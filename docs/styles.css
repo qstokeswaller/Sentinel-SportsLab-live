@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* trainerOS - Custom Styles */
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #print-packet,
+    #print-packet * {
+        visibility: visible;
+    }
+
+    #print-packet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+        background: white !important;
+    }
+
+    /* Ensure parents don't clip during print */
+    body,
+    html {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #root,
+    #root>div,
+    main {
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+    }
+
+    /* Pro-Sheet Table Styling */
+    #print-packet table {
+        border-spacing: 0;
+        width: 100% !important;
+    }
+
+    #print-packet th,
+    #print-packet td {
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    #print-packet img {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}
