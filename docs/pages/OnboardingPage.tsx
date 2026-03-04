@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { ActivityIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type AccountType = 'individual' | 'club' | null;
 
@@ -73,37 +75,36 @@ const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FF] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
 
         {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 mb-2">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M4 16 L16 4 L28 16 L16 28 Z" stroke="#06b6d4" strokeWidth="2" fill="none" />
-              <path d="M10 16 L16 10 L22 16 L16 22 Z" fill="#06b6d4" opacity="0.4" />
-            </svg>
-            <span className="text-2xl font-black text-slate-900 uppercase tracking-tighter">trainerOS</span>
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+            <ActivityIcon className="text-white w-4 h-4" />
           </div>
-          <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">Setup</p>
+          <span className="font-bold text-slate-900">
+            trainer<span className="text-indigo-600">OS</span>
+          </span>
         </div>
 
-        <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xl">
-          <h2 className="text-slate-900 font-black uppercase tracking-tight text-lg mb-1">How are you using TrainerOS?</h2>
-          <p className="text-slate-500 text-xs font-medium mb-8">This determines how your data is organised</p>
+        <div className="bg-white border border-slate-200 rounded-xl p-7 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">How are you using TrainerOS?</h2>
+          <p className="text-sm text-slate-500 mb-6">This determines how your data is organised.</p>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-3 mb-5">
             {/* Individual */}
             <button
               onClick={() => setSelected('individual')}
-              className={`p-6 rounded-2xl border-2 text-left transition-all ${selected === 'individual'
-                  ? 'border-cyan-500 bg-cyan-50/50'
-                  : 'border-slate-100 bg-slate-50 hover:border-slate-200'
-                }`}
+              className={`p-5 rounded-xl border-2 text-left transition-all ${
+                selected === 'individual'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+              }`}
             >
-              <div className="text-2xl mb-3">🏃</div>
-              <p className="text-slate-900 font-black uppercase tracking-tight text-sm mb-1">Individual Coach</p>
-              <p className="text-slate-500 text-xs font-medium leading-relaxed">
+              <div className="text-xl mb-2.5">🏃</div>
+              <p className="text-slate-900 font-semibold text-sm mb-1">Individual Coach</p>
+              <p className="text-slate-500 text-xs leading-relaxed">
                 Personal coaching practice. Manage your own athletes directly.
               </p>
             </button>
@@ -111,14 +112,15 @@ const OnboardingPage: React.FC = () => {
             {/* Club */}
             <button
               onClick={() => setSelected('club')}
-              className={`p-6 rounded-2xl border-2 text-left transition-all ${selected === 'club'
-                  ? 'border-cyan-500 bg-cyan-50/50'
-                  : 'border-slate-100 bg-slate-50 hover:border-slate-200'
-                }`}
+              className={`p-5 rounded-xl border-2 text-left transition-all ${
+                selected === 'club'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+              }`}
             >
-              <div className="text-2xl mb-3">🏟️</div>
-              <p className="text-slate-900 font-black uppercase tracking-tight text-sm mb-1">Club / Organisation</p>
-              <p className="text-slate-500 text-xs font-medium leading-relaxed">
+              <div className="text-xl mb-2.5">🏟️</div>
+              <p className="text-slate-900 font-semibold text-sm mb-1">Club / Organisation</p>
+              <p className="text-slate-500 text-xs leading-relaxed">
                 Multi-coach setup. Invite staff and manage multiple squads.
               </p>
             </button>
@@ -126,15 +128,15 @@ const OnboardingPage: React.FC = () => {
 
           {/* Club name input */}
           {selected === 'club' && (
-            <div className="mb-6">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">
-                Club / Organisation Name
+            <div className="mb-5">
+              <label className="text-xs font-medium text-slate-600 block mb-1.5">
+                Club / Organisation name
               </label>
               <input
                 type="text"
                 value={clubName}
                 onChange={e => setClubName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
                 placeholder="e.g. Northside FC"
                 autoFocus
               />
@@ -142,18 +144,19 @@ const OnboardingPage: React.FC = () => {
           )}
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-4">
-              <p className="text-red-400 text-xs font-medium">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
+              <p className="text-red-600 text-xs font-medium">{error}</p>
             </div>
           )}
 
-          <button
+          <Button
             onClick={handleContinue}
             disabled={!selected || loading}
-            className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-[11px] py-4 rounded-xl transition-colors"
+            className="w-full"
+            size="lg"
           >
             {loading ? 'Setting up...' : 'Continue to TrainerOS'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

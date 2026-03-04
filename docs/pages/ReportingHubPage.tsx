@@ -88,13 +88,13 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
                 {/* Controls Header */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-[2.5rem] border border-indigo-100 shadow-sm">
-                    <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg w-fit">
                         {['Team', 'Individual'].map(m => (
                             <button
                                 key={m}
                                 onClick={() => setHrReportViewMode(m)}
-                                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${hrReportViewMode === m ? 'bg-white text-indigo-900 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
                                 {m} View
                             </button>
@@ -133,35 +133,35 @@ export const ReportingHubPage = () => {
                 </div>
 
                 {/* Main Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-indigo-100 shadow-sm space-y-4 group hover:border-indigo-300 transition-colors">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Avg Session HR</div>
-                        <div className="text-4xl font-black text-indigo-900">158 <span className="text-sm text-indigo-300">BPM</span></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-indigo-200 transition-colors">
+                        <div className="text-xs font-medium text-slate-500">Avg Session HR</div>
+                        <div className="text-3xl font-bold text-slate-900">158 <span className="text-sm font-normal text-slate-400">BPM</span></div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div className="h-full bg-indigo-600 w-[70%]" />
                         </div>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-indigo-100 shadow-sm space-y-4 group hover:border-cyan-300 transition-colors">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Peak HR (Period)</div>
-                        <div className="text-4xl font-black text-cyan-600">198 <span className="text-sm text-cyan-300">BPM</span></div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-indigo-200 transition-colors">
+                        <div className="text-xs font-medium text-slate-500">Peak HR (Period)</div>
+                        <div className="text-3xl font-bold text-slate-900">198 <span className="text-sm font-normal text-slate-400">BPM</span></div>
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-cyan-500 w-[95%]" />
+                            <div className="h-full bg-indigo-500 w-[95%]" />
                         </div>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-indigo-100 shadow-sm space-y-4 group hover:border-emerald-300 transition-colors">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Recovery Score</div>
-                        <div className="text-4xl font-black text-emerald-500">92 <span className="text-sm text-emerald-300">/100</span></div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase">Based on HrR @ 2min</div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-emerald-200 transition-colors">
+                        <div className="text-xs font-medium text-slate-500">Recovery Score</div>
+                        <div className="text-3xl font-bold text-emerald-600">92 <span className="text-sm font-normal text-emerald-300">/100</span></div>
+                        <div className="text-xs text-slate-400">Based on HRR @ 2min</div>
                     </div>
                 </div>
 
                 {/* Session Timeline Chart */}
-                <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                     <div className="flex justify-between items-center">
-                        <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">Session Load Analysis</h4>
+                        <h4 className="text-base font-semibold text-slate-800">Session Load Analysis</h4>
                         <div className="flex gap-4">
-                            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-[9px] font-bold uppercase text-slate-400">Avg HR</span></div>
-                            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-400" /><span className="text-[9px] font-bold uppercase text-slate-400">Max HR</span></div>
+                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-xs text-slate-400">Avg HR</span></div>
+                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-300" /><span className="text-xs text-slate-400">Max HR</span></div>
                         </div>
                     </div>
                     <div className="h-64 flex items-end justify-between gap-6 px-4">
@@ -199,25 +199,25 @@ export const ReportingHubPage = () => {
         const tabs = ['Max', 'Comparison', 'Assessment'];
         return (
             <div className="space-y-8 animate-in fade-in duration-500">
-                <div className="flex bg-slate-100 p-1.5 rounded-[1.5rem] w-fit border border-slate-200 shadow-inner">
+                <div className="flex bg-slate-100 p-0.5 rounded-lg w-fit border border-slate-200">
                     {tabs.map(tab => (
                         <button
                             key={tab}
                             onClick={() => setTrackingTab(tab)}
-                            className={`px-10 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${trackingTab === tab ? "bg-white text-indigo-600 shadow-md transform scale-[1.02]" : "text-slate-400 hover:text-slate-600"}`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
                         >
                             {tab}
                         </button>
                     ))}
                 </div>
 
-                <div className="bg-white p-12 rounded-[3.5rem] border border-slate-200 shadow-sm min-h-[500px] flex flex-col items-center justify-center text-center space-y-6">
-                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 border border-slate-100 mb-4">
-                        <SearchIcon size={40} />
+                <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 border border-slate-100">
+                        <SearchIcon size={22} />
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{trackingTab} Analytics</h3>
-                        <p className="text-slate-400 text-sm font-medium italic max-w-md mx-auto">This module is being restructured as part of the unified Tracking Hub. Logic implementation will follow.</p>
+                    <div className="space-y-1.5">
+                        <h3 className="text-base font-semibold text-slate-800">{trackingTab} Analytics</h3>
+                        <p className="text-slate-400 text-sm max-w-md mx-auto">This module is being restructured as part of the unified Tracking Hub.</p>
                     </div>
                     <div className="flex gap-4 pt-4">
                         <div className="h-1 w-12 bg-indigo-100 rounded-full"></div>
@@ -250,7 +250,7 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
                 {/* HEADING & CORE SCORE */}
-                <div className="bg-white p-12 rounded-[3.5rem] border border-indigo-100 shadow-xl flex flex-col md:flex-row gap-12 items-center">
+                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-xl flex flex-col md:flex-row gap-12 items-center">
                     <div className="relative shrink-0">
                         <svg viewBox="0 0 100 100" className="w-48 h-48 transform -rotate-90">
                             <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="8" />
@@ -270,7 +270,7 @@ export const ReportingHubPage = () => {
                         </p>
                         <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                             {risks.map(r => (
-                                <div key={r.label} className={`px-5 py-2 rounded-2xl border bg-${r.color}-50 border-${r.color}-100 flex items-center gap-3`}>
+                                <div key={r.label} className={`px-5 py-2 rounded-xl border bg-${r.color}-50 border-${r.color}-100 flex items-center gap-3`}>
                                     <div className={`w-2 h-2 rounded-full bg-${r.color}-500 shadow-sm`}></div>
                                     <span className="text-[10px] font-black uppercase text-indigo-500 tracking-widest">{r.label}: <span className={`text-${r.color}-600`}>{r.status}</span></span>
                                 </div>
@@ -281,7 +281,7 @@ export const ReportingHubPage = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* WELLNESS TELEMETRY WIDGET */}
-                    <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+                    <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                         <div className="flex justify-between items-center">
                             <h5 className="text-lg font-black uppercase tracking-tight text-indigo-900 flex items-center gap-3">
                                 <HeartIcon size={20} className="text-rose-500" /> Wellness Telemetry
@@ -289,14 +289,14 @@ export const ReportingHubPage = () => {
                             <button onClick={() => { setActiveReport('Wellness Report'); setReportMode('analytics'); }} className="text-[10px] font-black uppercase text-indigo-600 hover:underline">Full Analytics</button>
                         </div>
                         <div className="grid grid-cols-2 gap-6">
-                            <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100 flex items-center gap-4">
+                            <div className="p-6 bg-indigo-50/50 rounded-xl border border-indigo-100 flex items-center gap-4">
                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-900 shadow-sm"><MoonIcon size={20} /></div>
                                 <div>
                                     <div className="text-[9px] font-black uppercase text-indigo-400">Sleep</div>
                                     <div className="text-xl font-black text-indigo-900">{wellness.sleep}h</div>
                                 </div>
                             </div>
-                            <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100 flex items-center gap-4">
+                            <div className="p-6 bg-indigo-50/50 rounded-xl border border-indigo-100 flex items-center gap-4">
                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-900 shadow-sm"><ZapIcon size={20} /></div>
                                 <div>
                                     <div className="text-[9px] font-black uppercase text-indigo-400">Energy</div>
@@ -307,7 +307,7 @@ export const ReportingHubPage = () => {
                     </div>
 
                     {/* EVALUATION & QUESTIONNAIRE WIDGET */}
-                    <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+                    <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                         <div className="flex justify-between items-center">
                             <h5 className="text-lg font-black uppercase tracking-tight text-indigo-900 flex items-center gap-3">
                                 <ClipboardListIcon size={20} className="text-indigo-500" /> Active Evaluations
@@ -319,7 +319,7 @@ export const ReportingHubPage = () => {
                                 { name: 'Lower Body Power', date: '21 Oct', score: '8.4', status: 'Optimal' },
                                 { name: 'Reactive Strength', date: '15 Oct', score: '6.2', status: 'Warning' }
                             ].map((ev, i) => (
-                                <div key={i} className="flex justify-between items-center p-4 bg-indigo-50/50 rounded-2xl hover:bg-indigo-100 transition-colors cursor-pointer border border-indigo-100">
+                                <div key={i} className="flex justify-between items-center p-4 bg-indigo-50/50 rounded-xl hover:bg-indigo-100 transition-colors cursor-pointer border border-indigo-100">
                                     <div>
                                         <div className="text-xs font-black text-indigo-900">{ev.name}</div>
                                         <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">{ev.date}</div>
@@ -351,30 +351,30 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-[2rem] border border-indigo-100 shadow-sm space-y-2">
+                    <div className="bg-white p-6 rounded-xl border border-indigo-100 shadow-sm space-y-2">
                         <div className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Total Sessions</div>
                         <div className="text-3xl font-black text-indigo-900">{activityStats.sessions} <span className="text-sm text-indigo-300 font-medium">/ {activityStats.planned}</span></div>
                     </div>
-                    <div className="bg-white p-6 rounded-[2rem] border border-indigo-100 shadow-sm space-y-2">
+                    <div className="bg-white p-6 rounded-xl border border-indigo-100 shadow-sm space-y-2">
                         <div className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Total Duration</div>
                         <div className="text-3xl font-black text-indigo-900">{activityStats.duration} <span className="text-sm text-indigo-300 font-medium">min</span></div>
                     </div>
-                    <div className="bg-white p-6 rounded-[2rem] border border-indigo-100 shadow-sm space-y-2">
+                    <div className="bg-white p-6 rounded-xl border border-indigo-100 shadow-sm space-y-2">
                         <div className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Volume Load</div>
                         <div className="text-3xl font-black text-indigo-900">{(activityStats.load / 1000).toFixed(1)}k <span className="text-sm text-indigo-300 font-medium">AU</span></div>
                     </div>
-                    <div className="bg-white p-6 rounded-[2rem] border border-indigo-100 shadow-sm space-y-2">
+                    <div className="bg-white p-6 rounded-xl border border-indigo-100 shadow-sm space-y-2">
                         <div className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Active Days</div>
                         <div className="text-3xl font-black text-indigo-900">5 <span className="text-sm text-indigo-300 font-medium">/ 7</span></div>
                     </div>
                 </div>
 
-                <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+                <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                     <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">Weekly Activity Volume</h4>
                     <div className="h-64 flex items-end justify-between gap-4 px-4 border-b border-slate-100 pb-4">
                         {weeklyActivity.map((count, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
-                                <div className="relative w-full bg-slate-100 rounded-2xl overflow-hidden flex items-end group-hover:bg-slate-200 transition-colors" style={{ height: '200px' }}>
+                                <div className="relative w-full bg-slate-100 rounded-xl overflow-hidden flex items-end group-hover:bg-slate-200 transition-colors" style={{ height: '200px' }}>
                                     <div className="w-full bg-indigo-600 rounded-t-2xl transition-all duration-1000" style={{ height: `${count * 15}%` }}></div>
                                 </div>
                                 <span className="text-[10px] font-black text-slate-400 uppercase">Day {i + 1}</span>
@@ -553,7 +553,7 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
                 {/* Filter Control Hub */}
-                <div className="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8 relative overflow-hidden border-t-8 border-t-indigo-900">
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-8 relative overflow-hidden border-t border-slate-200">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                         <div className="space-y-4 flex-1">
                             <h3 className="text-2xl font-black uppercase tracking-tighter text-indigo-900 leading-none">GPS Intelligence Filters</h3>
@@ -565,7 +565,7 @@ export const ReportingHubPage = () => {
                                         <select
                                             value={gpsFilterTarget}
                                             onChange={(e) => setGpsFilterTarget(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-12 shadow-sm"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-12 shadow-sm"
                                         >
                                             <option>All Athletes</option>
                                             <optgroup label="Squads">
@@ -582,7 +582,7 @@ export const ReportingHubPage = () => {
                                 {/* Date Mode Toggle */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">Timeline Mode</label>
-                                    <div className="flex bg-slate-100 p-1.5 rounded-2xl shadow-inner">
+                                    <div className="flex bg-slate-100 p-1.5 rounded-xl shadow-inner">
                                         <button
                                             onClick={() => setGpsFilterDateMode('range')}
                                             className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
@@ -607,7 +607,7 @@ export const ReportingHubPage = () => {
                                                 type="date"
                                                 value={gpsRangeStart}
                                                 onChange={(e) => setGpsRangeStart(e.target.value)}
-                                                className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                                className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -616,7 +616,7 @@ export const ReportingHubPage = () => {
                                                 type="date"
                                                 value={gpsRangeEnd}
                                                 onChange={(e) => setGpsRangeEnd(e.target.value)}
-                                                className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                                className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
                                             />
                                         </div>
                                     </div>
@@ -627,7 +627,7 @@ export const ReportingHubPage = () => {
                                             type="date"
                                             value={gpsSpecificDate}
                                             onChange={(e) => setGpsSpecificDate(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
                                         />
                                     </div>
                                 )}
@@ -637,11 +637,11 @@ export const ReportingHubPage = () => {
                         <div className="flex flex-col items-end gap-3 shrink-0">
                             <div className="flex items-center gap-4">
                                 {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'} animate-pulse`}>{gpsImportMessage}</span>}
-                                <label className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95 shadow-indigo-200/50">
+                                <label className="bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95 shadow-indigo-200/50">
                                     <FileIcon size={14} /> Import Telemetry
                                     <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                                 </label>
-                                <button onClick={clearGpsData} title="Clear Records" className="p-3 text-slate-300 hover:text-rose-500 transition-colors border border-slate-100 rounded-2xl hover:bg-rose-50"><Trash2Icon size={20} /></button>
+                                <button onClick={clearGpsData} title="Clear Records" className="p-3 text-slate-300 hover:text-rose-500 transition-colors border border-slate-100 rounded-xl hover:bg-rose-50"><Trash2Icon size={20} /></button>
                             </div>
                         </div>
                     </div>
@@ -649,22 +649,22 @@ export const ReportingHubPage = () => {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
+                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Avg Distance</div>
                         <div className="text-3xl font-black text-indigo-900 tracking-tighter group-hover:text-indigo-600 transition-colors">{formatDistance(stats.avgDist)}</div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase italic">Across Filter Selection</div>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
+                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Avg HSR</div>
                         <div className="text-3xl font-black text-indigo-600 tracking-tighter group-hover:text-indigo-400 transition-colors">{formatDistance(stats.avgHsr)}</div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase italic">High Speed Running</div>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2 group hover:border-emerald-200 transition-all">
+                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-emerald-200 transition-all">
                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Max Velocity</div>
                         <div className="text-3xl font-black text-emerald-600 tracking-tighter group-hover:text-emerald-500 transition-colors">{stats.maxVelocity}<span className="text-xs ml-1 font-black">KM/H</span></div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase italic">Squad Peak Velocity</div>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-2 group hover:border-orange-200 transition-all">
+                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-orange-200 transition-all">
                         <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Sprints</div>
                         <div className="text-3xl font-black text-orange-500 tracking-tighter group-hover:text-orange-400 transition-colors">{stats.totalSprints}</div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase italic">Frequency Count</div>
@@ -672,7 +672,7 @@ export const ReportingHubPage = () => {
                 </div>
 
                 {/* Telemetry Table */}
-                <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -766,9 +766,9 @@ export const ReportingHubPage = () => {
 
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
-                <div className="bg-white p-12 rounded-[3.5rem] border border-indigo-100 shadow-sm space-y-8">
+                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                     <div className="flex items-center gap-6 mb-8 border-b border-indigo-50 pb-8">
-                        <div className="w-16 h-16 bg-indigo-900 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                        <div className="w-16 h-16 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-xl">
                             <UserIcon size={32} />
                         </div>
                         <div>
@@ -800,7 +800,7 @@ export const ReportingHubPage = () => {
                                 placeholder="e.g. Flu, Ankle Sprain"
                                 value={optOutForm.reason}
                                 onChange={(e) => setOptOutForm({ ...optOutForm, reason: e.target.value })}
-                                className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-2xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium"
+                                className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium"
                             />
                         </div>
 
@@ -810,12 +810,12 @@ export const ReportingHubPage = () => {
                                 placeholder="Additional context..."
                                 value={optOutForm.notes}
                                 onChange={(e) => setOptOutForm({ ...optOutForm, notes: e.target.value })}
-                                className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-2xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-32 resize-none"
+                                className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-32 resize-none"
                             />
                         </div>
 
                         <div className="pt-4">
-                            <button onClick={handleSaveOptOut} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">Save Status</button>
+                            <button onClick={handleSaveOptOut} className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">Save Status</button>
                         </div>
                     </div>
                 </div>
@@ -852,9 +852,9 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">
                 {/* ACTION BAR */}
-                <div className="flex flex-wrap items-center justify-between gap-6 bg-white/50 backdrop-blur-md p-8 rounded-[2.5rem] border border-white shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-6 bg-white/50 backdrop-blur-md p-8 rounded-xl border border-white shadow-sm">
                     <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 bg-indigo-900 rounded-2xl flex items-center justify-center text-white shadow-xl">
+                        <div className="w-14 h-14 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-xl">
                             <StethoscopeIcon size={28} />
                         </div>
                         <div>
@@ -864,7 +864,7 @@ export const ReportingHubPage = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+                        <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                             <button
                                 onClick={() => { setMedicalModalMode('upload'); setIsMedicalModalOpen(true); }}
                                 className="px-6 py-3 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2 border border-slate-200"
@@ -902,7 +902,7 @@ export const ReportingHubPage = () => {
                 </div>
 
                 {/* TIMELINE */}
-                <div className="bg-white p-12 rounded-[3.5rem] border border-indigo-100 shadow-sm relative overflow-hidden">
+                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                         <ActivityIcon size={240} className="text-indigo-900" />
                     </div>
@@ -928,7 +928,7 @@ export const ReportingHubPage = () => {
 
                                 <div
                                     onClick={() => entry.timelineType === 'medical' && setInspectingMedicalRecord(entry)}
-                                    className={`p-8 rounded-[2.5rem] border transition-all ${entry.timelineType === 'medical'
+                                    className={`p-8 rounded-xl border transition-all ${entry.timelineType === 'medical'
                                         ? 'bg-slate-50/50 border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
                                         : 'bg-white border-indigo-50 shadow-sm'
                                         }`}
@@ -994,9 +994,9 @@ export const ReportingHubPage = () => {
     const renderRawDataReport = () => {
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">
-                <div className="bg-white p-12 rounded-[3.5rem] border border-indigo-100 shadow-sm text-center space-y-8">
+                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-sm text-center space-y-8">
                     <div className="max-w-lg mx-auto space-y-4">
-                        <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
+                        <div className="w-20 h-20 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
                             <TableIcon size={32} />
                         </div>
                         <h4 className="text-3xl font-black uppercase tracking-tighter text-indigo-900">Data Export Portal</h4>
@@ -1012,7 +1012,7 @@ export const ReportingHubPage = () => {
                             { name: 'Force Plate Data', size: '128MB' },
                             { name: 'GPS Exports', size: '45MB' }
                         ].map((file, i) => (
-                            <button key={i} className="flex justify-between items-center bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100 hover:border-indigo-600 hover:shadow-lg transition-all group">
+                            <button key={i} className="flex justify-between items-center bg-indigo-50/50 p-6 rounded-xl border border-indigo-100 hover:border-indigo-600 hover:shadow-lg transition-all group">
                                 <div className="text-left">
                                     <div className="text-xs font-black uppercase text-indigo-900">{file.name}</div>
                                     <div className="text-[10px] font-bold text-indigo-400 mt-1">{file.size} â€¢ CSV</div>
@@ -1030,9 +1030,9 @@ export const ReportingHubPage = () => {
     const renderHamstringReport = () => {
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
-                <div className="flex flex-col md:flex-row items-center justify-between bg-white p-8 rounded-[3rem] border border-orange-100 shadow-sm border-t-8 border-t-orange-500 gap-6">
+                <div className="flex flex-col md:flex-row items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm gap-4">
                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                        <div className="w-16 h-16 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
                             <ActivityIcon size={32} />
                         </div>
                         <div>
@@ -1040,7 +1040,7 @@ export const ReportingHubPage = () => {
                             <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-1">Nordic Force & Asymmetry Analysis</p>
                         </div>
                     </div>
-                    <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                    <div className="flex bg-slate-100 p-1.5 rounded-xl">
                         {['Analysis', 'Assessment', 'Import'].map(tab => (
                             <button key={tab} onClick={() => setHamstringReportTab(tab)}
                                 className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
@@ -1185,20 +1185,20 @@ export const ReportingHubPage = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white px-8 py-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                         <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Total Reports</span>
                         <div className="text-4xl font-black text-slate-800">{filteredEntries.length}</div>
                     </div>
-                    <div className="bg-white px-8 py-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1 border-rose-100">
+                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1 border-rose-100">
                         <span className="text-[9px] font-black uppercase text-rose-400 tracking-widest">High Risk</span>
                         <div className="text-4xl font-black text-rose-500">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
                     </div>
-                    <div className="bg-white px-8 py-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                         <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Avg Asymmetry</span>
                         <div className="text-4xl font-black text-slate-800">{avgAsymmetry}<span className="text-xl ml-0.5">%</span></div>
                     </div>
                 </div>
-                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse hamstring-analysis-table">
                             <thead>
@@ -1259,11 +1259,11 @@ export const ReportingHubPage = () => {
                 </div>
                 {inspectHamEntry && (
                     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
+                        <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
                             <div className="bg-slate-900 px-10 py-8 text-white relative">
                                 <button onClick={() => setInspectHamEntry(null)} className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"><XIcon size={24} /></button>
                                 <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white font-black text-lg">{inspectHamEntry.athleteName.split(' ').map(n => n[0]).join('')}</div>
+                                    <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black text-lg">{inspectHamEntry.athleteName.split(' ').map(n => n[0]).join('')}</div>
                                     <div>
                                         <h3 className="text-xl font-black tracking-tighter">{inspectHamEntry.athleteName}</h3>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assessment Detail</p>
@@ -1272,11 +1272,11 @@ export const ReportingHubPage = () => {
                             </div>
                             <div className="p-10 space-y-8">
                                 <div className="grid grid-cols-3 gap-4">
-                                    <div className="bg-white border border-slate-100 rounded-2xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Bodyweight</span><span className="text-sm font-black text-slate-800">{inspectHamEntry.weight}kg</span></div>
-                                    <div className="bg-white border border-slate-100 rounded-2xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Rel. Strength</span><span className="text-sm font-black text-rose-500">{inspectHamEntry.relativeStrength}</span></div>
-                                    <div className="bg-white border border-slate-100 rounded-2xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Asymmetry</span><span className="text-sm font-black text-slate-800">{inspectHamEntry.asymmetry || '0'}%</span></div>
+                                    <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Bodyweight</span><span className="text-sm font-black text-slate-800">{inspectHamEntry.weight}kg</span></div>
+                                    <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Rel. Strength</span><span className="text-sm font-black text-rose-500">{inspectHamEntry.relativeStrength}</span></div>
+                                    <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">Asymmetry</span><span className="text-sm font-black text-slate-800">{inspectHamEntry.asymmetry || '0'}%</span></div>
                                 </div>
-                                <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
+                                <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
                             </div>
                         </div>
                     </div>
@@ -1378,7 +1378,7 @@ export const ReportingHubPage = () => {
         const dropdownCls = 'w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-rose-400 transition-all cursor-pointer appearance-none';
 
         return (
-            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
 
                 {/* ── Mode toggle + dropdowns ───────────────────────────────── */}
                 <div className="bg-rose-50/50 px-8 py-6 border-b border-rose-100 space-y-5">
@@ -1550,7 +1550,7 @@ export const ReportingHubPage = () => {
                             </div>
 
                             {/* Excel-style table */}
-                            <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
                                 <table className="w-full text-xs border-collapse">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100">
@@ -1677,10 +1677,10 @@ export const ReportingHubPage = () => {
         };
         const handleFileUpload = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => processCSV(e.target.result); reader.readAsText(file); };
         return (
-            <div className="bg-white p-12 rounded-[3rem] border border-orange-100 shadow-sm text-center space-y-6">
-                <div className="mx-auto w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-orange-600"><FileTextIcon size={40} /></div>
+            <div className="bg-white p-12 rounded-xl border border-orange-100 shadow-sm text-center space-y-6">
+                <div className="mx-auto w-20 h-20 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600"><FileTextIcon size={40} /></div>
                 <h4 className="text-2xl font-black uppercase tracking-tighter">Batch Data Import</h4>
-                <label className="inline-flex items-center gap-3 bg-orange-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest cursor-pointer shadow-lg hover:bg-orange-600 transition-all">
+                <label className="inline-flex items-center gap-3 bg-orange-500 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest cursor-pointer shadow-lg hover:bg-orange-600 transition-all">
                     <FileIcon size={20} /><span>Select CSV File</span>
                     <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
                 </label>
@@ -1691,22 +1691,20 @@ export const ReportingHubPage = () => {
     // Main Reporting Hub View Switcher
     if (activeReport) {
         return (
-            <div className="space-y-8 animate-in fade-in duration-500">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+            <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => { setActiveReport(null); setReportMode('analytics'); }}
-                            className="w-12 h-12 bg-white border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-400 hover:text-indigo-900 hover:border-indigo-300 transition-all shadow-sm group"
+                            className="p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all"
                         >
-                            <ArrowLeftIcon size={20} className="group-hover:-translate-x-1 transition-transform" />
+                            <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Reporting Hub</div>
-                            <h2 className="text-3xl font-black text-indigo-900 uppercase tracking-tighter">{activeReport}</h2>
+                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Reporting Hub</div>
+                            <h2 className="text-base font-semibold text-slate-900">{activeReport}</h2>
                         </div>
                     </div>
-
-                    {/* Mode Toggler Removed as per requirements */}
                 </div>
 
                 <div className="min-h-[600px]">
@@ -1723,37 +1721,34 @@ export const ReportingHubPage = () => {
     }
 
     return (
-        <div className="space-y-12 animate-in fade-in duration-700">
-            <div className="bg-white p-12 rounded-[3.5rem] border border-indigo-100 shadow-sm relative overflow-hidden group/header border-t-8 border-t-indigo-900">
-                <div className="space-y-4 relative z-10">
-                    <h2 className="text-5xl font-black text-indigo-900 uppercase tracking-tighter leading-none">Reporting Hub</h2>
-                    <p className="text-indigo-500 text-sm font-bold uppercase tracking-wide italic">Elite Performance Intelligence Terminal</p>
-                </div>
+        <div className="space-y-5 animate-in fade-in duration-300">
+            <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                <h2 className="text-xl font-semibold text-slate-900">Reporting Hub</h2>
+                <p className="text-sm text-slate-500 mt-0.5">Performance intelligence reports and data exports.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[
-                    { title: 'Wellness Hub', desc: 'Unified Wellness, Evaluation & Workload Score', icon: ZapIcon, color: 'indigo' },
-                    { title: 'Heart Rate Metrics', desc: 'Session Intensity, Peaks & Zone Distribution', icon: HeartIcon, color: 'rose' },
-                    { title: 'Hamstring Report', desc: 'Nordic Force Analysis & Asymmetry Screening', icon: ActivityIcon, color: 'orange' }, // New Report
-                    { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon, color: 'indigo' },
-                    { title: 'Tracking Hub', desc: 'Consolidated Performance & Benchmark Tracking', icon: SearchIcon, color: 'indigo' },
-                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon, color: 'indigo' },
-                    { title: 'Medical Reports', desc: 'Athlete opt-outs, medical status and strategic notes', icon: AlertTriangleIcon, color: 'indigo' }
+                    { title: 'Wellness Hub', desc: 'Unified Wellness, Evaluation & Workload Score', icon: ZapIcon },
+                    { title: 'Heart Rate Metrics', desc: 'Session Intensity, Peaks & Zone Distribution', icon: HeartIcon },
+                    { title: 'Hamstring Report', desc: 'Nordic Force Analysis & Asymmetry Screening', icon: ActivityIcon },
+                    { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon },
+                    { title: 'Tracking Hub', desc: 'Consolidated Performance & Benchmark Tracking', icon: SearchIcon },
+                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon },
+                    { title: 'Medical Reports', desc: 'Athlete opt-outs, medical status and strategic notes', icon: AlertTriangleIcon }
                 ].map((report, i) => (
                     <button
                         key={i}
                         onClick={() => setActiveReport(report.title)}
-                        className={`bg-white p-6 rounded-[2.5rem] border ${report.title === 'Wellness Hub' ? 'border-indigo-600 shadow-indigo-100 shadow-xl' : 'border-indigo-100 shadow-sm'} hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col text-left relative overflow-hidden h-[200px]`}
+                        className={`bg-white p-5 rounded-xl border ${report.title === 'Wellness Hub' ? 'border-indigo-300 shadow-sm' : 'border-slate-200 shadow-sm'} hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]`}
                     >
-                        {report.title === 'Wellness Hub' && <div className="absolute top-0 right-0 p-4"><SparklesIcon size={24} className="text-indigo-400 animate-pulse" /></div>}
-                        <div className="flex items-start gap-5 h-full">
-                            <div className={`w-16 h-16 rounded-[1.5rem] ${report.title === 'Wellness Hub' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white'} flex items-center justify-center transition-all shrink-0`}>
-                                <report.icon size={30} />
+                        <div className="flex items-start gap-4 h-full">
+                            <div className={`w-10 h-10 rounded-lg ${report.title === 'Wellness Hub' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white'} flex items-center justify-center transition-all shrink-0`}>
+                                <report.icon size={20} />
                             </div>
                             <div className="flex flex-col justify-center h-full">
-                                <h3 className={`text-xl font-black ${report.title === 'Wellness Hub' ? 'text-indigo-900' : 'text-indigo-900'} uppercase tracking-tighter mb-1 leading-tight`}>{report.title}</h3>
-                                <p className="text-[11px] text-indigo-400 font-bold leading-relaxed">{report.desc}</p>
+                                <h3 className="text-base font-semibold text-slate-900 mb-1 leading-tight">{report.title}</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">{report.desc}</p>
                             </div>
                         </div>
                     </button>

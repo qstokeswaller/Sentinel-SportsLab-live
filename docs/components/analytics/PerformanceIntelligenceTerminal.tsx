@@ -38,21 +38,21 @@ export const PerformanceIntelligenceTerminal = ({
     const prevNordic = athleteAssessmentsFiltered.filter(a => a.test_type === 'nordic' || a.test_type === 'hamstring')[1];
 
     const KPIAssessmentCard = ({ title, label, value, unit, trend, icon }) => (
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/[0.07] transition-all group">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/[0.07] transition-all group">
             <div className="flex items-center justify-between mb-4">
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
                     {icon}
                 </div>
                 {trend !== null && (
-                    <div className={`text-[10px] font-black px-2 py-1 rounded-lg ${trend >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                    <div className={`text-[10px] font-semibold px-2 py-1 rounded-lg ${trend >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                         {trend >= 0 ? '+' : ''}{trend}%
                     </div>
                 )}
             </div>
             <div className="space-y-1">
-                <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{title}</div>
+                <div className="text-[8px] font-semibold text-indigo-400 uppercase tracking-wide">{title}</div>
                 <div className="flex items-baseline gap-1">
-                    <div className="text-3xl font-black text-white">{value || '--'}</div>
+                    <div className="text-3xl font-semibold text-white">{value || '--'}</div>
                     <div className="text-xs font-bold text-white/30">{unit}</div>
                 </div>
                 <div className="text-[10px] font-bold text-white/40 uppercase tracking-tight">{label}</div>
@@ -61,20 +61,20 @@ export const PerformanceIntelligenceTerminal = ({
     );
 
     return (
-        <div className="bg-slate-900 p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden border border-indigo-500/20">
+        <div className="bg-slate-900 p-12 rounded-xl shadow-2xl relative overflow-hidden border border-indigo-500/20">
             {/* Background Polish */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[100px] -mr-48 -mt-48 rounded-full"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/5 blur-[80px] -ml-32 -mb-32 rounded-full"></div>
 
             <div className="relative z-10 flex flex-col lg:flex-row gap-12">
                 <div className="lg:w-1/3 space-y-8">
-                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
                         <BrainIcon className="text-indigo-400" size={18} />
-                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">Neural Insight Engine</span>
+                        <span className="text-[10px] font-semibold text-indigo-300 uppercase tracking-[0.2em]">Neural Insight Engine</span>
                     </div>
 
                     <div className="space-y-4">
-                        <h2 className="text-5xl font-black text-white leading-[0.9] tracking-tighter">
+                        <h2 className="text-5xl font-semibold text-white leading-[0.9] tracking-tighter">
                             PERFORMANCE<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">INTELLIGENCE</span>
                         </h2>
@@ -84,21 +84,21 @@ export const PerformanceIntelligenceTerminal = ({
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
-                            <div className="text-[8px] font-black text-indigo-400 uppercase mb-1">System Confidence</div>
-                            <div className="text-xl font-black text-white">98.4%</div>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
+                            <div className="text-[8px] font-semibold text-indigo-400 uppercase mb-1">System Confidence</div>
+                            <div className="text-xl font-semibold text-white">98.4%</div>
                         </div>
-                        <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
-                            <div className="text-[8px] font-black text-indigo-400 uppercase mb-1">Active Monitors</div>
-                            <div className="text-xl font-black text-white">24</div>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
+                            <div className="text-[8px] font-semibold text-indigo-400 uppercase mb-1">Active Monitors</div>
+                            <div className="text-xl font-semibold text-white">24</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex-1 space-y-4">
                     {insights.map((insight, idx) => (
-                        <div key={idx} className="group p-8 bg-white/5 hover:bg-white/[0.08] transition-all duration-500 rounded-[2.5rem] border border-white/10 flex items-center gap-8">
-                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${insight.type === 'risk' ? 'bg-rose-500/20 text-rose-400' :
+                        <div key={idx} className="group p-8 bg-white/5 hover:bg-white/[0.08] transition-all duration-500 rounded-xl border border-white/10 flex items-center gap-8">
+                            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${insight.type === 'risk' ? 'bg-rose-500/20 text-rose-400' :
                                 insight.type === 'performance' ? 'bg-emerald-500/20 text-emerald-400' :
                                     'bg-amber-500/20 text-amber-400'
                                 }`}>
@@ -110,11 +110,11 @@ export const PerformanceIntelligenceTerminal = ({
 
                             <div className="flex-1 space-y-1">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{insight.category}</span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">{insight.category}</span>
                                     <div className="h-px flex-1 bg-white/10"></div>
-                                    <span className="text-[10px] font-black text-white/40">{insight.timestamp}</span>
+                                    <span className="text-[10px] font-semibold text-white/40">{insight.timestamp}</span>
                                 </div>
-                                <h4 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-indigo-300 transition-colors">{insight.title}</h4>
+                                <h4 className="text-xl font-semibold text-white uppercase tracking-tight group-hover:text-indigo-300 transition-colors">{insight.title}</h4>
                                 <p className="text-xs font-medium text-indigo-200/50 leading-relaxed">{insight.description}</p>
                             </div>
 
@@ -130,8 +130,8 @@ export const PerformanceIntelligenceTerminal = ({
             <div className="mt-16 space-y-8 border-t border-white/5 pt-16 relative z-10">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-2xl font-black text-white uppercase tracking-tight">Strength & Force Assessments</h3>
-                        <p className="text-indigo-200/40 text-xs font-medium uppercase tracking-widest mt-1">Longitudinal monitoring of neuromuscular output</p>
+                        <h3 className="text-2xl font-semibold text-white uppercase tracking-tight">Strength & Force Assessments</h3>
+                        <p className="text-indigo-200/40 text-xs font-medium uppercase tracking-wide mt-1">Longitudinal monitoring of neuromuscular output</p>
                     </div>
                 </div>
 

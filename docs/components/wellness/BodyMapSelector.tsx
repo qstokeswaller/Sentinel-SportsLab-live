@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BodyMapArea } from '../../types/types';
 import { BODY_MAP_AREAS } from '../../utils/mocks';
 
@@ -7,9 +7,19 @@ interface BodyMapSelectorProps {
     onChange: (areas: BodyMapArea[]) => void;
 }
 
-const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange }) => {
-    const [view, setView] = useState<'front' | 'back'>('front');
+const SEVERITY_STYLES: Record<number, string> = {
+    1: 'bg-yellow-400 border-yellow-400 text-white',
+    2: 'bg-orange-500 border-orange-500 text-white',
+    3: 'bg-red-600 border-red-600 text-white',
+};
 
+const SEVERITY_LABELS: Record<number, string> = {
+    1: 'Mild',
+    2: 'Mod',
+    3: 'Severe',
+};
+
+const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange }) => {
     const toggleArea = (areaKey: string) => {
         const existing = value.find(a => a.area === areaKey);
         if (existing) {
@@ -23,77 +33,68 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange }) =>
         }
     };
 
-    const getIntensityColor = (severity: number) => {
-        switch (severity) {
-            case 1: return 'bg-yellow-400';
-            case 2: return 'bg-orange-500';
-            case 3: return 'bg-red-600';
-            default: return 'bg-slate-200';
-        }
+    const frontAreas = BODY_MAP_AREAS.filter(a => a.view === 'front');
+    const backAreas = BODY_MAP_AREAS.filter(a => a.view === 'back');
+
+    const AreaButton = ({ area }: { area: typeof BODY_MAP_AREAS[0] }) => {
+        const selected = value.find(v => v.area === area.key);
+        return (
+            <button
+                type="button"
+                onClick={() => toggleArea(area.key)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all active:scale-95 ${
+                    selected
+                        ? SEVERITY_STYLES[selected.severity]
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+            >
+                <span>{area.label}</span>
+                {selected && (
+                    <span className="text-[10px] font-bold opacity-80 ml-1 shrink-0">
+                        {SEVERITY_LABELS[selected.severity]}
+                    </span>
+                )}
+            </button>
+        );
     };
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-center p-1 bg-slate-100 rounded-lg w-fit mx-auto">
-                <button
-                    type="button"
-                    onClick={() => setView('front')}
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'front' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                >
-                    Front View
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setView('back')}
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view === 'back' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                >
-                    Back View
-                </button>
-            </div>
-
-            <div className="relative aspect-[3/4] max-w-[300px] mx-auto bg-slate-50 rounded-2xl border-2 border-slate-100 p-4 min-h-[400px]">
-                {/* Anatomical background image */}
+            {/* Reference image */}
+            <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
                 <img
-                    src={view === 'front' ? "/body-map.png" : "/body-map.png"} // Using the suggested body-map.png
-                    alt="Body Map"
-                    className="w-full h-full object-contain opacity-40 grayscale"
+                    src="/body-image.jpeg"
+                    alt="Body reference — front and back"
+                    className="w-full object-contain max-h-56"
                 />
+            </div>
 
-                {/* Hotspots */}
-                <div className="absolute inset-0 p-4 flex flex-wrap content-start justify-center gap-2 overflow-y-auto">
-                    {BODY_MAP_AREAS.filter(a => a.view === view).map(area => {
-                        const selected = value.find(v => v.area === area.key);
-                        return (
-                            <button
-                                key={area.key}
-                                type="button"
-                                onClick={() => toggleArea(area.key)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${selected
-                                        ? `${getIntensityColor(selected.severity)} text-white border-transparent scale-105 shadow-md`
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-                                    }`}
-                            >
-                                <span className="text-xs font-semibold">{area.label}</span>
-                                {selected && (
-                                    <span className="flex h-2 w-2 rounded-full bg-white animate-pulse" />
-                                )}
-                            </button>
-                        );
-                    })}
+            <p className="text-xs text-slate-400 text-center">
+                Tap an area to mark it · tap again to increase severity · tap a third time to clear
+            </p>
+
+            {/* Two-column area list */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Front</p>
+                    {frontAreas.map(area => <AreaButton key={area.key} area={area} />)}
+                </div>
+                <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Back</p>
+                    {backAreas.map(area => <AreaButton key={area.key} area={area} />)}
                 </div>
             </div>
 
-            <div className="flex justify-center gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-yellow-400" /> Mild
+            {/* Legend */}
+            <div className="flex justify-center gap-5 text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" /> Mild
                 </div>
-                <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-orange-500" /> Moderate
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Moderate
                 </div>
-                <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-600" /> Severe
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-600" /> Severe
                 </div>
             </div>
         </div>

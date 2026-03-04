@@ -19,16 +19,16 @@ const ImportResolverModal = () => {
 
     return (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
+            <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-slate-900">Import Resolution</h3>
+                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900">Import Resolution</h3>
                     <button onClick={() => setIsImportResolverOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
                         <XIcon size={20} />
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-0 no-scrollbar">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-100 font-black text-slate-400 uppercase tracking-widest">
+                        <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-100 font-semibold text-slate-400 uppercase tracking-wide">
                             <tr>
                                 <th className="p-4">Import Name</th>
                                 <th className="p-4">Type/Value</th>
@@ -69,7 +69,7 @@ const ImportResolverModal = () => {
                             ))}
                             {importStaging.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest italic">
+                                    <td colSpan={4} className="p-12 text-center text-slate-400 font-bold uppercase tracking-wide italic">
                                         No records to resolve.
                                     </td>
                                 </tr>
@@ -79,7 +79,7 @@ const ImportResolverModal = () => {
                 </div>
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                     <button onClick={() => setIsImportResolverOpen(false)} className="px-6 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-200 uppercase tracking-wider text-xs transition-colors">Cancel</button>
-                    <button onClick={handleCommitImport} disabled={importStaging.length === 0} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Commit Import</button>
+                    <button onClick={handleCommitImport} disabled={importStaging.length === 0} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold uppercase tracking-wide text-xs shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Commit Import</button>
                 </div>
             </div>
         </div>

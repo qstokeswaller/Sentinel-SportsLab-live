@@ -44,14 +44,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
+        if (location.pathname.startsWith('/settings')) return;
         const path = location.pathname.slice(1);
         const valid = ['dashboard', 'periodization', 'clients', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
         if (valid.includes(path) && path !== activeTab)
             setActiveTab(path);
     }, [location.pathname]);
 
-    // Sync activeTab → URL
+    // Sync activeTab → URL (skip on public/standalone routes)
     useEffect(() => {
+        if (location.pathname.startsWith('/wellness-form')) return;
+        if (location.pathname.startsWith('/settings')) return;
         const current = location.pathname.slice(1) || 'dashboard';
         if (activeTab && activeTab !== current)
             navigate('/' + activeTab, { replace: true });
@@ -528,10 +531,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [wellnessTemplates, setWellnessTemplates] = useState<any[]>([]);
     const [wellnessResponses, setWellnessResponses] = useState<any[]>([]);
     const [wellnessSelectedTeamId, setWellnessSelectedTeamId] = useState<string>('all');
-    const [wellnessDateRange, setWellnessDateRange] = useState({
-        start: new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0],
-        end: new Date().toISOString().split('T')[0]
-    });
+    const [wellnessDateRange, setWellnessDateRange] = useState<string>('7d');
 
     const athletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
 
@@ -1450,11 +1450,35 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog]);
 
-    const handleLoadWellnessResponses = useCallback(async (teamId: string, startDate?: string, endDate?: string) => {
+    const handleLoadWellnessResponses = useCallback(async (teamId: string, rangeOrStart?: any, endDate?: string) => {
         if (!teamId || teamId === 'all') return;
+
+        // Convert shortcut string or legacy {start,end} object to actual ISO date strings
+        const today = new Date().toISOString().split('T')[0];
+        let dateFrom: string | undefined;
+        let dateTo: string | undefined = today;
+
+        if (!rangeOrStart) {
+            dateFrom = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+        } else if (typeof rangeOrStart === 'string') {
+            if (rangeOrStart === 'today') {
+                dateFrom = today;
+            } else if (rangeOrStart === '7d') {
+                dateFrom = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+            } else if (rangeOrStart === '30d') {
+                dateFrom = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+            } else {
+                dateFrom = rangeOrStart;
+                dateTo = endDate ?? today;
+            }
+        } else if (typeof rangeOrStart === 'object' && rangeOrStart.start) {
+            dateFrom = rangeOrStart.start;
+            dateTo = rangeOrStart.end ?? today;
+        }
+
         setIsLoading(true);
         try {
-            const records = await DatabaseService.fetchWellnessResponses(teamId, startDate, endDate);
+            const records = await DatabaseService.fetchWellnessResponses(teamId, dateFrom, dateTo);
             setWellnessResponses(records || []);
         } catch (err) {
             console.error("Error loading wellness responses:", err);

@@ -110,28 +110,28 @@ export const ScenarioModellingTerminal = ({ scheduledSessions = [], loadRecords 
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+            <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h4 className="text-2xl font-black uppercase tracking-tighter text-indigo-900">Training Logic Simulator</h4>
-                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Adjust upcoming sessions to see projected risk</p>
+                        <h4 className="text-2xl font-semibold uppercase tracking-tighter text-indigo-900">Training Logic Simulator</h4>
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mt-1">Adjust upcoming sessions to see projected risk</p>
                     </div>
                     <div className="flex items-center gap-3 bg-indigo-50 px-4 py-2 rounded-xl">
                         <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <span className="text-[10px] font-black uppercase text-indigo-900">Active Scenario</span>
+                        <span className="text-[10px] font-semibold uppercase text-indigo-900">Active Scenario</span>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     {simulatedSessions.length > 0 ? simulatedSessions.map(session => (
-                        <div key={session.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-wrap items-center gap-8">
+                        <div key={session.id} className="p-6 bg-slate-50 rounded-xl border border-slate-100 flex flex-wrap items-center gap-8">
                             <div className="flex-1 min-w-[200px]">
-                                <div className="text-[10px] font-black text-indigo-400 uppercase mb-1">{session.date}</div>
-                                <div className="font-black text-indigo-900 uppercase">{session.title}</div>
+                                <div className="text-[10px] font-semibold text-indigo-400 uppercase mb-1">{session.date}</div>
+                                <div className="font-semibold text-indigo-900 uppercase">{session.title}</div>
                             </div>
                             <div className="flex gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[8px] font-black uppercase text-slate-400">Planned RPE: {session.simulatedRPE}</label>
+                                    <label className="text-[8px] font-semibold uppercase text-slate-400">Planned RPE: {session.simulatedRPE}</label>
                                     <input
                                         type="range" min="1" max="10"
                                         value={session.simulatedRPE}
@@ -140,7 +140,7 @@ export const ScenarioModellingTerminal = ({ scheduledSessions = [], loadRecords 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[8px] font-black uppercase text-slate-400">Duration: {session.simulatedDuration}m</label>
+                                    <label className="text-[8px] font-semibold uppercase text-slate-400">Duration: {session.simulatedDuration}m</label>
                                     <input
                                         type="range" min="0" max="180" step="15"
                                         value={session.simulatedDuration}
@@ -157,25 +157,25 @@ export const ScenarioModellingTerminal = ({ scheduledSessions = [], loadRecords 
                             </button>
                         </div>
                     )) : (
-                        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No upcoming sessions found for {selectedSubject?.name}</p>
+                        <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">No upcoming sessions found for {selectedSubject?.name}</p>
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
-                    <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">7-Day ACWR Trajectory</h4>
+                <div className="lg:col-span-2 bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
+                    <h4 className="text-xl font-semibold uppercase tracking-tighter text-indigo-900">7-Day ACWR Trajectory</h4>
                     <div className="h-64 flex items-end justify-between px-6 border-b border-l border-indigo-50 relative pt-12">
-                        <div className="absolute top-4 right-0 p-2 bg-rose-50 border border-rose-100 rounded-lg text-[8px] font-black text-rose-600 uppercase">Risk Zone (&gt;1.5)</div>
+                        <div className="absolute top-4 right-0 p-2 bg-rose-50 border border-rose-100 rounded-lg text-[8px] font-semibold text-rose-600 uppercase">Risk Zone (&gt;1.5)</div>
                         {projection.map((point, i) => {
                             const h = Math.min(point.acwr * 60, 200);
                             return (
                                 <div key={i} className="flex flex-col items-center gap-2 group relative">
                                     <div className={`w-8 rounded-t-lg transition-all ${point.acwr > 1.5 ? 'bg-rose-500' : point.acwr > 1.3 ? 'bg-amber-500' : 'bg-indigo-500'}`} style={{ height: `${h}px` }}></div>
-                                    <div className="text-[8px] font-black text-slate-400">D+{point.day}</div>
-                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded transition-all z-10">
+                                    <div className="text-[8px] font-semibold text-slate-400">D+{point.day}</div>
+                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded transition-all z-10">
                                         {point.acwr.toFixed(2)}
                                     </div>
                                 </div>
@@ -184,12 +184,12 @@ export const ScenarioModellingTerminal = ({ scheduledSessions = [], loadRecords 
                     </div>
                 </div>
 
-                <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm flex flex-col justify-between">
+                <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm flex flex-col justify-between">
                     <div className="space-y-6">
-                        <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">Risk Assessment</h4>
+                        <h4 className="text-xl font-semibold uppercase tracking-tighter text-indigo-900">Risk Assessment</h4>
                         <div className="text-center py-8">
-                            <div className={`text-5xl font-black uppercase ${riskColor} tracking-tighter`}>{riskLevel}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Overall Rating</div>
+                            <div className={`text-5xl font-semibold uppercase ${riskColor} tracking-tighter`}>{riskLevel}</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-2">Overall Rating</div>
                         </div>
 
                         <div className="space-y-4">
@@ -204,9 +204,9 @@ export const ScenarioModellingTerminal = ({ scheduledSessions = [], loadRecords 
                         </div>
                     </div>
 
-                    <div className="mt-8 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                    <div className="mt-8 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
                         <p className="text-[10px] font-bold text-indigo-700 uppercase leading-relaxed">
-                            <span className="font-black text-indigo-900">Logic:</span> {
+                            <span className="font-semibold text-indigo-900">Logic:</span> {
                                 riskLevel === 'High' ? "Critical load spike predicted. High probability of overuse injury if cumulative fatigue is not managed." :
                                     riskLevel === 'Moderate' ? "Load is trending high. Ensure recovery protocols are prioritized to maintain readiness." :
                                         "Planned output is aligned with athlete capacity. Projecting positive adaptation."

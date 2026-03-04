@@ -92,7 +92,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                 {/* Range inputs — only editable for new scale type */}
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Starting Number</label>
+                        <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Starting Number</label>
                         <input
                             type="number"
                             min={0}
@@ -103,11 +103,11 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max(0, parseInt(e.target.value) || 0), (q.scaleMax ?? 10) - 1);
                                 update({ scaleMin: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-black text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                     <div>
-                        <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Ending Number</label>
+                        <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Ending Number</label>
                         <input
                             type="number"
                             min={1}
@@ -118,7 +118,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max((q.scaleMin ?? 0) + 1, parseInt(e.target.value) || 10), 20);
                                 update({ scaleMax: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-black text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -131,14 +131,14 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
 
                 {/* Live preview strip */}
                 <div>
-                    <label className="text-[9px] font-black uppercase text-slate-400 mb-2 block">
+                    <label className="text-[9px] font-semibold uppercase text-slate-400 mb-2 block">
                         Preview — {displayMax - displayMin + 1} steps
                     </label>
                     <div className="flex flex-wrap gap-1.5">
                         {Array.from({ length: displayMax - displayMin + 1 }, (_, i) => displayMin + i).map(n => (
                             <span
                                 key={n}
-                                className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-black flex items-center justify-center"
+                                className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-semibold flex items-center justify-center"
                             >
                                 {n}
                             </span>
@@ -149,7 +149,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                 {/* Min / Max labels */}
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">
+                        <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">
                             Min Label <span className="text-slate-300">(optional)</span>
                         </label>
                         <input
@@ -161,7 +161,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                         />
                     </div>
                     <div>
-                        <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">
+                        <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">
                             Max Label <span className="text-slate-300">(optional)</span>
                         </label>
                         <input
@@ -182,13 +182,13 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                    <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">
                         Options <span className="text-cyan-500">+ Numeric Values</span>
                     </label>
                     <button
                         type="button"
                         onClick={addOption}
-                        className="flex items-center gap-1 text-[9px] font-black uppercase text-cyan-600 hover:text-cyan-700 transition-colors"
+                        className="flex items-center gap-1 text-[9px] font-semibold uppercase text-cyan-600 hover:text-cyan-700 transition-colors"
                     >
                         <Plus size={12} /> Add Option
                     </button>
@@ -205,13 +205,13 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-cyan-400 transition-colors"
                             />
                             <div className="flex items-center gap-1 shrink-0">
-                                <span className="text-[9px] font-black text-slate-300 uppercase">=</span>
+                                <span className="text-[9px] font-semibold text-slate-300 uppercase">=</span>
                                 <input
                                     type="number"
                                     value={q.numericMap?.[oi] ?? ''}
                                     onChange={e => updateNumericMap(oi, e.target.value)}
                                     placeholder="val"
-                                    className="w-14 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-xs font-black text-slate-700 outline-none focus:border-cyan-400 transition-colors text-center"
+                                    className="w-14 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors text-center"
                                 />
                             </div>
                             <button
@@ -237,11 +237,11 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Checkbox Options</label>
+                    <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Checkbox Options</label>
                     <button
                         type="button"
                         onClick={addOption}
-                        className="flex items-center gap-1 text-[9px] font-black uppercase text-cyan-600 hover:text-cyan-700 transition-colors"
+                        className="flex items-center gap-1 text-[9px] font-semibold uppercase text-cyan-600 hover:text-cyan-700 transition-colors"
                     >
                         <Plus size={12} /> Add Option
                     </button>
@@ -276,8 +276,8 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
     if (q.type === 'yes_no') {
         return (
             <div className="mt-4 flex items-center gap-3">
-                <span className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg text-xs font-black text-emerald-600">Yes</span>
-                <span className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-lg text-xs font-black text-rose-500">No</span>
+                <span className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg text-xs font-semibold text-emerald-600">Yes</span>
+                <span className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-lg text-xs font-semibold text-rose-500">No</span>
                 <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wide">Auto-generated</span>
             </div>
         );
@@ -364,27 +364,27 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
         <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Questionnaire Templates</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Build and manage athlete survey structures</p>
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">Questionnaire Templates</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">Build and manage athlete survey structures</p>
                 </div>
                 <button
                     type="button"
                     onClick={() => { setSelectedTemplate(null); setNewQuestTitle(''); setNewQuestQuestions([]); setViewMode('create'); }}
-                    className="px-6 py-2.5 bg-cyan-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-cyan-700 hover:scale-105 transition-all flex items-center gap-2"
+                    className="px-6 py-2.5 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-700 hover:scale-105 transition-all flex items-center gap-2"
                 >
                     <Plus size={16} /> New Template
                 </button>
             </div>
 
             {wellnessTemplates.length === 0 ? (
-                <div className="p-16 border-2 border-dashed border-slate-200 rounded-3xl text-center bg-slate-50/50">
+                <div className="p-16 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
                     <ClipboardCheck size={40} className="mx-auto text-slate-200 mb-4" />
-                    <p className="text-slate-400 text-sm font-black uppercase tracking-widest mb-2">No templates yet</p>
+                    <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide mb-2">No templates yet</p>
                     <p className="text-slate-300 text-xs font-bold mb-6">Create your first questionnaire or load the default daily wellness template.</p>
                     <button
                         type="button"
                         onClick={() => { setNewQuestTitle('Daily Wellness Check'); setNewQuestQuestions([...DEFAULT_WELLNESS_QUESTIONS]); setViewMode('create'); }}
-                        className="px-6 py-3 bg-cyan-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-cyan-700 transition-all"
+                        className="px-6 py-3 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide hover:bg-cyan-700 transition-all"
                     >
                         Load Default Wellness Template
                     </button>
@@ -392,13 +392,13 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {wellnessTemplates.map((t: any) => (
-                        <div key={t.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                        <div key={t.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
                             <div className="space-y-4">
-                                <div className="w-12 h-12 bg-cyan-50 rounded-2xl flex items-center justify-center text-cyan-600 mb-2">
+                                <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-600 mb-2">
                                     <ClipboardCheck size={24} />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-black text-slate-900 leading-tight mb-1">{t.title || t.name}</h4>
+                                    <h4 className="text-lg font-semibold text-slate-900 leading-tight mb-1">{t.title || t.name}</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">{t.questions?.length || 0} Questions • {t.status || 'Active'}</p>
                                 </div>
 
@@ -409,7 +409,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                         .map(type => {
                                             const meta = QUESTION_TYPES.find(qt => qt.value === type);
                                             return (
-                                                <span key={type} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-black text-slate-400 uppercase">
+                                                <span key={type} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-semibold text-slate-400 uppercase">
                                                     {TYPE_ICONS[type]} {meta?.label}
                                                 </span>
                                             );
@@ -425,7 +425,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                             setNewQuestQuestions(t.questions || []);
                                             setViewMode('create');
                                         }}
-                                        className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-black uppercase hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
+                                        className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
                                     >
                                         <Pencil size={12} /> Edit
                                     </button>
@@ -451,17 +451,17 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
                 <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900">
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">
                         {selectedTemplate ? 'Edit Template' : 'New Template'}
                     </h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">
                         {newQuestQuestions.length} question{newQuestQuestions.length !== 1 ? 's' : ''} added
                     </p>
                 </div>
                 <button
                     type="button"
                     onClick={() => { setViewMode('list'); setSelectedTemplate(null); }}
-                    className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
+                    className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-semibold uppercase hover:bg-slate-200 transition-all"
                 >
                     Cancel
                 </button>
@@ -469,7 +469,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
 
             {/* Title */}
             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400">Template Title</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400">Template Title</label>
                 <input
                     type="text"
                     value={newQuestTitle}
@@ -481,15 +481,15 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
 
             {/* Question list */}
             <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase text-slate-400">Questions</h4>
+                <h4 className="text-[10px] font-semibold uppercase text-slate-400">Questions</h4>
 
                 {newQuestQuestions.length === 0 ? (
-                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50">
+                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
                         <p className="text-slate-400 text-sm font-bold mb-4">No questions added yet.</p>
                         <button
                             type="button"
                             onClick={applyWellnessTemplate}
-                            className="text-cyan-600 text-[10px] font-black uppercase hover:underline"
+                            className="text-cyan-600 text-[10px] font-semibold uppercase hover:underline"
                         >
                             Load Default "Daily Wellness" Template
                         </button>
@@ -499,11 +499,11 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                         {newQuestQuestions.map((q, i) => (
                             <div
                                 key={q.id || i}
-                                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm group transition-all hover:border-cyan-200 hover:shadow-md"
+                                className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm group transition-all hover:border-cyan-200 hover:shadow-md"
                             >
                                 {/* Question header */}
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0 mt-1">
+                                    <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] font-semibold text-slate-400 shrink-0 mt-1">
                                         {i + 1}
                                     </div>
                                     <div className="flex-1 space-y-4">
@@ -523,7 +523,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                         {/* Type + Required row */}
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Input Type</label>
+                                                <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Input Type</label>
                                                 <select
                                                     value={q.type}
                                                     onChange={e => {
@@ -547,7 +547,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Category</label>
+                                                <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Category</label>
                                                 <select
                                                     value={q.category || 'wellness'}
                                                     onChange={e => {
@@ -577,7 +577,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                 }}
                                                 className="w-4 h-4 rounded border-slate-300 accent-cyan-600"
                                             />
-                                            <span className="text-[10px] font-black uppercase text-slate-400">Required</span>
+                                            <span className="text-[10px] font-semibold uppercase text-slate-400">Required</span>
                                         </label>
 
                                         {/* Per-type config */}
@@ -605,8 +605,8 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             </div>
 
             {/* Add Question toolbar */}
-            <div className="bg-slate-900 p-4 rounded-2xl flex flex-wrap items-center gap-2 shadow-xl">
-                <span className="text-[10px] font-black uppercase text-slate-500 pl-1 mr-2">Add Question:</span>
+            <div className="bg-slate-900 p-4 rounded-xl flex flex-wrap items-center gap-2 shadow-xl">
+                <span className="text-[10px] font-semibold uppercase text-slate-500 pl-1 mr-2">Add Question:</span>
                 {[
                     { type: 'scale',           label: 'Scale',        icon: <BarChart3 size={13} /> },
                     { type: 'multiple_choice', label: 'Choice',       icon: <List size={13} /> },
@@ -631,7 +631,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                 type="button"
                 onClick={handleSaveTemplate}
                 disabled={loading || !newQuestTitle || newQuestQuestions.length === 0}
-                className="w-full py-4 bg-cyan-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-cyan-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-cyan-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 {loading ? 'Saving...' : (selectedTemplate ? 'Save Changes' : 'Create Template')}
             </button>

@@ -27,7 +27,7 @@ const COLUMN_DEFS = [
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 const Chip = ({ label, cls }: { label: string; cls: string }) => (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
         {label}
     </span>
 );
@@ -45,8 +45,8 @@ const renderCell = (key: string, val: any) => {
     switch (key) {
         case 'injuryStatus':
             return val === 'Injured'
-                ? <span className="flex items-center gap-1.5 text-rose-600 font-black text-[11px]"><ShieldAlert size={13} /> Injured</span>
-                : <span className="flex items-center gap-1.5 text-emerald-600 font-black text-[11px]"><Shield size={13} /> Clear</span>;
+                ? <span className="flex items-center gap-1.5 text-rose-600 font-semibold text-[11px]"><ShieldAlert size={13} /> Injured</span>
+                : <span className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[11px]"><Shield size={13} /> Clear</span>;
 
         case 'availability':
             const avMap: Record<string, string> = {
@@ -75,10 +75,10 @@ const renderCell = (key: string, val: any) => {
         }
 
         case 'hamstring':
-            return <span className="text-slate-700 text-xs font-black">{parseFloat(val).toFixed(2)}</span>;
+            return <span className="text-slate-700 text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
 
         case 'oneRM':
-            return <span className="text-slate-700 text-xs font-black">{val} kg</span>;
+            return <span className="text-slate-700 text-xs font-semibold">{val} kg</span>;
 
         case 'dsi': {
             const cls = parseFloat(val) > 1.0 ? 'bg-rose-100 text-rose-700'
@@ -91,7 +91,7 @@ const renderCell = (key: string, val: any) => {
             return <span className="text-slate-600 text-xs font-bold">{val}</span>;
 
         case 'rsi':
-            return <span className="text-slate-700 text-xs font-black">{parseFloat(val).toFixed(2)}</span>;
+            return <span className="text-slate-700 text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
 
         case 'hamstringDate':
         case 'oneRMDate':
@@ -224,13 +224,13 @@ export const DataHub = () => {
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+        <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm space-y-6">
 
             {/* Header row */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
                 <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Athlete Data Hub</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">Athlete Data Hub</h3>
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
                         {filtered.length} athletes · {visibleCols.length + 1} columns visible
                     </p>
                 </div>
@@ -261,15 +261,15 @@ export const DataHub = () => {
                     <div className="relative">
                         <button
                             onClick={() => setShowColPanel(p => !p)}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-black text-slate-600 uppercase hover:bg-slate-200 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 uppercase hover:bg-slate-200 transition-colors"
                         >
                             <ColumnsIcon size={13} /> Columns
                         </button>
 
                         {showColPanel && (
-                            <div className="absolute right-0 top-11 z-50 bg-white border border-slate-100 rounded-2xl shadow-2xl p-4 w-56 space-y-1.5">
+                            <div className="absolute right-0 top-11 z-50 bg-white border border-slate-100 rounded-xl shadow-2xl p-4 w-56 space-y-1.5">
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Toggle Columns</span>
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Toggle Columns</span>
                                     <button onClick={() => setShowColPanel(false)}><X size={14} className="text-slate-400 hover:text-slate-700" /></button>
                                 </div>
                                 {COLUMN_DEFS.map(col => (
@@ -290,7 +290,7 @@ export const DataHub = () => {
                     {/* Export */}
                     <button
                         onClick={handleExportCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 rounded-xl text-[11px] font-black text-white uppercase shadow-lg shadow-slate-200 hover:bg-black transition-all active:scale-95"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 rounded-xl text-[11px] font-semibold text-white uppercase shadow-lg shadow-slate-200 hover:bg-black transition-all active:scale-95"
                     >
                         <DownloadIcon size={13} /> Export CSV
                     </button>
@@ -317,14 +317,14 @@ export const DataHub = () => {
                         <thead>
                             <tr className="bg-slate-900 text-white">
                                 {/* Athlete — always first, sticky */}
-                                <th className="p-4 text-[9px] font-black uppercase tracking-[0.15em] whitespace-nowrap sticky left-0 bg-slate-900 z-10">
+                                <th className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] whitespace-nowrap sticky left-0 bg-slate-900 z-10">
                                     Athlete
                                 </th>
                                 {visibleCols.map(col => (
                                     <th
                                         key={col.key}
                                         onClick={() => handleSort(col.key)}
-                                        className="p-4 text-[9px] font-black uppercase tracking-[0.15em] cursor-pointer select-none whitespace-nowrap hover:bg-slate-800 transition-colors"
+                                        className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] cursor-pointer select-none whitespace-nowrap hover:bg-slate-800 transition-colors"
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
@@ -341,7 +341,7 @@ export const DataHub = () => {
                             {filtered.length > 0 ? filtered.map((row, i) => (
                                 <tr key={row.id || i} className="hover:bg-slate-50 transition-colors group">
                                     <td className="p-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r border-slate-100">
-                                        <span className="text-sm font-black text-slate-900">{row.name}</span>
+                                        <span className="text-sm font-semibold text-slate-900">{row.name}</span>
                                     </td>
                                     {visibleCols.map(col => (
                                         <td key={col.key} className="p-4 whitespace-nowrap">
@@ -352,7 +352,7 @@ export const DataHub = () => {
                             )) : (
                                 <tr>
                                     <td colSpan={1 + visibleCols.length} className="p-16 text-center">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
                                             {allRows.length === 0
                                                 ? 'No athletes found. Add athletes via the Squads page.'
                                                 : 'No results match your search or filter.'}
@@ -367,14 +367,14 @@ export const DataHub = () => {
 
             {/* Legend */}
             <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest w-full">ACWR Legend</p>
+                <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-wide w-full">ACWR Legend</p>
                 {[
                     { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 text-indigo-700' },
                     { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 text-emerald-700' },
                     { label: '1.3–1.5 — Caution',   cls: 'bg-rose-100 text-rose-700' },
                     { label: '> 1.5 — Danger',       cls: 'bg-rose-600 text-white' },
                 ].map(l => (
-                    <span key={l.label} className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase ${l.cls}`}>{l.label}</span>
+                    <span key={l.label} className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase ${l.cls}`}>{l.label}</span>
                 ))}
             </div>
         </div>

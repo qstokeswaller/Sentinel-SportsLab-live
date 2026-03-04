@@ -48,25 +48,25 @@ export const KpiTerminal = ({ kpiData, selectedAthlete }) => {
                 const isStable = Math.abs(slope) < 0.1;
 
                 return (
-                    <div key={kpi.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-md group">
+                    <div key={kpi.id} className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md group">
                         <div className="flex justify-between items-start mb-6">
-                            <div className={`p-3 rounded-2xl ${isStable ? 'bg-slate-50 text-slate-400' : isPositiveTrend ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
+                            <div className={`p-3 rounded-xl ${isStable ? 'bg-slate-50 text-slate-400' : isPositiveTrend ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
                                 {isStable ? <MinusIcon size={20} /> : isPositiveTrend ? <TrendingUpIcon size={20} /> : <TrendingDownIcon size={20} />}
                             </div>
                             <PulseGraph values={kpi.history} color={isStable ? 'bg-slate-400' : isPositiveTrend ? 'bg-emerald-500' : 'bg-rose-500'} />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{kpi.label}</div>
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{kpi.label}</div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-black text-slate-900">{kpi.value}</span>
-                                <span className="text-[10px] font-black text-slate-400">{kpi.unit}</span>
+                                <span className="text-3xl font-semibold text-slate-900">{kpi.value}</span>
+                                <span className="text-[10px] font-semibold text-slate-400">{kpi.unit}</span>
                             </div>
                         </div>
 
                         <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                            <span className="text-[8px] font-black text-slate-400 uppercase">7-Day Momentum</span>
-                            <span className={`text-[8px] font-black uppercase ${isStable ? 'text-slate-400' : isPositiveTrend ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            <span className="text-[8px] font-semibold text-slate-400 uppercase">7-Day Momentum</span>
+                            <span className={`text-[8px] font-semibold uppercase ${isStable ? 'text-slate-400' : isPositiveTrend ? 'text-emerald-500' : 'text-rose-500'}`}>
                                 {isStable ? 'Neutral' : isPositiveTrend ? '+ Improvement' : '- Regression'}
                             </span>
                         </div>

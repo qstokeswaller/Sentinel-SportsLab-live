@@ -176,7 +176,7 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
             return (
                 <div className="h-44 flex flex-col items-center justify-center gap-2 bg-slate-50/30">
                     <BarChart3 size={28} className="text-slate-200" />
-                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                    <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-wide">
                         No data for this period
                     </p>
                 </div>
@@ -287,7 +287,7 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                 return (
                     <div className="h-44 flex flex-col items-center justify-center gap-2 bg-amber-50/30 px-6">
                         <BarChart3 size={22} className="text-amber-300" />
-                        <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest text-center leading-relaxed">
+                        <p className="text-[9px] font-semibold text-amber-400 uppercase tracking-wide text-center leading-relaxed">
                             No comparison question set.<br />Edit this template to configure.
                         </p>
                     </div>
@@ -317,27 +317,27 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
 
     // ── Card ─────────────────────────────────────────────────────────────────
     return (
-        <div className="bg-white rounded-3xl border-2 border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden">
             {/* Header */}
             <div className="p-5 border-b border-slate-50">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-slate-900 leading-tight">
+                        <p className="text-xs font-semibold text-slate-900 leading-tight">
                             {question.text || 'Unnamed question'}
                         </p>
                         {question.templateName && (
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">
                                 {question.templateName}
                             </p>
                         )}
                     </div>
-                    <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-black text-slate-400 uppercase shrink-0">
+                    <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-semibold text-slate-400 uppercase shrink-0">
                         {question.visualization?.aggregation || 'daily'}
                     </span>
                 </div>
                 <div className="mt-2 flex items-center gap-1.5">
                     {CHART_ICON[chartType]}
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
                         {CHART_LABEL[chartType] || chartType}
                     </span>
                     {chartType === 'vs_bar' && vsResult.compareQ && (

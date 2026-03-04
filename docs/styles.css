@@ -1,10 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-/* trainerOS - Custom Styles */
+/* trainerOS - Design Tokens */
+:root {
+  --brand: 99 102 241;        /* indigo-500 */
+  --brand-dark: 67 56 202;    /* indigo-700 */
+  --surface: 255 255 255;
+  --bg: 248 250 252;          /* slate-50 */
+  --border: 226 232 240;      /* slate-200 */
+  --text-primary: 15 23 42;   /* slate-900 */
+  --text-secondary: 100 116 139; /* slate-500 */
+}
 
+/* trainerOS - Base Styles */
 body {
     font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .no-scrollbar::-webkit-scrollbar {

@@ -49,15 +49,16 @@ const PublicWellnessForm: React.FC = () => {
         if (!selectedAthleteId || !template) return;
         setSubmitting(true);
         try {
+            const validAvailability = ['available', 'modified', 'unavailable'].includes(responses['availability'])
+                ? responses['availability'] : undefined;
             await DatabaseService.saveWellnessResponse({
                 athlete_id: selectedAthleteId,
                 team_id: teamId!,
                 questionnaire_template_id: templateId,
                 session_date: new Date().toISOString().split('T')[0],
                 responses,
-                // Extract RPE and Availability to top level if they exist in responses
-                rpe: responses['rpe'],
-                availability: responses['availability'],
+                rpe: typeof responses['rpe'] === 'number' ? responses['rpe'] : undefined,
+                availability: validAvailability,
                 injury_report: responses['body_map'] ? { areas: responses['body_map'] } : undefined
             });
             setSubmitted(true);
@@ -176,69 +177,109 @@ const PublicWellnessForm: React.FC = () => {
                                     <h2 className="text-2xl font-black text-slate-900 mb-8 leading-tight">{q.text}</h2>
 
                                     {/* Question Inputs */}
-                                    {q.type === 'scale' ? (() => {
-                                        const min = q.scaleMin ?? 0;
-                                        const max = q.scaleMax ?? 10;
-                                        const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-                                        const useGrid = steps.length > 6;
-                                        return (
-                                            <div>
-                                                {(q.labels?.[0] || q.labels?.[1]) && (
-                                                    <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
-                                                        <span>{q.labels[0]}</span>
-                                                        <span>{q.labels[1]}</span>
+                                    {(() => {
+                                        // Resolve scale range: explicit 'scale' type uses scaleMin/scaleMax;
+                                        // 'scale_N_N' pattern parses range from type name
+                                        const scaleMatch = q.type.match(/^scale_(\d+)_(\d+)$/);
+                                        const isNumericScale = q.type === 'scale' || !!scaleMatch;
+
+                                        if (isNumericScale) {
+                                            const min = scaleMatch ? parseInt(scaleMatch[1]) : (q.scaleMin ?? 0);
+                                            const max = scaleMatch ? parseInt(scaleMatch[2]) : (q.scaleMax ?? 10);
+                                            const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+                                            const useGrid = steps.length > 6;
+                                            return (
+                                                <div>
+                                                    {(q.labels?.[0] || q.labels?.[1]) && (
+                                                        <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                                                            <span>{q.labels[0]}</span>
+                                                            <span>{q.labels[1]}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
+                                                        {steps.map(val => {
+                                                            const isSelected = responses[q.id] === val;
+                                                            return (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setResponses({ ...responses, [q.id]: val })}
+                                                                    className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${isSelected
+                                                                        ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                        : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                    }`}
+                                                                >
+                                                                    {val}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
-                                                )}
-                                                <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
-                                                    {steps.map(val => {
-                                                        const isSelected = responses[q.id] === val;
+                                                </div>
+                                            );
+                                        }
+
+                                        if (q.type === 'yes_no') {
+                                            return (
+                                                <div className="flex flex-col gap-3">
+                                                    {['Yes', 'No'].map(opt => {
+                                                        const isSelected = responses[q.id] === opt;
                                                         return (
                                                             <button
-                                                                key={val}
+                                                                key={opt}
                                                                 type="button"
-                                                                onClick={() => setResponses({ ...responses, [q.id]: val })}
-                                                                className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${isSelected
+                                                                onClick={() => setResponses({ ...responses, [q.id]: opt })}
+                                                                className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
                                                                     ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
                                                                     : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
                                                                 }`}
                                                             >
-                                                                {val}
+                                                                {opt}
                                                             </button>
                                                         );
                                                     })}
                                                 </div>
-                                            </div>
+                                            );
+                                        }
+
+                                        if (q.type === 'multiple_choice') {
+                                            return (
+                                                <div className="space-y-3">
+                                                    {(q.options || []).map((opt: any, idx: number) => {
+                                                        const val = q.numericMap ? q.numericMap[idx] : opt;
+                                                        const isSelected = responses[q.id] === val;
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                type="button"
+                                                                onClick={() => setResponses({ ...responses, [q.id]: val })}
+                                                                className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
+                                                                    ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                    : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                }`}
+                                                            >
+                                                                {opt}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        }
+
+                                        if (q.type === 'body_map') {
+                                            return (
+                                                <BodyMapSelector
+                                                    value={responses[q.id] || []}
+                                                    onChange={(val) => setResponses({ ...responses, [q.id]: val })}
+                                                />
+                                            );
+                                        }
+
+                                        return (
+                                            <p className="text-center p-8 bg-slate-100 rounded-2xl text-slate-400 font-bold">
+                                                {q.type} input not yet implemented
+                                            </p>
                                         );
-                                    })() : q.type === 'scale_1_5' || q.type === 'scale_1_10' || q.type === 'multiple_choice' ? (
-                                        <div className="space-y-3">
-                                            {(q.options || ['1', '2', '3', '4', '5']).map((opt: any, idx: number) => {
-                                                const val = q.numericMap ? q.numericMap[idx] : opt;
-                                                const isSelected = responses[q.id] === val;
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        type="button"
-                                                        onClick={() => setResponses({ ...responses, [q.id]: val })}
-                                                        className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
-                                                                ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                                                            }`}
-                                                    >
-                                                        {opt}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : q.type === 'body_map' ? (
-                                        <BodyMapSelector
-                                            value={responses[q.id] || []}
-                                            onChange={(val) => setResponses({ ...responses, [q.id]: val })}
-                                        />
-                                    ) : (
-                                        <p className="text-center p-8 bg-slate-100 rounded-2xl text-slate-400 font-bold">
-                                            {q.type} input not yet implemented
-                                        </p>
-                                    )}
+                                    })()}
                                 </div>
                             );
                         })()}
@@ -261,7 +302,7 @@ const PublicWellnessForm: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleNext}
-                            disabled={currentStep === 0 ? !selectedAthleteId : !responses[questions[currentStep - 1]?.id]}
+                            disabled={currentStep === 0 ? !selectedAthleteId : responses[questions[currentStep - 1]?.id] === undefined || responses[questions[currentStep - 1]?.id] === null || responses[questions[currentStep - 1]?.id] === ''}
                             className="flex-1 py-4 bg-cyan-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-cyan-200 disabled:opacity-50 disabled:grayscale transition-all active:scale-[0.98]"
                         >
                             <div className="flex items-center justify-center gap-2">

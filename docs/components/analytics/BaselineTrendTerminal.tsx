@@ -85,50 +85,50 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm space-y-4">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Daily Load Baseline</div>
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Daily Load Baseline</div>
                     <div className="flex items-baseline justify-between">
-                        <div className="text-4xl font-black text-indigo-900">{loadBaseline.toFixed(0)}</div>
-                        <div className={`text-xs font-black ${loadDeviation > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        <div className="text-4xl font-semibold text-indigo-900">{loadBaseline.toFixed(0)}</div>
+                        <div className={`text-xs font-semibold ${loadDeviation > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                             {loadDeviation > 0 ? '+' : ''}{loadDeviation.toFixed(1)}%
                         </div>
                     </div>
-                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase text-center ${getStatusColor(loadTrend, loadVolatility)}`}>
+                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-semibold uppercase text-center ${getStatusColor(loadTrend, loadVolatility)}`}>
                         {loadVolatility ? 'Volatile' : `Trend: ${loadTrend}`}
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm space-y-4">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Wellness Baseline</div>
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Wellness Baseline</div>
                     <div className="flex items-baseline justify-between">
-                        <div className="text-4xl font-black text-indigo-900">{wellnessBaseline.toFixed(1)}</div>
-                        <div className={`text-xs font-black ${wellnessDeviation < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        <div className="text-4xl font-semibold text-indigo-900">{wellnessBaseline.toFixed(1)}</div>
+                        <div className={`text-xs font-semibold ${wellnessDeviation < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                             {wellnessDeviation > 0 ? '+' : ''}{wellnessDeviation.toFixed(1)}%
                         </div>
                     </div>
-                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase text-center ${getStatusColor(wellnessTrend, wellnessVolatility, true)}`}>
+                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-semibold uppercase text-center ${getStatusColor(wellnessTrend, wellnessVolatility, true)}`}>
                         {wellnessVolatility ? 'Volatile' : `Trend: ${wellnessTrend}`}
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm space-y-4">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Current ACWR</div>
-                    <div className="text-4xl font-black text-indigo-900">{currentACWR.toFixed(2)}</div>
-                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase text-center ${currentACWR > 1.5 ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Current ACWR</div>
+                    <div className="text-4xl font-semibold text-indigo-900">{currentACWR.toFixed(2)}</div>
+                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-semibold uppercase text-center ${currentACWR > 1.5 ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
                         Status: {currentACWR > 1.5 ? 'CRITICAL' : 'OPTIMAL'}
                     </div>
                 </div>
 
-                <div className="bg-indigo-900 p-8 rounded-[3rem] shadow-xl space-y-4 text-white">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-300 italic">Diagnostic Summary</div>
-                    <div className={`text-2xl font-black uppercase tracking-tighter leading-tight ${riskColor}`}>{riskState}</div>
+                <div className="bg-indigo-900 p-8 rounded-xl shadow-xl space-y-4 text-white">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-300 italic">Diagnostic Summary</div>
+                    <div className={`text-2xl font-semibold uppercase tracking-tighter leading-tight ${riskColor}`}>{riskState}</div>
                     <p className="text-[10px] font-bold text-indigo-200 uppercase leading-relaxed">System detecting {riskState.toLowerCase()} pattern based on multi-variate baseline deviation.</p>
                 </div>
             </div>
 
-            <div className="bg-white p-10 rounded-[3rem] border border-indigo-100 shadow-sm space-y-8">
+            <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
                 <div className="flex justify-between items-center">
-                    <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">Baseline vs. Current Volatility</h4>
+                    <h4 className="text-xl font-semibold uppercase tracking-tighter text-indigo-900">Baseline vs. Current Volatility</h4>
                     <div className="flex gap-4">
                         <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-indigo-400">
                             <div className="w-3 h-3 bg-indigo-500 rounded-full"></div> Load
@@ -149,7 +149,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                                     <div className="w-3 bg-indigo-500 rounded-t-sm opacity-80" style={{ height: `${hL}px` }}></div>
                                     <div className="w-3 bg-cyan-400 rounded-t-sm opacity-80" style={{ height: `${hH}px` }}></div>
                                 </div>
-                                <div className="text-[8px] font-black text-slate-300">{l.date.split('-')[2]}</div>
+                                <div className="text-[8px] font-semibold text-slate-300">{l.date.split('-')[2]}</div>
                             </div>
                         );
                     })}

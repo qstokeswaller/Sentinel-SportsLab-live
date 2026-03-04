@@ -128,10 +128,10 @@ const ExRow = ({
     'w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-indigo-400 transition-colors';
 
   return (
-    <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden">
+    <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
-        <span className="w-6 h-6 bg-slate-900 text-white rounded-md flex items-center justify-center text-[10px] font-black shrink-0">
+        <span className="w-6 h-6 bg-slate-900 text-white rounded-md flex items-center justify-center text-[10px] font-semibold shrink-0">
           {letter}
         </span>
         <span className="flex-1 text-sm font-bold text-slate-800 truncate">{row.exerciseName}</span>
@@ -149,43 +149,43 @@ const ExRow = ({
       {/* Fields row */}
       <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 px-4 py-3">
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Sets</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sets</label>
           <input className={inputCls} placeholder="3" value={row.sets} onChange={(e) => upd('sets', e.target.value)} />
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Reps</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Reps</label>
           <input className={inputCls} placeholder="8-12" value={row.reps} onChange={(e) => upd('reps', e.target.value)} />
         </div>
         <div className="flex gap-1">
           <div className="flex-1">
-            <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Rest Min</label>
+            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Rest Min</label>
             <input type="number" min={0} className={inputCls} value={row.rest_min}
               onChange={(e) => upd('rest_min', parseInt(e.target.value) || 0)} />
           </div>
           <div className="flex-1">
-            <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Sec</label>
+            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sec</label>
             <input type="number" min={0} max={59} className={inputCls} value={row.rest_sec}
               onChange={(e) => upd('rest_sec', parseInt(e.target.value) || 0)} />
           </div>
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">RIR</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">RIR</label>
           <input className={inputCls} placeholder="2" value={row.rir} onChange={(e) => upd('rir', e.target.value)} />
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">RPE</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">RPE</label>
           <input className={inputCls} placeholder="8" value={row.rpe} onChange={(e) => upd('rpe', e.target.value)} />
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Intensity</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Intensity</label>
           <input className={inputCls} placeholder="75%" value={row.intensity} onChange={(e) => upd('intensity', e.target.value)} />
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Tempo</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Tempo</label>
           <input className={inputCls} placeholder="3-1-2" value={row.tempo} onChange={(e) => upd('tempo', e.target.value)} />
         </div>
         <div className="col-span-4 lg:col-span-8">
-          <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Notes</label>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Notes</label>
           <input className={inputCls} placeholder="e.g. Full ROM, control the eccentric" value={row.notes}
             onChange={(e) => upd('notes', e.target.value)} />
         </div>
@@ -435,14 +435,14 @@ export const ProgramBuilderModal = ({
               <ArrowLeftIcon size={18} /> Back
             </button>
             <div className="h-5 w-px bg-slate-200" />
-            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+            <h2 className="text-lg font-semibold text-slate-900 uppercase tracking-tight">
               {editingProgram ? 'Edit Program' : 'Create a Program'}
             </h2>
           </div>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
           >
             <SaveIcon size={16} />
             {saving ? 'Saving...' : 'Save & Close'}
@@ -455,7 +455,7 @@ export const ProgramBuilderModal = ({
             {/* Program meta */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Program Name *</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Name *</label>
                 <input
                   value={programName}
                   onChange={(e) => setProgramName(e.target.value)}
@@ -464,7 +464,7 @@ export const ProgramBuilderModal = ({
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Tags (comma separated)</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Tags (comma separated)</label>
                 <input
                   value={programTags}
                   onChange={(e) => setProgramTags(e.target.value)}
@@ -473,7 +473,7 @@ export const ProgramBuilderModal = ({
                 />
               </div>
               <div className="col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Program Overview</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Overview</label>
                 <textarea
                   value={programOverview}
                   onChange={(e) => setProgramOverview(e.target.value)}
@@ -491,13 +491,13 @@ export const ProgramBuilderModal = ({
             )}
 
             {/* Day tabs */}
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
               <div className="flex items-center gap-1 px-4 pt-3 border-b border-slate-200 overflow-x-auto no-scrollbar">
                 {days.map((d, i) => (
                   <button
                     key={d.tempId}
                     onClick={() => setActiveDayIdx(i)}
-                    className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-wider whitespace-nowrap rounded-t-xl transition-all border-b-2 ${
+                    className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-t-xl transition-all border-b-2 ${
                       activeDayIdx === i
                         ? 'border-indigo-600 text-indigo-600 bg-white'
                         : 'border-transparent text-slate-400 hover:text-slate-700'
@@ -540,11 +540,11 @@ export const ProgramBuilderModal = ({
                   {/* Volume Sets */}
                   {Object.keys(volume).length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      <span className="text-[9px] font-black uppercase text-slate-400 self-center tracking-widest mr-1">Total Volume Sets</span>
+                      <span className="text-[9px] font-semibold uppercase text-slate-400 self-center tracking-wide mr-1">Total Volume Sets</span>
                       {Object.entries(volume).map(([cat, sets]) => {
                         const color = VOLUME_COLORS[cat] ?? 'bg-slate-100 text-slate-600';
                         return (
-                          <span key={cat} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${color}`}>
+                          <span key={cat} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
                             {cat} {sets}
                           </span>
                         );
@@ -556,7 +556,7 @@ export const ProgramBuilderModal = ({
                   {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => (
                     <div key={sec} className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-500">{SECTION_LABELS[sec]}</h4>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{SECTION_LABELS[sec]}</h4>
                         <div className="flex-1 h-px bg-slate-200" />
                       </div>
 
@@ -574,7 +574,7 @@ export const ProgramBuilderModal = ({
                       {/* Add exercise button */}
                       <button
                         onClick={() => setActiveSection(sec)}
-                        className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest border-2 border-dashed transition-all ${
+                        className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wide border-2 border-dashed transition-all ${
                           activeSection === sec
                             ? 'border-indigo-400 text-indigo-500 bg-indigo-50'
                             : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
@@ -588,7 +588,7 @@ export const ProgramBuilderModal = ({
 
                   {/* Instructions */}
                   <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
+                    <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
                     <textarea
                       value={activeDay.instructions}
                       onChange={(e) => updateDay(activeDayIdx, 'instructions', e.target.value)}
@@ -607,7 +607,7 @@ export const ProgramBuilderModal = ({
       {/* ── Right Panel: Exercise Chooser ── */}
       <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden">
         <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
-          <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700">Choose Exercise</h3>
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Choose Exercise</h3>
 
           {/* Search */}
           <div className="relative">
@@ -636,17 +636,17 @@ export const ProgramBuilderModal = ({
 
           {/* Active section indicator */}
           <div className="bg-indigo-50 rounded-xl px-3 py-2">
-            <span className="text-[9px] font-black uppercase text-indigo-400 tracking-widest">Adding to: </span>
-            <span className="text-[9px] font-black uppercase text-indigo-700 tracking-widest">{SECTION_LABELS[activeSection]}</span>
+            <span className="text-[9px] font-semibold uppercase text-indigo-400 tracking-wide">Adding to: </span>
+            <span className="text-[9px] font-semibold uppercase text-indigo-700 tracking-wide">{SECTION_LABELS[activeSection]}</span>
           </div>
         </div>
 
         {/* Exercise list */}
         <div className="flex-1 overflow-y-auto">
           {exLoading ? (
-            <div className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading...</div>
+            <div className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">Loading...</div>
           ) : searchResults.length === 0 ? (
-            <div className="p-4 text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">No exercises found</div>
+            <div className="p-4 text-center text-[10px] font-bold text-slate-300 uppercase tracking-wide">No exercises found</div>
           ) : (
             searchResults.map((ex) => (
               <button

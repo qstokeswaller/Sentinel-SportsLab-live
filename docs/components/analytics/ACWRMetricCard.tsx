@@ -18,28 +18,28 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
     const status = ACWR_UTILS.getRatioStatus(acwrValue);
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                    <ActivityIcon size={20} />
+                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                    <ActivityIcon size={18} />
                 </div>
-                <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${status.color.replace('text-', 'bg-').replace('600', '100')} ${status.color}`}>
+                <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color.replace('text-', 'bg-').replace('600', '100')} ${status.color}`}>
                     {status.label}
                 </div>
             </div>
             <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Acute:Chronic Ratio</div>
-                <div className="text-3xl font-black text-slate-900">{acwrValue.toFixed(2)}</div>
+                <div className="text-xs font-medium text-slate-400 mb-1">Acute:Chronic Ratio</div>
+                <div className="text-3xl font-bold text-slate-900">{acwrValue.toFixed(2)}</div>
             </div>
-            <div className="pt-2 border-t border-slate-50">
-                <div className="flex justify-between items-end">
-                    <div className="bg-slate-100 h-1.5 flex-1 rounded-full overflow-hidden mr-4">
+            <div className="pt-2 border-t border-slate-100">
+                <div className="flex justify-between items-center">
+                    <div className="bg-slate-100 h-1.5 flex-1 rounded-full overflow-hidden mr-3">
                         <div
                             className={`h-full transition-all duration-1000 ${status.color.replace('text-', 'bg-')}`}
                             style={{ width: `${Math.min((acwrValue / 2) * 100, 100)}%` }}
                         ></div>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">2.0 Max</span>
+                    <span className="text-xs text-slate-400">2.0 max</span>
                 </div>
             </div>
         </div>

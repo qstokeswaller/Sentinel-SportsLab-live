@@ -2,15 +2,28 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
+import { useAuth } from '../../context/AuthContext';
 
-// Import icons commonly used
 import {
     ActivityIcon, LayoutDashboardIcon, CalendarIcon, UsersIcon, BookOpenIcon,
-    ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, PanelLeftIcon, PanelLeftCloseIcon
+    ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, ChevronLeftIcon, ChevronRightIcon,
+    SettingsIcon
 } from 'lucide-react';
+
+const NAV_ITEMS = [
+    { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon },
+    { id: 'periodization', label: 'Planner',           icon: CalendarIcon },
+    { id: 'clients',       label: 'Roster',            icon: UsersIcon },
+    { id: 'library',       label: 'Exercise Library',  icon: BookOpenIcon },
+    { id: 'conditioning',  label: 'Conditioning Hub',  icon: ZapIcon },
+    { id: 'analytics',     label: 'Analytics Hub',     icon: BarChart3Icon },
+    { id: 'reports',       label: 'Reporting Hub',     icon: FileIcon },
+    { id: 'lab',           label: 'Performance Lab',   icon: FlaskConicalIcon },
+];
 
 export const Sidebar = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const {
         isSidebarCollapsed,
         setIsSidebarCollapsed,
@@ -21,56 +34,96 @@ export const Sidebar = () => {
         setActiveConditioningModule
     } = useAppState();
 
+    const collapsed = isSidebarCollapsed;
+    const displayName = user?.user_metadata?.full_name || user?.email || '';
+    const userInitial = displayName[0]?.toUpperCase() ?? '?';
+
     return (
-        <nav className={`${isSidebarCollapsed ? 'w-24' : 'w-72'} bg-white border-r border-indigo-100 flex flex-col shrink-0 z-30 transition-all duration-300 shadow-sm print:hidden`}>
-            <div className="p-8 flex items-center justify-between border-b border-indigo-50 min-h-[100px]">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-900 rounded-[1.25rem] flex items-center justify-center shadow-xl shrink-0">
-                        <ActivityIcon className="text-white w-7 h-7" />
+        <nav className={`${collapsed ? 'w-16' : 'w-60'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-30 transition-all duration-300 print:hidden`}>
+
+            {/* Logo */}
+            <div className={`flex items-center gap-3 border-b border-slate-100 shrink-0 ${collapsed ? 'justify-center px-3 py-5' : 'px-4 py-5'}`}>
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                    <ActivityIcon className="text-white w-4 h-4" />
+                </div>
+                {!collapsed && (
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-sm text-slate-900 leading-tight">
+                            trainer<span className="text-indigo-600">OS</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 leading-tight">S&C Platform</span>
                     </div>
-                    {!isSidebarCollapsed && (
-                        <div className="flex flex-col">
-                            <span className="font-extrabold text-2xl tracking-tighter leading-none">
-                                trainer<span className="text-indigo-600">OS</span>
-                            </span>
-                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">S&C Terminal</span>
-                        </div>
-                    )}
+                )}
+            </div>
+
+            {/* Nav Items */}
+            <div className={`flex-1 py-3 overflow-y-auto no-scrollbar ${collapsed ? 'px-2' : 'px-3'}`}>
+                <div className="space-y-0.5">
+                    {NAV_ITEMS.map(item => {
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    if (item.id === 'lab') {
+                                        setIsPerformanceLabOpen(true);
+                                    } else {
+                                        navigate('/' + item.id);
+                                        setActiveAnalyticsModule(null);
+                                        setActiveReport(null);
+                                        if (item.id !== 'conditioning') setActiveConditioningModule(null);
+                                    }
+                                }}
+                                title={collapsed ? item.label : ''}
+                                className={`w-full flex items-center gap-3 rounded-lg transition-colors
+                                    ${collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'}
+                                    ${isActive
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                    }`}
+                            >
+                                <item.icon size={18} className="shrink-0" />
+                                {!collapsed && (
+                                    <span className="text-sm font-medium truncate">{item.label}</span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
-            <div className="flex-1 px-5 space-y-3 pt-10 overflow-y-auto no-scrollbar">
-                {[
-                    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
-                    { id: 'periodization', label: 'Planner', icon: CalendarIcon },
-                    { id: 'clients', label: 'Roster', icon: UsersIcon },
-                    { id: 'library', label: 'Exercise Library', icon: BookOpenIcon },
-                    { id: 'conditioning', label: 'Conditioning Hub', icon: ZapIcon },
-                    { id: 'analytics', label: 'Analytics Hub', icon: BarChart3Icon },
-                    { id: 'reports', label: 'Reporting Hub', icon: FileIcon },
-                    { id: 'lab', label: 'Performance Lab', icon: FlaskConicalIcon }
-                ].map(item => (
-                    <button key={item.id} onClick={() => {
-                        if (item.id === 'lab') {
-                            setIsPerformanceLabOpen(true);
-                        } else {
-                            navigate('/' + item.id);
-                            setActiveAnalyticsModule(null);
-                            setActiveReport(null);
-                            if (item.id !== 'conditioning') setActiveConditioningModule(null);
-                        }
-                    }} title={isSidebarCollapsed ? item.label : ""}
-                        className={`w-full flex items-center gap-5 px-5 py-4 rounded-[1.25rem] transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white font-bold shadow-2xl scale-[1.02]' : 'text-indigo-300 hover:text-indigo-900 hover:bg-indigo-50'}`}
+
+            {/* Bottom: User + Settings + Sign Out + Collapse */}
+            <div className="border-t border-slate-100 shrink-0">
+                {/* User profile strip */}
+                <div className={`flex items-center gap-2.5 px-3 py-3 border-b border-slate-100 ${collapsed ? 'justify-center' : ''}`}>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-semibold text-indigo-600">{userInitial}</span>
+                    </div>
+                    {!collapsed && (
+                        <p className="text-xs font-medium text-slate-600 truncate flex-1 min-w-0">{displayName}</p>
+                    )}
+                </div>
+
+                <div className={`py-2 space-y-0.5 ${collapsed ? 'px-2' : 'px-3'}`}>
+                    <button
+                        onClick={() => navigate('/settings')}
+                        title="Settings"
+                        className={`w-full flex items-center gap-3 rounded-lg py-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors
+                            ${collapsed ? 'justify-center px-0' : 'px-2'}`}
                     >
-                        <item.icon size={22} />{!isSidebarCollapsed && <span
-                            className="text-[14px] uppercase tracking-wider font-bold">{item.label}</span>}
+                        <SettingsIcon size={16} className="shrink-0" />
+                        {!collapsed && <span className="text-sm font-medium">Settings</span>}
                     </button>
-                ))}
-            </div>
-            <div className="p-5 border-t border-slate-100">
-                <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"} className="w-full flex items-center justify-center py-4 rounded-[1.25rem] text-slate-400 hover:bg-slate-50 transition-all">
-                    {isSidebarCollapsed ? <PanelLeftIcon size={22} /> : <PanelLeftCloseIcon size={22} />}
-                </button>
+
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!collapsed)}
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        className={`w-full flex items-center rounded-lg py-2 text-slate-300 hover:bg-slate-100 hover:text-slate-500 transition-colors
+                            ${collapsed ? 'justify-center px-0' : 'justify-end px-2'}`}
+                    >
+                        {collapsed ? <ChevronRightIcon size={14} /> : <ChevronLeftIcon size={14} />}
+                    </button>
+                </div>
             </div>
         </nav>
     );

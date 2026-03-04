@@ -251,7 +251,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                     }`}
                                 >
                                     <span
-                                        className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider mb-2 ${categoryColor(p.category)}`}
+                                        className={`inline-block px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider mb-2 ${categoryColor(p.category)}`}
                                     >
                                         {p.category}
                                     </span>
@@ -343,7 +343,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                 <div className="flex-1 overflow-y-auto p-5 no-scrollbar space-y-6">
                     {months.map(([month, dayGroups]) => (
                         <div key={month}>
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">
+                            <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-3 px-1">
                                 {month}
                             </div>
                             <div className="space-y-1.5">
@@ -362,7 +362,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                 }`}
                                             >
                                                 <div
-                                                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${
+                                                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold shrink-0 ${
                                                         sel
                                                             ? 'bg-cyan-400 text-white'
                                                             : 'bg-slate-100 text-slate-700'
@@ -371,7 +371,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                     {dayNum}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-[11px] font-black uppercase text-slate-800 leading-tight truncate">
+                                                    <div className="text-[11px] font-semibold uppercase text-slate-800 leading-tight truncate">
                                                         {resolveTargetName(s.targetId, s.targetType)} //{' '}
                                                         {s.trainingPhase || s.title}
                                                     </div>
@@ -379,7 +379,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                         {s.title}
                                                     </div>
                                                 </div>
-                                                <div className="text-[9px] font-black text-slate-400 shrink-0">
+                                                <div className="text-[9px] font-semibold text-slate-400 shrink-0">
                                                     {(s.exerciseIds || []).length} EX
                                                 </div>
                                             </button>
@@ -407,7 +407,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                 <div className="flex-1 overflow-y-auto p-5 no-scrollbar space-y-5">
                     {/* Target select */}
                     <div>
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
+                        <label className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-2 block">
                             Select Target
                         </label>
                         <select
@@ -430,7 +430,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
 
                     {/* Period window */}
                     <div>
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
+                        <label className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-2 block">
                             Period Window
                         </label>
                         <div className="flex gap-2">
@@ -451,10 +451,10 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
 
                     {/* Found sessions */}
                     <div>
-                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                        <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-3 flex items-center gap-2">
                             Found Sessions in Range
                             {rangeSessions.length > 0 && (
-                                <span className="bg-cyan-100 text-cyan-700 text-[8px] font-black px-1.5 py-0.5 rounded">
+                                <span className="bg-cyan-100 text-cyan-700 text-[8px] font-semibold px-1.5 py-0.5 rounded">
                                     {rangeSessions.length}
                                 </span>
                             )}
@@ -489,13 +489,13 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                         >
                                             {sel && <CheckIcon size={12} className="text-cyan-500 shrink-0" />}
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[11px] font-black uppercase text-slate-800 truncate">
+                                                <div className="text-[11px] font-semibold uppercase text-slate-800 truncate">
                                                     {resolveTargetName(s.targetId, s.targetType)} //{' '}
                                                     {s.trainingPhase || s.title}
                                                 </div>
                                                 <div className="text-[9px] text-slate-400">{dateStr}</div>
                                             </div>
-                                            <div className="text-[9px] font-black text-slate-400 shrink-0">
+                                            <div className="text-[9px] font-semibold text-slate-400 shrink-0">
                                                 {(s.exerciseIds || []).length} EX
                                             </div>
                                         </button>
@@ -514,8 +514,8 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
     // ---- Render ----
 
     return (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl w-full max-w-6xl h-[88vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl w-full max-w-6xl h-[88vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
 
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -524,10 +524,10 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                             <LayersIcon size={16} className="text-white" />
                         </div>
                         <div>
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                                 Distribution Hub
                             </div>
-                            <div className="text-sm font-black uppercase tracking-tight text-slate-900 leading-tight">
+                            <div className="text-sm font-semibold uppercase tracking-tight text-slate-900 leading-tight">
                                 Workout Packets
                             </div>
                         </div>
@@ -536,7 +536,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                         <button
                             onClick={handlePrint}
                             disabled={packetItems.length === 0}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-40 hover:bg-indigo-700 transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wider disabled:opacity-40 hover:bg-indigo-700 transition-all"
                         >
                             <PrinterIcon size={13} />
                             Print Packet
@@ -556,7 +556,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                     {/* Sidebar */}
                     <div className="w-52 shrink-0 bg-slate-50 border-r border-slate-100 flex flex-col py-4">
                         <div className="px-4 mb-2">
-                            <div className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-400">
                                 Packet Source
                             </div>
                         </div>
@@ -594,7 +594,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                     {/* Content panel */}
                     <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-100">
                         <div className="px-5 py-3 border-b border-slate-100 shrink-0">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                                 {TABS.find(t => t.id === wpMode)?.label}
                             </div>
                         </div>
@@ -604,19 +604,19 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                     {/* Right panel — Packet Preview */}
                     <div className="w-64 shrink-0 bg-slate-900 flex flex-col overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-700 shrink-0 flex items-center justify-between">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
                                 Packet Preview
                             </div>
-                            <span className="bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            <span className="bg-emerald-500 text-white text-[7px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                 Live
                             </span>
                         </div>
                         <div className="px-4 py-3 border-b border-slate-800 shrink-0 flex items-center gap-2">
-                            <div className="text-[10px] font-black uppercase text-slate-300">
+                            <div className="text-[10px] font-semibold uppercase text-slate-300">
                                 Selected Elements
                             </div>
                             {packetItems.length > 0 && (
-                                <span className="bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
+                                <span className="bg-indigo-500 text-white text-[8px] font-semibold px-1.5 py-0.5 rounded-full">
                                     {packetItems.length}
                                 </span>
                             )}
@@ -645,11 +645,11 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                 {item.type === 'protocol' && (
                                                     <>
                                                         <span
-                                                            className={`inline-block text-[7px] font-black uppercase px-1.5 py-0.5 rounded mb-1 ${categoryColor(item.data.category)}`}
+                                                            className={`inline-block text-[7px] font-semibold uppercase px-1.5 py-0.5 rounded mb-1 ${categoryColor(item.data.category)}`}
                                                         >
                                                             {item.data.category}
                                                         </span>
-                                                        <div className="text-[10px] font-black text-white leading-tight truncate">
+                                                        <div className="text-[10px] font-semibold text-white leading-tight truncate">
                                                             {item.data.name}
                                                         </div>
                                                     </>
@@ -662,7 +662,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                                 day: 'numeric',
                                                             })}
                                                         </div>
-                                                        <div className="text-[10px] font-black text-white leading-tight truncate">
+                                                        <div className="text-[10px] font-semibold text-white leading-tight truncate">
                                                             {resolveTargetName(item.data.targetId, item.data.targetType)}
                                                         </div>
                                                         <div className="text-[9px] text-slate-400">
@@ -675,7 +675,7 @@ ${sections || '<p style="color:#94a3b8">No items in packet.</p>'}
                                                         <div className="text-[8px] text-slate-400 mb-0.5">
                                                             Exercise
                                                         </div>
-                                                        <div className="text-[10px] font-black text-white leading-tight">
+                                                        <div className="text-[10px] font-semibold text-white leading-tight">
                                                             {item.data.name}
                                                         </div>
                                                     </>
