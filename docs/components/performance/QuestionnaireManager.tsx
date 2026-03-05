@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import {
     Trash2, Plus, BarChart3, List, ClipboardCheck, Pencil,
-    CheckSquare, Type, ToggleLeft, MapPin, X, GripVertical
+    CheckSquare, Type, ToggleLeft, MapPin, X, GripVertical, MousePointerClick
 } from 'lucide-react';
 import { DatabaseService } from '../../services/databaseService';
-import { DEFAULT_WELLNESS_QUESTIONS } from '../../utils/mocks';
+import { DEFAULT_WELLNESS_QUESTIONS, DEFAULT_BODY_MAP_CONFIG } from '../../utils/mocks';
+import { BodyMapConfig } from '../../types/types';
+import BodyMapSelector from '../wellness/BodyMapSelector';
+import BodyMapAreaEditor from '../wellness/BodyMapAreaEditor';
+import ImageAttachment from '../wellness/ImageAttachment';
+import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
 
 // ─── Question type metadata ───────────────────────────────────────────────────
 const QUESTION_TYPES = [
@@ -13,7 +18,8 @@ const QUESTION_TYPES = [
     { value: 'checklist',       label: 'Checklist',          desc: 'Multiple selections' },
     { value: 'yes_no',          label: 'Yes / No',           desc: 'Binary response' },
     { value: 'text',            label: 'Free Text',          desc: 'Open text response' },
-    { value: 'body_map',        label: 'Body Map',           desc: 'Athlete marks soreness / injury areas' },
+    { value: 'body_map',        label: 'Image Ref',          desc: 'Reference image with configurable input' },
+    { value: 'buttons',          label: 'Buttons',            desc: 'Tappable buttons with optional severity' },
 ];
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -27,6 +33,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
     yes_no:          <ToggleLeft size={14} />,
     text:            <Type size={14} />,
     body_map:        <MapPin size={14} />,
+    buttons:         <MousePointerClick size={14} />,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,6 +48,12 @@ const newQuestion = (type = 'scale') => ({
         : {}),
     ...(type === 'scale'
         ? { labels: ['', ''], scaleMin: 0, scaleMax: 10 }
+        : {}),
+    ...(type === 'body_map'
+        ? { bodyMapConfig: { ...DEFAULT_BODY_MAP_CONFIG, areas: [...DEFAULT_BODY_MAP_CONFIG.areas], severityLevels: [...DEFAULT_BODY_MAP_CONFIG.severityLevels] } }
+        : {}),
+    ...(type === 'buttons'
+        ? { bodyMapConfig: { areas: [...DEFAULT_BODY_MAP_CONFIG.areas], severityLevels: [...DEFAULT_BODY_MAP_CONFIG.severityLevels], subInputType: 'buttons' as const } }
         : {}),
 });
 
@@ -292,12 +305,74 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         );
     }
 
-    // Body map
+    // Body map / Image Ref — live preview + config editor
     if (q.type === 'body_map') {
+        const bmConfig: BodyMapConfig = q.bodyMapConfig ?? DEFAULT_BODY_MAP_CONFIG;
+        const subType = bmConfig.subInputType || 'buttons';
         return (
-            <div className="mt-4 px-4 py-3 bg-cyan-50 border border-cyan-100 rounded-lg flex items-center gap-3">
-                <MapPin size={16} className="text-cyan-500 shrink-0" />
-                <p className="text-[10px] font-bold text-cyan-700">Athletes tap body areas on the anatomical diagram to report soreness or injury.</p>
+            <div className="mt-4 space-y-4">
+                {/* Live preview */}
+                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
+                    {subType === 'buttons' ? (
+                        <BodyMapSelector
+                            value={[]}
+                            onChange={() => {}}
+                            config={bmConfig}
+                            readOnly
+                        />
+                    ) : (
+                        <div className="space-y-3">
+                            {bmConfig.referenceImageUrl && (
+                                <div className="rounded-xl overflow-hidden border border-slate-100 bg-white">
+                                    <img src={bmConfig.referenceImageUrl} alt="Reference" className="w-full object-contain max-h-40" />
+                                </div>
+                            )}
+                            <div className="px-3 py-2.5 bg-white border border-slate-100 rounded-lg">
+                                <p className="text-[10px] font-bold text-slate-400 italic">
+                                    {subType === 'scale' && `Scale input (${bmConfig.subInputScaleMin ?? 0}–${bmConfig.subInputScaleMax ?? 10})`}
+                                    {subType === 'multiple_choice' && `Multiple choice · ${(bmConfig.subInputOptions || []).length} options`}
+                                    {subType === 'checklist' && `Checklist · ${(bmConfig.subInputOptions || []).length} options`}
+                                    {subType === 'yes_no' && 'Yes / No response'}
+                                    {subType === 'text' && 'Free text response'}
+                                    {subType === 'none' && 'Image only — no input'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Config editor */}
+                <BodyMapAreaEditor
+                    config={bmConfig}
+                    onChange={(newConfig) => update({ bodyMapConfig: newConfig })}
+                />
+            </div>
+        );
+    }
+
+    // Buttons — standalone tappable buttons with optional severity
+    if (q.type === 'buttons') {
+        const bmConfig: BodyMapConfig = q.bodyMapConfig ?? { areas: [], severityLevels: [...DEFAULT_BODY_MAP_CONFIG.severityLevels], subInputType: 'buttons' };
+        return (
+            <div className="mt-4 space-y-4">
+                {/* Live preview */}
+                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
+                    <BodyMapSelector
+                        value={[]}
+                        onChange={() => {}}
+                        config={bmConfig}
+                        readOnly
+                    />
+                </div>
+
+                {/* Config editor (buttonsOnly hides image/sub-input picker) */}
+                <BodyMapAreaEditor
+                    config={bmConfig}
+                    onChange={(newConfig) => update({ bodyMapConfig: newConfig })}
+                    buttonsOnly
+                />
             </div>
         );
     }
@@ -404,7 +479,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
 
                                 {/* Question type breakdown */}
                                 <div className="flex flex-wrap gap-1.5">
-                                    {(['scale', 'scale_1_10', 'scale_1_5', 'scale_0_3', 'multiple_choice', 'body_map'] as string[])
+                                    {(['scale', 'scale_1_10', 'scale_1_5', 'scale_0_3', 'multiple_choice', 'body_map', 'buttons'] as string[])
                                         .filter(type => (t.questions || []).some((q: any) => q.type === type))
                                         .map(type => {
                                             const meta = QUESTION_TYPES.find(qt => qt.value === type);
@@ -588,6 +663,23 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                             <span className="text-[10px] font-semibold uppercase text-slate-400">Required</span>
                                         </label>
 
+                                        {/* Reference image attachment */}
+                                        <ImageAttachment
+                                            imageUrl={q.imageUrl}
+                                            onUpload={async (file: File) => {
+                                                const url = await uploadQuestionImage(file);
+                                                const updated = [...newQuestQuestions];
+                                                updated[i] = { ...updated[i], imageUrl: url };
+                                                setNewQuestQuestions(updated);
+                                            }}
+                                            onRemove={async () => {
+                                                if (q.imageUrl) await deleteQuestionImage(q.imageUrl);
+                                                const updated = [...newQuestQuestions];
+                                                updated[i] = { ...updated[i], imageUrl: undefined };
+                                                setNewQuestQuestions(updated);
+                                            }}
+                                        />
+
                                         {/* Per-type config */}
                                         <QuestionConfig
                                             q={q}
@@ -621,7 +713,8 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                     { type: 'checklist',       label: 'Checklist',    icon: <CheckSquare size={13} /> },
                     { type: 'yes_no',          label: 'Yes/No',       icon: <ToggleLeft size={13} /> },
                     { type: 'text',            label: 'Text',         icon: <Type size={13} /> },
-                    { type: 'body_map',        label: 'Body Map',     icon: <MapPin size={13} /> },
+                    { type: 'body_map',        label: 'Image Ref',    icon: <MapPin size={13} /> },
+                    { type: 'buttons',         label: 'Buttons',      icon: <MousePointerClick size={13} /> },
                 ].map(({ type, label, icon }) => (
                     <button
                         key={type}

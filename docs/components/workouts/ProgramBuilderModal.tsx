@@ -327,6 +327,17 @@ export const ProgramBuilderModal = ({
     setActiveDayIdx(days.length); // index of the new day
   };
 
+  const addWeek = () => {
+    const remainder = days.length % DAYS_PER_WEEK;
+    const padding = remainder === 0 ? 0 : DAYS_PER_WEEK - remainder;
+    const newDays: LocalDay[] = [];
+    for (let i = 0; i < padding + 1; i++) {
+      newDays.push(newDay(days.length + i + 1));
+    }
+    setDays((prev) => [...prev, ...newDays]);
+    setActiveDayIdx(days.length + padding); // jump to first day of new week
+  };
+
   const removeDay = (idx: number) => {
     if (days.length <= 1) return;
     setDays((prev) => prev.filter((_, i) => i !== idx));
@@ -622,16 +633,14 @@ export const ProgramBuilderModal = ({
               );
             })}
 
-            {/* Add Week button — appears when the last week is full */}
-            {lastWeekFull && (
-              <button
-                onClick={addDay}
-                className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
-              >
-                <PlusIcon size={14} />
-                Add Week {weeks.length + 1}
-              </button>
-            )}
+            {/* Add Week button — always visible */}
+            <button
+              onClick={addWeek}
+              className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+            >
+              <PlusIcon size={14} />
+              Add Week {weeks.length + 1}
+            </button>
 
           </div>
         </div>

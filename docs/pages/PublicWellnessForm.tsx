@@ -1,11 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { CheckCircle2, AlertCircle, Clock, ChevronRight, ChevronLeft, Send, Activity } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
+import { BODY_MAP_AREAS } from '../utils/mocks';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface VisibleStep {
+    question: any;
+    areaContext?: string;   // body area key (e.g. 'hamstrings')
+    areaLabel?: string;     // human-readable (e.g. 'Hamstrings')
+    responseKey: string;    // key into responses object
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 const PublicWellnessForm: React.FC = () => {
     const { templateId, teamId } = useParams<{ templateId: string; teamId: string }>();
+    const [searchParams] = useSearchParams();
+    const shareSessionId = searchParams.get('s') || undefined;
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -26,7 +40,6 @@ const PublicWellnessForm: React.FC = () => {
                 const data = await DatabaseService.getWellnessFormData(templateId, teamId);
                 setTemplate(data.template);
                 setAthletes(data.athletes);
-                // Always start at step 0 — athlete must pick their name first
             } catch (err) {
                 console.error(err);
                 setError("Failed to load form. Link may be expired or invalid.");
@@ -36,6 +49,70 @@ const PublicWellnessForm: React.FC = () => {
         };
         loadData();
     }, [templateId, teamId]);
+
+    // ── Build area label lookup ───────────────────────────────────────────────
+    const areaLabelMap = useMemo(() => {
+        const map: Record<string, string> = {};
+        (BODY_MAP_AREAS || []).forEach(a => { map[a.key] = a.label; });
+        return map;
+    }, []);
+
+    // ── Compute visible steps (conditional filtering + per-area expansion) ────
+    const questions: any[] = template?.questions || [];
+
+    const visibleSteps = useMemo((): VisibleStep[] => {
+        const bodyMapAreas: any[] = responses['body_map'] || [];
+        const areaKeys = bodyMapAreas.map((a: any) => a.area);
+        const steps: VisibleStep[] = [];
+
+        for (const q of questions) {
+            // Non-conditional questions are always visible
+            if (!q.conditional) {
+                steps.push({ question: q, responseKey: q.id });
+                continue;
+            }
+
+            const { questionId, notEmpty, value } = q.conditional;
+            const targetResponse = responses[questionId];
+
+            // Evaluate the conditional
+            let conditionMet = false;
+            if (notEmpty) {
+                if (Array.isArray(targetResponse)) conditionMet = targetResponse.length > 0;
+                else conditionMet = targetResponse !== undefined && targetResponse !== null && targetResponse !== '';
+            }
+            if (value !== undefined) {
+                conditionMet = targetResponse === value;
+            }
+
+            if (!conditionMet) continue;
+
+            // If conditional references body_map with notEmpty → expand per-area
+            if (questionId === 'body_map' && notEmpty && areaKeys.length > 0) {
+                for (const areaKey of areaKeys) {
+                    steps.push({
+                        question: q,
+                        areaContext: areaKey,
+                        areaLabel: areaLabelMap[areaKey] || areaKey,
+                        responseKey: `${q.id}__${areaKey}`,
+                    });
+                }
+            } else {
+                steps.push({ question: q, responseKey: q.id });
+            }
+        }
+
+        return steps;
+    }, [questions, responses, areaLabelMap]);
+
+    const totalSteps = visibleSteps.length + 1; // +1 for athlete selection
+
+    // Clamp currentStep if visible steps shrink (e.g. user goes back and clears body areas)
+    useEffect(() => {
+        if (currentStep > visibleSteps.length) {
+            setCurrentStep(visibleSteps.length);
+        }
+    }, [visibleSteps.length, currentStep]);
 
     const handleNext = () => {
         if (currentStep === 0 && !selectedAthleteId) return;
@@ -59,7 +136,8 @@ const PublicWellnessForm: React.FC = () => {
                 responses,
                 rpe: typeof responses['rpe'] === 'number' ? responses['rpe'] : undefined,
                 availability: validAvailability,
-                injury_report: responses['body_map'] ? { areas: responses['body_map'] } : undefined
+                injury_report: responses['body_map'] ? { areas: responses['body_map'] } : undefined,
+                share_session_id: shareSessionId,
             });
             setSubmitted(true);
         } catch (err) {
@@ -111,8 +189,16 @@ const PublicWellnessForm: React.FC = () => {
         </div>
     );
 
-    const questions = template?.questions || [];
-    const totalSteps = questions.length + 1; // +1 for athlete selection
+    // ── Determine if Continue button should be disabled ───────────────────────
+    const isContinueDisabled = (() => {
+        if (currentStep === 0) return !selectedAthleteId;
+        const step = visibleSteps[currentStep - 1];
+        if (!step) return true;
+        // Optional questions (required: false) can always be skipped
+        if (!step.question.required) return false;
+        const val = responses[step.responseKey];
+        return val === undefined || val === null || val === '';
+    })();
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -164,8 +250,10 @@ const PublicWellnessForm: React.FC = () => {
                 ) : (
                     <div className="flex-1">
                         {(() => {
-                            const q = questions[currentStep - 1];
-                            if (!q) return null;
+                            const step = visibleSteps[currentStep - 1];
+                            if (!step) return null;
+                            const q = step.question;
+                            const rk = step.responseKey;
 
                             return (
                                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -174,20 +262,40 @@ const PublicWellnessForm: React.FC = () => {
                                             {q.category}
                                         </div>
                                     </div>
+
+                                    {/* Per-area badge (when this is a follow-up for a specific body area) */}
+                                    {step.areaContext && (
+                                        <div className="mb-3 px-3 py-2 bg-cyan-50 border border-cyan-100 rounded-xl inline-flex items-center gap-2">
+                                            <Activity size={12} className="text-cyan-600" />
+                                            <span className="text-[11px] font-black text-cyan-700 uppercase tracking-wide">
+                                                {step.areaLabel}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Reference image (any question type) */}
+                                    {q.imageUrl && (
+                                        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white mb-6">
+                                            <img
+                                                src={q.imageUrl}
+                                                alt="Reference"
+                                                className="w-full object-contain max-h-56"
+                                            />
+                                        </div>
+                                    )}
+
                                     <h2 className="text-2xl font-black text-slate-900 mb-8 leading-tight">{q.text}</h2>
 
                                     {/* Question Inputs */}
                                     {(() => {
-                                        // Resolve scale range: explicit 'scale' type uses scaleMin/scaleMax;
-                                        // 'scale_N_N' pattern parses range from type name
                                         const scaleMatch = q.type.match(/^scale_(\d+)_(\d+)$/);
                                         const isNumericScale = q.type === 'scale' || !!scaleMatch;
 
                                         if (isNumericScale) {
                                             const min = scaleMatch ? parseInt(scaleMatch[1]) : (q.scaleMin ?? 0);
                                             const max = scaleMatch ? parseInt(scaleMatch[2]) : (q.scaleMax ?? 10);
-                                            const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-                                            const useGrid = steps.length > 6;
+                                            const scaleSteps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+                                            const useGrid = scaleSteps.length > 6;
                                             return (
                                                 <div>
                                                     {(q.labels?.[0] || q.labels?.[1]) && (
@@ -197,13 +305,13 @@ const PublicWellnessForm: React.FC = () => {
                                                         </div>
                                                     )}
                                                     <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
-                                                        {steps.map(val => {
-                                                            const isSelected = responses[q.id] === val;
+                                                        {scaleSteps.map(val => {
+                                                            const isSelected = responses[rk] === val;
                                                             return (
                                                                 <button
                                                                     key={val}
                                                                     type="button"
-                                                                    onClick={() => setResponses({ ...responses, [q.id]: val })}
+                                                                    onClick={() => setResponses({ ...responses, [rk]: val })}
                                                                     className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${isSelected
                                                                         ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
                                                                         : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
@@ -222,12 +330,12 @@ const PublicWellnessForm: React.FC = () => {
                                             return (
                                                 <div className="flex flex-col gap-3">
                                                     {['Yes', 'No'].map(opt => {
-                                                        const isSelected = responses[q.id] === opt;
+                                                        const isSelected = responses[rk] === opt;
                                                         return (
                                                             <button
                                                                 key={opt}
                                                                 type="button"
-                                                                onClick={() => setResponses({ ...responses, [q.id]: opt })}
+                                                                onClick={() => setResponses({ ...responses, [rk]: opt })}
                                                                 className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
                                                                     ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
                                                                     : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
@@ -246,12 +354,12 @@ const PublicWellnessForm: React.FC = () => {
                                                 <div className="space-y-3">
                                                     {(q.options || []).map((opt: any, idx: number) => {
                                                         const val = q.numericMap ? q.numericMap[idx] : opt;
-                                                        const isSelected = responses[q.id] === val;
+                                                        const isSelected = responses[rk] === val;
                                                         return (
                                                             <button
                                                                 key={idx}
                                                                 type="button"
-                                                                onClick={() => setResponses({ ...responses, [q.id]: val })}
+                                                                onClick={() => setResponses({ ...responses, [rk]: val })}
                                                                 className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
                                                                     ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
                                                                     : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
@@ -265,12 +373,131 @@ const PublicWellnessForm: React.FC = () => {
                                             );
                                         }
 
-                                        if (q.type === 'body_map') {
+                                        if (q.type === 'buttons') {
                                             return (
                                                 <BodyMapSelector
-                                                    value={responses[q.id] || []}
-                                                    onChange={(val) => setResponses({ ...responses, [q.id]: val })}
+                                                    value={responses[rk] || []}
+                                                    onChange={(val) => setResponses({ ...responses, [rk]: val })}
+                                                    config={q.bodyMapConfig}
                                                 />
+                                            );
+                                        }
+
+                                        if (q.type === 'body_map') {
+                                            const bmc = q.bodyMapConfig;
+                                            const subType = bmc?.subInputType || 'buttons';
+
+                                            if (subType === 'buttons') {
+                                                return (
+                                                    <BodyMapSelector
+                                                        value={responses[rk] || []}
+                                                        onChange={(val) => setResponses({ ...responses, [rk]: val })}
+                                                        config={bmc}
+                                                    />
+                                                );
+                                            }
+
+                                            return (
+                                                <div className="space-y-4">
+                                                    {bmc?.referenceImageUrl && (
+                                                        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
+                                                            <img src={bmc.referenceImageUrl} alt="Reference" className="w-full object-contain max-h-56" />
+                                                        </div>
+                                                    )}
+
+                                                    {subType === 'scale' && (() => {
+                                                        const min = bmc?.subInputScaleMin ?? 0;
+                                                        const max = bmc?.subInputScaleMax ?? 10;
+                                                        const scaleSteps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+                                                        const useGrid = scaleSteps.length > 6;
+                                                        return (
+                                                            <div>
+                                                                {(bmc?.subInputLabels?.[0] || bmc?.subInputLabels?.[1]) && (
+                                                                    <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                                                                        <span>{bmc!.subInputLabels![0]}</span>
+                                                                        <span>{bmc!.subInputLabels![1]}</span>
+                                                                    </div>
+                                                                )}
+                                                                <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
+                                                                    {scaleSteps.map(val => (
+                                                                        <button key={val} type="button"
+                                                                            onClick={() => setResponses({ ...responses, [rk]: val })}
+                                                                            className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${responses[rk] === val
+                                                                                ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                            }`}
+                                                                        >{val}</button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
+
+                                                    {subType === 'multiple_choice' && (
+                                                        <div className="space-y-3">
+                                                            {(bmc?.subInputOptions || []).map((opt: string, idx: number) => {
+                                                                const val = bmc?.subInputNumericMap?.[idx] ?? opt;
+                                                                return (
+                                                                    <button key={idx} type="button"
+                                                                        onClick={() => setResponses({ ...responses, [rk]: val })}
+                                                                        className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${responses[rk] === val
+                                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                        }`}
+                                                                    >{opt}</button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {subType === 'checklist' && (
+                                                        <div className="space-y-3">
+                                                            {(bmc?.subInputOptions || []).map((opt: string, idx: number) => {
+                                                                const checked = Array.isArray(responses[rk]) && (responses[rk] as string[]).includes(opt);
+                                                                return (
+                                                                    <button key={idx} type="button"
+                                                                        onClick={() => {
+                                                                            const cur: string[] = Array.isArray(responses[rk]) ? responses[rk] as string[] : [];
+                                                                            setResponses({ ...responses, [rk]: checked ? cur.filter(v => v !== opt) : [...cur, opt] });
+                                                                        }}
+                                                                        className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all flex items-center gap-3 ${checked
+                                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-xl'
+                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                        }`}
+                                                                    >
+                                                                        <span className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${checked ? 'bg-white border-white' : 'border-slate-300'}`}>
+                                                                            {checked && <span className="text-slate-900 text-xs font-black">&#10003;</span>}
+                                                                        </span>
+                                                                        {opt}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {subType === 'yes_no' && (
+                                                        <div className="flex flex-col gap-3">
+                                                            {['Yes', 'No'].map(opt => (
+                                                                <button key={opt} type="button"
+                                                                    onClick={() => setResponses({ ...responses, [rk]: opt })}
+                                                                    className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${responses[rk] === opt
+                                                                        ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                        : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                    }`}
+                                                                >{opt}</button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {subType === 'text' && (
+                                                        <textarea
+                                                            value={responses[rk] || ''}
+                                                            onChange={e => setResponses({ ...responses, [rk]: e.target.value })}
+                                                            className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-700 font-semibold min-h-[120px] focus:outline-none focus:border-slate-300 transition-all"
+                                                            placeholder="Type your answer..."
+                                                        />
+                                                    )}
+                                                </div>
                                             );
                                         }
 
@@ -302,7 +529,7 @@ const PublicWellnessForm: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleNext}
-                            disabled={currentStep === 0 ? !selectedAthleteId : responses[questions[currentStep - 1]?.id] === undefined || responses[questions[currentStep - 1]?.id] === null || responses[questions[currentStep - 1]?.id] === ''}
+                            disabled={isContinueDisabled}
                             className="flex-1 py-4 bg-cyan-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-cyan-200 disabled:opacity-50 disabled:grayscale transition-all active:scale-[0.98]"
                         >
                             <div className="flex items-center justify-center gap-2">

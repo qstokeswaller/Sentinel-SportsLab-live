@@ -495,3 +495,143 @@ export const BODY_MAP_AREAS = [
     { key: 'hamstrings',     label: 'Hamstrings',               view: 'back',  color: '#ec4899' },
     { key: 'calves',         label: 'Calves / Achilles',        view: 'back',  color: '#22c55e' },
 ];
+
+// Default severity levels for body map questions
+export const DEFAULT_SEVERITY_LEVELS: import('../types/types').SeverityLevel[] = [
+    { value: 1, label: 'Mild',     shortLabel: 'Mild',   style: 'bg-yellow-400 border-yellow-400 text-white', legendColor: '#facc15' },
+    { value: 2, label: 'Moderate', shortLabel: 'Mod',    style: 'bg-orange-500 border-orange-500 text-white', legendColor: '#f97316' },
+    { value: 3, label: 'Severe',   shortLabel: 'Severe', style: 'bg-red-600 border-red-600 text-white',       legendColor: '#dc2626' },
+];
+
+// Default body map config — derived from BODY_MAP_AREAS for backward compat
+export const DEFAULT_BODY_MAP_CONFIG: import('../types/types').BodyMapConfig = {
+    areas: BODY_MAP_AREAS.map(a => ({ key: a.key, label: a.label, view: a.view as 'front' | 'back', color: a.color, hasSeverity: true })),
+    severityLevels: DEFAULT_SEVERITY_LEVELS,
+    referenceImageUrl: '/body-image.jpeg',
+    instructionText: 'Tap an area to mark it \u00b7 tap again to increase severity \u00b7 tap a third time to clear',
+    subInputType: 'buttons',
+};
+
+// --- INJURY REPORT CONSTANTS ---
+
+export const INJURY_CLASSIFICATIONS = [
+    'Muscle Strain', 'Ligament Sprain', 'Fracture', 'Contusion',
+    'Tendinopathy', 'Dislocation', 'Overuse', 'Concussion',
+    'Laceration', 'Nerve Injury', 'Other'
+] as const;
+
+export const SEVERITY_GRADES = [
+    { value: 1, label: 'Grade 1 — Mild',     color: 'bg-yellow-100 text-yellow-700' },
+    { value: 2, label: 'Grade 2 — Moderate',  color: 'bg-orange-100 text-orange-700' },
+    { value: 3, label: 'Grade 3 — Severe',    color: 'bg-red-100 text-red-700' },
+] as const;
+
+export const LATERALITY_OPTIONS = ['Left', 'Right', 'Bilateral', 'Central'] as const;
+export const INJURY_ACTIVITIES = ['Training', 'Match', 'Warm-up', 'Gym', 'Other'] as const;
+export const PAIN_KINDS = ['Sharp', 'Dull', 'Burning', 'Throbbing', 'Radiating'] as const;
+export const RANGE_OF_MOTION_OPTIONS = ['Full', 'Limited', 'None'] as const;
+export const WEIGHT_BEARING_OPTIONS = ['Full', 'Partial', 'Non-weight-bearing'] as const;
+export const TRAINING_STATUS_OPTIONS = ['Full Training', 'Modified Training', 'Rehab Only', 'Complete Rest'] as const;
+export const TREATMENT_OPTIONS = ['Ice', 'Physio', 'Massage', 'Strapping', 'Medication', 'Surgery Referral', 'Imaging Referral'] as const;
+export const RTP_PHASES = [
+    'Phase 1 - Rest',
+    'Phase 2 - Rehab',
+    'Phase 3 - Modified Training',
+    'Phase 4 - Full Return'
+] as const;
+
+export const MOCK_INJURY_REPORTS: import('../types/types').InjuryReport[] = [
+    {
+        id: 'ir_1',
+        athleteId: 'p1',
+        athleteName: 'John Doe',
+        teamId: 't1',
+        areas: [{ area: 'hamstrings', side: 'left', severity: 2 }],
+        classification: 'Muscle Strain',
+        severityGrade: 2,
+        laterality: 'Left',
+        recurrence: 'New',
+        activity: 'Training',
+        dateOfInjury: '2026-02-20',
+        mechanism: 'Non-contact sprint during conditioning drill, felt sharp pull in left hamstring at full stretch.',
+        painLevel: 7,
+        painKinds: ['Sharp'],
+        hasSwelling: true,
+        swellingSeverity: 'Mild',
+        hasBruising: false,
+        rangeOfMotion: 'Limited',
+        weightBearing: 'Full',
+        stoppedTraining: true,
+        currentStatus: 'Rehab Only',
+        treatmentPrescribed: ['Ice', 'Physio', 'Massage'],
+        treatmentRecommendations: 'Progressive hamstring loading protocol. Nordic curls when pain-free at walking pace.',
+        followUpDate: '2026-02-27',
+        returnToPlayPhase: 'Phase 2 - Rehab',
+        expectedTimeOut: '2-3 weeks',
+        comments: 'Athlete reports similar sensation to previous hamstring issue 6 months ago but less severe. MRI scheduled for Feb 22.',
+        attachmentUrls: [],
+        createdAt: '2026-02-20T14:30:00Z',
+    },
+    {
+        id: 'ir_2',
+        athleteId: 'p2',
+        athleteName: 'Jane Smith',
+        teamId: 't1',
+        areas: [{ area: 'ankle_foot', side: 'right', severity: 1 }],
+        classification: 'Ligament Sprain',
+        severityGrade: 1,
+        laterality: 'Right',
+        recurrence: 'New',
+        activity: 'Match',
+        dateOfInjury: '2026-02-18',
+        mechanism: 'Landed awkwardly on right ankle after jump.',
+        painLevel: 4,
+        painKinds: ['Dull', 'Throbbing'],
+        hasSwelling: true,
+        swellingSeverity: 'Mild',
+        hasBruising: true,
+        bruisingSeverity: 'Mild',
+        rangeOfMotion: 'Limited',
+        weightBearing: 'Partial',
+        stoppedTraining: true,
+        currentStatus: 'Modified Training',
+        treatmentPrescribed: ['Ice', 'Strapping', 'Physio'],
+        treatmentRecommendations: 'RICE protocol for 48 hours, then progressive weight-bearing exercises.',
+        followUpDate: '2026-02-25',
+        returnToPlayPhase: 'Phase 3 - Modified Training',
+        expectedTimeOut: '1-2 weeks',
+        comments: 'Low-grade inversion sprain. No structural damage suspected.',
+        attachmentUrls: [],
+        createdAt: '2026-02-18T10:15:00Z',
+    },
+    {
+        id: 'ir_3',
+        athleteId: 'p1',
+        athleteName: 'John Doe',
+        teamId: 't1',
+        areas: [{ area: 'knee', side: 'left', severity: 1 }],
+        classification: 'Tendinopathy',
+        severityGrade: 1,
+        laterality: 'Left',
+        recurrence: 'Recurrence',
+        activity: 'Gym',
+        dateOfInjury: '2026-03-01',
+        mechanism: 'Gradual onset pain during heavy squat session. Anterior knee ache at bottom of ROM.',
+        painLevel: 3,
+        painKinds: ['Dull'],
+        hasSwelling: false,
+        hasBruising: false,
+        rangeOfMotion: 'Full',
+        weightBearing: 'Full',
+        stoppedTraining: false,
+        currentStatus: 'Modified Training',
+        treatmentPrescribed: ['Physio'],
+        treatmentRecommendations: 'Isometric quad exercises, avoid deep knee flexion under load for 2 weeks.',
+        followUpDate: '2026-03-15',
+        returnToPlayPhase: 'Phase 3 - Modified Training',
+        expectedTimeOut: '2-4 weeks',
+        comments: 'Recurring patellar tendon irritation. Similar episode in Dec 2025 resolved with isometric protocol.',
+        attachmentUrls: [],
+        createdAt: '2026-03-01T09:00:00Z',
+    },
+];

@@ -101,4 +101,10 @@ export const SupabaseStorageService = {
   saveBiometrics: (d: any) => save('biometrics', d),
   getWorkoutLog: () => get('workout_log'),
   saveWorkoutLog: (d: any) => save('workout_log', d),
+  getInjuryReports: () => get('injury_reports'),
+  saveInjuryReports: (d: any) => save('injury_reports', d),
+  getWorkoutTemplates: () => get('workout_templates'),
+  saveWorkoutTemplates: (d: any) => save('workout_templates', d),
+  getCustomEventTypes: () => get('custom_event_types'),
+  saveCustomEventTypes: (d: any) => save('custom_event_types', d),
 };

@@ -23,7 +23,8 @@ import {
     MOCK_KPI_DATA,
     MOCK_HEATMAP_DATA,
     MOCK_HABIT_DATA,
-    MOCK_VOLUME_DATA
+    MOCK_VOLUME_DATA,
+    MOCK_INJURY_REPORTS
 } from '../utils/mocks';
 
 export const AppStateContext = createContext<any>(null);
@@ -35,8 +36,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const location = useLocation();
 
     const [activeTab, setActiveTab] = useState(() => {
-        const path = window.location.pathname.slice(1);
-        const valid = ['dashboard', 'periodization', 'clients', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
+        const path = window.location.pathname.slice(1).split('/')[0];
+        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
         return valid.includes(path) ? path : 'dashboard';
     });
 
@@ -45,17 +46,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
         if (location.pathname.startsWith('/settings')) return;
-        const path = location.pathname.slice(1);
-        const valid = ['dashboard', 'periodization', 'clients', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
-        if (valid.includes(path) && path !== activeTab)
-            setActiveTab(path);
+        const topSegment = location.pathname.slice(1).split('/')[0];
+        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
+        if (valid.includes(topSegment) && topSegment !== activeTab)
+            setActiveTab(topSegment);
     }, [location.pathname]);
 
-    // Sync activeTab → URL (skip on public/standalone routes)
+    // Sync activeTab → URL (skip on public/standalone routes and sub-routes)
     useEffect(() => {
         if (location.pathname.startsWith('/wellness-form')) return;
         if (location.pathname.startsWith('/settings')) return;
         const current = location.pathname.slice(1) || 'dashboard';
+        // Don't redirect if we're on a sub-route of the activeTab (e.g. /workouts/packets)
+        if (current.startsWith(activeTab + '/')) return;
         if (activeTab && activeTab !== current)
             navigate('/' + activeTab, { replace: true });
     }, [activeTab]);
@@ -467,6 +470,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [addSessionCategory, setAddSessionCategory] = useState('All');
 
+    // --- CALENDAR EVENTS STATE ---
+    const [calendarEvents, setCalendarEvents] = useState([]);
+    const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+    const [customEventTypes, setCustomEventTypes] = useState([]);
+
     const [newSession, setNewSession] = useState({
         title: '',
         date: new Date().toISOString().split('T')[0],
@@ -668,6 +676,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [medicalReports, setMedicalReports] = useState([]);
 
+    useEffect(() => {
+        if (!isLoading)
+            StorageService.saveMedicalReports(medicalReports);
+    }, [medicalReports, isLoading]);
+
     const [isMedicalModalOpen, setIsMedicalModalOpen] = useState(false);
 
     const [medicalModalMode, setMedicalModalMode] = useState('upload'); // 'upload' or 'text'
@@ -678,6 +691,45 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [inspectingMedicalRecord, setInspectingMedicalRecord] = useState(null);
 
     const [medicalForm, setMedicalForm] = useState({ targetId: '', targetName: '', date: new Date().toISOString().split('T')[0], title: '', description: '', fileName: '', fileSize: '' });
+
+    // --- INJURY REPORTS STATE ---
+    const [injuryReports, setInjuryReports] = useState([]);
+    const [injuryFilterAthleteId, setInjuryFilterAthleteId] = useState('All');
+
+    useEffect(() => {
+        if (!isLoading)
+            StorageService.saveInjuryReports(injuryReports);
+    }, [injuryReports, isLoading]);
+
+    // Save an injury report to Supabase DB + update local state
+    const saveInjuryReportToDB = async (report) => {
+        try {
+            const { id, athleteId, athleteName, teamId, dateOfInjury, createdAt, updatedAt, ...reportFields } = report;
+            const dbPayload = {
+                team_id: teamId || '',
+                athlete_id: athleteId,
+                athlete_name: athleteName,
+                date_of_injury: dateOfInjury || new Date().toISOString().split('T')[0],
+                report_data: reportFields,
+            };
+            if (report._dbId) {
+                // Update existing DB row
+                await DatabaseService.updateInjuryReport(report._dbId, { report_data: reportFields, date_of_injury: dbPayload.date_of_injury });
+            } else {
+                await DatabaseService.saveInjuryReport(dbPayload);
+            }
+        } catch (err) {
+            console.warn('Could not save injury report to DB (will persist in localStorage):', err.message);
+        }
+    };
+
+    const deleteInjuryReportFromDB = async (id) => {
+        try {
+            await DatabaseService.deleteInjuryReport(id);
+        } catch (err) {
+            console.warn('Could not delete injury report from DB:', err.message);
+        }
+    };
 
     // Phase 4: Training Analytics State
     const [activityLog, setActivityLog] = useState([
@@ -728,6 +780,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isLoading)
             StorageService.saveWorkoutLog(workoutLog);
     }, [workoutLog, isLoading]);
+
+    const [workoutTemplates, setWorkoutTemplates] = useState([]);
+
+    // Workout templates are now persisted to Supabase workout_templates table.
+    // Legacy auto-save to StorageService kept as backup only.
+    useEffect(() => {
+        if (!isLoading)
+            StorageService.saveWorkoutTemplates(workoutTemplates);
+    }, [workoutTemplates, isLoading]);
 
     const [quickLogForm, setQuickLogForm] = useState({ exercise: '', sets: '', reps: '', weight: '', rpe: '', pattern: 'Squat' });
 
@@ -1234,6 +1295,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    const scheduleWorkoutSession = async (sessionPayload) => {
+        try {
+            setIsLoading(true);
+            await DatabaseService.createSession(sessionPayload);
+            await initData();
+            showToast("Workout scheduled successfully", "success");
+        } catch (err) {
+            console.error("Error scheduling workout:", err);
+            showToast("Failed to schedule workout", "error");
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleDeleteSession = async (sessionId) => {
         if (!confirm("Are you sure you want to delete this session?")) return;
         try {
@@ -1247,6 +1323,56 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // --- CALENDAR EVENT HANDLERS ---
+    const handleAddCalendarEvent = async (eventData) => {
+        try {
+            setIsLoading(true);
+            await DatabaseService.createCalendarEvent(eventData);
+            await initData();
+            setIsAddEventModalOpen(false);
+            showToast("Event created successfully", "success");
+        } catch (err) {
+            console.error("Error creating calendar event:", err);
+            showToast("Failed to create event", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdateCalendarEvent = async (id, updates) => {
+        try {
+            setIsLoading(true);
+            await DatabaseService.updateCalendarEvent(id, updates);
+            await initData();
+            showToast("Event updated", "success");
+        } catch (err) {
+            console.error("Error updating calendar event:", err);
+            showToast("Failed to update event", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteCalendarEvent = async (id) => {
+        if (!confirm("Are you sure you want to delete this event?")) return;
+        try {
+            setIsLoading(true);
+            await DatabaseService.deleteCalendarEvent(id);
+            await initData();
+            showToast("Event deleted", "success");
+        } catch (err) {
+            console.error("Error deleting calendar event:", err);
+            showToast("Failed to delete event", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSaveCustomEventTypes = async (types) => {
+        setCustomEventTypes(types);
+        await StorageService.saveCustomEventTypes(types);
     };
 
     // --- DATA LOADING ---
@@ -1308,6 +1434,22 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 // Fallback to mocks only if DB fails
                 dbTeams = MOCK_TEAMS;
                 dbExercises = MOCK_EXERCISES;
+            }
+
+            // 1b. Fetch calendar events + custom event types
+            try {
+                const calEventsResult = await DatabaseService.fetchCalendarEvents();
+                setCalendarEvents(calEventsResult || []);
+            } catch (e) {
+                console.warn("Could not fetch calendar events:", e.message);
+            }
+            try {
+                const storedCustomTypes = await StorageService.getCustomEventTypes();
+                if (storedCustomTypes && storedCustomTypes.length > 0) {
+                    setCustomEventTypes(storedCustomTypes);
+                }
+            } catch (e) {
+                console.warn("Could not load custom event types:", e.message);
             }
 
             // 2. Map strict relational data back into the frontend state shape
@@ -1389,11 +1531,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             }
 
             // 5. Load unmigrated Legacy Data (Schedules, Questionnaires)
-            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical] = await Promise.all([
+            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates] = await Promise.all([
                 StorageService.getSessions(),
                 StorageService.getQuestionnaires(),
                 StorageService.getGpsData(),
-                StorageService.getMedicalReports()
+                StorageService.getMedicalReports(),
+                StorageService.getWorkoutTemplates()
             ]);
 
             // Merge Sessions (Database data takes precedence over legacy)
@@ -1411,6 +1554,68 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setQuestionnaires(loadedQuestionnaires || []);
             setGpsData(loadedGps || []);
             setMedicalReports(loadedMedical || []);
+
+            // Workout Templates — prefer Supabase DB, fallback to StorageService
+            try {
+                const dbTemplates = await DatabaseService.fetchWorkoutTemplates();
+                if (dbTemplates && dbTemplates.length > 0) {
+                    const mapped = dbTemplates.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        trainingPhase: t.training_phase,
+                        load: t.load,
+                        sections: t.sections || { warmup: [], workout: [], cooldown: [] },
+                        createdAt: t.created_at,
+                    }));
+                    setWorkoutTemplates(mapped);
+                } else if (loadedTemplates && loadedTemplates.length > 0) {
+                    // Migrate legacy templates from StorageService to DB
+                    setWorkoutTemplates(loadedTemplates);
+                    for (const tpl of loadedTemplates) {
+                        try {
+                            await DatabaseService.createWorkoutTemplate({
+                                name: tpl.name,
+                                training_phase: tpl.trainingPhase,
+                                load: tpl.load,
+                                sections: tpl.sections,
+                            });
+                        } catch (e) {
+                            console.warn("Could not migrate template to DB:", e.message);
+                        }
+                    }
+                } else {
+                    setWorkoutTemplates([]);
+                }
+            } catch (e) {
+                console.warn("Could not fetch workout templates from DB:", e.message);
+                setWorkoutTemplates(loadedTemplates || []);
+            }
+
+            // Injury Reports — prefer Supabase DB, fallback to StorageService/mocks
+            try {
+                const dbInjury = await DatabaseService.fetchInjuryReports();
+                if (dbInjury && dbInjury.length > 0) {
+                    // Map DB rows into frontend shape
+                    const mapped = dbInjury.map(r => ({
+                        id: r.id,
+                        athleteId: r.athlete_id,
+                        athleteName: r.athlete_name,
+                        teamId: r.team_id,
+                        dateOfInjury: r.date_of_injury,
+                        ...(r.report_data || {}),
+                        createdAt: r.created_at,
+                        updatedAt: r.updated_at,
+                    }));
+                    setInjuryReports(mapped);
+                } else {
+                    const loadedInjuryReports = await StorageService.getInjuryReports();
+                    setInjuryReports(loadedInjuryReports?.length ? loadedInjuryReports : MOCK_INJURY_REPORTS);
+                }
+            } catch (e) {
+                console.warn('Could not load injury reports from DB, using StorageService fallback:', e.message);
+                const loadedInjuryReports = await StorageService.getInjuryReports();
+                setInjuryReports(loadedInjuryReports?.length ? loadedInjuryReports : MOCK_INJURY_REPORTS);
+            }
 
             // 6. Wellness Templates from Supabase
             try {
@@ -1803,6 +2008,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setInspectingMedicalRecord,
         medicalForm,
         setMedicalForm,
+        injuryReports,
+        setInjuryReports,
+        saveInjuryReportToDB,
+        deleteInjuryReportFromDB,
+        injuryFilterAthleteId,
+        setInjuryFilterAthleteId,
         activityLog,
         setActivityLog,
         activeConditioningModule,
@@ -1835,6 +2046,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setCompletionLog,
         workoutLog,
         setWorkoutLog,
+        workoutTemplates,
+        setWorkoutTemplates,
         quickLogForm,
         setQuickLogForm,
         assessmentData,
@@ -1953,6 +2166,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleDeleteAthlete,
         handleDeleteTeam,
         handleAddSession,
+        scheduleWorkoutSession,
         handleDeleteSession,
         dashboardCalendarDays,
         exportToCSV,
@@ -1960,7 +2174,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setAthleteAssessments,
         selectedAthleteId,
         setSelectedAthleteId,
-        athletes
+        athletes,
+        // Calendar events
+        calendarEvents,
+        isAddEventModalOpen,
+        setIsAddEventModalOpen,
+        customEventTypes,
+        handleAddCalendarEvent,
+        handleUpdateCalendarEvent,
+        handleDeleteCalendarEvent,
+        handleSaveCustomEventTypes,
     };
 
     return (

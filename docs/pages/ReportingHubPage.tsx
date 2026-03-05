@@ -3,7 +3,6 @@ import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { ACWRMetricCard } from '../components/analytics/ACWRMetricCard';
 import { DataHub } from '../components/analytics/DataHub';
-import WellnessHub from '../components/performance/WellnessHub';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
@@ -1705,12 +1704,10 @@ export const ReportingHubPage = () => {
                 </div>
 
                 <div className="min-h-[600px]">
-                    {activeReport === 'Wellness Hub' && <WellnessHub />}
                     {activeReport === 'Heart Rate Metrics' && renderHeartRateMetricsReport()}
                     {activeReport === 'Tracking Hub' && renderTrackingHub()}
                     {activeReport === 'GPS Data' && renderGPSDataReport()}
                     {activeReport === 'Hamstring Report' && renderHamstringReport()}
-                    {activeReport === 'Medical Reports' && (reportMode === 'input' ? renderMedicalInput() : renderMedicalReport())}
                     {activeReport === 'Data Hub' && renderDataHub()}
                 </div>
             </div>
@@ -1726,21 +1723,19 @@ export const ReportingHubPage = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[
-                    { title: 'Wellness Hub', desc: 'Unified Wellness, Evaluation & Workload Score', icon: ZapIcon },
                     { title: 'Heart Rate Metrics', desc: 'Session Intensity, Peaks & Zone Distribution', icon: HeartIcon },
                     { title: 'Hamstring Report', desc: 'Nordic Force Analysis & Asymmetry Screening', icon: ActivityIcon },
                     { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon },
                     { title: 'Tracking Hub', desc: 'Consolidated Performance & Benchmark Tracking', icon: SearchIcon },
-                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon },
-                    { title: 'Medical Reports', desc: 'Athlete opt-outs, medical status and strategic notes', icon: AlertTriangleIcon }
+                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon }
                 ].map((report, i) => (
                     <button
                         key={i}
                         onClick={() => setActiveReport(report.title)}
-                        className={`bg-white p-5 rounded-xl border ${report.title === 'Wellness Hub' ? 'border-indigo-300 shadow-sm' : 'border-slate-200 shadow-sm'} hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]`}
+                        className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]"
                     >
                         <div className="flex items-start gap-4 h-full">
-                            <div className={`w-10 h-10 rounded-lg ${report.title === 'Wellness Hub' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white'} flex items-center justify-center transition-all shrink-0`}>
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                 <report.icon size={20} />
                             </div>
                             <div className="flex flex-col justify-center h-full">

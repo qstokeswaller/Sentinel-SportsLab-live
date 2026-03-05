@@ -5,6 +5,7 @@ import App from './App';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import PublicWellnessForm from './pages/PublicWellnessForm';
+import PublicInjuryForm from './pages/PublicInjuryForm';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -34,6 +35,8 @@ const AppRouter: React.FC = () => {
         element={loading ? null : user ? <Navigate to="/" replace /> : <LoginPage />}
       />
       <Route path="/wellness-form/:templateId/:teamId" element={<PublicWellnessForm />} />
+      <Route path="/injury-form/:teamId" element={<PublicInjuryForm />} />
+      <Route path="/injury-form/:teamId/:athleteId" element={<PublicInjuryForm />} />
       <Route
         path="/onboarding"
         element={

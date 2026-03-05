@@ -5,19 +5,21 @@ import { useAppState } from '../../context/AppStateContext';
 import { useAuth } from '../../context/AuthContext';
 
 import {
-    ActivityIcon, LayoutDashboardIcon, CalendarIcon, UsersIcon, BookOpenIcon,
+    ActivityIcon, LayoutDashboardIcon, CalendarIcon, UsersIcon, BookOpenIcon, DumbbellIcon,
     ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, ChevronLeftIcon, ChevronRightIcon,
-    SettingsIcon
+    SettingsIcon, HeartPulseIcon
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon },
     { id: 'periodization', label: 'Planner',           icon: CalendarIcon },
     { id: 'clients',       label: 'Roster',            icon: UsersIcon },
-    { id: 'library',       label: 'Exercise Library',  icon: BookOpenIcon },
+    { id: 'workouts',      label: 'Workouts',           icon: DumbbellIcon },
+    { id: 'library',       label: 'Library',            icon: BookOpenIcon },
     { id: 'conditioning',  label: 'Conditioning Hub',  icon: ZapIcon },
     { id: 'analytics',     label: 'Analytics Hub',     icon: BarChart3Icon },
     { id: 'reports',       label: 'Reporting Hub',     icon: FileIcon },
+    { id: 'wellness',      label: 'Wellness Hub',      icon: HeartPulseIcon },
     { id: 'lab',           label: 'Performance Lab',   icon: FlaskConicalIcon },
 ];
 

@@ -96,8 +96,19 @@ const WellnessHub: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [searchQuery, setSearchQuery]           = useState('');
     const [copied, setCopied]                     = useState(false);
+    const [sharingInProgress, setSharingInProgress] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId]   = useState<string | null>(null);
     const [isKpiExpanded, setIsKpiExpanded]       = useState(true);
+    const [shareSessions, setShareSessions] = useState<{ id: string; template_id: string; shared_at: string }[]>([]);
+
+    // Resolve wellnessDateRange to ISO dateFrom/dateTo
+    const dateRange = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        if (wellnessDateRange === 'today') return { from: today, to: today };
+        if (wellnessDateRange === '30d') return { from: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0], to: today };
+        // default '7d'
+        return { from: new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0], to: today };
+    }, [wellnessDateRange]);
 
     // Auto-reload when selectedTeamId or wellnessDateRange changes
     React.useEffect(() => {
@@ -105,6 +116,13 @@ const WellnessHub: React.FC = () => {
             handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
         }
     }, [selectedTeamId, wellnessDateRange, viewMode]);
+
+    // Fetch share sessions for this team + date range
+    React.useEffect(() => {
+        if (selectedTeamId) {
+            DatabaseService.fetchShareSessions(selectedTeamId, dateRange.from, dateRange.to).then(setShareSessions);
+        }
+    }, [selectedTeamId, dateRange]);
 
     const handleDeleteResponse = async (id: string) => {
         try {
@@ -123,6 +141,43 @@ const WellnessHub: React.FC = () => {
             : wellnessResponses,
         [wellnessResponses, selectedTeamId]
     );
+
+    const activeTeam = teams.find(t => t.id === selectedTeamId);
+
+    // Compliance: expected = sessions × athletes, actual = unique (athlete, session) pairs
+    // Falls back to unique response dates when no share sessions exist yet (legacy responses)
+    const compliance = useMemo(() => {
+        const athleteCount = activeTeam?.players?.length || 0;
+        if (athleteCount === 0) return { expected: 0, actual: 0, rate: 0, sessionCount: 0, athleteCount: 0 };
+
+        if (shareSessions.length > 0) {
+            // New behaviour: track via share session IDs
+            const sessionCount = shareSessions.length;
+            const expected = sessionCount * athleteCount;
+            const sessionIds = new Set(shareSessions.map(s => s.id));
+            const seen = new Set<string>();
+            filteredResponses.forEach(r => {
+                if (r.share_session_id && sessionIds.has(r.share_session_id)) {
+                    seen.add(`${r.athlete_id}__${r.share_session_id}`);
+                }
+            });
+            const actual = seen.size;
+            return { expected, actual, rate: Math.round((actual / expected) * 100), sessionCount, athleteCount };
+        }
+
+        // Legacy fallback: each unique response date counts as one "session"
+        const uniqueDates = new Set(filteredResponses.map(r => r.session_date));
+        const sessionCount = uniqueDates.size;
+        if (sessionCount === 0) return { expected: 0, actual: 0, rate: 0, sessionCount: 0, athleteCount };
+        const expected = sessionCount * athleteCount;
+        // Count unique (athlete, date) pairs
+        const seen = new Set<string>();
+        filteredResponses.forEach(r => {
+            seen.add(`${r.athlete_id}__${r.session_date}`);
+        });
+        const actual = seen.size;
+        return { expected, actual, rate: Math.round((actual / expected) * 100), sessionCount, athleteCount };
+    }, [filteredResponses, shareSessions, activeTeam]);
 
     // Team averages across all numeric responses
     const teamAverages = useMemo(() => {
@@ -151,7 +206,6 @@ const WellnessHub: React.FC = () => {
         alerts:      filteredResponses.filter(r => (r.rpe || 0) >= 8 || r.injury_report || resolveAvailability(r) === 'unavailable').length,
     }), [filteredResponses]);
 
-    const activeTeam    = teams.find(t => t.id === selectedTeamId);
     const activeAthlete = athletes.find(a => a.id === selectedAthleteId);
 
     // ── SELECTION (home) ────────────────────────────────────────────────────
@@ -160,7 +214,7 @@ const WellnessHub: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                 <div>
-                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tighter">Wellness Hub</h2>
+                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tighter">Questionnaire Data</h2>
                     <p className="text-slate-400 font-bold uppercase text-[11px] tracking-[0.2em] mt-2 flex items-center gap-2">
                         <Activity size={14} className="text-cyan-500" />
                         {formatDate(TODAY)} — Real-time Readiness Monitoring
@@ -707,17 +761,38 @@ const WellnessHub: React.FC = () => {
                             <div className="relative z-10 h-full flex flex-col justify-between">
                                 <div>
                                     <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Response Rate</h3>
-                                    <div className="text-5xl font-semibold mt-2 tracking-tighter">
-                                        {Math.round((filteredResponses.length / (activeTeam?.players.length || 1)) * 100)}%
-                                    </div>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-2">
-                                        {filteredResponses.length} of {activeTeam?.players.length} athletes
-                                    </p>
+                                    {compliance.expected > 0 ? (
+                                        <>
+                                            <div className="text-5xl font-semibold mt-2 tracking-tighter">
+                                                {compliance.rate}%
+                                            </div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mt-2">
+                                                {compliance.actual} of {compliance.expected} expected
+                                            </p>
+                                            <p className="text-[9px] font-medium text-slate-600 mt-1">
+                                                {compliance.sessionCount} link{compliance.sessionCount !== 1 ? 's' : ''} shared · {compliance.athleteCount} athlete{compliance.athleteCount !== 1 ? 's' : ''}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="text-5xl font-semibold mt-2 tracking-tighter text-slate-600">
+                                                —
+                                            </div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mt-2">
+                                                No links shared yet in this period
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="pt-8 flex gap-1.5">
-                                    {(activeTeam?.players || []).slice(0, 6).map((_, i) => (
-                                        <div key={i} className={`flex-1 h-1.5 rounded-full overflow-hidden ${i < filteredResponses.length ? 'bg-cyan-500' : 'bg-white/10'}`} />
-                                    ))}
+                                    {compliance.expected > 0
+                                        ? Array.from({ length: Math.min(compliance.expected, 12) }, (_, i) => (
+                                            <div key={i} className={`flex-1 h-1.5 rounded-full overflow-hidden ${i < compliance.actual ? 'bg-cyan-500' : 'bg-white/10'}`} />
+                                        ))
+                                        : (activeTeam?.players || []).slice(0, 6).map((_, i) => (
+                                            <div key={i} className="flex-1 h-1.5 rounded-full overflow-hidden bg-white/10" />
+                                        ))
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -1059,7 +1134,7 @@ const WellnessHub: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Body Map */}
+                    {/* Body Map + Per-Area Injury Details */}
                     <div className="bg-white p-8 rounded-xl border-2 border-slate-100 shadow-sm space-y-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold uppercase text-slate-900 flex items-center gap-2">
@@ -1091,6 +1166,51 @@ const WellnessHub: React.FC = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Per-area injury follow-up details */}
+                        {res?.injury_report?.areas?.length > 0 && (() => {
+                            const followUpIds = ['injury_type', 'injury_timing', 'injury_mechanism', 'injury_side', 'training_interruption'];
+                            const followUpLabels: Record<string, string> = {
+                                injury_type: 'Nature', injury_timing: 'When', injury_mechanism: 'Mechanism',
+                                injury_side: 'Side', training_interruption: 'Interrupted Training',
+                            };
+                            return (
+                                <div className="space-y-3 mt-2">
+                                    {res.injury_report.areas.map((area: BodyMapArea) => {
+                                        // Check compound keys first (new format), fall back to flat keys (legacy)
+                                        const details = followUpIds
+                                            .map(fid => {
+                                                const val = res.responses[`${fid}__${area.area}`] ?? res.responses[fid];
+                                                return val ? { label: followUpLabels[fid] || fid, value: val } : null;
+                                            })
+                                            .filter(Boolean) as { label: string; value: any }[];
+
+                                        if (details.length === 0) return null;
+
+                                        return (
+                                            <div key={area.area} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                                                        area.severity === 3 ? 'bg-rose-500' : area.severity === 2 ? 'bg-orange-500' : 'bg-yellow-400'
+                                                    }`} />
+                                                    <span className="text-[10px] font-black uppercase tracking-wide text-slate-700">
+                                                        {area.area.replace(/_/g, ' ')}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {details.map(d => (
+                                                        <div key={d.label} className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg">
+                                                            <span className="text-[8px] font-bold uppercase text-slate-400 block">{d.label}</span>
+                                                            <span className="text-[10px] font-semibold text-slate-700">{String(d.value)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>
@@ -1099,20 +1219,40 @@ const WellnessHub: React.FC = () => {
 
     // ── SHARE PANEL ──────────────────────────────────────────────────────────
     const renderSharePanel = () => {
-        const templatesWithLinks = wellnessTemplates.map((t: any) => ({
-            ...t,
-            url: `${window.location.origin}/wellness-form/${t.id}/${selectedTeamId}`,
-        }));
+        const previewLink = selectedTemplate
+            ? `${window.location.origin}/wellness-form/${selectedTemplate.id}/${selectedTeamId}`
+            : '';
 
-        const activeLink = selectedTemplate ? `${window.location.origin}/wellness-form/${selectedTemplate.id}/${selectedTeamId}` : '';
+        // Create a new share session, return the full URL with ?s= param
+        const createSessionLink = async (): Promise<string | null> => {
+            if (!selectedTemplate || !selectedTeamId) return null;
+            try {
+                setSharingInProgress(true);
+                const session = await DatabaseService.createShareSession(selectedTemplate.id, selectedTeamId);
+                setShareSessions(prev => [{ id: session.id, template_id: selectedTemplate.id, shared_at: new Date().toISOString() }, ...prev]);
+                return `${window.location.origin}/wellness-form/${selectedTemplate.id}/${selectedTeamId}?s=${session.id}`;
+            } catch (err) {
+                console.error('Failed to create share session:', err);
+                return null;
+            } finally {
+                setSharingInProgress(false);
+            }
+        };
 
         const handleCopy = async () => {
-            await navigator.clipboard.writeText(activeLink);
+            const link = await createSessionLink();
+            if (!link) return;
+            await navigator.clipboard.writeText(link);
             setCopied(true);
             setTimeout(() => setCopied(false), 2500);
         };
 
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(`Complete your wellness check-in here: ${activeLink}`)}`;
+        const handleWhatsApp = async () => {
+            const link = await createSessionLink();
+            if (!link) return;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(`Complete your wellness check-in here: ${link}`)}`;
+            window.open(waUrl, '_blank', 'noopener,noreferrer');
+        };
 
         return (
             <div className="space-y-8 animate-in zoom-in-95 duration-500 max-w-4xl mx-auto">
@@ -1126,7 +1266,7 @@ const WellnessHub: React.FC = () => {
                     <div>
                         <h2 className="text-3xl font-semibold text-slate-900 tracking-tighter">Share Check-in Link</h2>
                         <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wide mt-1">
-                            Send to athletes — no login required
+                            Each share generates a unique link — response rate resets per share
                         </p>
                     </div>
                 </div>
@@ -1137,7 +1277,7 @@ const WellnessHub: React.FC = () => {
                         <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide ml-1">Select Questionnaire</label>
                         <div className="space-y-3">
                             {/* Existing templates */}
-                            {templatesWithLinks.map((t: any) => {
+                            {wellnessTemplates.map((t: any) => {
                                 const isSelected = selectedTemplate?.id === t.id;
                                 return (
                                     <div
@@ -1211,11 +1351,12 @@ const WellnessHub: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* URL copy row */}
+                                {/* URL preview row */}
                                 <div className="bg-slate-50 border-2 border-slate-100 rounded-xl p-4 flex items-center gap-3">
-                                    <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{activeLink}</p>
+                                    <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{previewLink}</p>
                                     <button
                                         onClick={handleCopy}
+                                        disabled={sharingInProgress}
                                         className={`p-2 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-500 hover:text-cyan-600 hover:border-cyan-200'}`}
                                     >
                                         {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
@@ -1226,22 +1367,30 @@ const WellnessHub: React.FC = () => {
                                 <div className="flex flex-col gap-3">
                                     <button
                                         onClick={handleCopy}
-                                        className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                        disabled={sharingInProgress}
+                                        className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
                                     >
-                                        <Copy size={14} /> {copied ? 'Copied!' : 'Copy Link'}
+                                        {sharingInProgress ? (
+                                            <><Clock size={14} className="animate-spin" /> Generating...</>
+                                        ) : (
+                                            <><Copy size={14} /> {copied ? 'Copied!' : 'Copy Link'}</>
+                                        )}
                                     </button>
-                                    <a
-                                        href={waUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-full py-3.5 bg-[#25D366] text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-[#1ebe5d] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                    <button
+                                        onClick={handleWhatsApp}
+                                        disabled={sharingInProgress}
+                                        className="w-full py-3.5 bg-[#25D366] text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-[#1ebe5d] transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
                                     >
-                                        <Share2 size={14} /> Share via WhatsApp
-                                    </a>
+                                        {sharingInProgress ? (
+                                            <><Clock size={14} className="animate-spin" /> Generating...</>
+                                        ) : (
+                                            <><Share2 size={14} /> Share via WhatsApp</>
+                                        )}
+                                    </button>
                                 </div>
 
                                 <p className="text-[9px] font-bold text-slate-300 uppercase text-center tracking-wide">
-                                    Athletes open the link on their device — no app or login needed.
+                                    Each share creates a unique session — response rate tracks this link only.
                                 </p>
                             </div>
                         ) : (

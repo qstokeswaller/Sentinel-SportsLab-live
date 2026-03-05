@@ -2,8 +2,9 @@
 import React from 'react';
 import { useAppState } from '../context/AppStateContext';
 import {
-    AlertTriangleIcon, CalendarIcon, PackageIcon, PrinterIcon, FilterIcon,
-    ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, PlusIcon, CheckCircle2Icon
+    AlertTriangleIcon, CalendarIcon, FilterIcon,
+    ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, PlusIcon, CheckCircle2Icon,
+    MapPinIcon, PencilIcon, Trash2Icon, XIcon,
 } from 'lucide-react';
 
 export const DashboardPage = () => {
@@ -12,14 +13,31 @@ export const DashboardPage = () => {
         dashboardFilterTarget, setDashboardFilterTarget,
         heatmapTeamFilter, setHeatmapTeamFilter,
         dashboardCalendarDate, setDashboardCalendarDate, dashboardCalendarDays,
-        isWorkoutPacketModalOpen, setIsWorkoutPacketModalOpen,
-        setIsWeightroomSheetModalOpen,
-        setIsAddSessionModalOpen,
-        newSession, setNewSession,
+        setIsAddEventModalOpen,
+        calendarEvents,
+        handleUpdateCalendarEvent,
+        handleDeleteCalendarEvent,
         setViewingDate, setViewingSession,
         setSelectedInterventionAthlete, setIsInterventionModalOpen,
         calculateACWR, resolveTargetName, getSessionTypeColor,
     } = useAppState();
+
+    const [activePopover, setActivePopover] = React.useState(null);
+    const [editingEvent, setEditingEvent] = React.useState(null);
+    const popoverRef = React.useRef(null);
+
+    // Close popover on click outside
+    React.useEffect(() => {
+        if (!activePopover) return;
+        const handler = (e) => {
+            if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+                setActivePopover(null);
+                setEditingEvent(null);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [activePopover]);
 
     const renderMorningReport = () => {
         const atRiskAthletes = teams.flatMap(t => t.players).map(player => {
@@ -51,7 +69,7 @@ export const DashboardPage = () => {
         }).filter(p => p.riskLevel !== 'Stable').sort((a, b) => b.riskScore - a.riskScore);
 
         return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
                 <div className="px-5 py-4 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
@@ -64,7 +82,7 @@ export const DashboardPage = () => {
                     </div>
                     <span className="px-2.5 py-1 bg-white border border-rose-200 rounded-full text-xs font-medium text-rose-600 shrink-0">{atRiskAthletes.length} at risk</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-3 space-y-2 flex-1 overflow-y-auto">
                     {atRiskAthletes.length > 0 ? atRiskAthletes.map(player => {
                         const isFocused = dashboardFilterTarget === player.name;
                         return (
@@ -127,47 +145,9 @@ export const DashboardPage = () => {
                             </div>
 
                             {/* Main Dashboard Actions Column */}
-                            <div className="lg:col-span-2 space-y-6">
-                                {/* Top Row: Preparation Actions */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <button onClick={(e) => {
-                                        console.log('--- WORKOUT PACKET CLICK START ---');
-                                        console.log('Current State:', isWorkoutPacketModalOpen);
-                                        console.log('Event Phase:', e.eventPhase);
-                                        setIsWorkoutPacketModalOpen(true);
-                                        console.log('State Setter Called');
-                                        window.WP_FORCE_OPEN = true; // Global flag for backup
-                                    }} className="bg-indigo-600 p-5 rounded-xl shadow-sm space-y-3 hover:bg-indigo-700 transition-colors text-left">
-                                        <div className="flex justify-between items-center text-indigo-200">
-                                            <h3 className="text-xs font-medium">Workout Packets</h3>
-                                            <PackageIcon size={14} />
-                                        </div>
-                                        <div className="text-white">
-                                            <div className="text-sm font-semibold leading-tight">Digital Distribution</div>
-                                            <div className="text-xs opacity-70 mt-1 leading-relaxed">
-                                                Generate QR-linked PDF packets for the session, streamlining off-site
-                                                training with instructional video integration for every prescribed movement.
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button onClick={() => setIsWeightroomSheetModalOpen(true)} className="bg-slate-800 p-5 rounded-xl shadow-sm space-y-3 hover:bg-slate-900 transition-colors text-left">
-                                        <div className="flex justify-between items-center text-slate-400">
-                                            <h3 className="text-xs font-medium">Weightroom Sheets</h3>
-                                            <PrinterIcon size={14} />
-                                        </div>
-                                        <div className="text-white">
-                                            <div className="text-sm font-semibold leading-tight">Generate Sheets</div>
-                                            <div className="text-xs opacity-60 mt-1 leading-relaxed">
-                                                Daily prescribed loads for squads. High-density team sheets with calculated
-                                                percentages based on 1RM testing data for precise intensity control.</div>
-                                        </div>
-                                    </button>
-                                </div>
-
-
+                            <div className="lg:col-span-2">
                                 {/* Squad Readiness Heatmap */}
-                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full flex flex-col">
                                     <div>
                                         <h4 className="text-sm font-semibold text-slate-900">
                                             {dashboardFilterTarget === 'All Athletes' ? 'Squad Readiness Heatmap' : 'Individual Readiness Heatmap'}
@@ -308,15 +288,12 @@ export const DashboardPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Add Session Button */}
+                                {/* Add Event Button */}
                                 <div className="flex justify-end">
-                                    <button onClick={() => {
-                                        setNewSession({ ...newSession, date: new Date().toISOString().split('T')[0] });
-                                        setIsAddSessionModalOpen(true);
-                                    }}
+                                    <button onClick={() => setIsAddEventModalOpen(true)}
                                         className="bg-indigo-600 text-white px-4 py-2 rounded-full text-xs font-medium shadow-sm flex items-center gap-1.5 hover:bg-indigo-700 transition-colors"
                                     >
-                                        <PlusIcon size={13} /> Add Session
+                                        <PlusIcon size={13} /> Add Event
                                     </button>
                                 </div>
                             </div>
@@ -342,6 +319,7 @@ export const DashboardPage = () => {
                                                             {isToday && <span className="text-[9px] font-medium bg-indigo-600 text-white px-1.5 py-0.5 rounded-full">Today</span>}
                                                         </div>
                                                         <div className="space-y-1">
+                                                            {/* Workout Sessions */}
                                                             {filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).slice(0, 3).map(session => (
                                                                 <div key={session.id} onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
                                                                     className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer ${getSessionTypeColor(session.trainingPhase)}`}>
@@ -351,15 +329,170 @@ export const DashboardPage = () => {
                                                                     </div>
                                                                     <div className="px-0.5">
                                                                         <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
-                                                                        <div className="text-[8px] opacity-70 truncate mt-0.5">{resolveTargetName(session.targetId, session.targetType)}</div>
+                                                                        <div className="text-[8px] opacity-70 truncate mt-0.5">
+                                                                            {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                            {resolveTargetName(session.targetId, session.targetType)}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
-                                                            {filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length > 3 && (
-                                                                <div className="text-[9px] text-slate-400 text-center pt-0.5">
-                                                                    +{filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length - 3} more
-                                                                </div>
-                                                            )}
+                                                            {/* Calendar Events — bubble cards */}
+                                                            {calendarEvents
+                                                                .filter(e => {
+                                                                    const start = e.start_date;
+                                                                    const end = e.end_date || e.start_date;
+                                                                    return dateObj.dateStr >= start && dateObj.dateStr <= end;
+                                                                })
+                                                                .slice(0, Math.max(0, 3 - filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length))
+                                                                .map(event => (
+                                                                    <div key={event.id} className="relative">
+                                                                        <div
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActivePopover(activePopover?.id === event.id ? null : { id: event.id, event });
+                                                                                setEditingEvent(null);
+                                                                            }}
+                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                                                                            style={{
+                                                                                backgroundColor: `${event.color}12`,
+                                                                                borderColor: `${event.color}30`,
+                                                                            }}
+                                                                        >
+                                                                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
+                                                                            <span className="text-[9px] font-medium leading-tight truncate" style={{ color: event.color }}>
+                                                                                {!event.all_day && event.start_time && (
+                                                                                    <span className="font-semibold">{event.start_time} </span>
+                                                                                )}
+                                                                                {event.title}
+                                                                            </span>
+                                                                        </div>
+                                                                        {/* Event Popover */}
+                                                                        {activePopover?.id === event.id && (
+                                                                            <div
+                                                                                ref={popoverRef}
+                                                                                className="absolute z-50 left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                            >
+                                                                                {/* Color accent bar */}
+                                                                                <div className="h-1 rounded-t-lg" style={{ backgroundColor: event.color }} />
+                                                                                <div className="p-3 space-y-2">
+                                                                                    {editingEvent?.id === event.id ? (
+                                                                                        /* Edit mode */
+                                                                                        <div className="space-y-2">
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={editingEvent.title}
+                                                                                                onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                                                                                                className="w-full text-sm font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-indigo-400"
+                                                                                            />
+                                                                                            <textarea
+                                                                                                value={editingEvent.description || ''}
+                                                                                                onChange={e => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                                                                                                placeholder="Description..."
+                                                                                                rows={2}
+                                                                                                className="w-full text-[10px] text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-indigo-400 resize-none"
+                                                                                            />
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={editingEvent.location || ''}
+                                                                                                onChange={e => setEditingEvent({ ...editingEvent, location: e.target.value })}
+                                                                                                placeholder="Location..."
+                                                                                                className="w-full text-[10px] text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-indigo-400"
+                                                                                            />
+                                                                                            <div className="flex gap-1.5">
+                                                                                                <button
+                                                                                                    onClick={() => {
+                                                                                                        handleUpdateCalendarEvent(event.id, {
+                                                                                                            title: editingEvent.title,
+                                                                                                            description: editingEvent.description || null,
+                                                                                                            location: editingEvent.location || null,
+                                                                                                        });
+                                                                                                        setActivePopover(null);
+                                                                                                        setEditingEvent(null);
+                                                                                                    }}
+                                                                                                    className="flex-1 px-2 py-1 bg-indigo-600 text-white rounded text-[10px] font-semibold hover:bg-indigo-700 transition-colors"
+                                                                                                >
+                                                                                                    Save
+                                                                                                </button>
+                                                                                                <button
+                                                                                                    onClick={() => setEditingEvent(null)}
+                                                                                                    className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-medium hover:bg-slate-200 transition-colors"
+                                                                                                >
+                                                                                                    Cancel
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        /* View mode */
+                                                                                        <>
+                                                                                            <div className="flex items-start justify-between">
+                                                                                                <h4 className="text-sm font-semibold text-slate-900 leading-tight">{event.title}</h4>
+                                                                                                <button onClick={() => { setActivePopover(null); setEditingEvent(null); }} className="p-0.5 text-slate-300 hover:text-slate-600 transition-colors">
+                                                                                                    <XIcon size={12} />
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <span
+                                                                                                className="inline-block px-2 py-0.5 rounded text-[9px] font-semibold"
+                                                                                                style={{ backgroundColor: `${event.color}20`, color: event.color }}
+                                                                                            >
+                                                                                                {event.event_type}
+                                                                                            </span>
+                                                                                            <div className="text-[10px] text-slate-500 space-y-1">
+                                                                                                <div>
+                                                                                                    {event.all_day
+                                                                                                        ? `All Day · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                                                                                                        : `${event.start_time || ''}${event.end_time ? ' – ' + event.end_time : ''} · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                                                                                                    }
+                                                                                                </div>
+                                                                                                {event.location && (
+                                                                                                    <div className="flex items-center gap-1">
+                                                                                                        <MapPinIcon size={9} className="text-slate-400 shrink-0" />
+                                                                                                        {event.location}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                                {event.description && (
+                                                                                                    <p className="text-slate-400 leading-relaxed">{event.description}</p>
+                                                                                                )}
+                                                                                            </div>
+                                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                                                                                                <button
+                                                                                                    onClick={() => setEditingEvent({ ...event })}
+                                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                                >
+                                                                                                    <PencilIcon size={10} /> Edit
+                                                                                                </button>
+                                                                                                <button
+                                                                                                    onClick={() => {
+                                                                                                        handleDeleteCalendarEvent(event.id);
+                                                                                                        setActivePopover(null);
+                                                                                                    }}
+                                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                                                >
+                                                                                                    <Trash2Icon size={10} /> Delete
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            {/* +X more count (sessions + events combined) */}
+                                                            {(() => {
+                                                                const sessionCount = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length;
+                                                                const eventCount = calendarEvents.filter(e => {
+                                                                    const start = e.start_date;
+                                                                    const end = e.end_date || e.start_date;
+                                                                    return dateObj.dateStr >= start && dateObj.dateStr <= end;
+                                                                }).length;
+                                                                const total = sessionCount + eventCount;
+                                                                return total > 3 ? (
+                                                                    <div className="text-[9px] text-slate-400 text-center pt-0.5">
+                                                                        +{total - 3} more
+                                                                    </div>
+                                                                ) : null;
+                                                            })()}
                                                         </div>
                                                     </>
                                                 )}

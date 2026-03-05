@@ -128,6 +128,28 @@ export interface ScheduledSession {
   status: 'Scheduled' | 'Completed' | 'Missed' | 'Modified';
 }
 
+// --- CALENDAR EVENT TYPES ---
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  event_type: string;
+  color: string;
+  description?: string;
+  location?: string;
+  all_day: boolean;
+  start_date: string;
+  end_date?: string;
+  start_time?: string;
+  end_time?: string;
+  created_at?: string;
+}
+
+export interface CustomEventType {
+  label: string;
+  color: string;
+}
+
 export interface ProgramTemplate {
   id: string;
   name: string;
@@ -145,6 +167,7 @@ export interface ChatMessage {
 // --- WELLNESS / QUESTIONNAIRE TYPES ---
 
 export type QuestionType =
+  | 'scale'
   | 'scale_1_5'
   | 'scale_1_10'
   | 'scale_0_3'
@@ -152,7 +175,8 @@ export type QuestionType =
   | 'checklist'
   | 'text'
   | 'yes_no'
-  | 'body_map';
+  | 'body_map'
+  | 'buttons';
 
 export interface QuestionOption {
   label: string;
@@ -168,11 +192,47 @@ export interface WellnessQuestion {
   options?: string[];          // for multiple_choice / checklist
   numericMap?: number[];       // parallel to options — numeric value for each choice
   labels?: [string, string];   // [min_label, max_label] for scale types
+  scaleMin?: number;           // custom range for 'scale' type
+  scaleMax?: number;
+  imageUrl?: string;           // reference image URL (any question type)
+  bodyMapConfig?: BodyMapConfig; // per-question body map configuration
   conditional?: {
     questionId: string;
     notEmpty?: boolean;        // show when target question has any value
     value?: any;               // show when target question equals this value
   };
+}
+
+export interface BodyMapAreaDef {
+  key: string;
+  label: string;
+  view: 'front' | 'back';
+  color: string;
+  hasSeverity?: boolean; // true = cycle severity levels, false = simple on/off toggle
+}
+
+export interface SeverityLevel {
+  value: number;
+  label: string;
+  shortLabel: string;
+  style: string;         // Tailwind classes
+  legendColor: string;   // hex color for legend dot
+}
+
+// Sub-input types available below the reference image
+export type ImageRefInputType = 'buttons' | 'scale' | 'multiple_choice' | 'checklist' | 'yes_no' | 'text' | 'none';
+
+export interface BodyMapConfig {
+  areas: BodyMapAreaDef[];
+  severityLevels: SeverityLevel[];
+  referenceImageUrl?: string;
+  instructionText?: string;
+  subInputType?: ImageRefInputType;       // what input renders below the image (default: 'area_buttons')
+  subInputOptions?: string[];             // options for choice/checklist sub-inputs
+  subInputNumericMap?: number[];          // numeric values for choice sub-inputs
+  subInputLabels?: [string, string];     // min/max labels for scale sub-input
+  subInputScaleMin?: number;
+  subInputScaleMax?: number;
 }
 
 export interface QuestionnaireTemplate {
@@ -194,7 +254,7 @@ export interface BodyMapArea {
   severity: 0 | 1 | 2 | 3;  // 0=none, 1=mild, 2=moderate, 3=severe
 }
 
-export interface InjuryReport {
+export interface WellnessInjuryData {
   areas: BodyMapArea[];
   type?: string;                // nature of pain
   mechanism?: string;           // contact / non-contact / overuse
@@ -212,6 +272,56 @@ export interface WellnessResponse {
   responses: Record<string, any>;  // { question_id: answer_value }
   rpe?: number;
   availability?: 'available' | 'modified' | 'unavailable';
-  injury_report?: InjuryReport;
+  injury_report?: WellnessInjuryData;
   submitted_at: string;
+}
+
+// --- INJURY REPORT TYPES (Physio) ---
+
+export type InjuryClassification = 'Muscle Strain' | 'Ligament Sprain' | 'Fracture' | 'Contusion' | 'Tendinopathy' | 'Dislocation' | 'Overuse' | 'Concussion' | 'Laceration' | 'Nerve Injury' | 'Other';
+export type SeverityGrade = 1 | 2 | 3;
+export type Laterality = 'Left' | 'Right' | 'Bilateral' | 'Central';
+export type PainKind = 'Sharp' | 'Dull' | 'Burning' | 'Throbbing' | 'Radiating';
+export type InjuryTrainingStatus = 'Full Training' | 'Modified Training' | 'Rehab Only' | 'Complete Rest';
+export type TreatmentOption = 'Ice' | 'Physio' | 'Massage' | 'Strapping' | 'Medication' | 'Surgery Referral' | 'Imaging Referral';
+export type ReturnToPlayPhase = 'Phase 1 - Rest' | 'Phase 2 - Rehab' | 'Phase 3 - Modified Training' | 'Phase 4 - Full Return';
+
+export interface InjuryReport {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  teamId?: string;
+  areas: BodyMapArea[];
+  // Classification & Context
+  classification?: InjuryClassification;
+  severityGrade?: SeverityGrade;
+  laterality?: Laterality;
+  recurrence?: 'New' | 'Recurrence';
+  activity?: 'Training' | 'Match' | 'Warm-up' | 'Gym' | 'Other';
+  // Clinical
+  dateOfInjury: string;
+  mechanism?: string;
+  painLevel?: number;
+  painKinds?: PainKind[];
+  hasSwelling?: boolean;
+  swellingSeverity?: 'Mild' | 'Moderate' | 'Severe';
+  hasBruising?: boolean;
+  bruisingSeverity?: 'Mild' | 'Moderate' | 'Severe';
+  rangeOfMotion?: 'Full' | 'Limited' | 'None';
+  weightBearing?: 'Full' | 'Partial' | 'Non-weight-bearing';
+  stoppedTraining?: boolean;
+  // Management
+  currentStatus?: InjuryTrainingStatus;
+  treatmentPrescribed?: TreatmentOption[];
+  treatmentRecommendations?: string;
+  followUpDate?: string;
+  returnToPlayPhase?: ReturnToPlayPhase;
+  expectedTimeOut?: string;
+  // Evaluation
+  comments?: string;
+  // Attachments
+  attachmentUrls?: string[];
+  // Meta
+  createdAt: string;
+  updatedAt?: string;
 }
