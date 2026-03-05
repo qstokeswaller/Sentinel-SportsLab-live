@@ -1169,6 +1169,26 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    const handleDeleteAthlete = async (athleteId: string) => {
+        try {
+            await DatabaseService.deleteAthlete(athleteId);
+            initData();
+        } catch (err) {
+            console.error("Error deleting athlete:", err);
+            alert("Failed to delete athlete.");
+        }
+    };
+
+    const handleDeleteTeam = async (teamId: string) => {
+        try {
+            await DatabaseService.deleteTeam(teamId);
+            initData();
+        } catch (err) {
+            console.error("Error deleting team:", err);
+            alert("Failed to delete team. Make sure all athletes are removed first.");
+        }
+    };
+
     const handleAddSession = async () => {
         if (!newSession.title || !newSession.targetId) {
             setAddSessionTab('info');
@@ -1930,6 +1950,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleOpenPlayerProfile,
         handleAddAthlete,
         handleAddTeam,
+        handleDeleteAthlete,
+        handleDeleteTeam,
         handleAddSession,
         handleDeleteSession,
         dashboardCalendarDays,

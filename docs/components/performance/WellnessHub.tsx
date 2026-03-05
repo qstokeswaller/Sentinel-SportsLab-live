@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import {
     Search, Users, ChevronRight, ArrowLeft, ClipboardList, AlertTriangle,
     Share2, Calendar, Activity, CheckCircle2, Clock, Copy, Zap, Link2, Plus, X,
-    BarChart3,
+    BarChart3, Trash2, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import { DatabaseService } from '../../services/databaseService';
 import QuestionnaireManager from './QuestionnaireManager';
 import WellnessChartCard from '../charts/WellnessChartCard';
 import { BodyMapArea } from '../../types/types';
@@ -16,11 +17,38 @@ const TODAY = new Date().toISOString().split('T')[0];
 const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+const formatDateHeader = (isoDate: string): { label: string; sub: string | null } => {
+    const d = new Date(isoDate + 'T00:00:00');
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    d.setHours(0, 0, 0, 0);
+    const dayName  = d.toLocaleDateString('en-GB', { weekday: 'long' });
+    const short    = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const full     = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (d.getTime() === now.getTime())       return { label: 'Today',     sub: short };
+    if (d.getTime() === yesterday.getTime()) return { label: 'Yesterday', sub: short };
+    return { label: dayName + ', ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), sub: null };
+};
+
+/** Resolves availability from either the top-level field (new) or the raw responses object (legacy).
+ *  The form used to save full option text like 'Fully available for training/competition'. */
+const resolveAvailability = (res: any): 'available' | 'modified' | 'unavailable' | undefined => {
+    const top = res?.availability;
+    if (top === 'available' || top === 'modified' || top === 'unavailable') return top;
+    const raw: string = res?.responses?.availability || '';
+    if (!raw) return undefined;
+    if (raw === 'available' || raw.toLowerCase().includes('fully available')) return 'available';
+    if (raw === 'modified'  || raw.toLowerCase().includes('modified'))        return 'modified';
+    if (raw === 'unavailable' || raw.toLowerCase().includes('unavailable'))   return 'unavailable';
+    return undefined;
+};
+
 /** Returns 'green' | 'amber' | 'red' | null for a wellness response */
 const getAthleteStatus = (res: any): 'green' | 'amber' | 'red' | null => {
     if (!res) return null;
-    if (res.availability === 'unavailable' || (res.injury_report?.areas?.length || 0) > 0 || (res.rpe || 0) >= 9) return 'red';
-    if (res.availability === 'modified' || (res.rpe || 0) >= 7) return 'amber';
+    const avail = resolveAvailability(res);
+    if (avail === 'unavailable' || (res.injury_report?.areas?.length || 0) > 0 || (res.rpe || 0) >= 9) return 'red';
+    if (avail === 'modified' || (res.rpe || 0) >= 7) return 'amber';
     return 'green';
 };
 
@@ -68,6 +96,8 @@ const WellnessHub: React.FC = () => {
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [searchQuery, setSearchQuery]           = useState('');
     const [copied, setCopied]                     = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId]   = useState<string | null>(null);
+    const [isKpiExpanded, setIsKpiExpanded]       = useState(true);
 
     // Auto-reload when selectedTeamId or wellnessDateRange changes
     React.useEffect(() => {
@@ -75,6 +105,16 @@ const WellnessHub: React.FC = () => {
             handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
         }
     }, [selectedTeamId, wellnessDateRange, viewMode]);
+
+    const handleDeleteResponse = async (id: string) => {
+        try {
+            await DatabaseService.deleteWellnessResponse(id);
+            setConfirmDeleteId(null);
+            if (selectedTeamId) handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
+        } catch {
+            alert('Failed to delete response.');
+        }
+    };
 
     // Responses for currently selected team
     const filteredResponses = useMemo(() =>
@@ -105,10 +145,10 @@ const WellnessHub: React.FC = () => {
     // KPI counts derived from filtered responses
     const kpi = useMemo(() => ({
         total:       filteredResponses.length,
-        available:   filteredResponses.filter(r => r.availability === 'available').length,
-        modified:    filteredResponses.filter(r => r.availability === 'modified').length,
-        unavailable: filteredResponses.filter(r => r.availability === 'unavailable').length,
-        alerts:      filteredResponses.filter(r => (r.rpe || 0) >= 8 || r.injury_report || r.availability === 'unavailable').length,
+        available:   filteredResponses.filter(r => resolveAvailability(r) === 'available').length,
+        modified:    filteredResponses.filter(r => resolveAvailability(r) === 'modified').length,
+        unavailable: filteredResponses.filter(r => resolveAvailability(r) === 'unavailable').length,
+        alerts:      filteredResponses.filter(r => (r.rpe || 0) >= 8 || r.injury_report || resolveAvailability(r) === 'unavailable').length,
     }), [filteredResponses]);
 
     const activeTeam    = teams.find(t => t.id === selectedTeamId);
@@ -141,10 +181,10 @@ const WellnessHub: React.FC = () => {
                     const todayRes = wellnessResponses.filter(
                         r => r.team_id === team.id && r.session_date === TODAY
                     );
-                    const fullCount      = todayRes.filter(r => r.availability === 'available').length;
-                    const modCount       = todayRes.filter(r => r.availability === 'modified').length;
-                    const outCount       = todayRes.filter(r => r.availability === 'unavailable').length;
-                    const alertCount     = todayRes.filter(r => (r.rpe || 0) >= 8 || r.injury_report || r.availability === 'unavailable').length;
+                    const fullCount      = todayRes.filter(r => resolveAvailability(r) === 'available').length;
+                    const modCount       = todayRes.filter(r => resolveAvailability(r) === 'modified').length;
+                    const outCount       = todayRes.filter(r => resolveAvailability(r) === 'unavailable').length;
+                    const alertCount     = todayRes.filter(r => (r.rpe || 0) >= 8 || r.injury_report || resolveAvailability(r) === 'unavailable').length;
                     const responseCount  = todayRes.length;
                     const totalAthletes  = team.players.length;
 
@@ -551,6 +591,14 @@ const WellnessHub: React.FC = () => {
                         </select>
                     </div>
                     <button
+                        onClick={() => setIsKpiExpanded(v => !v)}
+                        title={isKpiExpanded ? 'Hide availability summary' : 'Show availability summary'}
+                        className="flex items-center gap-1.5 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 hover:border-slate-400 transition-all text-[10px] font-bold uppercase tracking-wide"
+                    >
+                        {isKpiExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        {isKpiExpanded ? 'Hide' : 'Show'}
+                    </button>
+                    <button
                         onClick={() => setViewMode('share')}
                         className="p-3.5 bg-cyan-600 text-white rounded-xl hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-200"
                     >
@@ -559,6 +607,7 @@ const WellnessHub: React.FC = () => {
                 </div>
             </div>
 
+            {isKpiExpanded && (<>
             {/* Improvement #2: KPI strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
@@ -597,6 +646,7 @@ const WellnessHub: React.FC = () => {
                     </div>
                 </div>
             )}
+            </>)}
 
             {/* ── Tab strip ───────────────────────────────────────────── */}
             <div className="flex gap-1 bg-white border-2 border-slate-100 rounded-xl p-1 w-fit shadow-sm">
@@ -690,7 +740,7 @@ const WellnessHub: React.FC = () => {
                         </div>
                         <div className="space-y-3">
                             {filteredResponses
-                                .filter(r => (r.rpe || 0) >= 8 || r.injury_report || r.availability === 'unavailable')
+                                .filter(r => (r.rpe || 0) >= 8 || r.injury_report || resolveAvailability(r) === 'unavailable')
                                 .slice(0, 6)
                                 .map(r => {
                                     const a      = athletes.find(att => att.id === r.athlete_id);
@@ -756,73 +806,174 @@ const WellnessHub: React.FC = () => {
                                 <th className="px-6 py-4 text-right">Detail</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {(activeTeam?.players || [])
-                                .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                                .map(player => {
-                                    const res         = filteredResponses.find(r => r.athlete_id === player.id);
-                                    const status      = getAthleteStatus(res);
-                                    const injuryCount = res?.injury_report?.areas?.length || 0;
+                        <tbody>
+                            {(() => {
+                                const playerMap = Object.fromEntries(
+                                    (activeTeam?.players || []).map(p => [p.id, p])
+                                );
+
+                                const visibleResponses = filteredResponses.filter(res => {
+                                    if (!searchQuery) return true;
+                                    const player = playerMap[res.athlete_id];
+                                    return player?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                });
+
+                                if (visibleResponses.length === 0) {
                                     return (
-                                        <tr key={player.id} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="pl-5 pr-1 py-4">
-                                                {status
-                                                    ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} />
-                                                    : <span className="w-3 h-3 rounded-full block bg-slate-200" />
-                                                }
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
-                                                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt="" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs font-semibold text-slate-900">{player.name}</div>
-                                                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{player.subsection}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 font-semibold uppercase text-[9px]">
-                                                {res?.availability === 'available'   && <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">Full</span>}
-                                                {res?.availability === 'modified'    && <span className="text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">Modified</span>}
-                                                {res?.availability === 'unavailable' && <span className="text-rose-600 bg-rose-50 border border-rose-100 px-2.5 py-1 rounded-full">Out</span>}
-                                                {!res?.availability && <span className="text-slate-300">—</span>}
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                {res?.rpe ? (
-                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                                                        res.rpe >= 9 ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                        res.rpe >= 7 ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                                       'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                    }`}>{res.rpe}/10</span>
-                                                ) : <span className="text-slate-300 text-[10px] font-bold">—</span>}
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                {injuryCount > 0 ? (
-                                                    <div className="flex items-center gap-1.5 text-rose-500">
-                                                        <AlertTriangle size={13} />
-                                                        <span className="text-[10px] font-semibold">{injuryCount} Area{injuryCount > 1 ? 's' : ''}</span>
-                                                    </div>
-                                                ) : res ? (
-                                                    <div className="flex items-center gap-1.5 text-emerald-500">
-                                                        <CheckCircle2 size={13} />
-                                                        <span className="text-[10px] font-semibold uppercase">Clear</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-slate-200 text-[10px]">—</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => { setSelectedAthleteId(player.id); setViewMode('athlete'); }}
-                                                    className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all"
-                                                >
-                                                    <ChevronRight size={16} />
-                                                </button>
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-12 text-center text-slate-300 text-xs">
+                                                No responses found
                                             </td>
                                         </tr>
                                     );
-                                })}
+                                }
+
+                                const sorted = [...visibleResponses].sort((a, b) => {
+                                    const d = b.session_date.localeCompare(a.session_date);
+                                    return d !== 0 ? d : b.submitted_at.localeCompare(a.submitted_at);
+                                });
+
+                                // Group by session_date
+                                const groups: { date: string; items: typeof sorted }[] = [];
+                                sorted.forEach(res => {
+                                    const last = groups[groups.length - 1];
+                                    if (last && last.date === res.session_date) {
+                                        last.items.push(res);
+                                    } else {
+                                        groups.push({ date: res.session_date, items: [res] });
+                                    }
+                                });
+
+                                const formatDateLabel = (dateStr: string) => {
+                                    const [y, m, d] = dateStr.split('-').map(Number);
+                                    const dt = new Date(y, m - 1, d);
+                                    const today = new Date();
+                                    const todayStr = today.toISOString().split('T')[0];
+                                    const yest = new Date(today); yest.setDate(today.getDate() - 1);
+                                    const yesterdayStr = yest.toISOString().split('T')[0];
+                                    const weekday = dt.toLocaleDateString('en-GB', { weekday: 'long' });
+                                    const dayNum  = dt.toLocaleDateString('en-GB', { day: 'numeric' });
+                                    const month   = dt.toLocaleDateString('en-GB', { month: 'short' });
+                                    const year    = dt.toLocaleDateString('en-GB', { year: 'numeric' });
+                                    const label   = `${weekday}  ${dayNum} ${month} ${year}`;
+                                    const badge   = dateStr === todayStr ? 'Today' : dateStr === yesterdayStr ? 'Yesterday' : null;
+                                    return { label, badge };
+                                };
+
+                                return groups.flatMap(({ date, items }) => {
+                                    const { label, badge } = formatDateLabel(date);
+                                    const rows: React.ReactNode[] = [
+                                        <tr key={`date-${date}`} className="border-t-2 border-slate-100 bg-slate-50/60">
+                                            <td colSpan={6} className="px-5 py-2">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</span>
+                                                    {badge && (
+                                                        <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">{badge}</span>
+                                                    )}
+                                                    <span className="ml-auto text-[8px] font-semibold text-slate-300 uppercase tracking-wide">
+                                                        {items.length} response{items.length !== 1 ? 's' : ''}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ];
+
+                                    items.forEach(res => {
+                                        const player      = playerMap[res.athlete_id];
+                                        const status      = getAthleteStatus(res);
+                                        const injuryCount = res?.injury_report?.areas?.length || 0;
+                                        rows.push(
+                                            <tr key={res.id} className="group hover:bg-slate-50/50 transition-colors border-t border-slate-50">
+                                                <td className="pl-5 pr-1 py-4">
+                                                    {status
+                                                        ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} />
+                                                        : <span className="w-3 h-3 rounded-full block bg-slate-200" />
+                                                    }
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {player ? (
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
+                                                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt="" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-xs font-semibold text-slate-900">{player.name}</div>
+                                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{player.subsection}</div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-slate-400 text-xs">Unknown athlete</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-4 font-semibold uppercase text-[9px]">
+                                                    {(() => {
+                                                        const avail = resolveAvailability(res);
+                                                        if (avail === 'available')   return <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">Full</span>;
+                                                        if (avail === 'modified')    return <span className="text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">Modified</span>;
+                                                        if (avail === 'unavailable') return <span className="text-rose-600 bg-rose-50 border border-rose-100 px-2.5 py-1 rounded-full">Out</span>;
+                                                        return <span className="text-slate-300">—</span>;
+                                                    })()}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {res?.rpe ? (
+                                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                                                            res.rpe >= 9 ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                            res.rpe >= 7 ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                                           'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                        }`}>{res.rpe}/10</span>
+                                                    ) : <span className="text-slate-300 text-[10px] font-bold">—</span>}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {injuryCount > 0 ? (
+                                                        <div className="flex items-center gap-1.5 text-rose-500">
+                                                            <AlertTriangle size={13} />
+                                                            <span className="text-[10px] font-semibold">{injuryCount} Area{injuryCount > 1 ? 's' : ''}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 text-emerald-500">
+                                                            <CheckCircle2 size={13} />
+                                                            <span className="text-[10px] font-semibold uppercase">Clear</span>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        {confirmDeleteId === res.id ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-[9px] font-bold text-rose-500 uppercase">Delete?</span>
+                                                                <button
+                                                                    onClick={() => handleDeleteResponse(res.id)}
+                                                                    className="px-1.5 py-1 bg-rose-50 border border-rose-200 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100 transition-all"
+                                                                >Yes</button>
+                                                                <button
+                                                                    onClick={() => setConfirmDeleteId(null)}
+                                                                    className="px-1.5 py-1 bg-white border border-slate-200 rounded text-[9px] font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                                                                >No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => setConfirmDeleteId(res.id)}
+                                                                className="p-2 bg-white border border-slate-100 rounded-lg text-slate-300 hover:text-rose-400 hover:border-rose-100 hover:shadow-sm transition-all"
+                                                                title="Delete response"
+                                                            >
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }}
+                                                            className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all"
+                                                        >
+                                                            <ChevronRight size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+
+                                    return rows;
+                                });
+                            })()}
                         </tbody>
                     </table>
                 </div>
@@ -866,15 +1017,15 @@ const WellnessHub: React.FC = () => {
                         </div>
                     </div>
                     {/* Availability badge */}
-                    {res?.availability && (
-                        <span className={`px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wide ${
-                            res.availability === 'available'   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                            res.availability === 'modified'    ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                                                                  'bg-rose-50 text-rose-600 border border-rose-100'
-                        }`}>
-                            {res.availability === 'available' ? 'Full Training' : res.availability === 'modified' ? 'Modified Training' : 'Unavailable'}
-                        </span>
-                    )}
+                    {(() => {
+                        const avail = resolveAvailability(res);
+                        if (!avail) return null;
+                        const cls = avail === 'available' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                  : avail === 'modified'  ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                          : 'bg-rose-50 text-rose-600 border border-rose-100';
+                        const label = avail === 'available' ? 'Full Training' : avail === 'modified' ? 'Modified Training' : 'Unavailable';
+                        return <span className={`px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{label}</span>;
+                    })()}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

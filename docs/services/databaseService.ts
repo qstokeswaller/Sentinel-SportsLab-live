@@ -40,6 +40,22 @@ export const DatabaseService = {
         return data;
     },
 
+    async deleteAthlete(athleteId: string) {
+        const { error } = await supabase
+            .from('athletes')
+            .delete()
+            .eq('id', athleteId);
+        if (error) throw error;
+    },
+
+    async deleteTeam(teamId: string) {
+        const { error } = await supabase
+            .from('teams')
+            .delete()
+            .eq('id', teamId);
+        if (error) throw error;
+    },
+
     async createAthlete(athleteData: { name: string; team_id?: string; gender?: string; age?: number; height_cm?: number; weight_kg?: number; sport?: string; position?: string; goals?: string; notes?: string }) {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');
@@ -286,6 +302,14 @@ export const DatabaseService = {
             return [];
         }
         return data || [];
+    },
+
+    async deleteWellnessResponse(responseId: string) {
+        const { error } = await (supabase as any)
+            .from('wellness_responses')
+            .delete()
+            .eq('id', responseId);
+        if (error) throw error;
     },
 
     // Called by public form (anon) — fetches template + athlete names via SECURITY DEFINER RPC

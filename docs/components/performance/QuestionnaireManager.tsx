@@ -417,25 +417,33 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                 </div>
 
                                 <div className="flex gap-2 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedTemplate(t);
-                                            setNewQuestTitle(t.title || t.name || '');
-                                            setNewQuestQuestions(t.questions || []);
-                                            setViewMode('create');
-                                        }}
-                                        className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
-                                    >
-                                        <Pencil size={12} /> Edit
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDeleteTemplate(t.id)}
-                                        className="p-2 text-slate-200 hover:text-rose-500 transition-colors"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    {t.user_id == null ? (
+                                        <div className="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-wide text-slate-300">
+                                            Platform Default
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedTemplate(t);
+                                                    setNewQuestTitle(t.title || t.name || '');
+                                                    setNewQuestQuestions(t.questions || []);
+                                                    setViewMode('create');
+                                                }}
+                                                className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
+                                            >
+                                                <Pencil size={12} /> Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteTemplate(t.id)}
+                                                className="p-2 text-slate-200 hover:text-rose-500 transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

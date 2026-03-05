@@ -553,176 +553,173 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
                 {/* Filter Control Hub */}
-                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-8 relative overflow-hidden border-t border-slate-200">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="space-y-4 flex-1">
-                            <h3 className="text-2xl font-black uppercase tracking-tighter text-indigo-900 leading-none">GPS Intelligence Filters</h3>
-                            <div className="flex flex-wrap items-center gap-6">
-                                {/* Target Selector */}
-                                <div className="space-y-2 min-w-[240px]">
-                                    <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">Target Squad / Athlete</label>
-                                    <div className="relative group">
-                                        <select
-                                            value={gpsFilterTarget}
-                                            onChange={(e) => setGpsFilterTarget(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-12 shadow-sm"
-                                        >
-                                            <option>All Athletes</option>
-                                            <optgroup label="Squads">
-                                                {teams.map(t => <option key={t.id}>{t.name}</option>)}
-                                            </optgroup>
-                                            <optgroup label="Individual Athletes">
-                                                {teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
-                                            </optgroup>
-                                        </select>
-                                        <ChevronDownIcon size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-indigo-600 transition-colors" />
-                                    </div>
-                                </div>
-
-                                {/* Date Mode Toggle */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">Timeline Mode</label>
-                                    <div className="flex bg-slate-100 p-1.5 rounded-xl shadow-inner">
-                                        <button
-                                            onClick={() => setGpsFilterDateMode('range')}
-                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                                        >
-                                            Date Range
-                                        </button>
-                                        <button
-                                            onClick={() => setGpsFilterDateMode('single')}
-                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                                        >
-                                            One Day
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Contextual Date Selectors */}
-                                {gpsFilterDateMode === 'range' ? (
-                                    <div className="flex items-center gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">Start Date</label>
-                                            <input
-                                                type="date"
-                                                value={gpsRangeStart}
-                                                onChange={(e) => setGpsRangeStart(e.target.value)}
-                                                className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">End Date</label>
-                                            <input
-                                                type="date"
-                                                value={gpsRangeEnd}
-                                                onChange={(e) => setGpsRangeEnd(e.target.value)}
-                                                className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                            />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2 min-w-[200px]">
-                                        <label className="text-[10px] font-black uppercase text-indigo-400 tracking-widest pl-1">Specific Session Date</label>
-                                        <input
-                                            type="date"
-                                            value={gpsSpecificDate}
-                                            onChange={(e) => setGpsSpecificDate(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                        />
-                                    </div>
-                                )}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 relative overflow-hidden">
+                    {/* Title + actions row */}
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-slate-900">GPS Intelligence Filters</h3>
+                        <div className="flex items-center gap-2">
+                            {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'} animate-pulse`}>{gpsImportMessage}</span>}
+                            <label className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95">
+                                <FileIcon size={13} /> Import Telemetry
+                                <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                            </label>
+                            <button onClick={clearGpsData} title="Clear Records" className="p-2 text-slate-300 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-rose-50"><Trash2Icon size={15} /></button>
+                        </div>
+                    </div>
+                    {/* Filters row — all items baseline-aligned */}
+                    <div className="flex flex-wrap items-end gap-4">
+                        {/* Target Selector */}
+                        <div className="space-y-1.5 min-w-[220px]">
+                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Target Squad / Athlete</label>
+                            <div className="relative">
+                                <select
+                                    value={gpsFilterTarget}
+                                    onChange={(e) => setGpsFilterTarget(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-8 shadow-sm"
+                                >
+                                    <option>All Athletes</option>
+                                    <optgroup label="Squads">
+                                        {teams.map(t => <option key={t.id}>{t.name}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Individual Athletes">
+                                        {teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
+                                    </optgroup>
+                                </select>
+                                <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-3 shrink-0">
-                            <div className="flex items-center gap-4">
-                                {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'} animate-pulse`}>{gpsImportMessage}</span>}
-                                <label className="bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95 shadow-indigo-200/50">
-                                    <FileIcon size={14} /> Import Telemetry
-                                    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                                </label>
-                                <button onClick={clearGpsData} title="Clear Records" className="p-3 text-slate-300 hover:text-rose-500 transition-colors border border-slate-100 rounded-xl hover:bg-rose-50"><Trash2Icon size={20} /></button>
+                        {/* Date Mode Toggle */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Timeline Mode</label>
+                            <div className="flex bg-slate-100 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setGpsFilterDateMode('range')}
+                                    className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Date Range
+                                </button>
+                                <button
+                                    onClick={() => setGpsFilterDateMode('single')}
+                                    className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    One Day
+                                </button>
                             </div>
                         </div>
+
+                        {/* Contextual Date Selectors */}
+                        {gpsFilterDateMode === 'range' ? (
+                            <>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={gpsRangeStart}
+                                        onChange={(e) => setGpsRangeStart(e.target.value)}
+                                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={gpsRangeEnd}
+                                        onChange={(e) => setGpsRangeEnd(e.target.value)}
+                                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="space-y-1.5 min-w-[180px]">
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Session Date</label>
+                                <input
+                                    type="date"
+                                    value={gpsSpecificDate}
+                                    onChange={(e) => setGpsSpecificDate(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
-                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Avg Distance</div>
-                        <div className="text-3xl font-black text-indigo-900 tracking-tighter group-hover:text-indigo-600 transition-colors">{formatDistance(stats.avgDist)}</div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase italic">Across Filter Selection</div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
+                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Avg Distance</div>
+                        <div className="text-2xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{formatDistance(stats.avgDist)}</div>
+                        <div className="text-[9px] text-slate-400 uppercase">Across Filter Selection</div>
                     </div>
-                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
-                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Avg HSR</div>
-                        <div className="text-3xl font-black text-indigo-600 tracking-tighter group-hover:text-indigo-400 transition-colors">{formatDistance(stats.avgHsr)}</div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase italic">High Speed Running</div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
+                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Avg HSR</div>
+                        <div className="text-2xl font-bold text-indigo-600 group-hover:text-indigo-400 transition-colors">{formatDistance(stats.avgHsr)}</div>
+                        <div className="text-[9px] text-slate-400 uppercase">High Speed Running</div>
                     </div>
-                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-emerald-200 transition-all">
-                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Max Velocity</div>
-                        <div className="text-3xl font-black text-emerald-600 tracking-tighter group-hover:text-emerald-500 transition-colors">{stats.maxVelocity}<span className="text-xs ml-1 font-black">KM/H</span></div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase italic">Squad Peak Velocity</div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-emerald-200 transition-all">
+                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Max Velocity</div>
+                        <div className="text-2xl font-bold text-emerald-600 group-hover:text-emerald-500 transition-colors">{stats.maxVelocity}<span className="text-xs ml-1 font-semibold">KM/H</span></div>
+                        <div className="text-[9px] text-slate-400 uppercase">Squad Peak Velocity</div>
                     </div>
-                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-orange-200 transition-all">
-                        <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Sprints</div>
-                        <div className="text-3xl font-black text-orange-500 tracking-tighter group-hover:text-orange-400 transition-colors">{stats.totalSprints}</div>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase italic">Frequency Count</div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-orange-200 transition-all">
+                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Total Sprints</div>
+                        <div className="text-2xl font-bold text-orange-500 group-hover:text-orange-400 transition-colors">{stats.totalSprints}</div>
+                        <div className="text-[9px] text-slate-400 uppercase">Frequency Count</div>
                     </div>
                 </div>
 
                 {/* Telemetry Table */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-lg">
-                                <TableIcon size={20} />
+                    <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center text-white">
+                                <TableIcon size={16} />
                             </div>
                             <div>
-                                <h4 className="text-xl font-black uppercase tracking-tighter text-indigo-900">GPS Telemetry Log</h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {isTeamSelected ? 'Team Aggregation View' : 'Individual Session Log'} // {gpsFilterTarget}
+                                <h4 className="text-base font-semibold text-slate-900">GPS Telemetry Log</h4>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wide">
+                                    {isTeamSelected ? 'Team Aggregation View' : 'Individual Session Log'} · {gpsFilterTarget}
                                 </p>
                             </div>
                         </div>
-                        <div className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 uppercase tracking-widest animate-pulse">
-                            {displayRecords.length} Rows Displayed
+                        <div className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                            {displayRecords.length} rows
                         </div>
                     </div>
                     <div className="overflow-x-auto no-scrollbar">
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Athlete</th>
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">{isTeamSelected ? 'Sessions' : 'Session Date'}</th>
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">{isTeamSelected ? 'Avg Distance' : 'Total Distance'}</th>
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">{isTeamSelected ? 'Avg HSR' : 'HSR'}</th>
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">{isTeamSelected ? 'Avg Sprints' : 'Sprints'}</th>
-                                    <th className="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">{isTeamSelected ? 'Max Velocity' : 'Top Speed'}</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Athlete</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Sessions' : 'Session Date'}</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg Distance' : 'Total Distance'}</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg HSR' : 'HSR'}</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg Sprints' : 'Sprints'}</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Max Velocity' : 'Top Speed'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {(isTeamSelected ? displayRecords : displayRecords.slice().reverse()).map((r) => (
                                     <tr key={r.id || r.athleteId} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="p-6">
+                                        <td className="px-4 py-3">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-black text-indigo-900 group-hover:text-indigo-600 transition-colors">{r.matchedName}</span>
-                                                <span className={`text-[8px] font-black uppercase tracking-widest ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-slate-400'}`}>
+                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{r.matchedName}</span>
+                                                <span className={`text-[8px] font-medium uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-slate-400'}`}>
                                                     {r.athleteId === 'unknown' ? 'UNLINKED PROFILE' : 'VERIFIED ATHLETE'}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="p-6 text-center text-sm font-bold text-slate-600">{r.date}</td>
-                                        <td className="p-6 text-center font-black text-slate-900">
+                                        <td className="px-4 py-3 text-center text-sm font-medium text-slate-600">{r.date}</td>
+                                        <td className="px-4 py-3 text-center font-semibold text-slate-900">
                                             {formatDistance(r.totalDistance)}
                                         </td>
-                                        <td className="p-6 text-center font-black text-indigo-600">
+                                        <td className="px-4 py-3 text-center font-semibold text-indigo-600">
                                             {formatDistance(r.hsr)}
                                         </td>
-                                        <td className="p-6 text-center font-black text-orange-500">
+                                        <td className="px-4 py-3 text-center font-semibold text-orange-500">
                                             {Number(r.sprints).toLocaleString(undefined, { maximumFractionDigits: 1 })}
                                         </td>
-                                        <td className="p-6 text-center font-black text-emerald-600">
+                                        <td className="px-4 py-3 text-center font-semibold text-emerald-600">
                                             {Number(r.maxSpeed).toLocaleString(undefined, { maximumFractionDigits: 1 })} KM/H
                                         </td>
                                     </tr>
@@ -766,14 +763,14 @@ export const ReportingHubPage = () => {
 
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
-                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-sm space-y-8">
-                    <div className="flex items-center gap-6 mb-8 border-b border-indigo-50 pb-8">
-                        <div className="w-16 h-16 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-xl">
-                            <UserIcon size={32} />
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                    <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white">
+                            <UserIcon size={20} />
                         </div>
                         <div>
-                            <h4 className="text-3xl font-black uppercase tracking-tighter text-indigo-900">Athlete Status</h4>
-                            <p className="text-indigo-300 font-medium">Update availability and log opt-out reasons.</p>
+                            <h4 className="text-lg font-semibold text-slate-900">Athlete Status</h4>
+                            <p className="text-slate-500 text-sm">Update availability and log opt-out reasons.</p>
                         </div>
                     </div>
 
@@ -852,14 +849,14 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">
                 {/* ACTION BAR */}
-                <div className="flex flex-wrap items-center justify-between gap-6 bg-white/50 backdrop-blur-md p-8 rounded-xl border border-white shadow-sm">
-                    <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 bg-indigo-900 rounded-xl flex items-center justify-center text-white shadow-xl">
-                            <StethoscopeIcon size={28} />
+                <div className="flex flex-wrap items-center justify-between gap-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white">
+                            <StethoscopeIcon size={20} />
                         </div>
                         <div>
-                            <h4 className="text-2xl font-black uppercase tracking-tighter text-indigo-900">Medical Hub</h4>
-                            <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">Intelligence & Availability</p>
+                            <h4 className="text-lg font-semibold text-slate-900">Medical Hub</h4>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Intelligence & Availability</p>
                         </div>
                     </div>
 
@@ -867,13 +864,13 @@ export const ReportingHubPage = () => {
                         <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                             <button
                                 onClick={() => { setMedicalModalMode('upload'); setIsMedicalModalOpen(true); }}
-                                className="px-6 py-3 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2 border border-slate-200"
+                                className="px-4 py-2.5 bg-white text-indigo-600 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2 border border-slate-200"
                             >
                                 <UploadCloudIcon size={14} /> Upload Doc
                             </button>
                             <button
                                 onClick={() => { setMedicalModalMode('text'); setIsMedicalModalOpen(true); }}
-                                className="px-6 py-3 text-slate-500 hover:text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                                className="px-4 py-2.5 text-slate-500 hover:text-indigo-600 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
                             >
                                 <FileTextIcon size={14} /> Quick Log
                             </button>
@@ -882,11 +879,11 @@ export const ReportingHubPage = () => {
                         <div className="h-10 w-[1px] bg-slate-200 mx-2"></div>
 
                         <div className="relative group">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest absolute -top-5 left-2">Filter View</label>
+                            <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wide absolute -top-5 left-2">Filter View</label>
                             <select
                                 value={medicalFilterAthleteId}
                                 onChange={(e) => setMedicalFilterAthleteId(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-10 shadow-sm min-w-[180px]"
+                                className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-[10px] font-medium text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-10 shadow-sm min-w-[180px]"
                             >
                                 <option>All Athletes</option>
                                 <optgroup label="Squads">
@@ -902,19 +899,19 @@ export const ReportingHubPage = () => {
                 </div>
 
                 {/* TIMELINE */}
-                <div className="bg-white p-12 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
-                        <ActivityIcon size={240} className="text-indigo-900" />
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                        <ActivityIcon size={200} className="text-slate-900" />
                     </div>
 
-                    <div className="flex items-center justify-between mb-12">
-                        <h5 className="text-sm font-black uppercase tracking-widest text-indigo-400">Medical Timeline</h5>
-                        <div className="px-4 py-2 bg-indigo-50 rounded-full text-[9px] font-black uppercase text-indigo-600 tracking-tighter">
-                            Showing {timeline.length} Records
+                    <div className="flex items-center justify-between mb-6">
+                        <h5 className="text-sm font-semibold text-slate-600">Medical Timeline</h5>
+                        <div className="px-3 py-1.5 bg-slate-100 rounded-full text-[9px] font-semibold text-slate-600">
+                            {timeline.length} Records
                         </div>
                     </div>
 
-                    <div className="relative pl-12 border-l-2 border-indigo-50 space-y-12 pb-8">
+                    <div className="relative pl-12 border-l-2 border-slate-100 space-y-8 pb-8">
                         {timeline.length > 0 ? timeline.map((entry, i) => (
                             <div key={entry.id || i} className="relative group/item">
                                 {/* Date indicator */}
@@ -928,7 +925,7 @@ export const ReportingHubPage = () => {
 
                                 <div
                                     onClick={() => entry.timelineType === 'medical' && setInspectingMedicalRecord(entry)}
-                                    className={`p-8 rounded-xl border transition-all ${entry.timelineType === 'medical'
+                                    className={`p-5 rounded-xl border transition-all ${entry.timelineType === 'medical'
                                         ? 'bg-slate-50/50 border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
                                         : 'bg-white border-indigo-50 shadow-sm'
                                         }`}
@@ -947,7 +944,7 @@ export const ReportingHubPage = () => {
                                         {entry.timelineType === 'medical' && entry.type === 'upload' && <FileIcon size={18} className="text-indigo-300" />}
                                     </div>
 
-                                    <h6 className="text-xl font-black text-slate-900 group-hover/item:text-indigo-900 transition-colors uppercase tracking-tight">{entry.title}</h6>
+                                    <h6 className="text-base font-semibold text-slate-900 group-hover/item:text-indigo-900 transition-colors">{entry.title}</h6>
 
                                     {entry.description && (
                                         <p className="text-sm font-medium text-slate-400 mt-3 leading-relaxed max-w-xl line-clamp-2">
@@ -1031,19 +1028,19 @@ export const ReportingHubPage = () => {
         return (
             <div className="space-y-10 animate-in fade-in duration-500">
                 <div className="flex flex-col md:flex-row items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm gap-4">
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
-                            <ActivityIcon size={32} />
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-sm">
+                            <ActivityIcon size={20} />
                         </div>
                         <div>
-                            <h3 className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none">Hamstring Intelligence</h3>
-                            <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-1">Nordic Force & Asymmetry Analysis</p>
+                            <h3 className="text-lg font-semibold text-slate-900">Hamstring Intelligence</h3>
+                            <p className="text-xs text-orange-500 uppercase tracking-wide mt-0.5">Nordic Force & Asymmetry Analysis</p>
                         </div>
                     </div>
                     <div className="flex bg-slate-100 p-1.5 rounded-xl">
                         {['Analysis', 'Assessment', 'Import'].map(tab => (
                             <button key={tab} onClick={() => setHamstringReportTab(tab)}
-                                className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                                className={`px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                                 {tab}
                             </button>
                         ))}
@@ -1185,17 +1182,17 @@ export const ReportingHubPage = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
-                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Total Reports</span>
-                        <div className="text-4xl font-black text-slate-800">{filteredEntries.length}</div>
+                    <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                        <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Total Reports</span>
+                        <div className="text-2xl font-bold text-slate-800">{filteredEntries.length}</div>
                     </div>
-                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1 border-rose-100">
-                        <span className="text-[9px] font-black uppercase text-rose-400 tracking-widest">High Risk</span>
-                        <div className="text-4xl font-black text-rose-500">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
+                    <div className="bg-white px-5 py-5 rounded-xl border border-rose-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                        <span className="text-[9px] font-semibold uppercase text-rose-400 tracking-wide">High Risk</span>
+                        <div className="text-2xl font-bold text-rose-500">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
                     </div>
-                    <div className="bg-white px-8 py-6 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
-                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Avg Asymmetry</span>
-                        <div className="text-4xl font-black text-slate-800">{avgAsymmetry}<span className="text-xl ml-0.5">%</span></div>
+                    <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                        <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Avg Asymmetry</span>
+                        <div className="text-2xl font-bold text-slate-800">{avgAsymmetry}<span className="text-lg ml-0.5">%</span></div>
                     </div>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -1203,13 +1200,13 @@ export const ReportingHubPage = () => {
                         <table className="w-full text-left border-collapse hamstring-analysis-table">
                             <thead>
                                 <tr className="bg-slate-50/50 border-b border-slate-100 italic">
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest">Date</th>
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest">Athlete</th>
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest text-center">Avg Force (N)</th>
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest text-center">Rel. Strength (N/kg)</th>
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest text-center">Asymmetry (%)</th>
-                                    <th className="px-8 py-5 text-[9px] font-black uppercase text-slate-400 tracking-widest text-right">Risk</th>
-                                    {isHamstringEditMode && <th className="px-4 py-5 text-[9px] font-black uppercase text-rose-400 tracking-widest text-center print:hidden">Delete</th>}
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Date</th>
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Athlete</th>
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Avg Force (N)</th>
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Rel. Strength (N/kg)</th>
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Asymmetry (%)</th>
+                                    <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-right">Risk</th>
+                                    {isHamstringEditMode && <th className="px-4 py-3 text-[9px] font-semibold uppercase text-rose-400 tracking-wide text-center print:hidden">Delete</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -1224,21 +1221,21 @@ export const ReportingHubPage = () => {
                                     return (
                                         <tr key={entry.id || idx} onClick={() => !isHamstringEditMode && setInspectHamEntry(entry)}
                                             className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30' : 'hover:bg-slate-50/50 cursor-pointer'}`}>
-                                            <td className="px-8 py-4"><div className="text-xs font-black text-slate-900">{entry.date.slice(0, 10)}</div></td>
-                                            <td className="px-8 py-4">
+                                            <td className="px-4 py-3"><div className="text-xs font-semibold text-slate-900">{entry.date.slice(0, 10)}</div></td>
+                                            <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-extrabold text-[10px]">{entry.athleteName.split(' ').map(n => n[0]).join('')}</div>
-                                                    <div className="text-xs font-black text-slate-800">{entry.athleteName}</div>
+                                                    <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-[10px]">{entry.athleteName.split(' ').map(n => n[0]).join('')}</div>
+                                                    <div className="text-xs font-semibold text-slate-800">{entry.athleteName}</div>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-4 text-center"><div className="text-sm font-black text-slate-900">{avgForceValue} <span className="text-[9px] text-slate-300">N</span></div></td>
-                                            <td className="px-8 py-4 text-center"><div className={`text-sm font-black ${riskText}`}>{rs} <span className="text-[9px] opacity-70">N/kg</span></div></td>
-                                            <td className="px-8 py-4 text-center">
+                                            <td className="px-4 py-3 text-center"><div className="text-sm font-semibold text-slate-900">{avgForceValue} <span className="text-[9px] text-slate-300">N</span></div></td>
+                                            <td className="px-4 py-3 text-center"><div className={`text-sm font-semibold ${riskText}`}>{rs} <span className="text-[9px] opacity-70">N/kg</span></div></td>
+                                            <td className="px-4 py-3 text-center">
                                                 {entry.mode === 'split' ? (
-                                                    <div className={`text-sm font-black ${asym > 15 ? 'text-rose-500' : asym > 10 ? 'text-orange-500' : 'text-emerald-500'}`}>{asym}%</div>
-                                                ) : (<div className="text-[9px] font-bold text-slate-300 italic">N/A</div>)}
+                                                    <div className={`text-sm font-semibold ${asym > 15 ? 'text-rose-500' : asym > 10 ? 'text-orange-500' : 'text-emerald-500'}`}>{asym}%</div>
+                                                ) : (<div className="text-[9px] font-medium text-slate-300 italic">N/A</div>)}
                                             </td>
-                                            <td className="px-8 py-4">
+                                            <td className="px-4 py-3">
                                                 <div className="flex justify-end items-center gap-2">
                                                     <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full ${riskBg} ${riskText}`}>{riskLabel}</span>
                                                     <div className={`w-2.5 h-2.5 rounded-full ${riskColor} shadow-sm`}></div>

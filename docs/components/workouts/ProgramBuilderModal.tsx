@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   XIcon, PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
-  SaveIcon, ArrowLeftIcon
+  SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
 } from 'lucide-react';
 import { useExercises } from '../../hooks/useExercises';
 import {
@@ -39,6 +39,37 @@ interface LocalDay {
 
 type Section = 'warmup' | 'workout' | 'cooldown';
 
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const DAYS_PER_WEEK = 7;
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+const SECTION_LABELS: Record<Section, string> = {
+  warmup: 'Warm Up',
+  workout: 'Workout',
+  cooldown: 'Cool Down',
+};
+
+const VOLUME_COLORS: Record<string, string> = {
+  'Upper Body': 'bg-indigo-100 text-indigo-700',
+  'Lower Body': 'bg-emerald-100 text-emerald-700',
+  'Core': 'bg-amber-100 text-amber-700',
+  'Full Body': 'bg-purple-100 text-purple-700',
+  'Plyometric': 'bg-orange-100 text-orange-700',
+  'Olympic Weightlifting': 'bg-rose-100 text-rose-700',
+  'Powerlifting': 'bg-red-100 text-red-700',
+  'Mobility': 'bg-teal-100 text-teal-700',
+  'Bodybuilding': 'bg-sky-100 text-sky-700',
+  'Calisthenics': 'bg-violet-100 text-violet-700',
+};
+
+const EXERCISE_CATEGORIES = [
+  'All', 'Upper Body', 'Lower Body', 'Core', 'Full Body',
+  'Plyometric', 'Olympic Weightlifting', 'Powerlifting',
+  'Mobility', 'Bodybuilding', 'Calisthenics', 'Balance',
+  'Animal Flow', 'Ballistics', 'Grinds', 'Postural',
+];
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const tempId = () => `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -68,32 +99,6 @@ const emptyRow = (ex: { id: string; name: string; categories: string[] }): Local
   notes: '',
 });
 
-const SECTION_LABELS: Record<Section, string> = {
-  warmup: 'Warm Up',
-  workout: 'Workout',
-  cooldown: 'Cool Down',
-};
-
-const VOLUME_COLORS: Record<string, string> = {
-  'Upper Body': 'bg-indigo-100 text-indigo-700',
-  'Lower Body': 'bg-emerald-100 text-emerald-700',
-  'Core': 'bg-amber-100 text-amber-700',
-  'Full Body': 'bg-purple-100 text-purple-700',
-  'Plyometric': 'bg-orange-100 text-orange-700',
-  'Olympic Weightlifting': 'bg-rose-100 text-rose-700',
-  'Powerlifting': 'bg-red-100 text-red-700',
-  'Mobility': 'bg-teal-100 text-teal-700',
-  'Bodybuilding': 'bg-sky-100 text-sky-700',
-  'Calisthenics': 'bg-violet-100 text-violet-700',
-};
-
-const EXERCISE_CATEGORIES = [
-  'All', 'Upper Body', 'Lower Body', 'Core', 'Full Body',
-  'Plyometric', 'Olympic Weightlifting', 'Powerlifting',
-  'Mobility', 'Bodybuilding', 'Calisthenics', 'Balance',
-  'Animal Flow', 'Ballistics', 'Grinds', 'Postural',
-];
-
 // ── Volume calculator ──────────────────────────────────────────────────────
 
 function computeVolume(day: LocalDay): Record<string, number> {
@@ -111,10 +116,7 @@ function computeVolume(day: LocalDay): Record<string, number> {
 // ── Exercise Row ───────────────────────────────────────────────────────────
 
 const ExRow = ({
-  row,
-  letter,
-  onChange,
-  onRemove,
+  row, letter, onChange, onRemove,
 }: {
   row: LocalExRow;
   letter: string;
@@ -129,7 +131,6 @@ const ExRow = ({
 
   return (
     <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
-      {/* Header row */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
         <span className="w-6 h-6 bg-slate-900 text-white rounded-md flex items-center justify-center text-[10px] font-semibold shrink-0">
           {letter}
@@ -146,7 +147,6 @@ const ExRow = ({
           <Trash2Icon size={14} />
         </button>
       </div>
-      {/* Fields row */}
       <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 px-4 py-3">
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sets</label>
@@ -208,27 +208,32 @@ export const ProgramBuilderModal = ({
   editingProgram = null,
 }: ProgramBuilderModalProps) => {
   // Program meta
-  const [programName, setProgramName] = useState('');
+  const [programName, setProgramName]         = useState('');
   const [programOverview, setProgramOverview] = useState('');
-  const [programTags, setProgramTags] = useState('');
+  const [programTags, setProgramTags]         = useState('');
 
-  // Days
-  const [days, setDays] = useState<LocalDay[]>([newDay(1)]);
+  // Days (flat array — grouped visually into weeks of 7)
+  const [days, setDays]               = useState<LocalDay[]>([newDay(1)]);
   const [activeDayIdx, setActiveDayIdx] = useState(0);
 
-  // Active section (determines where next exercise goes)
+  // Active section
   const [activeSection, setActiveSection] = useState<Section>('workout');
 
-  // Right panel exercise search
-  const [exSearch, setExSearch] = useState('');
+  // Exercise sidebar filters
+  const [exSearch, setExSearch]     = useState('');
   const [exCategory, setExCategory] = useState('All');
+  const [exLetter, setExLetter]     = useState('');   // '' = no letter filter
+  const [exPage, setExPage]         = useState(1);
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]   = useState('');
 
   const createProgram = useCreateProgram();
   const updateProgram = useUpdateProgram();
-  const saveFull = useSaveProgramFull();
+  const saveFull      = useSaveProgramFull();
+
+  // Reset page when any filter changes
+  useEffect(() => { setExPage(1); }, [exSearch, exCategory, exLetter]);
 
   // Populate when editing
   useEffect(() => {
@@ -242,57 +247,30 @@ export const ProgramBuilderModal = ({
         tempId: d.id,
         name: d.name ?? `Day ${d.day_number}`,
         instructions: d.instructions ?? '',
-        warmup: d.exercises
-          .filter((e) => e.section === 'warmup')
-          .map((e) => ({
-            tempId: e.id,
-            exerciseId: e.exercise_id,
-            exerciseName: e.exercise_id, // will be overridden by name lookup if needed
-            exerciseCategories: [],
-            sets: e.sets ?? '',
-            reps: e.reps ?? '',
-            rest_min: e.rest_min ?? 0,
-            rest_sec: e.rest_sec ?? 0,
-            rir: e.rir ?? '',
-            rpe: e.rpe ?? '',
-            intensity: e.intensity ?? '',
-            tempo: e.tempo ?? '',
-            notes: e.notes ?? '',
-          })),
-        workout: d.exercises
-          .filter((e) => e.section === 'workout')
-          .map((e) => ({
-            tempId: e.id,
-            exerciseId: e.exercise_id,
-            exerciseName: e.exercise_id,
-            exerciseCategories: [],
-            sets: e.sets ?? '',
-            reps: e.reps ?? '',
-            rest_min: e.rest_min ?? 0,
-            rest_sec: e.rest_sec ?? 0,
-            rir: e.rir ?? '',
-            rpe: e.rpe ?? '',
-            intensity: e.intensity ?? '',
-            tempo: e.tempo ?? '',
-            notes: e.notes ?? '',
-          })),
-        cooldown: d.exercises
-          .filter((e) => e.section === 'cooldown')
-          .map((e) => ({
-            tempId: e.id,
-            exerciseId: e.exercise_id,
-            exerciseName: e.exercise_id,
-            exerciseCategories: [],
-            sets: e.sets ?? '',
-            reps: e.reps ?? '',
-            rest_min: e.rest_min ?? 0,
-            rest_sec: e.rest_sec ?? 0,
-            rir: e.rir ?? '',
-            rpe: e.rpe ?? '',
-            intensity: e.intensity ?? '',
-            tempo: e.tempo ?? '',
-            notes: e.notes ?? '',
-          })),
+        warmup: d.exercises.filter((e) => e.section === 'warmup').map((e) => ({
+          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
+          exerciseCategories: [],
+          sets: e.sets ?? '', reps: e.reps ?? '',
+          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
+          rir: e.rir ?? '', rpe: e.rpe ?? '',
+          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+        })),
+        workout: d.exercises.filter((e) => e.section === 'workout').map((e) => ({
+          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
+          exerciseCategories: [],
+          sets: e.sets ?? '', reps: e.reps ?? '',
+          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
+          rir: e.rir ?? '', rpe: e.rpe ?? '',
+          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+        })),
+        cooldown: d.exercises.filter((e) => e.section === 'cooldown').map((e) => ({
+          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
+          exerciseCategories: [],
+          sets: e.sets ?? '', reps: e.reps ?? '',
+          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
+          rir: e.rir ?? '', rpe: e.rpe ?? '',
+          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+        })),
       }));
       setDays(loadedDays.length > 0 ? loadedDays : [newDay(1)]);
     } else {
@@ -305,28 +283,48 @@ export const ProgramBuilderModal = ({
     setActiveSection('workout');
     setExSearch('');
     setExCategory('All');
+    setExLetter('');
+    setExPage(1);
     setError('');
   }, [isOpen, editingProgram]);
 
-  // Exercise search (right panel)
+  // Exercise search (right panel) — paginated, 25 per page
   const { data: exData, isLoading: exLoading } = useExercises({
     search: exSearch,
     category: exCategory === 'All' ? undefined : exCategory,
-    pageSize: 30,
+    alphabetLetter: exLetter || undefined,
+    page: exPage,
+    pageSize: 25,
   });
   const searchResults = exData?.exercises ?? [];
+  const totalPages    = exData?.totalPages ?? 1;
+  const totalCount    = exData?.total ?? 0;
 
-  // Volume sets for active day
-  const volume = useMemo(() => (days[activeDayIdx] ? computeVolume(days[activeDayIdx]) : {}), [days, activeDayIdx]);
+  // Volume for active day
+  const volume = useMemo(
+    () => (days[activeDayIdx] ? computeVolume(days[activeDayIdx]) : {}),
+    [days, activeDayIdx]
+  );
+
+  // Week groupings (derived — no extra state needed)
+  const weeks = useMemo(() => {
+    const result: { startIdx: number; weekDays: LocalDay[] }[] = [];
+    for (let i = 0; i < days.length; i += DAYS_PER_WEEK) {
+      result.push({ startIdx: i, weekDays: days.slice(i, i + DAYS_PER_WEEK) });
+    }
+    return result;
+  }, [days]);
+
+  const lastWeekFull = days.length > 0 && days.length % DAYS_PER_WEEK === 0;
 
   if (!isOpen) return null;
 
-  // ── Day helpers ────────────────────────────────────────────────────────
+  // ── Day helpers ──────────────────────────────────────────────────────────
 
   const addDay = () => {
     const n = days.length + 1;
     setDays((prev) => [...prev, newDay(n)]);
-    setActiveDayIdx(days.length);
+    setActiveDayIdx(days.length); // index of the new day
   };
 
   const removeDay = (idx: number) => {
@@ -338,7 +336,7 @@ export const ProgramBuilderModal = ({
   const updateDay = (idx: number, field: keyof LocalDay, val: string) =>
     setDays((prev) => prev.map((d, i) => (i === idx ? { ...d, [field]: val } : d)));
 
-  // ── Section helpers ────────────────────────────────────────────────────
+  // ── Exercise helpers ─────────────────────────────────────────────────────
 
   const addExercise = (ex: { id: string; name: string; categories: string[] }) => {
     const row = emptyRow(ex);
@@ -367,7 +365,17 @@ export const ProgramBuilderModal = ({
       )
     );
 
-  // ── Save ───────────────────────────────────────────────────────────────
+  // ── Save ─────────────────────────────────────────────────────────────────
+
+  const rowToPayload = (r: LocalExRow, section: Section, oi: number) => ({
+    exercise_id: r.exerciseId,
+    section,
+    order_index: oi,
+    sets: r.sets, reps: r.reps,
+    rest_min: r.rest_min, rest_sec: r.rest_sec,
+    rir: r.rir, rpe: r.rpe,
+    intensity: r.intensity, tempo: r.tempo, notes: r.notes,
+  });
 
   const handleSave = async () => {
     if (!programName.trim()) { setError('Program name is required.'); return; }
@@ -405,29 +413,16 @@ export const ProgramBuilderModal = ({
     }
   };
 
-  const rowToPayload = (r: LocalExRow, section: Section, oi: number) => ({
-    exercise_id: r.exerciseId,
-    section,
-    order_index: oi,
-    sets: r.sets,
-    reps: r.reps,
-    rest_min: r.rest_min,
-    rest_sec: r.rest_sec,
-    rir: r.rir,
-    rpe: r.rpe,
-    intensity: r.intensity,
-    tempo: r.tempo,
-    notes: r.notes,
-  });
-
   const activeDay = days[activeDayIdx];
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="fixed inset-0 z-[700] flex items-stretch bg-white animate-in fade-in duration-200">
+
       {/* ── Main Panel ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-4">
@@ -452,6 +447,7 @@ export const ProgramBuilderModal = ({
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
+
             {/* Program meta */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -490,122 +486,161 @@ export const ProgramBuilderModal = ({
               </div>
             )}
 
-            {/* Day tabs */}
-            <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
-              <div className="flex items-center gap-1 px-4 pt-3 border-b border-slate-200 overflow-x-auto no-scrollbar">
-                {days.map((d, i) => (
-                  <button
-                    key={d.tempId}
-                    onClick={() => setActiveDayIdx(i)}
-                    className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-t-xl transition-all border-b-2 ${
-                      activeDayIdx === i
-                        ? 'border-indigo-600 text-indigo-600 bg-white'
-                        : 'border-transparent text-slate-400 hover:text-slate-700'
-                    }`}
-                  >
-                    Day {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={addDay}
-                  className="px-3 py-2.5 text-slate-400 hover:text-indigo-600 transition-colors"
-                  title="Add day"
-                >
-                  <PlusIcon size={16} />
-                </button>
-              </div>
+            {/* ── Week Blocks ── */}
+            {weeks.map(({ startIdx, weekDays }, wi) => {
+              const weekNum     = wi + 1;
+              const isLastWeek  = wi === weeks.length - 1;
+              const isActiveWeek = activeDayIdx >= startIdx && activeDayIdx < startIdx + weekDays.length;
 
-              {/* Day content */}
-              {activeDay && (
-                <div className="p-6 space-y-6">
-                  {/* Day name + delete */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      value={activeDay.name}
-                      onChange={(e) => updateDay(activeDayIdx, 'name', e.target.value)}
-                      placeholder="Day Name *"
-                      className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
-                    />
-                    {days.length > 1 && (
+              return (
+                <div key={`week-${weekNum}-${startIdx}`} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+
+                  {/* Week header */}
+                  <div className="flex items-center gap-3 px-5 py-2.5 bg-slate-100/70 border-b border-slate-200">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Week {weekNum}</span>
+                    <span className="text-[9px] font-semibold text-slate-400">
+                      · {weekDays.length} of {DAYS_PER_WEEK} days
+                    </span>
+                    {weekDays.length === DAYS_PER_WEEK && (
+                      <span className="ml-auto text-[8px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                        Full
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Day tabs */}
+                  <div className="flex items-center gap-1 px-4 pt-2 border-b border-slate-200 overflow-x-auto no-scrollbar">
+                    {weekDays.map((d, i) => {
+                      const globalIdx = startIdx + i;
+                      return (
+                        <button
+                          key={d.tempId}
+                          onClick={() => setActiveDayIdx(globalIdx)}
+                          className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-t-lg transition-all border-b-2 ${
+                            activeDayIdx === globalIdx
+                              ? 'border-indigo-600 text-indigo-600 bg-white'
+                              : 'border-transparent text-slate-400 hover:text-slate-700'
+                          }`}
+                        >
+                          Day {i + 1}
+                        </button>
+                      );
+                    })}
+                    {/* + Add Day — only show in last incomplete week */}
+                    {isLastWeek && weekDays.length < DAYS_PER_WEEK && (
                       <button
-                        onClick={() => removeDay(activeDayIdx)}
-                        className="p-2.5 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
-                        title="Remove this day"
+                        onClick={addDay}
+                        className="px-3 py-2.5 text-slate-400 hover:text-indigo-600 transition-colors shrink-0"
+                        title="Add day to this week"
                       >
-                        <Trash2Icon size={16} />
+                        <PlusIcon size={16} />
                       </button>
                     )}
                   </div>
 
-                  {/* Volume Sets */}
-                  {Object.keys(volume).length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-[9px] font-semibold uppercase text-slate-400 self-center tracking-wide mr-1">Total Volume Sets</span>
-                      {Object.entries(volume).map(([cat, sets]) => {
-                        const color = VOLUME_COLORS[cat] ?? 'bg-slate-100 text-slate-600';
-                        return (
-                          <span key={cat} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
-                            {cat} {sets}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Sections */}
-                  {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => (
-                    <div key={sec} className="space-y-3">
+                  {/* Active day content — only rendered for the week that owns it */}
+                  {isActiveWeek && activeDay && (
+                    <div className="p-6 space-y-6">
+                      {/* Day name + delete */}
                       <div className="flex items-center gap-3">
-                        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{SECTION_LABELS[sec]}</h4>
-                        <div className="flex-1 h-px bg-slate-200" />
+                        <input
+                          value={activeDay.name}
+                          onChange={(e) => updateDay(activeDayIdx, 'name', e.target.value)}
+                          placeholder="Day Name *"
+                          className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
+                        />
+                        {days.length > 1 && (
+                          <button
+                            onClick={() => removeDay(activeDayIdx)}
+                            className="p-2.5 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
+                            title="Remove this day"
+                          >
+                            <Trash2Icon size={16} />
+                          </button>
+                        )}
                       </div>
 
-                      {/* Exercise rows */}
-                      {activeDay[sec].map((row, idx) => (
-                        <ExRow
-                          key={row.tempId}
-                          row={row}
-                          letter={String.fromCharCode(65 + idx)}
-                          onChange={(updated) => updateRow(sec, row.tempId, updated)}
-                          onRemove={() => removeRow(sec, row.tempId)}
-                        />
+                      {/* Volume sets */}
+                      {Object.keys(volume).length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          <span className="text-[9px] font-semibold uppercase text-slate-400 self-center tracking-wide mr-1">Total Volume Sets</span>
+                          {Object.entries(volume).map(([cat, sets]) => {
+                            const color = VOLUME_COLORS[cat] ?? 'bg-slate-100 text-slate-600';
+                            return (
+                              <span key={cat} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
+                                {cat} {sets}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Sections */}
+                      {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => (
+                        <div key={sec} className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{SECTION_LABELS[sec]}</h4>
+                            <div className="flex-1 h-px bg-slate-200" />
+                          </div>
+                          {activeDay[sec].map((row, idx) => (
+                            <ExRow
+                              key={row.tempId}
+                              row={row}
+                              letter={String.fromCharCode(65 + idx)}
+                              onChange={(updated) => updateRow(sec, row.tempId, updated)}
+                              onRemove={() => removeRow(sec, row.tempId)}
+                            />
+                          ))}
+                          <button
+                            onClick={() => setActiveSection(sec)}
+                            className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wide border-2 border-dashed transition-all ${
+                              activeSection === sec
+                                ? 'border-indigo-400 text-indigo-500 bg-indigo-50'
+                                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                            }`}
+                          >
+                            <PlusIcon size={12} className="inline mr-1.5" />
+                            Add an Exercise{activeSection === sec ? ' (Select from panel →)' : ''}
+                          </button>
+                        </div>
                       ))}
 
-                      {/* Add exercise button */}
-                      <button
-                        onClick={() => setActiveSection(sec)}
-                        className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wide border-2 border-dashed transition-all ${
-                          activeSection === sec
-                            ? 'border-indigo-400 text-indigo-500 bg-indigo-50'
-                            : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
-                        }`}
-                      >
-                        <PlusIcon size={12} className="inline mr-1.5" />
-                        Add an Exercise{activeSection === sec ? ' (Select from panel →)' : ''}
-                      </button>
+                      {/* Day instructions */}
+                      <div>
+                        <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
+                        <textarea
+                          value={activeDay.instructions}
+                          onChange={(e) => updateDay(activeDayIdx, 'instructions', e.target.value)}
+                          placeholder="Coaching notes, warm-up protocol, session intent..."
+                          rows={3}
+                          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-indigo-500 bg-white resize-none"
+                        />
+                      </div>
                     </div>
-                  ))}
-
-                  {/* Instructions */}
-                  <div>
-                    <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
-                    <textarea
-                      value={activeDay.instructions}
-                      onChange={(e) => updateDay(activeDayIdx, 'instructions', e.target.value)}
-                      placeholder="Coaching notes, warm-up protocol, session intent..."
-                      rows={3}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-indigo-500 bg-white resize-none"
-                    />
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })}
+
+            {/* Add Week button — appears when the last week is full */}
+            {lastWeekFull && (
+              <button
+                onClick={addDay}
+                className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+              >
+                <PlusIcon size={14} />
+                Add Week {weeks.length + 1}
+              </button>
+            )}
+
           </div>
         </div>
       </div>
 
       {/* ── Right Panel: Exercise Chooser ── */}
       <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden">
+
+        {/* Header / filters */}
         <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
           <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Choose Exercise</h3>
 
@@ -614,7 +649,7 @@ export const ProgramBuilderModal = ({
             <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={exSearch}
-              onChange={(e) => setExSearch(e.target.value)}
+              onChange={(e) => { setExSearch(e.target.value); setExLetter(''); }}
               placeholder="Search by name..."
               className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50"
             />
@@ -634,41 +669,111 @@ export const ProgramBuilderModal = ({
             <ChevronDownIcon size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Active section indicator */}
+          {/* A–Z letter browser */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Browse A–Z</span>
+              {exLetter && (
+                <button
+                  onClick={() => setExLetter('')}
+                  className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 uppercase tracking-wide"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              <button
+                onClick={() => { setExLetter(''); setExSearch(''); }}
+                className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
+                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 hover:text-indigo-700'
+                }`}
+              >
+                ✕
+              </button>
+              {LETTERS.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => {
+                    if (exLetter === l) { setExLetter(''); }
+                    else { setExLetter(l); setExSearch(''); }
+                  }}
+                  className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
+                    exLetter === l
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 hover:text-indigo-700'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Adding to indicator */}
           <div className="bg-indigo-50 rounded-xl px-3 py-2">
             <span className="text-[9px] font-semibold uppercase text-indigo-400 tracking-wide">Adding to: </span>
             <span className="text-[9px] font-semibold uppercase text-indigo-700 tracking-wide">{SECTION_LABELS[activeSection]}</span>
+            <span className="text-[9px] text-indigo-400 ml-1">
+              — {activeDay?.name ?? ''}
+            </span>
           </div>
         </div>
 
-        {/* Exercise list */}
-        <div className="flex-1 overflow-y-auto">
-          {exLoading ? (
-            <div className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">Loading...</div>
-          ) : searchResults.length === 0 ? (
-            <div className="p-4 text-center text-[10px] font-bold text-slate-300 uppercase tracking-wide">No exercises found</div>
-          ) : (
-            searchResults.map((ex) => (
-              <button
-                key={ex.id}
-                onClick={() => addExercise(ex)}
-                className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 transition-colors group flex items-start gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-800 leading-tight truncate">
-                    {ex.name}
-                  </div>
-                  {ex.categories?.[0] && (
-                    <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">
-                      {ex.categories[0]}
+        {/* Exercise list + pagination */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
+            {exLoading ? (
+              <div className="p-6 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">Loading...</div>
+            ) : searchResults.length === 0 ? (
+              <div className="p-6 text-center text-[10px] font-bold text-slate-300 uppercase tracking-wide">No exercises found</div>
+            ) : (
+              searchResults.map((ex) => (
+                <button
+                  key={ex.id}
+                  onClick={() => addExercise(ex)}
+                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 transition-colors group flex items-start gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-800 leading-tight truncate">
+                      {ex.name}
                     </div>
-                  )}
-                </div>
-                <div className="w-6 h-6 rounded-lg bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-all mt-0.5">
-                  <PlusIcon size={12} />
-                </div>
+                    {ex.categories?.[0] && (
+                      <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">
+                        {ex.categories[0]}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-6 h-6 rounded-lg bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-all mt-0.5">
+                    <PlusIcon size={12} />
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="shrink-0 border-t border-slate-100 px-3 py-2.5 flex items-center justify-between bg-white">
+              <button
+                onClick={() => setExPage((p) => Math.max(1, p - 1))}
+                disabled={exPage === 1 || exLoading}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+              >
+                <ChevronLeftIcon size={11} /> Prev
               </button>
-            ))
+              <div className="text-center">
+                <div className="text-[10px] font-bold text-slate-500">{exPage} / {totalPages}</div>
+                <div className="text-[8px] text-slate-300 font-semibold">{totalCount} total</div>
+              </div>
+              <button
+                onClick={() => setExPage((p) => Math.min(totalPages, p + 1))}
+                disabled={exPage === totalPages || exLoading}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+              >
+                Next <ChevronRightIcon size={11} />
+              </button>
+            </div>
           )}
         </div>
       </div>
