@@ -325,3 +325,91 @@ export interface InjuryReport {
   createdAt: string;
   updatedAt?: string;
 }
+
+// --- PERIODIZATION PLAN TYPES ---
+
+export type PlanViewMode = 'timeline' | 'cards';
+export type PlanEventType = 'competition' | 'testing' | 'custom';
+
+export interface PeriodizationPlan {
+  id: string;
+  name: string;
+  targetType: 'Team' | 'Individual';
+  targetId: string;
+  startDate: string;
+  endDate?: string;
+  viewMode: PlanViewMode;
+  modalities: string[];
+  phases: PlanPhase[];
+  events: PlanEvent[];
+  volumeOverrides: Record<number, number>;
+  intensityOverrides: Record<number, number>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlanPhase {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate?: string;
+  color: string;
+  trainingPhase: TrainingPhase;
+  blocks: PlanTrainingBlock[];
+}
+
+export interface PlanTrainingBlock {
+  id: string;
+  name: string;
+  label: string;
+  startDate: string;
+  endDate?: string;
+  color: string;
+  blockType: BlockType;
+  goals: string;
+  modalities: Record<string, string>;
+  weeks: PlanWeek[];
+}
+
+export interface PlanWeek {
+  id: string;
+  weekNumber: number;
+  startDate: string;
+  intent: string;
+  sessions: PlanSession[];
+}
+
+export interface PlanSession {
+  id: string;
+  date: string;
+  name: string;
+  sections: PlanSessionSection[];
+  plannedDuration?: number;
+  plannedRPE?: number;
+  load?: LoadLevel;
+  workoutTemplateId?: string;
+  notes?: string;
+}
+
+export interface PlanSessionSection {
+  id: string;
+  type: string;
+  exercises: PlanSessionExercise[];
+}
+
+export interface PlanSessionExercise {
+  id: string;
+  exerciseId: string;
+  sets: number;
+  reps: string;
+  weight: string;
+  rpe?: number;
+}
+
+export interface PlanEvent {
+  id: string;
+  date: string;
+  type: PlanEventType;
+  label: string;
+  color?: string;
+}

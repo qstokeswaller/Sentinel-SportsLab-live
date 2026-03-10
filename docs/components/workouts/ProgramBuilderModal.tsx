@@ -5,6 +5,7 @@ import {
   SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
 } from 'lucide-react';
 import { useExercises } from '../../hooks/useExercises';
+import { useExerciseMap } from '../../hooks/useExerciseMap';
 import {
   useCreateProgram, useUpdateProgram, useSaveProgramFull,
   type WorkoutProgram, type FullProgram,
@@ -17,6 +18,7 @@ interface LocalExRow {
   exerciseId: string;
   exerciseName: string;
   exerciseCategories: string[];
+  exerciseBodyParts: string[];
   sets: string;
   reps: string;
   rest_min: number;
@@ -63,6 +65,25 @@ const VOLUME_COLORS: Record<string, string> = {
   'Calisthenics': 'bg-violet-100 text-violet-700',
 };
 
+const BODY_PART_COLORS: Record<string, string> = {
+  'Chest': 'bg-rose-100 text-rose-700',
+  'Back': 'bg-sky-100 text-sky-700',
+  'Shoulders': 'bg-amber-100 text-amber-700',
+  'Biceps': 'bg-cyan-100 text-cyan-700',
+  'Triceps': 'bg-violet-100 text-violet-700',
+  'Quadriceps': 'bg-emerald-100 text-emerald-700',
+  'Hamstrings': 'bg-lime-100 text-lime-700',
+  'Glutes': 'bg-pink-100 text-pink-700',
+  'Calves': 'bg-teal-100 text-teal-700',
+  'Abdominals': 'bg-orange-100 text-orange-700',
+  'Forearms': 'bg-stone-100 text-stone-600',
+  'Trapezius': 'bg-indigo-100 text-indigo-700',
+  'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
+  'Adductors': 'bg-blue-100 text-blue-700',
+  'Abductors': 'bg-purple-100 text-purple-700',
+  'Shins': 'bg-green-100 text-green-700',
+};
+
 const EXERCISE_CATEGORIES = [
   'All', 'Upper Body', 'Lower Body', 'Core', 'Full Body',
   'Plyometric', 'Olympic Weightlifting', 'Powerlifting',
@@ -83,11 +104,12 @@ const newDay = (n: number): LocalDay => ({
   cooldown: [],
 });
 
-const emptyRow = (ex: { id: string; name: string; categories: string[] }): LocalExRow => ({
+const emptyRow = (ex: { id: string; name: string; categories: string[]; body_parts?: string[] }): LocalExRow => ({
   tempId: tempId(),
   exerciseId: ex.id,
   exerciseName: ex.name,
   exerciseCategories: ex.categories ?? [],
+  exerciseBodyParts: ex.body_parts ?? [],
   sets: '',
   reps: '',
   rest_min: 0,
@@ -101,16 +123,19 @@ const emptyRow = (ex: { id: string; name: string; categories: string[] }): Local
 
 // ── Volume calculator ──────────────────────────────────────────────────────
 
-function computeVolume(day: LocalDay): Record<string, number> {
-  const vol: Record<string, number> = {};
+function computeVolume(day: LocalDay): { byRegion: Record<string, number>; byBodyPart: Record<string, number> } {
+  const byRegion: Record<string, number> = {};
+  const byBodyPart: Record<string, number> = {};
   const allRows = [...day.warmup, ...day.workout, ...day.cooldown];
   for (const row of allRows) {
-    const cat = row.exerciseCategories[0];
-    if (!cat) continue;
     const sets = parseInt(row.sets) || 0;
-    if (sets > 0) vol[cat] = (vol[cat] ?? 0) + sets;
+    if (sets <= 0) continue;
+    const region = row.exerciseCategories[0];
+    if (region) byRegion[region] = (byRegion[region] ?? 0) + sets;
+    const part = row.exerciseBodyParts?.[0];
+    if (part) byBodyPart[part] = (byBodyPart[part] ?? 0) + sets;
   }
-  return vol;
+  return { byRegion, byBodyPart };
 }
 
 // ── Exercise Row ───────────────────────────────────────────────────────────
@@ -231,6 +256,7 @@ export const ProgramBuilderModal = ({
   const createProgram = useCreateProgram();
   const updateProgram = useUpdateProgram();
   const saveFull      = useSaveProgramFull();
+  const { exerciseFullMap } = useExerciseMap();
 
   // Reset page when any filter changes
   useEffect(() => { setExPage(1); }, [exSearch, exCategory, exLetter]);
@@ -243,34 +269,26 @@ export const ProgramBuilderModal = ({
       setProgramOverview(editingProgram.overview ?? '');
       setProgramTags((editingProgram.tags ?? []).join(', '));
 
+      const mapRow = (e: any): LocalExRow => {
+        const exInfo = exerciseFullMap[e.exercise_id];
+        return {
+          tempId: e.id, exerciseId: e.exercise_id,
+          exerciseName: exInfo?.name || e.exercise_id,
+          exerciseCategories: exInfo?.categories || [],
+          exerciseBodyParts: exInfo?.body_parts || [],
+          sets: e.sets ?? '', reps: e.reps ?? '',
+          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
+          rir: e.rir ?? '', rpe: e.rpe ?? '',
+          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+        };
+      };
       const loadedDays: LocalDay[] = (editingProgram.days ?? []).map((d) => ({
         tempId: d.id,
         name: d.name ?? `Day ${d.day_number}`,
         instructions: d.instructions ?? '',
-        warmup: d.exercises.filter((e) => e.section === 'warmup').map((e) => ({
-          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
-          exerciseCategories: [],
-          sets: e.sets ?? '', reps: e.reps ?? '',
-          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
-          rir: e.rir ?? '', rpe: e.rpe ?? '',
-          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
-        })),
-        workout: d.exercises.filter((e) => e.section === 'workout').map((e) => ({
-          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
-          exerciseCategories: [],
-          sets: e.sets ?? '', reps: e.reps ?? '',
-          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
-          rir: e.rir ?? '', rpe: e.rpe ?? '',
-          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
-        })),
-        cooldown: d.exercises.filter((e) => e.section === 'cooldown').map((e) => ({
-          tempId: e.id, exerciseId: e.exercise_id, exerciseName: e.exercise_id,
-          exerciseCategories: [],
-          sets: e.sets ?? '', reps: e.reps ?? '',
-          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
-          rir: e.rir ?? '', rpe: e.rpe ?? '',
-          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
-        })),
+        warmup: d.exercises.filter((e) => e.section === 'warmup').map(mapRow),
+        workout: d.exercises.filter((e) => e.section === 'workout').map(mapRow),
+        cooldown: d.exercises.filter((e) => e.section === 'cooldown').map(mapRow),
       }));
       setDays(loadedDays.length > 0 ? loadedDays : [newDay(1)]);
     } else {
@@ -302,7 +320,7 @@ export const ProgramBuilderModal = ({
 
   // Volume for active day
   const volume = useMemo(
-    () => (days[activeDayIdx] ? computeVolume(days[activeDayIdx]) : {}),
+    () => (days[activeDayIdx] ? computeVolume(days[activeDayIdx]) : { byRegion: {}, byBodyPart: {} }),
     [days, activeDayIdx]
   );
 
@@ -349,7 +367,7 @@ export const ProgramBuilderModal = ({
 
   // ── Exercise helpers ─────────────────────────────────────────────────────
 
-  const addExercise = (ex: { id: string; name: string; categories: string[] }) => {
+  const addExercise = (ex: { id: string; name: string; categories: string[]; body_parts?: string[] }) => {
     const row = emptyRow(ex);
     setDays((prev) =>
       prev.map((d, i) =>
@@ -572,17 +590,34 @@ export const ProgramBuilderModal = ({
                       </div>
 
                       {/* Volume sets */}
-                      {Object.keys(volume).length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          <span className="text-[9px] font-semibold uppercase text-slate-400 self-center tracking-wide mr-1">Total Volume Sets</span>
-                          {Object.entries(volume).map(([cat, sets]) => {
-                            const color = VOLUME_COLORS[cat] ?? 'bg-slate-100 text-slate-600';
-                            return (
-                              <span key={cat} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
-                                {cat} {sets}
-                              </span>
-                            );
-                          })}
+                      {(Object.keys(volume.byBodyPart).length > 0 || Object.keys(volume.byRegion).length > 0) && (
+                        <div className="space-y-2">
+                          {Object.keys(volume.byBodyPart).length > 0 && (
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Body Part Volume</span>
+                              {Object.entries(volume.byBodyPart).sort((a, b) => b[1] - a[1]).map(([part, sets]) => {
+                                const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600';
+                                return (
+                                  <span key={part} className={`px-3 py-1 rounded-full text-[10px] font-semibold ${color}`}>
+                                    {part} {sets}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {Object.keys(volume.byRegion).length > 0 && (
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Region Volume</span>
+                              {Object.entries(volume.byRegion).sort((a, b) => b[1] - a[1]).map(([region, sets]) => {
+                                const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600';
+                                return (
+                                  <span key={region} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
+                                    {region} {sets}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
 

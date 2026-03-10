@@ -241,6 +241,11 @@ export const DatabaseService = {
         return data;
     },
 
+    async deleteAssessment(id: string) {
+        const { error } = await supabase.from('assessments').delete().eq('id', id);
+        if (error) throw error;
+    },
+
     async fetchAssessmentsByAthlete(athleteId: string, testType?: string) {
         let query = supabase
             .from('assessments')
@@ -258,6 +263,33 @@ export const DatabaseService = {
             return [];
         }
         return data || [];
+    },
+
+    async fetchAssessmentsByTeam(teamPlayerIds: string[], testType?: string) {
+        let query = supabase
+            .from('assessments')
+            .select('*')
+            .in('athlete_id', teamPlayerIds)
+            .order('date', { ascending: false });
+        if (testType) query = query.eq('test_type', testType);
+        const { data, error } = await query;
+        if (error) { console.error('fetchAssessmentsByTeam error:', error); return []; }
+        return data || [];
+    },
+
+    async batchLogAssessments(entries: { testType: string; athleteId: string; metrics: any; date?: string }[]) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('User not authenticated');
+        const rows = entries.map(e => ({
+            user_id: userData.user.id,
+            athlete_id: e.athleteId,
+            test_type: e.testType,
+            metrics: e.metrics,
+            date: e.date || new Date().toISOString().split('T')[0],
+        }));
+        const { data, error } = await supabase.from('assessments').insert(rows).select();
+        if (error) throw error;
+        return data;
     },
 
     // --- QUESTIONNAIRE TEMPLATES ---
@@ -532,5 +564,37 @@ export const DatabaseService = {
             });
         if (error) throw error;
         return data as { athletes: { id: string; name: string }[] };
+    },
+
+    // --- SHARED WORKOUT VIEWS (public, anon) ---
+
+    async getSharedWorkoutProgram(programId: string) {
+        const db = supabase as any;
+        const { data, error } = await db
+            .rpc('get_shared_workout_program', {
+                p_program_id: programId,
+            });
+        if (error) throw error;
+        return data as { program: any } | null;
+    },
+
+    async getSharedWorkoutTemplate(templateId: string) {
+        const db = supabase as any;
+        const { data, error } = await db
+            .rpc('get_shared_workout_template', {
+                p_template_id: templateId,
+            });
+        if (error) throw error;
+        return data as any;
+    },
+
+    async getSharedProtocol(protocolId: string) {
+        const db = supabase as any;
+        const { data, error } = await db
+            .rpc('get_shared_protocol', {
+                p_protocol_id: protocolId,
+            });
+        if (error) throw error;
+        return data as any;
     },
 };

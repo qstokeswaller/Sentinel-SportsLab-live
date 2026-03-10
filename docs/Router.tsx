@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import PublicWellnessForm from './pages/PublicWellnessForm';
 import PublicInjuryForm from './pages/PublicInjuryForm';
+import PublicWorkoutView from './pages/PublicWorkoutView';
+import PublicProtocolView from './pages/PublicProtocolView';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -37,6 +39,8 @@ const AppRouter: React.FC = () => {
       <Route path="/wellness-form/:templateId/:teamId" element={<PublicWellnessForm />} />
       <Route path="/injury-form/:teamId" element={<PublicInjuryForm />} />
       <Route path="/injury-form/:teamId/:athleteId" element={<PublicInjuryForm />} />
+      <Route path="/workout/:workoutType/:workoutId" element={<PublicWorkoutView />} />
+      <Route path="/protocol/:protocolId" element={<PublicProtocolView />} />
       <Route
         path="/onboarding"
         element={

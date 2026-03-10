@@ -20,6 +20,7 @@ import SettingsPage from './pages/SettingsPage';
 import { WorkoutPacketsPage } from './pages/WorkoutPacketsPage';
 import { WeightroomSheetsPage } from './pages/WeightroomSheetsPage';
 import { WorkoutHistoryPage } from './pages/WorkoutHistoryPage';
+import { TestingHubPage } from './pages/TestingHubPage';
 import WorkoutPacketModal from './components/WorkoutPacketModal';
 import AddEventModal from './components/calendar/AddEventModal';
 
@@ -265,6 +266,7 @@ const App = () => {
                         <Route path="/analytics" element={<AnalyticsHubPage />} />
                         <Route path="/reports" element={<ReportingHubPage />} />
                         <Route path="/wellness" element={<WellnessHubPage />} />
+                        <Route path="/testing" element={<TestingHubPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
@@ -857,187 +859,106 @@ const SessionModal = () => {
         viewingSession,
         setViewingSession,
         resolveTargetName,
-        exercises,
-        BORG_RPE_SCALE,
-        kpiDefinitions,
-        scheduledSessions,
-        setScheduledSessions,
-        loadRecords,
-        setLoadRecords
+        navigate,
+        handleDeleteSession,
     } = useAppState();
 
     if (!viewingSession) return null;
 
-    const handleSave = async () => {
-        try {
-            // 1. Update the session status to Completed
-            await DatabaseService.updateSession(viewingSession.id, {
-                status: 'Completed',
-                actual_duration: viewingSession.actualDuration || viewingSession.plannedDuration || 60,
-                // actualRPE? We might need to add a field to the schema or store in metrics
-                notes: `Actual RPE: ${viewingSession.actualRPE}. ` + (viewingSession.notes || '')
-            });
+    const targetName = resolveTargetName(viewingSession.targetId, viewingSession.targetType);
+    const loadColor = viewingSession.load === 'High' ? 'text-red-600 bg-red-50 border-red-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-green-600 bg-green-50 border-green-100';
+    const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-            // 2. Log the load assessment for the athlete
-            const athleteId = viewingSession.targetType === 'Individual' ? viewingSession.targetId : 'p1';
-            const sRPE = (viewingSession.actualRPE || 0) * (viewingSession.actualDuration || viewingSession.plannedDuration || 60);
-
-            await DatabaseService.logAssessment('sRPE_load', athleteId, {
-                sessionId: viewingSession.id,
-                perceivedLoad: viewingSession.actualRPE,
-                sRPE: sRPE,
-                date: viewingSession.date
-            });
-
-            // 3. Refresh global state
-            await initData();
-            setViewingSession(null);
-            showToast("Session completed and diagnostics logged");
-        } catch (err) {
-            console.error("Error saving session diagnostic:", err);
-            showToast("Failed to save. Ensure schema is applied.", "error");
-        }
+    const handleViewWorkout = () => {
+        setViewingSession(null);
+        navigate('/workouts/packets');
     };
-
-    const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
-    const LABEL = "text-xs font-medium text-slate-500";
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
-                    <div>
-                        <h3 className="text-base font-semibold text-slate-900">{viewingSession.title}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Post-session diagnostics</p>
+            <div className="bg-white rounded-xl w-full max-w-md shadow-xl border border-slate-200 overflow-hidden">
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
+                            <DumbbellIcon size={16} />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-900 leading-tight">{viewingSession.title}</h3>
+                            <p className="text-xs text-slate-400 mt-0.5">{viewingSession.targetType === 'Team' ? 'Team Session' : 'Individual Session'}</p>
+                        </div>
                     </div>
                     <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
-                <div className="p-5 space-y-5 overflow-y-auto no-scrollbar">
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <span className={`${LABEL} block mb-1`}>Date</span>
-                                <span className="text-sm font-semibold text-slate-900">{viewingSession.date}</span>
-                            </div>
-                            <div>
-                                <span className={`${LABEL} block mb-1`}>Load</span>
-                                <span className={`text-sm font-semibold ${viewingSession.load === 'High' ? 'text-red-600' : viewingSession.load === 'Medium' ? 'text-amber-600' : 'text-green-600'}`}>{viewingSession.load}</span>
-                            </div>
-                            <div>
-                                <span className={`${LABEL} block mb-1`}>Target</span>
-                                <span className="text-sm font-semibold text-slate-900">{resolveTargetName(viewingSession.targetId, viewingSession.targetType)}</span>
-                            </div>
-                        </div>
+
+                {/* Details */}
+                <div className="p-5 space-y-4">
+                    {/* Meta row */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {viewingSession.time && (
+                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">{viewingSession.time}</span>
+                        )}
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${loadColor}`}>{viewingSession.load} Load</span>
+                        {viewingSession.trainingPhase && (
+                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
+                        )}
+                        {viewingSession.status === 'Completed' && (
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-md text-xs font-semibold">Completed</span>
+                        )}
                     </div>
 
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2">Exercise Prescription</h4>
-                        <div className="space-y-2">
-                            {viewingSession.exercises ? viewingSession.exercises.map((exObj, idx) => {
-                                const ex = exercises.find(e => e.id === exObj.id);
-                                return ex ? (
-                                    <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[9px] font-medium">{idx + 1}</div>
-                                            <div>
-                                                <span className="text-sm font-medium text-slate-900 block leading-tight">{ex.name}</span>
-                                                <span className="text-xs text-slate-400">{ex.categories[0]}</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-xs font-semibold text-slate-900 block">{exObj.sets} sets × {exObj.reps} reps</span>
-                                            <span className="text-xs text-indigo-500">
-                                                {exObj.weight && exObj.weight !== '-' ? `@ ${exObj.weight}` : 'Bodyweight'} {exObj.rpe ? `· RPE ${exObj.rpe}` : ''}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ) : null;
-                            }) : viewingSession.exerciseIds?.map((eid, idx) => {
-                                const ex = exercises.find(e => e.id === eid);
-                                return ex ? (
-                                    <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[9px] font-medium">{idx + 1}</div>
-                                            <span className="text-sm font-medium text-slate-900">{ex.name}</span>
-                                        </div>
-                                        <span className="text-xs text-slate-400 italic">3 sets × 8–10 reps</span>
-                                    </div>
-                                ) : null;
-                            })}
+                    {/* Info grid */}
+                    <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-400 font-medium">Athlete / Team</span>
+                            <span className="text-sm font-semibold text-slate-900">{targetName}</span>
                         </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2">Log Diagnostics</h4>
-
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2.5">
-                                <div className="flex justify-between items-end">
-                                    <label className={LABEL}>sRPE (Borg CR10)</label>
-                                    <span className={`text-xs font-semibold ${BORG_RPE_SCALE[viewingSession.actualRPE || 5]?.color || 'text-slate-500'}`}>
-                                        {BORG_RPE_SCALE[viewingSession.actualRPE || 5]?.label || 'Moderate'}
-                                    </span>
+                        <div className="h-px bg-slate-200" />
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-400 font-medium">Date</span>
+                            <span className="text-sm text-slate-700">{dateStr}</span>
+                        </div>
+                        {viewingSession.time && (
+                            <>
+                                <div className="h-px bg-slate-200" />
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-slate-400 font-medium">Start Time</span>
+                                    <span className="text-sm text-slate-700">{viewingSession.time}</span>
                                 </div>
-                                <input
-                                    type="range"
-                                    min="0" max="10"
-                                    step="1"
-                                    value={viewingSession.actualRPE || 5}
-                                    onChange={(e) => setViewingSession({ ...viewingSession, actualRPE: parseInt(e.target.value) })}
-                                    className="w-full accent-slate-900"
-                                />
-                                <div className="flex justify-between text-[9px] font-medium text-slate-400 px-0.5">
-                                    <span>Rest</span>
-                                    <span>Maximal</span>
+                            </>
+                        )}
+                        {viewingSession.plannedDuration && (
+                            <>
+                                <div className="h-px bg-slate-200" />
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-slate-400 font-medium">Duration</span>
+                                    <span className="text-sm text-slate-700">{viewingSession.actual_duration || viewingSession.plannedDuration} mins</span>
                                 </div>
-
-                                <div className="mt-2 p-3.5 bg-slate-900 rounded-lg border border-slate-800">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-xs text-slate-400">Calculated Load</span>
-                                        <span className="text-xl font-bold text-white">
-                                            {(viewingSession.actualRPE || 0) * (viewingSession.actualDuration || viewingSession.plannedDuration || 60)} <span className="text-xs text-slate-500">AU</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
+                            </>
+                        )}
+                        {viewingSession.notes && (
+                            <>
+                                <div className="h-px bg-slate-200" />
                                 <div>
-                                    <label className={`${LABEL} block mb-1.5`}>Actual Duration (mins)</label>
-                                    <input
-                                        type="number"
-                                        value={viewingSession.actualDuration || viewingSession.plannedDuration || 60}
-                                        onChange={(e) => setViewingSession({ ...viewingSession, actualDuration: parseInt(e.target.value) })}
-                                        className={INPUT}
-                                    />
+                                    <span className="text-xs text-slate-400 font-medium block mb-1">Notes</span>
+                                    <p className="text-sm text-slate-600">{viewingSession.notes}</p>
                                 </div>
-                                <div>
-                                    <label className={`${LABEL} block mb-1.5`}>Body Weight (kg)</label>
-                                    <input type="number" placeholder="kg" className={INPUT} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className={`${LABEL} block mb-1.5`}>Session-Specific KPIs</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {(kpiDefinitions || []).slice(0, 4).map(kpi => (
-                                    <div key={kpi.id}>
-                                        <label className="text-[9px] font-medium text-slate-500 block mb-1">{kpi.name} ({kpi.unit})</label>
-                                        <input type="number" placeholder={kpi.unit} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className={`${LABEL} block mb-1.5`}>Session Notes</label>
-                            <textarea placeholder="Any observations, injuries, or performance notes..." className={INPUT + " h-20 resize-none"}></textarea>
-                        </div>
+                            </>
+                        )}
                     </div>
                 </div>
-                <div className="px-5 py-4 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
-                    <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Cancel</button>
-                    <button onClick={handleSave} className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors">Save Diagnostics & Load</button>
+
+                {/* Footer */}
+                <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Close</button>
+                        <button onClick={() => { handleDeleteSession(viewingSession.id); setViewingSession(null); }} className="flex items-center gap-1.5 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                            <Trash2Icon size={14} /> Delete
+                        </button>
+                    </div>
+                    <button onClick={handleViewWorkout} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors">
+                        <DumbbellIcon size={14} /> View Workout
+                    </button>
                 </div>
             </div>
         </div>

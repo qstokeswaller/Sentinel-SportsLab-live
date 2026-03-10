@@ -64,6 +64,22 @@ body {
         background: white !important;
     }
 
+    /* Standalone public pages (protocols, workouts, etc.) */
+    .print-standalone,
+    .print-standalone * {
+        visibility: visible !important;
+    }
+
+    .print-standalone {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
     /* Ensure parents don't clip during print */
     body,
     html {

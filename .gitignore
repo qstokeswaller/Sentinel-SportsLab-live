@@ -9,6 +9,7 @@ archive/dist/
 .env.local
 .env.*.local
 secure/
+.mcp.json
 
 # Logs & temp
 logs/

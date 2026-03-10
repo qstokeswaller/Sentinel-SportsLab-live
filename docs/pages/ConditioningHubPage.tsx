@@ -4,9 +4,10 @@ import { useAppState } from '../context/AppStateContext';
 import { Button } from '@/components/ui/button';
 import {
     ActivityIcon, ZapIcon, PlusIcon, Trash2Icon, SaveIcon, PrinterIcon,
-    ClockIcon, FileEditIcon, Calculator as CalculatorIcon
+    ClockIcon, FileEditIcon, Calculator as CalculatorIcon, FootprintsIcon, ArrowLeftIcon,
 } from 'lucide-react';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
+import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 
 const ICON_MAP = {
     'Activity': ActivityIcon,
@@ -300,6 +301,16 @@ ${sectionsHtml}
                         <h3 className="text-base font-semibold text-slate-900">Wattbike Hub</h3>
                         <p className="text-sm text-slate-500 leading-relaxed">High-fidelity Wattbike power profiling and protocol management.</p>
                     </div>
+                    <div
+                        onClick={() => setActiveConditioningModule('running')}
+                        className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
+                    >
+                        <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <FootprintsIcon size={20} />
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-900">Running Mechanics</h3>
+                        <p className="text-sm text-slate-500 leading-relaxed">Gait analysis reports, sprint mechanics & movement documents.</p>
+                    </div>
                 </div>
             )}
 
@@ -420,15 +431,25 @@ ${sectionsHtml}
             )}
 
             {activeConditioningModule === 'running' && (
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6 animate-in slide-in-from-bottom-3">
-                    <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm"><ActivityIcon size={20} /></div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-900">Running Mechanics</h3>
-                            <p className="text-sm text-slate-400">Gait Analysis & Force-Velocity Profiling</p>
+                <div className="space-y-5 animate-in slide-in-from-bottom-3">
+                    <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setActiveConditioningModule(null)}
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all"
+                            >
+                                <ArrowLeftIcon size={16} />
+                            </button>
+                            <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
+                                <FootprintsIcon size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-900">Running Mechanics</h3>
+                                <p className="text-xs text-slate-400 mt-0.5">Gait analysis reports, sprint mechanics & movement documents</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="text-center py-16"><p className="text-slate-400 text-sm italic">Module coming soon...</p></div>
+                    <RunningMechanicsLibrary />
                 </div>
             )}
 

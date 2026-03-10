@@ -6,6 +6,7 @@ import { useWorkoutPrograms, useDeleteProgram } from '../hooks/useWorkoutProgram
 import { DatabaseService } from '../services/databaseService';
 import { ProgramBuilderModal } from '../components/workouts/ProgramBuilderModal';
 import { ProgramViewModal } from '../components/workouts/ProgramViewModal';
+import { TemplateViewModal } from '../components/workouts/TemplateViewModal';
 import {
     DumbbellIcon, SearchIcon, PlusIcon,
     Trash2Icon, PencilIcon,
@@ -13,7 +14,9 @@ import {
     LayersIcon, MoreVerticalIcon,
     PackageIcon, PrinterIcon, HistoryIcon,
     ChevronDownIcon, ChevronUpIcon, CalendarPlusIcon,
+    Share2Icon,
 } from 'lucide-react';
+import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -33,7 +36,7 @@ function formatDate(iso: string) {
 
 // ── Program Card ──────────────────────────────────────────────────────────
 
-const ProgramCard = ({ program, onView, onEdit, onDelete }) => (
+const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
     <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col hover:shadow-md hover:border-slate-300 transition-all duration-200 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-start justify-between mb-3">
@@ -51,7 +54,16 @@ const ProgramCard = ({ program, onView, onEdit, onDelete }) => (
                     </div>
                 )}
             </div>
-            <ProgramMenu onEdit={onEdit} onDelete={onDelete} />
+            <div className="flex items-center gap-0.5 shrink-0">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onShare(); }}
+                    className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                    title="Share"
+                >
+                    <Share2Icon size={13} />
+                </button>
+                <ProgramMenu onEdit={onEdit} onDelete={onDelete} />
+            </div>
         </div>
 
         {program.overview && (
@@ -183,6 +195,13 @@ export const WorkoutsPage = () => {
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+    // ── Template view state ─────────────────────────────────────────────
+    const [viewingTemplate, setViewingTemplate] = useState(null);
+    const [isTemplateViewOpen, setIsTemplateViewOpen] = useState(false);
+
+    // ── Share popover ──────────────────────────────────────────────────
+    const [shareTarget, setShareTarget] = useState<{ type: 'program' | 'template'; id: string; name: string } | null>(null);
 
     // ── Shared search ──────────────────────────────────────────────────
     const [search, setSearch] = useState('');
@@ -334,6 +353,7 @@ export const WorkoutsPage = () => {
                                         onView={() => { setViewingProgram(p); setIsViewModalOpen(true); }}
                                         onEdit={() => { setEditingProgram(p); setIsProgramBuilderOpen(true); }}
                                         onDelete={() => setConfirmDeleteId(p.id)}
+                                        onShare={() => setShareTarget({ type: 'program', id: p.id, name: p.name })}
                                     />
                                 ))}
                             </div>
@@ -368,6 +388,7 @@ export const WorkoutsPage = () => {
                                                 <td className="px-5 py-3.5 text-xs text-slate-500">{timeAgo(p.updated_at)}</td>
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center justify-end gap-1.5">
+                                                        <button onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Share"><Share2Icon size={13} /></button>
                                                         <button onClick={() => { setEditingProgram(p); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
                                                         <button onClick={() => setConfirmDeleteId(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete"><Trash2Icon size={13} /></button>
                                                         <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all" title="View"><EyeIcon size={13} /></button>
@@ -421,15 +442,19 @@ export const WorkoutsPage = () => {
                                 {filteredTemplates.map(tpl => {
                                     const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                     return (
-                                        <div key={tpl.id} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-emerald-200 transition-all group relative overflow-hidden">
+                                        <div key={tpl.id} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-emerald-200 transition-all group relative overflow-hidden cursor-pointer"
+                                            onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
                                             <div className="absolute top-0 left-0 w-full h-0.5 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             <div className="flex items-start justify-between mb-2">
                                                 <h4 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors truncate flex-1 pr-2">{tpl.name}</h4>
                                                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleEditTemplate(tpl)} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit">
+                                                    <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Share">
+                                                        <Share2Icon size={12} />
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit">
                                                         <PencilIcon size={12} />
                                                     </button>
-                                                    <button onClick={() => handleDeleteTemplate(tpl.id)} className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }} className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
                                                         <Trash2Icon size={12} />
                                                     </button>
                                                 </div>
@@ -444,7 +469,7 @@ export const WorkoutsPage = () => {
                                                 Created {new Date(tpl.createdAt).toLocaleDateString()}
                                             </div>
                                             <button
-                                                onClick={() => navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } })}
+                                                onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }}
                                                 className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <CalendarPlusIcon size={11} /> Assign & Schedule
@@ -471,7 +496,7 @@ export const WorkoutsPage = () => {
                                         {filteredTemplates.map(tpl => {
                                             const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                             return (
-                                                <tr key={tpl.id} className="group hover:bg-slate-50 transition-colors">
+                                                <tr key={tpl.id} className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
                                                     <td className="px-5 py-3.5">
                                                         <div className="font-medium text-slate-800 text-sm group-hover:text-emerald-700">{tpl.name}</div>
                                                     </td>
@@ -483,13 +508,16 @@ export const WorkoutsPage = () => {
                                                     <td className="px-5 py-3.5 text-xs text-slate-500">{new Date(tpl.createdAt).toLocaleDateString()}</td>
                                                     <td className="px-5 py-3.5">
                                                         <div className="flex items-center justify-end gap-1.5">
-                                                            <button onClick={() => handleEditTemplate(tpl)} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Edit">
+                                                            <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Share">
+                                                                <Share2Icon size={13} />
+                                                            </button>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Edit">
                                                                 <PencilIcon size={13} />
                                                             </button>
-                                                            <button onClick={() => navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } })} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Assign">
+                                                            <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Assign">
                                                                 <CalendarPlusIcon size={13} />
                                                             </button>
-                                                            <button onClick={() => handleDeleteTemplate(tpl.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
                                                                 <Trash2Icon size={13} />
                                                             </button>
                                                         </div>
@@ -532,6 +560,25 @@ export const WorkoutsPage = () => {
                 isOpen={isViewModalOpen}
                 onClose={() => { setIsViewModalOpen(false); setViewingProgram(null); }}
             />
+
+            {/* Template View Modal */}
+            <TemplateViewModal
+                template={viewingTemplate}
+                isOpen={isTemplateViewOpen}
+                onClose={() => { setIsTemplateViewOpen(false); setViewingTemplate(null); }}
+                onEdit={handleEditTemplate}
+                onDelete={handleDeleteTemplate}
+            />
+
+            {/* Share Popover */}
+            {shareTarget && (
+                <ShareWorkoutPopover
+                    workoutType={shareTarget.type}
+                    workoutId={shareTarget.id}
+                    workoutName={shareTarget.name}
+                    onClose={() => setShareTarget(null)}
+                />
+            )}
         </>
     );
 };

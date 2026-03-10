@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { useExercises } from '../hooks/useExercises';
-import { MUSCLE_GROUPS } from '../utils/mocks';
+import { MUSCLE_GROUPS, BODY_REGIONS, CLASSIFICATIONS } from '../utils/mocks';
 import { Button } from '@/components/ui/button';
 import {
     DumbbellIcon, SearchIcon, PlusIcon, XIcon, ChevronRightIcon, ArrowRightIcon,
@@ -10,6 +10,10 @@ import {
     EyeIcon, InfoIcon, CheckIcon, SaveIcon,
     PlayCircleIcon, VideoOffIcon
 } from 'lucide-react';
+import { ExerciseInfoModal } from '../components/library/ExerciseInfoModal';
+import { EditExerciseModal } from '../components/library/EditExerciseModal';
+import { DeleteExerciseModal } from '../components/library/DeleteExerciseModal';
+import { ProtocolLibrary } from '../components/library/ProtocolLibrary';
 
 // ── Main Page ──────────────────────────────────────────────────────────────
 
@@ -33,10 +37,12 @@ export const ExerciseLibraryPage = () => {
 
     // Alphabet filter
     const [alphabetLetter, setAlphabetLetter] = useState('All');
+    const [selectedClassification, setSelectedClassification] = useState('All');
 
     const { data: exerciseData, isLoading: exercisesLoading } = useExercises({
         search: librarySearch,
         category: selectedCategory,
+        classification: selectedClassification,
         muscleGroup: selectedMuscleGroup,
         alphabetLetter,
         page: libraryPage,
@@ -72,16 +78,17 @@ export const ExerciseLibraryPage = () => {
                     <table className="w-full text-left border-collapse relative">
                         <thead className="sticky top-0 z-20">
                             <tr className="border-b border-slate-200 bg-slate-50">
-                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 w-1/3">Exercise</th>
+                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Exercise</th>
                                 <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center">Target Muscle</th>
-                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center">Category</th>
+                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center">Body Region</th>
+                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center">Classification</th>
                                 <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center">Info</th>
-                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center w-36">Manage</th>
+                                <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-center w-28">Manage</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
                             {exercisesLoading ? (
-                                <tr><td colSpan={5} className="py-10 text-center text-sm text-slate-400">Loading exercises...</td></tr>
+                                <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-400">Loading exercises...</td></tr>
                             ) : dbExercises.map(ex => (
                                 <tr key={ex.id} className="group hover:bg-slate-50 transition-colors">
                                     <td className="px-4 py-3">
@@ -93,22 +100,22 @@ export const ExerciseLibraryPage = () => {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <div className="flex flex-wrap justify-center gap-1">
-                                            {ex.categories && ex.categories.length > 0 ? (
-                                                <>
-                                                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-indigo-50 text-xs font-medium text-indigo-600 border border-indigo-100">
-                                                        {ex.categories[0]}
-                                                    </span>
-                                                    {ex.categories[1] && (
-                                                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-50 text-xs font-medium text-slate-500 border border-slate-200">
-                                                            {ex.categories[1]}
-                                                        </span>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <span className="text-slate-300 text-xs">—</span>
-                                            )}
-                                        </div>
+                                        {ex.categories?.[0] ? (
+                                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-indigo-50 text-xs font-medium text-indigo-600 border border-indigo-100">
+                                                {ex.categories[0]}
+                                            </span>
+                                        ) : (
+                                            <span className="text-slate-300 text-xs">—</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {ex.categories?.[1] ? (
+                                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-medium text-emerald-600 border border-emerald-100">
+                                                {ex.categories[1]}
+                                            </span>
+                                        ) : (
+                                            <span className="text-slate-300 text-xs">—</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-1.5">
@@ -240,9 +247,9 @@ export const ExerciseLibraryPage = () => {
                                             <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                         </div>
 
-                                        {/* Category Filter */}
+                                        {/* Body Region Filter */}
                                         <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 gap-2">
-                                            <span className="text-xs font-medium text-slate-400">Category</span>
+                                            <span className="text-xs font-medium text-slate-400">Region</span>
                                             <div className="h-3 w-px bg-slate-200" />
                                             <select
                                                 value={selectedCategory}
@@ -250,8 +257,25 @@ export const ExerciseLibraryPage = () => {
                                                 className="bg-transparent text-xs font-medium text-slate-700 outline-none appearance-none pr-5 cursor-pointer min-w-[60px]"
                                             >
                                                 <option value="All">All</option>
-                                                {exerciseCategories.map(cat => (
-                                                    <option key={cat} value={cat}>{cat}</option>
+                                                {BODY_REGIONS.filter(r => r !== 'Unsorted').map(r => (
+                                                    <option key={r} value={r}>{r}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </div>
+
+                                        {/* Classification Filter */}
+                                        <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 gap-2">
+                                            <span className="text-xs font-medium text-slate-400">Class</span>
+                                            <div className="h-3 w-px bg-slate-200" />
+                                            <select
+                                                value={selectedClassification}
+                                                onChange={(e) => { setSelectedClassification(e.target.value); setLibraryPage(1); }}
+                                                className="bg-transparent text-xs font-medium text-slate-700 outline-none appearance-none pr-5 cursor-pointer min-w-[60px]"
+                                            >
+                                                <option value="All">All</option>
+                                                {CLASSIFICATIONS.filter(c => c !== 'Unsorted').map(c => (
+                                                    <option key={c} value={c}>{c}</option>
                                                 ))}
                                             </select>
                                             <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -304,15 +328,29 @@ export const ExerciseLibraryPage = () => {
 
                 {/* Content */}
                 {libraryViewMode === 'protocols' ? (
-                    <div className="py-20 text-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50">
-                        <div className="w-12 h-12 bg-white rounded-xl mx-auto flex items-center justify-center shadow-sm mb-4">
-                            <DumbbellIcon size={22} className="text-slate-300" />
-                        </div>
-                        <h4 className="text-base font-semibold text-slate-700 mb-1">Protocols</h4>
-                        <p className="text-sm text-slate-400">Coming soon</p>
-                    </div>
+                    <ProtocolLibrary />
                 ) : renderExercises()}
             </div>
+
+            {/* Exercise Modals */}
+            <ExerciseInfoModal
+                exercise={viewingExerciseInfo}
+                isOpen={isExerciseInfoModalOpen}
+                onClose={() => { setIsExerciseInfoModalOpen(false); setViewingExerciseInfo(null); }}
+            />
+            <EditExerciseModal
+                isOpen={isEditLiftModalOpen}
+                onClose={() => { setIsEditLiftModalOpen(false); setEditingExercise(null); }}
+                exercise={editingExercise}
+                initialForm={newExercise}
+                showToast={showToast}
+            />
+            <DeleteExerciseModal
+                exercise={deletingExercise}
+                isOpen={isDeleteConfirmModalOpen}
+                onClose={() => { setIsDeleteConfirmModalOpen(false); setDeletingExercise(null); }}
+                showToast={showToast}
+            />
         </>
     );
 };

@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
     ActivityIcon, LayoutDashboardIcon, CalendarIcon, UsersIcon, BookOpenIcon, DumbbellIcon,
     ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, ChevronLeftIcon, ChevronRightIcon,
-    SettingsIcon, HeartPulseIcon
+    SettingsIcon, HeartPulseIcon, ClipboardListIcon
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
     { id: 'analytics',     label: 'Analytics Hub',     icon: BarChart3Icon },
     { id: 'reports',       label: 'Reporting Hub',     icon: FileIcon },
     { id: 'wellness',      label: 'Wellness Hub',      icon: HeartPulseIcon },
+    { id: 'testing',       label: 'Testing Hub',       icon: ClipboardListIcon },
     { id: 'lab',           label: 'Performance Lab',   icon: FlaskConicalIcon },
 ];
 

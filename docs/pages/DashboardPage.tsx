@@ -11,6 +11,9 @@ export const DashboardPage = () => {
     const {
         teams, scheduledSessions, wellnessData, bodyHeatmapData,
         dashboardFilterTarget, setDashboardFilterTarget,
+        calendarFilterCategory, setCalendarFilterCategory,
+        calendarFilterTeamId, setCalendarFilterTeamId,
+        calendarFilterAthleteId, setCalendarFilterAthleteId,
         heatmapTeamFilter, setHeatmapTeamFilter,
         dashboardCalendarDate, setDashboardCalendarDate, dashboardCalendarDays,
         setIsAddEventModalOpen,
@@ -25,6 +28,30 @@ export const DashboardPage = () => {
     const [activePopover, setActivePopover] = React.useState(null);
     const [editingEvent, setEditingEvent] = React.useState(null);
     const popoverRef = React.useRef(null);
+
+    // Deterministic color palette for targets (athletes/teams)
+    const TARGET_COLORS = [
+        { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', pillBg: 'bg-red-100' },
+        { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', pillBg: 'bg-blue-100' },
+        { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', pillBg: 'bg-emerald-100' },
+        { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pillBg: 'bg-orange-100' },
+        { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', pillBg: 'bg-violet-100' },
+        { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', pillBg: 'bg-pink-100' },
+        { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', pillBg: 'bg-cyan-100' },
+        { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', pillBg: 'bg-amber-100' },
+        { bg: 'bg-lime-50', border: 'border-lime-200', text: 'text-lime-700', pillBg: 'bg-lime-100' },
+        { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', pillBg: 'bg-rose-100' },
+    ];
+
+    // Build stable targetId → color index mapping from all sessions
+    const targetColorMap = React.useMemo(() => {
+        const map = new Map();
+        const uniqueTargets = [...new Set(scheduledSessions.map(s => s.targetId))];
+        uniqueTargets.forEach((id, i) => { map.set(id, TARGET_COLORS[i % TARGET_COLORS.length]); });
+        return map;
+    }, [scheduledSessions]);
+
+    const getTargetColor = (targetId) => targetColorMap.get(targetId) || TARGET_COLORS[0];
 
     // Close popover on click outside
     React.useEffect(() => {
@@ -128,13 +155,59 @@ export const DashboardPage = () => {
         );
     };
 
+    // Build list of athlete IDs in selected team for filtering
+    const selectedTeamPlayerIds = React.useMemo(() => {
+        if (!calendarFilterTeamId) return [];
+        const team = teams.find(t => t.id === calendarFilterTeamId);
+        return team ? team.players.map(p => p.id) : [];
+    }, [calendarFilterTeamId, teams]);
+
     const filteredSessionsForCalendar = scheduledSessions.filter(s => {
-                    if (dashboardFilterTarget === 'All Athletes') return true;
-                    // Check if target matches ID directly OR resolved name
-                    if (s.targetId === dashboardFilterTarget) return true;
-                    const name = resolveTargetName(s.targetId, s.targetType);
-                    return name === dashboardFilterTarget;
-                });
+        if (calendarFilterCategory === 'all') return true;
+        if (calendarFilterCategory === 'trainer') return false; // trainer events only, no sessions
+        if (calendarFilterCategory === 'teams') {
+            if (s.targetType !== 'Team') return false;
+            return !calendarFilterTeamId || s.targetId === calendarFilterTeamId;
+        }
+        if (calendarFilterCategory === 'athletes') {
+            if (calendarFilterAthleteId) {
+                return s.targetId === calendarFilterAthleteId;
+            }
+            if (calendarFilterTeamId) {
+                return s.targetId === calendarFilterTeamId || selectedTeamPlayerIds.includes(s.targetId);
+            }
+            return true;
+        }
+        return true;
+    });
+
+    const showCalendarEvents = calendarFilterCategory === 'all' || calendarFilterCategory === 'trainer';
+
+    // Filter label for display
+    const calendarFilterLabel = React.useMemo(() => {
+        if (calendarFilterCategory === 'all') return 'All';
+        if (calendarFilterCategory === 'trainer') return 'Trainer Events';
+        if (calendarFilterCategory === 'teams') {
+            if (calendarFilterTeamId) {
+                const t = teams.find(t => t.id === calendarFilterTeamId);
+                return t ? t.name : 'All Teams';
+            }
+            return 'All Teams';
+        }
+        if (calendarFilterCategory === 'athletes') {
+            if (calendarFilterAthleteId) {
+                const team = teams.find(t => t.players.some(p => p.id === calendarFilterAthleteId));
+                const player = team?.players.find(p => p.id === calendarFilterAthleteId);
+                return player ? player.name : 'All Athletes';
+            }
+            if (calendarFilterTeamId) {
+                const t = teams.find(t => t.id === calendarFilterTeamId);
+                return t ? `${t.name} Athletes` : 'All Athletes';
+            }
+            return 'All Athletes';
+        }
+        return 'All';
+    }, [calendarFilterCategory, calendarFilterTeamId, calendarFilterAthleteId, teams]);
 
                 return (
                     <div className="space-y-6 animate-in fade-in duration-700">
@@ -270,31 +343,82 @@ export const DashboardPage = () => {
                                                     <ChevronRightIcon size={14} className="text-slate-600" />
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-slate-500">{dashboardFilterTarget}</p>
+                                            <p className="text-xs text-slate-500">{calendarFilterLabel}</p>
                                         </div>
                                     </div>
 
-                                    {/* Filter Dropdown */}
-                                    <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-200 relative group shrink-0">
-                                        <FilterIcon size={13} className="text-slate-400" />
-                                        <div className="h-3 w-px bg-slate-200 mx-0.5"></div>
-                                        <select value={dashboardFilterTarget} onChange={(e) => setDashboardFilterTarget(e.target.value)}
-                                            className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-5 cursor-pointer"
-                                        >
-                                            <option>All Athletes</option>
-                                            {teams.flatMap(t => t.players).map(p => <option key={p.id}>{p.name}</option>)}
-                                        </select>
-                                        <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
+                                    {/* Cascading Filter Dropdowns + Add Event */}
+                                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                        {/* Category Filter */}
+                                        <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
+                                            <FilterIcon size={13} className="text-slate-400" />
+                                            <select value={calendarFilterCategory} onChange={(e) => {
+                                                setCalendarFilterCategory(e.target.value);
+                                                setCalendarFilterTeamId(null);
+                                                setCalendarFilterAthleteId(null);
+                                            }}
+                                                className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer font-medium"
+                                            >
+                                                <option value="all">All</option>
+                                                <option value="teams">Teams</option>
+                                                <option value="athletes">Athletes</option>
+                                                <option value="trainer">Trainer Events</option>
+                                            </select>
+                                            <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </div>
 
-                                {/* Add Event Button */}
-                                <div className="flex justify-end">
-                                    <button onClick={() => setIsAddEventModalOpen(true)}
-                                        className="bg-indigo-600 text-white px-4 py-2 rounded-full text-xs font-medium shadow-sm flex items-center gap-1.5 hover:bg-indigo-700 transition-colors"
-                                    >
-                                        <PlusIcon size={13} /> Add Event
-                                    </button>
+                                        {/* Team Filter — shown for 'teams' category */}
+                                        {calendarFilterCategory === 'teams' && (
+                                            <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
+                                                <select value={calendarFilterTeamId || ''} onChange={(e) => {
+                                                    setCalendarFilterTeamId(e.target.value || null);
+                                                }}
+                                                    className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
+                                                >
+                                                    <option value="">All Teams</option>
+                                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                </select>
+                                                <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                            </div>
+                                        )}
+
+                                        {/* Athletes: Team picker then athlete picker */}
+                                        {calendarFilterCategory === 'athletes' && (
+                                            <>
+                                                <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
+                                                    <select value={calendarFilterTeamId || ''} onChange={(e) => {
+                                                        setCalendarFilterTeamId(e.target.value || null);
+                                                        setCalendarFilterAthleteId(null);
+                                                    }}
+                                                        className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
+                                                    >
+                                                        <option value="">All Teams</option>
+                                                        {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                    </select>
+                                                    <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                                </div>
+                                                <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
+                                                    <UserIcon size={12} className="text-slate-400" />
+                                                    <select value={calendarFilterAthleteId || ''} onChange={(e) => setCalendarFilterAthleteId(e.target.value || null)}
+                                                        className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
+                                                    >
+                                                        <option value="">All Athletes</option>
+                                                        {(calendarFilterTeamId
+                                                            ? (teams.find(t => t.id === calendarFilterTeamId)?.players || [])
+                                                            : teams.flatMap(t => t.players)
+                                                        ).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                    </select>
+                                                    <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <button onClick={() => setIsAddEventModalOpen(true)}
+                                            className="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-sm flex items-center gap-1.5 hover:bg-indigo-700 transition-colors"
+                                        >
+                                            <PlusIcon size={13} /> Add Event
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -320,12 +444,23 @@ export const DashboardPage = () => {
                                                         </div>
                                                         <div className="space-y-1">
                                                             {/* Workout Sessions */}
-                                                            {filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).slice(0, 3).map(session => (
+                                                            {filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).slice(0, 3).map(session => {
+                                                                const tc = getTargetColor(session.targetId);
+                                                                return (
                                                                 <div key={session.id} onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
-                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer ${getSessionTypeColor(session.trainingPhase)}`}>
-                                                                    <div className="flex justify-between items-center bg-white/40 px-1 py-0.5 rounded">
+                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer ${tc.bg} ${tc.border} ${tc.text}`}>
+                                                                    <div className={`flex justify-between items-center ${tc.pillBg} px-1 py-0.5 rounded`}>
                                                                         <span className="text-[8px] font-medium uppercase tracking-wide">{session.trainingPhase}</span>
-                                                                        {session.targetType === 'Individual' && <UserIcon size={7} />}
+                                                                        <div className="flex items-center gap-1">
+                                                                            {session.load && (
+                                                                                <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
+                                                                                    session.load === 'High' ? 'bg-red-500 text-white' :
+                                                                                    session.load === 'Medium' ? 'bg-amber-400 text-white' :
+                                                                                    'bg-emerald-400 text-white'
+                                                                                }`}>{session.load[0]}</span>
+                                                                            )}
+                                                                            {session.targetType === 'Individual' && <UserIcon size={7} />}
+                                                                        </div>
                                                                     </div>
                                                                     <div className="px-0.5">
                                                                         <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
@@ -335,9 +470,10 @@ export const DashboardPage = () => {
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            ))}
-                                                            {/* Calendar Events — bubble cards */}
-                                                            {calendarEvents
+                                                                );
+                                                            })}
+                                                            {/* Calendar Events — bubble cards (hidden when filtering teams/athletes) */}
+                                                            {showCalendarEvents && calendarEvents
                                                                 .filter(e => {
                                                                     const start = e.start_date;
                                                                     const end = e.end_date || e.start_date;
@@ -481,11 +617,11 @@ export const DashboardPage = () => {
                                                             {/* +X more count (sessions + events combined) */}
                                                             {(() => {
                                                                 const sessionCount = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length;
-                                                                const eventCount = calendarEvents.filter(e => {
+                                                                const eventCount = showCalendarEvents ? calendarEvents.filter(e => {
                                                                     const start = e.start_date;
                                                                     const end = e.end_date || e.start_date;
                                                                     return dateObj.dateStr >= start && dateObj.dateStr <= end;
-                                                                }).length;
+                                                                }).length : 0;
                                                                 const total = sessionCount + eventCount;
                                                                 return total > 3 ? (
                                                                     <div className="text-[9px] text-slate-400 text-center pt-0.5">

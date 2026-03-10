@@ -37,7 +37,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [activeTab, setActiveTab] = useState(() => {
         const path = window.location.pathname.slice(1).split('/')[0];
-        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
+        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness', 'testing'];
         return valid.includes(path) ? path : 'dashboard';
     });
 
@@ -45,16 +45,27 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
+        if (location.pathname.startsWith('/workout/')) return;
+        if (location.pathname.startsWith('/wellness-form')) return;
+        if (location.pathname.startsWith('/injury-form')) return;
+        if (location.pathname.startsWith('/protocol/')) return;
+        if (location.pathname.startsWith('/login')) return;
+        if (location.pathname.startsWith('/onboarding')) return;
         if (location.pathname.startsWith('/settings')) return;
         const topSegment = location.pathname.slice(1).split('/')[0];
-        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness'];
+        const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness', 'testing'];
         if (valid.includes(topSegment) && topSegment !== activeTab)
             setActiveTab(topSegment);
     }, [location.pathname]);
 
     // Sync activeTab → URL (skip on public/standalone routes and sub-routes)
     useEffect(() => {
+        if (location.pathname.startsWith('/workout/')) return;
         if (location.pathname.startsWith('/wellness-form')) return;
+        if (location.pathname.startsWith('/injury-form')) return;
+        if (location.pathname.startsWith('/protocol/')) return;
+        if (location.pathname.startsWith('/login')) return;
+        if (location.pathname.startsWith('/onboarding')) return;
         if (location.pathname.startsWith('/settings')) return;
         const current = location.pathname.slice(1) || 'dashboard';
         // Don't redirect if we're on a sub-route of the activeTab (e.g. /workouts/packets)
@@ -331,6 +342,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     const [dashboardFilterTarget, setDashboardFilterTarget] = useState('All Athletes');
+    const [calendarFilterCategory, setCalendarFilterCategory] = useState('all');
+    const [calendarFilterTeamId, setCalendarFilterTeamId] = useState(null);
+    const [calendarFilterAthleteId, setCalendarFilterAthleteId] = useState(null);
 
     const [exerciseCategories, setExerciseCategories] = useState(["Animal Flow", "Balance", "Ballistics", "Bodybuilding", "Calisthenics", "Core", "Full Body", "Grinds", "Lower Body", "Mobility", "Olympic Weightlifting", "Plyometric", "Postural", "Powerlifting", "Unsorted", "Upper Body"]);
 
@@ -375,6 +389,18 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
 
     const [planBlocks, setPlanBlocks] = useState(MOCK_INDIVIDUAL_PLAN_BLOCKS);
+
+    // --- PERIODIZATION PLANNER STATE ---
+    const [periodizationPlans, setPeriodizationPlans] = useState([]);
+    const [activePlanId, setActivePlanId] = useState(null);
+    const [planDrillPath, setPlanDrillPath] = useState([]);
+    const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
+    const [isPlanPhaseModalOpen, setIsPlanPhaseModalOpen] = useState(false);
+    const [isPlanBlockModalOpenNew, setIsPlanBlockModalOpenNew] = useState(false);
+    const [isPlanEventModalOpen, setIsPlanEventModalOpen] = useState(false);
+    const [editingPlanPhase, setEditingPlanPhase] = useState(null);
+    const [editingPlanBlock, setEditingPlanBlock] = useState(null);
+    const [editingPlanEvent, setEditingPlanEvent] = useState(null);
 
     // Weightroom Sheet State
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
@@ -668,11 +694,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         { id: 'q2', text: 'Any muscle soreness?', type: 'yesno' }
     ]);
 
-    const [optOuts, setOptOuts] = useState([
-        { athleteId: 'p2', date: '2023-11-20', reason: 'Flu', status: 'Unavailable' }
-    ]);
+    const [optOuts, setOptOuts] = useState([]);
 
-    const [optOutForm, setOptOutForm] = useState({ reason: '', notes: '', status: 'Unavailable' });
+    const [optOutForm, setOptOutForm] = useState({ reason: '', notes: '', status: 'Available' });
 
     const [medicalReports, setMedicalReports] = useState([]);
 
@@ -1375,6 +1399,308 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         await StorageService.saveCustomEventTypes(types);
     };
 
+    // --- PERIODIZATION PLAN CRUD HANDLERS ---
+    const _uid = () => `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+    const savePlans = async (updated) => {
+        setPeriodizationPlans(updated);
+        await StorageService.savePeriodizationPlans(updated);
+    };
+
+    const handleCreatePlan = async (planData) => {
+        const plan = {
+            id: _uid(),
+            name: planData.name || 'Untitled Plan',
+            targetType: planData.targetType || 'Team',
+            targetId: planData.targetId || '',
+            startDate: planData.startDate || new Date().toISOString().split('T')[0],
+            endDate: planData.endDate || undefined,
+            viewMode: planData.viewMode || 'timeline',
+            modalities: planData.modalities || ['Strength', 'Plyometrics', 'Speed', 'Conditioning', 'Loaded Power'],
+            phases: [],
+            events: [],
+            volumeOverrides: {},
+            intensityOverrides: {},
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        const updated = [...periodizationPlans, plan];
+        await savePlans(updated);
+        setActivePlanId(plan.id);
+        setPlanDrillPath([]);
+        setIsCreatePlanModalOpen(false);
+        return plan;
+    };
+
+    const handleUpdatePlan = async (planId, updates) => {
+        const updated = periodizationPlans.map(p =>
+            p.id === planId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+        );
+        await savePlans(updated);
+    };
+
+    const handleDeletePlan = async (planId) => {
+        const updated = periodizationPlans.filter(p => p.id !== planId);
+        await savePlans(updated);
+        if (activePlanId === planId) {
+            setActivePlanId(null);
+            setPlanDrillPath([]);
+        }
+    };
+
+    const _updateActivePlan = async (updater) => {
+        const updated = periodizationPlans.map(p => {
+            if (p.id !== activePlanId) return p;
+            return { ...updater(p), updatedAt: new Date().toISOString() };
+        });
+        await savePlans(updated);
+    };
+
+    const handleAddPlanPhase = async (phaseData) => {
+        const phase = {
+            id: _uid(),
+            name: phaseData.name || 'New Phase',
+            startDate: phaseData.startDate,
+            endDate: phaseData.endDate,
+            color: phaseData.color || '#6366f1',
+            trainingPhase: phaseData.trainingPhase || 'General Preparation',
+            blocks: [],
+        };
+        await _updateActivePlan(p => ({ ...p, phases: [...p.phases, phase] }));
+        setIsPlanPhaseModalOpen(false);
+        setEditingPlanPhase(null);
+    };
+
+    const handleUpdatePlanPhase = async (phaseId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId ? { ...ph, ...updates } : ph)
+        }));
+        setIsPlanPhaseModalOpen(false);
+        setEditingPlanPhase(null);
+    };
+
+    const handleDeletePlanPhase = async (phaseId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.filter(ph => ph.id !== phaseId)
+        }));
+        setIsPlanPhaseModalOpen(false);
+        setEditingPlanPhase(null);
+    };
+
+    const handleAddPlanBlock = async (phaseId, blockData) => {
+        const startDate = new Date(blockData.startDate);
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+        const weekCount = blockData.endDate
+            ? Math.max(1, Math.ceil((new Date(blockData.endDate) - startDate) / msPerWeek))
+            : 1;
+        const weeks = Array.from({ length: weekCount }, (_, i) => {
+            const wStart = new Date(startDate.getTime() + i * msPerWeek);
+            return {
+                id: _uid(),
+                weekNumber: i + 1,
+                startDate: wStart.toISOString().split('T')[0],
+                intent: '',
+                sessions: [],
+            };
+        });
+        const block = {
+            id: _uid(),
+            name: blockData.name || 'New Block',
+            label: blockData.label || '',
+            startDate: blockData.startDate,
+            endDate: blockData.endDate,
+            color: blockData.color || '#8b5cf6',
+            blockType: blockData.blockType || 'General',
+            goals: blockData.goals || '',
+            modalities: blockData.modalities || {},
+            weeks,
+        };
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? { ...ph, blocks: [...ph.blocks, block] }
+                : ph
+            )
+        }));
+        setIsPlanBlockModalOpenNew(false);
+        setEditingPlanBlock(null);
+    };
+
+    const handleUpdatePlanBlock = async (phaseId, blockId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? { ...ph, blocks: ph.blocks.map(b => b.id === blockId ? { ...b, ...updates } : b) }
+                : ph
+            )
+        }));
+        setIsPlanBlockModalOpenNew(false);
+        setEditingPlanBlock(null);
+    };
+
+    const handleDeletePlanBlock = async (phaseId, blockId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? { ...ph, blocks: ph.blocks.filter(b => b.id !== blockId) }
+                : ph
+            )
+        }));
+        setIsPlanBlockModalOpenNew(false);
+        setEditingPlanBlock(null);
+    };
+
+    const handleUpdateBlockModality = async (phaseId, blockId, modality, value) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
+                        ? { ...b, modalities: { ...b.modalities, [modality]: value } }
+                        : b
+                    )
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleUpdatePlanWeek = async (phaseId, blockId, weekId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
+                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId ? { ...w, ...updates } : w) }
+                        : b
+                    )
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleAddPlanWeek = async (phaseId, blockId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => {
+                        if (b.id !== blockId) return b;
+                        const lastWeek = b.weeks[b.weeks.length - 1];
+                        const nextStart = lastWeek
+                            ? new Date(new Date(lastWeek.startDate).getTime() + 7 * 86400000).toISOString().split('T')[0]
+                            : b.startDate;
+                        const newWeek = {
+                            id: _uid(),
+                            weekNumber: (lastWeek?.weekNumber || 0) + 1,
+                            startDate: nextStart,
+                            intent: '',
+                            sessions: [],
+                        };
+                        return { ...b, weeks: [...b.weeks, newWeek] };
+                    })
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleAddPlanSession = async (phaseId, blockId, weekId, sessionData) => {
+        const session = {
+            id: _uid(),
+            date: sessionData.date,
+            name: sessionData.name || 'New Session',
+            sections: sessionData.sections || [],
+            plannedDuration: sessionData.plannedDuration || null,
+            plannedRPE: sessionData.plannedRPE || null,
+            load: sessionData.load || null,
+            workoutTemplateId: sessionData.workoutTemplateId || null,
+            notes: sessionData.notes || '',
+        };
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
+                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId ? { ...w, sessions: [...w.sessions, session] } : w) }
+                        : b
+                    )
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleUpdatePlanSession = async (phaseId, blockId, weekId, sessionId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
+                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId
+                            ? { ...w, sessions: w.sessions.map(s => s.id === sessionId ? { ...s, ...updates } : s) }
+                            : w
+                        ) }
+                        : b
+                    )
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleDeletePlanSession = async (phaseId, blockId, weekId, sessionId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
+                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId
+                            ? { ...w, sessions: w.sessions.filter(s => s.id !== sessionId) }
+                            : w
+                        ) }
+                        : b
+                    )
+                }
+                : ph
+            )
+        }));
+    };
+
+    const handleAddPlanEvent = async (eventData) => {
+        const event = {
+            id: _uid(),
+            date: eventData.date,
+            type: eventData.type || 'custom',
+            label: eventData.label || '',
+            color: eventData.color,
+        };
+        await _updateActivePlan(p => ({ ...p, events: [...p.events, event] }));
+        setIsPlanEventModalOpen(false);
+        setEditingPlanEvent(null);
+    };
+
+    const handleUpdatePlanEvent = async (eventId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            events: p.events.map(e => e.id === eventId ? { ...e, ...updates } : e)
+        }));
+        setIsPlanEventModalOpen(false);
+        setEditingPlanEvent(null);
+    };
+
+    const handleDeletePlanEvent = async (eventId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            events: p.events.filter(e => e.id !== eventId)
+        }));
+        setIsPlanEventModalOpen(false);
+        setEditingPlanEvent(null);
+    };
+
     // --- DATA LOADING ---
     const initData = useCallback(async () => {
         setIsLoading(true);
@@ -1645,6 +1971,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setBiometricsRecords(loadedBiometrics || []);
             setWorkoutLog(loadedWorkoutLog || []);
 
+            // 6b. Load Periodization Plans
+            try {
+                const loadedPlans = await StorageService.getPeriodizationPlans();
+                setPeriodizationPlans(loadedPlans || []);
+            } catch (e) {
+                console.warn("Could not load periodization plans:", e.message);
+            }
+
             // 7. Load Assessments and Evaluations from Database
             const [dbEvaluations, dbMaxHistory] = await Promise.all([
                 DatabaseService.fetchAssessments('evaluation'),
@@ -1771,6 +2105,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setIsSidebarCollapsed,
         dashboardFilterTarget,
         setDashboardFilterTarget,
+        calendarFilterCategory, setCalendarFilterCategory,
+        calendarFilterTeamId, setCalendarFilterTeamId,
+        calendarFilterAthleteId, setCalendarFilterAthleteId,
         exerciseCategories,
         setExerciseCategories,
         trackingMetrics,
@@ -2184,6 +2521,45 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleUpdateCalendarEvent,
         handleDeleteCalendarEvent,
         handleSaveCustomEventTypes,
+        // Periodization Planner
+        periodizationPlans,
+        setPeriodizationPlans,
+        activePlanId,
+        setActivePlanId,
+        planDrillPath,
+        setPlanDrillPath,
+        isCreatePlanModalOpen,
+        setIsCreatePlanModalOpen,
+        isPlanPhaseModalOpen,
+        setIsPlanPhaseModalOpen,
+        isPlanBlockModalOpenNew,
+        setIsPlanBlockModalOpenNew,
+        isPlanEventModalOpen,
+        setIsPlanEventModalOpen,
+        editingPlanPhase,
+        setEditingPlanPhase,
+        editingPlanBlock,
+        setEditingPlanBlock,
+        editingPlanEvent,
+        setEditingPlanEvent,
+        handleCreatePlan,
+        handleUpdatePlan,
+        handleDeletePlan,
+        handleAddPlanPhase,
+        handleUpdatePlanPhase,
+        handleDeletePlanPhase,
+        handleAddPlanBlock,
+        handleUpdatePlanBlock,
+        handleDeletePlanBlock,
+        handleUpdateBlockModality,
+        handleUpdatePlanWeek,
+        handleAddPlanWeek,
+        handleAddPlanSession,
+        handleUpdatePlanSession,
+        handleDeletePlanSession,
+        handleAddPlanEvent,
+        handleUpdatePlanEvent,
+        handleDeletePlanEvent,
     };
 
     return (

@@ -12,7 +12,9 @@ import {
     ChevronDown as ChevronDownIcon,
     Repeat as RepeatIcon,
     PencilIcon,
+    Trash2 as Trash2Icon,
 } from 'lucide-react';
+import { DatabaseService } from '../services/databaseService';
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 
@@ -25,10 +27,12 @@ function formatDate(iso: string) {
 export const WorkoutHistoryPage = () => {
     const navigate = useNavigate();
     const {
-        scheduledSessions, teams, resolveTargetName,
+        scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast,
     } = useAppState();
 
     const [historyFilter, setHistoryFilter] = useState('All');
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const allPlayers = useMemo(() => teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)), [teams]);
 
@@ -58,6 +62,20 @@ export const WorkoutHistoryPage = () => {
                 returnTo: '/workouts/history',
             },
         });
+    };
+
+    const handleDelete = async (sessionId: string) => {
+        setDeleting(true);
+        try {
+            await DatabaseService.deleteSession(sessionId);
+            setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
+            showToast('Session removed from history', 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Failed to delete session', 'error');
+        } finally {
+            setDeleting(false);
+            setConfirmDeleteId(null);
+        }
     };
 
     return (
@@ -117,7 +135,10 @@ export const WorkoutHistoryPage = () => {
                     historySessions.map(session => {
                         const targetName = resolveTargetName(session.targetId || session.target_id, session.targetType || session.target_type);
                         const phase = session.trainingPhase || session.training_phase || '';
-                        const exCount = (session.exercises || session.exercise_ids || []).length;
+                        const exRaw = session.exercises;
+                        const exCount = exRaw
+                            ? (Array.isArray(exRaw) ? exRaw.length : (exRaw.warmup?.length || 0) + (exRaw.workout?.length || 0) + (exRaw.cooldown?.length || 0))
+                            : (session.exercise_ids || []).length;
                         const isTeam = (session.targetType || session.target_type) === 'Team';
                         const statusColor = session.status === 'Completed' ? 'bg-emerald-100 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-600';
 
@@ -162,6 +183,32 @@ export const WorkoutHistoryPage = () => {
                                         >
                                             <RepeatIcon size={11} /> Reassign
                                         </button>
+                                        {confirmDeleteId === session.id ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[9px] font-semibold text-red-600">Delete?</span>
+                                                <button
+                                                    onClick={() => handleDelete(session.id)}
+                                                    disabled={deleting}
+                                                    className="px-2.5 py-1.5 bg-red-600 text-white rounded-lg text-[10px] font-semibold transition-all hover:bg-red-700"
+                                                >
+                                                    {deleting ? '...' : 'Yes'}
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                    className="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all hover:bg-slate-200"
+                                                >
+                                                    No
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setConfirmDeleteId(session.id)}
+                                                className="px-3 py-2 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                title="Remove from history"
+                                            >
+                                                <Trash2Icon size={11} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

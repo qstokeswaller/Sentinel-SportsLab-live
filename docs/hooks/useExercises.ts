@@ -26,9 +26,10 @@ export interface Exercise {
 
 export interface ExerciseFilters {
   search?: string;
-  category?: string;       // matches categories array
-  muscleGroup?: string;    // matches body_parts array
-  alphabetLetter?: string; // first letter filter
+  category?: string;         // body region — matches categories array
+  classification?: string;   // classification — matches categories array
+  muscleGroup?: string;      // matches body_parts array
+  alphabetLetter?: string;   // first letter filter
   page?: number;
   pageSize?: number;
 }
@@ -39,7 +40,7 @@ export interface ExerciseFilters {
  * The RLS policy handles data isolation automatically.
  */
 export function useExercises(filters: ExerciseFilters = {}) {
-  const { search, category, muscleGroup, alphabetLetter, page = 1, pageSize = 50 } = filters;
+  const { search, category, classification, muscleGroup, alphabetLetter, page = 1, pageSize = 50 } = filters;
 
   return useQuery({
     queryKey: ['exercises', filters],
@@ -57,6 +58,9 @@ export function useExercises(filters: ExerciseFilters = {}) {
       }
       if (category && category !== 'All') {
         query = query.contains('categories', [category]);
+      }
+      if (classification && classification !== 'All') {
+        query = query.contains('categories', [classification]);
       }
       if (muscleGroup && muscleGroup !== 'All') {
         query = query.contains('body_parts', [muscleGroup]);

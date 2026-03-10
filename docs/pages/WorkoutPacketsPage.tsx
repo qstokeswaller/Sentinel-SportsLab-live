@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useExercises } from '../hooks/useExercises';
+import { useExerciseMap } from '../hooks/useExerciseMap';
 import { DatabaseService } from '../services/databaseService';
 import {
     ArrowLeft as ArrowLeftIcon,
@@ -20,6 +21,7 @@ import {
     Package as PackageIcon,
     RefreshCw as RefreshCwIcon,
     Copy as CopyIcon,
+    Link as LinkIcon,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -37,6 +39,38 @@ const SECTIONS = ['warmup', 'workout', 'cooldown'] as const;
 const SECTION_LABELS = { warmup: 'Warm-Up', workout: 'Workout', cooldown: 'Cool-Down' };
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+const VOLUME_COLORS: Record<string, string> = {
+    'Upper Body': 'bg-indigo-100 text-indigo-700',
+    'Lower Body': 'bg-emerald-100 text-emerald-700',
+    'Core': 'bg-amber-100 text-amber-700',
+    'Full Body': 'bg-purple-100 text-purple-700',
+    'Plyometric': 'bg-orange-100 text-orange-700',
+    'Olympic Weightlifting': 'bg-rose-100 text-rose-700',
+    'Powerlifting': 'bg-red-100 text-red-700',
+    'Mobility': 'bg-teal-100 text-teal-700',
+    'Bodybuilding': 'bg-sky-100 text-sky-700',
+    'Calisthenics': 'bg-violet-100 text-violet-700',
+};
+
+const BODY_PART_COLORS: Record<string, string> = {
+    'Chest': 'bg-rose-100 text-rose-700',
+    'Back': 'bg-sky-100 text-sky-700',
+    'Shoulders': 'bg-amber-100 text-amber-700',
+    'Biceps': 'bg-cyan-100 text-cyan-700',
+    'Triceps': 'bg-violet-100 text-violet-700',
+    'Quadriceps': 'bg-emerald-100 text-emerald-700',
+    'Hamstrings': 'bg-lime-100 text-lime-700',
+    'Glutes': 'bg-pink-100 text-pink-700',
+    'Calves': 'bg-teal-100 text-teal-700',
+    'Abdominals': 'bg-orange-100 text-orange-700',
+    'Forearms': 'bg-stone-100 text-stone-600',
+    'Trapezius': 'bg-indigo-100 text-indigo-700',
+    'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
+    'Adductors': 'bg-blue-100 text-blue-700',
+    'Abductors': 'bg-purple-100 text-purple-700',
+    'Shins': 'bg-green-100 text-green-700',
+};
+
 const tempId = () => `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +79,8 @@ interface ExRow {
     tempId: string;
     exerciseId: string;
     exerciseName: string;
+    exerciseBodyParts: string[];
+    exerciseCategories: string[];
     sets: string;
     reps: string;
     rest: string;
@@ -52,10 +88,12 @@ interface ExRow {
     notes: string;
 }
 
-const emptyRow = (ex: { id: string; name: string }): ExRow => ({
+const emptyRow = (ex: { id: string; name: string; body_parts?: string[]; categories?: string[] }): ExRow => ({
     tempId: tempId(),
     exerciseId: ex.id,
     exerciseName: ex.name,
+    exerciseBodyParts: ex.body_parts ?? [],
+    exerciseCategories: ex.categories ?? [],
     sets: '3',
     reps: '10',
     rest: '60',
@@ -72,6 +110,7 @@ export const WorkoutPacketsPage = () => {
         teams, resolveTargetName,
         scheduleWorkoutSession, showToast,
         workoutTemplates, setWorkoutTemplates,
+        handleUpdatePlanSession, periodizationPlans,
     } = useAppState();
 
     // ── Incoming edit state via router ───────────────────────────────────
@@ -79,10 +118,19 @@ export const WorkoutPacketsPage = () => {
         editTemplate?: any;
         editSession?: any;
         returnTo?: string;
+        assignToPlanSession?: {
+            sessionId: string;
+            date: string;
+            weekId: string;
+            blockId: string;
+            phaseId: string;
+            planId: string;
+        };
     } | null;
 
     const editingTemplateId = routerState?.editTemplate?.id || null;
-    const returnTo = routerState?.returnTo || '/workouts';
+    const assignCtx = routerState?.assignToPlanSession || null;
+    const returnTo = assignCtx ? '/periodization' : (routerState?.returnTo || '/workouts');
 
     // ── Session info state ─────────────────────────────────────────────────
     const [title, setTitle] = useState('');
@@ -104,6 +152,27 @@ export const WorkoutPacketsPage = () => {
     const [exPage, setExPage] = useState(1);
 
     const [scheduling, setScheduling] = useState(false);
+    const [assigning, setAssigning] = useState(false);
+    const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
+    const isAssigning = !!assignCtx;
+
+    // Normalize an exercise row from any source format into ExRow shape
+    const normalizeRow = (r: any): ExRow => {
+        const exId = r.exerciseId || r.exercise_id || r.id || '';
+        const exInfo = exerciseFullMap[exId];
+        return {
+            tempId: tempId(),
+            exerciseId: exId,
+            exerciseName: r.exerciseName || r.exercise_name || r.name || resolveExerciseName(exId),
+            exerciseBodyParts: r.exerciseBodyParts || exInfo?.body_parts || [],
+            exerciseCategories: r.exerciseCategories || exInfo?.categories || [],
+            sets: String(r.sets || 3),
+            reps: String(r.reps || 10),
+            rest: String(r.rest || 60),
+            rpe: String(r.rpe || 7),
+            notes: r.notes || '',
+        };
+    };
 
     // ── Populate form from incoming edit data ───────────────────────────────
     useEffect(() => {
@@ -119,32 +188,87 @@ export const WorkoutPacketsPage = () => {
         if (src.target_type || src.targetType) setTargetType(src.target_type || src.targetType);
         if (src.target_id || src.targetId) setTargetId(src.target_id || src.targetId);
 
-        // Load sections from template shape
-        if (src.sections) {
+        // Load sections from template shape (sections or exercises-as-sections)
+        const sectionData = src.sections || (src.exercises && !Array.isArray(src.exercises) && src.exercises.warmup !== undefined ? src.exercises : null);
+        if (sectionData) {
             setSections({
-                warmup: (src.sections.warmup || []).map(r => ({ ...r, tempId: tempId() })),
-                workout: (src.sections.workout || []).map(r => ({ ...r, tempId: tempId() })),
-                cooldown: (src.sections.cooldown || []).map(r => ({ ...r, tempId: tempId() })),
+                warmup: (sectionData.warmup || []).map(normalizeRow),
+                workout: (sectionData.workout || []).map(normalizeRow),
+                cooldown: (sectionData.cooldown || []).map(normalizeRow),
             });
         }
         // Load from session exercises (flat array → all go into workout section)
         else if (src.exercises && Array.isArray(src.exercises)) {
             setSections({
                 warmup: [],
-                workout: src.exercises.map(ex => ({
-                    tempId: tempId(),
-                    exerciseId: ex.id || '',
-                    exerciseName: ex.name || '',
-                    sets: String(ex.sets || 3),
-                    reps: String(ex.reps || 10),
-                    rest: String(ex.rest || 60),
-                    rpe: String(ex.rpe || 7),
-                    notes: ex.notes || '',
-                })),
+                workout: src.exercises.map(normalizeRow),
                 cooldown: [],
             });
         }
     }, []); // Run once on mount
+
+    // ── Pre-populate from periodizer assign context ──────────────────────
+    useEffect(() => {
+        if (!assignCtx) return;
+        setDate(assignCtx.date);
+        // Find the session name from the plan to pre-fill title
+        const plan = periodizationPlans.find(p => p.id === assignCtx.planId);
+        if (plan) {
+            for (const ph of plan.phases) {
+                if (ph.id !== assignCtx.phaseId) continue;
+                for (const bl of ph.blocks) {
+                    if (bl.id !== assignCtx.blockId) continue;
+                    for (const wk of bl.weeks) {
+                        if (wk.id !== assignCtx.weekId) continue;
+                        const sess = wk.sessions.find(s => s.id === assignCtx.sessionId);
+                        if (sess?.name) setTitle(sess.name);
+                    }
+                }
+            }
+        }
+    }, []); // Run once on mount
+
+    // ── Assign workout to periodizer session ─────────────────────────────
+    const handleAssignToPlan = async () => {
+        if (!assignCtx) return;
+        if (!title.trim()) { showToast('Enter a workout title', 'error'); return; }
+
+        // 1. Save as template so we have a referenceable ID
+        const payload = buildTemplatePayload();
+        let templateId: string;
+
+        try {
+            const created = await DatabaseService.createWorkoutTemplate({
+                name: payload.name,
+                training_phase: payload.trainingPhase,
+                load: payload.load,
+                sections: payload.sections,
+            });
+            templateId = created.id;
+            setWorkoutTemplates(prev => [{ id: templateId, ...payload, createdAt: created.created_at }, ...prev]);
+        } catch {
+            templateId = `tpl_${Date.now()}`;
+            setWorkoutTemplates(prev => [{ id: templateId, ...payload, createdAt: new Date().toISOString() }, ...prev]);
+        }
+
+        // 2. Write workoutTemplateId back to the plan session
+        try {
+            setAssigning(true);
+            await handleUpdatePlanSession(
+                assignCtx.phaseId,
+                assignCtx.blockId,
+                assignCtx.weekId,
+                assignCtx.sessionId,
+                { workoutTemplateId: templateId }
+            );
+            showToast('Workout assigned to plan', 'success');
+            navigate(returnTo);
+        } catch (err) {
+            showToast('Failed to assign workout', 'error');
+        } finally {
+            setAssigning(false);
+        }
+    };
 
     // ── Query ──────────────────────────────────────────────────────────────
     const { data: exData, isLoading: exLoading } = useExercises({
@@ -162,8 +286,23 @@ export const WorkoutPacketsPage = () => {
     const totalExercises = SECTIONS.reduce((sum, s) => sum + sections[s].length, 0);
     const isEditing = !!editingTemplateId;
 
+    const packetVolume = useMemo(() => {
+        const byRegion: Record<string, number> = {};
+        const byBodyPart: Record<string, number> = {};
+        const allRows = [...sections.warmup, ...sections.workout, ...sections.cooldown];
+        for (const row of allRows) {
+            const sets = parseInt(row.sets) || 0;
+            if (sets <= 0) continue;
+            const region = row.exerciseCategories?.[0];
+            if (region) byRegion[region] = (byRegion[region] ?? 0) + sets;
+            const part = row.exerciseBodyParts?.[0];
+            if (part) byBodyPart[part] = (byBodyPart[part] ?? 0) + sets;
+        }
+        return { byRegion, byBodyPart };
+    }, [sections]);
+
     // ── Exercise row handlers ──────────────────────────────────────────────
-    const addExercise = (ex: { id: string; name: string }) => {
+    const addExercise = (ex: { id: string; name: string; body_parts?: string[]; categories?: string[] }) => {
         setSections(prev => ({
             ...prev,
             [activeSection]: [...prev[activeSection], emptyRow(ex)]
@@ -202,7 +341,7 @@ export const WorkoutPacketsPage = () => {
         if (!title.trim()) { showToast('Please enter a workout title', 'error'); return; }
         if (!targetId) { showToast('Please select a target athlete or team', 'error'); return; }
 
-        const allExs = [...sections.warmup, ...sections.workout, ...sections.cooldown];
+        const stripTemp = (r) => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes });
         const payload = {
             title: title.trim(),
             date,
@@ -213,15 +352,11 @@ export const WorkoutPacketsPage = () => {
             load,
             status: 'Scheduled',
             planned_duration: 60,
-            exercises: allExs.map(r => ({
-                id: r.exerciseId,
-                name: r.exerciseName,
-                sets: parseInt(r.sets) || 3,
-                reps: r.reps || '10',
-                weight: '-',
-                rpe: parseInt(r.rpe) || 7,
-                notes: r.notes || '',
-            })),
+            exercises: {
+                warmup: sections.warmup.map(stripTemp),
+                workout: sections.workout.map(stripTemp),
+                cooldown: sections.cooldown.map(stripTemp),
+            },
         };
 
         try {
@@ -353,18 +488,30 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-all" title="Back">
                                 <ArrowLeftIcon size={18} />
                             </button>
-                            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAssigning ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                                 <PackageIcon size={14} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-bold text-slate-900">
-                                    {isEditing ? 'Edit Workout Packet' : 'New Workout Packet'}
+                                    {isAssigning ? 'Assign Workout to Plan' : isEditing ? 'Edit Workout Packet' : 'New Workout Packet'}
                                 </h2>
-                                <p className="text-[10px] text-slate-400">Build, schedule & print one-off workouts</p>
+                                <p className="text-[10px] text-slate-400">
+                                    {isAssigning ? 'Build a workout and assign it to your periodization plan session' : 'Build, schedule & print one-off workouts'}
+                                </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {isEditing ? (
+                            {isAssigning ? (
+                                <>
+                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all" title="Save as template without assigning">
+                                        <SaveIcon size={12} /> Save Template Only
+                                    </button>
+                                    <button onClick={handleAssignToPlan} disabled={assigning || !title.trim() || totalExercises === 0}
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                        <CalendarPlusIcon size={12} /> {assigning ? 'Assigning...' : 'Assign & Return'}
+                                    </button>
+                                </>
+                            ) : isEditing ? (
                                 <>
                                     <button onClick={handleUpdateTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all">
                                         <RefreshCwIcon size={12} /> Update Template
@@ -378,22 +525,50 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <SaveIcon size={12} /> Save Template
                                 </button>
                             )}
-                            <button onClick={handlePrint} disabled={totalExercises === 0} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
-                                <PrinterIcon size={12} /> Print
-                            </button>
-                            <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
-                                <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
-                            </button>
+                            {!isAssigning && (
+                                <>
+                                    <button onClick={handlePrint} disabled={totalExercises === 0} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                        <PrinterIcon size={12} /> Print
+                                    </button>
+                                    <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                        <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
+
+                    {/* Assignment context banner */}
+                    {isAssigning && (() => {
+                        const plan = periodizationPlans.find(p => p.id === assignCtx.planId);
+                        const phase = plan?.phases.find(ph => ph.id === assignCtx.phaseId);
+                        const block = phase?.blocks.find(b => b.id === assignCtx.blockId);
+                        const week = block?.weeks.find(w => w.id === assignCtx.weekId);
+                        const session = week?.sessions.find(s => s.id === assignCtx.sessionId);
+                        const dayName = new Date(assignCtx.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                        return (
+                            <div className="px-6 py-2.5 bg-emerald-50 border-b border-emerald-200 flex items-center gap-3 shrink-0">
+                                <LinkIcon size={14} className="text-emerald-600 shrink-0" />
+                                <p className="text-[11px] text-emerald-800 font-medium">
+                                    Assigning to: <span className="font-bold">{plan?.name || 'Plan'}</span>
+                                    {' > '}<span className="font-bold">{phase?.name || 'Phase'}</span>
+                                    {' > '}<span className="font-bold">{block?.label || block?.name || 'Block'}</span>
+                                    {' > '}<span className="font-bold">{dayName}</span>
+                                    {session?.name ? <span className="text-emerald-600"> ({session.name})</span> : null}
+                                </p>
+                            </div>
+                        );
+                    })()}
 
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/60">
                         {/* Session Info Card */}
                         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <ClockIcon size={14} className="text-indigo-500" />
-                                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Session Details</h3>
+                                <ClockIcon size={14} className={isAssigning ? 'text-emerald-500' : 'text-indigo-500'} />
+                                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                                    {isAssigning ? 'Workout Details' : 'Session Details'}
+                                </h3>
                             </div>
 
                             {/* Title */}
@@ -405,16 +580,20 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none hover:border-slate-300 focus:border-indigo-400 transition-all placeholder:text-slate-300"
                             />
 
-                            {/* Row 2: Date, Time, Phase, Load */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Date</label>
-                                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Time</label>
-                                    <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
-                                </div>
+                            {/* Phase + Load (always shown) */}
+                            <div className={`grid gap-3 ${isAssigning ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
+                                {!isAssigning && (
+                                    <>
+                                        <div>
+                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Date</label>
+                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Time</label>
+                                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                        </div>
+                                    </>
+                                )}
                                 <div>
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Phase</label>
                                     <div className="relative">
@@ -436,34 +615,36 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 </div>
                             </div>
 
-                            {/* Row 3: Target Type + Target */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Target Type</label>
-                                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                                        {['Team', 'Individual'].map(tt => (
-                                            <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
-                                                {tt}
-                                            </button>
-                                        ))}
+                            {/* Row 3: Target Type + Target — only in normal mode */}
+                            {!isAssigning && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Target Type</label>
+                                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                            {['Team', 'Individual'].map(tt => (
+                                                <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
+                                                    {tt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
+                                            {targetType === 'Team' ? 'Select Team' : 'Select Athlete'}
+                                        </label>
+                                        <div className="relative">
+                                            <select value={targetId} onChange={e => setTargetId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none appearance-none pr-8 focus:border-indigo-400 transition-all">
+                                                <option value="">Select...</option>
+                                                {targetType === 'Team'
+                                                    ? teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
+                                                    : allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
+                                                }
+                                            </select>
+                                            <ChevronDownIcon size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
-                                        {targetType === 'Team' ? 'Select Team' : 'Select Athlete'}
-                                    </label>
-                                    <div className="relative">
-                                        <select value={targetId} onChange={e => setTargetId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none appearance-none pr-8 focus:border-indigo-400 transition-all">
-                                            <option value="">Select...</option>
-                                            {targetType === 'Team'
-                                                ? teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
-                                                : allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
-                                            }
-                                        </select>
-                                        <ChevronDownIcon size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Workout Builder */}
@@ -477,6 +658,38 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     </button>
                                 ))}
                             </div>
+
+                            {/* Volume tracking */}
+                            {(Object.keys(packetVolume.byBodyPart).length > 0 || Object.keys(packetVolume.byRegion).length > 0) && (
+                                <div className="px-4 pt-3 space-y-2">
+                                    {Object.keys(packetVolume.byBodyPart).length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 items-center">
+                                            <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Body Part</span>
+                                            {Object.entries(packetVolume.byBodyPart).sort((a, b) => b[1] - a[1]).map(([part, sets]) => {
+                                                const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600';
+                                                return (
+                                                    <span key={part} className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold ${color}`}>
+                                                        {part} {sets}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    {Object.keys(packetVolume.byRegion).length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 items-center">
+                                            <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Region</span>
+                                            {Object.entries(packetVolume.byRegion).sort((a, b) => b[1] - a[1]).map(([region, sets]) => {
+                                                const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600';
+                                                return (
+                                                    <span key={region} className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold uppercase ${color}`}>
+                                                        {region} {sets}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Exercise rows */}
                             <div className="p-4 space-y-3 min-h-[200px]">

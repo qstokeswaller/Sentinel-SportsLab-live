@@ -1,8 +1,10 @@
 // @ts-nocheck
 import React, { useState } from 'react';
-import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, LayersIcon } from 'lucide-react';
+import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, LayersIcon, Share2Icon } from 'lucide-react';
 import { useProgramWithDays, useDeleteProgram, type WorkoutProgram } from '../../hooks/useWorkoutPrograms';
 import { ProgramBuilderModal } from './ProgramBuilderModal';
+import { ShareWorkoutPopover } from './ShareWorkoutPopover';
+import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { Button } from '@/components/ui/button';
 
 type Section = 'warmup' | 'workout' | 'cooldown';
@@ -26,6 +28,8 @@ interface ProgramViewModalProps {
 export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const { exerciseMap } = useExerciseMap();
 
   const { data: fullProgram, isLoading } = useProgramWithDays(isOpen ? program?.id ?? null : null);
   const deleteProgram = useDeleteProgram();
@@ -71,6 +75,9 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
             )}
           </div>
           <div className="flex items-center gap-2 ml-4 shrink-0">
+            <Button variant="secondary" size="sm" onClick={() => setShowShare(true)}>
+              <Share2Icon size={13} className="mr-1.5" /> Share
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
               <PencilIcon size={13} className="mr-1.5" /> Edit
             </Button>
@@ -101,15 +108,25 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
               <div className="text-sm text-slate-300">No days configured</div>
             </div>
           ) : (
-            <DayTabs program={fullProgram} />
+            <DayTabs program={fullProgram} exerciseMap={exerciseMap} />
           )}
         </div>
       </div>
+
+      {/* Share Popover */}
+      {showShare && program && (
+        <ShareWorkoutPopover
+          workoutType="program"
+          workoutId={program.id}
+          workoutName={program.name}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 };
 
-const DayTabs = ({ program }) => {
+const DayTabs = ({ program, exerciseMap }) => {
   const [activeDay, setActiveDay] = useState(0);
   const days = program.days ?? [];
   const day = days[activeDay];
@@ -150,7 +167,7 @@ const DayTabs = ({ program }) => {
                   <div className="flex-1 h-px bg-slate-100" />
                 </div>
                 {rows.map((row, idx) => (
-                  <ExerciseViewRow key={row.id} row={row} letter={String.fromCharCode(65 + idx)} />
+                  <ExerciseViewRow key={row.id} row={row} letter={String.fromCharCode(65 + idx)} exerciseMap={exerciseMap} />
                 ))}
               </div>
             );
@@ -167,15 +184,16 @@ const DayTabs = ({ program }) => {
   );
 };
 
-const ExerciseViewRow = ({ row, letter }) => {
+const ExerciseViewRow = ({ row, letter, exerciseMap }) => {
   const hasMeta = row.sets || row.reps || row.rest_min || row.rest_sec || row.rir || row.rpe;
+  const exerciseName = exerciseMap[row.exercise_id] || row.exercise_id;
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
       <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0">
         {letter}
       </span>
       <div className="flex-1">
-        <div className="text-sm font-medium text-slate-800">{row.exercise_id}</div>
+        <div className="text-sm font-medium text-slate-800">{exerciseName}</div>
         {row.notes && <div className="text-xs text-slate-400 mt-0.5">{row.notes}</div>}
       </div>
       {hasMeta && (

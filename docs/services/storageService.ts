@@ -107,4 +107,8 @@ export const SupabaseStorageService = {
   saveWorkoutTemplates: (d: any) => save('workout_templates', d),
   getCustomEventTypes: () => get('custom_event_types'),
   saveCustomEventTypes: (d: any) => save('custom_event_types', d),
+  getRunningMechanicsDocs: () => get('running_mechanics_docs'),
+  saveRunningMechanicsDocs: (d: any) => save('running_mechanics_docs', d),
+  getPeriodizationPlans: () => get('periodization_plans'),
+  savePeriodizationPlans: (d: any) => save('periodization_plans', d),
 };

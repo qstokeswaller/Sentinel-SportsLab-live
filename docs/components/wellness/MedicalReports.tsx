@@ -3,7 +3,8 @@ import React, { useState, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
     UserIcon, StethoscopeIcon, UploadCloudIcon, FileTextIcon, ActivityIcon,
-    SearchIcon, ChevronRightIcon, ChevronDownIcon, FileIcon, XIcon, Trash2Icon, DownloadIcon
+    SearchIcon, ChevronRightIcon, ChevronDownIcon, FileIcon, XIcon, Trash2Icon, DownloadIcon,
+    PencilIcon
 } from 'lucide-react';
 
 const MedicalReports: React.FC = () => {
@@ -19,11 +20,14 @@ const MedicalReports: React.FC = () => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [fileData, setFileData] = useState<{ name: string; size: number; dataUrl: string } | null>(null);
+    const [editingReportId, setEditingReportId] = useState<string | null>(null);
+    const [editingOptOutId, setEditingOptOutId] = useState<string | null>(null);
 
     const allPlayers = teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name));
 
     const resetModal = () => {
         setIsMedicalModalOpen(false);
+        setEditingReportId(null);
         setMedicalForm({ targetId: '', targetName: '', date: new Date().toISOString().split('T')[0], title: '', description: '', fileName: '', fileSize: '' });
         setFileData(null);
     };
@@ -52,43 +56,122 @@ const MedicalReports: React.FC = () => {
 
     const handleSaveReport = () => {
         if (!medicalForm.title || !medicalForm.targetId) return;
-        const newReport = {
-            id: `med_${Date.now()}`,
-            type: medicalModalMode === 'upload' ? 'upload' : 'log',
-            targetId: medicalForm.targetId,
-            targetName: medicalForm.targetName,
-            date: medicalForm.date,
-            title: medicalForm.title,
-            description: medicalForm.description,
-            fileName: medicalForm.fileName || '',
-            fileSize: medicalForm.fileSize || '',
-            fileData: fileData?.dataUrl || '',
-            createdAt: new Date().toISOString(),
-        };
-        setMedicalReports([newReport, ...medicalReports]);
+
+        if (editingReportId) {
+            // Update existing record
+            setMedicalReports(medicalReports.map(r => r.id === editingReportId ? {
+                ...r,
+                targetId: medicalForm.targetId,
+                targetName: medicalForm.targetName,
+                date: medicalForm.date,
+                title: medicalForm.title,
+                description: medicalForm.description,
+                fileName: medicalForm.fileName || r.fileName,
+                fileSize: medicalForm.fileSize || r.fileSize,
+                fileData: fileData?.dataUrl || r.fileData,
+            } : r));
+        } else {
+            // Create new record
+            const newReport = {
+                id: `med_${Date.now()}`,
+                type: medicalModalMode === 'upload' ? 'upload' : 'log',
+                targetId: medicalForm.targetId,
+                targetName: medicalForm.targetName,
+                date: medicalForm.date,
+                title: medicalForm.title,
+                description: medicalForm.description,
+                fileName: medicalForm.fileName || '',
+                fileSize: medicalForm.fileSize || '',
+                fileData: fileData?.dataUrl || '',
+                createdAt: new Date().toISOString(),
+            };
+            setMedicalReports([newReport, ...medicalReports]);
+        }
         resetModal();
     };
 
+    const handleEditReport = (record: any) => {
+        setEditingReportId(record.id);
+        setMedicalModalMode(record.type === 'upload' ? 'upload' : 'text');
+        setMedicalForm({
+            targetId: record.targetId,
+            targetName: record.targetName,
+            date: record.date,
+            title: record.title,
+            description: record.description || '',
+            fileName: record.fileName || '',
+            fileSize: record.fileSize || '',
+        });
+        if (record.fileData) {
+            setFileData({ name: record.fileName, size: 0, dataUrl: record.fileData });
+        }
+        setInspectingMedicalRecord(null);
+        setIsMedicalModalOpen(true);
+    };
+
     const handleDeleteReport = (id: string) => {
+        if (!confirm('Delete this record?')) return;
         setMedicalReports(medicalReports.filter(r => r.id !== id));
         setInspectingMedicalRecord(null);
     };
 
+    // --- Opt-out handlers ---
+
     const handleSaveOptOut = () => {
         if (!optOutForm.reason) return;
-        const newOptOut = {
-            athleteId: optOutForm.targetId || 'p1',
-            date: new Date().toISOString().split('T')[0],
-            ...optOutForm
-        };
-        setOptOuts([newOptOut, ...optOuts]);
+
+        if (editingOptOutId) {
+            // Update existing opt-out
+            setOptOuts(optOuts.map(o => o.id === editingOptOutId ? {
+                ...o,
+                athleteId: optOutForm.targetId || o.athleteId,
+                status: optOutForm.status,
+                reason: optOutForm.reason,
+                notes: optOutForm.notes,
+            } : o));
+            setEditingOptOutId(null);
+        } else {
+            // Create new opt-out
+            const newOptOut = {
+                id: `optout_${Date.now()}`,
+                athleteId: optOutForm.targetId || 'p1',
+                date: new Date().toISOString().split('T')[0],
+                ...optOutForm
+            };
+            setOptOuts([newOptOut, ...optOuts]);
+        }
+        setOptOutForm({ targetId: '', status: 'Available', reason: '', notes: '' });
         setReportMode('analytics');
+    };
+
+    const handleEditOptOut = (entry: any) => {
+        setEditingOptOutId(entry.id || null);
+        setOptOutForm({
+            targetId: entry.athleteId || '',
+            status: entry.status || 'Available',
+            reason: entry.reason || '',
+            notes: entry.notes || '',
+        });
+        setReportMode('input');
+    };
+
+    const handleDeleteOptOut = (entry: any) => {
+        if (!confirm('Delete this status record?')) return;
+        if (entry.id) {
+            setOptOuts(optOuts.filter(o => o.id !== entry.id));
+        } else {
+            // Legacy opt-outs without id — match by fields
+            setOptOuts(optOuts.filter(o =>
+                !(o.athleteId === entry.athleteId && o.date === entry.date && o.reason === entry.reason)
+            ));
+        }
     };
 
     // --- UPLOAD / QUICK LOG MODAL ---
     const renderMedicalModal = () => {
         if (!isMedicalModalOpen) return null;
         const isUpload = medicalModalMode === 'upload';
+        const isEditing = !!editingReportId;
 
         return (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={resetModal}>
@@ -97,11 +180,15 @@ const MedicalReports: React.FC = () => {
                     <div className={`px-6 py-4 flex items-center justify-between ${isUpload ? 'bg-indigo-50 border-b border-indigo-100' : 'bg-emerald-50 border-b border-emerald-100'}`}>
                         <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white ${isUpload ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
-                                {isUpload ? <UploadCloudIcon size={16} /> : <FileTextIcon size={16} />}
+                                {isEditing ? <PencilIcon size={16} /> : isUpload ? <UploadCloudIcon size={16} /> : <FileTextIcon size={16} />}
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">{isUpload ? 'Upload Document' : 'Quick Log'}</h3>
-                                <p className="text-[10px] text-slate-500">{isUpload ? 'Attach a medical document to a player or team' : 'Log a quick medical note'}</p>
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    {isEditing ? 'Edit Record' : isUpload ? 'Upload Document' : 'Quick Log'}
+                                </h3>
+                                <p className="text-[10px] text-slate-500">
+                                    {isEditing ? 'Update the details of this record' : isUpload ? 'Attach a medical document to a player or team' : 'Log a quick medical note'}
+                                </p>
                             </div>
                         </div>
                         <button onClick={resetModal} className="p-2 hover:bg-white rounded-lg transition-colors"><XIcon size={16} className="text-slate-400" /></button>
@@ -163,7 +250,7 @@ const MedicalReports: React.FC = () => {
                                         <FileIcon size={18} className="text-indigo-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-900 truncate">{fileData.name}</p>
-                                            <p className="text-[10px] text-slate-500">{(fileData.size / 1024).toFixed(1)} KB</p>
+                                            <p className="text-[10px] text-slate-500">{fileData.size ? `${(fileData.size / 1024).toFixed(1)} KB` : medicalForm.fileSize}</p>
                                         </div>
                                         <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 rounded-lg transition-colors">
                                             <XIcon size={14} className="text-indigo-400" />
@@ -202,7 +289,7 @@ const MedicalReports: React.FC = () => {
                             disabled={!medicalForm.title || !medicalForm.targetId}
                             className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm ${(!medicalForm.title || !medicalForm.targetId) ? 'bg-slate-300 cursor-not-allowed' : isUpload ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                         >
-                            {isUpload ? 'Upload Document' : 'Save Log'}
+                            {isEditing ? 'Save Changes' : isUpload ? 'Upload Document' : 'Save Log'}
                         </button>
                     </div>
                 </div>
@@ -277,12 +364,20 @@ const MedicalReports: React.FC = () => {
 
                     {/* Footer */}
                     <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-                        <button
-                            onClick={() => handleDeleteReport(record.id)}
-                            className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                        >
-                            <Trash2Icon size={12} /> Delete Record
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleDeleteReport(record.id)}
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                            >
+                                <Trash2Icon size={12} /> Delete
+                            </button>
+                            <button
+                                onClick={() => handleEditReport(record)}
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                            >
+                                <PencilIcon size={12} /> Edit
+                            </button>
+                        </div>
                         <button onClick={() => setInspectingMedicalRecord(null)} className="px-5 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-black transition-colors">Close</button>
                     </div>
                 </div>
@@ -299,8 +394,12 @@ const MedicalReports: React.FC = () => {
                         <UserIcon size={20} />
                     </div>
                     <div>
-                        <h4 className="text-lg font-semibold text-slate-900">Athlete Status</h4>
-                        <p className="text-slate-500 text-sm">Update availability and log opt-out reasons.</p>
+                        <h4 className="text-lg font-semibold text-slate-900">
+                            {editingOptOutId ? 'Edit Athlete Status' : 'Athlete Status'}
+                        </h4>
+                        <p className="text-slate-500 text-sm">
+                            {editingOptOutId ? 'Update availability and opt-out details.' : 'Update availability and log opt-out reasons.'}
+                        </p>
                     </div>
                 </div>
 
@@ -357,8 +456,18 @@ const MedicalReports: React.FC = () => {
                         />
                     </div>
 
-                    <div className="pt-4">
-                        <button onClick={handleSaveOptOut} className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">Save Status</button>
+                    <div className="pt-4 flex gap-3">
+                        {editingOptOutId && (
+                            <button
+                                onClick={() => { setEditingOptOutId(null); setOptOutForm({ targetId: '', status: 'Available', reason: '', notes: '' }); setReportMode('analytics'); }}
+                                className="flex-1 py-5 bg-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                        <button onClick={handleSaveOptOut} className="flex-1 py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">
+                            {editingOptOutId ? 'Save Changes' : 'Save Status'}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -458,11 +567,11 @@ const MedicalReports: React.FC = () => {
                     <div className="relative pl-12 border-l-2 border-slate-100 space-y-8 pb-8">
                         {timeline.length > 0 ? timeline.map((entry, i) => (
                             <div key={entry.id || i} className="relative group/item">
-                                <div className="absolute -left-[76px] top-6 text-right w-12 text-[10px] font-black text-slate-300 group-hover/item:text-indigo-400 transition-colors uppercase leading-tight">
+                                <div className="absolute -left-[76px] top-1 text-right w-12 text-[10px] font-black text-slate-300 group-hover/item:text-indigo-400 transition-colors uppercase leading-tight">
                                     {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </div>
 
-                                <div className={`absolute -left-[57px] top-6 w-5 h-5 rounded-full border-4 border-white shadow-md z-10 transition-transform group-hover/item:scale-125 ${entry.timelineType === 'medical' ? 'bg-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-500' : entry.status === 'Modified' ? 'bg-amber-500' : 'bg-rose-500')
+                                <div className={`absolute -left-[57px] top-5 w-5 h-5 rounded-full border-4 border-white shadow-md z-10 transition-transform group-hover/item:scale-125 ${entry.timelineType === 'medical' ? 'bg-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-500' : entry.status === 'Modified' ? 'bg-amber-500' : 'bg-rose-500')
                                     }`}></div>
 
                                 <div
@@ -483,7 +592,31 @@ const MedicalReports: React.FC = () => {
                                                 <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{entry.targetName}</span>
                                             </div>
                                         </div>
-                                        {entry.timelineType === 'medical' && entry.type === 'upload' && <FileIcon size={18} className="text-indigo-300" />}
+
+                                        {/* Action buttons */}
+                                        <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                            {entry.timelineType === 'medical' && entry.type === 'upload' && <FileIcon size={14} className="text-indigo-300 mr-1" />}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    entry.timelineType === 'medical' ? handleEditReport(entry) : handleEditOptOut(entry);
+                                                }}
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                title="Edit"
+                                            >
+                                                <PencilIcon size={13} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    entry.timelineType === 'medical' ? handleDeleteReport(entry.id) : handleDeleteOptOut(entry);
+                                                }}
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2Icon size={13} />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <h6 className="text-base font-semibold text-slate-900 group-hover/item:text-indigo-900 transition-colors">{entry.title}</h6>
