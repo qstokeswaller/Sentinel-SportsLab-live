@@ -39,7 +39,7 @@ const PublicWellnessForm: React.FC = () => {
             try {
                 const data = await DatabaseService.getWellnessFormData(templateId, teamId);
                 setTemplate(data.template);
-                setAthletes(data.athletes);
+                setAthletes(data.athletes || []);
             } catch (err) {
                 console.error(err);
                 setError("Failed to load form. Link may be expired or invalid.");
