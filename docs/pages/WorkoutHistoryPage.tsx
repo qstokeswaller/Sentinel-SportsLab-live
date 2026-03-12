@@ -13,8 +13,12 @@ import {
     Repeat as RepeatIcon,
     PencilIcon,
     Trash2 as Trash2Icon,
+    ClipboardList as ClipboardListIcon,
+    Printer as PrinterIcon,
+    X as XIcon,
 } from 'lucide-react';
 import { DatabaseService } from '../services/databaseService';
+import { buildMaxLookup, getSheetCellValue, printSheet } from '../utils/weightroomUtils';
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 
@@ -27,12 +31,15 @@ function formatDate(iso: string) {
 export const WorkoutHistoryPage = () => {
     const navigate = useNavigate();
     const {
-        scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast,
+        scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast, maxHistory,
     } = useAppState();
 
     const [historyFilter, setHistoryFilter] = useState('All');
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [viewingSheetSession, setViewingSheetSession] = useState(null);
+
+    const maxLookup = useMemo(() => buildMaxLookup(maxHistory), [maxHistory]);
 
     const allPlayers = useMemo(() => teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)), [teams]);
 
@@ -167,9 +174,45 @@ export const WorkoutHistoryPage = () => {
                                                     {exCount} exercises
                                                 </span>
                                             )}
+                                            {exRaw?.weightroomSheet && (
+                                                <span className="flex items-center gap-1 text-teal-600 font-semibold">
+                                                    <ClipboardListIcon size={10} />
+                                                    Sheet
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="shrink-0 ml-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {exRaw?.weightroomSheet && (
+                                            <>
+                                                <button
+                                                    onClick={() => setViewingSheetSession(session)}
+                                                    className="px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                >
+                                                    <ClipboardListIcon size={11} /> View Sheet
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const tid = session.target_id || session.targetId;
+                                                        const ttype = session.target_type || session.targetType;
+                                                        let athletes = [];
+                                                        if (ttype === 'Team') {
+                                                            const team = teams.find(t => t.id === tid);
+                                                            athletes = [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
+                                                        } else {
+                                                            for (const t of teams) {
+                                                                const p = (t.players || []).find(p => p.id === tid);
+                                                                if (p) { athletes = [p]; break; }
+                                                            }
+                                                        }
+                                                        printSheet(exRaw.weightroomSheet, athletes, maxLookup, session.title);
+                                                    }}
+                                                    className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                >
+                                                    <PrinterIcon size={11} /> Print Sheet
+                                                </button>
+                                            </>
+                                        )}
                                         <button
                                             onClick={() => handleEdit(session)}
                                             className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
@@ -216,6 +259,79 @@ export const WorkoutHistoryPage = () => {
                     })
                 )}
             </div>
+
+            {/* View Sheet Modal */}
+            {viewingSheetSession && (() => {
+                const sheetConfig = viewingSheetSession.exercises?.weightroomSheet;
+                if (!sheetConfig) return null;
+                const tid = viewingSheetSession.target_id || viewingSheetSession.targetId;
+                const ttype = viewingSheetSession.target_type || viewingSheetSession.targetType;
+                let sheetAthletes = [];
+                if (ttype === 'Team') {
+                    const team = teams.find(t => t.id === tid);
+                    sheetAthletes = [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
+                } else {
+                    for (const t of teams) {
+                        const p = (t.players || []).find(p => p.id === tid);
+                        if (p) { sheetAthletes = [p]; break; }
+                    }
+                }
+
+                return (
+                    <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                        <div className="bg-white rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 overflow-hidden max-h-[80vh] flex flex-col">
+                            <div className="px-5 py-3 bg-teal-700 flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-2.5 text-white">
+                                    <ClipboardListIcon size={16} />
+                                    <span className="text-xs font-black uppercase tracking-widest">Weightroom Sheet</span>
+                                    <span className="text-[10px] text-teal-200">{viewingSheetSession.title}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => printSheet(sheetConfig, sheetAthletes, maxLookup, viewingSheetSession.title)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[10px] font-semibold transition-all"
+                                    >
+                                        <PrinterIcon size={11} /> Print
+                                    </button>
+                                    <button onClick={() => setViewingSheetSession(null)} className="text-teal-200 hover:text-white transition-colors">
+                                        <XIcon size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-5 overflow-y-auto">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse text-xs">
+                                        <thead>
+                                            <tr>
+                                                <th className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
+                                                {sheetConfig.columns.map(col => (
+                                                    <th key={col.id} className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
+                                                        {col.label} ({col.percentage}%)
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sheetAthletes.length === 0 ? (
+                                                <tr><td colSpan={sheetConfig.columns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes found</td></tr>
+                                            ) : sheetAthletes.map(a => (
+                                                <tr key={a.id} className="hover:bg-slate-50">
+                                                    <td className="px-3 py-2 font-semibold text-slate-800 uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                                    {sheetConfig.columns.map(col => (
+                                                        <td key={col.id} className="px-3 py-2 text-slate-600 border border-slate-200 text-center min-w-[80px]">
+                                                            {getSheetCellValue(col, a.id, maxLookup) || '\u2014'}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 };

@@ -22,7 +22,9 @@ import {
     RefreshCw as RefreshCwIcon,
     Copy as CopyIcon,
     Link as LinkIcon,
+    ClipboardList as ClipboardListIcon,
 } from 'lucide-react';
+import WeightroomSheetPanel from '../components/workout/WeightroomSheetPanel';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -153,6 +155,8 @@ export const WorkoutPacketsPage = () => {
 
     const [scheduling, setScheduling] = useState(false);
     const [assigning, setAssigning] = useState(false);
+    const [showWeightroomSheet, setShowWeightroomSheet] = useState(false);
+    const [weightroomSheetConfig, setWeightroomSheetConfig] = useState(null);
     const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
     const isAssigning = !!assignCtx;
 
@@ -196,6 +200,10 @@ export const WorkoutPacketsPage = () => {
                 workout: (sectionData.workout || []).map(normalizeRow),
                 cooldown: (sectionData.cooldown || []).map(normalizeRow),
             });
+            // Load attached weightroom sheet config
+            if (sectionData.weightroomSheet) {
+                setWeightroomSheetConfig(sectionData.weightroomSheet);
+            }
         }
         // Load from session exercises (flat array → all go into workout section)
         else if (src.exercises && Array.isArray(src.exercises)) {
@@ -332,6 +340,7 @@ export const WorkoutPacketsPage = () => {
             warmup: sections.warmup.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
             workout: sections.workout.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
             cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
+            ...(weightroomSheetConfig ? { weightroomSheet: weightroomSheetConfig } : {}),
         },
         createdAt: new Date().toISOString(),
     });
@@ -356,11 +365,29 @@ export const WorkoutPacketsPage = () => {
                 warmup: sections.warmup.map(stripTemp),
                 workout: sections.workout.map(stripTemp),
                 cooldown: sections.cooldown.map(stripTemp),
+                ...(weightroomSheetConfig ? { weightroomSheet: weightroomSheetConfig } : {}),
             },
         };
 
         try {
             setScheduling(true);
+            // Auto-save as template if not already editing one
+            if (!editingTemplateId) {
+                const tplPayload = buildTemplatePayload();
+                try {
+                    const created = await DatabaseService.createWorkoutTemplate({
+                        name: tplPayload.name,
+                        training_phase: tplPayload.trainingPhase,
+                        load: tplPayload.load,
+                        sections: tplPayload.sections,
+                    });
+                    setWorkoutTemplates(prev => [{ id: created.id, ...tplPayload, createdAt: created.created_at }, ...prev]);
+                } catch {
+                    // Fallback: save locally
+                    const localId = `tpl_${Date.now()}`;
+                    setWorkoutTemplates(prev => [{ id: localId, ...tplPayload, createdAt: new Date().toISOString() }, ...prev]);
+                }
+            }
             await scheduleWorkoutSession(payload);
             navigate(returnTo);
         } catch (err) {
@@ -527,6 +554,16 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             )}
                             {!isAssigning && (
                                 <>
+                                    <button
+                                        onClick={() => setShowWeightroomSheet(true)}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all ${
+                                            weightroomSheetConfig
+                                                ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                                                : 'bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200'
+                                        }`}
+                                    >
+                                        <ClipboardListIcon size={12} /> {weightroomSheetConfig ? 'Edit Sheet' : 'Attach Sheet'}
+                                    </button>
                                     <button onClick={handlePrint} disabled={totalExercises === 0} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
                                         <PrinterIcon size={12} /> Print
                                     </button>
@@ -559,6 +596,29 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             </div>
                         );
                     })()}
+
+                    {/* Weightroom Sheet Panel */}
+                    {showWeightroomSheet && (
+                        <div className="px-6 pt-4">
+                            <WeightroomSheetPanel
+                                workoutExercises={sections.workout}
+                                sheetConfig={weightroomSheetConfig}
+                                targetType={targetType}
+                                targetId={targetId}
+                                onSave={(config) => {
+                                    setWeightroomSheetConfig(config);
+                                    setShowWeightroomSheet(false);
+                                    showToast('Weightroom sheet attached', 'success');
+                                }}
+                                onRemove={() => {
+                                    setWeightroomSheetConfig(null);
+                                    setShowWeightroomSheet(false);
+                                    showToast('Sheet removed', 'info');
+                                }}
+                                onClose={() => setShowWeightroomSheet(false)}
+                            />
+                        </div>
+                    )}
 
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/60">
@@ -704,7 +764,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <div key={row.tempId} className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 hover:border-slate-200 transition-all">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{LETTERS[idx] || idx + 1}</span>
+                                                    <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
                                                     <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
                                                 </div>
                                                 <button onClick={() => removeRow(activeSection, row.tempId)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">

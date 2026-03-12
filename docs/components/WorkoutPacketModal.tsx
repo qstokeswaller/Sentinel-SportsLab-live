@@ -472,7 +472,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                     {/* Exercise header */}
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{LETTERS[idx] || idx + 1}</span>
+                                                            <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
                                                             <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
                                                         </div>
                                                         <button onClick={() => removeRow(activeSection, row.tempId)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">

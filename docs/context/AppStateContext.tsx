@@ -14,7 +14,7 @@ import {
     InfoIcon, TargetIcon, UserPlusIcon, XIcon, PlusIcon, FileStackIcon, TrendingUpIcon
 } from 'lucide-react';
 
-import { ACWR_UTILS, BORG_RPE_SCALE, DSI_NORMS, RSI_NORMS } from '../utils/constants';
+import { ACWR_UTILS, BORG_RPE_SCALE, DSI_NORMS, RSI_NORMS, RM_EXERCISE_MAP } from '../utils/constants';
 import { DEFAULT_WATTBIKE_SESSIONS } from '../utils/wattbikeSessions';
 import {
     MOCK_INDIVIDUAL_PLAN_BLOCKS,
@@ -1982,7 +1982,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             // 7. Load Assessments and Evaluations from Database
             const [dbEvaluations, dbMaxHistory] = await Promise.all([
                 DatabaseService.fetchAssessments('evaluation'),
-                DatabaseService.fetchAssessments('1rm')
+                DatabaseService.fetchRmAssessments()
             ]);
 
             if (dbEvaluations) {
@@ -1994,12 +1994,20 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             }
 
             if (dbMaxHistory) {
-                setMaxHistory(dbMaxHistory.map(raw => ({
-                    athleteId: raw.athlete_id,
-                    date: raw.date,
-                    exercise: (raw.metrics && raw.metrics.exercise) || 'Unknown',
-                    weight: (raw.metrics && raw.metrics.weight) || 0
-                })));
+                setMaxHistory(dbMaxHistory.map(raw => {
+                    const m = raw.metrics || {};
+                    let exerciseName, maxWeight;
+                    if (raw.test_type === '1rm') {
+                        // Performance Lab: exerciseLabel has the name, value has the estimated 1RM
+                        exerciseName = m.exerciseLabel || RM_EXERCISE_MAP[m.exerciseId] || 'Unknown';
+                        maxWeight = m.value || 0;
+                    } else {
+                        // Testing Hub: test_type is the key (e.g. 'rm_back_squat'), metrics.weight is actual 1RM
+                        exerciseName = RM_EXERCISE_MAP[raw.test_type] || raw.test_type;
+                        maxWeight = m.weight || 0;
+                    }
+                    return { athleteId: raw.athlete_id, date: raw.date, exercise: exerciseName, weight: maxWeight };
+                }));
             }
 
         } catch (error) {

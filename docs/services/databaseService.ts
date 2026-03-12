@@ -222,6 +222,16 @@ export const DatabaseService = {
         return data;
     },
 
+    async fetchRmAssessments() {
+        const { data, error } = await supabase
+            .from('assessments')
+            .select('*')
+            .in('test_type', ['1rm', 'rm_back_squat', 'rm_bench_press', 'rm_deadlift', 'rm_front_squat', 'rm_ohp'])
+            .order('date', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
     async logAssessment(testType: string, athleteId: string, metrics: any, date?: string) {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');
@@ -415,6 +425,17 @@ export const DatabaseService = {
         const { data, error } = await query;
         if (error) { console.error('fetchShareSessions error:', error); return []; }
         return (data || []) as { id: string; template_id: string; shared_at: string }[];
+    },
+
+    // Resolve today's share session for a team+template (used by permalink auto-match)
+    async resolveShareSessionId(teamId: string, templateId: string): Promise<string | null> {
+        const db = supabase as any;
+        const { data, error } = await db.rpc('resolve_share_session_id', {
+            p_team_id: teamId,
+            p_template_id: templateId,
+        });
+        if (error) { console.error('resolveShareSessionId error:', error); return null; }
+        return data as string | null;
     },
 
     // --- WELLNESS RESPONSES ---

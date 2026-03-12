@@ -87,3 +87,28 @@ export const ACWR_UTILS = {
                 return { label: 'Danger Zone', color: 'text-rose-500', bg: 'bg-rose-50', status: 'danger' };
             }
         };
+
+// Maps Testing Hub test_type IDs and Performance Lab exerciseIds → canonical display names
+export const RM_EXERCISE_MAP: Record<string, string> = {
+    // Testing Hub test_type values
+    'rm_back_squat': 'Back Squat',
+    'rm_bench_press': 'Bench Press',
+    'rm_deadlift': 'Deadlift',
+    'rm_front_squat': 'Front Squat',
+    'rm_ohp': 'Overhead Press',
+    // Performance Lab exerciseId values
+    'back_squat': 'Back Squat',
+    'front_squat': 'Front Squat',
+    'trap_bar_deadlift': 'Trap Bar Deadlift',
+    'leg_press': 'Leg Press',
+    'bench_press': 'Bench Press',
+    'overhead_press': 'Overhead Press',
+    'incline_bench': 'Incline Bench',
+    'dips_weighted': 'Dips (Weighted)',
+    'pullups_weighted': 'Pullups (Weighted)',
+    'barbell_row': 'Barbell Row',
+    'lat_pulldown': 'Lat Pulldown',
+};
+
+// Deduplicated, sorted list of all 1RM-testable exercise names for the weightroom sheet picker
+export const WEIGHTROOM_1RM_EXERCISES = [...new Set(Object.values(RM_EXERCISE_MAP))].sort();

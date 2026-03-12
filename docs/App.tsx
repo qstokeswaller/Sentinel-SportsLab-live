@@ -23,6 +23,7 @@ import { WorkoutHistoryPage } from './pages/WorkoutHistoryPage';
 import { TestingHubPage } from './pages/TestingHubPage';
 import WorkoutPacketModal from './components/WorkoutPacketModal';
 import AddEventModal from './components/calendar/AddEventModal';
+import { WEIGHTROOM_1RM_EXERCISES } from './utils/constants';
 
 import {
     Activity as ActivityIcon,
@@ -327,10 +328,10 @@ const WeightroomSheetModal = () => {
         return map;
     }, [maxHistory]);
 
-    // Trackable exercises for advanced mode picker
+    // Trackable exercises for advanced mode picker — curated 1RM-testable exercises
     const trackableExercises = useMemo(() =>
-        (exercises || []).filter(e => e.tracking_type === '1RM' || e.tracking_type === 'Highest Weight').sort((a, b) => a.name.localeCompare(b.name)),
-        [exercises]
+        WEIGHTROOM_1RM_EXERCISES.map(name => ({ id: name, name })),
+        []
     );
 
     const addColumn = () => {
@@ -349,8 +350,7 @@ const WeightroomSheetModal = () => {
             const updated = { ...c, [field]: value };
             // If exercise changed in advanced mode, update label to exercise name
             if (field === 'exerciseId' && wsMode === 'advanced') {
-                const ex = exercises.find(e => e.id === value);
-                if (ex) updated.label = ex.name;
+                if (value) updated.label = value;
             }
             return updated;
         }));
@@ -365,9 +365,7 @@ const WeightroomSheetModal = () => {
 
     const getCellValue = (col, athlete) => {
         if (wsMode !== 'advanced' || !col.exerciseId) return '';
-        const ex = exercises.find(e => e.id === col.exerciseId);
-        if (!ex) return '';
-        const athleteMax = maxLookup[athlete.id]?.[ex.name];
+        const athleteMax = maxLookup[athlete.id]?.[col.exerciseId];
         if (!athleteMax) return '—';
         const load = roundTo2_5(athleteMax.weight * (col.percentage / 100));
         return `${load}`;
@@ -870,8 +868,9 @@ const SessionModal = () => {
     const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const handleViewWorkout = () => {
+        const session = viewingSession;
         setViewingSession(null);
-        navigate('/workouts/packets');
+        navigate('/workouts/packets', { state: { editSession: session, returnTo: '/' } });
     };
 
     return (

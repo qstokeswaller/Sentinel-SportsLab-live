@@ -126,6 +126,12 @@ const PublicWellnessForm: React.FC = () => {
         if (!selectedAthleteId || !template) return;
         setSubmitting(true);
         try {
+            // Auto-resolve share session for permalink responses (no ?s= param)
+            let resolvedSessionId = shareSessionId;
+            if (!resolvedSessionId && teamId && templateId) {
+                resolvedSessionId = await DatabaseService.resolveShareSessionId(teamId, templateId) || undefined;
+            }
+
             const validAvailability = ['available', 'modified', 'unavailable'].includes(responses['availability'])
                 ? responses['availability'] : undefined;
             await DatabaseService.saveWellnessResponse({
@@ -137,7 +143,7 @@ const PublicWellnessForm: React.FC = () => {
                 rpe: typeof responses['rpe'] === 'number' ? responses['rpe'] : undefined,
                 availability: validAvailability,
                 injury_report: responses['body_map'] ? { areas: responses['body_map'] } : undefined,
-                share_session_id: shareSessionId,
+                share_session_id: resolvedSessionId,
             });
             setSubmitted(true);
         } catch (err) {

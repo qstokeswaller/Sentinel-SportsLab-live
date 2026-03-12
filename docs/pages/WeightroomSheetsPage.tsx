@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
+import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
+import { buildMaxLookup, getSheetCellValue, roundTo2_5 } from '../utils/weightroomUtils';
 import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
@@ -18,8 +20,6 @@ const WS_MODES = [
     { id: 'labeled', label: 'Labeled' },
     { id: 'empty-header', label: 'Empty Header' },
 ];
-
-const roundTo2_5 = (v) => Math.round(v / 2.5) * 2.5;
 
 // ── Page Component ───────────────────────────────────────────────────────────
 
@@ -43,21 +43,11 @@ export const WeightroomSheetsPage = () => {
         return [...list].sort((a, b) => a.name.localeCompare(b.name));
     }, [teams, wrSelectedTeam]);
 
-    const maxLookup = useMemo(() => {
-        const map = {};
-        (maxHistory || []).forEach(r => {
-            if (!map[r.athleteId]) map[r.athleteId] = {};
-            const existing = map[r.athleteId][r.exercise];
-            if (!existing || r.date > existing.date) {
-                map[r.athleteId][r.exercise] = { weight: r.weight, date: r.date };
-            }
-        });
-        return map;
-    }, [maxHistory]);
+    const maxLookup = useMemo(() => buildMaxLookup(maxHistory), [maxHistory]);
 
     const trackableExercises = useMemo(() =>
-        (exercises || []).filter(e => e.tracking_type === '1RM' || e.tracking_type === 'Highest Weight').sort((a, b) => a.name.localeCompare(b.name)),
-        [exercises]
+        WEIGHTROOM_1RM_EXERCISES.map(name => ({ id: name, name })),
+        []
     );
 
     const addColumn = () => {
@@ -75,8 +65,7 @@ export const WeightroomSheetsPage = () => {
             if (c.id !== id) return c;
             const updated = { ...c, [field]: value };
             if (field === 'exerciseId' && wsMode === 'advanced') {
-                const ex = exercises.find(e => e.id === value);
-                if (ex) updated.label = ex.name;
+                if (value) updated.label = value;
             }
             return updated;
         }));
@@ -91,12 +80,7 @@ export const WeightroomSheetsPage = () => {
 
     const getCellValue = (col, athlete) => {
         if (wsMode !== 'advanced' || !col.exerciseId) return '';
-        const ex = exercises.find(e => e.id === col.exerciseId);
-        if (!ex) return '';
-        const athleteMax = maxLookup[athlete.id]?.[ex.name];
-        if (!athleteMax) return '\u2014';
-        const load = roundTo2_5(athleteMax.weight * (col.percentage / 100));
-        return `${load}`;
+        return getSheetCellValue(col, athlete.id, maxLookup);
     };
 
     const handlePrint = () => {
