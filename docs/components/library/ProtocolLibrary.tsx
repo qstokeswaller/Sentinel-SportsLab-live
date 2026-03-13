@@ -13,7 +13,7 @@ import {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type BlockType = 'text_block' | 'exercise_block';
+export type BlockType = 'text_block' | 'exercise_block' | 'pdf_block';
 export type LineType = 'heading1' | 'heading2' | 'paragraph' | 'bullet' | 'numbered' | 'divider';
 
 export interface TextLine {
@@ -33,6 +33,19 @@ export interface ProtocolBlock {
     lines?: TextLine[];
     sectionName?: string;
     exercises?: ProtocolExercise[];
+    // pdf_block fields
+    pdfTitle?: string;
+    pdfFileName?: string;
+    pdfFileSize?: number;
+    pdfUrl?: string;
+}
+
+export interface ProtocolAttachment {
+    id: string;
+    title: string;
+    fileName: string;
+    fileSize: number;
+    url: string;
 }
 
 export interface Protocol {
@@ -40,6 +53,7 @@ export interface Protocol {
     name: string;
     category: string;
     blocks: ProtocolBlock[];
+    attachments?: ProtocolAttachment[];
     createdAt: string;
     updatedAt: string;
 }

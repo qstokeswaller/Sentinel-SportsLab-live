@@ -95,6 +95,30 @@ export const printSheet = (
     if (w) { w.document.write(html); w.document.close(); w.print(); }
 };
 
+/** Compute athlete_weight_overrides for exercises linked to a weightroom sheet.
+ *  Returns a map: { exerciseName → { athleteId → "weight_string" } } */
+export const computeAthleteWeightOverrides = (
+    sheetConfig: SheetConfig,
+    athletes: { id: string }[],
+    maxLookup: Record<string, Record<string, { weight: number; date: string }>>
+): Record<string, Record<string, string>> => {
+    const overrides: Record<string, Record<string, string>> = {};
+    for (const col of sheetConfig.columns) {
+        if (!col.exerciseId) continue;
+        const perAthlete: Record<string, string> = {};
+        for (const a of athletes) {
+            const val = getSheetCellValue(col, a.id, maxLookup);
+            if (val && val !== '\u2014') {
+                perAthlete[a.id] = val;
+            }
+        }
+        if (Object.keys(perAthlete).length > 0) {
+            overrides[col.exerciseId] = perAthlete;
+        }
+    }
+    return overrides;
+};
+
 /** Match workout exercises against 1RM-testable exercise list, return suggested columns */
 export const matchWorkoutExercisesTo1RM = (
     workoutExercises: { exerciseName: string }[]

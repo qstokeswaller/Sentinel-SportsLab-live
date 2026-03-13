@@ -5,8 +5,10 @@ import {
     ChevronUpIcon, ChevronDownIcon,
     Heading1Icon, Heading2Icon, TypeIcon, ListIcon, ListOrderedIcon,
     MinusIcon, DumbbellIcon, XIcon, PlusCircleIcon, FileTextIcon,
+    FileIcon, ExternalLinkIcon, UploadIcon, PaperclipIcon, Loader2Icon,
 } from 'lucide-react';
-import type { Protocol, ProtocolBlock, BlockType, TextLine, LineType, ProtocolExercise } from './ProtocolLibrary';
+import type { Protocol, ProtocolBlock, ProtocolAttachment, BlockType, TextLine, LineType, ProtocolExercise } from './ProtocolLibrary';
+import { uploadPdf, deletePdf } from '../../utils/pdfUpload';
 import { PROTOCOL_CATEGORIES } from './ProtocolLibrary';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,7 +35,14 @@ const makeBlock = (type: BlockType): ProtocolBlock => ({
     type,
     ...(type === 'text_block' ? { lines: [makeLine()] } : {}),
     ...(type === 'exercise_block' ? { sectionName: '', exercises: [] } : {}),
+    ...(type === 'pdf_block' ? { pdfTitle: '', pdfFileName: '', pdfFileSize: 0, pdfUrl: '' } : {}),
 });
+
+const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+};
 
 /** What type should the next line be after Enter? */
 const nextLineType = (current: LineType): LineType => {
@@ -409,6 +418,111 @@ const ExerciseBlockCard: React.FC<{
     );
 };
 
+// ── PDF Block Card ────────────────────────────────────────────────────────
+
+const PdfBlockCard: React.FC<{
+    block: ProtocolBlock;
+    onChange: (b: ProtocolBlock) => void;
+    onDelete: () => void;
+    onMove: (dir: -1 | 1) => void;
+    isFirst: boolean;
+    isLast: boolean;
+}> = ({ block, onChange, onDelete, onMove, isFirst, isLast }) => {
+    const [uploading, setUploading] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const url = await uploadPdf(file);
+            onChange({
+                ...block,
+                pdfTitle: block.pdfTitle || file.name.replace(/\.pdf$/i, ''),
+                pdfFileName: file.name,
+                pdfFileSize: file.size,
+                pdfUrl: url,
+            });
+        } catch (err) {
+            console.error('PDF upload failed:', err);
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
+
+    const handleRemoveFile = async () => {
+        if (block.pdfUrl) {
+            try { await deletePdf(block.pdfUrl); } catch {}
+        }
+        onChange({ ...block, pdfFileName: '', pdfFileSize: 0, pdfUrl: '' });
+    };
+
+    return (
+        <div className="rounded-xl border border-rose-200 overflow-hidden shadow-sm">
+            {/* Header */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-rose-50 border-b border-rose-200">
+                <FileIcon size={14} className="text-rose-500 shrink-0" />
+                <span className="text-[11px] font-semibold text-rose-600 uppercase tracking-wide">PDF Block</span>
+                <div className="flex-1" />
+                <div className="flex items-center gap-0.5">
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
+                    <button onClick={onDelete} className="p-1 rounded text-rose-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2Icon size={14} /></button>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="bg-rose-50/30 p-4 space-y-3">
+                <input
+                    type="text"
+                    value={block.pdfTitle || ''}
+                    onChange={e => onChange({ ...block, pdfTitle: e.target.value })}
+                    placeholder="PDF title (e.g., Clinical Guidelines)"
+                    className="w-full px-3 py-2 rounded-lg border border-rose-200 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 placeholder:text-slate-400 placeholder:font-normal"
+                />
+
+                {block.pdfUrl ? (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3 bg-white rounded-lg border border-slate-200 p-3">
+                            <FileIcon size={20} className="text-rose-500 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">{block.pdfFileName}</p>
+                                <p className="text-xs text-slate-400">{formatFileSize(block.pdfFileSize || 0)}</p>
+                            </div>
+                            <button onClick={() => window.open(block.pdfUrl, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Open PDF">
+                                <ExternalLinkIcon size={14} />
+                            </button>
+                            <button onClick={handleRemoveFile} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Remove PDF">
+                                <Trash2Icon size={14} />
+                            </button>
+                        </div>
+                        <iframe
+                            src={block.pdfUrl}
+                            title={block.pdfTitle || block.pdfFileName}
+                            className="w-full rounded-lg border border-slate-200"
+                            style={{ height: '400px' }}
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <input ref={fileRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
+                        <button
+                            onClick={() => fileRef.current?.click()}
+                            disabled={uploading}
+                            className="flex items-center gap-2 px-4 py-3 w-full border-2 border-dashed border-rose-200 rounded-lg text-sm text-rose-500 hover:border-rose-400 hover:bg-rose-50 transition-all disabled:opacity-50"
+                        >
+                            {uploading ? <Loader2Icon size={14} className="animate-spin" /> : <UploadIcon size={14} />}
+                            {uploading ? 'Uploading...' : 'Upload PDF'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // ── Main Editor ──────────────────────────────────────────────────────────────
 
 interface ProtocolEditorProps {
@@ -424,6 +538,9 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
     const [blocks, setBlocks] = useState<ProtocolBlock[]>(
         protocol?.blocks?.length ? protocol.blocks : []
     );
+    const [attachments, setAttachments] = useState<ProtocolAttachment[]>(protocol?.attachments || []);
+    const [attachUploading, setAttachUploading] = useState(false);
+    const attachFileRef = useRef<HTMLInputElement>(null);
 
     const updateBlock = useCallback((idx: number, block: ProtocolBlock) => {
         setBlocks(prev => prev.map((b, i) => i === idx ? block : b));
@@ -443,10 +560,36 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
         });
     }, []);
 
-    const addBlock = useCallback((type: 'text' | 'exercise') => {
-        const blockType: BlockType = type === 'text' ? 'text_block' : 'exercise_block';
+    const addBlock = useCallback((type: 'text' | 'exercise' | 'pdf') => {
+        const blockType: BlockType = type === 'text' ? 'text_block' : type === 'exercise' ? 'exercise_block' : 'pdf_block';
         setBlocks(prev => [...prev, makeBlock(blockType)]);
     }, []);
+
+    const handleAttachUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAttachUploading(true);
+        try {
+            const url = await uploadPdf(file);
+            setAttachments(prev => [...prev, {
+                id: 'att_' + uid(),
+                title: file.name.replace(/\.pdf$/i, ''),
+                fileName: file.name,
+                fileSize: file.size,
+                url,
+            }]);
+        } catch (err) {
+            console.error('Attachment upload failed:', err);
+        } finally {
+            setAttachUploading(false);
+            if (attachFileRef.current) attachFileRef.current.value = '';
+        }
+    };
+
+    const removeAttachment = async (att: ProtocolAttachment) => {
+        try { await deletePdf(att.url); } catch {}
+        setAttachments(prev => prev.filter(a => a.id !== att.id));
+    };
 
     const handleSave = () => {
         if (!name.trim()) return;
@@ -456,6 +599,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
             name: name.trim(),
             category,
             blocks,
+            attachments: attachments.length > 0 ? attachments : undefined,
             createdAt: protocol?.createdAt || now,
             updatedAt: now,
         });
@@ -515,6 +659,16 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                             isFirst={idx === 0}
                             isLast={idx === blocks.length - 1}
                         />
+                    ) : block.type === 'pdf_block' ? (
+                        <PdfBlockCard
+                            key={block.id}
+                            block={block}
+                            onChange={b => updateBlock(idx, b)}
+                            onDelete={() => deleteBlock(idx)}
+                            onMove={dir => moveBlock(idx, dir)}
+                            isFirst={idx === 0}
+                            isLast={idx === blocks.length - 1}
+                        />
                     ) : (
                         <TextBlockCard
                             key={block.id}
@@ -537,7 +691,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 )}
 
                 {/* Add Block buttons */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="grid grid-cols-3 gap-3 pt-1">
                     <button
                         onClick={() => addBlock('text')}
                         className="flex items-center justify-center gap-2 px-4 py-4 bg-white border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
@@ -551,6 +705,54 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                     >
                         <DumbbellIcon size={16} />
                         <span className="text-sm font-medium">Exercise Block</span>
+                    </button>
+                    <button
+                        onClick={() => addBlock('pdf')}
+                        className="flex items-center justify-center gap-2 px-4 py-4 bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-xl text-rose-500 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    >
+                        <FileIcon size={16} />
+                        <span className="text-sm font-medium">PDF Block</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Protocol-level attachments */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                    <PaperclipIcon size={14} className="text-slate-500" />
+                    <h4 className="text-sm font-semibold text-slate-700">Attachments</h4>
+                    <span className="text-xs text-slate-400">{attachments.length} file{attachments.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                {attachments.length > 0 && (
+                    <div className="space-y-2">
+                        {attachments.map(att => (
+                            <div key={att.id} className="flex items-center gap-3 bg-slate-50 rounded-lg border border-slate-200 p-3">
+                                <FileIcon size={16} className="text-rose-500 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-800 truncate">{att.title || att.fileName}</p>
+                                    <p className="text-xs text-slate-400">{att.fileName} — {formatFileSize(att.fileSize)}</p>
+                                </div>
+                                <button onClick={() => window.open(att.url, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Open">
+                                    <ExternalLinkIcon size={14} />
+                                </button>
+                                <button onClick={() => removeAttachment(att)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Remove">
+                                    <Trash2Icon size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div>
+                    <input ref={attachFileRef} type="file" accept=".pdf" onChange={handleAttachUpload} className="hidden" />
+                    <button
+                        onClick={() => attachFileRef.current?.click()}
+                        disabled={attachUploading}
+                        className="flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors disabled:opacity-50"
+                    >
+                        {attachUploading ? <Loader2Icon size={13} className="animate-spin" /> : <PlusCircleIcon size={13} />}
+                        {attachUploading ? 'Uploading...' : 'Attach PDF'}
                     </button>
                 </div>
             </div>

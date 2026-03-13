@@ -167,7 +167,7 @@ const DayTabs = ({ program, exerciseMap }) => {
                   <div className="flex-1 h-px bg-slate-100" />
                 </div>
                 {rows.map((row, idx) => (
-                  <ExerciseViewRow key={row.id} row={row} letter={String.fromCharCode(65 + idx)} exerciseMap={exerciseMap} />
+                  <ExerciseViewRow key={row.id} row={row} letter={String(idx + 1)} exerciseMap={exerciseMap} />
                 ))}
               </div>
             );

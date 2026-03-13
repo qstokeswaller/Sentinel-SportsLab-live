@@ -3,12 +3,11 @@ import { supabase } from '../lib/supabase';
 export const DatabaseService = {
     // --- TEAMS ---
     async fetchTeams() {
-        const { data, error } = await supabase
-            .from('teams')
-            .select(`
-        *,
-        athletes (*)
-      `);
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        let query = supabase.from('teams').select('*, athletes (*)');
+        if (userId) query = query.eq('user_id', userId);
+        const { data, error } = await query;
         if (error) throw error;
         return data;
     },
@@ -33,9 +32,11 @@ export const DatabaseService = {
 
     // --- ATHLETES ---
     async fetchAthletes() {
-        const { data, error } = await supabase
-            .from('athletes')
-            .select('*');
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        let query = supabase.from('athletes').select('*');
+        if (userId) query = query.eq('user_id', userId);
+        const { data, error } = await query;
         if (error) throw error;
         return data;
     },
@@ -86,6 +87,7 @@ export const DatabaseService = {
         const { data, error } = await supabase
             .from('scheduled_sessions')
             .select('*');
+        console.log('[fetchSessions] data:', data?.length, 'error:', error);
         if (error) throw error;
         return data;
     },
@@ -125,6 +127,35 @@ export const DatabaseService = {
             .delete()
             .eq('id', id);
         if (error) throw error;
+    },
+
+    // --- SESSION COMPLETION (Tonnage Tracking) ---
+
+    async completeSession(id: string, actualResults: Record<string, any[]>, actualRpe: number | null) {
+        const { data, error } = await supabase
+            .from('scheduled_sessions')
+            .update({
+                status: 'Completed',
+                actual_results: actualResults,
+                actual_rpe: actualRpe,
+            })
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async fetchCompletedSessionResults() {
+        const { data, error } = await supabase
+            .from('scheduled_sessions')
+            .select('*')
+            .eq('status', 'Completed')
+            .eq('track_tonnage', true)
+            .not('actual_results', 'is', null)
+            .order('date', { ascending: false });
+        if (error) throw error;
+        return data || [];
     },
 
     // --- WORKOUT TEMPLATES ---

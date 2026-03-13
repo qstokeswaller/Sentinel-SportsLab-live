@@ -1,9 +1,16 @@
 // @ts-nocheck
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { ACWRMetricCard } from '../components/analytics/ACWRMetricCard';
 import { DataHub } from '../components/analytics/DataHub';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
+import { DatabaseService } from '../services/databaseService';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell,
+} from 'recharts';
+import { useExerciseMap } from '../hooks/useExerciseMap';
+import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
     CalendarIcon, HeartPulseIcon, DumbbellIcon, FlameIcon, BatteryIcon, ShieldAlertIcon,
@@ -22,7 +29,7 @@ import {
     SlidersIcon, DatabaseIcon, WifiIcon, WifiOffIcon, CloudIcon, CloudOffIcon, BellIcon,
     LogOutIcon, LogInIcon, KeyIcon, LockIcon, UnlockIcon, ImageIcon, VideoIcon, MicIcon,
     Volume2Icon, VolumeXIcon, GlobeIcon, MapIcon, NavigationIcon, CompassIcon, CameraIcon,
-    SparklesIcon, FileDownIcon, UndoIcon, FileEditIcon, UserIcon, MoonIcon, ClipboardListIcon
+    SparklesIcon, FileDownIcon, UndoIcon, FileEditIcon, UserIcon, MoonIcon, ClipboardListIcon, FootprintsIcon
 } from 'lucide-react';
 
 export const ReportingHubPage = () => {
@@ -54,7 +61,24 @@ export const ReportingHubPage = () => {
     const [gpsImportMessage, setGpsImportMessage] = useState('');
 
     const [hrReportDateRange, setHrReportDateRange] = useState({ start: '2025-01-01', end: new Date().toISOString().split('T')[0] });
-    const [trackingTab, setTrackingTab] = useState('Max');
+    const [trackingTab, setTrackingTab] = useState('Tonnage Trends');
+    const [trackingSelectedAthlete, setTrackingSelectedAthlete] = useState('');
+    const [trackingDateRange, setTrackingDateRange] = useState(() => {
+        const end = new Date().toISOString().split('T')[0];
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        return { start: d.toISOString().split('T')[0], end };
+    });
+    const [trackingSelectedTeam, setTrackingSelectedTeam] = useState('');
+    const [trackingPeriod, setTrackingPeriod] = useState<'This Week' | 'This Month' | 'Custom'>('This Month');
+    const [trackingLoadPeriod, setTrackingLoadPeriod] = useState<'Day' | 'Week' | 'Month' | 'Custom'>('Month');
+    const [trackingLoadView, setTrackingLoadView] = useState<'body_part' | 'region'>('body_part');
+    const [trackingLoadCustomRange, setTrackingLoadCustomRange] = useState(() => {
+        const end = new Date().toISOString().split('T')[0];
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        return { start: d.toISOString().split('T')[0], end };
+    });
+    const [trackingSortCol, setTrackingSortCol] = useState('totalTonnage');
+    const [trackingSortDir, setTrackingSortDir] = useState<'asc' | 'desc'>('desc');
 
     const renderHeartRateMetricsReport = () => {
 
@@ -178,36 +202,607 @@ export const ReportingHubPage = () => {
         );
     };
 
+    // ─── Tracking Hub: Exercise Map for body-part resolution ────
+    const { exerciseFullMap } = useExerciseMap();
+
+    // ─── Tracking Hub: Real Data Fetch ────
+    const [completedSessions, setCompletedSessions] = useState<any[]>([]);
+    useEffect(() => {
+        DatabaseService.fetchCompletedSessionResults()
+            .then(setCompletedSessions)
+            .catch((err) => console.error('Failed to fetch completed sessions:', err));
+    }, [scheduledSessions]);
+
+    // Flatten real completed sessions into tonnage rows
+    const realTonnageData = useMemo(() => {
+        const allPlayers = teams.flatMap(t => t.players);
+        const playerMap: Record<string, string> = {};
+        for (const p of allPlayers) playerMap[p.id] = p.name;
+
+        const rows: { date: string; athleteId: string; athleteName: string; exerciseId: string; exercise: string; sets: number; reps: number; weight: number; tonnage: number }[] = [];
+        for (const session of completedSessions) {
+            if (!session.actual_results || session.track_tonnage === false) continue;
+            const date = session.date;
+            for (const [athleteId, exercises] of Object.entries(session.actual_results as Record<string, any[]>)) {
+                const athleteName = playerMap[athleteId] || 'Unknown';
+                for (const ex of (exercises || [])) {
+                    rows.push({
+                        date,
+                        athleteId,
+                        athleteName,
+                        exerciseId: ex.exerciseId || '',
+                        exercise: ex.exerciseName || 'Unknown',
+                        sets: ex.sets || 0,
+                        reps: ex.reps || 0,
+                        weight: ex.weight || 0,
+                        tonnage: ex.tonnage || (ex.sets * ex.reps * ex.weight) || 0,
+                    });
+                }
+            }
+        }
+        return rows;
+    }, [completedSessions, teams]);
+
+    // All athletes across all teams (including Private Clients synthetic team)
+    const allTrackingAthletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
+
+    const TONNAGE_DATA = realTonnageData;
+
+    // Auto-select first athlete/team if not set
+    if (!trackingSelectedAthlete && allTrackingAthletes.length > 0) {
+        setTimeout(() => setTrackingSelectedAthlete(allTrackingAthletes[0].id), 0);
+    }
+    if (!trackingSelectedTeam && teams.length > 0) {
+        setTimeout(() => setTrackingSelectedTeam(teams[0].id), 0);
+    }
+
+    // Tab 1: Tonnage Trends computations
+    const trackingAthleteData = useMemo(() =>
+        TONNAGE_DATA.filter(d =>
+            d.athleteId === trackingSelectedAthlete &&
+            d.date >= trackingDateRange.start && d.date <= trackingDateRange.end
+        ), [TONNAGE_DATA, trackingSelectedAthlete, trackingDateRange]);
+
+    const trackingSessionTonnage = useMemo(() => {
+        const map: Record<string, number> = {};
+        trackingAthleteData.forEach(d => { map[d.date] = (map[d.date] || 0) + d.tonnage; });
+        return Object.entries(map).map(([date, tonnage]) => ({
+            date, tonnage, label: new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        })).sort((a, b) => a.date.localeCompare(b.date));
+    }, [trackingAthleteData]);
+
+    const trackingKpis = useMemo(() => {
+        const now = new Date();
+        const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekStr = weekAgo.toISOString().split('T')[0];
+        const weeklyTotal = trackingAthleteData.filter(d => d.date >= weekStr).reduce((s, d) => s + d.tonnage, 0);
+        const monthlyTotal = trackingAthleteData.reduce((s, d) => s + d.tonnage, 0);
+        const sessionCount = new Set(trackingAthleteData.map(d => d.date)).size;
+        const avgPerSession = sessionCount > 0 ? Math.round(monthlyTotal / sessionCount) : 0;
+        const peak = trackingSessionTonnage.reduce((best, s) => s.tonnage > best.tonnage ? s : best, { tonnage: 0, date: '', label: '' });
+        return { weeklyTotal, monthlyTotal, avgPerSession, peakTonnage: peak.tonnage, peakDate: peak.label };
+    }, [trackingAthleteData, trackingSessionTonnage]);
+
+    const trackingExerciseBreakdown = useMemo(() => {
+        const map: Record<string, { sets: number; reps: number; totalWeight: number; tonnage: number; count: number }> = {};
+        trackingAthleteData.forEach(d => {
+            if (!map[d.exercise]) map[d.exercise] = { sets: 0, reps: 0, totalWeight: 0, tonnage: 0, count: 0 };
+            const e = map[d.exercise];
+            e.sets += d.sets; e.reps += d.reps; e.totalWeight += d.weight; e.tonnage += d.tonnage; e.count++;
+        });
+        return Object.entries(map).map(([exercise, v]) => ({
+            exercise, sets: v.sets, reps: v.reps, avgWeight: Math.round(v.totalWeight / v.count), tonnage: v.tonnage
+        })).sort((a, b) => b.tonnage - a.tonnage);
+    }, [trackingAthleteData]);
+
+    // Tab 2: Team Overview computations
+    const trackingTeamPeriodRange = useMemo(() => {
+        const now = new Date();
+        let periodStart: string, periodEnd: string, priorStart: string, priorEnd: string;
+        if (trackingPeriod === 'This Week') {
+            const day = now.getDay() || 7;
+            const monday = new Date(now); monday.setDate(now.getDate() - day + 1);
+            periodStart = monday.toISOString().split('T')[0];
+            periodEnd = now.toISOString().split('T')[0];
+            const priorMonday = new Date(monday); priorMonday.setDate(priorMonday.getDate() - 7);
+            const priorSunday = new Date(monday); priorSunday.setDate(priorSunday.getDate() - 1);
+            priorStart = priorMonday.toISOString().split('T')[0];
+            priorEnd = priorSunday.toISOString().split('T')[0];
+        } else if (trackingPeriod === 'This Month') {
+            periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            periodEnd = now.toISOString().split('T')[0];
+            const pm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            priorStart = pm.toISOString().split('T')[0];
+            priorEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+        } else {
+            periodStart = trackingDateRange.start;
+            periodEnd = trackingDateRange.end;
+            const days = Math.max(1, (new Date(periodEnd).getTime() - new Date(periodStart).getTime()) / 86400000);
+            const ps = new Date(new Date(periodStart).getTime() - days * 86400000);
+            priorStart = ps.toISOString().split('T')[0];
+            priorEnd = new Date(new Date(periodStart).getTime() - 86400000).toISOString().split('T')[0];
+        }
+        return { periodStart, periodEnd, priorStart, priorEnd };
+    }, [trackingPeriod, trackingDateRange]);
+
+    const trackingTeamStats = useMemo(() => {
+        const team = teams.find(t => t.id === trackingSelectedTeam);
+        if (!team) return [];
+        const { periodStart, periodEnd, priorStart, priorEnd } = trackingTeamPeriodRange;
+        return team.players.map(player => {
+            const current = TONNAGE_DATA.filter(d => d.athleteId === player.id && d.date >= periodStart && d.date <= periodEnd);
+            const prior = TONNAGE_DATA.filter(d => d.athleteId === player.id && d.date >= priorStart && d.date <= priorEnd);
+            const totalTonnage = current.reduce((s, d) => s + d.tonnage, 0);
+            const priorTonnage = prior.reduce((s, d) => s + d.tonnage, 0);
+            const sessions = new Set(current.map(d => d.date)).size;
+            const avgPerSession = sessions > 0 ? Math.round(totalTonnage / sessions) : 0;
+            const trend = priorTonnage > 0 ? Math.round(((totalTonnage - priorTonnage) / priorTonnage) * 100) : 0;
+            return { id: player.id, name: player.name, sessions, totalTonnage, avgPerSession, trend };
+        });
+    }, [teams, trackingSelectedTeam, TONNAGE_DATA, trackingTeamPeriodRange]);
+
+    const trackingSortedTeamStats = useMemo(() => {
+        return [...trackingTeamStats].sort((a, b) => {
+            const aVal = (a as any)[trackingSortCol] ?? 0;
+            const bVal = (b as any)[trackingSortCol] ?? 0;
+            return trackingSortDir === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+    }, [trackingTeamStats, trackingSortCol, trackingSortDir]);
+
+    const handleTrackingSort = (col: string) => {
+        if (trackingSortCol === col) setTrackingSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        else { setTrackingSortCol(col); setTrackingSortDir('desc'); }
+    };
+    const TrackingSortIcon = ({ col }: { col: string }) => trackingSortCol === col
+        ? (trackingSortDir === 'asc' ? <ArrowUpIcon size={10} /> : <ArrowDownIcon size={10} />)
+        : <MinusIcon size={8} className="opacity-30" />;
+
+    // Tab 3: Load Distribution — body part / region tonnage breakdown
+    const BODY_PART_COLORS_MAP: Record<string, string> = {
+        'Chest': '#f43f5e', 'Back': '#0ea5e9', 'Shoulders': '#f59e0b', 'Biceps': '#06b6d4',
+        'Triceps': '#8b5cf6', 'Quadriceps': '#10b981', 'Hamstrings': '#84cc16', 'Glutes': '#ec4899',
+        'Calves': '#14b8a6', 'Abdominals': '#f97316', 'Forearms': '#78716c', 'Trapezius': '#6366f1',
+        'Hip Flexors': '#d946ef', 'Adductors': '#3b82f6', 'Abductors': '#a855f7', 'Shins': '#22c55e',
+    };
+    const BODY_PART_BG: Record<string, string> = {
+        'Chest': 'bg-rose-100 text-rose-700', 'Back': 'bg-sky-100 text-sky-700', 'Shoulders': 'bg-amber-100 text-amber-700',
+        'Biceps': 'bg-cyan-100 text-cyan-700', 'Triceps': 'bg-violet-100 text-violet-700', 'Quadriceps': 'bg-emerald-100 text-emerald-700',
+        'Hamstrings': 'bg-lime-100 text-lime-700', 'Glutes': 'bg-pink-100 text-pink-700', 'Calves': 'bg-teal-100 text-teal-700',
+        'Abdominals': 'bg-orange-100 text-orange-700', 'Forearms': 'bg-stone-100 text-stone-600', 'Trapezius': 'bg-indigo-100 text-indigo-700',
+        'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700', 'Adductors': 'bg-blue-100 text-blue-700', 'Abductors': 'bg-purple-100 text-purple-700',
+        'Shins': 'bg-green-100 text-green-700',
+    };
+    const REGION_COLORS_MAP: Record<string, string> = {
+        'Upper Body': '#6366f1', 'Lower Body': '#10b981', 'Core': '#f59e0b', 'Full Body': '#a855f7',
+    };
+    const REGION_BG: Record<string, string> = {
+        'Upper Body': 'bg-indigo-100 text-indigo-700', 'Lower Body': 'bg-emerald-100 text-emerald-700',
+        'Core': 'bg-amber-100 text-amber-700', 'Full Body': 'bg-purple-100 text-purple-700',
+    };
+    // Map body parts → regions
+    const BODY_PART_TO_REGION: Record<string, string> = {
+        'Chest': 'Upper Body', 'Back': 'Upper Body', 'Shoulders': 'Upper Body', 'Biceps': 'Upper Body',
+        'Triceps': 'Upper Body', 'Forearms': 'Upper Body', 'Trapezius': 'Upper Body',
+        'Quadriceps': 'Lower Body', 'Hamstrings': 'Lower Body', 'Glutes': 'Lower Body',
+        'Calves': 'Lower Body', 'Hip Flexors': 'Lower Body', 'Adductors': 'Lower Body',
+        'Abductors': 'Lower Body', 'Shins': 'Lower Body',
+        'Abdominals': 'Core',
+    };
+
+    const trackingLoadData = useMemo(() => {
+        const team = teams.find(t => t.id === trackingSelectedTeam);
+        const players = team ? team.players : allTrackingAthletes;
+        const playerIds = new Set(players.map(p => p.id));
+        const now = new Date();
+        let start: string, end: string;
+        if (trackingLoadPeriod === 'Day') {
+            start = end = now.toISOString().split('T')[0];
+        } else if (trackingLoadPeriod === 'Week') {
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString().split('T')[0];
+            end = now.toISOString().split('T')[0];
+        } else if (trackingLoadPeriod === 'Custom') {
+            start = trackingLoadCustomRange.start;
+            end = trackingLoadCustomRange.end;
+        } else {
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30).toISOString().split('T')[0];
+            end = now.toISOString().split('T')[0];
+        }
+
+        const filtered = TONNAGE_DATA.filter(d => playerIds.has(d.athleteId) && d.date >= start && d.date <= end);
+
+        // Aggregate tonnage and sets by body part
+        const byBodyPart: Record<string, { tonnage: number; sets: number; exercises: Set<string> }> = {};
+        const byRegion: Record<string, { tonnage: number; sets: number }> = {};
+        let totalTonnage = 0;
+        let totalSets = 0;
+
+        for (const row of filtered) {
+            totalTonnage += row.tonnage;
+            totalSets += row.sets;
+
+            // Resolve body parts from exercise map
+            const exInfo = exerciseFullMap[row.exerciseId];
+            const bodyParts = exInfo?.body_parts || [];
+
+            if (bodyParts.length === 0) {
+                // Fallback: tag as 'Unsorted'
+                if (!byBodyPart['Unsorted']) byBodyPart['Unsorted'] = { tonnage: 0, sets: 0, exercises: new Set() };
+                byBodyPart['Unsorted'].tonnage += row.tonnage;
+                byBodyPart['Unsorted'].sets += row.sets;
+                byBodyPart['Unsorted'].exercises.add(row.exercise);
+
+                if (!byRegion['Full Body']) byRegion['Full Body'] = { tonnage: 0, sets: 0 };
+                byRegion['Full Body'].tonnage += row.tonnage;
+                byRegion['Full Body'].sets += row.sets;
+            } else {
+                // Split tonnage evenly across body parts (if exercise targets multiple)
+                const share = row.tonnage / bodyParts.length;
+                const setShare = row.sets / bodyParts.length;
+                for (const bp of bodyParts) {
+                    if (!byBodyPart[bp]) byBodyPart[bp] = { tonnage: 0, sets: 0, exercises: new Set() };
+                    byBodyPart[bp].tonnage += share;
+                    byBodyPart[bp].sets += setShare;
+                    byBodyPart[bp].exercises.add(row.exercise);
+
+                    const region = BODY_PART_TO_REGION[bp] || 'Full Body';
+                    if (!byRegion[region]) byRegion[region] = { tonnage: 0, sets: 0 };
+                    byRegion[region].tonnage += share;
+                    byRegion[region].sets += setShare;
+                }
+            }
+        }
+
+        const bodyPartList = Object.entries(byBodyPart)
+            .map(([name, v]) => ({ name, tonnage: Math.round(v.tonnage), sets: Math.round(v.sets), exerciseCount: v.exercises.size, pct: totalTonnage > 0 ? Math.round((v.tonnage / totalTonnage) * 100) : 0 }))
+            .sort((a, b) => b.tonnage - a.tonnage);
+
+        const regionList = Object.entries(byRegion)
+            .map(([name, v]) => ({ name, tonnage: Math.round(v.tonnage), sets: Math.round(v.sets), pct: totalTonnage > 0 ? Math.round((v.tonnage / totalTonnage) * 100) : 0 }))
+            .sort((a, b) => b.tonnage - a.tonnage);
+
+        return { bodyPartList, regionList, totalTonnage: Math.round(totalTonnage), totalSets: Math.round(totalSets) };
+    }, [teams, trackingSelectedTeam, TONNAGE_DATA, trackingLoadPeriod, trackingLoadCustomRange, allTrackingAthletes, exerciseFullMap]);
+
+    const TrackingTrendArrow = ({ value }: { value: number }) => {
+        if (value > 2) return <span className="flex items-center gap-0.5 text-emerald-600 text-xs font-bold"><ArrowUpIcon size={12} />+{value}%</span>;
+        if (value < -2) return <span className="flex items-center gap-0.5 text-rose-600 text-xs font-bold"><ArrowDownIcon size={12} />{value}%</span>;
+        return <span className="flex items-center gap-0.5 text-slate-400 text-xs font-bold"><MinusIcon size={12} />0%</span>;
+    };
+
+    // (trackingMedalColors removed — leaderboard replaced with load distribution)
+
+    // ─── Tracking Hub Render ─────────────────────────────────────────
     const renderTrackingHub = () => {
-        const tabs = ['Max', 'Comparison', 'Assessment'];
+        const tabs = ['Tonnage Trends', 'Team Overview', 'Load Distribution'];
         return (
-            <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="space-y-6 animate-in fade-in duration-500">
+                {/* Tab pills */}
                 <div className="flex bg-slate-100 p-0.5 rounded-lg w-fit border border-slate-200">
                     {tabs.map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setTrackingTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
-                        >
+                        <button key={tab} onClick={() => setTrackingTab(tab)}
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
                             {tab}
                         </button>
                     ))}
                 </div>
 
-                <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 border border-slate-100">
-                        <SearchIcon size={22} />
+                {/* ═══ TAB 1: TONNAGE TRENDS ═══ */}
+                {trackingTab === 'Tonnage Trends' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {/* Controls */}
+                        <div className="flex flex-wrap items-end gap-4 bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">Athlete</label>
+                                <select value={trackingSelectedAthlete} onChange={e => setTrackingSelectedAthlete(e.target.value)}
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 min-w-[180px]">
+                                    {allTrackingAthletes.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">From</label>
+                                <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">To</label>
+                                <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                            </div>
+                        </div>
+
+                        {/* KPI Cards */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[
+                                { label: 'Weekly Total', value: `${trackingKpis.weeklyTotal.toLocaleString()} kg`, icon: <CalendarIcon size={16} className="text-indigo-500" />, sub: 'Last 7 days' },
+                                { label: 'Monthly Total', value: `${trackingKpis.monthlyTotal.toLocaleString()} kg`, icon: <DumbbellIcon size={16} className="text-indigo-500" />, sub: 'Selected range' },
+                                { label: 'Avg / Session', value: `${trackingKpis.avgPerSession.toLocaleString()} kg`, icon: <TrendingUpIcon size={16} className="text-indigo-500" />, sub: `${new Set(trackingAthleteData.map(d => d.date)).size} sessions` },
+                                { label: 'Peak Session', value: `${trackingKpis.peakTonnage.toLocaleString()} kg`, icon: <ZapIcon size={16} className="text-amber-500" />, sub: trackingKpis.peakDate || '—' },
+                            ].map(kpi => (
+                                <div key={kpi.label} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">{kpi.icon}</div>
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">{kpi.label}</span>
+                                    </div>
+                                    <div className="text-2xl font-black text-slate-900">{kpi.value}</div>
+                                    <div className="text-[10px] text-slate-400 mt-1">{kpi.sub}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Bar Chart */}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                            <h4 className="text-sm font-bold text-slate-800 mb-4">Session Tonnage Over Time</h4>
+                            {trackingSessionTonnage.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={trackingSessionTonnage} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                        <XAxis dataKey="label" tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }} />
+                                        <YAxis tick={{ fontSize: 9, fontWeight: 700, fill: '#94a3b8' }} tickFormatter={(v: number) => `${(v / 1000).toFixed(1)}t`} />
+                                        <Tooltip formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Tonnage']}
+                                            contentStyle={{ fontSize: 11, fontWeight: 700, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+                                        <Bar dataKey="tonnage" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-[280px] flex items-center justify-center text-sm text-slate-400">No data for selected range</div>
+                            )}
+                        </div>
+
+                        {/* Exercise Breakdown Table */}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-slate-100">
+                                <h4 className="text-sm font-bold text-slate-800">Exercise Breakdown</h4>
+                            </div>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold uppercase text-slate-400 tracking-wide">Exercise</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wide">Sets</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wide">Reps</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 tracking-wide">Avg Weight</th>
+                                        <th className="px-4 py-3 text-right text-[10px] font-bold uppercase text-slate-400 tracking-wide">Tonnage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {trackingExerciseBreakdown.map((row, i) => (
+                                        <tr key={row.exercise} className={`border-b border-slate-50 ${i % 2 === 0 ? '' : 'bg-slate-50/30'}`}>
+                                            <td className="px-5 py-3 text-xs font-semibold text-slate-700">{row.exercise}</td>
+                                            <td className="px-4 py-3 text-xs text-slate-600 text-center">{row.sets}</td>
+                                            <td className="px-4 py-3 text-xs text-slate-600 text-center">{row.reps}</td>
+                                            <td className="px-4 py-3 text-xs text-slate-600 text-center">{row.avgWeight} kg</td>
+                                            <td className="px-4 py-3 text-xs font-bold text-indigo-700 text-right">{row.tonnage.toLocaleString()} kg</td>
+                                        </tr>
+                                    ))}
+                                    {trackingExerciseBreakdown.length > 0 && (
+                                        <tr className="bg-indigo-50/50 border-t border-indigo-100">
+                                            <td className="px-5 py-3 text-xs font-bold text-indigo-900">Total</td>
+                                            <td className="px-4 py-3 text-xs font-bold text-indigo-700 text-center">{trackingExerciseBreakdown.reduce((s, r) => s + r.sets, 0)}</td>
+                                            <td className="px-4 py-3 text-xs font-bold text-indigo-700 text-center">{trackingExerciseBreakdown.reduce((s, r) => s + r.reps, 0)}</td>
+                                            <td className="px-4 py-3"></td>
+                                            <td className="px-4 py-3 text-xs font-black text-indigo-900 text-right">{trackingExerciseBreakdown.reduce((s, r) => s + r.tonnage, 0).toLocaleString()} kg</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div className="space-y-1.5">
-                        <h3 className="text-base font-semibold text-slate-800">{trackingTab} Analytics</h3>
-                        <p className="text-slate-400 text-sm max-w-md mx-auto">This module is being restructured as part of the unified Tracking Hub.</p>
+                )}
+
+                {/* ═══ TAB 2: TEAM OVERVIEW ═══ */}
+                {trackingTab === 'Team Overview' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {/* Controls */}
+                        <div className="flex flex-wrap items-end gap-4 bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">Team</label>
+                                <select value={trackingSelectedTeam} onChange={e => setTrackingSelectedTeam(e.target.value)}
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 min-w-[180px]">
+                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                {(['This Week', 'This Month', 'Custom'] as const).map(p => (
+                                    <button key={p} onClick={() => setTrackingPeriod(p)}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingPeriod === p ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                            {trackingPeriod === 'Custom' && (
+                                <>
+                                    <div>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">From</label>
+                                        <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
+                                            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">To</label>
+                                        <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
+                                            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Table */}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                        {[
+                                            { key: 'name', label: 'Athlete', align: 'left' },
+                                            { key: 'sessions', label: 'Sessions', align: 'center' },
+                                            { key: 'totalTonnage', label: 'Total Tonnage', align: 'center' },
+                                            { key: 'avgPerSession', label: 'Avg / Session', align: 'center' },
+                                            { key: 'trend', label: 'Trend', align: 'center' },
+                                        ].map(col => (
+                                            <th key={col.key} onClick={() => handleTrackingSort(col.key)}
+                                                className={`px-5 py-3 text-${col.align} text-[10px] font-bold uppercase text-slate-400 tracking-wide cursor-pointer hover:text-slate-600 transition-colors select-none`}>
+                                                <span className="inline-flex items-center gap-1">{col.label} <TrackingSortIcon col={col.key} /></span>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {trackingSortedTeamStats.length > 0 ? trackingSortedTeamStats.map((row, i) => (
+                                        <tr key={row.id} className={`border-b border-slate-50 hover:bg-indigo-50/30 transition-colors ${i % 2 === 0 ? '' : 'bg-slate-50/30'}`}>
+                                            <td className="px-5 py-3.5 text-xs font-semibold text-slate-700">{row.name}</td>
+                                            <td className="px-4 py-3.5 text-xs text-slate-600 text-center">{row.sessions}</td>
+                                            <td className="px-4 py-3.5 text-xs font-bold text-indigo-700 text-center">{row.totalTonnage.toLocaleString()} kg</td>
+                                            <td className="px-4 py-3.5 text-xs text-slate-600 text-center">{row.avgPerSession.toLocaleString()} kg</td>
+                                            <td className="px-4 py-3.5 text-center"><TrackingTrendArrow value={row.trend} /></td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400">Select a team to view tonnage data</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div className="flex gap-4 pt-4">
-                        <div className="h-1 w-12 bg-indigo-100 rounded-full"></div>
-                        <div className="h-1 w-12 bg-indigo-200 rounded-full"></div>
-                        <div className="h-1 w-12 bg-indigo-300 rounded-full"></div>
+                )}
+
+                {/* ═══ TAB 3: LOAD DISTRIBUTION ═══ */}
+                {trackingTab === 'Load Distribution' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {/* Controls */}
+                        <div className="flex flex-wrap items-end gap-4 bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">Team</label>
+                                <select value={trackingSelectedTeam} onChange={e => setTrackingSelectedTeam(e.target.value)}
+                                    className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 min-w-[180px]">
+                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                {(['Day', 'Week', 'Month', 'Custom'] as const).map(p => (
+                                    <button key={p} onClick={() => setTrackingLoadPeriod(p)}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadPeriod === p ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                            {trackingLoadPeriod === 'Custom' && (
+                                <div className="flex items-end gap-2">
+                                    <div>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">From</label>
+                                        <input type="date" value={trackingLoadCustomRange.start}
+                                            onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, start: e.target.value }))}
+                                            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide block mb-1">To</label>
+                                        <input type="date" value={trackingLoadCustomRange.end}
+                                            onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, end: e.target.value }))}
+                                            min={trackingLoadCustomRange.start}
+                                            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-slate-50" />
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                {([['body_part', 'By Muscle'], ['region', 'By Region']] as const).map(([key, label]) => (
+                                    <button key={key} onClick={() => setTrackingLoadView(key as any)}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadView === key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Summary KPI Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider mb-1">Total Tonnage</div>
+                                <div className="text-2xl font-black text-slate-900">{trackingLoadData.totalTonnage.toLocaleString()} <span className="text-xs font-semibold text-slate-400">kg</span></div>
+                            </div>
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider mb-1">Total Sets</div>
+                                <div className="text-2xl font-black text-slate-900">{trackingLoadData.totalSets.toLocaleString()}</div>
+                            </div>
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider mb-1">{trackingLoadView === 'body_part' ? 'Muscle Groups' : 'Regions'} Trained</div>
+                                <div className="text-2xl font-black text-slate-900">{trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList.length : trackingLoadData.regionList.length}</div>
+                            </div>
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider mb-1">Top {trackingLoadView === 'body_part' ? 'Muscle' : 'Region'}</div>
+                                <div className="text-lg font-black text-slate-900 truncate">
+                                    {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList[0]?.name : trackingLoadData.regionList[0]?.name) || '—'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Chart + Breakdown */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Bar chart */}
+                            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                                <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-4">
+                                    Tonnage {trackingLoadView === 'body_part' ? 'by Muscle Group' : 'by Region'}
+                                </div>
+                                {(() => {
+                                    const items = trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList;
+                                    const colorsMap = trackingLoadView === 'body_part' ? BODY_PART_COLORS_MAP : REGION_COLORS_MAP;
+                                    if (items.length === 0) return <div className="text-center py-12 text-sm text-slate-400">No tonnage data for this period</div>;
+                                    return (
+                                        <ResponsiveContainer width="100%" height={Math.max(200, items.length * 36)}>
+                                            <BarChart data={items} layout="vertical" margin={{ left: 10, right: 30 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                                <XAxis type="number" tickFormatter={v => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
+                                                <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10, fontWeight: 600 }} />
+                                                <Tooltip
+                                                    formatter={(v: number) => [`${v.toLocaleString()} kg`, 'Tonnage']}
+                                                    contentStyle={{ borderRadius: 8, fontSize: 11, fontWeight: 600 }}
+                                                />
+                                                <Bar dataKey="tonnage" radius={[0, 6, 6, 0]}>
+                                                    {items.map(item => (
+                                                        <Cell key={item.name} fill={colorsMap[item.name] || '#94a3b8'} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()}
+                            </div>
+
+                            {/* Breakdown list */}
+                            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                                <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-4">Breakdown</div>
+                                <div className="space-y-3">
+                                    {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList).map(item => {
+                                        const bgClass = trackingLoadView === 'body_part'
+                                            ? (BODY_PART_BG[item.name] || 'bg-slate-100 text-slate-600')
+                                            : (REGION_BG[item.name] || 'bg-slate-100 text-slate-600');
+                                        return (
+                                            <div key={item.name} className="space-y-1.5">
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold ${bgClass}`}>{item.name}</span>
+                                                    <span className="text-xs font-black text-slate-800">{item.tonnage.toLocaleString()} kg</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-500"
+                                                            style={{
+                                                                width: `${item.pct}%`,
+                                                                backgroundColor: (trackingLoadView === 'body_part' ? BODY_PART_COLORS_MAP : REGION_COLORS_MAP)[item.name] || '#94a3b8',
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[9px] font-bold text-slate-400 w-8 text-right">{item.pct}%</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-[9px] text-slate-400">
+                                                    <span>{item.sets} sets</span>
+                                                    {'exerciseCount' in item && <span>{(item as any).exerciseCount} exercises</span>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList).length === 0 && (
+                                        <div className="text-center py-8 text-sm text-slate-400">No data for this period</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         );
     };
@@ -1030,6 +1625,7 @@ export const ReportingHubPage = () => {
                     {activeReport === 'Tracking Hub' && renderTrackingHub()}
                     {activeReport === 'GPS Data' && renderGPSDataReport()}
                     {activeReport === 'Data Hub' && renderDataHub()}
+                    {activeReport === 'Running Mechanics' && <RunningMechanicsLibrary />}
                 </div>
             </div>
         );
@@ -1047,7 +1643,8 @@ export const ReportingHubPage = () => {
                     { title: 'Heart Rate Metrics', desc: 'Session Intensity, Peaks & Zone Distribution', icon: HeartIcon },
                     { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon },
                     { title: 'Tracking Hub', desc: 'Consolidated Performance & Benchmark Tracking', icon: SearchIcon },
-                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon }
+                    { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon },
+                    { title: 'Running Mechanics', desc: 'Gait analysis, sprint mechanics & movement documents', icon: FootprintsIcon },
                 ].map((report, i) => (
                     <button
                         key={i}

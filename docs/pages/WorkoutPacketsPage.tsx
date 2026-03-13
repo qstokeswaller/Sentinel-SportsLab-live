@@ -25,6 +25,7 @@ import {
     ClipboardList as ClipboardListIcon,
 } from 'lucide-react';
 import WeightroomSheetPanel from '../components/workout/WeightroomSheetPanel';
+import { buildMaxLookup, computeAthleteWeightOverrides } from '../utils/weightroomUtils';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ interface ExRow {
     rest: string;
     rpe: string;
     notes: string;
+    weight: string;
 }
 
 const emptyRow = (ex: { id: string; name: string; body_parts?: string[]; categories?: string[] }): ExRow => ({
@@ -101,6 +103,7 @@ const emptyRow = (ex: { id: string; name: string; body_parts?: string[]; categor
     rest: '60',
     rpe: '7',
     notes: '',
+    weight: '',
 });
 
 // ── Page Component ───────────────────────────────────────────────────────────
@@ -113,6 +116,7 @@ export const WorkoutPacketsPage = () => {
         scheduleWorkoutSession, showToast,
         workoutTemplates, setWorkoutTemplates,
         handleUpdatePlanSession, periodizationPlans,
+        maxHistory,
     } = useAppState();
 
     // ── Incoming edit state via router ───────────────────────────────────
@@ -142,6 +146,7 @@ export const WorkoutPacketsPage = () => {
     const [targetId, setTargetId] = useState('');
     const [trainingPhase, setTrainingPhase] = useState('Strength');
     const [load, setLoad] = useState('Medium');
+    const [trackTonnage, setTrackTonnage] = useState(true);
 
     // ── Workout builder state ──────────────────────────────────────────────
     const [sections, setSections] = useState<Record<string, ExRow[]>>({ warmup: [], workout: [], cooldown: [] });
@@ -175,6 +180,7 @@ export const WorkoutPacketsPage = () => {
             rest: String(r.rest || 60),
             rpe: String(r.rpe || 7),
             notes: r.notes || '',
+            weight: String(r.weight || ''),
         };
     };
 
@@ -186,6 +192,7 @@ export const WorkoutPacketsPage = () => {
         setTitle(src.name || src.title || '');
         setTrainingPhase(src.trainingPhase || src.training_phase || 'Strength');
         setLoad(src.load || 'Medium');
+        setTrackTonnage(src.track_tonnage !== false);
 
         if (src.date) setDate(src.date);
         if (src.time) setTime(src.time);
@@ -337,9 +344,9 @@ export const WorkoutPacketsPage = () => {
         trainingPhase,
         load,
         sections: {
-            warmup: sections.warmup.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
-            workout: sections.workout.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
-            cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
+            warmup: sections.warmup.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes, weight: r.weight })),
+            workout: sections.workout.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes, weight: r.weight })),
+            cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes, weight: r.weight })),
             ...(weightroomSheetConfig ? { weightroomSheet: weightroomSheetConfig } : {}),
         },
         createdAt: new Date().toISOString(),
@@ -350,7 +357,27 @@ export const WorkoutPacketsPage = () => {
         if (!title.trim()) { showToast('Please enter a workout title', 'error'); return; }
         if (!targetId) { showToast('Please select a target athlete or team', 'error'); return; }
 
-        const stripTemp = (r) => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes });
+        const stripTemp = (r) => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes, weight: r.weight });
+
+        // Compute per-athlete weight overrides from weightroom sheet 1RM data
+        let sheetOverrides: Record<string, Record<string, string>> = {};
+        if (weightroomSheetConfig) {
+            const targetAthletes = targetType === 'Team'
+                ? (teams.find(t => t.id === targetId)?.players || [])
+                : allPlayers.filter(p => p.id === targetId);
+            const maxLookup = buildMaxLookup(maxHistory);
+            sheetOverrides = computeAthleteWeightOverrides(weightroomSheetConfig, targetAthletes, maxLookup);
+        }
+
+        const attachOverrides = (r) => {
+            const base = stripTemp(r);
+            // Match exercise to sheet column by name (sheet columns use canonical 1RM exercise names)
+            const overrides = sheetOverrides[r.exerciseName]
+                || Object.entries(sheetOverrides).find(([k]) => r.exerciseName.toLowerCase().includes(k.toLowerCase()))?.[1];
+            if (overrides) base.athlete_weight_overrides = overrides;
+            return base;
+        };
+
         const payload = {
             title: title.trim(),
             date,
@@ -361,10 +388,11 @@ export const WorkoutPacketsPage = () => {
             load,
             status: 'Scheduled',
             planned_duration: 60,
+            track_tonnage: trackTonnage,
             exercises: {
-                warmup: sections.warmup.map(stripTemp),
-                workout: sections.workout.map(stripTemp),
-                cooldown: sections.cooldown.map(stripTemp),
+                warmup: sections.warmup.map(attachOverrides),
+                workout: sections.workout.map(attachOverrides),
+                cooldown: sections.cooldown.map(attachOverrides),
                 ...(weightroomSheetConfig ? { weightroomSheet: weightroomSheetConfig } : {}),
             },
         };
@@ -673,6 +701,18 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         ))}
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Track Tonnage</label>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <button type="button" onClick={() => setTrackTonnage(v => !v)}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                            <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                                        </button>
+                                        <span className="text-[10px] text-slate-400">
+                                            {trackTonnage ? 'Feeds Tracking Hub' : 'Tracking off'}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Row 3: Target Type + Target — only in normal mode */}
@@ -766,17 +806,23 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                 <div className="flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
                                                     <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
+                                                    {weightroomSheetConfig?.columns?.some(c => c.exerciseId && (row.exerciseName === c.exerciseId || row.exerciseName.toLowerCase().includes(c.exerciseId.toLowerCase()))) && (
+                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-[8px] font-bold text-indigo-600 uppercase tracking-wide">
+                                                            <LinkIcon size={8} /> 1RM
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <button onClick={() => removeRow(activeSection, row.tempId)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
                                                     <Trash2Icon size={12} />
                                                 </button>
                                             </div>
-                                            <div className="grid grid-cols-5 gap-2">
+                                            <div className="grid grid-cols-6 gap-2">
                                                 {[
                                                     { key: 'sets', label: 'Sets', placeholder: '3' },
                                                     { key: 'reps', label: 'Reps', placeholder: '10' },
                                                     { key: 'rest', label: 'Rest (s)', placeholder: '60' },
                                                     { key: 'rpe', label: 'RPE', placeholder: '7' },
+                                                    { key: 'weight', label: 'Weight (kg)', placeholder: '80' },
                                                     { key: 'notes', label: 'Notes', placeholder: '—' },
                                                 ].map(f => (
                                                     <div key={f.key}>

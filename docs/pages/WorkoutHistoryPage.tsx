@@ -16,9 +16,11 @@ import {
     ClipboardList as ClipboardListIcon,
     Printer as PrinterIcon,
     X as XIcon,
+    CheckCircle2 as CheckCircle2Icon,
 } from 'lucide-react';
 import { DatabaseService } from '../services/databaseService';
 import { buildMaxLookup, getSheetCellValue, printSheet } from '../utils/weightroomUtils';
+import { CompleteSessionModal } from '../components/workouts/CompleteSessionModal';
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,7 @@ export const WorkoutHistoryPage = () => {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [viewingSheetSession, setViewingSheetSession] = useState(null);
+    const [completingSession, setCompletingSession] = useState(null);
 
     const maxLookup = useMemo(() => buildMaxLookup(maxHistory), [maxHistory]);
 
@@ -60,6 +63,34 @@ export const WorkoutHistoryPage = () => {
                 returnTo: '/workouts/history',
             },
         });
+    };
+
+    const handleCompleteSession = async (sessionId: string, actualResults: Record<string, any[]>, actualRpe: number | null) => {
+        try {
+            await DatabaseService.completeSession(sessionId, actualResults, actualRpe);
+            setScheduledSessions(prev => prev.map(s =>
+                s.id === sessionId ? { ...s, status: 'Completed', actual_results: actualResults, actual_rpe: actualRpe } : s
+            ));
+            showToast('Session completed — tonnage recorded', 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Failed to complete session', 'error');
+        } finally {
+            setCompletingSession(null);
+        }
+    };
+
+    const resolveAthletes = (session) => {
+        const tid = session.target_id || session.targetId;
+        const ttype = session.target_type || session.targetType;
+        if (ttype === 'Team') {
+            const team = teams.find(t => t.id === tid);
+            return [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
+        }
+        for (const t of teams) {
+            const p = (t.players || []).find(p => p.id === tid);
+            if (p) return [p];
+        }
+        return [];
     };
 
     const handleReassign = (session) => {
@@ -213,6 +244,14 @@ export const WorkoutHistoryPage = () => {
                                                 </button>
                                             </>
                                         )}
+                                        {session.status !== 'Completed' && (
+                                            <button
+                                                onClick={() => setCompletingSession(session)}
+                                                className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                            >
+                                                <CheckCircle2Icon size={11} /> Complete
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => handleEdit(session)}
                                             className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
@@ -259,6 +298,16 @@ export const WorkoutHistoryPage = () => {
                     })
                 )}
             </div>
+
+            {/* Complete Session Modal */}
+            {completingSession && (
+                <CompleteSessionModal
+                    session={completingSession}
+                    athletes={resolveAthletes(completingSession)}
+                    onComplete={handleCompleteSession}
+                    onClose={() => setCompletingSession(null)}
+                />
+            )}
 
             {/* View Sheet Modal */}
             {viewingSheetSession && (() => {

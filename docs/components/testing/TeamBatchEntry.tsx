@@ -12,6 +12,7 @@ import {
 interface Props {
   test: TestDefinition;
   date: string;
+  onDateChange?: (newDate: string) => void;
   onSaved?: () => void;
 }
 
@@ -19,7 +20,7 @@ interface Props {
  * Generic team batch entry component.
  * Select a team → table shows all athletes → enter values per row → save individually or all at once.
  */
-export const TeamBatchEntry: React.FC<Props> = ({ test, date, onSaved }) => {
+export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSaved }) => {
     const { teams, showToast } = useAppState();
 
     const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -43,7 +44,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onSaved }) => {
 
     // Only show required + number fields in table columns (skip text/notes)
     const tableFields = useMemo(
-        () => test.fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 6),
+        () => test.fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 8),
         [test.fields]
     );
 
@@ -163,8 +164,8 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onSaved }) => {
                         <input
                             type="date"
                             value={date}
-                            disabled
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-slate-50 text-slate-500"
+                            onChange={e => onDateChange?.(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all"
                         />
                     </div>
                 </div>

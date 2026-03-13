@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppState } from './context/AppStateContext';
+import { DatabaseService } from './services/databaseService';
 import { SupabaseStorageService } from './services/storageService';
 import PerformanceLab from './components/performance/PerformanceLab';
 import ImportResolverModal from './components/performance/ImportResolverModal';
@@ -75,6 +76,13 @@ const AddAthleteModal = () => {
 
     const [step, setStep] = useState(1);
 
+    // Auto-select newest team when teams list changes (e.g. after creating a team)
+    useEffect(() => {
+        if (teams.length > 0 && (!newAthleteTeam || !teams.some(t => t.id === newAthleteTeam))) {
+            setNewAthleteTeam(teams[teams.length - 1]?.id || '');
+        }
+    }, [teams]);
+
     if (!isAddAthleteModalOpen) return null;
 
     const setProfile = (key, val) => setNewAthleteProfile(prev => ({ ...prev, [key]: val }));
@@ -88,7 +96,7 @@ const AddAthleteModal = () => {
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-lg shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
 
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
@@ -856,9 +864,10 @@ const SessionModal = () => {
     const {
         viewingSession,
         setViewingSession,
+        setScheduledSessions,
         resolveTargetName,
         navigate,
-        handleDeleteSession,
+        showToast,
     } = useAppState();
 
     if (!viewingSession) return null;
@@ -866,6 +875,19 @@ const SessionModal = () => {
     const targetName = resolveTargetName(viewingSession.targetId, viewingSession.targetType);
     const loadColor = viewingSession.load === 'High' ? 'text-red-600 bg-red-50 border-red-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-green-600 bg-green-50 border-green-100';
     const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const handleDeleteAndClose = async () => {
+        const id = viewingSession.id;
+        if (!confirm('Are you sure you want to delete this session?')) return;
+        try {
+            await DatabaseService.deleteSession(id);
+            setViewingSession(null);
+            setScheduledSessions(prev => prev.filter(s => s.id !== id));
+            showToast('Session deleted', 'success');
+        } catch (err) {
+            showToast('Failed to delete session', 'error');
+        }
+    };
 
     const handleViewWorkout = () => {
         const session = viewingSession;
@@ -951,7 +973,7 @@ const SessionModal = () => {
                 <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Close</button>
-                        <button onClick={() => { handleDeleteSession(viewingSession.id); setViewingSession(null); }} className="flex items-center gap-1.5 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
                             <Trash2Icon size={14} /> Delete
                         </button>
                     </div>

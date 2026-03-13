@@ -57,7 +57,12 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
     };
 
     const updatePercentage = (id, pct) => {
-        setColumns(prev => prev.map(c => c.id === id ? { ...c, percentage: Number(pct) || 100 } : c));
+        setColumns(prev => prev.map(c => c.id === id ? { ...c, percentage: pct === '' ? '' : (Number(pct) || 0) } : c));
+    };
+
+    // On blur, snap empty/zero back to 100
+    const commitPercentage = (id) => {
+        setColumns(prev => prev.map(c => c.id === id && (!c.percentage || c.percentage === '') ? { ...c, percentage: 100 } : c));
     };
 
     const handleAttach = () => {
@@ -71,9 +76,10 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
     };
 
     return (
-        <div className="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300">
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-xl border border-teal-200 shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="px-5 py-3 bg-teal-700 flex items-center justify-between">
+            <div className="px-5 py-3 bg-teal-700 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2.5 text-white">
                     <PrinterIcon size={16} />
                     <span className="text-xs font-black uppercase tracking-widest">Weightroom Sheet</span>
@@ -82,7 +88,7 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
                 <button onClick={onClose} className="text-teal-200 hover:text-white transition-colors"><XIcon size={16} /></button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 overflow-y-auto flex-1">
                 {/* Suggestions */}
                 {suggestions.length > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -144,6 +150,7 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
                                         type="number"
                                         value={col.percentage}
                                         onChange={(e) => updatePercentage(col.id, e.target.value)}
+                                        onBlur={() => commitPercentage(col.id)}
                                         min={1} max={200}
                                         className="w-14 bg-white border border-slate-200 rounded px-1.5 py-1 text-xs text-center outline-none focus:border-teal-400"
                                     />
@@ -241,6 +248,7 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
                     </div>
                 </div>
             </div>
+          </div>
         </div>
     );
 };

@@ -247,6 +247,7 @@ export const TestingHubPage: React.FC = () => {
                     <TeamBatchEntry
                         test={activeTest}
                         date={testDate}
+                        onDateChange={setTestDate}
                         onSaved={() => setHistoryRefresh(prev => prev + 1)}
                     />
                 )}

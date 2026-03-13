@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { DatabaseService } from '../../services/databaseService';
 import {
     X as XIcon,
     CalendarPlus as CalendarPlusIcon,
@@ -8,6 +9,9 @@ import {
     Clock as ClockIcon,
     Plus as PlusIcon,
     Check as CheckIcon,
+    Repeat as RepeatIcon,
+    Calendar as CalendarIcon,
+    Trash2 as Trash2Icon,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -34,6 +38,7 @@ const AddEventModal = () => {
         customEventTypes,
         handleAddCalendarEvent,
         handleSaveCustomEventTypes,
+        showToast,
     } = useAppState();
 
     // Form state
@@ -47,6 +52,12 @@ const AddEventModal = () => {
     const [endDate, setEndDate] = useState('');
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
+
+    // Schedule mode
+    const [scheduleMode, setScheduleMode] = useState<'range' | 'dates'>('range');
+    const [selectedDates, setSelectedDates] = useState<string[]>([]);
+    const [dateToAdd, setDateToAdd] = useState(new Date().toISOString().split('T')[0]);
+    const [creating, setCreating] = useState(false);
 
     // Custom type inline form
     const [showCustomTypeForm, setShowCustomTypeForm] = useState(false);
@@ -68,8 +79,12 @@ const AddEventModal = () => {
         setEndDate('');
         setStartTime('09:00');
         setEndTime('10:00');
+        setScheduleMode('range');
+        setSelectedDates([]);
+        setDateToAdd(new Date().toISOString().split('T')[0]);
         setShowCustomTypeForm(false);
         setNewTypeLabel('');
+        setCreating(false);
     };
 
     const handleClose = () => {
@@ -99,22 +114,105 @@ const AddEventModal = () => {
         setNewTypeLabel('');
     };
 
-    const handleSubmit = () => {
+    const addSelectedDate = () => {
+        if (!dateToAdd || selectedDates.includes(dateToAdd)) return;
+        setSelectedDates(prev => [...prev, dateToAdd].sort());
+    };
+
+    const removeSelectedDate = (d: string) => {
+        setSelectedDates(prev => prev.filter(x => x !== d));
+    };
+
+    const formatDateChip = (d: string) => {
+        const dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString('en-US', { day: 'numeric', month: 'short', weekday: 'short' });
+    };
+
+    const handleSubmit = async () => {
         if (!title.trim()) return;
-        handleAddCalendarEvent({
+
+        const basePayload = {
             title: title.trim(),
             event_type: eventType,
             color,
             description: description.trim() || null,
             location: location.trim() || null,
             all_day: allDay,
-            start_date: startDate,
-            end_date: endDate || startDate,
             start_time: allDay ? null : startTime || null,
             end_time: allDay ? null : endTime || null,
-        });
-        resetForm();
+        };
+
+        if (scheduleMode === 'dates' && selectedDates.length > 0) {
+            // Batch create: one event per selected date
+            // Insert all but last directly, then use handleAddCalendarEvent for the last (triggers initData reload)
+            setCreating(true);
+            try {
+                const sorted = [...selectedDates].sort();
+                for (let i = 0; i < sorted.length - 1; i++) {
+                    await DatabaseService.createCalendarEvent({
+                        ...basePayload,
+                        start_date: sorted[i],
+                        end_date: sorted[i],
+                    });
+                }
+                // Last one goes through the handler which calls initData()
+                await handleAddCalendarEvent({
+                    ...basePayload,
+                    start_date: sorted[sorted.length - 1],
+                    end_date: sorted[sorted.length - 1],
+                });
+                resetForm();
+            } catch (err) {
+                showToast('Failed to create events', 'error');
+            } finally {
+                setCreating(false);
+            }
+        } else {
+            // Range mode — split into individual events per day
+            const effectiveEnd = endDate || startDate;
+            if (effectiveEnd > startDate) {
+                // Multiple days: create one event per day
+                setCreating(true);
+                try {
+                    const dates: string[] = [];
+                    const cur = new Date(startDate + 'T00:00:00');
+                    const end = new Date(effectiveEnd + 'T00:00:00');
+                    while (cur <= end) {
+                        dates.push(cur.toISOString().split('T')[0]);
+                        cur.setDate(cur.getDate() + 1);
+                    }
+                    for (let i = 0; i < dates.length - 1; i++) {
+                        await DatabaseService.createCalendarEvent({
+                            ...basePayload,
+                            start_date: dates[i],
+                            end_date: dates[i],
+                        });
+                    }
+                    // Last one triggers initData reload
+                    await handleAddCalendarEvent({
+                        ...basePayload,
+                        start_date: dates[dates.length - 1],
+                        end_date: dates[dates.length - 1],
+                    });
+                    resetForm();
+                } catch (err) {
+                    showToast('Failed to create events', 'error');
+                } finally {
+                    setCreating(false);
+                }
+            } else {
+                // Single day
+                handleAddCalendarEvent({
+                    ...basePayload,
+                    start_date: startDate,
+                    end_date: startDate,
+                });
+                resetForm();
+            }
+        }
     };
+
+    const canSubmit = title.trim() && !creating && (scheduleMode === 'range' || selectedDates.length > 0);
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -253,28 +351,92 @@ const AddEventModal = () => {
                         <span className="text-xs font-medium text-slate-700">All Day</span>
                     </div>
 
-                    {/* Date / Time Row */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className={LABEL}>Start Date <span className="text-red-400">*</span></label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={e => setStartDate(e.target.value)}
-                                className={INPUT}
-                            />
-                        </div>
-                        <div>
-                            <label className={LABEL}>End Date</label>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={e => setEndDate(e.target.value)}
-                                min={startDate}
-                                className={INPUT}
-                            />
+                    {/* Schedule Mode Toggle */}
+                    <div>
+                        <label className={LABEL}>Schedule</label>
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit">
+                            <button
+                                onClick={() => setScheduleMode('range')}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'range' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                <CalendarIcon size={12} /> Date Range
+                            </button>
+                            <button
+                                onClick={() => setScheduleMode('dates')}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'dates' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                <RepeatIcon size={12} /> Specific Dates
+                            </button>
                         </div>
                     </div>
+
+                    {/* Date Range Mode */}
+                    {scheduleMode === 'range' && (
+                        <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-150">
+                            <div>
+                                <label className={LABEL}>Start Date <span className="text-red-400">*</span></label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                    className={INPUT}
+                                />
+                            </div>
+                            <div>
+                                <label className={LABEL}>End Date</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={e => setEndDate(e.target.value)}
+                                    min={startDate}
+                                    className={INPUT}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Specific Dates Mode */}
+                    {scheduleMode === 'dates' && (
+                        <div className="space-y-3 animate-in fade-in duration-150">
+                            <div className="flex items-end gap-2">
+                                <div className="flex-1">
+                                    <label className={LABEL}>Pick a Date</label>
+                                    <input
+                                        type="date"
+                                        value={dateToAdd}
+                                        onChange={e => setDateToAdd(e.target.value)}
+                                        className={INPUT}
+                                    />
+                                </div>
+                                <button
+                                    onClick={addSelectedDate}
+                                    disabled={!dateToAdd || selectedDates.includes(dateToAdd)}
+                                    className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 shrink-0"
+                                >
+                                    <PlusIcon size={14} /> Add
+                                </button>
+                            </div>
+
+                            {selectedDates.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedDates.map(d => (
+                                        <span key={d} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700">
+                                            {formatDateChip(d)}
+                                            <button onClick={() => removeSelectedDate(d)} className="text-indigo-400 hover:text-red-500 transition-colors">
+                                                <XIcon size={12} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-[10px] text-slate-400 text-center py-2">No dates selected yet. Pick dates above to add them.</p>
+                            )}
+
+                            <p className="text-[10px] text-slate-400">
+                                Each date creates a separate event that can be edited or deleted individually.
+                            </p>
+                        </div>
+                    )}
 
                     {!allDay && (
                         <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-150">
@@ -316,10 +478,10 @@ const AddEventModal = () => {
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!title.trim()}
+                        disabled={!canSubmit}
                         className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        Create Event
+                        {creating ? 'Creating...' : scheduleMode === 'dates' && selectedDates.length > 1 ? `Create ${selectedDates.length} Events` : 'Create Event'}
                     </button>
                 </div>
             </div>

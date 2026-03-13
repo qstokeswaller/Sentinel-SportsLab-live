@@ -282,7 +282,28 @@ const musculoskeletalTests: TestDefinition[] = [
     ],
     estimatedDuration: '2 min',
   },
-  // 8. Y-Balance Test
+  // 8. Movement Competency Screen (MCS)
+  {
+    id: 'mcs', name: 'Movement Competency Screen (MCS)', shortName: 'MCS',
+    category: 'musculoskeletal',
+    description: '7-movement screen assessing fundamental movement competency. Each scored 1–3, total out of 21.',
+    fields: [
+      { key: 'overhead_squat', label: 'Overhead Squat', type: 'number', min: 1, max: 3 },
+      { key: 'single_leg_squat', label: 'Single Leg Squat', type: 'number', min: 1, max: 3 },
+      { key: 'push_up', label: 'Push-Up', type: 'number', min: 1, max: 3 },
+      { key: 'lunge', label: 'Lunge', type: 'number', min: 1, max: 3 },
+      { key: 'bend_and_lift', label: 'Bend & Lift', type: 'number', min: 1, max: 3 },
+      { key: 'step_down', label: 'Step Down', type: 'number', min: 1, max: 3 },
+      { key: 'twist', label: 'Twist', type: 'number', min: 1, max: 3 },
+    ],
+    computeTotal: (vals: Record<string, any>) =>
+      ['overhead_squat', 'single_leg_squat', 'push_up', 'lunge', 'bend_and_lift', 'step_down', 'twist']
+        .reduce((s, k) => s + (Number(vals[k]) || 0), 0),
+    maxTotal: 21,
+    norms: { elite: 19, good: 16, average: 13, belowAverage: 10 },
+    estimatedDuration: '10 min',
+  },
+  // 9. Y-Balance Test
   {
     id: 'y_balance', name: 'Y-Balance Test', shortName: 'YBT',
     category: 'musculoskeletal',

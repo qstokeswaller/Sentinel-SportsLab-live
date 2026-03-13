@@ -28,6 +28,7 @@ interface LocalExRow {
   intensity: string;
   tempo: string;
   notes: string;
+  weight: string;
 }
 
 interface LocalDay {
@@ -119,6 +120,7 @@ const emptyRow = (ex: { id: string; name: string; categories: string[]; body_par
   intensity: '',
   tempo: '',
   notes: '',
+  weight: '',
 });
 
 // ── Volume calculator ──────────────────────────────────────────────────────
@@ -172,7 +174,7 @@ const ExRow = ({
           <Trash2Icon size={14} />
         </button>
       </div>
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 px-4 py-3">
+      <div className="grid grid-cols-4 lg:grid-cols-9 gap-2 px-4 py-3">
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sets</label>
           <input className={inputCls} placeholder="3" value={row.sets} onChange={(e) => upd('sets', e.target.value)} />
@@ -209,7 +211,11 @@ const ExRow = ({
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Tempo</label>
           <input className={inputCls} placeholder="3-1-2" value={row.tempo} onChange={(e) => upd('tempo', e.target.value)} />
         </div>
-        <div className="col-span-4 lg:col-span-8">
+        <div>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Weight (kg)</label>
+          <input className={inputCls} placeholder="80" value={row.weight} onChange={(e) => upd('weight', e.target.value)} />
+        </div>
+        <div className="col-span-4 lg:col-span-9">
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Notes</label>
           <input className={inputCls} placeholder="e.g. Full ROM, control the eccentric" value={row.notes}
             onChange={(e) => upd('notes', e.target.value)} />
@@ -236,6 +242,7 @@ export const ProgramBuilderModal = ({
   const [programName, setProgramName]         = useState('');
   const [programOverview, setProgramOverview] = useState('');
   const [programTags, setProgramTags]         = useState('');
+  const [trackTonnage, setTrackTonnage]       = useState(true);
 
   // Days (flat array — grouped visually into weeks of 7)
   const [days, setDays]               = useState<LocalDay[]>([newDay(1)]);
@@ -268,6 +275,7 @@ export const ProgramBuilderModal = ({
       setProgramName(editingProgram.name);
       setProgramOverview(editingProgram.overview ?? '');
       setProgramTags((editingProgram.tags ?? []).join(', '));
+      setTrackTonnage(editingProgram.track_tonnage !== false);
 
       const mapRow = (e: any): LocalExRow => {
         const exInfo = exerciseFullMap[e.exercise_id];
@@ -280,6 +288,7 @@ export const ProgramBuilderModal = ({
           rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
           rir: e.rir ?? '', rpe: e.rpe ?? '',
           intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+          weight: e.weight ?? '',
         };
       };
       const loadedDays: LocalDay[] = (editingProgram.days ?? []).map((d) => ({
@@ -295,6 +304,7 @@ export const ProgramBuilderModal = ({
       setProgramName('');
       setProgramOverview('');
       setProgramTags('');
+      setTrackTonnage(true);
       setDays([newDay(1)]);
     }
     setActiveDayIdx(0);
@@ -404,6 +414,7 @@ export const ProgramBuilderModal = ({
     rest_min: r.rest_min, rest_sec: r.rest_sec,
     rir: r.rir, rpe: r.rpe,
     intensity: r.intensity, tempo: r.tempo, notes: r.notes,
+    weight: r.weight,
   });
 
   const handleSave = async () => {
@@ -415,10 +426,10 @@ export const ProgramBuilderModal = ({
       let programId: string;
 
       if (editingProgram) {
-        await updateProgram.mutateAsync({ id: editingProgram.id, name: programName.trim(), overview: programOverview, tags });
+        await updateProgram.mutateAsync({ id: editingProgram.id, name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage });
         programId = editingProgram.id;
       } else {
-        const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags });
+        const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage });
         programId = created.id;
       }
 
@@ -496,6 +507,19 @@ export const ProgramBuilderModal = ({
                   placeholder="e.g. Strength, Hypertrophy, Off-Season"
                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
                 />
+              </div>
+              <div className="col-span-2 flex items-center gap-3">
+                <label className="text-[10px] font-semibold uppercase text-slate-400">Track Tonnage</label>
+                <button
+                  type="button"
+                  onClick={() => setTrackTonnage((v) => !v)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                </button>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {trackTonnage ? 'Completed sessions feed the Tracking Hub' : 'Tonnage tracking disabled for this program'}
+                </span>
               </div>
               <div className="col-span-2">
                 <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Overview</label>
@@ -632,7 +656,7 @@ export const ProgramBuilderModal = ({
                             <ExRow
                               key={row.tempId}
                               row={row}
-                              letter={String.fromCharCode(65 + idx)}
+                              letter={String(idx + 1)}
                               onChange={(updated) => updateRow(sec, row.tempId, updated)}
                               onRemove={() => removeRow(sec, row.tempId)}
                             />

@@ -136,43 +136,44 @@ const WellnessHub: React.FC = () => {
         }
     };
 
-    // Responses for currently selected team
-    const filteredResponses = useMemo(() =>
-        selectedTeamId
+    // Responses for currently selected team, filtered to the active date range
+    const filteredResponses = useMemo(() => {
+        let filtered = selectedTeamId
             ? wellnessResponses.filter(r => r.team_id === selectedTeamId)
-            : wellnessResponses,
-        [wellnessResponses, selectedTeamId]
-    );
+            : wellnessResponses;
+        // Apply date range filter so compliance + averages match the picker
+        filtered = filtered.filter(r => {
+            const d = r.session_date || r.created_at?.split('T')[0];
+            return d && d >= dateRange.from && d <= dateRange.to;
+        });
+        return filtered;
+    }, [wellnessResponses, selectedTeamId, dateRange]);
 
     const activeTeam = teams.find(t => t.id === selectedTeamId);
 
-    // Compliance: expected = sessions × athletes, actual = unique (athlete, session) pairs
-    // Falls back to unique response dates when no share sessions exist yet (legacy responses)
+    // Compliance: expected = unique tracking days × athletes, actual = unique (athlete, date) pairs
+    // Multiple shares on the same day count as 1 session day
     const compliance = useMemo(() => {
         const athleteCount = activeTeam?.players?.length || 0;
         if (athleteCount === 0) return { expected: 0, actual: 0, rate: 0, sessionCount: 0, athleteCount: 0 };
 
+        // Count unique tracking days from share sessions (deduplicate by date)
+        let uniqueTrackingDates: Set<string>;
         if (shareSessions.length > 0) {
-            // New behaviour: track via share session IDs
-            const sessionCount = shareSessions.length;
-            const expected = sessionCount * athleteCount;
-            const sessionIds = new Set(shareSessions.map(s => s.id));
-            const seen = new Set<string>();
-            filteredResponses.forEach(r => {
-                if (r.share_session_id && sessionIds.has(r.share_session_id)) {
-                    seen.add(`${r.athlete_id}__${r.share_session_id}`);
-                }
-            });
-            const actual = seen.size;
-            return { expected, actual, rate: Math.round((actual / expected) * 100), sessionCount, athleteCount };
+            uniqueTrackingDates = new Set(shareSessions.map(s => {
+                // shared_at is a timestamp — extract date portion
+                const ts = s.shared_at || s.session_date || '';
+                return ts.split('T')[0];
+            }));
+        } else {
+            // Legacy fallback: each unique response date counts as one tracking day
+            uniqueTrackingDates = new Set(filteredResponses.map(r => r.session_date));
         }
 
-        // Legacy fallback: each unique response date counts as one "session"
-        const uniqueDates = new Set(filteredResponses.map(r => r.session_date));
-        const sessionCount = uniqueDates.size;
+        const sessionCount = uniqueTrackingDates.size;
         if (sessionCount === 0) return { expected: 0, actual: 0, rate: 0, sessionCount: 0, athleteCount };
         const expected = sessionCount * athleteCount;
-        // Count unique (athlete, date) pairs
+        // Count unique (athlete, date) pairs — one response per athlete per day
         const seen = new Set<string>();
         filteredResponses.forEach(r => {
             seen.add(`${r.athlete_id}__${r.session_date}`);
@@ -1189,17 +1190,33 @@ const WellnessHub: React.FC = () => {
                             <div className="flex flex-wrap gap-3">
                                 {Object.entries(res.responses).map(([qid, val]: [string, any]) => {
                                     if (typeof val !== 'number') return null;
-                                    const qText = wellnessTemplates.flatMap((t: any) => t.questions || [])
-                                        .find((q: any) => q.id === qid)?.text || qid;
-                                    // Color chip by value — heuristic: low is good for RPE/stress/fatigue, high is good for energy/sleep
-                                    const isHighBad = ['rpe', 'stress', 'fatigue'].some(k => qid.toLowerCase().includes(k));
-                                    const chipColor = isHighBad
-                                        ? (val >= 8 ? 'bg-rose-50 text-rose-700 border-rose-100' : val >= 6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100')
-                                        : 'bg-slate-50 text-slate-700 border-slate-100';
+                                    const question = wellnessTemplates.flatMap((t: any) => t.questions || [])
+                                        .find((q: any) => q.id === qid);
+                                    const qText = question?.text || qid;
+                                    const qType = question?.type || '';
+                                    // Resolve scale max from question type or numericMap
+                                    const scaleMax = qType === 'scale_1_10' ? 10
+                                        : qType === 'scale_0_5' ? 5
+                                        : qType === 'scale_0_3' ? 3
+                                        : qType === 'scale' && question?.scaleMax ? question.scaleMax
+                                        : question?.numericMap?.length ? Math.max(...question.numericMap)
+                                        : null;
+                                    // Color chip by sentiment — high-bad vs high-good
+                                    const qLow = qid.toLowerCase();
+                                    const isHighBad = ['rpe', 'stress', 'fatigue', 'soreness'].some(k => qLow.includes(k));
+                                    const isHighGood = ['energy', 'motivation', 'sleep'].some(k => qLow.includes(k));
+                                    const pct = scaleMax ? val / scaleMax : 0;
+                                    let chipColor = 'bg-slate-50 text-slate-700 border-slate-100';
+                                    if (isHighBad && scaleMax) {
+                                        chipColor = pct >= 0.8 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct >= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                                    } else if (isHighGood && scaleMax) {
+                                        chipColor = pct <= 0.4 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct <= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                                    }
                                     return (
                                         <div key={qid} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold ${chipColor}`}>
                                             <span className="uppercase tracking-tight text-[9px] font-bold opacity-60">{qText.slice(0, 18)}</span>
                                             <span className="text-sm">{val}</span>
+                                            {scaleMax && <span className="text-[8px] font-medium opacity-40">/ {scaleMax}</span>}
                                         </div>
                                     );
                                 })}

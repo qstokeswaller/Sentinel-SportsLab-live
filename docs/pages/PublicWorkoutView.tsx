@@ -34,7 +34,7 @@ const ExerciseTable = ({ exercises, sectionLabel }: { exercises: any[]; sectionL
                     return (
                         <div key={ex.id || idx} className="flex items-start gap-3 px-4 py-3 bg-white border border-slate-200 rounded-lg print:border-slate-300">
                             <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 print:bg-slate-700">
-                                {String.fromCharCode(65 + idx)}
+                                {idx + 1}
                             </span>
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-semibold text-slate-800">{name}</div>

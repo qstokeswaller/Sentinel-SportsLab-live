@@ -9,6 +9,7 @@ export interface WorkoutProgram {
   name: string;
   overview: string | null;
   tags: string[];
+  track_tonnage: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +40,8 @@ export interface WorkoutDayExercise {
   intensity: string | null;
   tempo: string | null;
   notes: string | null;
+  weight: string | null;
+  athlete_weight_overrides: Record<string, string> | null;
   created_at: string;
 }
 
@@ -115,7 +118,7 @@ export function useProgramWithDays(programId: string | null) {
 export function useCreateProgram() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; overview?: string; tags?: string[] }) => {
+    mutationFn: async (payload: { name: string; overview?: string; tags?: string[]; track_tonnage?: boolean }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
@@ -186,6 +189,8 @@ export interface SaveDayPayload {
     intensity: string;
     tempo: string;
     notes: string;
+    weight: string;
+    athlete_weight_overrides?: Record<string, string>;
   }[];
 }
 

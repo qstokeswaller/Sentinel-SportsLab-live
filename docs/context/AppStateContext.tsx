@@ -1247,7 +1247,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             await DatabaseService.createTeam(newTeamName, 'Football');
             setIsAddTeamModalOpen(false);
             setNewTeamName('');
-            initData(); // refresh in background — don't block modal close
+            await initData(); // refresh teams before switching mode
+            setAddAthleteMode('athlete'); // auto-switch back so user can add athlete to new team
         } catch (err) {
             console.error("Error adding team:", err);
             alert("Failed to add team. Ensure the database schema has been applied.");

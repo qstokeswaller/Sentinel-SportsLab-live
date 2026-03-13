@@ -3,6 +3,7 @@ import React from 'react';
 import {
     ArrowLeftIcon, PencilIcon, Trash2Icon, CalendarIcon,
     TagIcon, DumbbellIcon, Link2Icon, PrinterIcon,
+    FileIcon, ExternalLinkIcon, PaperclipIcon,
 } from 'lucide-react';
 import type { Protocol, ProtocolBlock, TextLine } from './ProtocolLibrary';
 
@@ -19,6 +20,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+};
 
 /** Convert **text** → <strong>text</strong> */
 const renderBold = (text: string) => {
@@ -147,6 +154,34 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
         );
     }
 
+    if (block.type === 'pdf_block' && block.pdfUrl) {
+        return (
+            <div className="border border-rose-200 rounded-xl overflow-hidden my-3">
+                <div className="flex items-center gap-3 px-4 py-3 bg-rose-50">
+                    <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center shrink-0">
+                        <FileIcon size={14} className="text-rose-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800">{block.pdfTitle || block.pdfFileName}</p>
+                        <p className="text-xs text-slate-400">{block.pdfFileName} — {formatFileSize(block.pdfFileSize || 0)}</p>
+                    </div>
+                    <button
+                        onClick={() => window.open(block.pdfUrl, '_blank')}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-600 bg-rose-100 hover:bg-rose-200 transition-all"
+                    >
+                        <ExternalLinkIcon size={12} /> Open in New Tab
+                    </button>
+                </div>
+                <iframe
+                    src={block.pdfUrl}
+                    title={block.pdfTitle || block.pdfFileName}
+                    className="w-full border-t border-rose-200"
+                    style={{ height: '500px' }}
+                />
+            </div>
+        );
+    }
+
     return null;
 };
 
@@ -237,6 +272,34 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                     <p className="text-sm text-slate-400 italic text-center py-12">This protocol has no content yet.</p>
                 )}
             </div>
+
+            {/* Attachments */}
+            {protocol.attachments && protocol.attachments.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                    <div className="flex items-center gap-2">
+                        <PaperclipIcon size={14} className="text-slate-500" />
+                        <h4 className="text-sm font-semibold text-slate-700">Attachments</h4>
+                        <span className="text-xs text-slate-400">{protocol.attachments.length} file{protocol.attachments.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="space-y-2">
+                        {protocol.attachments.map(att => (
+                            <div key={att.id} className="flex items-center gap-3 bg-slate-50 rounded-lg border border-slate-200 p-3">
+                                <FileIcon size={16} className="text-rose-500 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-800 truncate">{att.title || att.fileName}</p>
+                                    <p className="text-xs text-slate-400">{att.fileName} — {formatFileSize(att.fileSize)}</p>
+                                </div>
+                                <button
+                                    onClick={() => window.open(att.url, '_blank')}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                                >
+                                    <ExternalLinkIcon size={12} /> Open
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
