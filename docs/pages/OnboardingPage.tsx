@@ -84,12 +84,12 @@ const OnboardingPage: React.FC = () => {
             <ActivityIcon className="text-white w-4 h-4" />
           </div>
           <span className="font-bold text-slate-900">
-            trainer<span className="text-indigo-600">OS</span>
+            Sentinel <span className="text-indigo-600">SportsLab</span>
           </span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-7 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">How are you using TrainerOS?</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">How are you using Sentinel SportsLab?</h2>
           <p className="text-sm text-slate-500 mb-6">This determines how your data is organised.</p>
 
           <div className="grid grid-cols-2 gap-3 mb-5">
@@ -155,7 +155,7 @@ const OnboardingPage: React.FC = () => {
             className="w-full"
             size="lg"
           >
-            {loading ? 'Setting up...' : 'Continue to TrainerOS'}
+            {loading ? 'Setting up...' : 'Continue to Sentinel SportsLab'}
           </Button>
         </div>
       </div>

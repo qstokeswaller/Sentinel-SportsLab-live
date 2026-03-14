@@ -214,7 +214,7 @@ const PublicWellnessForm: React.FC = () => {
                     <div className="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center text-white">
                         <Activity size={18} />
                     </div>
-                    <span className="font-bold text-slate-900 tracking-tight">TrainerOS</span>
+                    <span className="font-bold text-slate-900 tracking-tight">Sentinel SportsLab</span>
                 </div>
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Step {currentStep + 1} of {totalSteps}
@@ -302,6 +302,22 @@ const PublicWellnessForm: React.FC = () => {
                                             const max = scaleMatch ? parseInt(scaleMatch[2]) : (q.scaleMax ?? 10);
                                             const scaleSteps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
                                             const useGrid = scaleSteps.length > 6;
+                                            const isRpe = q.type === 'scale_1_10';
+
+                                            // RPE gradient colors per value
+                                            const rpeColors: Record<number, { selected: string; unselected: string }> = {
+                                                1:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
+                                                2:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
+                                                3:  { selected: 'bg-green-500 border-green-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-green-50 border-green-200 text-green-700 hover:border-green-300' },
+                                                4:  { selected: 'bg-green-500 border-green-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-green-50 border-green-200 text-green-700 hover:border-green-300' },
+                                                5:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+                                                6:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+                                                7:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
+                                                8:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
+                                                9:  { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',       unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
+                                                10: { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',       unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
+                                            };
+
                                             return (
                                                 <div>
                                                     {(q.labels?.[0] || q.labels?.[1]) && (
@@ -313,14 +329,18 @@ const PublicWellnessForm: React.FC = () => {
                                                     <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
                                                         {scaleSteps.map(val => {
                                                             const isSelected = responses[rk] === val;
+                                                            const rpeStyle = isRpe ? rpeColors[val] : null;
                                                             return (
                                                                 <button
                                                                     key={val}
                                                                     type="button"
                                                                     onClick={() => setResponses({ ...responses, [rk]: val })}
-                                                                    className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${isSelected
-                                                                        ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                        : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                    className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${
+                                                                        rpeStyle
+                                                                            ? (isSelected ? rpeStyle.selected : rpeStyle.unselected)
+                                                                            : (isSelected
+                                                                                ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200')
                                                                     }`}
                                                                 >
                                                                     {val}

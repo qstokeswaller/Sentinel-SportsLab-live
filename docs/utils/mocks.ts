@@ -422,15 +422,15 @@ export const DEFAULT_WELLNESS_QUESTIONS = [
             'Unavailable due to injury/illness'
         ]
     },
-    // URTI / Illness symptoms (0 = No symptoms → 3 = Moderate)
-    { id: 'urti_hoarseness', type: 'scale_0_3', category: 'health', required: false, text: 'Hoarseness (Voice roughness)', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_blocked_nose', type: 'scale_0_3', category: 'health', required: false, text: 'Blocked / Plugged Nose', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_runny_nose', type: 'scale_0_3', category: 'health', required: false, text: 'Runny Nose', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_sinus_pressure', type: 'scale_0_3', category: 'health', required: false, text: 'Sinus Pressure (Facial pressure)', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_sneezing', type: 'scale_0_3', category: 'health', required: false, text: 'Sneezing', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_dry_cough', type: 'scale_0_3', category: 'health', required: false, text: 'Dry Cough', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_wet_cough', type: 'scale_0_3', category: 'health', required: false, text: 'Wet Cough (sputum / mucus)', labels: ['0 — No symptoms', '3 — Moderate'] },
-    { id: 'urti_headache', type: 'scale_0_3', category: 'health', required: false, text: 'Headache', labels: ['0 — No symptoms', '3 — Moderate'] },
+    // URTI / Illness symptoms — word-based severity (stored as 0-3 via numericMap)
+    { id: 'urti_hoarseness', type: 'multiple_choice', category: 'health', required: false, text: 'Hoarseness (Voice roughness)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_blocked_nose', type: 'multiple_choice', category: 'health', required: false, text: 'Blocked / Plugged Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_runny_nose', type: 'multiple_choice', category: 'health', required: false, text: 'Runny Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_sinus_pressure', type: 'multiple_choice', category: 'health', required: false, text: 'Sinus Pressure (Facial pressure)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_sneezing', type: 'multiple_choice', category: 'health', required: false, text: 'Sneezing', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_dry_cough', type: 'multiple_choice', category: 'health', required: false, text: 'Dry Cough', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_wet_cough', type: 'multiple_choice', category: 'health', required: false, text: 'Wet Cough (sputum / mucus)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_headache', type: 'multiple_choice', category: 'health', required: false, text: 'Headache', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
     // Injury / Body Map
     {
         id: 'body_map', type: 'body_map', category: 'injury', required: false,

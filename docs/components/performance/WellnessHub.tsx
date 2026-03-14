@@ -52,6 +52,15 @@ const getAthleteStatus = (res: any): 'green' | 'amber' | 'red' | null => {
     return 'green';
 };
 
+/** Returns gradient badge classes for an RPE value (1-10) */
+const getRpeBadge = (rpe: number): string => {
+    if (rpe >= 9) return 'bg-rose-50 text-rose-600 border-rose-100';
+    if (rpe >= 7) return 'bg-orange-50 text-orange-600 border-orange-100';
+    if (rpe >= 5) return 'bg-amber-50 text-amber-600 border-amber-100';
+    if (rpe >= 3) return 'bg-green-50 text-green-600 border-green-100';
+    return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+};
+
 const STATUS_DOT: Record<'green' | 'amber' | 'red', string> = {
     green: 'bg-emerald-500',
     amber: 'bg-amber-400',
@@ -1070,11 +1079,7 @@ const WellnessHub: React.FC = () => {
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     {res?.rpe ? (
-                                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                                                            res.rpe >= 9 ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                            res.rpe >= 7 ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                                           'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                        }`}>{res.rpe}/10</span>
+                                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${getRpeBadge(res.rpe)}`}>{res.rpe}/10</span>
                                                     ) : <span className="text-slate-300 text-[10px] font-bold">—</span>}
                                                 </td>
                                                 <td className="px-4 py-4">

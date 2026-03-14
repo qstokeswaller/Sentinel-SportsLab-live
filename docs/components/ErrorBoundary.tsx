@@ -33,7 +33,7 @@ class ErrorBoundary extends Component<Props, State> {
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4">Application Crash</h1>
                         <p className="text-slate-500 font-medium mb-8">
-                            TrainerOS encountered a critical error. This is likely due to the missing database schema we're currently restoring.
+                            Sentinel SportsLab encountered a critical error. This is likely due to the missing database schema we're currently restoring.
                         </p>
                         <div className="bg-slate-50 rounded-2xl p-6 text-left mb-8 overflow-auto max-h-48">
                             <p className="text-xs font-mono text-rose-600 break-all">
