@@ -80,7 +80,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
             <ActivityIcon className="text-white w-4 h-4" />
           </div>
           <span className="font-bold text-slate-900">
-            trainer<span className="text-indigo-600">OS</span>
+            Sentinel <span className="text-indigo-600">SportsLab</span>
           </span>
         </div>
 
