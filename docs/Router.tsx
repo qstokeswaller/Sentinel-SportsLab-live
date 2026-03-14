@@ -28,7 +28,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AppRouter: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, needsPasswordUpdate } = useAuth();
+
+  // If the user arrived via a password-recovery link, show the update-password form
+  if (needsPasswordUpdate && user) {
+    return <LoginPage forceMode="update-password" />;
+  }
 
   return (
     <Routes>

@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { ActivityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '../context/AuthContext';
 
-type Mode = 'signin' | 'signup' | 'reset';
+type Mode = 'signin' | 'signup' | 'reset' | 'update-password';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const labelCls = "text-xs font-medium text-slate-600 block mb-1.5";
 
-const LoginPage: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('signin');
+const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) => {
+  const { clearPasswordUpdate } = useAuth();
+  const [mode, setMode] = useState<Mode>(forceMode ?? 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [organization, setOrganization] = useState('');
   const [phone, setPhone] = useState('');
@@ -29,7 +32,16 @@ const LoginPage: React.FC = () => {
 
     const siteUrl = (import.meta as any).env?.VITE_SITE_URL || window.location.origin;
 
-    if (mode === 'signin') {
+    if (mode === 'update-password') {
+      if (password.length < 6) { setError('Password must be at least 6 characters.'); setLoading(false); return; }
+      if (password !== confirmPassword) { setError('Passwords do not match.'); setLoading(false); return; }
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) setError(error.message);
+      else {
+        setMessage('Password updated successfully! Redirecting…');
+        clearPasswordUpdate();
+      }
+    } else if (mode === 'signin') {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
     } else if (mode === 'signup') {
@@ -78,11 +90,13 @@ const LoginPage: React.FC = () => {
             {mode === 'signin' && 'Sign in'}
             {mode === 'signup' && 'Create account'}
             {mode === 'reset' && 'Reset password'}
+            {mode === 'update-password' && 'Set new password'}
           </h2>
           <p className="text-sm text-slate-500 mb-6">
             {mode === 'signin' && 'Welcome back — enter your details below.'}
             {mode === 'signup' && 'Tell us about yourself to get started.'}
             {mode === 'reset' && "We'll send a reset link to your email."}
+            {mode === 'update-password' && 'Enter your new password below.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -127,25 +141,42 @@ const LoginPage: React.FC = () => {
               </>
             )}
 
-            <div>
-              <label className={labelCls}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className={inputCls}
-                placeholder="coach@club.com"
-              />
-            </div>
+            {mode !== 'update-password' && (
+              <div>
+                <label className={labelCls}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  className={inputCls}
+                  placeholder="coach@club.com"
+                />
+              </div>
+            )}
 
             {mode !== 'reset' && (
               <div>
-                <label className={labelCls}>Password</label>
+                <label className={labelCls}>{mode === 'update-password' ? 'New password' : 'Password'}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className={inputCls}
+                  placeholder="••••••••"
+                />
+              </div>
+            )}
+
+            {mode === 'update-password' && (
+              <div>
+                <label className={labelCls}>Confirm new password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
                   className={inputCls}
@@ -170,6 +201,7 @@ const LoginPage: React.FC = () => {
                 ? 'Please wait...'
                 : mode === 'signin' ? 'Sign in'
                 : mode === 'signup' ? 'Create account'
+                : mode === 'update-password' ? 'Update password'
                 : 'Send reset link'}
             </Button>
           </form>
