@@ -35,11 +35,11 @@ import {
 export const ReportingHubPage = () => {
     const {
         teams, setTeams, loadRecords, wellnessData, habitRecords, scheduledSessions,
-        gpsData, setGpsData, kpiRecords, volumeRecords,
+        gpsData, setGpsData, hrData, setHrData, kpiRecords, volumeRecords,
         selectedAnalyticsAthleteId, setSelectedAnalyticsAthleteId,
         activeReport, setActiveReport, reportMode, setReportMode,
         activeTab, setActiveTab, questionnaires, setQuestionnaires,
-        hrReportViewMode, setHrReportViewMode,
+        hrReportViewMode, setHrReportViewMode, hrReportSelectedAthlete, setHrReportSelectedAthlete,
         dataHubTab, setDataHubTab,
         medicalReports, setMedicalReports, medicalFilterAthleteId, setMedicalFilterAthleteId,
         isMedicalModalOpen, setIsMedicalModalOpen, medicalModalMode, setMedicalModalMode,
@@ -61,6 +61,10 @@ export const ReportingHubPage = () => {
     const [gpsImportMessage, setGpsImportMessage] = useState('');
 
     const [hrReportDateRange, setHrReportDateRange] = useState({ start: '2025-01-01', end: new Date().toISOString().split('T')[0] });
+    const [hrImportStatus, setHrImportStatus] = useState<'success' | 'error' | null>(null);
+    const [hrImportMessage, setHrImportMessage] = useState('');
+    const [hrReportSelectedTeam, setHrReportSelectedTeam] = useState('');
+    const hrFileRef = useRef<HTMLInputElement>(null);
     const [trackingTab, setTrackingTab] = useState('Tonnage Trends');
     const [trackingSelectedAthlete, setTrackingSelectedAthlete] = useState('');
     const [trackingDateRange, setTrackingDateRange] = useState(() => {
@@ -80,124 +84,372 @@ export const ReportingHubPage = () => {
     const [trackingSortCol, setTrackingSortCol] = useState('totalTonnage');
     const [trackingSortDir, setTrackingSortDir] = useState<'asc' | 'desc'>('desc');
 
+    // ── HR CSV Import ──────────────────────────────────────────────────────
+    const HR_ZONE_DEFS = [
+        { zone: 'Z1', label: 'Recovery', min: 0, max: 60, color: 'bg-sky-400' },
+        { zone: 'Z2', label: 'Aerobic', min: 60, max: 70, color: 'bg-emerald-400' },
+        { zone: 'Z3', label: 'Tempo', min: 70, max: 80, color: 'bg-amber-400' },
+        { zone: 'Z4', label: 'Threshold', min: 80, max: 90, color: 'bg-orange-500' },
+        { zone: 'Z5', label: 'VO2 Max', min: 90, max: 100, color: 'bg-red-500' },
+    ];
+
+    const classifyZone = (hr: number, maxHr: number) => {
+        if (!maxHr || maxHr <= 0) return 'Z3';
+        const pct = (hr / maxHr) * 100;
+        for (const z of HR_ZONE_DEFS) { if (pct < z.max) return z.zone; }
+        return 'Z5';
+    };
+
+    const processHrCSV = (csvText: string) => {
+        const lines = csvText.split('\n').filter(l => l.trim());
+        if (lines.length < 2) { setHrImportStatus('error'); setHrImportMessage('CSV file is empty or has no data rows.'); return; }
+
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
+
+        // Map common header variations
+        const findCol = (candidates: string[]) => headers.findIndex(h => candidates.some(c => h.includes(c)));
+        const dateIdx = findCol(['date', 'session_date', 'timestamp']);
+        const sessionIdx = findCol(['session', 'session_name', 'session_type', 'activity', 'type']);
+        const athleteIdx = findCol(['athlete', 'player', 'name', 'athlete_name', 'player_name']);
+        const avgHrIdx = findCol(['avg_hr', 'average_hr', 'avg_heart_rate', 'mean_hr', 'avghr']);
+        const maxHrIdx = findCol(['max_hr', 'peak_hr', 'max_heart_rate', 'maxhr']);
+        const minHrIdx = findCol(['min_hr', 'resting_hr', 'rest_hr', 'minhr']);
+        const durationIdx = findCol(['duration', 'session_duration', 'time', 'total_time', 'duration_min']);
+        const trimpIdx = findCol(['trimp', 'training_impulse']);
+        const caloriesIdx = findCol(['calories', 'kcal', 'energy']);
+        const z1Idx = findCol(['z1', 'zone_1', 'zone1', 'time_z1']);
+        const z2Idx = findCol(['z2', 'zone_2', 'zone2', 'time_z2']);
+        const z3Idx = findCol(['z3', 'zone_3', 'zone3', 'time_z3']);
+        const z4Idx = findCol(['z4', 'zone_4', 'zone4', 'time_z4']);
+        const z5Idx = findCol(['z5', 'zone_5', 'zone5', 'time_z5']);
+        const recoveryIdx = findCol(['recovery_hr', 'hrr', 'hr_recovery', 'recovery']);
+
+        if (avgHrIdx === -1 && maxHrIdx === -1) {
+            setHrImportStatus('error');
+            setHrImportMessage('CSV must contain at least avg_hr or max_hr columns. Supported columns: date, session, athlete, avg_hr, max_hr, min_hr, duration, trimp, calories, z1-z5, recovery_hr');
+            return;
+        }
+
+        const rows = lines.slice(1);
+        const parsed = [];
+        for (const line of rows) {
+            const cols = line.split(',').map(c => c.trim());
+            const num = (idx: number) => idx >= 0 ? parseFloat(cols[idx]) || 0 : 0;
+            const str = (idx: number) => idx >= 0 ? cols[idx] || '' : '';
+
+            const avgHr = num(avgHrIdx);
+            const maxHr = num(maxHrIdx);
+            if (!avgHr && !maxHr) continue; // skip empty rows
+
+            parsed.push({
+                id: `hr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                date: str(dateIdx) || new Date().toISOString().split('T')[0],
+                session: str(sessionIdx) || 'Session',
+                athlete: str(athleteIdx) || '',
+                avgHr, maxHr,
+                minHr: num(minHrIdx),
+                duration: num(durationIdx),
+                trimp: num(trimpIdx),
+                calories: num(caloriesIdx),
+                zones: {
+                    z1: num(z1Idx), z2: num(z2Idx), z3: num(z3Idx), z4: num(z4Idx), z5: num(z5Idx),
+                },
+                recoveryHr: num(recoveryIdx),
+                zone: classifyZone(avgHr, maxHr || 200),
+            });
+        }
+
+        if (parsed.length === 0) { setHrImportStatus('error'); setHrImportMessage('No valid HR rows found in CSV.'); return; }
+
+        const updated = [...(Array.isArray(hrData) ? hrData : []), ...parsed];
+        setHrData(updated);
+        StorageService.saveHrData(updated);
+        setHrImportStatus('success');
+        setHrImportMessage(`Imported ${parsed.length} session${parsed.length > 1 ? 's' : ''} successfully.`);
+        setTimeout(() => setHrImportStatus(null), 5000);
+    };
+
+    const handleHrFileUpload = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => { processHrCSV(ev.target.result as string); };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
+    const handleClearHrData = () => {
+        if (!confirm('Clear all imported HR data?')) return;
+        setHrData([]);
+        StorageService.saveHrData([]);
+        showToast('HR data cleared', 'success');
+    };
+
     const renderHeartRateMetricsReport = () => {
+        // Filter data by date range and athlete
+        const allPlayers = teams.flatMap(t => t.players || []);
+        const safeHrData = Array.isArray(hrData) ? hrData : [];
+        const selectedTeamPlayers = hrReportSelectedTeam
+            ? (teams.find(t => t.id === hrReportSelectedTeam)?.players || []).map(p => p.name.toLowerCase())
+            : [];
+        const filtered = safeHrData.filter(d => {
+            if (d.date < hrReportDateRange.start || d.date > hrReportDateRange.end) return false;
+            if (hrReportViewMode === 'Team' && hrReportSelectedTeam && d.athlete) {
+                if (!selectedTeamPlayers.some(name => d.athlete.toLowerCase().includes(name))) return false;
+            }
+            if (hrReportViewMode === 'Individual' && hrReportSelectedAthlete) {
+                const player = allPlayers.find(p => p.id === hrReportSelectedAthlete);
+                if (player && d.athlete && !d.athlete.toLowerCase().includes(player.name.toLowerCase())) return false;
+            }
+            return true;
+        }).sort((a, b) => a.date.localeCompare(b.date));
 
-        // State hoisted to App level to avoid Hook errors in conditional render
+        // Compute KPIs from real data
+        const avgSessionHr = filtered.length > 0 ? Math.round(filtered.reduce((s, d) => s + d.avgHr, 0) / filtered.length) : 0;
+        const peakHr = filtered.length > 0 ? Math.max(...filtered.map(d => d.maxHr || d.avgHr)) : 0;
+        const avgTrimp = filtered.length > 0 ? Math.round(filtered.reduce((s, d) => s + (d.trimp || 0), 0) / filtered.length) : 0;
+        const totalSessions = filtered.length;
 
-        // Mock Data specific for HR Report
-        const hrData = [
-            { date: '2025-01-20', session: 'Strength', avgHr: 145, maxHr: 182, zone: 'Z3' },
-            { date: '2025-01-22', session: 'Conditioning', avgHr: 168, maxHr: 195, zone: 'Z5' },
-            { date: '2025-01-24', session: 'Recovery', avgHr: 110, maxHr: 130, zone: 'Z1' },
-            { date: '2025-01-26', session: 'Match Sim', avgHr: 175, maxHr: 198, zone: 'Z5' },
-        ];
+        // Zone distribution across all sessions
+        const zoneTotals = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+        const zoneSessionCount = { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0 };
+        for (const d of filtered) {
+            if (d.zones) { for (const k of Object.keys(zoneTotals)) zoneTotals[k] += d.zones[k] || 0; }
+            if (d.zone) zoneSessionCount[d.zone] = (zoneSessionCount[d.zone] || 0) + 1;
+        }
+        const hasZoneTime = Object.values(zoneTotals).some(v => v > 0);
+        const totalZoneTime = Object.values(zoneTotals).reduce((a, b) => a + b, 0);
+
+        // Avg recovery HR
+        const recoveryEntries = filtered.filter(d => d.recoveryHr > 0);
+        const avgRecoveryHr = recoveryEntries.length > 0 ? Math.round(recoveryEntries.reduce((s, d) => s + d.recoveryHr, 0) / recoveryEntries.length) : 0;
+
+        // Chart data — limit to last 20 sessions for readability
+        const chartData = filtered.slice(-20);
 
         return (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
                 {/* Controls Header */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg w-fit">
                         {['Team', 'Individual'].map(m => (
-                            <button
-                                key={m}
-                                onClick={() => setHrReportViewMode(m)}
-                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                            >
+                            <button key={m} onClick={() => setHrReportViewMode(m)}
+                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                 {m} View
                             </button>
                         ))}
                     </div>
+                    {hrReportViewMode === 'Team' && (
+                        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                            <UsersIcon size={14} className="text-slate-400" />
+                            <select value={hrReportSelectedTeam} onChange={(e) => setHrReportSelectedTeam(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase">
+                                <option value="">All Teams</option>
+                                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            </select>
+                        </div>
+                    )}
                     {hrReportViewMode === 'Individual' && (
                         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
                             <UserIcon size={14} className="text-slate-400" />
-                            <select
-                                value={hrReportSelectedAthlete}
-                                onChange={(e) => setHrReportSelectedAthlete(e.target.value)}
-                                className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase"
-                            >
-                                {teams.flatMap(t => t.players).map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
+                            <select value={hrReportSelectedAthlete} onChange={(e) => setHrReportSelectedAthlete(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase">
+                                <option value="">All Athletes</option>
+                                {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                     )}
                     <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
                         <CalendarIcon size={14} className="text-slate-400" />
-                        <input
-                            type="date"
-                            value={hrReportDateRange.start}
-                            onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })}
-                            className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase w-24"
-                        />
+                        <input type="date" value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })}
+                            className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase w-24" />
                         <span className="text-slate-300">-</span>
-                        <input
-                            type="date"
-                            value={hrReportDateRange.end}
-                            onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })}
-                            className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase w-24"
-                        />
+                        <input type="date" value={hrReportDateRange.end} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })}
+                            className="bg-transparent text-xs font-bold text-slate-700 outline-none uppercase w-24" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input ref={hrFileRef} type="file" accept=".csv" className="hidden" onChange={handleHrFileUpload} />
+                        <button onClick={() => hrFileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-semibold uppercase tracking-wide hover:bg-indigo-700 transition-all">
+                            <UploadIcon size={13} /> Import CSV
+                        </button>
+                        {safeHrData.length > 0 && (
+                            <button onClick={handleClearHrData} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-semibold hover:bg-red-50 hover:text-red-500 transition-all">
+                                <Trash2Icon size={12} /> Clear
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Main Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-indigo-200 transition-colors">
-                        <div className="text-xs font-medium text-slate-500">Avg Session HR</div>
-                        <div className="text-3xl font-bold text-slate-900">158 <span className="text-sm font-normal text-slate-400">BPM</span></div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-600 w-[70%]" />
-                        </div>
+                {/* Import status */}
+                {hrImportStatus && (
+                    <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold ${hrImportStatus === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                        {hrImportStatus === 'success' ? <CheckIcon size={14} /> : <AlertCircleIcon size={14} />}
+                        {hrImportMessage}
                     </div>
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-indigo-200 transition-colors">
-                        <div className="text-xs font-medium text-slate-500">Peak HR (Period)</div>
-                        <div className="text-3xl font-bold text-slate-900">198 <span className="text-sm font-normal text-slate-400">BPM</span></div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500 w-[95%]" />
-                        </div>
-                    </div>
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:border-emerald-200 transition-colors">
-                        <div className="text-xs font-medium text-slate-500">Recovery Score</div>
-                        <div className="text-3xl font-bold text-emerald-600">92 <span className="text-sm font-normal text-emerald-300">/100</span></div>
-                        <div className="text-xs text-slate-400">Based on HRR @ 2min</div>
-                    </div>
-                </div>
+                )}
 
-                {/* Session Timeline Chart */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h4 className="text-base font-semibold text-slate-800">Session Load Analysis</h4>
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-xs text-slate-400">Avg HR</span></div>
-                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-300" /><span className="text-xs text-slate-400">Max HR</span></div>
+                {/* CSV format help */}
+                {safeHrData.length === 0 && !hrImportStatus && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-3">
+                        <HeartPulseIcon size={32} className="mx-auto text-slate-300" />
+                        <h4 className="text-sm font-semibold text-slate-700">Import Heart Rate Data</h4>
+                        <p className="text-xs text-slate-400 max-w-md mx-auto">Upload a CSV file from your HR monitoring system (Polar, Garmin, Catapult, FirstBeat, etc). Supported columns:</p>
+                        <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+                            {['date', 'session', 'athlete', 'avg_hr', 'max_hr', 'min_hr', 'duration', 'trimp', 'calories', 'z1-z5', 'recovery_hr'].map(c => (
+                                <span key={c} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-mono text-slate-600">{c}</span>
+                            ))}
                         </div>
+                        <p className="text-[10px] text-slate-400">Minimum required: <strong>avg_hr</strong> or <strong>max_hr</strong>. All other columns are optional.</p>
+                        <button onClick={() => hrFileRef.current?.click()} className="mt-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all">
+                            <UploadIcon size={14} className="inline mr-1.5" /> Choose CSV File
+                        </button>
                     </div>
-                    <div className="h-64 flex items-end justify-between gap-6 px-4">
-                        {hrData.map((d, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer">
-                                <div className="relative w-full flex items-end justify-center h-full">
-                                    {/* Max HR Bar */}
-                                    <div
-                                        className="w-full max-w-[40px] bg-cyan-100 rounded-t-xl absolute bottom-0 transition-all duration-500 group-hover:bg-cyan-200"
-                                        style={{ height: `${(d.maxHr / 220) * 100}%` }}
-                                    ></div>
-                                    {/* Avg HR Bar */}
-                                    <div
-                                        className="w-full max-w-[40px] bg-indigo-600 rounded-t-xl relative z-10 transition-all duration-500 group-hover:scale-y-105 origin-bottom shadow-lg shadow-indigo-200"
-                                        style={{ height: `${(d.avgHr / 220) * 100}%` }}
-                                    >
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
-                                            {d.avgHr} / {d.maxHr}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-[9px] font-black uppercase text-slate-400 text-center">{d.date.slice(5)}</div>
-                                    <div className="text-[8px] font-bold uppercase text-indigo-300 text-center mt-0.5">{d.session}</div>
+                )}
+
+                {/* ── Dashboard (only shown when data exists) ── */}
+                {filtered.length > 0 && (
+                    <>
+                        {/* KPI Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-indigo-200 transition-colors">
+                                <div className="text-xs font-medium text-slate-500">Avg Session HR</div>
+                                <div className="text-3xl font-bold text-slate-900">{avgSessionHr} <span className="text-sm font-normal text-slate-400">BPM</span></div>
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-indigo-600 rounded-full" style={{ width: `${Math.min((avgSessionHr / 200) * 100, 100)}%` }} /></div>
+                            </div>
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-indigo-200 transition-colors">
+                                <div className="text-xs font-medium text-slate-500">Peak HR (Period)</div>
+                                <div className="text-3xl font-bold text-slate-900">{peakHr} <span className="text-sm font-normal text-slate-400">BPM</span></div>
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-rose-500 rounded-full" style={{ width: `${Math.min((peakHr / 220) * 100, 100)}%` }} /></div>
+                            </div>
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-emerald-200 transition-colors">
+                                <div className="text-xs font-medium text-slate-500">{avgRecoveryHr > 0 ? 'Avg Recovery HR' : 'Total Sessions'}</div>
+                                {avgRecoveryHr > 0
+                                    ? <div className="text-3xl font-bold text-emerald-600">{avgRecoveryHr} <span className="text-sm font-normal text-emerald-300">BPM</span></div>
+                                    : <div className="text-3xl font-bold text-slate-900">{totalSessions}</div>
+                                }
+                                <div className="text-xs text-slate-400">{avgRecoveryHr > 0 ? 'Post-session 2min recovery' : `In selected date range`}</div>
+                            </div>
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-amber-200 transition-colors">
+                                <div className="text-xs font-medium text-slate-500">{avgTrimp > 0 ? 'Avg TRIMP' : 'Total Sessions'}</div>
+                                {avgTrimp > 0
+                                    ? <div className="text-3xl font-bold text-amber-600">{avgTrimp} <span className="text-sm font-normal text-amber-300">AU</span></div>
+                                    : <div className="text-3xl font-bold text-slate-900">{totalSessions}</div>
+                                }
+                                <div className="text-xs text-slate-400">{avgTrimp > 0 ? 'Training impulse per session' : 'Across period'}</div>
+                            </div>
+                        </div>
+
+                        {/* Session Load Chart */}
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-base font-semibold text-slate-800">Session Load Analysis</h4>
+                                <div className="flex gap-4">
+                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-xs text-slate-400">Avg HR</span></div>
+                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-300" /><span className="text-xs text-slate-400">Max HR</span></div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
+                            <div className="h-64 flex items-end gap-1 px-2 overflow-x-auto">
+                                {chartData.map((d, i) => (
+                                    <div key={d.id || i} className="flex flex-col items-center gap-2 group cursor-pointer" style={{ minWidth: chartData.length > 12 ? 36 : undefined, flex: chartData.length <= 12 ? 1 : undefined }}>
+                                        <div className="relative w-full flex items-end justify-center h-56">
+                                            <div className="w-full max-w-[36px] bg-cyan-100 rounded-t-lg absolute bottom-0 transition-all duration-500 group-hover:bg-cyan-200"
+                                                style={{ height: `${((d.maxHr || d.avgHr) / 220) * 100}%` }} />
+                                            <div className="w-full max-w-[36px] bg-indigo-600 rounded-t-lg relative z-10 transition-all duration-500 group-hover:scale-y-105 origin-bottom shadow-md shadow-indigo-200"
+                                                style={{ height: `${(d.avgHr / 220) * 100}%` }}>
+                                                <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                                    {d.avgHr} / {d.maxHr || '—'} BPM{d.trimp ? ` · TRIMP ${d.trimp}` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="w-full text-center">
+                                            <div className="text-[8px] font-black uppercase text-slate-400 truncate">{d.date.slice(5)}</div>
+                                            <div className="text-[7px] font-bold uppercase text-indigo-300 truncate">{d.session}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Zone Distribution */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <h4 className="text-sm font-semibold text-slate-800">HR Zone Distribution</h4>
+                                {hasZoneTime ? (
+                                    <div className="space-y-2.5">
+                                        {HR_ZONE_DEFS.map(z => {
+                                            const val = zoneTotals[z.zone.toLowerCase()] || 0;
+                                            const pct = totalZoneTime > 0 ? (val / totalZoneTime) * 100 : 0;
+                                            return (
+                                                <div key={z.zone} className="flex items-center gap-3">
+                                                    <span className="text-[10px] font-bold text-slate-500 w-6">{z.zone}</span>
+                                                    <span className="text-[9px] text-slate-400 w-16">{z.label}</span>
+                                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${z.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-slate-600 w-10 text-right">{Math.round(pct)}%</span>
+                                                    <span className="text-[9px] text-slate-400 w-12 text-right">{Math.round(val)}m</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5">
+                                        {HR_ZONE_DEFS.map(z => {
+                                            const count = zoneSessionCount[z.zone] || 0;
+                                            const pct = totalSessions > 0 ? (count / totalSessions) * 100 : 0;
+                                            return (
+                                                <div key={z.zone} className="flex items-center gap-3">
+                                                    <span className="text-[10px] font-bold text-slate-500 w-6">{z.zone}</span>
+                                                    <span className="text-[9px] text-slate-400 w-16">{z.label}</span>
+                                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${z.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-slate-600 w-12 text-right">{count} sess</span>
+                                                </div>
+                                            );
+                                        })}
+                                        <p className="text-[9px] text-slate-400 italic">Based on avg HR per session. Import z1–z5 columns for time-in-zone breakdown.</p>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Session Table */}
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                                <h4 className="text-sm font-semibold text-slate-800">Session Log ({filtered.length})</h4>
+                                <div className="max-h-64 overflow-y-auto -mx-1">
+                                    <table className="w-full text-xs">
+                                        <thead className="sticky top-0 bg-white">
+                                            <tr className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-100">
+                                                <th className="text-left py-2 px-2">Date</th>
+                                                <th className="text-left py-2 px-2">Session</th>
+                                                {hrReportViewMode === 'Team' && <th className="text-left py-2 px-2">Athlete</th>}
+                                                <th className="text-right py-2 px-2">Avg</th>
+                                                <th className="text-right py-2 px-2">Max</th>
+                                                <th className="text-right py-2 px-2">Zone</th>
+                                                {avgTrimp > 0 && <th className="text-right py-2 px-2">TRIMP</th>}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filtered.slice(-30).reverse().map((d, i) => {
+                                                const zDef = HR_ZONE_DEFS.find(z => z.zone === d.zone);
+                                                return (
+                                                    <tr key={d.id || i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                                        <td className="py-2 px-2 text-slate-600 font-medium">{d.date}</td>
+                                                        <td className="py-2 px-2 text-slate-700 font-semibold">{d.session}</td>
+                                                        {hrReportViewMode === 'Team' && <td className="py-2 px-2 text-slate-500">{d.athlete || '—'}</td>}
+                                                        <td className="py-2 px-2 text-right font-bold text-indigo-600">{d.avgHr}</td>
+                                                        <td className="py-2 px-2 text-right font-bold text-slate-700">{d.maxHr || '—'}</td>
+                                                        <td className="py-2 px-2 text-right"><span className={`px-1.5 py-0.5 rounded text-[9px] font-bold text-white ${zDef?.color || 'bg-slate-400'}`}>{d.zone}</span></td>
+                                                        {avgTrimp > 0 && <td className="py-2 px-2 text-right text-amber-600 font-semibold">{d.trimp || '—'}</td>}
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         );
     };

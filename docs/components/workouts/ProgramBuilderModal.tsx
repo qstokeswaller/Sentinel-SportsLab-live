@@ -3,9 +3,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   XIcon, PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
   SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
+  Activity as ActivityIcon,
+  Timer as TimerIcon,
 } from 'lucide-react';
 import { useExercises } from '../../hooks/useExercises';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
+import { useAppState } from '../../context/AppStateContext';
+import { LinkedSessionsPicker, LinkedSession } from '../conditioning/LinkedSessionsPicker';
 import {
   useCreateProgram, useUpdateProgram, useSaveProgramFull,
   type WorkoutProgram, type FullProgram,
@@ -38,6 +42,7 @@ interface LocalDay {
   warmup: LocalExRow[];
   workout: LocalExRow[];
   cooldown: LocalExRow[];
+  linkedSessions: LinkedSession[];
 }
 
 type Section = 'warmup' | 'workout' | 'cooldown';
@@ -103,6 +108,7 @@ const newDay = (n: number): LocalDay => ({
   warmup: [],
   workout: [],
   cooldown: [],
+  linkedSessions: [],
 });
 
 const emptyRow = (ex: { id: string; name: string; categories: string[]; body_parts?: string[] }): LocalExRow => ({
@@ -238,6 +244,8 @@ export const ProgramBuilderModal = ({
   onClose,
   editingProgram = null,
 }: ProgramBuilderModalProps) => {
+  const { wattbikeSessions, conditioningSessions } = useAppState();
+
   // Program meta
   const [programName, setProgramName]         = useState('');
   const [programOverview, setProgramOverview] = useState('');
@@ -298,6 +306,7 @@ export const ProgramBuilderModal = ({
         warmup: d.exercises.filter((e) => e.section === 'warmup').map(mapRow),
         workout: d.exercises.filter((e) => e.section === 'workout').map(mapRow),
         cooldown: d.exercises.filter((e) => e.section === 'cooldown').map(mapRow),
+        linkedSessions: d.linked_sessions || [],
       }));
       setDays(loadedDays.length > 0 ? loadedDays : [newDay(1)]);
     } else {
@@ -437,6 +446,7 @@ export const ProgramBuilderModal = ({
         day_number: i + 1,
         name: d.name,
         instructions: d.instructions,
+        linked_sessions: d.linkedSessions,
         exercises: [
           ...d.warmup.map((r, oi) => rowToPayload(r, 'warmup', oi)),
           ...d.workout.map((r, oi) => rowToPayload(r, 'workout', oi)),
@@ -686,6 +696,31 @@ export const ProgramBuilderModal = ({
                           className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-indigo-500 bg-white resize-none"
                         />
                       </div>
+
+                      {/* Linked Sessions for this day */}
+                      <LinkedSessionsPicker
+                        linked={activeDay.linkedSessions}
+                        onChange={(updated) => setDays(prev => prev.map((d, i) => i === activeDayIdx ? { ...d, linkedSessions: updated } : d))}
+                        label="Linked Sessions"
+                        sources={[
+                          {
+                            key: 'wattbike',
+                            label: 'Wattbike',
+                            icon: <ActivityIcon size={12} />,
+                            color: 'bg-emerald-100',
+                            textColor: 'text-emerald-700',
+                            items: (wattbikeSessions || []).map(s => ({ id: s.id, title: s.title || s.name, meta: s.mapType || s.type })),
+                          },
+                          {
+                            key: 'conditioning',
+                            label: 'Conditioning',
+                            icon: <TimerIcon size={12} />,
+                            color: 'bg-orange-100',
+                            textColor: 'text-orange-700',
+                            items: (conditioningSessions || []).map(s => ({ id: s.id, title: s.title, meta: s.energySystem })),
+                          },
+                        ]}
+                      />
                     </div>
                   )}
                 </div>

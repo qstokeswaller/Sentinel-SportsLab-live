@@ -23,8 +23,11 @@ import {
     Copy as CopyIcon,
     Link as LinkIcon,
     ClipboardList as ClipboardListIcon,
+    Activity as ActivityIcon,
+    Timer as TimerIcon,
 } from 'lucide-react';
 import WeightroomSheetPanel from '../components/workout/WeightroomSheetPanel';
+import { LinkedSessionsPicker, LinkedSession } from '../components/conditioning/LinkedSessionsPicker';
 import { buildMaxLookup, computeAthleteWeightOverrides } from '../utils/weightroomUtils';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -117,6 +120,7 @@ export const WorkoutPacketsPage = () => {
         workoutTemplates, setWorkoutTemplates,
         handleUpdatePlanSession, periodizationPlans,
         maxHistory,
+        wattbikeSessions, conditioningSessions,
     } = useAppState();
 
     // ── Incoming edit state via router ───────────────────────────────────
@@ -151,6 +155,7 @@ export const WorkoutPacketsPage = () => {
     // ── Workout builder state ──────────────────────────────────────────────
     const [sections, setSections] = useState<Record<string, ExRow[]>>({ warmup: [], workout: [], cooldown: [] });
     const [activeSection, setActiveSection] = useState<string>('workout');
+    const [linkedSessions, setLinkedSessions] = useState<LinkedSession[]>([]);
 
     // ── Exercise picker state ──────────────────────────────────────────────
     const [exSearch, setExSearch] = useState('');
@@ -220,6 +225,9 @@ export const WorkoutPacketsPage = () => {
                 cooldown: [],
             });
         }
+
+        // Load linked sessions
+        if (src.linkedSessions) setLinkedSessions(src.linkedSessions);
     }, []); // Run once on mount
 
     // ── Pre-populate from periodizer assign context ──────────────────────
@@ -349,6 +357,7 @@ export const WorkoutPacketsPage = () => {
             cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes, weight: r.weight })),
             ...(weightroomSheetConfig ? { weightroomSheet: weightroomSheetConfig } : {}),
         },
+        linkedSessions,
         createdAt: new Date().toISOString(),
     });
 
@@ -389,6 +398,8 @@ export const WorkoutPacketsPage = () => {
             status: 'Scheduled',
             planned_duration: 60,
             track_tonnage: trackTonnage,
+            linked_sessions: linkedSessions,
+            session_type: 'workout',
             exercises: {
                 warmup: sections.warmup.map(attachOverrides),
                 workout: sections.workout.map(attachOverrides),
@@ -842,6 +853,33 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 )}
                             </div>
                         </div>
+                    </div>
+
+                    {/* ── Linked Sessions ────────────────────────────── */}
+                    <div className="px-5 py-4 border-t border-slate-100">
+                        <LinkedSessionsPicker
+                            linked={linkedSessions}
+                            onChange={setLinkedSessions}
+                            label="Linked Sessions"
+                            sources={[
+                                {
+                                    key: 'wattbike',
+                                    label: 'Wattbike',
+                                    icon: <ActivityIcon size={12} />,
+                                    color: 'bg-emerald-100',
+                                    textColor: 'text-emerald-700',
+                                    items: (wattbikeSessions || []).map(s => ({ id: s.id, title: s.title || s.name, meta: s.mapType || s.type })),
+                                },
+                                {
+                                    key: 'conditioning',
+                                    label: 'Conditioning',
+                                    icon: <TimerIcon size={12} />,
+                                    color: 'bg-orange-100',
+                                    textColor: 'text-orange-700',
+                                    items: (conditioningSessions || []).map(s => ({ id: s.id, title: s.title, meta: s.energySystem })),
+                                },
+                            ]}
+                        />
                     </div>
                 </div>
 

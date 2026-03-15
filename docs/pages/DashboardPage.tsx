@@ -5,6 +5,7 @@ import {
     AlertTriangleIcon, CalendarIcon, FilterIcon,
     ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, PlusIcon, CheckCircle2Icon,
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
+    Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon,
 } from 'lucide-react';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
@@ -470,8 +471,14 @@ export const DashboardPage = () => {
                                                                 <div key={session.id} onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
                                                                     className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer ${tc.bg} ${tc.border} ${tc.text}`}>
                                                                     <div className={`flex justify-between items-center ${tc.pillBg} px-1 py-0.5 rounded`}>
-                                                                        <span className="text-[8px] font-medium uppercase tracking-wide">{session.trainingPhase}</span>
                                                                         <div className="flex items-center gap-1">
+                                                                            {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600" />}
+                                                                            {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500" />}
+                                                                            {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} />}
+                                                                            <span className="text-[8px] font-medium uppercase tracking-wide">{session.trainingPhase}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
                                                                             {session.load && (
                                                                                 <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
                                                                                     session.load === 'High' ? 'bg-red-500 text-white' :

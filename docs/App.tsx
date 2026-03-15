@@ -39,6 +39,7 @@ import {
     Search as SearchIcon,
     Settings as SettingsIcon,
     Table as TableIcon,
+    Timer as TimerIcon,
     Trash2 as Trash2Icon,
     UserPlus as UserPlusIcon,
     X as XIcon,
@@ -876,6 +877,14 @@ const SessionModal = () => {
     const loadColor = viewingSession.load === 'High' ? 'text-red-600 bg-red-50 border-red-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-green-600 bg-green-50 border-green-100';
     const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+    const sessionType = viewingSession.session_type || 'workout';
+    const isWattbike = sessionType === 'wattbike';
+    const isConditioning = sessionType === 'conditioning';
+    const linkedSessions = viewingSession.linked_sessions || [];
+    const headerIcon = isWattbike ? <ActivityIcon size={16} /> : isConditioning ? <TimerIcon size={16} /> : <DumbbellIcon size={16} />;
+    const headerBg = isWattbike ? 'bg-emerald-600' : isConditioning ? 'bg-orange-500' : 'bg-slate-800';
+    const typeLabel = isWattbike ? 'Wattbike Session' : isConditioning ? 'Conditioning Session' : (viewingSession.targetType === 'Team' ? 'Team Session' : 'Individual Session');
+
     const handleDeleteAndClose = async () => {
         const id = viewingSession.id;
         if (!confirm('Are you sure you want to delete this session?')) return;
@@ -901,12 +910,12 @@ const SessionModal = () => {
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
-                            <DumbbellIcon size={16} />
+                        <div className={`w-9 h-9 ${headerBg} rounded-lg flex items-center justify-center text-white shrink-0`}>
+                            {headerIcon}
                         </div>
                         <div>
                             <h3 className="text-base font-semibold text-slate-900 leading-tight">{viewingSession.title}</h3>
-                            <p className="text-xs text-slate-400 mt-0.5">{viewingSession.targetType === 'Team' ? 'Team Session' : 'Individual Session'}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{typeLabel}</p>
                         </div>
                     </div>
                     <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
@@ -967,6 +976,52 @@ const SessionModal = () => {
                             </>
                         )}
                     </div>
+
+                    {/* Session-type specific details */}
+                    {isWattbike && viewingSession.exercises?.meta && (
+                        <div className="bg-emerald-50 rounded-lg border border-emerald-100 p-3 space-y-1">
+                            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Wattbike Protocol</span>
+                            <div className="flex items-center gap-3 text-xs text-emerald-700">
+                                {viewingSession.exercises.meta.type && <span className="font-medium">{viewingSession.exercises.meta.type}</span>}
+                                {viewingSession.exercises.meta.duration && <span>· {viewingSession.exercises.meta.duration}</span>}
+                            </div>
+                        </div>
+                    )}
+                    {isConditioning && viewingSession.exercises?.meta && (
+                        <div className="bg-orange-50 rounded-lg border border-orange-100 p-3 space-y-1">
+                            <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Conditioning Protocol</span>
+                            <div className="flex items-center gap-3 text-xs text-orange-700">
+                                {viewingSession.exercises.meta.modality && <span className="font-medium">{viewingSession.exercises.meta.modality}</span>}
+                                {viewingSession.exercises.meta.energySystem && <span>· {viewingSession.exercises.meta.energySystem}</span>}
+                                {viewingSession.exercises.meta.totalDuration && <span>· {viewingSession.exercises.meta.totalDuration}</span>}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Linked sessions */}
+                    {linkedSessions.length > 0 && (
+                        <div className="space-y-2">
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Linked Sessions</span>
+                            <div className="flex flex-wrap gap-2">
+                                {linkedSessions.map(l => {
+                                    const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 text-emerald-700'
+                                        : l.source === 'conditioning' ? 'bg-orange-100 text-orange-700'
+                                        : l.source === 'workout-template' ? 'bg-indigo-100 text-indigo-700'
+                                        : 'bg-slate-100 text-slate-600';
+                                    const srcIcon = l.source === 'wattbike' ? <ActivityIcon size={10} />
+                                        : l.source === 'conditioning' ? <TimerIcon size={10} />
+                                        : <DumbbellIcon size={10} />;
+                                    return (
+                                        <div key={l.id} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                            <div className={`w-4 h-4 rounded flex items-center justify-center ${srcColor}`}>{srcIcon}</div>
+                                            <span className="text-xs font-medium text-slate-700">{l.title}</span>
+                                            {l.meta && <span className="text-[10px] text-slate-400">· {l.meta}</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
@@ -977,9 +1032,21 @@ const SessionModal = () => {
                             <Trash2Icon size={14} /> Delete
                         </button>
                     </div>
-                    <button onClick={handleViewWorkout} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors">
-                        <DumbbellIcon size={14} /> View Workout
-                    </button>
+                    {!isWattbike && !isConditioning && (
+                        <button onClick={handleViewWorkout} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors">
+                            <DumbbellIcon size={14} /> View Workout
+                        </button>
+                    )}
+                    {isWattbike && (
+                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+                            <ActivityIcon size={14} /> View in Wattbike Hub
+                        </button>
+                    )}
+                    {isConditioning && (
+                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
+                            <TimerIcon size={14} /> View in Conditioning Hub
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

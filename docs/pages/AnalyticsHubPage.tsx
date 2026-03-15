@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { UserIcon, ChevronDownIcon, AlertTriangleIcon, LockIcon, CalendarIcon, ArrowLeftIcon, ActivityIcon } from 'lucide-react';
-import { ACWRMetricCard } from '../components/analytics/ACWRMetricCard';
 import { BaselineTrendTerminal } from '../components/analytics/BaselineTrendTerminal';
 import { PerformanceIntelligenceTerminal } from '../components/analytics/PerformanceIntelligenceTerminal';
 import { ScenarioModellingTerminal } from '../components/analytics/ScenarioModellingTerminal';
@@ -168,26 +167,6 @@ export const AnalyticsHubPage = () => {
                 setWatchedKpiIds={setWatchedKpiIds}
                 setIsKpiWatchlistModalOpen={setIsKpiWatchlistModalOpen}
             />}
-
-            {activeAnalyticsModule === 'acwr' && (
-                <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ACWRMetricCard athleteId={selectedAnalyticsAthleteId} loadRecords={loadRecords} />
-
-                        <div className="bg-slate-800 text-white p-5 rounded-xl shadow-sm flex flex-col justify-center">
-                            <h4 className="text-sm font-semibold text-emerald-400 mb-3">Model Interpretation</h4>
-                            <p className="text-sm text-slate-300 leading-relaxed mb-3">
-                                The Acute:Chronic Workload Ratio (ACWR) compares short-term workload (7 days) to long-term workload (28 days).
-                            </p>
-                            <ul className="space-y-2 text-xs text-slate-400">
-                                <li className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> 0.8–1.3: Optimal Load (Low Risk)</li>
-                                <li className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> 1.3–1.5: High Load (Caution)</li>
-                                <li className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div> &gt;1.5: Excessive Load (High Risk)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {activeAnalyticsModule === 'scenario' && (
                 <ScenarioModellingTerminal

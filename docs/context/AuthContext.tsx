@@ -29,6 +29,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearPasswordUpdate = () => setNeedsPasswordUpdate(false);
 
   useEffect(() => {
+    // Fallback: detect recovery token in URL hash in case the event fires before
+    // the listener is registered or the page is refreshed mid-flow.
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setNeedsPasswordUpdate(true);
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSession(session);

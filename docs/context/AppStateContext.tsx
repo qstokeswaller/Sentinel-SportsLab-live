@@ -89,7 +89,23 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         title: '',
         duration: '',
         type: 'Conditioning',
-        sections: []
+        sections: [],
+        linkedSessions: []
+    });
+
+
+    // --- CONDITIONING SESSIONS STATE ---
+    const [conditioningSessions, setConditioningSessions] = useState([]);
+    const [conditioningView, setConditioningView] = useState('grid'); // 'grid', 'view', 'create'
+    const [selectedConditioningSession, setSelectedConditioningSession] = useState(null);
+    const [newConditioningSession, setNewConditioningSession] = useState({
+        title: '',
+        energySystem: 'aerobic', // 'alactic', 'glycolytic', 'aerobic', 'mixed'
+        modality: 'Running', // Running, Bike, Sled, Rowing, etc.
+        totalDuration: '',
+        notes: '',
+        sets: [],
+        linkedSessions: []
     });
 
 
@@ -275,6 +291,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isLoading)
             StorageService.saveWattbikeSessions(wattbikeSessions);
     }, [wattbikeSessions, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading)
+            StorageService.saveConditioningSessions(conditioningSessions);
+    }, [conditioningSessions, isLoading]);
 
     const handleSaveMetric = async (athleteId: string, data: any) => {
         if (!athleteId) {
@@ -516,6 +537,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [activeReport, setActiveReport] = useState(null);
 
     const [gpsData, setGpsData] = useState([]);
+    const [hrData, setHrData] = useState([]);
 
     const [gpsImportStatus, setGpsImportStatus] = useState(null);
 
@@ -654,7 +676,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const modules = [
         { id: 'load', title: 'Baseline & Trend Analysis', icon: TrendingUpIcon, description: 'Diagnostic baselines & trend classification' },
         { id: 'kpi', title: 'Performance Intelligence', icon: LineChartIcon, description: 'KPI trendlines & progression predictors' },
-        { id: 'acwr', title: 'ACWR Monitoring', icon: ActivityIcon, description: 'Track acute:chronic workload ratios to prevent overtraining and optimize performance' },
         { id: 'scenario', title: 'Scenario Modelling', icon: ZapIcon, description: 'Simulate training decisions and assess future risk/readiness.' }
     ];
 
@@ -1880,6 +1901,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setScheduledSessions(mergedSessions);
             setQuestionnaires(loadedQuestionnaires || []);
             setGpsData(loadedGps || []);
+            const rawHr = StorageService.getHrData();
+            setHrData(Array.isArray(rawHr) ? rawHr : []);
             setMedicalReports(loadedMedical || []);
 
             // Workout Templates — prefer Supabase DB, fallback to StorageService
@@ -1959,6 +1982,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 const missingDefaults = prev.filter(s => !existingIds.has(s.id));
                 return [...loadedWattbike, ...missingDefaults];
             });
+
+            const loadedConditioning = await StorageService.getConditioningSessions();
+            if (loadedConditioning && loadedConditioning.length > 0) setConditioningSessions(loadedConditioning);
 
             // 6. Load Training & Wellness records from Storage
             const [loadedLoad, loadedWellness, loadedBiometrics, loadedWorkoutLog] = await Promise.all([
@@ -2231,6 +2257,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setActiveReport,
         gpsData,
         setGpsData,
+        hrData,
+        setHrData,
         gpsImportStatus,
         setGpsImportStatus,
         gpsImportMessage,
@@ -2364,6 +2392,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setActivityLog,
         activeConditioningModule,
         setActiveConditioningModule,
+        conditioningSessions,
+        setConditioningSessions,
+        conditioningView,
+        setConditioningView,
+        selectedConditioningSession,
+        setSelectedConditioningSession,
+        newConditioningSession,
+        setNewConditioningSession,
         isWattbikeMapCalculatorOpen,
         setIsWattbikeMapCalculatorOpen,
         wbMapTab,
