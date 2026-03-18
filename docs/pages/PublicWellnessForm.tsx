@@ -4,6 +4,7 @@ import { DatabaseService } from '../services/databaseService';
 import { CheckCircle2, AlertCircle, Clock, ChevronRight, ChevronLeft, Send, Activity } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { BODY_MAP_AREAS } from '../utils/mocks';
+import { BORG_RPE_SCALE } from '../utils/constants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -195,13 +196,24 @@ const PublicWellnessForm: React.FC = () => {
         </div>
     );
 
+    // ── Severity color map for URTI illness symptom options ────────────────────
+    const SEVERITY_OPTION_COLORS: Record<string, { selected: string; unselected: string }> = {
+        'No Symptoms': { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
+        'Mild':        { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+        'Moderate':    { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',  unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
+        'Severe':      { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
+    };
+
     // ── Determine if Continue button should be disabled ───────────────────────
+    // All questions are required EXCEPT body_map (injury selection is optional).
+    // This overrides the template's required flag to ensure athletes can't skip questions.
     const isContinueDisabled = (() => {
         if (currentStep === 0) return !selectedAthleteId;
         const step = visibleSteps[currentStep - 1];
         if (!step) return true;
-        // Optional questions (required: false) can always be skipped
-        if (!step.question.required) return false;
+        const q = step.question;
+        // body_map is the only truly optional question
+        if (q.type === 'body_map' || q.type === 'buttons') return false;
         const val = responses[step.responseKey];
         return val === undefined || val === null || val === '';
     })();
@@ -229,7 +241,7 @@ const PublicWellnessForm: React.FC = () => {
                 />
             </div>
 
-            <main className="flex-1 p-6 max-w-md mx-auto w-full flex flex-col">
+            <main className="flex-1 overflow-y-auto p-6 pb-2 max-w-md mx-auto w-full">
                 {currentStep === 0 ? (
                     <div className="flex-1">
                         <h2 className="text-2xl font-black text-slate-900 mb-2">Welcome!</h2>
@@ -290,7 +302,11 @@ const PublicWellnessForm: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <h2 className="text-2xl font-black text-slate-900 mb-8 leading-tight">{q.text}</h2>
+                                    <h2 className="text-2xl font-black text-slate-900 leading-tight">{q.text}</h2>
+                                    {q.description && (
+                                        <p className="text-slate-500 font-medium mt-1">{q.description}</p>
+                                    )}
+                                    <div className="mb-8" />
 
                                     {/* Question Inputs */}
                                     {(() => {
@@ -304,20 +320,75 @@ const PublicWellnessForm: React.FC = () => {
                                             const useGrid = scaleSteps.length > 6;
                                             const isRpe = q.type === 'scale_1_10';
 
-                                            // RPE gradient colors per value
+                                            // RPE gradient colors matching standard RPE chart (blue → green → yellow → orange → red)
                                             const rpeColors: Record<number, { selected: string; unselected: string }> = {
-                                                1:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
-                                                2:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
-                                                3:  { selected: 'bg-green-500 border-green-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-green-50 border-green-200 text-green-700 hover:border-green-300' },
-                                                4:  { selected: 'bg-green-500 border-green-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-green-50 border-green-200 text-green-700 hover:border-green-300' },
-                                                5:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
-                                                6:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
-                                                7:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
-                                                8:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
-                                                9:  { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',       unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
-                                                10: { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',       unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
+                                                1:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 border-sky-200 text-sky-700 hover:border-sky-300' },
+                                                2:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 border-sky-200 text-sky-700 hover:border-sky-300' },
+                                                3:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-lime-50 border-lime-200 text-lime-700 hover:border-lime-300' },
+                                                4:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-lime-50 border-lime-200 text-lime-700 hover:border-lime-300' },
+                                                5:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-xl scale-[1.02]',  unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:border-yellow-300' },
+                                                6:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-xl scale-[1.02]',  unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:border-yellow-300' },
+                                                7:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+                                                8:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',  unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
+                                                9:  { selected: 'bg-red-500 border-red-500 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 text-red-700 hover:border-red-300' },
+                                                10: { selected: 'bg-red-600 border-red-600 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 text-red-700 hover:border-red-300' },
                                             };
 
+                                            // RPE: compact vertical list with number + label + color
+                                            if (isRpe) {
+                                                return (
+                                                    <div className="space-y-1.5">
+                                                        {scaleSteps.map(val => {
+                                                            const isSelected = responses[rk] === val;
+                                                            const style = rpeColors[val];
+                                                            const borgLabel = BORG_RPE_SCALE[val]?.label || '';
+                                                            return (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setResponses({ ...responses, [rk]: val })}
+                                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
+                                                                        isSelected ? style.selected : style.unselected
+                                                                    }`}
+                                                                >
+                                                                    <span className="text-lg font-black w-7 text-center shrink-0">{val}</span>
+                                                                    <span className="text-sm">{borgLabel}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            }
+
+                                            // Health severity scale (0-3): plain buttons with descriptors
+                                            const isHealthSeverity = q.type === 'scale_0_3' && q.category === 'health';
+                                            if (isHealthSeverity) {
+                                                const severityLabels: Record<number, string> = { 0: 'None', 1: 'Mild', 2: 'Moderate', 3: 'Severe' };
+                                                return (
+                                                    <div className="space-y-2">
+                                                        {scaleSteps.map(val => {
+                                                            const isSelected = responses[rk] === val;
+                                                            return (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setResponses({ ...responses, [rk]: val })}
+                                                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
+                                                                        isSelected
+                                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                    }`}
+                                                                >
+                                                                    <span className="text-lg font-black w-7 text-center shrink-0">{val}</span>
+                                                                    <span className="text-sm font-semibold">{severityLabels[val] || val}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            }
+
+                                            // Non-RPE scales: grid or vertical list
                                             return (
                                                 <div>
                                                     {(q.labels?.[0] || q.labels?.[1]) && (
@@ -329,18 +400,15 @@ const PublicWellnessForm: React.FC = () => {
                                                     <div className={useGrid ? 'grid grid-cols-5 gap-2' : 'flex flex-col gap-3'}>
                                                         {scaleSteps.map(val => {
                                                             const isSelected = responses[rk] === val;
-                                                            const rpeStyle = isRpe ? rpeColors[val] : null;
                                                             return (
                                                                 <button
                                                                     key={val}
                                                                     type="button"
                                                                     onClick={() => setResponses({ ...responses, [rk]: val })}
                                                                     className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${
-                                                                        rpeStyle
-                                                                            ? (isSelected ? rpeStyle.selected : rpeStyle.unselected)
-                                                                            : (isSelected
-                                                                                ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200')
+                                                                        isSelected
+                                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
                                                                     }`}
                                                                 >
                                                                     {val}
@@ -381,14 +449,18 @@ const PublicWellnessForm: React.FC = () => {
                                                     {(q.options || []).map((opt: any, idx: number) => {
                                                         const val = q.numericMap ? q.numericMap[idx] : opt;
                                                         const isSelected = responses[rk] === val;
+                                                        const sevStyle = SEVERITY_OPTION_COLORS[opt];
                                                         return (
                                                             <button
                                                                 key={idx}
                                                                 type="button"
                                                                 onClick={() => setResponses({ ...responses, [rk]: val })}
-                                                                className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
-                                                                    ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                    : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${
+                                                                    sevStyle
+                                                                        ? (isSelected ? sevStyle.selected : sevStyle.unselected)
+                                                                        : (isSelected
+                                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
+                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200')
                                                                 }`}
                                                             >
                                                                 {opt}
@@ -539,8 +611,11 @@ const PublicWellnessForm: React.FC = () => {
                     </div>
                 )}
 
-                {/* Footer Navigation */}
-                <div className="mt-auto pt-8 flex gap-4">
+            </main>
+
+            {/* Sticky Footer Navigation */}
+            <div className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-100">
+                <div className="flex gap-4 px-6 py-4 max-w-md mx-auto w-full">
                     {currentStep > 0 && (
                         <button
                             type="button"
@@ -577,7 +652,7 @@ const PublicWellnessForm: React.FC = () => {
                         </button>
                     )}
                 </div>
-            </main>
+            </div>
         </div>
     );
 };

@@ -1,15 +1,15 @@
-export const BORG_RPE_SCALE = {
-            0: { label: 'Rest', color: 'text-slate-400' },
-            1: { label: 'Very Easy', color: 'text-emerald-400' },
-            2: { label: 'Easy', color: 'text-emerald-500' },
-            3: { label: 'Moderate', color: 'text-amber-500' },
-            4: { label: 'Sort of Hard', color: 'text-amber-600' },
-            5: { label: 'Hard', color: 'text-orange-500' },
-            6: { label: 'Hard', color: 'text-orange-600' },
-            7: { label: 'Very Hard', color: 'text-red-500' },
-            8: { label: 'Very Hard', color: 'text-red-600' },
-            9: { label: 'Near Maximal', color: 'text-rose-600' },
-            10: { label: 'Maximal', color: 'text-rose-700' }
+export const BORG_RPE_SCALE: Record<number, { label: string; color: string }> = {
+            0: { label: 'Nothing at all',  color: 'text-slate-400' },
+            1: { label: 'Rest',            color: 'text-emerald-400' },
+            2: { label: 'Really easy',     color: 'text-emerald-500' },
+            3: { label: 'Easy',            color: 'text-green-500' },
+            4: { label: 'Moderate',        color: 'text-amber-500' },
+            5: { label: 'Challenging',     color: 'text-amber-600' },
+            6: { label: 'Hard',            color: 'text-orange-500' },
+            7: { label: 'Very hard',       color: 'text-orange-600' },
+            8: { label: 'Really hard',     color: 'text-red-500' },
+            9: { label: 'Near maximal',    color: 'text-rose-600' },
+            10: { label: 'Maximal',        color: 'text-rose-700' }
         };
 
 export const ACWR_UTILS = {

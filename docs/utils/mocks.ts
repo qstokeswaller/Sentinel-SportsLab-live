@@ -423,21 +423,21 @@ export const DEFAULT_WELLNESS_QUESTIONS = [
         ]
     },
     // URTI / Illness symptoms — word-based severity (stored as 0-3 via numericMap)
-    { id: 'urti_hoarseness', type: 'multiple_choice', category: 'health', required: false, text: 'Hoarseness (Voice roughness)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_blocked_nose', type: 'multiple_choice', category: 'health', required: false, text: 'Blocked / Plugged Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_runny_nose', type: 'multiple_choice', category: 'health', required: false, text: 'Runny Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_sinus_pressure', type: 'multiple_choice', category: 'health', required: false, text: 'Sinus Pressure (Facial pressure)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_sneezing', type: 'multiple_choice', category: 'health', required: false, text: 'Sneezing', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_dry_cough', type: 'multiple_choice', category: 'health', required: false, text: 'Dry Cough', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_wet_cough', type: 'multiple_choice', category: 'health', required: false, text: 'Wet Cough (sputum / mucus)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
-    { id: 'urti_headache', type: 'multiple_choice', category: 'health', required: false, text: 'Headache', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_hoarseness', type: 'multiple_choice', category: 'health', required: true, text: 'Hoarseness (Voice roughness)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_blocked_nose', type: 'multiple_choice', category: 'health', required: true, text: 'Blocked / Plugged Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_runny_nose', type: 'multiple_choice', category: 'health', required: true, text: 'Runny Nose', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_sinus_pressure', type: 'multiple_choice', category: 'health', required: true, text: 'Sinus Pressure (Facial pressure)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_sneezing', type: 'multiple_choice', category: 'health', required: true, text: 'Sneezing', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_dry_cough', type: 'multiple_choice', category: 'health', required: true, text: 'Dry Cough', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_wet_cough', type: 'multiple_choice', category: 'health', required: true, text: 'Wet Cough (sputum / mucus)', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
+    { id: 'urti_headache', type: 'multiple_choice', category: 'health', required: true, text: 'Headache', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], numericMap: [0, 1, 2, 3] },
     // Injury / Body Map
     {
         id: 'body_map', type: 'body_map', category: 'injury', required: false,
-        text: 'Knocks & Niggles — Tap any areas of soreness or injury on the body map'
+        text: 'Injuries or Knocks'
     },
     {
-        id: 'injury_type', type: 'multiple_choice', category: 'injury', required: false,
+        id: 'injury_type', type: 'multiple_choice', category: 'injury', required: true,
         text: 'Nature of Pain / Discomfort',
         conditional: { questionId: 'body_map', notEmpty: true },
         options: [
@@ -448,25 +448,25 @@ export const DEFAULT_WELLNESS_QUESTIONS = [
         ]
     },
     {
-        id: 'injury_timing', type: 'multiple_choice', category: 'injury', required: false,
+        id: 'injury_timing', type: 'multiple_choice', category: 'injury', required: true,
         text: 'When did it occur?',
         conditional: { questionId: 'body_map', notEmpty: true },
         options: ['Warm Up', 'Early session', 'Middle of session', 'Towards end of session', 'Before training (pre-existing)']
     },
     {
-        id: 'injury_mechanism', type: 'multiple_choice', category: 'injury', required: false,
+        id: 'injury_mechanism', type: 'multiple_choice', category: 'injury', required: true,
         text: 'Injury Mechanism',
         conditional: { questionId: 'body_map', notEmpty: true },
         options: ['Contact', 'Non-contact', 'Overuse', 'Unknown']
     },
     {
-        id: 'injury_side', type: 'multiple_choice', category: 'injury', required: false,
+        id: 'injury_side', type: 'multiple_choice', category: 'injury', required: true,
         text: 'Affected Side',
         conditional: { questionId: 'body_map', notEmpty: true },
         options: ['Left', 'Right', 'Both', 'Not sure']
     },
     {
-        id: 'training_interruption', type: 'yes_no', category: 'injury', required: false,
+        id: 'training_interruption', type: 'yes_no', category: 'injury', required: true,
         text: 'Did this interrupt your training?',
         conditional: { questionId: 'body_map', notEmpty: true }
     }
@@ -508,7 +508,7 @@ export const DEFAULT_BODY_MAP_CONFIG: import('../types/types').BodyMapConfig = {
     areas: BODY_MAP_AREAS.map(a => ({ key: a.key, label: a.label, view: a.view as 'front' | 'back', color: a.color, hasSeverity: true })),
     severityLevels: DEFAULT_SEVERITY_LEVELS,
     referenceImageUrl: '/body-image.jpeg',
-    instructionText: 'Tap an area to mark it \u00b7 tap again to increase severity \u00b7 tap a third time to clear',
+    instructionText: '1. Tap an area to mark it\n2. Tap again to increase severity of injury\n3. Tap a third time to clear',
     subInputType: 'buttons',
 };
 
