@@ -6,7 +6,8 @@ import {
   Activity as ActivityIcon,
   Timer as TimerIcon,
 } from 'lucide-react';
-import { useExercises } from '../../hooks/useExercises';
+import { useSmartSearch } from '../../hooks/useSmartSearch';
+
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { useAppState } from '../../context/AppStateContext';
 import { LinkedSessionsPicker, LinkedSession } from '../conditioning/LinkedSessionsPicker';
@@ -92,9 +93,10 @@ const BODY_PART_COLORS: Record<string, string> = {
 
 const EXERCISE_CATEGORIES = [
   'All', 'Upper Body', 'Lower Body', 'Core', 'Full Body',
-  'Plyometric', 'Olympic Weightlifting', 'Powerlifting',
-  'Mobility', 'Bodybuilding', 'Calisthenics', 'Balance',
-  'Animal Flow', 'Ballistics', 'Grinds', 'Postural',
+  'Mobility', 'Conditioning',
+  'Bodybuilding', 'Powerlifting', 'Olympic Weightlifting',
+  'Calisthenics', 'Plyometric', 'Balance', 'Postural',
+  'Ballistics', 'Grinds', 'Isolation', 'Compound',
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -325,8 +327,8 @@ export const ProgramBuilderModal = ({
     setError('');
   }, [isOpen, editingProgram]);
 
-  // Exercise search (right panel) — paginated, 25 per page
-  const { data: exData, isLoading: exLoading } = useExercises({
+  // Exercise search (right panel) — paginated, 25 per page, with fuzzy fallback
+  const { data: exData, isLoading: exLoading } = useSmartSearch({
     search: exSearch,
     category: exCategory === 'All' ? undefined : exCategory,
     alphabetLetter: exLetter || undefined,
@@ -336,6 +338,7 @@ export const ProgramBuilderModal = ({
   const searchResults = exData?.exercises ?? [];
   const totalPages    = exData?.totalPages ?? 1;
   const totalCount    = exData?.total ?? 0;
+  const exSuggestions = exData?.suggestions ?? [];
 
   // Volume for active day
   const volume = useMemo(
@@ -757,6 +760,19 @@ export const ProgramBuilderModal = ({
               className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50"
             />
           </div>
+
+          {/* Did you mean? */}
+          {exSuggestions.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+              Did you mean:{' '}
+              {exSuggestions.map((s, i) => (
+                <React.Fragment key={s.name}>
+                  {i > 0 && ', '}
+                  <button type="button" onClick={() => { setExSearch(s.name); setExPage(1); }} className="font-semibold underline underline-offset-2 hover:text-amber-900">{s.name}</button>
+                </React.Fragment>
+              ))}?
+            </div>
+          )}
 
           {/* Category filter */}
           <div className="relative">

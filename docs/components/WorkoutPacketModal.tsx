@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppState } from '../context/AppStateContext';
-import { useExercises } from '../hooks/useExercises';
+import { useSmartSearch } from '../hooks/useSmartSearch';
+import { useExerciseMap } from '../hooks/useExerciseMap';
 import {
     X as XIcon,
     Printer as PrinterIcon,
@@ -24,9 +25,10 @@ const TRAINING_PHASES = ['Strength', 'Power', 'Hypertrophy', 'Speed', 'Condition
 
 const EXERCISE_CATEGORIES = [
     'All', 'Upper Body', 'Lower Body', 'Core', 'Full Body',
-    'Plyometric', 'Olympic Weightlifting', 'Powerlifting',
-    'Mobility', 'Bodybuilding', 'Calisthenics', 'Balance',
-    'Animal Flow', 'Ballistics', 'Grinds', 'Postural',
+    'Mobility', 'Conditioning',
+    'Bodybuilding', 'Powerlifting', 'Olympic Weightlifting',
+    'Calisthenics', 'Plyometric', 'Balance', 'Postural',
+    'Ballistics', 'Grinds', 'Isolation', 'Compound',
 ];
 
 const SECTIONS = ['warmup', 'workout', 'cooldown'] as const;
@@ -45,6 +47,7 @@ interface ExRow {
     reps: string;
     rest: string;
     rpe: string;
+    weight: string;
     notes: string;
 }
 
@@ -56,6 +59,7 @@ const emptyRow = (ex: { id: string; name: string }): ExRow => ({
     reps: '10',
     rest: '60',
     rpe: '7',
+    weight: '',
     notes: '',
 });
 
@@ -68,6 +72,7 @@ const WorkoutPacketModal = () => {
         scheduleWorkoutSession, showToast,
         workoutTemplates, setWorkoutTemplates,
     } = useAppState();
+    const { exerciseFullMap } = useExerciseMap();
 
     // ── Session info state ─────────────────────────────────────────────────
     const [title, setTitle] = useState('');
@@ -92,14 +97,15 @@ const WorkoutPacketModal = () => {
     const [viewMode, setViewMode] = useState<'builder' | 'templates'>('builder');
     const [scheduling, setScheduling] = useState(false);
 
-    // ── Query ──────────────────────────────────────────────────────────────
-    const { data: exData, isLoading: exLoading } = useExercises({
+    // ── Query (smart search with fuzzy fallback) ───────────────────────────
+    const { data: exData, isLoading: exLoading } = useSmartSearch({
         search: exSearch || undefined,
         category: exCategory !== 'All' ? exCategory : undefined,
         alphabetLetter: exLetter || undefined,
         page: exPage,
         pageSize: 25,
     });
+    const packetSuggestions = exData?.suggestions ?? [];
 
     useEffect(() => { setExPage(1); }, [exSearch, exCategory, exLetter]);
 
@@ -173,7 +179,7 @@ const WorkoutPacketModal = () => {
                 name: r.exerciseName,
                 sets: parseInt(r.sets) || 3,
                 reps: r.reps || '10',
-                weight: '-',
+                weight: r.weight || '-',
                 rpe: parseInt(r.rpe) || 7,
                 notes: r.notes || '',
             })),
@@ -199,9 +205,9 @@ const WorkoutPacketModal = () => {
             trainingPhase,
             load,
             sections: {
-                warmup: sections.warmup.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
-                workout: sections.workout.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
-                cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, notes: r.notes })),
+                warmup: sections.warmup.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, weight: r.weight, notes: r.notes })),
+                workout: sections.workout.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, weight: r.weight, notes: r.notes })),
+                cooldown: sections.cooldown.map(r => ({ exerciseId: r.exerciseId, exerciseName: r.exerciseName, sets: r.sets, reps: r.reps, rest: r.rest, rpe: r.rpe, weight: r.weight, notes: r.notes })),
             },
             createdAt: new Date().toISOString(),
         };
@@ -233,10 +239,22 @@ const WorkoutPacketModal = () => {
 
         const buildTable = (rows: ExRow[]) => {
             if (!rows.length) return '';
-            const trs = rows.map(r =>
-                `<tr><td>${r.exerciseName}</td><td>${r.sets}</td><td>${r.reps}</td><td>${r.rest}s</td><td>${r.rpe}</td><td>${r.notes || ''}</td></tr>`
-            ).join('');
-            return `<table><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Notes</th></tr></thead><tbody>${trs}</tbody></table>`;
+            const trs = rows.map((r, i) => {
+                const info = exerciseFullMap?.[r.exerciseId];
+                const rawDesc = info?.description || '';
+                const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
+                const videoUrl = info?.video_url || '';
+                const hasDetail = desc || videoUrl;
+                const weightCell = r.weight ? `<td style="color:#4f46e5;font-weight:600">${r.weight}kg</td>` : '<td>—</td>';
+                return `<tr>
+                    <td><strong>${r.exerciseName}</strong></td>
+                    <td>${r.sets}</td><td>${r.reps}</td>${weightCell}<td>${r.rest}s</td><td>${r.rpe}</td><td>${r.notes || ''}</td>
+                </tr>${hasDetail ? `<tr class="detail-row"><td colspan="7" style="background:#f8fafc;padding:6px 12px 10px;border-top:none;">
+                    ${desc ? `<div style="font-size:11px;color:#64748b;line-height:1.5;margin-bottom:${videoUrl ? '4px' : '0'}">${desc}</div>` : ''}
+                    ${videoUrl ? `<a href="${videoUrl}" style="font-size:11px;color:#4f46e5;text-decoration:none;" target="_blank">Video Reference ↗</a>` : ''}
+                </td></tr>` : ''}`;
+            }).join('');
+            return `<table><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight</th><th>Rest</th><th>RPE</th><th>Notes</th></tr></thead><tbody>${trs}</tbody></table>`;
         };
 
         let body = '';
@@ -470,7 +488,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             sections[activeSection].map((row, idx) => (
                                                 <div key={row.tempId} className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 hover:border-slate-200 transition-all">
                                                     {/* Exercise header */}
-                                                    <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center justify-between mb-1">
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
                                                             <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
@@ -479,11 +497,20 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                             <Trash2Icon size={12} />
                                                         </button>
                                                     </div>
+                                                    {/* Description */}
+                                                    {(() => {
+                                                        const info = exerciseFullMap?.[row.exerciseId];
+                                                        const desc = info?.description && info.description.toLowerCase() !== 'no description provided.' ? info.description : '';
+                                                        return desc ? (
+                                                            <p className="text-[10px] text-slate-400 leading-snug mb-3 ml-8">{desc}</p>
+                                                        ) : <div className="mb-3" />;
+                                                    })()}
                                                     {/* Fields */}
-                                                    <div className="grid grid-cols-5 gap-2">
+                                                    <div className="grid grid-cols-6 gap-2">
                                                         {[
                                                             { key: 'sets', label: 'Sets', placeholder: '3' },
                                                             { key: 'reps', label: 'Reps', placeholder: '10' },
+                                                            { key: 'weight', label: 'Weight (kg)', placeholder: '80' },
                                                             { key: 'rest', label: 'Rest (s)', placeholder: '60' },
                                                             { key: 'rpe', label: 'RPE', placeholder: '7' },
                                                             { key: 'notes', label: 'Notes', placeholder: '—' },
@@ -529,6 +556,18 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 transition-all"
                             />
                         </div>
+                        {/* Did you mean? */}
+                        {packetSuggestions.length > 0 && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                                Did you mean:{' '}
+                                {packetSuggestions.map((s, i) => (
+                                    <React.Fragment key={s.name}>
+                                        {i > 0 && ', '}
+                                        <button type="button" onClick={() => { setExSearch(s.name); setExPage(1); }} className="font-semibold underline underline-offset-2 hover:text-amber-900">{s.name}</button>
+                                    </React.Fragment>
+                                ))}?
+                            </div>
+                        )}
                         {/* Category */}
                         <div className="relative">
                             <select value={exCategory} onChange={e => setExCategory(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium outline-none appearance-none pr-8 focus:border-indigo-400 transition-all">

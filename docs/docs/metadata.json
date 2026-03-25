@@ -1,0 +1,7 @@
+{
+  "name": "Sentinel SportsLab",
+  "description": "A comprehensive platform for sports scientists and trainers to manage periodized plans, monitor client RPE, and track training loads.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
