@@ -121,6 +121,7 @@ export const WorkoutPacketsPage = () => {
         handleUpdatePlanSession, periodizationPlans,
         maxHistory,
         wattbikeSessions, conditioningSessions,
+        personalExerciseIds,
     } = useAppState();
 
     // ── Incoming edit state via router ───────────────────────────────────
@@ -302,6 +303,11 @@ export const WorkoutPacketsPage = () => {
         pageSize: 25,
     });
     const exSuggestions = exData?.suggestions ?? [];
+    const [pickerSource, setPickerSource] = useState<'all' | 'mine'>('all');
+    const personalSet = useMemo(() => new Set(personalExerciseIds || []), [personalExerciseIds]);
+    const displayExercises = pickerSource === 'mine'
+        ? (exData?.exercises || []).filter(ex => personalSet.has(ex.id))
+        : (exData?.exercises || []);
 
     useEffect(() => { setExPage(1); }, [exSearch, exCategory, exLetter]);
 
@@ -570,25 +576,25 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         <div className="flex items-center gap-2">
                             {isAssigning ? (
                                 <>
-                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all" title="Save as template without assigning">
+                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[10px] font-semibold text-emerald-700 transition-all" title="Save as template without assigning">
                                         <SaveIcon size={12} /> Save Template Only
                                     </button>
                                     <button onClick={handleAssignToPlan} disabled={assigning || !title.trim() || totalExercises === 0}
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                                         <CalendarPlusIcon size={12} /> {assigning ? 'Assigning...' : 'Assign & Return'}
                                     </button>
                                 </>
                             ) : isEditing ? (
                                 <>
-                                    <button onClick={handleUpdateTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all">
+                                    <button onClick={handleUpdateTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[10px] font-semibold text-emerald-700 transition-all">
                                         <RefreshCwIcon size={12} /> Update Template
                                     </button>
-                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all">
+                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[10px] font-semibold text-emerald-700 transition-all">
                                         <CopyIcon size={12} /> Save as New
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all" title="Save as template">
+                                <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[10px] font-semibold text-emerald-700 transition-all" title="Save as template">
                                     <SaveIcon size={12} /> Save Template
                                 </button>
                             )}
@@ -604,10 +610,10 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     >
                                         <ClipboardListIcon size={12} /> {weightroomSheetConfig ? 'Edit Sheet' : 'Attach Sheet'}
                                     </button>
-                                    <button onClick={handlePrint} disabled={totalExercises === 0} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                    <button onClick={handlePrint} disabled={totalExercises === 0} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${totalExercises === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}>
                                         <PrinterIcon size={12} /> Print
                                     </button>
-                                    <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                                    <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${(scheduling || !title.trim() || !targetId) ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
                                         <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
                                     </button>
                                 </>
@@ -889,7 +895,15 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xs font-semibold text-slate-700">Choose Exercise</h3>
-                            <span className="text-[9px] text-slate-400">{exData?.total ?? 0} total</span>
+                            <span className="text-[9px] text-slate-400">{pickerSource === 'mine' ? displayExercises.length : (exData?.total ?? 0)} total</span>
+                        </div>
+                        {/* All / Mine toggle */}
+                        <div className="flex bg-slate-100 rounded-lg p-0.5">
+                            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
+                            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
+                                Mine
+                            </button>
                         </div>
                         <div className="relative">
                             <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -948,10 +962,12 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     <div className="flex-1 overflow-y-auto p-3 space-y-1">
                         {exLoading ? (
                             <div className="py-12 flex items-center justify-center text-slate-400 text-xs">Loading...</div>
-                        ) : (exData?.exercises || []).length === 0 ? (
-                            <div className="py-12 flex items-center justify-center text-slate-400 text-xs">No exercises found</div>
+                        ) : displayExercises.length === 0 ? (
+                            <div className="py-12 flex flex-col items-center justify-center text-slate-400 text-xs gap-1">
+                                {pickerSource === 'mine' ? <><span>No exercises in your library</span><span className="text-[9px]">Star exercises from the Exercise Library page</span></> : 'No exercises found'}
+                            </div>
                         ) : (
-                            (exData?.exercises || []).map(ex => {
+                            displayExercises.map(ex => {
                                 const already = sections[activeSection].some(r => r.exerciseId === ex.id);
                                 return (
                                     <button

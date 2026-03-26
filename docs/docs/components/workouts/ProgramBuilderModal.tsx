@@ -483,7 +483,7 @@ export const ProgramBuilderModal = ({
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-sm font-bold">
+            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-bold">
               <ArrowLeftIcon size={18} /> Back
             </button>
             <div className="h-5 w-px bg-slate-200" />
@@ -892,7 +892,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.max(1, p - 1))}
                 disabled={exPage === 1 || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeftIcon size={11} /> Prev
               </button>
@@ -903,7 +903,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.min(totalPages, p + 1))}
                 disabled={exPage === totalPages || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next <ChevronRightIcon size={11} />
               </button>

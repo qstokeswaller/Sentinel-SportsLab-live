@@ -246,7 +246,7 @@ export const ProgramBuilderModal = ({
   onClose,
   editingProgram = null,
 }: ProgramBuilderModalProps) => {
-  const { wattbikeSessions, conditioningSessions } = useAppState();
+  const { wattbikeSessions, conditioningSessions, personalExerciseIds } = useAppState();
 
   // Program meta
   const [programName, setProgramName]         = useState('');
@@ -335,9 +335,13 @@ export const ProgramBuilderModal = ({
     page: exPage,
     pageSize: 25,
   });
-  const searchResults = exData?.exercises ?? [];
+  const [pickerSource, setPickerSource] = useState<'all' | 'mine'>('all');
+  const personalSet = useMemo(() => new Set(personalExerciseIds), [personalExerciseIds]);
+  const searchResults = pickerSource === 'mine'
+    ? (exData?.exercises ?? []).filter(ex => personalSet.has(ex.id))
+    : (exData?.exercises ?? []);
   const totalPages    = exData?.totalPages ?? 1;
-  const totalCount    = exData?.total ?? 0;
+  const totalCount    = pickerSource === 'mine' ? searchResults.length : (exData?.total ?? 0);
   const exSuggestions = exData?.suggestions ?? [];
 
   // Volume for active day
@@ -479,7 +483,7 @@ export const ProgramBuilderModal = ({
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={onClose} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-sm font-bold">
+            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-bold">
               <ArrowLeftIcon size={18} /> Back
             </button>
             <div className="h-5 w-px bg-slate-200" />
@@ -750,6 +754,15 @@ export const ProgramBuilderModal = ({
         <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
           <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Choose Exercise</h3>
 
+          {/* All / Mine toggle */}
+          <div className="flex bg-slate-100 rounded-lg p-0.5">
+            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
+            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
+              Mine
+            </button>
+          </div>
+
           {/* Search */}
           <div className="relative">
             <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -845,7 +858,9 @@ export const ProgramBuilderModal = ({
             {exLoading ? (
               <div className="p-6 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">Loading...</div>
             ) : searchResults.length === 0 ? (
-              <div className="p-6 text-center text-[10px] font-bold text-slate-300 uppercase tracking-wide">No exercises found</div>
+              <div className="p-6 text-center text-[10px] font-bold text-slate-300 tracking-wide">
+                {pickerSource === 'mine' ? <><div className="uppercase">No exercises in your library</div><div className="text-[9px] font-medium normal-case mt-1">Star exercises from the Exercise Library page</div></> : <span className="uppercase">No exercises found</span>}
+              </div>
             ) : (
               searchResults.map((ex) => (
                 <button
@@ -877,7 +892,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.max(1, p - 1))}
                 disabled={exPage === 1 || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeftIcon size={11} /> Prev
               </button>
@@ -888,7 +903,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.min(totalPages, p + 1))}
                 disabled={exPage === totalPages || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next <ChevronRightIcon size={11} />
               </button>

@@ -333,13 +333,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     Templates {workoutTemplates.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded-full text-[8px]">{workoutTemplates.length}</span>}
                                 </button>
                             </div>
-                            <button onClick={handleSaveTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-semibold text-slate-600 transition-all" title="Save as template">
+                            <button onClick={handleSaveTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-[10px] font-semibold text-emerald-700 transition-all" title="Save as template">
                                 <SaveIcon size={12} /> Save Template
                             </button>
-                            <button onClick={handlePrint} disabled={totalExercises === 0} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                            <button onClick={handlePrint} disabled={totalExercises === 0} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${totalExercises === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}>
                                 <PrinterIcon size={12} /> Print
                             </button>
-                            <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-semibold disabled:opacity-40 transition-all">
+                            <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${(scheduling || !title.trim() || !targetId) ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
                                 <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
                             </button>
                             <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-all">

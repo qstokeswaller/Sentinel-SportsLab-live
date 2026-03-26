@@ -67,14 +67,10 @@ export const ExerciseLibraryPage = () => {
 
     // ── Personal library client-side filtering ──────────────────────────
     const personalExercises = useMemo(() => {
-        const all = personalExerciseIds
-            .map(id => exerciseFullMap?.[id])
-            .filter(Boolean)
-            .map(ex => ({ ...ex, id: Object.keys(exerciseFullMap).find(k => exerciseFullMap[k] === ex) }));
-        // Re-map with proper id
+        if (!personalExerciseIds?.length || !exerciseFullMap) return [];
         return personalExerciseIds
             .map(id => {
-                const info = exerciseFullMap?.[id];
+                const info = exerciseFullMap[id];
                 if (!info) return null;
                 return { id, ...info };
             })
@@ -82,9 +78,9 @@ export const ExerciseLibraryPage = () => {
     }, [personalExerciseIds, exerciseFullMap]);
 
     const filteredPersonalExercises = useMemo(() => {
-        let list = personalExercises;
+        let list = personalExercises || [];
         const q = librarySearch?.toLowerCase().trim();
-        if (q) list = list.filter(ex => ex.name.toLowerCase().includes(q));
+        if (q) list = list.filter(ex => ex.name?.toLowerCase().includes(q));
         if (selectedCategory && selectedCategory !== 'All') list = list.filter(ex => ex.categories?.[0] === selectedCategory);
         if (selectedClassification && selectedClassification !== 'All') list = list.filter(ex => ex.categories?.[1] === selectedClassification);
         if (selectedMuscleGroup && selectedMuscleGroup !== 'All') list = list.filter(ex => ex.body_parts?.includes(selectedMuscleGroup));
@@ -97,7 +93,8 @@ export const ExerciseLibraryPage = () => {
 
     // Recently used exercises not already in personal library
     const recentNotInPersonal = useMemo(() => {
-        const personalSet = new Set(personalExerciseIds);
+        if (!recentlyUsedExerciseIds?.length) return [];
+        const personalSet = new Set(personalExerciseIds || []);
         return recentlyUsedExerciseIds
             .filter(id => !personalSet.has(id))
             .slice(0, 10)
