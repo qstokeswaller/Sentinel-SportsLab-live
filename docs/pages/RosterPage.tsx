@@ -4,12 +4,14 @@ import { useAppState } from '../context/AppStateContext';
 import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
-    ArrowLeftIcon, LayoutListIcon,
+    ArrowLeftIcon, LayoutListIcon, ClipboardListIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import TrainingRegister from '../components/roster/TrainingRegister';
 
 type ViewMode     = 'list' | 'grid';
 type PlayerLayout = 'list' | 'cards';          // sub-toggle inside team drill-down
+type TeamDetailTab = 'athletes' | 'register';
 
 export const RosterPage = () => {
     const {
@@ -24,6 +26,7 @@ export const RosterPage = () => {
     const [viewMode, setViewMode]           = useState<ViewMode>('list');
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [playerLayout, setPlayerLayout]   = useState<PlayerLayout>('cards');
+    const [teamDetailTab, setTeamDetailTab] = useState<TeamDetailTab>('athletes');
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
 
@@ -36,6 +39,7 @@ export const RosterPage = () => {
     const switchViewMode = (mode: ViewMode) => {
         setViewMode(mode);
         setSelectedTeamId(null); // always reset drill-down when toggling view
+        setTeamDetailTab('athletes');
     };
 
     const handleConfirmDelete = async () => {
@@ -238,7 +242,7 @@ export const RosterPage = () => {
                     return (
                         <div
                             key={team.id}
-                            onClick={() => setSelectedTeamId(team.id)}
+                            onClick={() => { setSelectedTeamId(team.id); setTeamDetailTab('athletes'); }}
                             className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
                         >
                             {/* Coloured top strip */}
@@ -343,23 +347,25 @@ export const RosterPage = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* Player layout sub-toggle */}
-                        <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-0.5">
-                            <button
-                                onClick={() => setPlayerLayout('list')}
-                                className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'}`}
-                                title="List"
-                            >
-                                <LayoutListIcon size={14} />
-                            </button>
-                            <button
-                                onClick={() => setPlayerLayout('cards')}
-                                className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'}`}
-                                title="Cards"
-                            >
-                                <LayoutGridIcon size={14} />
-                            </button>
-                        </div>
+                        {/* Player layout sub-toggle — only visible on Athletes tab */}
+                        {teamDetailTab === 'athletes' && (
+                            <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-0.5">
+                                <button
+                                    onClick={() => setPlayerLayout('list')}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'}`}
+                                    title="List"
+                                >
+                                    <LayoutListIcon size={14} />
+                                </button>
+                                <button
+                                    onClick={() => setPlayerLayout('cards')}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-700'}`}
+                                    title="Cards"
+                                >
+                                    <LayoutGridIcon size={14} />
+                                </button>
+                            </div>
+                        )}
                         {/* Main view toggle — stays here so user can jump back to list view */}
                         <ViewToggle />
                         <button
@@ -375,7 +381,34 @@ export const RosterPage = () => {
                     </div>
                 </div>
 
-                {players.length === 0 ? (
+                {/* Athletes | Register tab bar */}
+                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 w-fit">
+                    <button
+                        onClick={() => setTeamDetailTab('athletes')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                            teamDetailTab === 'athletes'
+                                ? 'bg-white shadow-sm text-slate-900'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        <UsersIcon size={13} /> Athletes
+                    </button>
+                    <button
+                        onClick={() => setTeamDetailTab('register')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                            teamDetailTab === 'register'
+                                ? 'bg-white shadow-sm text-slate-900'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        <ClipboardListIcon size={13} /> Register
+                    </button>
+                </div>
+
+                {/* Tab body: Register */}
+                {teamDetailTab === 'register' ? (
+                    <TrainingRegister team={selectedTeam} />
+                ) : players.length === 0 ? (
                     <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 p-12 text-center">
                         <UsersIcon size={28} className="text-slate-300 mx-auto mb-3" />
                         <p className="text-sm font-medium text-slate-400">No athletes in this team yet.</p>

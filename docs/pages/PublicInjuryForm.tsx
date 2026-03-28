@@ -117,8 +117,9 @@ const PublicInjuryForm = () => {
 
     const selectedAthlete = athletes.find(a => a.id === selectedAthleteId);
 
+    const minStep = preselectedAthleteId ? 1 : 0;
     const handleNext = () => { setStep(s => Math.min(s + 1, STEP_NAMES.length - 1)); window.scrollTo(0, 0); };
-    const handleBack = () => { setStep(s => Math.max(0, s - 1)); window.scrollTo(0, 0); };
+    const handleBack = () => { setStep(s => Math.max(minStep, s - 1)); window.scrollTo(0, 0); };
 
     const canProgress = () => {
         if (step === 0) return !!selectedAthleteId;
@@ -216,8 +217,8 @@ const PublicInjuryForm = () => {
             </div>
 
             <main className="flex-1 p-6 max-w-lg mx-auto w-full flex flex-col">
-                {/* Step 0: Athlete Selection */}
-                {step === 0 && (
+                {/* Step 0: Athlete Selection (only when no athlete preselected in URL) */}
+                {step === 0 && !preselectedAthleteId && (
                     <div className="flex-1">
                         <h2 className="text-2xl font-black text-slate-900 mb-2">Select Athlete</h2>
                         <p className="text-slate-500 mb-8 font-medium">Choose the athlete this injury report is for.</p>
@@ -239,6 +240,18 @@ const PublicInjuryForm = () => {
                 {/* Step 1: Body Map */}
                 {step === 1 && (
                     <div className="flex-1 space-y-4">
+                        {/* Locked athlete banner when preselected */}
+                        {preselectedAthleteId && selectedAthlete && (
+                            <div className="bg-cyan-50 border border-cyan-200 rounded-2xl p-4 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-cyan-600 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0">
+                                    {selectedAthlete.name?.[0]?.toUpperCase() || '?'}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600">Injury report for</p>
+                                    <p className="font-black text-slate-900 text-lg leading-tight">{selectedAthlete.name}</p>
+                                </div>
+                            </div>
+                        )}
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Injury Location</h2>
                         <p className="text-slate-500 font-medium mb-4">Tap the affected body areas and indicate severity.</p>
                         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">

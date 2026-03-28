@@ -649,4 +649,42 @@ export const DatabaseService = {
         if (error) throw error;
         return data as any;
     },
+
+    // --- TRAINING ATTENDANCE ---
+
+    async fetchAttendanceByTeam(teamId: string) {
+        const { data, error } = await (supabase as any)
+            .from('training_attendance')
+            .select('*')
+            .eq('team_id', teamId)
+            .order('date', { ascending: false });
+        if (error) throw error;
+        return data as any[];
+    },
+
+    async saveAttendance(record: {
+        session_id: string;
+        team_id: string;
+        date: string;
+        absent_athlete_ids: string[];
+        attendance_count: number;
+        attendance_total: number;
+        notes?: string;
+    }) {
+        const { data, error } = await (supabase as any)
+            .from('training_attendance')
+            .upsert(record, { onConflict: 'session_id,team_id' })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteAttendance(id: string) {
+        const { error } = await (supabase as any)
+            .from('training_attendance')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    },
 };

@@ -58,6 +58,9 @@ const AddEventModal = () => {
     const [selectedDates, setSelectedDates] = useState<string[]>([]);
     const [dateToAdd, setDateToAdd] = useState(new Date().toISOString().split('T')[0]);
     const [creating, setCreating] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const titleRef = React.useRef(null);
+    const datesRef = React.useRef(null);
 
     // Custom type inline form
     const [showCustomTypeForm, setShowCustomTypeForm] = useState(false);
@@ -85,6 +88,7 @@ const AddEventModal = () => {
         setShowCustomTypeForm(false);
         setNewTypeLabel('');
         setCreating(false);
+        setValidationErrors({});
     };
 
     const handleClose = () => {
@@ -129,7 +133,16 @@ const AddEventModal = () => {
     };
 
     const handleSubmit = async () => {
-        if (!title.trim()) return;
+        const errors: Record<string, string> = {};
+        if (!title.trim()) errors.title = 'Please enter an event title';
+        if (scheduleMode === 'dates' && selectedDates.length === 0) errors.dates = 'Please select at least one date';
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            const firstRef = errors.title ? titleRef : datesRef;
+            firstRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setValidationErrors({});
 
         const basePayload = {
             title: title.trim(),
@@ -143,24 +156,17 @@ const AddEventModal = () => {
         };
 
         if (scheduleMode === 'dates' && selectedDates.length > 0) {
-            // Batch create: one event per selected date
-            // Insert all but last directly, then use handleAddCalendarEvent for the last (triggers initData reload)
+            // Batch create: one event per selected date — all through handler for instant UI update
             setCreating(true);
             try {
                 const sorted = [...selectedDates].sort();
-                for (let i = 0; i < sorted.length - 1; i++) {
-                    await DatabaseService.createCalendarEvent({
+                for (const d of sorted) {
+                    await handleAddCalendarEvent({
                         ...basePayload,
-                        start_date: sorted[i],
-                        end_date: sorted[i],
+                        start_date: d,
+                        end_date: d,
                     });
                 }
-                // Last one goes through the handler which calls initData()
-                await handleAddCalendarEvent({
-                    ...basePayload,
-                    start_date: sorted[sorted.length - 1],
-                    end_date: sorted[sorted.length - 1],
-                });
                 resetForm();
             } catch (err) {
                 showToast('Failed to create events', 'error');
@@ -171,7 +177,7 @@ const AddEventModal = () => {
             // Range mode — split into individual events per day
             const effectiveEnd = endDate || startDate;
             if (effectiveEnd > startDate) {
-                // Multiple days: create one event per day
+                // Multiple days: create one event per day — all through handler
                 setCreating(true);
                 try {
                     const dates: string[] = [];
@@ -181,19 +187,13 @@ const AddEventModal = () => {
                         dates.push(cur.toISOString().split('T')[0]);
                         cur.setDate(cur.getDate() + 1);
                     }
-                    for (let i = 0; i < dates.length - 1; i++) {
-                        await DatabaseService.createCalendarEvent({
+                    for (const d of dates) {
+                        await handleAddCalendarEvent({
                             ...basePayload,
-                            start_date: dates[i],
-                            end_date: dates[i],
+                            start_date: d,
+                            end_date: d,
                         });
                     }
-                    // Last one triggers initData reload
-                    await handleAddCalendarEvent({
-                        ...basePayload,
-                        start_date: dates[dates.length - 1],
-                        end_date: dates[dates.length - 1],
-                    });
                     resetForm();
                 } catch (err) {
                     showToast('Failed to create events', 'error');
@@ -212,7 +212,7 @@ const AddEventModal = () => {
         }
     };
 
-    const canSubmit = title.trim() && !creating && (scheduleMode === 'range' || selectedDates.length > 0);
+    const canSubmit = !creating;
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -236,16 +236,17 @@ const AddEventModal = () => {
                 {/* Form Body */}
                 <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
                     {/* Event Name */}
-                    <div>
+                    <div ref={titleRef}>
                         <label className={LABEL}>Event Name <span className="text-red-400">*</span></label>
                         <input
                             type="text"
                             value={title}
-                            onChange={e => setTitle(e.target.value)}
+                            onChange={e => { setTitle(e.target.value); if (validationErrors.title) setValidationErrors(p => { const n = { ...p }; delete n.title; return n; }); }}
                             placeholder="e.g. Team Meeting, Physio Appointment..."
-                            className={INPUT}
+                            className={`${INPUT} ${validationErrors.title ? '!border-red-400 ring-2 ring-red-100' : ''}`}
                             autoFocus
                         />
+                        {validationErrors.title && <p className="text-red-500 text-[10px] font-semibold mt-1 pl-1">{validationErrors.title}</p>}
                     </div>
 
                     {/* Event Type */}

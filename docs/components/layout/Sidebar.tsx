@@ -54,7 +54,8 @@ export const Sidebar = () => {
                         <span className="font-bold text-sm text-slate-900 leading-tight">
                             Sentinel <span className="text-indigo-600">SportsLab</span>
                         </span>
-                        <span className="text-[10px] text-slate-400 leading-tight">S&C Platform</span>
+                        <span className="text-[10px] text-slate-400 leading-tight">Athlete Monitoring</span>
+                        <span className="text-[10px] text-slate-400 leading-tight">& Performance Intelligence</span>
                     </div>
                 )}
             </div>

@@ -14,13 +14,16 @@ const OnboardingPage: React.FC = () => {
   const [clubName, setClubName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clubNameError, setClubNameError] = useState(false);
 
   const handleContinue = async () => {
     if (!selected || !user) return;
     if (selected === 'club' && !clubName.trim()) {
       setError('Please enter your club name.');
+      setClubNameError(true);
       return;
     }
+    setClubNameError(false);
 
     setLoading(true);
     setError(null);
@@ -135,11 +138,16 @@ const OnboardingPage: React.FC = () => {
               <input
                 type="text"
                 value={clubName}
-                onChange={e => setClubName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
+                onChange={e => { setClubName(e.target.value); setClubNameError(false); setError(null); }}
+                className={`w-full bg-slate-50 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                  clubNameError
+                    ? 'border-2 border-red-400 focus:ring-red-500/20 focus:border-red-400'
+                    : 'border border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
+                }`}
                 placeholder="e.g. Northside FC"
                 autoFocus
               />
+              {clubNameError && <p className="text-red-500 text-xs mt-1">Please enter your club name.</p>}
             </div>
           )}
 

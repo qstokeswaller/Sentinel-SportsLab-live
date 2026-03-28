@@ -387,6 +387,9 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
     const [newQuestQuestions, setNewQuestQuestions] = useState<any[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const titleRef = React.useRef<HTMLDivElement>(null);
+    const questionsRef = React.useRef<HTMLDivElement>(null);
 
     const applyWellnessTemplate = () => {
         setNewQuestTitle('Daily Wellness Check');
@@ -394,7 +397,19 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
     };
 
     const handleSaveTemplate = async () => {
-        if (!newQuestTitle) return;
+        const errors: Record<string, string> = {};
+        if (!newQuestTitle.trim()) errors.title = 'Template title is required.';
+        if (newQuestQuestions.length === 0) errors.questions = 'Add at least one question.';
+        // Check for empty question text
+        const emptyQ = newQuestQuestions.findIndex(q => !q.text?.trim());
+        if (emptyQ >= 0 && !errors.questions) errors.questions = `Question ${emptyQ + 1} has no text.`;
+        if (Object.keys(errors).length) {
+            setValidationErrors(errors);
+            const firstRef = errors.title ? titleRef : questionsRef;
+            firstRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setValidationErrors({});
         setLoading(true);
         try {
             const templateData = { name: newQuestTitle, questions: newQuestQuestions, is_active: true, is_default: false };
@@ -551,20 +566,30 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             </div>
 
             {/* Title */}
-            <div className="space-y-2">
-                <label className="text-[10px] font-semibold uppercase text-slate-400">Template Title</label>
+            <div className="space-y-2" ref={titleRef}>
+                <label className="text-[10px] font-semibold uppercase text-slate-400">Template Title <span className="text-red-500">*</span></label>
                 <input
                     type="text"
                     value={newQuestTitle}
-                    onChange={e => setNewQuestTitle(e.target.value)}
+                    onChange={e => { setNewQuestTitle(e.target.value); setValidationErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
                     placeholder="e.g. Daily Wellness Check"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-5 py-4 text-lg font-bold outline-none focus:ring-2 focus:ring-cyan-500/10 shadow-sm"
+                    className={`w-full bg-white rounded-xl px-5 py-4 text-lg font-bold outline-none focus:ring-2 shadow-sm ${
+                        validationErrors.title
+                            ? 'border-2 border-red-400 focus:ring-red-500/10'
+                            : 'border border-slate-200 focus:ring-cyan-500/10'
+                    }`}
                 />
+                {validationErrors.title && <p className="text-red-500 text-xs">{validationErrors.title}</p>}
             </div>
 
             {/* Question list */}
-            <div className="space-y-4">
-                <h4 className="text-[10px] font-semibold uppercase text-slate-400">Questions</h4>
+            <div className="space-y-4" ref={questionsRef}>
+                <h4 className="text-[10px] font-semibold uppercase text-slate-400">Questions <span className="text-red-500">*</span></h4>
+                {validationErrors.questions && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <p className="text-red-600 text-xs font-medium">{validationErrors.questions}</p>
+                    </div>
+                )}
 
                 {newQuestQuestions.length === 0 ? (
                     <div className="p-10 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
@@ -731,7 +756,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             <button
                 type="button"
                 onClick={handleSaveTemplate}
-                disabled={loading || !newQuestTitle || newQuestQuestions.length === 0}
+                disabled={loading}
                 className="w-full py-4 bg-cyan-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 {loading ? 'Saving...' : (selectedTemplate ? 'Save Changes' : 'Create Template')}

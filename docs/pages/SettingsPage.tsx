@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { ActivityIcon, SaveIcon, LogOutIcon, UserIcon, BuildingIcon, PhoneIcon, MailIcon } from 'lucide-react';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+const inputErrorCls = "w-full bg-slate-50 border-2 border-red-400 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-colors";
 const labelCls = "text-xs font-medium text-slate-600 block mb-1.5";
 
 const SettingsPage: React.FC = () => {
@@ -15,6 +16,9 @@ const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const nameRef = useRef<HTMLDivElement>(null);
+  const orgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user?.user_metadata) {
@@ -24,10 +28,20 @@ const SettingsPage: React.FC = () => {
     }
   }, [user]);
 
+  const clearFieldError = (field: string) => setFieldErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim()) { setError('Full name is required.'); return; }
-    if (!organization.trim()) { setError('Organisation is required.'); return; }
+    const errors: Record<string, string> = {};
+    if (!fullName.trim()) errors.fullName = 'Full name is required.';
+    if (!organization.trim()) errors.organization = 'Organisation is required.';
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      const firstRef = errors.fullName ? nameRef : orgRef;
+      firstRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    setFieldErrors({});
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -65,26 +79,28 @@ const SettingsPage: React.FC = () => {
         </h2>
 
         <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className={labelCls}>Full name</label>
+          <div ref={nameRef}>
+            <label className={labelCls}>Full name <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={fullName}
-              onChange={e => { setFullName(e.target.value); setMessage(null); setError(null); }}
-              className={inputCls}
+              onChange={e => { setFullName(e.target.value); clearFieldError('fullName'); setMessage(null); setError(null); }}
+              className={fieldErrors.fullName ? inputErrorCls : inputCls}
               placeholder="Alex Smith"
             />
+            {fieldErrors.fullName && <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>}
           </div>
 
-          <div>
-            <label className={labelCls}>Organisation</label>
+          <div ref={orgRef}>
+            <label className={labelCls}>Organisation <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={organization}
-              onChange={e => { setOrganization(e.target.value); setMessage(null); setError(null); }}
-              className={inputCls}
+              onChange={e => { setOrganization(e.target.value); clearFieldError('organization'); setMessage(null); setError(null); }}
+              className={fieldErrors.organization ? inputErrorCls : inputCls}
               placeholder="City FC / Elite Academy"
             />
+            {fieldErrors.organization && <p className="text-red-500 text-xs mt-1">{fieldErrors.organization}</p>}
           </div>
 
           <div>

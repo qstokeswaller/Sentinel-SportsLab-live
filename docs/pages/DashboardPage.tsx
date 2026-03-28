@@ -5,7 +5,7 @@ import {
     AlertTriangleIcon, CalendarIcon, FilterIcon,
     ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, PlusIcon, CheckCircle2Icon,
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
-    Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon,
+    Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
 } from 'lucide-react';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
@@ -21,7 +21,7 @@ const PRESET_COLORS = [
 
 export const DashboardPage = () => {
     const {
-        teams, scheduledSessions, wellnessData, bodyHeatmapData,
+        teams, scheduledSessions, wellnessData, bodyHeatmapData, isLoading,
         dashboardFilterTarget, setDashboardFilterTarget,
         calendarFilterCategory, setCalendarFilterCategory,
         calendarFilterTeamId, setCalendarFilterTeamId,
@@ -36,13 +36,62 @@ export const DashboardPage = () => {
         setViewingDate, setViewingSession,
         setSelectedInterventionAthlete, setIsInterventionModalOpen,
         calculateACWR, resolveTargetName, getSessionTypeColor,
+        handleUpdateSession, handleDeleteSession, handleAddCalendarEvent, showToast,
     } = useAppState();
 
     const [activePopover, setActivePopover] = React.useState(null);
+    const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
+    const [editingSession, setEditingSession] = React.useState(null);
     const [editingEvent, setEditingEvent] = React.useState(null);
     const [overflowDay, setOverflowDay] = React.useState(null); // dateStr of day showing overflow popover
+    const [dragOverDate, setDragOverDate] = React.useState(null); // highlight drop target
     const popoverRef = React.useRef(null);
+    const sessionPopoverRef = React.useRef(null);
     const overflowRef = React.useRef(null);
+    const dragDataRef = React.useRef(null); // { type: 'session'|'event', item, sourceDate }
+
+    // ── Drag & Drop handlers ──────────────────────────────────────────
+    const handleDragStart = (e, type, item, sourceDate) => {
+        dragDataRef.current = { type, item, sourceDate };
+        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.setData('text/plain', ''); // required for Firefox
+    };
+    const handleDragOver = (e, dateStr) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = e.ctrlKey ? 'copy' : 'move';
+        if (dragOverDate !== dateStr) setDragOverDate(dateStr);
+    };
+    const handleDragLeave = () => setDragOverDate(null);
+    const handleDrop = async (e, targetDate) => {
+        e.preventDefault();
+        setDragOverDate(null);
+        const drag = dragDataRef.current;
+        if (!drag || drag.sourceDate === targetDate) return;
+        dragDataRef.current = null;
+
+        if (e.ctrlKey && drag.type === 'event') {
+            // Ctrl+drop = copy event
+            const ev = drag.item;
+            await handleAddCalendarEvent({
+                title: ev.title,
+                event_type: ev.event_type,
+                color: ev.color,
+                description: ev.description || null,
+                location: ev.location || null,
+                all_day: ev.all_day,
+                start_time: ev.start_time || null,
+                end_time: ev.end_time || null,
+                start_date: targetDate,
+                end_date: targetDate,
+            });
+            showToast('Event copied', 'success');
+        } else if (drag.type === 'event') {
+            handleUpdateCalendarEvent(drag.item.id, { start_date: targetDate, end_date: targetDate });
+        } else if (drag.type === 'session') {
+            handleUpdateSession(drag.item.id, { date: targetDate });
+        }
+    };
+    const handleDragEnd = () => { dragDataRef.current = null; setDragOverDate(null); };
 
     // Deterministic color palette for targets (athletes/teams)
     const TARGET_COLORS = [
@@ -70,11 +119,14 @@ export const DashboardPage = () => {
 
     // Close popover on click outside
     React.useEffect(() => {
-        if (!activePopover && !overflowDay) return;
+        if (!activePopover && !activeSessionPopover && !overflowDay) return;
         const handler = (e) => {
             if (activePopover && popoverRef.current && !popoverRef.current.contains(e.target)) {
                 setActivePopover(null);
                 setEditingEvent(null);
+            }
+            if (activeSessionPopover && sessionPopoverRef.current && !sessionPopoverRef.current.contains(e.target)) {
+                setActiveSessionPopover(null);
             }
             if (overflowDay && overflowRef.current && !overflowRef.current.contains(e.target)) {
                 setOverflowDay(null);
@@ -82,7 +134,7 @@ export const DashboardPage = () => {
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [activePopover, overflowDay]);
+    }, [activePopover, activeSessionPopover, overflowDay]);
 
     const renderMorningReport = () => {
         const atRiskAthletes = teams.flatMap(t => t.players).map(player => {
@@ -440,7 +492,14 @@ export const DashboardPage = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4">
+                            <div className="p-4 relative">
+                                {/* Calendar loading skeleton */}
+                                {isLoading && (!calendarEvents || calendarEvents.length === 0) && (
+                                    <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
+                                        <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                                        <span className="text-xs font-medium text-slate-400">Loading calendar...</span>
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-7 gap-2">
                                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                                         <div key={day} className="text-[11px] font-medium text-slate-400 text-center pb-3">{day}</div>
@@ -450,10 +509,17 @@ export const DashboardPage = () => {
                                         const calendarRow = Math.floor(idx / 7);
                                         const totalRows = Math.ceil(dashboardCalendarDays.length / 7);
                                         const isBottomRows = calendarRow >= totalRows - 2;
+                                        const isDragOver = dateObj && dragOverDate === dateObj.dateStr;
                                         return (
-                                            <div key={idx} className={`relative min-h-[96px] rounded-lg border transition-all group p-2.5 flex flex-col justify-between ${dateObj
+                                            <div key={idx}
+                                                onDragOver={dateObj ? (e) => handleDragOver(e, dateObj.dateStr) : undefined}
+                                                onDragLeave={dateObj ? handleDragLeave : undefined}
+                                                onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
+                                                className={`relative min-h-[96px] rounded-lg border transition-all group p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
-                                                    : 'bg-slate-50/30 border-transparent'} ${isToday
+                                                    : 'bg-slate-50/30 border-transparent'} ${isDragOver
+                                                        ? 'bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 shadow-md'
+                                                        : isToday
                                                         ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-200'
                                                         : 'bg-white border-slate-100 hover:border-slate-300'}`}
                                                 onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
@@ -464,12 +530,35 @@ export const DashboardPage = () => {
                                                             {isToday && <span className="text-[9px] font-medium bg-indigo-600 text-white px-1.5 py-0.5 rounded-full">Today</span>}
                                                         </div>
                                                         <div className="space-y-1">
-                                                            {/* Workout Sessions */}
-                                                            {filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).slice(0, 3).map(session => {
-                                                                const tc = getTargetColor(session.targetId);
-                                                                return (
-                                                                <div key={session.id} onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
-                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer ${tc.bg} ${tc.border} ${tc.text}`}>
+                                                            {/* Merged sessions + events, sorted by time */}
+                                                            {(() => {
+                                                                const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
+                                                                    .map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s }));
+                                                                const dayEvents = showCalendarEvents
+                                                                    ? (calendarEvents || []).filter(e => e.start_date === dateObj.dateStr)
+                                                                        .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }))
+                                                                    : [];
+                                                                const merged = [...daySessions, ...dayEvents]
+                                                                    .sort((a, b) => a.time.localeCompare(b.time))
+                                                                    .slice(0, 3);
+                                                                return merged.map(entry => {
+                                                                    if (entry.type === 'session') {
+                                                                        const session = entry.item;
+                                                                        const tc = getTargetColor(session.targetId);
+                                                                        return (
+                                                                <div key={session.id} className="relative"
+                                                                    draggable
+                                                                    onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, dateObj.dateStr); }}
+                                                                    onDragEnd={handleDragEnd}
+                                                                >
+                                                                <div
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const popKey = session.id;
+                                                                        setActiveSessionPopover(activeSessionPopover?.id === popKey ? null : { id: popKey, session });
+                                                                        setActivePopover(null);
+                                                                    }}
+                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab ${tc.bg} ${tc.border} ${tc.text}`}>
                                                                     <div className={`flex justify-between items-center ${tc.pillBg} px-1 py-0.5 rounded`}>
                                                                         <div className="flex items-center gap-1">
                                                                             {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600" />}
@@ -497,14 +586,77 @@ export const DashboardPage = () => {
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                );
-                                                            })}
-                                                            {/* Calendar Events — bubble cards (hidden when filtering teams/athletes) */}
-                                                            {showCalendarEvents && calendarEvents
-                                                                .filter(e => e.start_date === dateObj.dateStr)
-                                                                .slice(0, Math.max(0, 3 - filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr).length))
-                                                                .map(event => (
-                                                                    <div key={`${event.id}_${dateObj.dateStr}`} className="relative">
+                                                                {/* Session Popover */}
+                                                                {activeSessionPopover?.id === session.id && (
+                                                                    <div
+                                                                        ref={sessionPopoverRef}
+                                                                        className={`absolute z-50 left-0 w-56 bg-white rounded-lg shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <div className={`h-1 rounded-t-lg ${tc.bg === 'bg-red-50' ? 'bg-red-400' : tc.bg === 'bg-blue-50' ? 'bg-blue-400' : tc.bg === 'bg-emerald-50' ? 'bg-emerald-400' : tc.bg === 'bg-orange-50' ? 'bg-orange-400' : tc.bg === 'bg-violet-50' ? 'bg-violet-400' : 'bg-indigo-400'}`} />
+                                                                        <div className="p-3 space-y-2">
+                                                                            <div className="flex items-start justify-between">
+                                                                                <h4 className="text-sm font-semibold text-slate-900 leading-tight">{session.title}</h4>
+                                                                                <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 transition-colors">
+                                                                                    <XIcon size={12} />
+                                                                                </button>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 text-indigo-600">{session.trainingPhase}</span>
+                                                                                {session.load && (
+                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
+                                                                                        session.load === 'High' ? 'bg-red-50 text-red-600' :
+                                                                                        session.load === 'Medium' ? 'bg-amber-50 text-amber-600' :
+                                                                                        'bg-emerald-50 text-emerald-600'
+                                                                                    }`}>{session.load} Load</span>
+                                                                                )}
+                                                                                {session.status && session.status !== 'Scheduled' && (
+                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500">{session.status}</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-500 space-y-1">
+                                                                                <div>
+                                                                                    {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                                    {new Date(session.date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                                                </div>
+                                                                                <div>{resolveTargetName(session.targetId, session.targetType)}</div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                                                                                <button
+                                                                                    onClick={() => { setViewingSession(session); setActiveSessionPopover(null); }}
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                >
+                                                                                    <EyeIcon size={10} /> View
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                >
+                                                                                    <PencilIcon size={10} /> Edit
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleDeleteSession(session.id);
+                                                                                        setActiveSessionPopover(null);
+                                                                                    }}
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                                >
+                                                                                    <Trash2Icon size={10} /> Delete
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                </div>
+                                                                        );
+                                                                    } else {
+                                                                        const event = entry.item;
+                                                                        return (
+                                                                    <div key={`${event.id}_${dateObj.dateStr}`} className="relative"
+                                                                        draggable
+                                                                        onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, dateObj.dateStr); }}
+                                                                        onDragEnd={handleDragEnd}
+                                                                    >
                                                                         <div
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
@@ -512,7 +664,7 @@ export const DashboardPage = () => {
                                                                                 setActivePopover(activePopover?.id === popKey ? null : { id: popKey, event });
                                                                                 setEditingEvent(null);
                                                                             }}
-                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab"
                                                                             style={{
                                                                                 backgroundColor: `${event.color}12`,
                                                                                 borderColor: `${event.color}30`,
@@ -586,21 +738,22 @@ export const DashboardPage = () => {
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                ))}
-                                                            {/* +X more count (sessions + events combined) */}
+                                                                        );
+                                                                    }
+                                                                });
+                                                            })()}
+                                                            {/* +X more count (sessions + events combined, sorted by time) */}
                                                             {(() => {
-                                                                const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr);
-                                                                const dayEvents = showCalendarEvents ? calendarEvents.filter(e => e.start_date === dateObj.dateStr) : [];
-                                                                const total = daySessions.length + dayEvents.length;
+                                                                const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
+                                                                    .map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s }));
+                                                                const dayEvents = showCalendarEvents
+                                                                    ? (calendarEvents || []).filter(e => e.start_date === dateObj.dateStr)
+                                                                        .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }))
+                                                                    : [];
+                                                                const allItems = [...daySessions, ...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
+                                                                const total = allItems.length;
                                                                 const hidden = total - 3;
                                                                 if (hidden <= 0) return null;
-
-                                                                // Items not shown: sessions beyond first 3, then events beyond remaining slots
-                                                                const shownSessions = daySessions.slice(0, 3);
-                                                                const eventSlots = Math.max(0, 3 - daySessions.length);
-                                                                const shownEvents = dayEvents.slice(0, eventSlots);
-                                                                const hiddenSessions = daySessions.slice(3);
-                                                                const hiddenEvents = dayEvents.slice(eventSlots);
 
                                                                 return (
                                                                     <div className="relative">
@@ -629,14 +782,18 @@ export const DashboardPage = () => {
                                                                                     </div>
                                                                                 </div>
                                                                                 <div className="p-2 space-y-1">
-                                                                                    {/* All sessions for this day */}
-                                                                                    {daySessions.map(session => {
-                                                                                        const tc = getTargetColor(session.targetId);
-                                                                                        return (
+                                                                                    {allItems.map(entry => {
+                                                                                        if (entry.type === 'session') {
+                                                                                            const session = entry.item;
+                                                                                            const tc = getTargetColor(session.targetId);
+                                                                                            return (
                                                                                             <div
                                                                                                 key={session.id}
+                                                                                                draggable
+                                                                                                onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, dateObj.dateStr); }}
+                                                                                                onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
                                                                                                 onClick={() => { setViewingSession(session); setOverflowDay(null); }}
-                                                                                                className={`flex items-center gap-2 p-1.5 rounded-md border cursor-pointer transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                                                className={`flex items-center gap-2 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
                                                                                             >
                                                                                                 <div className="flex-1 min-w-0">
                                                                                                     <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
@@ -653,18 +810,21 @@ export const DashboardPage = () => {
                                                                                                     }`}>{session.load[0]}</span>
                                                                                                 )}
                                                                                             </div>
-                                                                                        );
-                                                                                    })}
-                                                                                    {/* All events for this day */}
-                                                                                    {dayEvents.map(event => (
+                                                                                            );
+                                                                                        } else {
+                                                                                            const event = entry.item;
+                                                                                            return (
                                                                                         <div
                                                                                             key={event.id}
+                                                                                            draggable
+                                                                                            onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, dateObj.dateStr); }}
+                                                                                            onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
                                                                                             onClick={() => {
                                                                                                 setOverflowDay(null);
                                                                                                 const popKey = `${event.id}_${dateObj.dateStr}`;
                                                                                                 setActivePopover({ id: popKey, event });
                                                                                             }}
-                                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
+                                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95"
                                                                                             style={{
                                                                                                 backgroundColor: `${event.color}12`,
                                                                                                 borderColor: `${event.color}30`,
@@ -678,7 +838,9 @@ export const DashboardPage = () => {
                                                                                                 {event.title}
                                                                                             </span>
                                                                                         </div>
-                                                                                    ))}
+                                                                                            );
+                                                                                        }
+                                                                                    })}
                                                                                 </div>
                                                                             </div>
                                                                         )}
@@ -833,6 +995,97 @@ export const DashboardPage = () => {
                                                 setEditingEvent(null);
                                             }}
                                             disabled={!editingEvent.title?.trim()}
+                                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40"
+                                        >
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* ── Edit Session Modal ── */}
+                    {editingSession && (() => {
+                        const PHASES = ['Strength', 'Power', 'Hypertrophy', 'Endurance', 'Speed', 'Recovery', 'Testing', 'Pre-Season', 'In-Season', 'Off-Season'];
+                        const LOADS = ['Low', 'Medium', 'High'];
+                        const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
+                        const LABEL = 'text-xs font-medium text-slate-600 block mb-1.5';
+                        return (
+                            <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingSession(null)}>
+                                <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                                                <DumbbellIcon size={16} />
+                                            </div>
+                                            <h3 className="text-lg font-bold text-slate-900">Edit Session</h3>
+                                        </div>
+                                        <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                                            <XIcon size={16} />
+                                        </button>
+                                    </div>
+                                    <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+                                        {/* Title */}
+                                        <div>
+                                            <label className={LABEL}>Title</label>
+                                            <input value={editingSession.title || ''} onChange={e => setEditingSession(p => ({ ...p, title: e.target.value }))} className={INPUT} />
+                                        </div>
+                                        {/* Date & Time */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className={LABEL}>Date</label>
+                                                <input type="date" value={editingSession.date || ''} onChange={e => setEditingSession(p => ({ ...p, date: e.target.value }))} className={INPUT} />
+                                            </div>
+                                            <div>
+                                                <label className={LABEL}>Time</label>
+                                                <input type="time" value={editingSession.time || ''} onChange={e => setEditingSession(p => ({ ...p, time: e.target.value }))} className={INPUT} />
+                                            </div>
+                                        </div>
+                                        {/* Phase & Load */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className={LABEL}>Training Phase</label>
+                                                <select value={editingSession.trainingPhase || ''} onChange={e => setEditingSession(p => ({ ...p, trainingPhase: e.target.value }))} className={INPUT}>
+                                                    {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={LABEL}>Load</label>
+                                                <select value={editingSession.load || 'Medium'} onChange={e => setEditingSession(p => ({ ...p, load: e.target.value }))} className={INPUT}>
+                                                    {LOADS.map(l => <option key={l} value={l}>{l}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {/* Status */}
+                                        <div>
+                                            <label className={LABEL}>Status</label>
+                                            <select value={editingSession.status || 'Scheduled'} onChange={e => setEditingSession(p => ({ ...p, status: e.target.value }))} className={INPUT}>
+                                                <option value="Scheduled">Scheduled</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    {/* Footer */}
+                                    <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
+                                        <button onClick={() => setEditingSession(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleUpdateSession(editingSession.id, {
+                                                    title: editingSession.title,
+                                                    date: editingSession.date,
+                                                    time: editingSession.time || null,
+                                                    trainingPhase: editingSession.trainingPhase,
+                                                    load: editingSession.load,
+                                                    status: editingSession.status,
+                                                });
+                                                setEditingSession(null);
+                                            }}
+                                            disabled={!editingSession.title?.trim()}
                                             className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40"
                                         >
                                             Save Changes

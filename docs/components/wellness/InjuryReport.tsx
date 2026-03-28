@@ -112,7 +112,14 @@ const InjuryReportComponent = () => {
     const [editingId, setEditingId] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const fileRef = useRef(null);
+    const sectionRefs = {
+        athlete: useRef(null),
+        bodyMap: useRef(null),
+        classification: useRef(null),
+        dateOfInjury: useRef(null),
+    };
 
     // Flatten all athletes
     const allAthletes = useMemo(() =>
@@ -143,8 +150,26 @@ const InjuryReportComponent = () => {
         if (athlete) patch({ athleteId: athlete.id, athleteName: athlete.name, teamId: athlete.teamId });
     };
 
+    // Clear a specific validation error when user interacts with that field
+    const clearError = (field: string) => {
+        if (validationErrors[field]) setValidationErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+    };
+
     const handleSave = () => {
-        if (!form.athleteId || form.areas.length === 0) return;
+        const errors: Record<string, string> = {};
+        if (!form.athleteId) errors.athlete = 'Please select an athlete';
+        if (form.areas.length === 0) errors.bodyMap = 'Please select at least one injury location on the body map';
+        if (!form.classification) errors.classification = 'Please select an injury classification';
+        if (!form.dateOfInjury) errors.dateOfInjury = 'Please enter the date of injury';
+
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            // Scroll to first error
+            const firstKey = Object.keys(errors)[0];
+            sectionRefs[firstKey]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setValidationErrors({});
         const now = new Date().toISOString();
         let savedReport;
         if (editingId) {
@@ -255,13 +280,14 @@ const InjuryReportComponent = () => {
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* Athlete Selection */}
+                        <div ref={sectionRefs.athlete}>
                         <SectionCard title="Athlete Selection">
                             <div>
-                                <Label>Player</Label>
+                                <Label>Player <span className="text-red-400">*</span></Label>
                                 <select
                                     value={form.athleteId}
-                                    onChange={e => handleAthleteSelect(e.target.value)}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900"
+                                    onChange={e => { handleAthleteSelect(e.target.value); clearError('athlete'); }}
+                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.athlete ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
                                 >
                                     <option value="">Select athlete...</option>
                                     {teams.map(t => (
@@ -272,8 +298,10 @@ const InjuryReportComponent = () => {
                                         </optgroup>
                                     ))}
                                 </select>
+                                {validationErrors.athlete && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.athlete}</p>}
                             </div>
                         </SectionCard>
+                        </div>
 
                         {/* Share Link Panel — shown when athlete is selected */}
                         {form.athleteId && form.teamId && (
@@ -326,17 +354,19 @@ const InjuryReportComponent = () => {
                         )}
 
                         {/* Classification & Context */}
+                        <div ref={sectionRefs.classification}>
                         <SectionCard title="Classification & Context">
                             <div>
-                                <Label>Injury Classification</Label>
+                                <Label>Injury Classification <span className="text-red-400">*</span></Label>
                                 <select
                                     value={form.classification || ''}
-                                    onChange={e => patch({ classification: e.target.value || undefined })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900"
+                                    onChange={e => { patch({ classification: e.target.value || undefined }); clearError('classification'); }}
+                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.classification ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
                                 >
                                     <option value="">Select type...</option>
                                     {INJURY_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
+                                {validationErrors.classification && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.classification}</p>}
                             </div>
 
                             <div>
@@ -364,17 +394,20 @@ const InjuryReportComponent = () => {
                                 <PillRow options={[...INJURY_ACTIVITIES]} value={form.activity} onChange={v => patch({ activity: v })} />
                             </div>
                         </SectionCard>
+                        </div>
 
                         {/* Clinical Assessment */}
+                        <div ref={sectionRefs.dateOfInjury}>
                         <SectionCard title="Clinical Assessment">
                             <div>
-                                <Label>Date of Injury</Label>
+                                <Label>Date of Injury <span className="text-red-400">*</span></Label>
                                 <input
                                     type="date"
                                     value={form.dateOfInjury}
-                                    onChange={e => patch({ dateOfInjury: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900"
+                                    onChange={e => { patch({ dateOfInjury: e.target.value }); clearError('dateOfInjury'); }}
+                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
                                 />
+                                {validationErrors.dateOfInjury && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.dateOfInjury}</p>}
                             </div>
 
                             <div>
@@ -452,6 +485,7 @@ const InjuryReportComponent = () => {
                                     colorMap={{ 'Yes': 'bg-red-600 text-white', 'No': 'bg-emerald-500 text-white' }} />
                             </div>
                         </SectionCard>
+                        </div>
 
                         {/* Management */}
                         <SectionCard title="Management">
@@ -566,10 +600,15 @@ const InjuryReportComponent = () => {
                         </SectionCard>
 
                         {/* Save */}
+                        {Object.keys(validationErrors).length > 0 && (
+                            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2">
+                                <ShieldAlertIcon size={14} className="text-red-500 shrink-0" />
+                                <p className="text-red-600 text-[10px] font-semibold">Please fill in the required fields highlighted in red above</p>
+                            </div>
+                        )}
                         <button
                             onClick={handleSave}
-                            disabled={!form.athleteId || form.areas.length === 0}
-                            className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all"
                         >
                             {editingId ? 'Update Injury Report' : 'Save Injury Report'}
                         </button>
@@ -577,12 +616,13 @@ const InjuryReportComponent = () => {
 
                     {/* RIGHT — Body Map (sticky) */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-5 space-y-5">
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                                <h5 className="text-sm font-semibold text-slate-700 border-b border-slate-100 pb-3">Body Map — Injury Location</h5>
+                        <div className="sticky top-5 space-y-5" ref={sectionRefs.bodyMap}>
+                            <div className={`bg-white p-6 rounded-xl border shadow-sm space-y-4 ${validationErrors.bodyMap ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'}`}>
+                                <h5 className="text-sm font-semibold text-slate-700 border-b border-slate-100 pb-3">Body Map — Injury Location <span className="text-red-400">*</span></h5>
+                                {validationErrors.bodyMap && <p className="text-red-500 text-[10px] font-semibold pl-1">{validationErrors.bodyMap}</p>}
                                 <BodyMapSelector
                                     value={form.areas}
-                                    onChange={areas => patch({ areas })}
+                                    onChange={areas => { patch({ areas }); clearError('bodyMap'); }}
                                 />
                                 {form.areas.length > 0 && (
                                     <div className="space-y-2 pt-3 border-t border-slate-100">

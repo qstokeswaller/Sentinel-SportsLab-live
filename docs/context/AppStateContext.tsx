@@ -1385,6 +1385,33 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
+    const handleUpdateSession = async (sessionId, updates) => {
+        try {
+            // Optimistic: update local state immediately
+            setScheduledSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updates } : s));
+            // Map camelCase → snake_case for DB
+            const dbUpdates: any = {};
+            if (updates.date !== undefined) dbUpdates.date = updates.date;
+            if (updates.time !== undefined) dbUpdates.time = updates.time;
+            if (updates.title !== undefined) dbUpdates.title = updates.title;
+            if (updates.trainingPhase !== undefined) dbUpdates.training_phase = updates.trainingPhase;
+            if (updates.load !== undefined) dbUpdates.load = updates.load;
+            if (updates.targetType !== undefined) dbUpdates.target_type = updates.targetType;
+            if (updates.targetId !== undefined) dbUpdates.target_id = updates.targetId;
+            if (updates.status !== undefined) dbUpdates.status = updates.status;
+            await DatabaseService.updateSession(sessionId, dbUpdates);
+            showToast("Session updated", "success");
+        } catch (err) {
+            console.error("Error updating session:", err);
+            showToast("Failed to update session", "error");
+            // Rollback: refetch
+            try {
+                const sessions = await DatabaseService.fetchSessions();
+                if (sessions) setScheduledSessions(sessions.map(s => ({ ...s, trainingPhase: s.training_phase, targetType: s.target_type, targetId: s.target_id, plannedDuration: s.planned_duration })));
+            } catch (_) {}
+        }
+    };
+
     const handleDeleteSession = async (sessionId) => {
         if (!confirm("Are you sure you want to delete this session?")) return;
         try {
@@ -1401,18 +1428,31 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     // --- CALENDAR EVENT HANDLERS ---
+    const addEventModalGenRef = useRef(0); // increments each time modal opens — prevents stale close
+    useEffect(() => {
+        if (isAddEventModalOpen) addEventModalGenRef.current += 1;
+    }, [isAddEventModalOpen]);
+
     const handleAddCalendarEvent = async (eventData) => {
+        const gen = addEventModalGenRef.current; // snapshot generation before async work
         try {
-            setIsLoading(true);
-            await DatabaseService.createCalendarEvent(eventData);
-            await initData();
-            setIsAddEventModalOpen(false);
+            const result = await DatabaseService.createCalendarEvent(eventData);
+            // Optimistic: append to local state so calendar updates instantly
+            if (result) {
+                setCalendarEvents(prev => [...prev, ...(Array.isArray(result) ? result : [result])]);
+            }
             showToast("Event created successfully", "success");
+            // Close modal only if user hasn't reopened it since this save started
+            if (addEventModalGenRef.current === gen) {
+                setIsAddEventModalOpen(false);
+            }
+            // Refresh calendar events in background
+            DatabaseService.fetchCalendarEvents().then(events => {
+                if (events) setCalendarEvents(events);
+            }).catch(() => {});
         } catch (err) {
             console.error("Error creating calendar event:", err);
             showToast("Failed to create event", "error");
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -2588,6 +2628,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleAddSession,
         scheduleWorkoutSession,
         handleDeleteSession,
+        handleUpdateSession,
         dashboardCalendarDays,
         exportToCSV,
         athleteAssessments,
