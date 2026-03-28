@@ -130,7 +130,7 @@ export const ExerciseLibraryPage = () => {
                     className="flex-1 bg-transparent text-sm outline-none text-slate-900 placeholder:text-slate-400"
                 />
                 <div className="text-xs text-slate-400 border-l border-slate-200 pl-3 shrink-0">
-                    {filteredPersonalExercises.length} of {personalExerciseIds.length} saved
+                    {filteredPersonalExercises.length} of {(personalExerciseIds || []).length} saved
                 </div>
             </div>
 
@@ -158,7 +158,7 @@ export const ExerciseLibraryPage = () => {
             )}
 
             {/* Table */}
-            {personalExerciseIds.length === 0 ? (
+            {(personalExerciseIds || []).length === 0 ? (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16 flex flex-col items-center gap-3">
                     <StarIcon size={32} className="text-slate-200" />
                     <p className="text-sm text-slate-400">Your personal library is empty</p>
@@ -480,8 +480,8 @@ export const ExerciseLibraryPage = () => {
                                             <span className="flex items-center gap-1.5">
                                                 <StarIcon size={11} fill="currentColor" />
                                                 My Library
-                                                {personalExerciseIds.length > 0 && (
-                                                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-full text-[8px] font-bold">{personalExerciseIds.length}</span>
+                                                {(personalExerciseIds || []).length > 0 && (
+                                                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-full text-[8px] font-bold">{(personalExerciseIds || []).length}</span>
                                                 )}
                                             </span>
                                         </button>
