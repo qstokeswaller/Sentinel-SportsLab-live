@@ -835,6 +835,35 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             StorageService.saveWorkoutTemplates(workoutTemplates);
     }, [workoutTemplates, isLoading]);
 
+    // ── Personal Exercise Library ────────────────────────────────────────
+    const [personalExerciseIds, setPersonalExerciseIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!isLoading)
+            StorageService.savePersonalExercises(personalExerciseIds);
+    }, [personalExerciseIds, isLoading]);
+
+    const addToPersonalLibrary = (exerciseId: string) => {
+        setPersonalExerciseIds(prev => prev.includes(exerciseId) ? prev : [...prev, exerciseId]);
+    };
+    const removeFromPersonalLibrary = (exerciseId: string) => {
+        setPersonalExerciseIds(prev => prev.filter(id => id !== exerciseId));
+    };
+    const isInPersonalLibrary = (exerciseId: string) => personalExerciseIds.includes(exerciseId);
+
+    const recentlyUsedExerciseIds = useMemo(() => {
+        const idSet = new Set<string>();
+        (workoutTemplates || []).forEach((tpl: any) => {
+            const sections = tpl.sections || {};
+            ['warmup', 'workout', 'cooldown'].forEach(sec => {
+                (sections[sec] || []).forEach((row: any) => {
+                    if (row.exerciseId) idSet.add(row.exerciseId);
+                });
+            });
+        });
+        return Array.from(idSet);
+    }, [workoutTemplates]);
+
     const [quickLogForm, setQuickLogForm] = useState({ exercise: '', sets: '', reps: '', weight: '', rpe: '', pattern: 'Squat' });
 
     const [assessmentData, setAssessmentData] = useState([
@@ -1941,6 +1970,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 setWorkoutTemplates(loadedTemplates || []);
             }
 
+            // Personal Exercise Library
+            const loadedPersonalExercises = await StorageService.getPersonalExercises();
+            setPersonalExerciseIds(loadedPersonalExercises || []);
+
             // Injury Reports — prefer Supabase DB, fallback to StorageService/mocks
             try {
                 const dbInjury = await DatabaseService.fetchInjuryReports();
@@ -2430,6 +2463,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setWorkoutLog,
         workoutTemplates,
         setWorkoutTemplates,
+        personalExerciseIds,
+        addToPersonalLibrary,
+        removeFromPersonalLibrary,
+        isInPersonalLibrary,
+        recentlyUsedExerciseIds,
         quickLogForm,
         setQuickLogForm,
         assessmentData,

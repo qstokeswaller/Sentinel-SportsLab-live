@@ -115,4 +115,6 @@ export const SupabaseStorageService = {
   saveRunningMechanicsDocs: (d: any) => save('running_mechanics_docs', d),
   getPeriodizationPlans: () => get('periodization_plans'),
   savePeriodizationPlans: (d: any) => save('periodization_plans', d),
+  getPersonalExercises: () => get('personal_exercises'),
+  savePersonalExercises: (d: any) => save('personal_exercises', d),
 };
