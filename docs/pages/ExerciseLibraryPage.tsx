@@ -1,8 +1,9 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { useSmartSearch } from '../hooks/useSmartSearch';
 import { useExerciseMap } from '../hooks/useExerciseMap';
+import { supabase } from '../lib/supabase';
 import { MUSCLE_GROUPS, BODY_REGIONS, CLASSIFICATIONS } from '../utils/mocks';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import { Button } from '@/components/ui/button';
@@ -65,17 +66,20 @@ export const ExerciseLibraryPage = () => {
     const hasFuzzyResults = exerciseData?.hasFuzzyResults ?? false;
     const suggestions = exerciseData?.suggestions ?? [];
 
-    // ── Personal library client-side filtering ──────────────────────────
-    const personalExercises = useMemo(() => {
-        if (!personalExerciseIds?.length || !exerciseFullMap) return [];
-        return personalExerciseIds
-            .map(id => {
-                const info = exerciseFullMap[id];
-                if (!info) return null;
-                return { id, ...info };
-            })
-            .filter(Boolean);
-    }, [personalExerciseIds, exerciseFullMap]);
+    // ── Personal library — fetch full exercise objects from Supabase ────
+    const [personalExercises, setPersonalExercises] = useState<any[]>([]);
+    useEffect(() => {
+        if (!(personalExerciseIds || []).length) { setPersonalExercises([]); return; }
+        let cancelled = false;
+        (async () => {
+            const { data } = await supabase
+                .from('exercises')
+                .select('id, name, body_parts, categories, description, video_url, equipment, options')
+                .in('id', personalExerciseIds);
+            if (!cancelled && data) setPersonalExercises(data);
+        })();
+        return () => { cancelled = true; };
+    }, [personalExerciseIds]);
 
     const filteredPersonalExercises = useMemo(() => {
         let list = personalExercises || [];
@@ -92,18 +96,22 @@ export const ExerciseLibraryPage = () => {
     const pagedPersonalExercises = filteredPersonalExercises.slice((personalPage - 1) * ITEMS_PER_PAGE, personalPage * ITEMS_PER_PAGE);
 
     // Recently used exercises not already in personal library
-    const recentNotInPersonal = useMemo(() => {
-        if (!recentlyUsedExerciseIds?.length) return [];
+    const [recentNotInPersonal, setRecentNotInPersonal] = useState<any[]>([]);
+    useEffect(() => {
+        if (!(recentlyUsedExerciseIds || []).length) { setRecentNotInPersonal([]); return; }
         const personalSet = new Set(personalExerciseIds || []);
-        return recentlyUsedExerciseIds
-            .filter(id => !personalSet.has(id))
-            .slice(0, 10)
-            .map(id => {
-                const info = exerciseFullMap?.[id];
-                return info ? { id, name: info.name, body_parts: info.body_parts, categories: info.categories } : null;
-            })
-            .filter(Boolean);
-    }, [recentlyUsedExerciseIds, personalExerciseIds, exerciseFullMap]);
+        const needed = recentlyUsedExerciseIds.filter(id => !personalSet.has(id)).slice(0, 10);
+        if (!needed.length) { setRecentNotInPersonal([]); return; }
+        let cancelled = false;
+        (async () => {
+            const { data } = await supabase
+                .from('exercises')
+                .select('id, name, body_parts, categories')
+                .in('id', needed);
+            if (!cancelled && data) setRecentNotInPersonal(data);
+        })();
+        return () => { cancelled = true; };
+    }, [recentlyUsedExerciseIds, personalExerciseIds]);
 
     const handleTogglePersonal = (exId: string) => {
         if (isInPersonalLibrary(exId)) {
