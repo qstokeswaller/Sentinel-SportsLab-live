@@ -4,14 +4,15 @@ import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
-    PlusIcon, SaveIcon, Loader2Icon, XIcon, UsersIcon,
-    CalendarIcon, ActivityIcon, ChevronDownIcon,
+    SaveIcon, Loader2Icon, XIcon, ChevronLeftIcon, ChevronRightIcon,
+    CalendarIcon, ActivityIcon, PauseIcon,
 } from 'lucide-react';
 
-const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const labelCls = "text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1";
 
 interface TrainingLoadEntryProps {
+    teamId?: string;
     onClose?: () => void;
     onSaved?: () => void;
 }
@@ -23,116 +24,162 @@ const SESSION_TYPES = [
     { id: 'recovery', label: 'Recovery' },
 ];
 
-const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ onClose, onSaved }) => {
-    const { teams, showToast } = useAppState();
-    const athletes = useMemo(() => teams.flatMap(t => t.players.map(p => ({ ...p, teamId: t.id, teamName: t.name }))), [teams]);
+const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelectedTeamId, onClose, onSaved }) => {
+    const { teams, acwrSettings, showToast, loadRecords } = useAppState();
 
-    const [selectedAthleteIds, setSelectedAthleteIds] = useState<string[]>([]);
-    const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+    const [selectedTeamId, setSelectedTeamId] = useState<string>(preSelectedTeamId || '');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [metricType, setMetricType] = useState<string>('srpe');
     const [sessionType, setSessionType] = useState<string>('training');
-    const [rpe, setRpe] = useState<number | ''>('');
-    const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
-    const [distanceMetres, setDistanceMetres] = useState<number | ''>('');
-    const [sprintDistanceMetres, setSprintDistanceMetres] = useState<number | ''>('');
-    const [manualValue, setManualValue] = useState<number | ''>('');
-    const [notes, setNotes] = useState('');
     const [saving, setSaving] = useState(false);
-    const [bulkMode, setBulkMode] = useState(false);
+    const [notes, setNotes] = useState('');
 
-    // Auto-compute value based on metric type
-    const computedValue = useMemo(() => {
-        if (manualValue !== '') return Number(manualValue);
-        switch (metricType) {
-            case 'srpe':
-                return (Number(rpe) || 0) * (Number(durationMinutes) || 0);
-            case 'sprint_distance':
-                return Number(sprintDistanceMetres) || 0;
-            case 'total_distance':
-                return Number(distanceMetres) || 0;
-            case 'duration':
-                return Number(durationMinutes) || 0;
-            case 'tonnage':
-                return Number(manualValue) || 0;
-            default:
-                return Number(manualValue) || 0;
+    // Per-athlete row data: { [athleteId]: { rpe, duration, value, skip } }
+    const [rowData, setRowData] = useState<Record<string, { rpe: string; duration: string; value: string; skip: boolean }>>({});
+
+    // Private team reference (needed before other computations)
+    const privateTeam = teams.find(t => t.id === 't_private');
+
+    // Determine if selection is a private client (ind_xxx) or a team
+    const isPrivateClient = selectedTeamId.startsWith('ind_');
+    const privateClientId = isPrivateClient ? selectedTeamId.replace('ind_', '') : null;
+
+    // Get settings — team-level or individual
+    const teamSettings = useMemo(() => {
+        if (!selectedTeamId) return null;
+        return acwrSettings[selectedTeamId] || null;
+    }, [selectedTeamId, acwrSettings]);
+
+    const lockedMethod = teamSettings?.method || 'srpe';
+    const metricInfo = ACWR_METRIC_TYPES[lockedMethod];
+
+    // Players for the selected team or individual
+    const selectedTeam = isPrivateClient ? privateTeam : teams.find(t => t.id === selectedTeamId);
+    const players = useMemo(() => {
+        if (isPrivateClient && privateClientId) {
+            const client = (privateTeam?.players || []).find(p => p.id === privateClientId);
+            return client ? [client] : [];
         }
-    }, [metricType, rpe, durationMinutes, distanceMetres, sprintDistanceMetres, manualValue]);
+        if (!selectedTeam) return [];
+        return (selectedTeam.players || []).sort((a, b) => a.name?.localeCompare(b.name));
+    }, [selectedTeam, isPrivateClient, privateClientId, privateTeam]);
 
-    const filteredAthletes = useMemo(() => {
-        if (!selectedTeamId) return athletes;
-        return athletes.filter(a => a.teamId === selectedTeamId);
-    }, [athletes, selectedTeamId]);
-
-    const toggleAthlete = (id: string) => {
-        setSelectedAthleteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-    };
-
-    const selectAllFiltered = () => {
-        const ids = filteredAthletes.map(a => a.id);
-        setSelectedAthleteIds(prev => {
-            const allSelected = ids.every(id => prev.includes(id));
-            if (allSelected) return prev.filter(id => !ids.includes(id));
-            return [...new Set([...prev, ...ids])];
+    // Check which athletes already have data for this date
+    const existingDataForDate = useMemo(() => {
+        const map: Record<string, any> = {};
+        if (!loadRecords) return map;
+        loadRecords.forEach(r => {
+            const d = (r.date || '').split('T')[0];
+            if (d === date) {
+                const aid = r.athleteId || r.athlete_id;
+                map[aid] = r;
+            }
         });
+        return map;
+    }, [loadRecords, date]);
+
+    const getRow = (id: string) => rowData[id] || { rpe: '', duration: '', value: '', skip: false };
+
+    const updateRow = (id: string, field: string, val: any) => {
+        setRowData(prev => ({
+            ...prev,
+            [id]: { ...getRow(id), [field]: val },
+        }));
     };
 
-    const handleSave = async () => {
-        if (selectedAthleteIds.length === 0) {
-            showToast?.('Select at least one athlete');
-            return;
+    // Compute load value for a row
+    const computeValue = (row: { rpe: string; duration: string; value: string }) => {
+        if (row.value) return Number(row.value) || 0;
+        if (lockedMethod === 'srpe' || lockedMethod === 'trimp') {
+            return (Number(row.rpe) || 0) * (Number(row.duration) || 0);
         }
-        if (computedValue <= 0) {
-            showToast?.('Load value must be greater than 0');
+        return Number(row.value) || 0;
+    };
+
+    // Navigate date (timezone-safe)
+    const shiftDate = (days: number) => {
+        const [y, m, d] = date.split('-').map(Number);
+        const dt = new Date(y, m - 1, d + days);
+        const yyyy = dt.getFullYear();
+        const mm = String(dt.getMonth() + 1).padStart(2, '0');
+        const dd = String(dt.getDate()).padStart(2, '0');
+        setDate(`${yyyy}-${mm}-${dd}`);
+    };
+
+    const handleSaveAll = async () => {
+        const records = players
+            .filter(p => {
+                const row = getRow(p.id);
+                return !row.skip && computeValue(row) > 0;
+            })
+            .map(p => {
+                const row = getRow(p.id);
+                const val = computeValue(row);
+                return {
+                    athlete_id: p.id,
+                    team_id: isPrivateClient ? 't_private' : selectedTeamId,
+                    date,
+                    metric_type: lockedMethod,
+                    value: val,
+                    session_type: sessionType,
+                    rpe: row.rpe ? Number(row.rpe) : null,
+                    duration_minutes: row.duration ? Number(row.duration) : null,
+                    notes: notes.trim() || null,
+                };
+            });
+
+        // Also save rest day records for skipped athletes (value=0) so EWMA knows it's a rest day
+        const restRecords = players
+            .filter(p => getRow(p.id).skip)
+            .map(p => ({
+                athlete_id: p.id,
+                team_id: isPrivateClient ? 't_private' : selectedTeamId,
+                date,
+                metric_type: lockedMethod,
+                value: 0,
+                session_type: 'rest',
+                rpe: null,
+                duration_minutes: null,
+                notes: 'Rest day',
+            }));
+
+        const allRecords = [...records, ...restRecords];
+        if (allRecords.length === 0) {
+            showToast?.('No load data to save. Enter values or mark rest days.');
             return;
         }
 
         setSaving(true);
         try {
-            const records = selectedAthleteIds.map(athleteId => {
-                const athlete = athletes.find(a => a.id === athleteId);
-                return {
-                    athlete_id: athleteId,
-                    team_id: athlete?.teamId || selectedTeamId || null,
-                    date,
-                    metric_type: metricType,
-                    value: computedValue,
-                    session_type: sessionType,
-                    rpe: rpe !== '' ? Number(rpe) : null,
-                    duration_minutes: durationMinutes !== '' ? Number(durationMinutes) : null,
-                    distance_metres: distanceMetres !== '' ? Number(distanceMetres) : null,
-                    sprint_distance_metres: sprintDistanceMetres !== '' ? Number(sprintDistanceMetres) : null,
-                    notes: notes.trim() || null,
-                };
-            });
-
-            if (records.length === 1) {
-                await DatabaseService.saveTrainingLoad(records[0]);
-            } else {
-                await DatabaseService.saveTrainingLoadsBatch(records);
-            }
-
-            showToast?.(`Saved ${records.length} load record${records.length > 1 ? 's' : ''}`);
+            await DatabaseService.saveTrainingLoadsBatch(allRecords);
+            showToast?.(`Saved ${records.length} load records + ${restRecords.length} rest days for ${new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`);
             onSaved?.();
-
-            // Reset form for next entry
-            setSelectedAthleteIds([]);
-            setRpe('');
-            setDurationMinutes('');
-            setDistanceMetres('');
-            setSprintDistanceMetres('');
-            setManualValue('');
-            setNotes('');
         } catch (err: any) {
-            console.error('Save training load failed:', err);
-            showToast?.('Failed to save training load');
+            console.error('Save training load batch failed:', err);
+            showToast?.('Failed to save training loads');
         } finally {
             setSaving(false);
         }
     };
 
-    const metricInfo = ACWR_METRIC_TYPES[metricType];
+    const handleSaveAndNext = async () => {
+        await handleSaveAll();
+        // Clear row data and advance to next day
+        setRowData({});
+        shiftDate(1);
+    };
+
+    // Teams that have ACWR enabled (excluding t_private)
+    const enabledTeams = teams.filter(t => t.id !== 't_private' && acwrSettings[t.id]?.enabled);
+
+    // Private clients with individual ACWR enabled
+    const enabledPrivateClients = (privateTeam?.players || []).filter(p => acwrSettings[`ind_${p.id}`]?.enabled);
+
+    // Input columns based on locked method
+    const needsRpeDuration = lockedMethod === 'srpe' || lockedMethod === 'trimp';
+    const needsDirectValue = !needsRpeDuration;
+
+    const filledCount = players.filter(p => computeValue(getRow(p.id)) > 0).length;
+    const skippedCount = players.filter(p => getRow(p.id).skip).length;
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -140,11 +187,11 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ onClose, onSaved 
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white shrink-0">
-                        <PlusIcon size={16} />
+                        <ActivityIcon size={16} />
                     </div>
                     <div>
                         <h3 className="text-sm font-semibold text-slate-900">Log Training Load</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Manual entry for ACWR monitoring</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Inline roster entry — fill in each athlete's load</p>
                     </div>
                 </div>
                 {onClose && (
@@ -154,12 +201,44 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ onClose, onSaved 
                 )}
             </div>
 
-            <div className="p-5 space-y-5">
-                {/* Date + Session Type row */}
-                <div className="grid grid-cols-2 gap-3">
+            <div className="p-5 space-y-4">
+                {/* Team selector + Date + Session Type */}
+                <div className="grid grid-cols-3 gap-3">
+                    <div>
+                        <label className={labelCls}>Team / Group</label>
+                        <select
+                            value={selectedTeamId}
+                            onChange={e => { setSelectedTeamId(e.target.value); setRowData({}); }}
+                            className={inputCls}
+                        >
+                            <option value="">Select team...</option>
+                            {enabledTeams.length > 0 && (
+                                <optgroup label="Teams">
+                                    {enabledTeams.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </optgroup>
+                            )}
+                            {enabledPrivateClients.length > 0 && (
+                                <optgroup label="Private Clients">
+                                    {enabledPrivateClients.map(p => (
+                                        <option key={`ind_${p.id}`} value={`ind_${p.id}`}>{p.name}</option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+                    </div>
                     <div>
                         <label className={labelCls}>Date</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} />
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => shiftDate(-1)} className="p-2 hover:bg-slate-100 rounded-lg shrink-0">
+                                <ChevronLeftIcon size={14} className="text-slate-400" />
+                            </button>
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls + ' text-center'} />
+                            <button onClick={() => shiftDate(1)} className="p-2 hover:bg-slate-100 rounded-lg shrink-0">
+                                <ChevronRightIcon size={14} className="text-slate-400" />
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label className={labelCls}>Session Type</label>
@@ -169,143 +248,168 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ onClose, onSaved 
                     </div>
                 </div>
 
-                {/* Metric Type */}
-                <div>
-                    <label className={labelCls}>Load Metric</label>
-                    <select value={metricType} onChange={e => setMetricType(e.target.value)} className={inputCls}>
-                        {Object.entries(ACWR_METRIC_TYPES).map(([id, info]) => (
-                            <option key={id} value={id}>{info.label} ({info.unit})</option>
-                        ))}
-                    </select>
-                    {metricInfo && <p className="text-[11px] text-slate-400 mt-1">{metricInfo.desc}</p>}
-                </div>
+                {/* Method indicator (locked from settings) */}
+                {selectedTeamId && teamSettings && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                        <span className="text-xs font-medium text-indigo-600">
+                            Method: <span className="font-bold">{metricInfo?.label}</span> — {metricInfo?.desc}
+                        </span>
+                        <span className="text-[9px] text-indigo-400 uppercase">Locked via Settings</span>
+                    </div>
+                )}
 
-                {/* Contextual input fields based on metric */}
-                <div className="grid grid-cols-2 gap-3">
-                    {(metricType === 'srpe' || metricType === 'trimp') && (
-                        <>
-                            <div>
-                                <label className={labelCls}>RPE (1-10)</label>
-                                <input type="number" min={1} max={10} value={rpe} onChange={e => { setRpe(e.target.value === '' ? '' : Number(e.target.value)); setManualValue(''); }} className={inputCls} placeholder="7" />
-                            </div>
-                            <div>
-                                <label className={labelCls}>Duration (min)</label>
-                                <input type="number" min={0} value={durationMinutes} onChange={e => { setDurationMinutes(e.target.value === '' ? '' : Number(e.target.value)); setManualValue(''); }} className={inputCls} placeholder="90" />
-                            </div>
-                        </>
-                    )}
-                    {metricType === 'sprint_distance' && (
-                        <>
-                            <div>
-                                <label className={labelCls}>Sprint Distance (m)</label>
-                                <input type="number" min={0} value={sprintDistanceMetres} onChange={e => { setSprintDistanceMetres(e.target.value === '' ? '' : Number(e.target.value)); setManualValue(''); }} className={inputCls} placeholder="320" />
-                            </div>
-                            <div>
-                                <label className={labelCls}>Total Distance (m)</label>
-                                <input type="number" min={0} value={distanceMetres} onChange={e => setDistanceMetres(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} placeholder="9500" />
-                            </div>
-                        </>
-                    )}
-                    {metricType === 'total_distance' && (
-                        <div className="col-span-2">
-                            <label className={labelCls}>Total Distance (m)</label>
-                            <input type="number" min={0} value={distanceMetres} onChange={e => { setDistanceMetres(e.target.value === '' ? '' : Number(e.target.value)); setManualValue(''); }} className={inputCls} placeholder="9500" />
-                        </div>
-                    )}
-                    {metricType === 'duration' && (
-                        <div className="col-span-2">
-                            <label className={labelCls}>Duration (min)</label>
-                            <input type="number" min={0} value={durationMinutes} onChange={e => { setDurationMinutes(e.target.value === '' ? '' : Number(e.target.value)); setManualValue(''); }} className={inputCls} placeholder="90" />
-                        </div>
-                    )}
-                    {(metricType === 'tonnage' || metricType === 'player_load') && (
-                        <div className="col-span-2">
-                            <label className={labelCls}>{metricInfo?.label} ({metricInfo?.unit})</label>
-                            <input type="number" min={0} value={manualValue} onChange={e => setManualValue(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} placeholder="Enter value" />
-                        </div>
-                    )}
-                </div>
+                {/* No team selected */}
+                {!selectedTeamId && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
+                        <ActivityIcon size={24} className="mx-auto text-slate-300 mb-2" />
+                        <p className="text-sm text-slate-500">Select a team with ACWR enabled to begin logging.</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Enable ACWR for teams in Settings → ACWR Monitoring.</p>
+                    </div>
+                )}
 
-                {/* Computed value display */}
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                    <span className="text-xs font-medium text-indigo-600">Computed Load Value</span>
-                    <span className="text-lg font-bold text-indigo-900">{computedValue} <span className="text-xs font-normal text-indigo-400">{metricInfo?.unit}</span></span>
-                </div>
+                {/* No ACWR settings for this team */}
+                {selectedTeamId && !teamSettings?.enabled && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                        <p className="text-sm text-amber-700 font-medium">ACWR is not enabled for this team.</p>
+                        <p className="text-[10px] text-amber-500 mt-1">Go to Settings → ACWR Monitoring to enable it.</p>
+                    </div>
+                )}
 
-                {/* Team filter + athlete selector */}
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <label className={labelCls + ' mb-0'}>Athletes</label>
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={selectedTeamId}
-                                onChange={e => setSelectedTeamId(e.target.value)}
-                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-600"
-                            >
-                                <option value="">All Teams</option>
-                                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
+                {/* Roster spreadsheet */}
+                {selectedTeamId && teamSettings?.enabled && players.length > 0 && (
+                    <>
+                        {/* Column headers */}
+                        <div className={`grid gap-2 items-end px-1 ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">Athlete</span>
+                            {needsRpeDuration ? (
+                                <>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase text-center">RPE</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase text-center">Min</span>
+                                </>
+                            ) : (
+                                <span className="text-[9px] font-bold text-slate-400 uppercase text-center">{metricInfo?.unit || 'Value'}</span>
+                            )}
+                            <span className="text-[9px] font-bold text-slate-400 uppercase text-center">Load</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase text-center">Rest</span>
+                        </div>
+
+                        {/* Athlete rows */}
+                        <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                            {players.map(player => {
+                                const row = getRow(player.id);
+                                const computed = computeValue(row);
+                                const existing = existingDataForDate[player.id];
+                                const initials = player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+                                return (
+                                    <div
+                                        key={player.id}
+                                        className={`grid gap-2 items-center px-1 py-1.5 rounded-lg transition-all ${
+                                            row.skip ? 'bg-slate-100 opacity-60' : existing ? 'bg-emerald-50/50' : 'hover:bg-slate-50'
+                                        } ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}
+                                    >
+                                        {/* Athlete name */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                                                {initials}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="text-sm font-medium text-slate-900 truncate block">{player.name}</span>
+                                                {existing && <span className="text-[9px] text-emerald-500">Logged: {existing.value || existing.sRPE}</span>}
+                                            </div>
+                                        </div>
+
+                                        {/* Input fields */}
+                                        {needsRpeDuration ? (
+                                            <>
+                                                <input
+                                                    type="number" min={1} max={10} placeholder="RPE"
+                                                    value={row.rpe}
+                                                    onChange={e => updateRow(player.id, 'rpe', e.target.value)}
+                                                    disabled={row.skip}
+                                                    className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                                />
+                                                <input
+                                                    type="number" min={0} placeholder="min"
+                                                    value={row.duration}
+                                                    onChange={e => updateRow(player.id, 'duration', e.target.value)}
+                                                    disabled={row.skip}
+                                                    className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                                />
+                                            </>
+                                        ) : (
+                                            <input
+                                                type="number" min={0} placeholder={metricInfo?.unit || '0'}
+                                                value={row.value}
+                                                onChange={e => updateRow(player.id, 'value', e.target.value)}
+                                                disabled={row.skip}
+                                                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                            />
+                                        )}
+
+                                        {/* Computed load */}
+                                        <div className={`text-center text-sm font-bold ${
+                                            row.skip ? 'text-slate-400' : computed > 0 ? 'text-indigo-600' : 'text-slate-300'
+                                        }`}>
+                                            {row.skip ? '—' : computed > 0 ? computed : '—'}
+                                        </div>
+
+                                        {/* Skip / Rest day toggle */}
+                                        <div className="flex justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateRow(player.id, 'skip', !row.skip)}
+                                                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                                                    row.skip ? 'bg-amber-100 text-amber-600 border border-amber-300' : 'bg-slate-100 text-slate-300 border border-slate-200 hover:text-slate-500'
+                                                }`}
+                                                title={row.skip ? 'Marked as rest day' : 'Mark as rest/skip'}
+                                            >
+                                                <PauseIcon size={12} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Summary + Notes */}
+                        <div className="flex items-center gap-4 pt-2 border-t border-slate-100">
+                            <span className="text-xs text-slate-500">{filledCount} logged · {skippedCount} rest · {players.length - filledCount - skippedCount} empty</span>
+                            <div className="flex-1" />
+                            <input
+                                type="text"
+                                value={notes}
+                                onChange={e => setNotes(e.target.value)}
+                                placeholder="Session notes (optional)"
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                            />
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex gap-3">
                             <button
-                                type="button"
-                                onClick={selectAllFiltered}
-                                className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700 px-2 py-1 bg-indigo-50 rounded-lg"
+                                onClick={handleSaveAll}
+                                disabled={saving || (filledCount === 0 && skippedCount === 0)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl px-5 py-3 transition-colors"
                             >
-                                Toggle All
+                                {saving
+                                    ? <><Loader2Icon size={14} className="animate-spin" /> Saving...</>
+                                    : <><SaveIcon size={14} /> Save</>
+                                }
+                            </button>
+                            <button
+                                onClick={handleSaveAndNext}
+                                disabled={saving || (filledCount === 0 && skippedCount === 0)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white text-sm font-semibold rounded-xl px-5 py-3 transition-colors"
+                            >
+                                {saving
+                                    ? <><Loader2Icon size={14} className="animate-spin" /> Saving...</>
+                                    : <><CalendarIcon size={14} /> Save & Next Day</>
+                                }
                             </button>
                         </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto rounded-lg border border-slate-200 p-2 bg-slate-50/50">
-                        {filteredAthletes.map(athlete => {
-                            const selected = selectedAthleteIds.includes(athlete.id);
-                            return (
-                                <button
-                                    key={athlete.id}
-                                    type="button"
-                                    onClick={() => toggleAthlete(athlete.id)}
-                                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-all text-xs ${
-                                        selected
-                                            ? 'bg-indigo-100 border border-indigo-300 text-indigo-900 font-medium'
-                                            : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                                        selected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'
-                                    }`}>
-                                        {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <span className="truncate">{athlete.name}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {selectedAthleteIds.length > 0 && (
-                        <p className="text-[11px] text-indigo-500 mt-1 font-medium">{selectedAthleteIds.length} athlete{selectedAthleteIds.length > 1 ? 's' : ''} selected</p>
-                    )}
-                </div>
-
-                {/* Notes */}
-                <div>
-                    <label className={labelCls}>Notes (optional)</label>
-                    <textarea
-                        value={notes}
-                        onChange={e => setNotes(e.target.value)}
-                        rows={2}
-                        className={inputCls + ' resize-none'}
-                        placeholder="e.g. match day, reduced session, GPS data..."
-                    />
-                </div>
-
-                {/* Save */}
-                <button
-                    onClick={handleSave}
-                    disabled={saving || selectedAthleteIds.length === 0 || computedValue <= 0}
-                    className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl px-5 py-3 transition-colors"
-                >
-                    {saving
-                        ? <><Loader2Icon size={14} className="animate-spin" /> Saving...</>
-                        : <><SaveIcon size={14} /> Save Training Load{selectedAthleteIds.length > 1 ? ` (×${selectedAthleteIds.length})` : ''}</>
-                    }
-                </button>
+                    </>
+                )}
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import { ActivityIcon, TrendingUpIcon, AlertCircleIcon, ArrowUpRightIcon, ArrowDownRightIcon } from 'lucide-react';
+import { ActivityIcon, TrendingUpIcon, AlertCircleIcon, ZapIcon } from 'lucide-react';
 
 export const LoadTerminal = ({ loadRegistry, acwrValue, acwrStatus, athleteLoad }) => {
     return (

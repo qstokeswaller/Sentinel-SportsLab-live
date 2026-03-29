@@ -721,9 +721,11 @@ export const DatabaseService = {
         sprint_distance_metres?: number;
         notes?: string;
     }) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const withUser = { ...record, user_id: user?.id };
         const { data, error } = await (supabase as any)
             .from('training_loads')
-            .upsert(record, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
+            .upsert(withUser, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
             .select()
             .single();
         if (error) throw error;
@@ -731,9 +733,11 @@ export const DatabaseService = {
     },
 
     async saveTrainingLoadsBatch(records: any[]) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const withUser = records.map(r => ({ ...r, user_id: user?.id }));
         const { data, error } = await (supabase as any)
             .from('training_loads')
-            .upsert(records, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
+            .upsert(withUser, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
             .select();
         if (error) throw error;
         return data;

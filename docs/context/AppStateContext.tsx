@@ -563,6 +563,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [loadRecords, setLoadRecords] = useState([]);
 
+    // ACWR Feature Settings — per team/individual
+    // { [teamId_or_'ind_'+athleteId]: { enabled: bool, method: string, acuteWindow: 7, chronicWindow: 28, freezeRestDays: bool, sprintThreshold: 25 } }
+    const [acwrSettings, setAcwrSettings] = useState<Record<string, any>>({});
+
+    // ACWR Exclusions — injured/excluded athletes
+    // { [athleteId]: { excluded: bool, excludedDate: string, returnDate?: string, frozenChronic?: number, frozenAcute?: number } }
+    const [acwrExclusions, setAcwrExclusions] = useState<Record<string, any>>({});
+
     const [kpiRecords, setKpiRecords] = useState(MOCK_KPI_DATA);
 
     const [heatmapRecords, setHeatmapRecords] = useState(MOCK_HEATMAP_DATA);
@@ -690,6 +698,18 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isLoading)
             StorageService.saveWellnessData(wellnessData);
     }, [wellnessData, isLoading]);
+
+    // Persist ACWR feature settings
+    useEffect(() => {
+        if (!isLoading)
+            localStorage.setItem('acwr_feature_settings', JSON.stringify(acwrSettings));
+    }, [acwrSettings, isLoading]);
+
+    // Persist ACWR exclusions
+    useEffect(() => {
+        if (!isLoading)
+            localStorage.setItem('acwr_exclusions', JSON.stringify(acwrExclusions));
+    }, [acwrExclusions, isLoading]);
 
     useEffect(() => {
         if (!isLoading)
@@ -1049,44 +1069,58 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
      * Calculates the Acute:Chronic Work Rate Ratio (ACWR)
      * Acute (7-day rolling avg) vs Chronic (28-day rolling avg)
      */
-    const calculateACWR = (athleteId, options = {}) => {
+    // Resolve ACWR settings for a given athlete
+    const getAthleteAcwrOptions = (athleteId) => {
+        // Find the athlete's team
+        const playerTeam = teams.find(t => (t.players || []).some(p => p.id === athleteId));
+        const teamId = playerTeam?.id;
+        const settings = (teamId === 't_private')
+            ? (acwrSettings[`ind_${athleteId}`] || {})
+            : (acwrSettings[teamId] || {});
+        return {
+            metricType: settings.method || 'srpe',
+            acuteN: settings.acuteWindow || 7,
+            chronicN: settings.chronicWindow || 28,
+            freezeRestDays: settings.freezeRestDays !== false,
+        };
+    };
+
+    const calculateACWR = (athleteId, options) => {
         const logs = loadRecords || [];
-        const result = ACWR_UTILS.calculateAthleteACWR(logs, athleteId, options);
-        return result.ratio.toFixed(2);
+        const opts = options || getAthleteAcwrOptions(athleteId);
+        const result = ACWR_UTILS.calculateAthleteACWR(logs, athleteId, opts);
+        return parseFloat(result.ratio.toFixed(2));
     };
 
     const calculateMonotony = (athleteId) => {
-        const athleteLogs = loadRecords.filter(l => l.athleteId === athleteId);
+        const athleteLogs = loadRecords.filter(l => (l.athleteId === athleteId || l.athlete_id === athleteId));
         const now = new Date();
         const dailyLoads = [];
-        // Get daily loads for the last 7 days
         for (let i = 0; i < 7; i++) {
             const d = new Date(now);
             d.setDate(now.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
             const daySum = athleteLogs
-                .filter(l => l.date === dateStr)
-                .reduce((acc, l) => acc + (l.sRPE || 0), 0);
+                .filter(l => (l.date || '').split('T')[0] === dateStr)
+                .reduce((acc, l) => acc + (l.value || l.sRPE || 0), 0);
             dailyLoads.push(daySum);
         }
         const mean = dailyLoads.reduce((a, b) => a + b, 0) / 7;
-        if (mean === 0)
-            return 0.0;
+        if (mean === 0) return 0.0;
         const variance = dailyLoads.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / 7;
         const stdDev = Math.sqrt(variance);
-        if (stdDev === 0)
-            return 2.0; // High monotony if no variation in training
+        if (stdDev === 0) return 2.0;
         return (mean / stdDev).toFixed(2);
     };
 
     const calculateStrain = (athleteId) => {
-        const athleteLogs = loadRecords.filter(l => l.athleteId === athleteId);
+        const athleteLogs = loadRecords.filter(l => (l.athleteId === athleteId || l.athlete_id === athleteId));
         const now = new Date();
         const start = new Date(now);
         start.setDate(now.getDate() - 7);
         const weeklyLoad = athleteLogs
             .filter(l => new Date(l.date) >= start)
-            .reduce((acc, l) => acc + (l.sRPE || 0), 0);
+            .reduce((acc, l) => acc + (l.value || l.sRPE || 0), 0);
         const monotony = parseFloat(calculateMonotony(athleteId));
         return (weeklyLoad * monotony).toFixed(0);
     };
@@ -1878,7 +1912,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         id: a.id,
                         name: a.name,
                         position: a.gender || 'Athlete',
-                        image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${a.name.replace(/\s+/g, '')}`,
+                        image: null,
                         readiness: 100,
                         status: 'Active',
                         trend: 'stable',
@@ -1899,7 +1933,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         id: a.id,
                         name: a.name,
                         position: a.gender || 'Athlete',
-                        image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${a.name.replace(/\s+/g, '')}`,
+                        image: null,
                         readiness: 100,
                         status: 'Active',
                         trend: 'stable',
@@ -2066,25 +2100,30 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 StorageService.getBiometrics(),
                 StorageService.getWorkoutLog()
             ]);
-            // Merge local storage load records with Supabase training_loads
+            // Merge local storage load records with Supabase training_loads (deduplicated)
             let mergedLoadRecords = loadedLoad || [];
             try {
                 const dbTrainingLoads = await DatabaseService.fetchTrainingLoads();
                 if (dbTrainingLoads && dbTrainingLoads.length > 0) {
-                    // Map DB records to the loadRecords shape used by ACWR_UTILS
                     const mapped = dbTrainingLoads.map(r => ({
                         athleteId: r.athlete_id,
                         athlete_id: r.athlete_id,
                         date: r.date,
-                        sRPE: r.metric_type === 'srpe' ? r.value : 0,
-                        value: r.value,
+                        sRPE: r.metric_type === 'srpe' ? Number(r.value) : 0,
+                        value: Number(r.value),
                         metric_type: r.metric_type,
                         session_type: r.session_type,
                     }));
-                    mergedLoadRecords = [...mergedLoadRecords, ...mapped];
+                    // Deduplicate: DB records take priority over local
+                    const dbKeys = new Set(mapped.map(r => `${r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type}`));
+                    const localOnly = mergedLoadRecords.filter(r => {
+                        const key = `${r.athleteId || r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type || 'srpe'}`;
+                        return !dbKeys.has(key);
+                    });
+                    mergedLoadRecords = [...localOnly, ...mapped];
                 }
             } catch (e) {
-                console.warn("Could not fetch training_loads:", e.message);
+                console.error("[ACWR] FAILED to fetch training_loads:", e);
             }
             setLoadRecords(mergedLoadRecords);
             setWellnessData(loadedWellness || []);
@@ -2133,6 +2172,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         } catch (error) {
             console.error("Critical error in initData:", error);
         } finally {
+            // Load ACWR feature settings from localStorage
+            try {
+                const saved = localStorage.getItem('acwr_feature_settings');
+                if (saved) {
+                    setAcwrSettings(JSON.parse(saved));
+                }
+            } catch (e) { /* ignore parse errors */ }
+            try {
+                const savedEx = localStorage.getItem('acwr_exclusions');
+                if (savedEx) setAcwrExclusions(JSON.parse(savedEx));
+            } catch (e) { /* ignore parse errors */ }
             setIsLoading(false);
         }
     }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog]);
@@ -2633,6 +2683,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setNewLoadEntry,
         newHabitEntry,
         setNewHabitEntry,
+        acwrSettings,
+        setAcwrSettings,
+        acwrExclusions,
+        setAcwrExclusions,
+        getAthleteAcwrOptions,
         calculateACWR,
         calculateMonotony,
         calculateStrain,

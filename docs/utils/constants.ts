@@ -28,47 +28,59 @@ export const ACWR_UTILS = {
              * λ = 2/(N+1) per Williams et al. (2017)
              * @param {Array} loads - Array of daily loads
              * @param {Number} N - Time decay constant (7 for Acute, 28 for Chronic)
-             * @param {Boolean} freezeRestDays - If true, EWMA freezes on zero-load days (Menaspà 2017 approach)
+             * @param {Boolean} freezeRestDays - If true, EWMA freezes on explicit rest days
+             * @param {Set} restDays - Set of date strings that are explicit rest days
+             * @param {Array} dates - Corresponding date strings for each load entry
              * @returns {Number} Calculated EWMA
              */
-            calculateEWMA: (loads, N, freezeRestDays = false) => {
+            calculateEWMA: (loads, N, freezeRestDays = false, restDays = new Set(), dates = []) => {
                 if (!loads || loads.length === 0) return 0;
                 const lambda = 2 / (N + 1);
                 let ewma = loads[0];
                 for (let i = 1; i < loads.length; i++) {
-                    if (freezeRestDays && loads[i] === 0) continue; // freeze on rest days
+                    if (freezeRestDays && restDays.has(dates[i])) continue; // freeze only on explicit rest
                     ewma = (loads[i] * lambda) + (ewma * (1 - lambda));
                 }
                 return ewma;
             },
 
             /**
-             * Builds daily load array from records, filling date gaps
+             * Builds daily load array from records, filling date gaps.
+             * Also tracks which days are explicit rest days (session_type === 'rest')
+             * vs days with no data (gaps) vs days with a logged zero value.
              * @param {Array} records - Filtered records for one athlete + one metric type
              * @param {String} valueField - Field to sum ('value', 'sRPE', etc.)
-             * @returns {Array} { dates: string[], loads: number[] }
+             * @returns {{ dates: string[], loads: number[], restDays: Set<string> }}
              */
             buildDailyLoads: (records, valueField = 'value') => {
-                if (!records || records.length === 0) return { dates: [], loads: [] };
+                if (!records || records.length === 0) return { dates: [], loads: [], restDays: new Set() };
                 const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
                 const dailyMap = {};
+                const restDaySet = new Set();
                 sorted.forEach(r => {
                     const d = (r.date || '').split('T')[0];
+                    // Track explicit rest days (marked by sport scientist)
+                    if (r.session_type === 'rest') {
+                        restDaySet.add(d);
+                    }
                     const v = Number(r[valueField]) || Number(r.sRPE) || 0;
                     dailyMap[d] = (dailyMap[d] || 0) + v;
                 });
                 const dateKeys = Object.keys(dailyMap).sort();
-                if (dateKeys.length === 0) return { dates: [], loads: [] };
-                const start = new Date(dateKeys[0] + 'T00:00:00');
-                const end = new Date(dateKeys[dateKeys.length - 1] + 'T00:00:00');
+                if (dateKeys.length === 0) return { dates: [], loads: [], restDays: restDaySet };
+                // Timezone-safe date iteration using local date parts
+                const [sy, sm, sd] = dateKeys[0].split('-').map(Number);
+                const [ey, em, ed] = dateKeys[dateKeys.length - 1].split('-').map(Number);
+                const startD = new Date(sy, sm - 1, sd);
+                const endD = new Date(ey, em - 1, ed);
                 const dates = [];
                 const loads = [];
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const ds = d.toISOString().split('T')[0];
+                for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     dates.push(ds);
                     loads.push(dailyMap[ds] || 0);
                 }
-                return { dates, loads };
+                return { dates, loads, restDays: restDaySet };
             },
 
             /**
@@ -88,13 +100,13 @@ export const ACWR_UTILS = {
                     athleteRecords = athleteRecords.filter(r => r.metric_type === metricType);
                 }
 
-                if (athleteRecords.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [] };
+                if (athleteRecords.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays: new Set() };
 
-                // Build daily loads
+                // Build daily loads + explicit rest day tracking
                 const valueField = metricType ? 'value' : 'sRPE';
-                const { dates, loads } = ACWR_UTILS.buildDailyLoads(athleteRecords, valueField);
+                const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(athleteRecords, valueField);
 
-                if (loads.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [] };
+                if (loads.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays };
 
                 // Calculate full EWMA history for charting
                 const lambda_a = 2 / (acuteN + 1);
@@ -109,8 +121,8 @@ export const ACWR_UTILS = {
                     if (i === 0) {
                         ewma_a = loads[0];
                         ewma_c = loads[0];
-                    } else if (freezeRestDays && loads[i] === 0) {
-                        // Freeze — keep previous values
+                    } else if (freezeRestDays && restDays.has(dates[i])) {
+                        // Freeze ONLY on explicitly marked rest days — zeros from training still count
                     } else {
                         ewma_a = (loads[i] * lambda_a) + (ewma_a * (1 - lambda_a));
                         ewma_c = (loads[i] * lambda_c) + (ewma_c * (1 - lambda_c));
@@ -124,7 +136,7 @@ export const ACWR_UTILS = {
                 const chronic = chronicHistory[chronicHistory.length - 1] || 0;
                 const ratio = ratioHistory[ratioHistory.length - 1] || 0;
 
-                return { acute: Math.round(acute), chronic: Math.round(chronic), ratio, dates, loads, acuteHistory, chronicHistory, ratioHistory };
+                return { acute: Math.round(acute), chronic: Math.round(chronic), ratio, dates, loads, acuteHistory, chronicHistory, ratioHistory, restDays };
             },
 
             /**
@@ -133,44 +145,57 @@ export const ACWR_UTILS = {
             calculateTeamACWR: (records, athleteIds, options = {}) => {
                 const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false } = options;
 
-                // Build per-athlete daily load maps
+                // Build per-athlete daily load maps + collect rest days
                 let filtered = metricType ? records.filter(r => r.metric_type === metricType) : records;
                 const allDates = new Set();
                 const athleteMaps = {};
+                const allRestDays = new Set();
 
                 athleteIds.forEach(aid => {
                     const recs = filtered.filter(r => (r.athleteId === aid || r.athlete_id === aid));
                     const valueField = metricType ? 'value' : 'sRPE';
-                    const { dates, loads } = ACWR_UTILS.buildDailyLoads(recs, valueField);
+                    const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(recs, valueField);
                     const map = {};
                     dates.forEach((d, i) => { map[d] = loads[i]; allDates.add(d); });
                     athleteMaps[aid] = map;
+                    // A team rest day = all athletes have explicit rest on that date
+                    restDays.forEach(d => allRestDays.add(d + '_' + aid));
                 });
 
                 const sortedDates = [...allDates].sort();
-                if (sortedDates.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [] };
+                if (sortedDates.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays: new Set() };
 
-                // Fill complete date range and average
-                const start = new Date(sortedDates[0] + 'T00:00:00');
-                const end = new Date(sortedDates[sortedDates.length - 1] + 'T00:00:00');
+                // Fill complete date range and average (timezone-safe)
+                const [sy, sm, sd] = sortedDates[0].split('-').map(Number);
+                const [ey, em, ed] = sortedDates[sortedDates.length - 1].split('-').map(Number);
+                const startD = new Date(sy, sm - 1, sd);
+                const endD = new Date(ey, em - 1, ed);
                 const dates = [];
                 const loads = [];
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const ds = d.toISOString().split('T')[0];
+                const teamRestDays = new Set();
+                for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     dates.push(ds);
                     let sum = 0, count = 0;
+                    // Check if ALL athletes have explicit rest on this day
+                    let allResting = athleteIds.length > 0;
                     athleteIds.forEach(aid => {
                         const v = athleteMaps[aid]?.[ds];
                         if (v !== undefined) { sum += v; count++; }
+                        if (!allRestDays.has(ds + '_' + aid)) allResting = false;
                     });
+                    if (allResting) teamRestDays.add(ds);
                     loads.push(count > 0 ? parseFloat((sum / count).toFixed(1)) : 0);
                 }
 
-                // Run EWMA on team averages
-                const teamRecords = dates.map((d, i) => ({ date: d, value: loads[i] }));
+                // Run EWMA on team averages — mark team rest days so freeze works
+                const teamRecords = dates.map((d, i) => ({
+                    date: d, value: loads[i], athlete_id: '__team__',
+                    metric_type: metricType || 'srpe',
+                    session_type: teamRestDays.has(d) ? 'rest' : 'training',
+                }));
                 const result = ACWR_UTILS.calculateAthleteACWR(
-                    teamRecords.map(r => ({ ...r, athlete_id: '__team__', metric_type: metricType || 'srpe' })),
-                    '__team__',
+                    teamRecords, '__team__',
                     { metricType: metricType || 'srpe', acuteN, chronicN, freezeRestDays }
                 );
                 return result;
@@ -181,10 +206,10 @@ export const ACWR_UTILS = {
              */
             getRatioStatus: (ratio) => {
                 if (ratio === 0) return { label: 'No Data', color: 'text-slate-400', bg: 'bg-slate-100', status: 'neutral' };
-                if (ratio < 0.8) return { label: 'Undertrained', color: 'text-blue-500', bg: 'bg-blue-50', status: 'warning' };
+                if (ratio < 0.8) return { label: 'Undertrained', color: 'text-sky-500', bg: 'bg-sky-50', status: 'warning' };
                 if (ratio >= 0.8 && ratio <= 1.3) return { label: 'Optimal', color: 'text-emerald-500', bg: 'bg-emerald-50', status: 'success' };
-                if (ratio > 1.3 && ratio <= 1.5) return { label: 'Overreaching', color: 'text-amber-500', bg: 'bg-amber-50', status: 'warning' };
-                return { label: 'Danger Zone', color: 'text-rose-500', bg: 'bg-rose-50', status: 'danger' };
+                if (ratio > 1.3 && ratio <= 1.5) return { label: 'Caution', color: 'text-amber-500', bg: 'bg-amber-50', status: 'warning' };
+                return { label: 'Danger', color: 'text-rose-500', bg: 'bg-rose-50', status: 'danger' };
             },
 
             /**

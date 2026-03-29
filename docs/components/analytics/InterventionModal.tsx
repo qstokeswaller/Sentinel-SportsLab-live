@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useMemo } from 'react';
 import { ACWR_UTILS } from '../../utils/constants';
+import ACWRLineChart from './ACWRLineChart';
 import {
     XIcon, AlertTriangleIcon, ActivityIcon, HeartIcon, MoonIcon,
     ZapIcon, BrainIcon, TrendingUpIcon, ShieldAlertIcon,
@@ -32,25 +33,28 @@ const CATEGORY_ICONS = {
 const InterventionModal: React.FC<InterventionModalProps> = ({
     athlete, isOpen, onClose, loadRecords, wellnessData, acwrOptions = {},
 }) => {
-    if (!isOpen || !athlete) return null;
+    const safeAthleteId = athlete?.id || '';
 
     const acwrResult = useMemo(() => {
-        return ACWR_UTILS.calculateAthleteACWR(loadRecords || [], athlete.id, acwrOptions);
-    }, [loadRecords, athlete.id, acwrOptions]);
+        if (!safeAthleteId) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [] };
+        return ACWR_UTILS.calculateAthleteACWR(loadRecords || [], safeAthleteId, acwrOptions);
+    }, [loadRecords, safeAthleteId, acwrOptions]);
 
     const reasons = useMemo(() => {
-        return ACWR_UTILS.getAthleteRiskReasoning(acwrResult, wellnessData, loadRecords, athlete.id);
-    }, [acwrResult, wellnessData, loadRecords, athlete.id]);
+        if (!safeAthleteId) return [];
+        return ACWR_UTILS.getAthleteRiskReasoning(acwrResult, wellnessData, loadRecords, safeAthleteId);
+    }, [acwrResult, wellnessData, loadRecords, safeAthleteId]);
 
     const ratioStatus = ACWR_UTILS.getRatioStatus(acwrResult.ratio);
 
-    // Mini sparkline for last 14 days of ACWR ratio
     const ratioSpark = useMemo(() => {
         const hist = acwrResult.ratioHistory || [];
         return hist.slice(-14);
     }, [acwrResult.ratioHistory]);
 
     const sparkMax = Math.max(...ratioSpark, 1.5);
+
+    if (!isOpen || !athlete) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -63,8 +67,8 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                 <div className={`px-6 py-5 border-b ${ratioStatus.status === 'danger' ? 'bg-rose-50 border-rose-100' : ratioStatus.status === 'warning' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 bg-slate-200 rounded-xl overflow-hidden">
-                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${athlete.name}`} alt={athlete.name} className="w-full h-full" />
+                            <div className="w-11 h-11 bg-slate-200 rounded-xl flex items-center justify-center text-sm font-bold text-slate-600">
+                                {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
                             <div>
                                 <h3 className="text-base font-bold text-slate-900">{athlete.name}</h3>
@@ -95,25 +99,16 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Mini Sparkline */}
-                    {ratioSpark.length > 2 && (
-                        <div className="mt-3 bg-white rounded-lg border border-slate-200 p-3">
-                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">ACWR Trend (14d)</div>
-                            <div className="flex items-end gap-[2px] h-10">
-                                {ratioSpark.map((val, i) => {
-                                    const h = Math.max((val / sparkMax) * 100, 4);
-                                    const color = val > 1.5 ? 'bg-rose-400' : val > 1.3 ? 'bg-amber-400' : val >= 0.8 ? 'bg-emerald-400' : 'bg-sky-400';
-                                    return (
-                                        <div key={i} className="flex-1 flex flex-col items-center justify-end">
-                                            <div className={`w-full rounded-sm ${color}`} style={{ height: `${h}%` }} />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="flex justify-between mt-1">
-                                <span className="text-[9px] text-slate-300">14d ago</span>
-                                <span className="text-[9px] text-slate-300">Today</span>
-                            </div>
+                    {/* ACWR Trend Line Chart */}
+                    {acwrResult.ratioHistory?.length > 2 && (
+                        <div className="mt-3">
+                            <ACWRLineChart
+                                dates={(acwrResult.dates || []).slice(-14)}
+                                ratioHistory={(acwrResult.ratioHistory || []).slice(-14)}
+                                restDays={acwrResult.restDays}
+                                height={140}
+                                title="ACWR Trend (14d)"
+                            />
                         </div>
                     )}
                 </div>

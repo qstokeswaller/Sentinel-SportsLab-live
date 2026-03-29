@@ -8,6 +8,7 @@ import {
     Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
 } from 'lucide-react';
 import InterventionModal from '../components/analytics/InterventionModal';
+import { DatabaseService } from '../services/databaseService';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -22,7 +23,7 @@ const PRESET_COLORS = [
 
 export const DashboardPage = () => {
     const {
-        teams, scheduledSessions, wellnessData, bodyHeatmapData, isLoading,
+        teams, scheduledSessions, setScheduledSessions, wellnessData, bodyHeatmapData, isLoading,
         dashboardFilterTarget, setDashboardFilterTarget,
         calendarFilterCategory, setCalendarFilterCategory,
         calendarFilterTeamId, setCalendarFilterTeamId,
@@ -37,13 +38,58 @@ export const DashboardPage = () => {
         setViewingDate, setViewingSession,
         setSelectedInterventionAthlete, setIsInterventionModalOpen,
         isInterventionModalOpen, selectedInterventionAthlete,
-        loadRecords,
+        loadRecords, acwrSettings, acwrExclusions, getAthleteAcwrOptions,
         calculateACWR, resolveTargetName, getSessionTypeColor,
         handleUpdateSession, handleDeleteSession, handleAddCalendarEvent, showToast,
     } = useAppState();
 
+    // Check if any ACWR monitoring is enabled
+    const hasAnyAcwrEnabled = Object.values(acwrSettings || {}).some((s: any) => s?.enabled);
+
+    // Build set of ACWR-enabled athlete IDs
+    const acwrEnabledAthleteIds = React.useMemo(() => {
+        const ids = new Set<string>();
+        if (!acwrSettings) return ids;
+        teams.forEach(t => {
+            if (t.id === 't_private') {
+                // Private clients: check individual settings
+                (t.players || []).forEach(p => {
+                    if (acwrSettings[`ind_${p.id}`]?.enabled) ids.add(p.id);
+                });
+            } else if (acwrSettings[t.id]?.enabled) {
+                (t.players || []).forEach(p => ids.add(p.id));
+            }
+        });
+        return ids;
+    }, [acwrSettings, teams]);
+
     const [activePopover, setActivePopover] = React.useState(null);
+    const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
+    const [completingSession, setCompletingSession] = React.useState(null);
+
+    const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
+        try {
+            await DatabaseService.completeSession(sessionId, actualResults, actualRpe);
+            setScheduledSessions(prev => prev.map(s =>
+                s.id === sessionId ? { ...s, status: 'Completed', actual_results: actualResults, actual_rpe: actualRpe } : s
+            ));
+            showToast('Session completed');
+        } catch (err) {
+            showToast(err.message || 'Failed to complete session');
+        } finally {
+            setCompletingSession(null);
+        }
+    };
+
+    const resolveSessionAthletes = (session) => {
+        if (session?.targetType === 'Individual') {
+            const player = teams.flatMap(t => t.players || []).find(p => p.id === session.targetId);
+            return player ? [player] : [];
+        }
+        const team = teams.find(t => t.id === session?.targetId);
+        return team?.players || [];
+    };
     const [editingSession, setEditingSession] = React.useState(null);
     const [editingEvent, setEditingEvent] = React.useState(null);
     const [overflowDay, setOverflowDay] = React.useState(null); // dateStr of day showing overflow popover
@@ -140,90 +186,125 @@ export const DashboardPage = () => {
     }, [activePopover, activeSessionPopover, overflowDay]);
 
     const renderMorningReport = () => {
-        const atRiskAthletes = teams.flatMap(t => t.players).map(player => {
-            const acwr = parseFloat(calculateACWR(player.id));
-            const lastWellness = wellnessData.filter(d => d.athleteId === player.id).slice(-1)[0];
-            const heatmapLogs = bodyHeatmapData.filter(d => d.athleteId === player.id);
-            const recentPain = heatmapLogs.some(log => (log.type === 'Acute Pain' || log.intensity > 7) && (new Date() - new Date(log.timestamp)) < 86400000);
-            let riskLevel = 'Stable';
-            let flags = [];
-            let score = 0;
+        // Only include athletes with ACWR enabled
+        if (!hasAnyAcwrEnabled) return null;
 
-            if (acwr > 1.5) { score += 50; flags.push('ACWR Critical Spike'); }
-            else if (acwr > 1.3) { score += 30; flags.push('ACWR Elevated'); }
-            else if (acwr < 0.8) { score += 10; flags.push('Low Chronic Loading'); }
+        // Active at-risk athletes
+        const activeAtRisk = teams.flatMap(t => t.players)
+            .filter(player => acwrEnabledAthleteIds.has(player.id))
+            .filter(player => !acwrExclusions?.[player.id]?.excluded)
+            .map(player => {
+                const acwr = parseFloat(calculateACWR(player.id));
+                let riskLevel = 'Stable';
+                const ex = acwrExclusions?.[player.id];
+                const isReturning = ex?.returnDate && !ex.excluded && ((Date.now() - new Date(ex.returnDate + 'T00:00:00').getTime()) / 86400000) <= 7;
+                if (acwr > 1.5) riskLevel = 'Critical';
+                else if (acwr > 1.3) riskLevel = 'Warning';
+                else if (acwr < 0.8 && acwr > 0) riskLevel = 'Warning';
+                else if (isReturning) riskLevel = 'Warning';
+                return { ...player, riskLevel, acwr, isReturning, isInjured: false };
+            }).filter(p => p.riskLevel !== 'Stable').sort((a, b) => b.acwr - a.acwr);
 
-            if (lastWellness) {
-                if (lastWellness.energy < 3) { score += 40; flags.push('Severe Fatigue'); }
-                else if (lastWellness.energy < 5) { score += 20; flags.push('Low Energy'); }
-                if (lastWellness.stress > 8) { score += 30; flags.push('High Stress'); }
-                if (lastWellness.sleep < 5) { score += 25; flags.push('Poor Sleep'); }
-            }
+        // Injured/excluded athletes (at the bottom)
+        const injuredAthletes = teams.flatMap(t => t.players)
+            .filter(player => acwrEnabledAthleteIds.has(player.id))
+            .filter(player => acwrExclusions?.[player.id]?.excluded)
+            .map(player => ({ ...player, riskLevel: 'Injured', acwr: 0, isReturning: false, isInjured: true }));
 
-            if (recentPain) { score += 60; flags.push('Acute Pain Event'); }
+        const atRiskAthletes = [...activeAtRisk, ...injuredAthletes];
+        const totalCount = atRiskAthletes.length;
 
-            if (score >= 50) riskLevel = 'Critical';
-            else if (score >= 20) riskLevel = 'Warning';
+        const visible = atRiskAthletes.slice(0, 5);
+        const remaining = atRiskAthletes.length - 5;
 
-            return { ...player, riskLevel, flags, acwr, riskScore: score };
-        }).filter(p => p.riskLevel !== 'Stable').sort((a, b) => b.riskScore - a.riskScore);
+        const renderCompactRow = (player, onClick) => {
+            const initials = player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+            const isInjured = player.isInjured;
+            const acwrColor = isInjured ? 'text-slate-400' : player.acwr > 1.5 ? 'text-rose-600' : player.acwr > 1.3 ? 'text-amber-600' : 'text-sky-600';
+            const bgColor = isInjured ? 'bg-slate-200 text-slate-500' : player.acwr > 1.5 ? 'bg-rose-100 text-rose-700' : player.acwr > 1.3 ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700';
+            const borderColor = isInjured ? 'border-l-slate-400' : player.acwr > 1.5 ? 'border-l-rose-500' : player.acwr > 1.3 ? 'border-l-amber-400' : 'border-l-sky-400';
+            return (
+                <div key={player.id}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 opacity-70' : 'bg-slate-50/50'} hover:bg-white hover:shadow-sm transition-all cursor-pointer`}
+                    onClick={onClick}
+                >
+                    <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${bgColor}`}>
+                        {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h4 className="text-[12px] font-medium text-slate-900 truncate">{player.name}</h4>
+                    </div>
+                    {isInjured ? (
+                        <span className="text-[10px] font-semibold text-slate-400 italic shrink-0">Injured</span>
+                    ) : (
+                        <div className={`text-sm font-bold ${acwrColor} shrink-0`}>{player.acwr.toFixed(2)}</div>
+                    )}
+                </div>
+            );
+        };
 
         return (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="px-5 py-4 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
-                            <AlertTriangleIcon size={16} />
+                <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                            <AlertTriangleIcon size={14} />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900">Morning Performance Report</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">High-priority readiness screening</p>
+                            <h3 className="text-[13px] font-semibold text-slate-900">Morning Report</h3>
+                            <p className="text-[10px] text-slate-500">ACWR readiness</p>
                         </div>
                     </div>
-                    <span className="px-2.5 py-1 bg-white border border-rose-200 rounded-full text-xs font-medium text-rose-600 shrink-0">{atRiskAthletes.length} at risk</span>
+                    <span className="px-2 py-0.5 bg-white border border-rose-200 rounded-full text-[10px] font-medium text-rose-600 shrink-0">{atRiskAthletes.length}</span>
                 </div>
-                <div className="p-3 space-y-2 flex-1 overflow-y-auto">
-                    {atRiskAthletes.length > 0 ? atRiskAthletes.map(player => {
-                        const isFocused = dashboardFilterTarget === player.name;
-                        return (
-                            <div key={player.id} className={`flex items-center justify-between p-3.5 rounded-lg border transition-all cursor-pointer group ${isFocused ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/10' : 'bg-slate-50/50 border-slate-100 hover:bg-white hover:shadow-sm'}`}
-                                onClick={() => { setSelectedInterventionAthlete(player); setIsInterventionModalOpen(true); }}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <div className="w-9 h-9 bg-slate-200 rounded-lg overflow-hidden grayscale group-hover:grayscale-0 transition-all">
-                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt={player.name} />
-                                        </div>
-                                        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${player.riskLevel === 'Critical' ? 'bg-red-500' : 'bg-orange-400'}`}></div>
-                                        {isFocused && <div className="absolute -top-0.5 -left-0.5 w-3 h-3 bg-indigo-600 rounded-full border-2 border-white" />}
-                                    </div>
-                                    <div>
-                                        <h4 className={`text-sm font-medium transition-colors ${isFocused ? 'text-indigo-900' : 'text-slate-900 group-hover:text-rose-600'}`}>{player.name}</h4>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {player.flags.map((flag, idx) => (
-                                                <span key={idx} className={`px-1.5 py-0.5 bg-white border rounded text-[9px] font-medium transition-all ${isFocused ? 'border-indigo-200 text-indigo-600' : 'border-slate-200 text-slate-500'}`}>{flag}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-center flex flex-col items-center gap-1.5 shrink-0">
-                                    <div>
-                                        <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wide">ACWR</div>
-                                        <div className={`text-lg font-bold ${player.acwr > 1.5 ? 'text-red-500' : 'text-orange-500'}`}>{player.acwr}</div>
-                                    </div>
-                                    <button onClick={(e) => { e.stopPropagation(); setSelectedInterventionAthlete(player); setIsInterventionModalOpen(true); }}
-                                        className={`px-3 py-1 text-white text-[10px] font-medium rounded-full transition-colors ${isFocused ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-rose-600 hover:bg-rose-700'}`}
-                                    >Intervene</button>
-                                </div>
-                            </div>
-                        );
-                    }) : (
-                        <div className="py-14 flex flex-col items-center justify-center text-slate-300 gap-3">
-                            <CheckCircle2Icon size={36} className="text-emerald-400/40" />
-                            <p className="text-xs text-slate-400">All squad members cleared</p>
+                <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
+                    {atRiskAthletes.length > 0 ? (
+                        <>
+                            {visible.map(player => renderCompactRow(player, () => {
+                                setSelectedInterventionAthlete(player);
+                                setIsInterventionModalOpen(true);
+                            }))}
+                            {remaining > 0 && (
+                                <button
+                                    onClick={() => setIsMorningReportExpanded(true)}
+                                    className="w-full py-2 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                                >
+                                    +{remaining} more athlete{remaining > 1 ? 's' : ''}
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <div className="py-8 flex flex-col items-center justify-center text-slate-300 gap-2">
+                            <CheckCircle2Icon size={28} className="text-emerald-400/40" />
+                            <p className="text-[11px] text-slate-400">All cleared</p>
                         </div>
                     )}
                 </div>
+
+                {/* Expanded popup showing all at-risk athletes */}
+                {isMorningReportExpanded && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMorningReportExpanded(false)} />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-5 py-4 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-900">All At-Risk Athletes</h3>
+                                    <p className="text-[10px] text-slate-500">Click an athlete to see their risk analysis</p>
+                                </div>
+                                <button onClick={() => setIsMorningReportExpanded(false)} className="p-1.5 hover:bg-white/60 rounded-lg">
+                                    <XIcon size={16} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-3 space-y-1.5 flex-1 overflow-y-auto">
+                                {atRiskAthletes.map(player => renderCompactRow(player, () => {
+                                    setSelectedInterventionAthlete(player);
+                                    setIsInterventionModalOpen(true);
+                                    setIsMorningReportExpanded(false);
+                                }))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -631,6 +712,14 @@ export const DashboardPage = () => {
                                                                                 >
                                                                                     <EyeIcon size={10} /> View
                                                                                 </button>
+                                                                                {session.status !== 'Completed' && (
+                                                                                    <button
+                                                                                        onClick={() => { setCompletingSession(session); setActiveSessionPopover(null); }}
+                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                                                                                    >
+                                                                                        <CheckCircle2Icon size={10} /> Complete
+                                                                                    </button>
+                                                                                )}
                                                                                 <button
                                                                                     onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
                                                                                     className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
@@ -1105,6 +1194,45 @@ export const DashboardPage = () => {
                         onClose={() => { setIsInterventionModalOpen(false); setSelectedInterventionAthlete(null); }}
                         loadRecords={loadRecords || []}
                         wellnessData={wellnessData || []}
+                        acwrOptions={selectedInterventionAthlete ? getAthleteAcwrOptions(selectedInterventionAthlete.id) : {}}
                     />
+                    {/* Quick Complete Session Modal */}
+                    {completingSession && (
+                        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden">
+                                <div className="px-5 py-3.5 bg-emerald-700 flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-white">
+                                        <CheckCircle2Icon size={16} />
+                                        <span className="text-xs font-bold uppercase tracking-wide">Complete Session</span>
+                                    </div>
+                                    <button onClick={() => setCompletingSession(null)} className="text-emerald-200 hover:text-white">
+                                        <XIcon size={16} />
+                                    </button>
+                                </div>
+                                <div className="p-5 space-y-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900">{completingSession.title || 'Untitled Session'}</h3>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">
+                                            {new Date(completingSession.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                            {completingSession.time ? ` at ${completingSession.time}` : ''}
+                                            {' · '}{resolveTargetName(completingSession.targetId, completingSession.targetType)}
+                                        </p>
+                                    </div>
+                                    <p className="text-xs text-slate-500">Mark this session as completed?</p>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setCompletingSession(null)}
+                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors">
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => handleCompleteSession(completingSession.id, {}, null)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors">
+                                            <CheckCircle2Icon size={14} /> Complete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </>);
             }
