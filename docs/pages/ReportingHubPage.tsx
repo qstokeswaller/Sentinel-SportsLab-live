@@ -11,6 +11,8 @@ import {
 } from 'recharts';
 import { useExerciseMap } from '../hooks/useExerciseMap';
 import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
+import GpsColumnMapper, { findMatchingProfile } from '../components/performance/GpsColumnMapper';
+import type { GpsProfile, ProfileMatchResult } from '../components/performance/GpsColumnMapper';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
     CalendarIcon, HeartPulseIcon, DumbbellIcon, FlameIcon, BatteryIcon, ShieldAlertIcon,
@@ -59,6 +61,17 @@ export const ReportingHubPage = () => {
     const [gpsSpecificDate, setGpsSpecificDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [gpsImportStatus, setGpsImportStatus] = useState<'success' | 'error' | null>(null);
     const [gpsImportMessage, setGpsImportMessage] = useState('');
+
+    // GPS Column Mapper state
+    const [isGpsMapperOpen, setIsGpsMapperOpen] = useState(false);
+    const [gpsCsvHeaders, setGpsCsvHeaders] = useState<string[]>([]);
+    const [gpsCsvPreviewRows, setGpsCsvPreviewRows] = useState<Record<string, string>[]>([]);
+    const [gpsCsvParsedData, setGpsCsvParsedData] = useState<Record<string, string>[]>([]);
+    const [gpsAnomalyMode, setGpsAnomalyMode] = useState<{ profile: GpsProfile; newColumns: string[]; missingColumns: string[] } | null>(null);
+    const [gpsImportTeamId, setGpsImportTeamId] = useState<string>('');
+    const [gpsProfiles, setGpsProfiles] = useState<GpsProfile[]>(() => {
+        try { return JSON.parse(localStorage.getItem('gps_column_profiles') || '[]'); } catch { return []; }
+    });
 
     const [hrReportDateRange, setHrReportDateRange] = useState({ start: '2025-01-01', end: new Date().toISOString().split('T')[0] });
     const [hrImportStatus, setHrImportStatus] = useState<'success' | 'error' | null>(null);
@@ -1217,19 +1230,23 @@ export const ReportingHubPage = () => {
     };
     const renderGPSDataReport = () => {
 
+        // --- GPS CSV Import with Column Mapper ---
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
             if (!file) return;
+            // Reset file input so re-uploading same file works
+            event.target.value = '';
 
             const reader = new FileReader();
             reader.onload = (e) => {
                 const text = e.target.result;
-                processGPSCSV(text);
+                parseAndOpenMapper(text);
             };
             reader.readAsText(file);
         };
 
-        const processGPSCSV = (csvText) => {
+        // Step 1: Parse CSV, check for matching profile, then route accordingly
+        const parseAndOpenMapper = (csvText) => {
             const lines = csvText.split('\n');
             if (lines.length < 2) {
                 setGpsImportStatus('error');
@@ -1237,50 +1254,88 @@ export const ReportingHubPage = () => {
                 return;
             }
 
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const headers = lines[0].split(',').map(h => h.trim());
             const rows = lines.slice(1).filter(line => line.trim() !== '');
 
             const parsedData = rows.map(row => {
                 const values = row.split(',').map(v => v.trim());
                 const obj = {};
-                headers.forEach((header, i) => {
-                    obj[header] = values[i];
-                });
+                headers.forEach((header, i) => { obj[header] = values[i]; });
                 return obj;
             });
 
-            const standardizedData = parsedData.map(entry => {
-                const findValue = (possibleKeys) => {
-                    const key = Object.keys(entry).find(k => possibleKeys.includes(k.toLowerCase()));
-                    return key ? entry[key] : null;
+            setGpsCsvHeaders(headers);
+            setGpsCsvPreviewRows(parsedData.slice(0, 4));
+            setGpsCsvParsedData(parsedData);
+
+            // Try to auto-match against saved profiles
+            const match = findMatchingProfile(headers, gpsProfiles, gpsImportTeamId || undefined);
+
+            if (match && match.matchType === 'exact') {
+                // Perfect match — auto-import, skip the mapper entirely
+                setGpsImportStatus('success');
+                setGpsImportMessage(`Auto-matched profile "${match.profile.name}". Importing...`);
+                handleMapperConfirm(match.profile.mapping);
+                return;
+            }
+
+            if (match && match.matchType === 'partial' && match.newColumns.length > 0) {
+                // Partial match — new columns detected, show anomaly prompt
+                setGpsAnomalyMode({
+                    profile: match.profile,
+                    newColumns: match.newColumns,
+                    missingColumns: match.missingColumns,
+                });
+                setIsGpsMapperOpen(true);
+                return;
+            }
+
+            // No match — show full mapper
+            setGpsAnomalyMode(null);
+            setIsGpsMapperOpen(true);
+        };
+
+        // Step 2: User confirms mapping → process data with their column choices
+        const handleMapperConfirm = (mapping) => {
+            setIsGpsMapperOpen(false);
+
+            const allPlayers = teams.flatMap(t => t.players);
+
+            const standardizedData = gpsCsvParsedData.map(entry => {
+                const getVal = (fieldId) => {
+                    const csvCol = mapping[fieldId];
+                    return csvCol ? (entry[csvCol] || null) : null;
                 };
 
-                const name = findValue(['player', 'name', 'athlete', 'full name', 'first name', 'surname']);
-                const totalDist = parseFloat(findValue(['total distance', 'distance', 'total distance (m)', 'dist', 'distance (m)', 'meters'])) || 0;
-                const hsr = parseFloat(findValue(['hsr', 'high speed running', 'hsr (m)', 'high speed dist'])) || 0;
-                const sprints = parseInt(findValue(['sprints', 'sprint count', 'sprinting'])) || 0;
-                const topSpeed = parseFloat(findValue(['top speed', 'max speed', 'velocity max', 'max speed (km/h)', 'v max'])) || 0;
-                const accels = parseInt(findValue(['accels', 'accelerations', 'accel', 'total accelerations'])) || 0;
-                const decels = parseInt(findValue(['decels', 'decelerations', 'decel', 'total decelerations'])) || 0;
-                const date = findValue(['date', 'session date', 'day']) || new Date().toISOString().split('T')[0];
+                const name = getVal('athlete_name');
+                const date = getVal('date') || new Date().toISOString().split('T')[0];
 
                 return {
                     id: 'gps_' + Date.now() + Math.random().toString(36).substr(2, 5),
                     date,
                     playerName: name || 'Unknown',
-                    totalDistance: totalDist,
-                    hsr,
-                    sprints,
-                    maxSpeed: topSpeed,
-                    accelerations: accels,
-                    decelerations: decels,
+                    totalDistance: parseFloat(getVal('total_distance')) || 0,
+                    hsr: parseFloat(getVal('hsr') || getVal('sprint_distance')) || 0,
+                    sprints: parseInt(getVal('sprints')) || 0,
+                    maxSpeed: parseFloat(getVal('max_speed')) || 0,
+                    accelerations: parseInt(getVal('accelerations')) || 0,
+                    decelerations: parseInt(getVal('decelerations')) || 0,
+                    playerLoad: parseFloat(getVal('player_load')) || 0,
+                    heartRateAvg: parseFloat(getVal('heart_rate_avg')) || 0,
+                    heartRateMax: parseFloat(getVal('heart_rate_max')) || 0,
+                    durationMinutes: parseFloat(getVal('duration_minutes')) || 0,
+                    metabolicPower: parseFloat(getVal('metabolic_power')) || 0,
+                    impacts: parseInt(getVal('impacts')) || 0,
+                    distancePerMin: parseFloat(getVal('distance_per_min')) || 0,
                     timestamp: new Date().toISOString()
                 };
             });
 
-            const allPlayers = teams.flatMap(t => t.players);
             const alignedData = standardizedData.map(entry => {
-                const player = allPlayers.find(p => p.name.toLowerCase().includes(entry.playerName.toLowerCase()) || entry.playerName.toLowerCase().includes(p.name.toLowerCase()));
+                const player = allPlayers.find(p =>
+                    p.name.toLowerCase().includes(entry.playerName.toLowerCase()) ||
+                    entry.playerName.toLowerCase().includes(p.name.toLowerCase())
+                );
                 return {
                     ...entry,
                     athleteId: player ? player.id : 'unknown',
@@ -1293,8 +1348,26 @@ export const ReportingHubPage = () => {
             StorageService.saveGpsData(updatedGpsData);
 
             setGpsImportStatus('success');
-            setGpsImportMessage(`Successfully imported ${alignedData.length} GPS records.`);
+            setGpsImportMessage(`Imported ${alignedData.length} records (${Object.keys(mapping).length} fields mapped).`);
             setTimeout(() => setGpsImportStatus(null), 5000);
+        };
+
+        const handleSaveGpsProfile = (profile) => {
+            // Ensure fingerprint is set from current headers
+            if (!profile.headerFingerprint || profile.headerFingerprint.length === 0) {
+                profile.headerFingerprint = gpsCsvHeaders.map(h => h.toLowerCase().trim());
+            }
+            const updated = [...gpsProfiles.filter(p => p.name !== profile.name), profile];
+            setGpsProfiles(updated);
+            localStorage.setItem('gps_column_profiles', JSON.stringify(updated));
+            showToast?.(`Profile "${profile.name}" saved for ${profile.teamName}`);
+        };
+
+        const handleDeleteGpsProfile = (name) => {
+            const updated = gpsProfiles.filter(p => p.name !== name);
+            setGpsProfiles(updated);
+            localStorage.setItem('gps_column_profiles', JSON.stringify(updated));
+            showToast?.(`Profile deleted`);
         };
 
         const clearGpsData = () => {
@@ -1389,6 +1462,15 @@ export const ReportingHubPage = () => {
                         <h3 className="text-lg font-semibold text-slate-900">GPS Intelligence Filters</h3>
                         <div className="flex items-center gap-2">
                             {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'} animate-pulse`}>{gpsImportMessage}</span>}
+                            <select
+                                value={gpsImportTeamId}
+                                onChange={e => setGpsImportTeamId(e.target.value)}
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-[10px] font-medium text-slate-600"
+                                title="Select team for this import"
+                            >
+                                <option value="">Team / Group...</option>
+                                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            </select>
                             <label className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95">
                                 <FileIcon size={13} /> Import Telemetry
                                 <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
@@ -1571,6 +1653,22 @@ export const ReportingHubPage = () => {
                         </table>
                     </div>
                 </div>
+
+                {/* GPS Column Mapper Modal */}
+                {isGpsMapperOpen && (
+                    <GpsColumnMapper
+                        csvHeaders={gpsCsvHeaders}
+                        csvPreviewRows={gpsCsvPreviewRows}
+                        onConfirm={(mapping) => { setIsGpsMapperOpen(false); setGpsAnomalyMode(null); handleMapperConfirm(mapping); }}
+                        onCancel={() => { setIsGpsMapperOpen(false); setGpsAnomalyMode(null); }}
+                        savedProfiles={gpsProfiles}
+                        onSaveProfile={handleSaveGpsProfile}
+                        onDeleteProfile={handleDeleteGpsProfile}
+                        teams={teams.map(t => ({ id: t.id, name: t.name }))}
+                        preSelectedTeamId={gpsImportTeamId}
+                        anomalyMode={gpsAnomalyMode}
+                    />
+                )}
             </div>
         );
     };

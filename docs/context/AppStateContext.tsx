@@ -1049,9 +1049,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
      * Calculates the Acute:Chronic Work Rate Ratio (ACWR)
      * Acute (7-day rolling avg) vs Chronic (28-day rolling avg)
      */
-    const calculateACWR = (athleteId) => {
-        const logs = loadRecords || []; // Ensure safe access
-        const result = ACWR_UTILS.calculateAthleteACWR(logs, athleteId);
+    const calculateACWR = (athleteId, options = {}) => {
+        const logs = loadRecords || [];
+        const result = ACWR_UTILS.calculateAthleteACWR(logs, athleteId, options);
         return result.ratio.toFixed(2);
     };
 
@@ -2066,7 +2066,27 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 StorageService.getBiometrics(),
                 StorageService.getWorkoutLog()
             ]);
-            setLoadRecords(loadedLoad || []);
+            // Merge local storage load records with Supabase training_loads
+            let mergedLoadRecords = loadedLoad || [];
+            try {
+                const dbTrainingLoads = await DatabaseService.fetchTrainingLoads();
+                if (dbTrainingLoads && dbTrainingLoads.length > 0) {
+                    // Map DB records to the loadRecords shape used by ACWR_UTILS
+                    const mapped = dbTrainingLoads.map(r => ({
+                        athleteId: r.athlete_id,
+                        athlete_id: r.athlete_id,
+                        date: r.date,
+                        sRPE: r.metric_type === 'srpe' ? r.value : 0,
+                        value: r.value,
+                        metric_type: r.metric_type,
+                        session_type: r.session_type,
+                    }));
+                    mergedLoadRecords = [...mergedLoadRecords, ...mapped];
+                }
+            } catch (e) {
+                console.warn("Could not fetch training_loads:", e.message);
+            }
+            setLoadRecords(mergedLoadRecords);
             setWellnessData(loadedWellness || []);
             setBiometricsRecords(loadedBiometrics || []);
             setWorkoutLog(loadedWorkoutLog || []);

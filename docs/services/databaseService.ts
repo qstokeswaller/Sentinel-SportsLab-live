@@ -687,4 +687,63 @@ export const DatabaseService = {
             .eq('id', id);
         if (error) throw error;
     },
+
+    // --- TRAINING LOADS (ACWR) ---
+
+    async fetchTrainingLoads(athleteId?: string) {
+        let query = (supabase as any).from('training_loads').select('*').order('date', { ascending: false });
+        if (athleteId) query = query.eq('athlete_id', athleteId);
+        const { data, error } = await query;
+        if (error) throw error;
+        return data as any[];
+    },
+
+    async fetchTrainingLoadsByTeam(teamId: string) {
+        const { data, error } = await (supabase as any)
+            .from('training_loads')
+            .select('*')
+            .eq('team_id', teamId)
+            .order('date', { ascending: false });
+        if (error) throw error;
+        return data as any[];
+    },
+
+    async saveTrainingLoad(record: {
+        athlete_id: string;
+        team_id?: string;
+        date: string;
+        metric_type: string;
+        value: number;
+        session_type?: string;
+        rpe?: number;
+        duration_minutes?: number;
+        distance_metres?: number;
+        sprint_distance_metres?: number;
+        notes?: string;
+    }) {
+        const { data, error } = await (supabase as any)
+            .from('training_loads')
+            .upsert(record, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async saveTrainingLoadsBatch(records: any[]) {
+        const { data, error } = await (supabase as any)
+            .from('training_loads')
+            .upsert(records, { onConflict: 'user_id,athlete_id,date,metric_type,session_type' })
+            .select();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteTrainingLoad(id: string) {
+        const { error } = await (supabase as any)
+            .from('training_loads')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+    },
 };

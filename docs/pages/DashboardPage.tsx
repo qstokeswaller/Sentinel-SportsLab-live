@@ -7,6 +7,7 @@ import {
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
     Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
 } from 'lucide-react';
+import InterventionModal from '../components/analytics/InterventionModal';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -35,6 +36,8 @@ export const DashboardPage = () => {
         customEventTypes,
         setViewingDate, setViewingSession,
         setSelectedInterventionAthlete, setIsInterventionModalOpen,
+        isInterventionModalOpen, selectedInterventionAthlete,
+        loadRecords,
         calculateACWR, resolveTargetName, getSessionTypeColor,
         handleUpdateSession, handleDeleteSession, handleAddCalendarEvent, showToast,
     } = useAppState();
@@ -1095,5 +1098,13 @@ export const DashboardPage = () => {
                             </div>
                         );
                     })()}
+                    {/* Intervention Modal */}
+                    <InterventionModal
+                        athlete={selectedInterventionAthlete}
+                        isOpen={isInterventionModalOpen}
+                        onClose={() => { setIsInterventionModalOpen(false); setSelectedInterventionAthlete(null); }}
+                        loadRecords={loadRecords || []}
+                        wellnessData={wellnessData || []}
+                    />
                 </>);
             }

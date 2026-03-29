@@ -7,6 +7,7 @@ import { PerformanceIntelligenceTerminal } from '../components/analytics/Perform
 import { ScenarioModellingTerminal } from '../components/analytics/ScenarioModellingTerminal';
 import { KpiWatchlistModal } from '../components/analytics/KpiWatchlistModal';
 import { DatabaseService } from '../services/databaseService';
+import TrainingLoadEntry from '../components/analytics/TrainingLoadEntry';
 
 export const AnalyticsHubPage = () => {
     const {
@@ -150,11 +151,14 @@ export const AnalyticsHubPage = () => {
             </div>
 
             {activeAnalyticsModule === 'load' && (
-                <BaselineTrendTerminal
-                    habitRecords={habitRecords}
-                    loadRecords={loadRecords}
-                    selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
-                />
+                <div className="space-y-6">
+                    <BaselineTrendTerminal
+                        habitRecords={habitRecords}
+                        loadRecords={loadRecords}
+                        selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
+                    />
+                    <TrainingLoadEntry />
+                </div>
             )}
             {activeAnalyticsModule === 'kpi' && <PerformanceIntelligenceTerminal
                 kpiDefinitions={kpiDefinitions}
