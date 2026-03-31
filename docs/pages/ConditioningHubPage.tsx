@@ -25,7 +25,7 @@ const ICON_MAP = {
 
 export const ConditioningHubPage = () => {
     const {
-        activeConditioningModule, setActiveConditioningModule,
+        activeConditioningModule, setActiveConditioningModule, isLoading,
         wattbikeView, setWattbikeView,
         selectedWattbikeSession, setSelectedWattbikeSession,
         newWattbikeSession, setNewWattbikeSession,
@@ -733,7 +733,23 @@ ${sectionsHtml}
             )}
 
             {/* Modules Grid */}
-            {!activeConditioningModule && (
+            {!activeConditioningModule && isLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2].map(i => (
+                        <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                            <div className="w-10 h-10 bg-slate-100 rounded-lg animate-pulse" />
+                            <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
+                            <div className="h-3 w-full bg-slate-50 rounded animate-pulse" />
+                            <div className="h-3 w-2/3 bg-slate-50 rounded animate-pulse" />
+                        </div>
+                    ))}
+                    <div className="col-span-full flex flex-col items-center py-4">
+                        <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2" />
+                        <span className="text-xs font-medium text-slate-400">Loading conditioning data...</span>
+                    </div>
+                </div>
+            )}
+            {!activeConditioningModule && !isLoading && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div
                         onClick={() => setActiveConditioningModule('wattbike')}
@@ -754,6 +770,16 @@ ${sectionsHtml}
                         </div>
                         <h3 className="text-base font-semibold text-slate-900">Conditioning Sessions</h3>
                         <p className="text-sm text-slate-500 leading-relaxed">Prescribe running, bike & sled sessions with sets, reps, intensity & work:rest ratios.</p>
+                    </div>
+                    <div
+                        onClick={() => setActiveConditioningModule('mechanics')}
+                        className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
+                    >
+                        <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                            <FootprintsIcon size={20} />
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-900">Running Mechanics</h3>
+                        <p className="text-sm text-slate-500 leading-relaxed">Gait analysis, sprint mechanics & movement documents.</p>
                     </div>
                 </div>
             )}
@@ -981,6 +1007,24 @@ ${sectionsHtml}
                         </div>
                     </div>
                     <div className="text-center py-16"><p className="text-slate-400 text-sm italic">Module coming soon...</p></div>
+                </div>
+            )}
+
+            {/* Running Mechanics */}
+            {activeConditioningModule === 'mechanics' && (
+                <div className="space-y-5 animate-in slide-in-from-bottom-3">
+                    <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                                <FootprintsIcon size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-900">Running Mechanics</h3>
+                                <p className="text-xs text-slate-400 mt-0.5">Gait analysis, sprint mechanics & movement documents</p>
+                            </div>
+                        </div>
+                    </div>
+                    <RunningMechanicsLibrary />
                 </div>
             )}
         </div>

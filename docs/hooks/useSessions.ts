@@ -34,6 +34,7 @@ export interface SessionFilters {
 export function useSessions(filters: SessionFilters = {}) {
   return useQuery<ScheduledSession[]>({
     queryKey: ['sessions', filters],
+    staleTime: 2 * 60 * 1000, // 2 minutes — sessions don't change that often
     queryFn: async () => {
       let query = supabase
         .from('scheduled_sessions')
@@ -73,6 +74,7 @@ export function useSessionsForTarget(targetId: string, targetType?: 'Team' | 'In
 export function useSession(sessionId: string) {
   return useQuery<ScheduledSession>({
     queryKey: ['session', sessionId],
+    staleTime: 2 * 60 * 1000,
     enabled: !!sessionId,
     queryFn: async () => {
       const { data, error } = await supabase

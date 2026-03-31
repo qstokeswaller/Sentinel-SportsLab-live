@@ -27,6 +27,7 @@ interface TemplateViewModalProps {
 export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete }: TemplateViewModalProps) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [expandedEx, setExpandedEx] = useState<string | null>(null);
   const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
 
   if (!isOpen || !template) return null;
@@ -104,52 +105,80 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                   <span className="text-[10px] text-slate-300 font-medium">{exercises.length} exercises</span>
                 </div>
                 {exercises.map((ex: any, idx: number) => {
+                  const exKey = ex.id || `${sec}_${idx}`;
                   const exId = ex.exerciseId || ex.exercise_id || '';
                   const name = ex.exerciseName || ex.exercise_name || ex.name || resolveExerciseName(exId);
                   const hasMeta = ex.sets || ex.reps || ex.rest || ex.rpe || ex.intensity || ex.tempo || ex.weight;
                   const fullInfo = exerciseFullMap?.[exId];
                   const rawDesc = fullInfo?.description || '';
                   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
-                  const videoUrl = fullInfo?.video_url || '';
-                  const hasDetail = desc || videoUrl || ex.notes;
+                  const rawVideoUrl = fullInfo?.video_url || '';
+                  const videoUrl = rawVideoUrl && rawVideoUrl.startsWith('http') ? rawVideoUrl : '';
+                  const bodyParts = fullInfo?.body_parts || [];
+                  const categories = fullInfo?.categories || [];
+                  // Always expandable — show whatever info we have, or a minimal "no info" state
+                  const hasDetail = true;
+                  const isExpanded = expandedEx === exKey;
                   return (
-                    <div key={ex.id || idx} className="bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden">
-                      {/* Banner */}
-                      <div className="flex items-center gap-3 px-4 py-3">
-                        <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0">
+                    <div key={exKey} className="bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden">
+                      {/* Banner — clickable to expand details */}
+                      <button
+                        onClick={() => hasDetail ? setExpandedEx(isExpanded ? null : exKey) : null}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-3 ${hasDetail ? 'cursor-pointer' : 'cursor-default'}`}
+                      >
+                        <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-slate-800">{name}</div>
+                          {hasMeta && (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                              {ex.sets && <span>Sets: <span className="font-medium text-indigo-600">{ex.sets}</span></span>}
+                              {ex.reps && <span>Reps: <span className="font-medium text-indigo-600">{ex.reps}</span></span>}
+                              {ex.weight && (
+                                <span className="flex items-center gap-0.5">
+                                  <Weight size={10} className="text-indigo-500" />
+                                  <span className="font-medium text-indigo-600">{ex.weight} kg</span>
+                                </span>
+                              )}
+                              {ex.rest && <span>Rest: <span className="text-slate-600">{ex.rest}s</span></span>}
+                              {ex.rpe && <span>RPE: <span className="text-slate-600">{ex.rpe}</span></span>}
+                              {ex.intensity && <span>Int: <span className="text-slate-600">{ex.intensity}</span></span>}
+                              {ex.tempo && <span>Tempo: <span className="text-slate-600">{ex.tempo}</span></span>}
+                            </div>
+                          )}
                         </div>
-                        {hasMeta && (
-                          <div className="flex items-center gap-3 text-xs text-slate-500 shrink-0">
-                            {ex.sets && <span>Sets: <span className="font-medium text-indigo-600">{ex.sets}</span></span>}
-                            {ex.reps && <span>Reps: <span className="font-medium text-indigo-600">{ex.reps}</span></span>}
-                            {ex.weight && (
-                              <span className="flex items-center gap-0.5">
-                                <Weight size={10} className="text-indigo-500" />
-                                <span className="font-medium text-indigo-600">{ex.weight}kg</span>
-                              </span>
-                            )}
-                            {ex.rest && <span>Rest: <span className="text-slate-600">{ex.rest}s</span></span>}
-                            {ex.rpe && <span>RPE: <span className="text-slate-600">{ex.rpe}</span></span>}
-                            {ex.intensity && <span>Int: <span className="text-slate-600">{ex.intensity}</span></span>}
-                            {ex.tempo && <span>Tempo: <span className="text-slate-600">{ex.tempo}</span></span>}
-                          </div>
+                        {hasDetail && (
+                          <span className={`text-slate-300 shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                            <ExternalLink size={12} className={isExpanded ? 'hidden' : ''} />
+                            <XIcon size={12} className={isExpanded ? '' : 'hidden'} />
+                          </span>
                         )}
-                      </div>
-                      {/* Detail area */}
-                      {hasDetail && (
-                        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 space-y-1.5">
+                      </button>
+                      {/* Detail area — only shown when expanded */}
+                      {isExpanded && (
+                        <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {(bodyParts.length > 0 || categories.length > 0) && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {bodyParts.map((bp: string) => (
+                                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-medium">{bp}</span>
+                              ))}
+                              {categories.map((cat: string) => (
+                                <span key={cat} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">{cat}</span>
+                              ))}
+                            </div>
+                          )}
                           {ex.notes && <p className="text-xs text-slate-500 italic">{ex.notes}</p>}
-                          {desc && <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>}
+                          {desc && <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>}
                           {videoUrl && (
                             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
                                className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
                               <ExternalLink size={10} />
                               Video Reference
                             </a>
+                          )}
+                          {!desc && !videoUrl && !ex.notes && bodyParts.length === 0 && categories.length === 0 && (
+                            <p className="text-[10px] text-slate-400 italic">No additional information available for this exercise.</p>
                           )}
                         </div>
                       )}

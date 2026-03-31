@@ -39,6 +39,7 @@ export interface Player {
 export function usePlayers(squadId?: string | null) {
   return useQuery<Player[]>({
     queryKey: ['players', squadId ?? 'all'],
+    staleTime: 5 * 60 * 1000, // 5 minutes — roster data changes infrequently
     queryFn: async () => {
       let query = supabase
         .from('players')
@@ -66,6 +67,7 @@ export function usePlayers(squadId?: string | null) {
 export function usePlayer(playerId: string) {
   return useQuery<Player>({
     queryKey: ['player', playerId],
+    staleTime: 5 * 60 * 1000,
     enabled: !!playerId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -177,6 +179,7 @@ export function useUpsertTelemetry() {
 export function usePlayerTelemetry(playerId: string, from?: string, to?: string) {
   return useQuery<TelemetryEntry[]>({
     queryKey: ['telemetry', playerId, from, to],
+    staleTime: 2 * 60 * 1000,
     enabled: !!playerId,
     queryFn: async () => {
       let query = supabase

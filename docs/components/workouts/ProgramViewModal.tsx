@@ -128,6 +128,7 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
 
 const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
   const [activeDay, setActiveDay] = useState(0);
+  const [expandedEx, setExpandedEx] = useState<string | null>(null);
   const days = program.days ?? [];
   const day = days[activeDay];
 
@@ -167,7 +168,15 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
                   <div className="flex-1 h-px bg-slate-100" />
                 </div>
                 {rows.map((row, idx) => (
-                  <ExerciseViewRow key={row.id} row={row} letter={String(idx + 1)} exerciseMap={exerciseMap} exerciseFullMap={exerciseFullMap} />
+                  <ExerciseViewRow
+                    key={row.id}
+                    row={row}
+                    letter={String(idx + 1)}
+                    exerciseMap={exerciseMap}
+                    exerciseFullMap={exerciseFullMap}
+                    isExpanded={expandedEx === row.id}
+                    onToggle={() => setExpandedEx(expandedEx === row.id ? null : row.id)}
+                  />
                 ))}
               </div>
             );
@@ -184,54 +193,77 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
   );
 };
 
-const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap }) => {
+const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, isExpanded, onToggle }) => {
   const hasMeta = row.sets || row.reps || row.rest_min || row.rest_sec || row.rir || row.rpe || row.weight;
-  const exerciseName = exerciseMap[row.exercise_id] || row.exercise_id;
+  // Resolve name: try exercise_id map first, then fall back to the name stored on the row itself
+  const exerciseName = exerciseMap[row.exercise_id] || row.exercise_name || row.name || row.exercise_id;
   const fullInfo = exerciseFullMap?.[row.exercise_id];
   const rawDesc = fullInfo?.description || '';
   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
-  const videoUrl = fullInfo?.video_url || '';
-  const hasDetail = desc || videoUrl || row.notes;
+  const rawVideoUrl = fullInfo?.video_url || '';
+  const videoUrl = rawVideoUrl && rawVideoUrl.startsWith('http') ? rawVideoUrl : '';
+  const bodyParts = fullInfo?.body_parts || [];
+  const categories = fullInfo?.categories || [];
+  const hasDetail = true; // Always expandable
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden">
-      {/* Banner */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0">
+      <button
+        onClick={() => hasDetail ? onToggle() : null}
+        className={`w-full text-left px-4 py-3 flex items-start gap-3 ${hasDetail ? 'cursor-pointer' : 'cursor-default'}`}
+      >
+        <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
           {letter}
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-slate-800">{exerciseName}</div>
+          {hasMeta && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+              {row.sets && <span>Sets: <span className="font-medium text-indigo-600">{row.sets}</span></span>}
+              {row.reps && <span>Reps: <span className="font-medium text-indigo-600">{row.reps}</span></span>}
+              {row.weight && (
+                <span className="flex items-center gap-0.5">
+                  <Weight size={10} className="text-indigo-500" />
+                  <span className="font-medium text-indigo-600">{row.weight} kg</span>
+                </span>
+              )}
+              {(row.rest_min > 0 || row.rest_sec > 0) && (
+                <span>Rest: <span className="text-slate-600">{row.rest_min}m {row.rest_sec}s</span></span>
+              )}
+              {row.rir && <span>RIR: <span className="text-slate-600">{row.rir}</span></span>}
+              {row.rpe && <span>RPE: <span className="text-slate-600">{row.rpe}</span></span>}
+            </div>
+          )}
         </div>
-        {hasMeta && (
-          <div className="flex items-center gap-3 text-xs text-slate-500 shrink-0">
-            {row.sets && <span>Sets: <span className="font-medium text-indigo-600">{row.sets}</span></span>}
-            {row.reps && <span>Reps: <span className="font-medium text-indigo-600">{row.reps}</span></span>}
-            {row.weight && (
-              <span className="flex items-center gap-0.5">
-                <Weight size={10} className="text-indigo-500" />
-                <span className="font-medium text-indigo-600">{row.weight}kg</span>
-              </span>
-            )}
-            {(row.rest_min > 0 || row.rest_sec > 0) && (
-              <span>Rest: <span className="text-slate-600">{row.rest_min}m {row.rest_sec}s</span></span>
-            )}
-            {row.rir && <span>RIR: <span className="text-slate-600">{row.rir}</span></span>}
-            {row.rpe && <span>RPE: <span className="text-slate-600">{row.rpe}</span></span>}
-          </div>
+        {hasDetail && (
+          <span className="text-slate-300 shrink-0 mt-1">
+            {isExpanded ? <XIcon size={12} /> : <ExternalLink size={12} />}
+          </span>
         )}
-      </div>
-      {/* Detail area */}
-      {hasDetail && (
-        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 space-y-1.5">
+      </button>
+      {isExpanded && (
+        <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+          {(bodyParts.length > 0 || categories.length > 0) && (
+            <div className="flex flex-wrap gap-1.5">
+              {bodyParts.map((bp: string) => (
+                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-medium">{bp}</span>
+              ))}
+              {categories.map((cat: string) => (
+                <span key={cat} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">{cat}</span>
+              ))}
+            </div>
+          )}
           {row.notes && <p className="text-xs text-slate-500 italic">{row.notes}</p>}
-          {desc && <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>}
+          {desc && <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>}
           {videoUrl && (
             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
                className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
               <ExternalLink size={10} />
               Video Reference
             </a>
+          )}
+          {!desc && !videoUrl && !row.notes && bodyParts.length === 0 && categories.length === 0 && (
+            <p className="text-[10px] text-slate-400 italic">No additional information available for this exercise.</p>
           )}
         </div>
       )}

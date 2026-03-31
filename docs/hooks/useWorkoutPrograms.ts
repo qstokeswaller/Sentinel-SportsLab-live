@@ -76,30 +76,32 @@ export function useProgramWithDays(programId: string | null) {
     queryFn: async () => {
       if (!programId) return null;
 
-      const { data: program, error: pErr } = await supabase
-        .from('workout_programs')
-        .select('*')
-        .eq('id', programId)
-        .single();
-      if (pErr) throw pErr;
-
-      const { data: days, error: dErr } = await supabase
-        .from('workout_days')
-        .select('*')
-        .eq('program_id', programId)
-        .order('day_number');
-      if (dErr) throw dErr;
+      // Parallelize program + days fetch (independent queries)
+      const [programResult, daysResult] = await Promise.all([
+        supabase.from('workout_programs').select('*').eq('id', programId).single(),
+        supabase.from('workout_days').select('*').eq('program_id', programId).order('day_number'),
+      ]);
+      if (programResult.error) throw programResult.error;
+      if (daysResult.error) throw daysResult.error;
+      const program = programResult.data;
+      const days = daysResult.data;
 
       const dayIds = (days ?? []).map((d: WorkoutDay) => d.id);
       let exercises: WorkoutDayExercise[] = [];
       if (dayIds.length > 0) {
+        // Join with exercises table to resolve exercise names
         const { data: exData, error: eErr } = await supabase
           .from('workout_day_exercises')
-          .select('*')
+          .select('*, exercises(name)')
           .in('day_id', dayIds)
           .order('order_index');
         if (eErr) throw eErr;
-        exercises = (exData ?? []) as WorkoutDayExercise[];
+        // Attach resolved name onto each exercise row
+        exercises = (exData ?? []).map((e: any) => ({
+          ...e,
+          exercise_name: e.exercises?.name || null,
+          exercises: undefined, // remove nested join object
+        })) as WorkoutDayExercise[];
       }
 
       const fullDays = (days ?? []).map((day: WorkoutDay) => ({

@@ -49,6 +49,7 @@ export const ReportingHubPage = () => {
         optOutForm, setOptOutForm,
         optOuts, setOptOuts,
         showToast, wellnessDateRange, setWellnessDateRange, calculateACWR, calculateMonotony,
+        isLoading,
     } = useAppState();
 
     // --- Local state for GPS Data report ---
@@ -1970,12 +1971,17 @@ export const ReportingHubPage = () => {
                     </div>
                 </div>
 
-                <div className="min-h-[600px]">
+                <div className="min-h-[600px] relative">
+                    {isLoading && (
+                        <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
+                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                            <span className="text-xs font-medium text-slate-400">Loading {activeReport?.toLowerCase()} data...</span>
+                        </div>
+                    )}
                     {activeReport === 'Heart Rate Metrics' && renderHeartRateMetricsReport()}
                     {activeReport === 'Tracking Hub' && renderTrackingHub()}
                     {activeReport === 'GPS Data' && renderGPSDataReport()}
                     {activeReport === 'Data Hub' && renderDataHub()}
-                    {activeReport === 'Running Mechanics' && <RunningMechanicsLibrary />}
                 </div>
             </div>
         );
@@ -1994,7 +2000,6 @@ export const ReportingHubPage = () => {
                     { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon },
                     { title: 'Tracking Hub', desc: 'Consolidated Performance & Benchmark Tracking', icon: SearchIcon },
                     { title: 'GPS Data', desc: 'Sprints, Distance & Velocity telemetry import', icon: ActivityIcon },
-                    { title: 'Running Mechanics', desc: 'Gait analysis, sprint mechanics & movement documents', icon: FootprintsIcon },
                 ].map((report, i) => (
                     <button
                         key={i}

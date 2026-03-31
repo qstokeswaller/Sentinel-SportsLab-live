@@ -2,7 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
-import { AlertCircle, FileText, Printer, DumbbellIcon, TagIcon } from 'lucide-react';
+import { AlertCircle, FileText, Printer, DumbbellIcon, TagIcon, Activity as ActivityIcon } from 'lucide-react';
+
+const BrandingBanner = () => (
+    <div className="bg-white border-b border-slate-100 py-4 print:py-6 print:border-b-2 print:border-slate-200">
+        <div className="flex flex-col items-center justify-center gap-1.5">
+            <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                    <ActivityIcon className="text-white w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-base text-slate-900 tracking-tight">
+                    Sentinel <span className="text-indigo-600">SportsLab</span>
+                </span>
+            </div>
+            <span className="text-[10px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
+        </div>
+    </div>
+);
 
 // ── Types (duplicated from ProtocolLibrary — standalone page, no app imports) ─
 
@@ -214,7 +230,16 @@ const PublicProtocolView: React.FC = () => {
         load();
     }, [protocolId]);
 
-    const handlePrint = () => window.print();
+    const handlePrint = () => {
+        document.body.classList.add('printing-standalone');
+        window.print();
+        document.body.classList.remove('printing-standalone');
+    };
+
+    React.useEffect(() => {
+        document.body.classList.add('printing-standalone');
+        return () => document.body.classList.remove('printing-standalone');
+    }, []);
 
     // ── Loading state ────────────────────────────────────────────────────────
     if (loading) {
@@ -246,6 +271,7 @@ const PublicProtocolView: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+            <BrandingBanner />
             {/* Header bar */}
             <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">
                 <div className="flex items-center gap-3">

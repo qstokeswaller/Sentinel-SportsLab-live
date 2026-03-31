@@ -18,7 +18,7 @@ export const PeriodizationPage = () => {
         periodizationPlans, activePlanId, setActivePlanId,
         planDrillPath, setPlanDrillPath,
         isCreatePlanModalOpen, setIsCreatePlanModalOpen,
-        handleDeletePlan, handleUpdatePlan, teams,
+        handleDeletePlan, handleUpdatePlan, teams, isLoading,
     } = useAppState();
 
     const activePlan = periodizationPlans.find(p => p.id === activePlanId);
@@ -171,7 +171,28 @@ export const PeriodizationPage = () => {
                 )}
 
                 {/* Plan Cards */}
-                {periodizationPlans.length === 0 ? (
+                {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 bg-slate-100 rounded-lg animate-pulse" />
+                                    <div className="h-4 w-36 bg-slate-100 rounded animate-pulse" />
+                                </div>
+                                <div className="h-3 w-28 bg-slate-50 rounded animate-pulse" />
+                                <div className="h-3 w-40 bg-slate-50 rounded animate-pulse" />
+                                <div className="flex gap-2 mt-2">
+                                    <div className="h-5 w-16 bg-slate-50 rounded-full animate-pulse" />
+                                    <div className="h-5 w-14 bg-slate-50 rounded-full animate-pulse" />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 flex flex-col items-center justify-center col-span-full">
+                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+                            <span className="text-xs font-medium text-slate-400">Loading periodization plans...</span>
+                        </div>
+                    </div>
+                ) : periodizationPlans.length === 0 ? (
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
                         <CalendarDays size={40} className="text-slate-300 mx-auto mb-3" />
                         <h3 className="text-sm font-bold text-slate-600 mb-1">No Periodization Plans</h3>
@@ -307,7 +328,13 @@ export const PeriodizationPage = () => {
             </div>
 
             {/* View Router */}
-            {activePlan.viewMode === 'timeline'
+            {isLoading ? (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
+                    <span className="text-sm font-medium text-slate-500">Loading {getTargetName(activePlan)} periodization planner...</span>
+                    <span className="text-xs text-slate-400 mt-1">{activePlan.name}</span>
+                </div>
+            ) : activePlan.viewMode === 'timeline'
                 ? <TimelineView plan={activePlan} />
                 : <CardView plan={activePlan} />
             }

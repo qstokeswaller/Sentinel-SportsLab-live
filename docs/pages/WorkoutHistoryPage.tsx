@@ -33,7 +33,7 @@ function formatDate(iso: string) {
 export const WorkoutHistoryPage = () => {
     const navigate = useNavigate();
     const {
-        scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast, maxHistory,
+        scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast, maxHistory, isLoading,
     } = useAppState();
 
     const [historyFilter, setHistoryFilter] = useState('All');
@@ -160,7 +160,29 @@ export const WorkoutHistoryPage = () => {
 
             {/* Sessions list */}
             <div className="space-y-2">
-                {historySessions.length === 0 ? (
+                {isLoading ? (
+                    <div className="space-y-2">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                <div className="flex items-start justify-between">
+                                    <div className="space-y-2 flex-1">
+                                        <div className="flex gap-2">
+                                            <div className="h-5 w-16 bg-slate-100 rounded animate-pulse" />
+                                            <div className="h-5 w-14 bg-slate-50 rounded animate-pulse" />
+                                        </div>
+                                        <div className="h-4 w-48 bg-slate-100 rounded animate-pulse" />
+                                        <div className="h-3 w-32 bg-slate-50 rounded animate-pulse" />
+                                    </div>
+                                    <div className="h-8 w-20 bg-slate-50 rounded-lg animate-pulse" />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="flex flex-col items-center py-4">
+                            <div className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-2" />
+                            <span className="text-xs font-medium text-slate-400">Loading workout history...</span>
+                        </div>
+                    </div>
+                ) : historySessions.length === 0 ? (
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16 flex flex-col items-center text-slate-300 gap-2">
                         <ClockIcon size={32} className="opacity-40" />
                         <p className="text-xs text-slate-400">No workout sessions found</p>

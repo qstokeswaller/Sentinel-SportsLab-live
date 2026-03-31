@@ -75,6 +75,8 @@ export interface TestDefinition {
   equipmentRequired?: string[];
   estimatedDuration?: string;
   customComponent?: boolean;         // true → renders dedicated component (e.g. HamstringReport)
+  vbtFields?: TestField[];           // VBT tab fields (velocity-based training) — only for barbell tests
+  vbtCalculations?: TestCalculation[]; // VBT calculated metrics
 }
 
 export interface CategoryInfo {
@@ -84,6 +86,47 @@ export interface CategoryInfo {
   icon: string;                      // lucide icon name
   testCount: number;
 }
+
+// ─── VBT (Velocity-Based Training) shared field definitions ────────
+// Reused across all barbell-based tests that support VBT tracking.
+const VBT_FIELDS: TestField[] = [
+  { key: 'vbt_load', label: 'Load', type: 'number', unit: 'kg', required: true, helpText: 'Weight on the bar for this set' },
+  { key: 'vbt_mean_velocity', label: 'Mean Velocity', type: 'number', unit: 'm/s', required: true, step: 0.01, helpText: 'Mean concentric velocity from encoder/sensor' },
+  { key: 'vbt_peak_velocity', label: 'Peak Velocity', type: 'number', unit: 'm/s', step: 0.01, helpText: 'Peak velocity during concentric phase' },
+  { key: 'vbt_reps', label: 'Reps', type: 'number', min: 1, max: 30, helpText: 'Number of reps at this load' },
+];
+
+const VBT_CALCULATIONS: TestCalculation[] = [
+  { key: 'vbt_e1rm', label: 'Estimated 1RM', unit: 'kg',
+    formula: (v) => {
+      if (!v.vbt_load || !v.vbt_mean_velocity) return null;
+      // Jidovtseff et al. load-velocity linear regression approach:
+      // At 1RM, mean velocity ≈ 0.17 m/s (back squat) — we use a generalised minimum velocity threshold
+      const mvt = 0.2; // minimum velocity threshold (m/s) — conservative general value
+      const mv = v.vbt_mean_velocity;
+      if (mv <= mvt) return v.vbt_load; // already at/below 1RM velocity
+      // Linear extrapolation: e1RM = load × (mv / mvt) simplified to load / (1 - ((mv - mvt) / mv))
+      return +(v.vbt_load / (mvt / mv)).toFixed(1);
+    }},
+  { key: 'vbt_zone', label: 'Velocity Zone', unit: '',
+    formula: (v) => {
+      const mv = v.vbt_mean_velocity;
+      if (!mv) return null;
+      if (mv > 1.0) return 'Speed-Strength';
+      if (mv > 0.75) return 'Power';
+      if (mv > 0.5) return 'Strength-Speed';
+      if (mv > 0.3) return 'Max Strength';
+      return 'Near 1RM';
+    }},
+  { key: 'vbt_intensity', label: 'Est. Intensity', unit: '%',
+    formula: (v) => {
+      const mv = v.vbt_mean_velocity;
+      if (!mv) return null;
+      // Generalised mean velocity → %1RM mapping (Gonzalez-Badillo et al.)
+      const pct = Math.round((-51.7 * mv + 114.3));
+      return Math.max(30, Math.min(100, pct));
+    }},
+];
 
 // ─── Categories ────────────────────────────────────────────────────
 
@@ -633,6 +676,8 @@ const strengthPowerTests: TestDefinition[] = [
     },
     equipmentRequired: ['Barbell', 'Squat rack', 'Plates'],
     estimatedDuration: '30-45 min',
+    vbtFields: VBT_FIELDS,
+    vbtCalculations: VBT_CALCULATIONS,
   },
   {
     id: 'rm_bench_press', name: '1RM Bench Press', shortName: 'Bench Press',
@@ -663,6 +708,8 @@ const strengthPowerTests: TestDefinition[] = [
     },
     equipmentRequired: ['Barbell', 'Bench', 'Plates'],
     estimatedDuration: '30-45 min',
+    vbtFields: VBT_FIELDS,
+    vbtCalculations: VBT_CALCULATIONS,
   },
   {
     id: 'rm_deadlift', name: '1RM Deadlift', shortName: 'Deadlift',
@@ -694,6 +741,8 @@ const strengthPowerTests: TestDefinition[] = [
     },
     equipmentRequired: ['Barbell', 'Platform', 'Plates'],
     estimatedDuration: '30-45 min',
+    vbtFields: VBT_FIELDS,
+    vbtCalculations: VBT_CALCULATIONS,
   },
   {
     id: 'rm_front_squat', name: '1RM Front Squat', shortName: 'Front Squat',
@@ -709,6 +758,8 @@ const strengthPowerTests: TestDefinition[] = [
     ],
     equipmentRequired: ['Barbell', 'Squat rack', 'Plates'],
     estimatedDuration: '30-45 min',
+    vbtFields: VBT_FIELDS,
+    vbtCalculations: VBT_CALCULATIONS,
   },
   {
     id: 'rm_ohp', name: '1RM Overhead Press', shortName: 'OHP',
@@ -724,6 +775,8 @@ const strengthPowerTests: TestDefinition[] = [
     ],
     equipmentRequired: ['Barbell', 'Plates'],
     estimatedDuration: '30-45 min',
+    vbtFields: VBT_FIELDS,
+    vbtCalculations: VBT_CALCULATIONS,
   },
   // IMTP
   {

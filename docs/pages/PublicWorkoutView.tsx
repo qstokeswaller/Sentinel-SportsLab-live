@@ -2,7 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
-import { AlertCircle, Dumbbell, Printer, ChevronRight, ExternalLink, Weight } from 'lucide-react';
+import { AlertCircle, Dumbbell, Printer, ChevronRight, ExternalLink, Weight, Activity as ActivityIcon } from 'lucide-react';
+
+// ── Branding Banner (shared across public pages + PDF exports) ───────────────
+const BrandingBanner = () => (
+    <div className="bg-white border-b border-slate-100 py-3 print:py-2 print:border-b print:border-slate-200">
+        <div className="flex flex-col items-center justify-center gap-0.5">
+            <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
+                    <ActivityIcon className="text-white w-3 h-3" />
+                </div>
+                <span className="font-bold text-sm text-slate-900 tracking-tight">
+                    Sentinel <span className="text-indigo-600">SportsLab</span>
+                </span>
+            </div>
+            <span className="text-[9px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
+        </div>
+    </div>
+);
 
 // ── Section labels ────────────────────────────────────────────────────────────
 const SECTION_LABELS: Record<string, string> = {
@@ -34,39 +51,43 @@ const ExerciseTable = ({ exercises, sectionLabel, exerciseDetails }: { exercises
                     // Resolve description and video_url from RPC data or exercise details map
                     const rawDesc = ex.exercise_description || exerciseDetails?.[ex.exerciseId || ex.exercise_id]?.description || '';
                     const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
-                    const videoUrl = ex.exercise_video_url || exerciseDetails?.[ex.exerciseId || ex.exercise_id]?.video_url || '';
+                    const rawVideoUrl = ex.exercise_video_url || exerciseDetails?.[ex.exerciseId || ex.exercise_id]?.video_url || '';
+                    // Only show video link if it's a real URL (not empty, not placeholder)
+                    const videoUrl = rawVideoUrl && rawVideoUrl.startsWith('http') ? rawVideoUrl : '';
                     const hasDetail = desc || videoUrl || ex.notes;
 
                     return (
                         <div key={ex.id || idx} className="bg-white border border-slate-200 rounded-lg print:border-slate-300 overflow-hidden print:break-inside-avoid">
-                            {/* Banner: Number + Name + Metrics */}
-                            <div className="flex items-center gap-3 px-4 py-3">
-                                <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 print:bg-slate-700">
-                                    {idx + 1}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-semibold text-slate-800">{name}</div>
-                                </div>
-                                {hasMeta && (
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 shrink-0">
-                                        {ex.sets && <span>Sets <span className="font-semibold text-slate-700">{ex.sets}</span></span>}
-                                        {ex.reps && <span>Reps <span className="font-semibold text-slate-700">{ex.reps}</span></span>}
-                                        {ex.weight && (
-                                            <span className="flex items-center gap-0.5">
-                                                <Weight size={10} className="text-indigo-500" />
-                                                <span className="font-semibold text-indigo-600">{ex.weight}kg</span>
-                                            </span>
+                            {/* Banner: Number + Name + Metrics — stacks on mobile */}
+                            <div className="px-4 py-3">
+                                <div className="flex items-start gap-3">
+                                    <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 print:bg-slate-700 mt-0.5">
+                                        {idx + 1}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-semibold text-slate-800 break-words">{name}</div>
+                                        {hasMeta && (
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 mt-1.5">
+                                                {ex.sets && <span>Sets <span className="font-semibold text-slate-700">{ex.sets}</span></span>}
+                                                {ex.reps && <span>Reps <span className="font-semibold text-slate-700">{ex.reps}</span></span>}
+                                                {ex.weight && (
+                                                    <span className="flex items-center gap-0.5">
+                                                        <Weight size={10} className="text-indigo-500" />
+                                                        <span className="font-semibold text-indigo-600">{ex.weight} kg</span>
+                                                    </span>
+                                                )}
+                                                {(ex.rest_min > 0 || ex.rest_sec > 0) && (
+                                                    <span>Rest <span className="text-slate-600">{ex.rest_min || 0}m {ex.rest_sec || 0}s</span></span>
+                                                )}
+                                                {ex.rest && !ex.rest_min && <span>Rest <span className="text-slate-600">{ex.rest}s</span></span>}
+                                                {ex.rpe && <span>RPE <span className="text-slate-600">{ex.rpe}</span></span>}
+                                                {ex.rir && <span>RIR <span className="text-slate-600">{ex.rir}</span></span>}
+                                                {ex.intensity && <span>Int <span className="text-slate-600">{ex.intensity}</span></span>}
+                                                {ex.tempo && <span>Tempo <span className="text-slate-600">{ex.tempo}</span></span>}
+                                            </div>
                                         )}
-                                        {(ex.rest_min > 0 || ex.rest_sec > 0) && (
-                                            <span>Rest <span className="text-slate-600">{ex.rest_min || 0}m {ex.rest_sec || 0}s</span></span>
-                                        )}
-                                        {ex.rest && !ex.rest_min && <span>Rest <span className="text-slate-600">{ex.rest}s</span></span>}
-                                        {ex.rpe && <span>RPE <span className="text-slate-600">{ex.rpe}</span></span>}
-                                        {ex.rir && <span>RIR <span className="text-slate-600">{ex.rir}</span></span>}
-                                        {ex.intensity && <span>Int <span className="text-slate-600">{ex.intensity}</span></span>}
-                                        {ex.tempo && <span>Tempo <span className="text-slate-600">{ex.tempo}</span></span>}
                                     </div>
-                                )}
+                                </div>
                             </div>
                             {/* Detail area: description, video link, notes */}
                             {hasDetail && (
@@ -127,7 +148,18 @@ const PublicWorkoutView: React.FC = () => {
         load();
     }, [workoutType, workoutId]);
 
-    // ── Print / PDF ─────────────────────────────────────────────────────────
+    // ── Print / PDF ──
+    // Add class to body on mount so print CSS rules apply correctly.
+    // Also set background to white for clean print output.
+    React.useEffect(() => {
+        document.body.classList.add('printing-standalone');
+        document.body.style.background = 'white';
+        return () => {
+            document.body.classList.remove('printing-standalone');
+            document.body.style.background = '';
+        };
+    }, []);
+
     const handlePrint = () => window.print();
 
     // ── Loading state ───────────────────────────────────────────────────────
@@ -161,26 +193,29 @@ const PublicWorkoutView: React.FC = () => {
         const day = days[activeDay];
 
         return (
-            <div className="min-h-screen bg-[#F8F9FF] print:bg-white print:min-h-0 print-standalone">
+            <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+                <BrandingBanner />
                 {/* Header */}
-                <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
-                            <Dumbbell size={16} />
+                <div className="bg-white border-b border-slate-200 px-4 py-3 print:border-none print:px-0 print:py-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
+                                <Dumbbell size={16} />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-bold text-slate-900 print:text-lg">{data.name}</h1>
+                                <p className="text-[10px] text-slate-400 font-medium">
+                                    {days.length} day program
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-base font-bold text-slate-900 print:text-xl">{data.name}</h1>
-                            <p className="text-[10px] text-slate-400 font-medium">
-                                {days.length} day program · Created {formatDate(data.created_at)}
-                            </p>
-                        </div>
+                        <button
+                            onClick={handlePrint}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold transition-all print:hidden"
+                        >
+                            <Printer size={12} /> Download PDF
+                        </button>
                     </div>
-                    <button
-                        onClick={handlePrint}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold transition-all print:hidden"
-                    >
-                        <Printer size={12} /> Download PDF
-                    </button>
                 </div>
 
                 {/* Overview */}
@@ -240,7 +275,7 @@ const PublicWorkoutView: React.FC = () => {
                 )}
 
                 {/* Print view: all days expanded */}
-                <div className="hidden print:block max-w-3xl mx-auto px-4 mt-4">
+                <div className="hidden print:block max-w-3xl mx-auto px-4 mt-2">
                     {days.map((d: any, i: number) => (
                         <div key={d.id || i} className="mb-8 break-inside-avoid">
                             <h2 className="text-base font-bold text-slate-800 mb-1">{d.name || `Day ${d.day_number}`}</h2>
@@ -261,37 +296,38 @@ const PublicWorkoutView: React.FC = () => {
     const exerciseDetails = data.exercise_details || {};
 
     return (
-        <div className="min-h-screen bg-[#F8F9FF] print:bg-white print:min-h-0 print-standalone">
+        <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+            <BrandingBanner />
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
-                        <Dumbbell size={16} />
-                    </div>
-                    <div>
-                        <h1 className="text-base font-bold text-slate-900 print:text-xl">{data.name}</h1>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            {data.training_phase && (
-                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{data.training_phase}</span>
-                            )}
-                            {data.load && (
-                                <span className="text-[10px] text-slate-400 font-medium">{data.load} Load</span>
-                            )}
-                            <span className="text-[10px] text-slate-300">·</span>
-                            <span className="text-[10px] text-slate-400 font-medium">Created {formatDate(data.created_at)}</span>
+            <div className="bg-white border-b border-slate-200 px-4 py-3 print:border-none print:px-0 print:py-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
+                            <Dumbbell size={16} />
+                        </div>
+                        <div>
+                            <h1 className="text-base font-bold text-slate-900 print:text-lg">{data.name}</h1>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                {data.training_phase && (
+                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{data.training_phase}</span>
+                                )}
+                                {data.load && (
+                                    <span className="text-[10px] text-slate-400 font-medium">{data.load} Load</span>
+                                )}
+                            </div>
                         </div>
                     </div>
+                    <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold transition-all print:hidden"
+                    >
+                        <Printer size={12} /> Download PDF
+                    </button>
                 </div>
-                <button
-                    onClick={handlePrint}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold transition-all print:hidden"
-                >
-                    <Printer size={12} /> Download PDF
-                </button>
             </div>
 
             {/* Sections */}
-            <div className="max-w-3xl mx-auto px-4 mt-5 pb-12">
+            <div className="max-w-3xl mx-auto px-4 mt-5 pb-12 print:mt-2 print:pb-4">
                 {SECTION_ORDER.map(sec => {
                     const exercises = sections[sec] || [];
                     return <ExerciseTable key={sec} exercises={exercises} sectionLabel={SECTION_LABELS[sec]} exerciseDetails={exerciseDetails} />;

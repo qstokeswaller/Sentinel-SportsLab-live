@@ -367,8 +367,32 @@ export const DashboardPage = () => {
                     <div className="space-y-6 animate-in fade-in duration-700">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Morning Readiness Report Column */}
-                            <div className="lg:col-span-1">
-                                {renderMorningReport()}
+                            <div className="lg:col-span-1 relative">
+                                {isLoading && (
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+                                        <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center gap-2.5">
+                                            <div className="w-8 h-8 bg-rose-200 rounded-lg animate-pulse" />
+                                            <div className="space-y-1">
+                                                <div className="h-3 w-24 bg-rose-100 rounded animate-pulse" />
+                                                <div className="h-2 w-16 bg-rose-50 rounded animate-pulse" />
+                                            </div>
+                                        </div>
+                                        <div className="p-2.5 space-y-1.5 flex-1">
+                                            {[1, 2, 3].map(i => (
+                                                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50">
+                                                    <div className="w-7 h-7 rounded-md bg-slate-100 animate-pulse" />
+                                                    <div className="flex-1 h-3 bg-slate-100 rounded animate-pulse" />
+                                                    <div className="w-8 h-4 bg-slate-100 rounded animate-pulse" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex flex-col items-center py-4">
+                                            <div className="w-5 h-5 border-2 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-1.5" />
+                                            <span className="text-[10px] font-medium text-slate-400">Loading morning performance report...</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {!isLoading && renderMorningReport()}
                             </div>
 
                             {/* Main Dashboard Actions Column */}
@@ -423,7 +447,13 @@ export const DashboardPage = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-6 sm:grid-cols-10 gap-2">
+                                    <div className="grid grid-cols-6 sm:grid-cols-10 gap-2 relative">
+                                        {isLoading && (
+                                            <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 rounded-lg col-span-full">
+                                                <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                                                <span className="text-[10px] font-medium text-slate-400">Loading squad readiness heatmap...</span>
+                                            </div>
+                                        )}
                                         {teams.flatMap(team => team.players.map(p => ({ ...p, teamName: team.name })))
                                             .filter(p => heatmapTeamFilter === 'All Teams' || p.teamName === heatmapTeamFilter)
                                             .sort((a, b) => {

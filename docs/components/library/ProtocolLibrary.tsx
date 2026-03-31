@@ -88,6 +88,10 @@ const countBlocks = (blocks: ProtocolBlock[]) => blocks.length;
 
 // ── View Toggle ─────────────────────────────────────────────────────────────
 
+// All 95 testing protocols generated from the complete protocol reference document.
+// These appear for every user by default — merged on first load if not already present.
+import { DEFAULT_PROTOCOLS } from '../../utils/defaultProtocols';
+
 const ViewToggle: React.FC<{ view: 'grid' | 'list'; setView: (v: 'grid' | 'list') => void }> = ({ view, setView }) => (
     <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
         <button
@@ -124,12 +128,30 @@ export const ProtocolLibrary: React.FC = () => {
         setShareTarget(protocol);
     }, []);
 
-    // Load protocols on mount
+    // Load protocols on mount — defaults are the base, user-created protocols layer on top
     useEffect(() => {
         (async () => {
             try {
                 const data = await StorageService.getProtocols();
-                setProtocols(Array.isArray(data) ? data : []);
+                const userProtocols = Array.isArray(data) ? data : [];
+
+                // Build name lookup of defaults (normalised to lowercase for matching)
+                const defaultNames = new Set(DEFAULT_PROTOCOLS.map(p => p.name.toLowerCase().trim()));
+                const defaultIds = new Set(DEFAULT_PROTOCOLS.map(p => p.id));
+
+                // User protocols that are NOT duplicates of defaults (by name or ID)
+                const userOriginals = userProtocols.filter(p =>
+                    !defaultIds.has(p.id) && !defaultNames.has(p.name?.toLowerCase().trim())
+                );
+
+                // Final list: all 95 defaults + any user-created originals on top
+                const merged = [...userOriginals, ...DEFAULT_PROTOCOLS];
+                setProtocols(merged);
+
+                // Persist the clean merged set (removes old duplicates)
+                if (userProtocols.length !== merged.length || userOriginals.length !== userProtocols.length) {
+                    await StorageService.saveProtocols(merged);
+                }
             } catch (err) {
                 console.error('Load protocols error:', err);
             } finally {
@@ -320,10 +342,6 @@ export const ProtocolLibrary: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-3 text-[11px] text-slate-400">
                                     <span className="flex items-center gap-1">
-                                        <CalendarIcon size={10} />
-                                        {formatDate(protocol.createdAt)}
-                                    </span>
-                                    <span className="flex items-center gap-1">
                                         <LayersIcon size={10} />
                                         {blockCount} block{blockCount !== 1 ? 's' : ''}
                                     </span>
@@ -346,7 +364,6 @@ export const ProtocolLibrary: React.FC = () => {
                             <tr className="border-b border-slate-200 bg-slate-50">
                                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Protocol Name</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Category</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Created</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Blocks</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Exercises</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">Actions</th>
@@ -377,7 +394,6 @@ export const ProtocolLibrary: React.FC = () => {
                                                 {protocol.category}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3 text-xs text-slate-500">{formatDate(protocol.createdAt)}</td>
                                         <td className="px-5 py-3 text-xs text-slate-500">{blockCount}</td>
                                         <td className="px-5 py-3 text-xs text-slate-500">{exerciseCount || '—'}</td>
                                         <td className="px-5 py-3 text-right">

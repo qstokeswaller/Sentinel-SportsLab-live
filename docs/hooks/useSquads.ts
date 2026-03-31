@@ -20,6 +20,7 @@ export interface Squad {
 export function useSquads() {
   return useQuery<Squad[]>({
     queryKey: ['squads'],
+    staleTime: 5 * 60 * 1000, // 5 minutes — squad structure rarely changes
     queryFn: async () => {
       const { data, error } = await supabase
         .from('squads')
@@ -47,6 +48,7 @@ export function useSquads() {
 export function useSquad(squadId: string) {
   return useQuery<Squad>({
     queryKey: ['squad', squadId],
+    staleTime: 5 * 60 * 1000,
     enabled: !!squadId,
     queryFn: async () => {
       const { data, error } = await supabase

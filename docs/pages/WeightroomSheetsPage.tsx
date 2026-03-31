@@ -25,7 +25,7 @@ const WS_MODES = [
 
 export const WeightroomSheetsPage = () => {
     const navigate = useNavigate();
-    const { teams, exercises, maxHistory } = useAppState();
+    const { teams, exercises, maxHistory, isLoading } = useAppState();
 
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
     const [wsMode, setWsMode] = useState('blank');
@@ -215,7 +215,26 @@ table { width: 100%; border-collapse: collapse; }
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {athletes.length === 0 ? (
+                                        {isLoading ? (
+                                            <>
+                                                {[1, 2, 3, 4, 5].map(i => (
+                                                    <tr key={i}>
+                                                        <td className="px-3 py-2 border border-slate-200"><div className="h-4 w-24 bg-slate-100 rounded animate-pulse" /></td>
+                                                        {wsColumns.map(col => (
+                                                            <td key={col.id} className="px-3 py-2 border border-slate-200 text-center"><div className="h-4 w-12 bg-slate-50 rounded animate-pulse mx-auto" /></td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                                <tr>
+                                                    <td colSpan={wsColumns.length + 1} className="py-4 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                                                            <span className="text-xs font-medium text-slate-400">Loading athlete data...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </>
+                                        ) : athletes.length === 0 ? (
                                             <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes in selected squad</td></tr>
                                         ) : athletes.map(a => (
                                             <tr key={a.id} className="hover:bg-slate-50">

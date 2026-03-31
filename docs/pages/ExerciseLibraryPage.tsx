@@ -342,7 +342,26 @@ export const ExerciseLibraryPage = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
                             {exercisesLoading ? (
-                                <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-400">Loading exercises...</td></tr>
+                                <>
+                                    {[1, 2, 3, 4, 5, 6].map(i => (
+                                        <tr key={i}>
+                                            <td className="px-4 py-3"><div className="h-4 w-32 bg-slate-100 rounded animate-pulse" /></td>
+                                            <td className="px-4 py-3 text-center"><div className="h-5 w-16 bg-slate-100 rounded-md animate-pulse mx-auto" /></td>
+                                            <td className="px-4 py-3 text-center"><div className="h-5 w-20 bg-slate-50 rounded-full animate-pulse mx-auto" /></td>
+                                            <td className="px-4 py-3 text-center"><div className="h-5 w-16 bg-slate-50 rounded-full animate-pulse mx-auto" /></td>
+                                            <td className="px-4 py-3 text-center"><div className="h-4 w-8 bg-slate-50 rounded animate-pulse mx-auto" /></td>
+                                            <td className="px-4 py-3 text-center"><div className="h-6 w-20 bg-slate-50 rounded-lg animate-pulse mx-auto" /></td>
+                                        </tr>
+                                    ))}
+                                    <tr>
+                                        <td colSpan={6} className="py-4 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                                                <span className="text-xs font-medium text-slate-400">Loading exercise library...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </>
                             ) : dbExercises.length === 0 ? (
                                 <tr><td colSpan={6} className="py-10 text-center">
                                     <div className="text-sm text-slate-400">No exercises found{librarySearch ? ` for "${librarySearch}"` : ''}</div>

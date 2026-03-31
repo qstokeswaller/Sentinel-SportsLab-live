@@ -35,3 +35,5 @@ matches.txt
 # Supabase local dev
 supabase/.branches/
 supabase/.temp/
+
+.vercel

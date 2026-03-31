@@ -84,10 +84,16 @@ export const DatabaseService = {
 
     // --- SESSIONS ---
     async fetchSessions() {
+        // Only fetch sessions from the last 6 months + 1 month ahead to avoid loading entire history
+        const from = new Date(Date.now() - 180 * 86400000).toISOString().split('T')[0];
+        const to = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
         const { data, error } = await supabase
             .from('scheduled_sessions')
-            .select('*');
-        console.log('[fetchSessions] data:', data?.length, 'error:', error);
+            .select('*')
+            .gte('date', from)
+            .lte('date', to)
+            .order('date', { ascending: false })
+            .limit(1000);
         if (error) throw error;
         return data;
     },
@@ -163,7 +169,8 @@ export const DatabaseService = {
         const { data, error } = await (supabase as any)
             .from('workout_templates')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(200);
         if (error) throw error;
         return data || [];
     },
@@ -203,10 +210,16 @@ export const DatabaseService = {
 
     // --- CALENDAR EVENTS ---
     async fetchCalendarEvents() {
+        // Only fetch events from last 3 months + 3 months ahead
+        const from = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
+        const to = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0];
         const { data, error } = await (supabase as any)
             .from('calendar_events')
             .select('*')
-            .order('start_date', { ascending: true });
+            .gte('start_date', from)
+            .lte('start_date', to)
+            .order('start_date', { ascending: true })
+            .limit(500);
         if (error) throw error;
         return data || [];
     },
@@ -246,7 +259,9 @@ export const DatabaseService = {
 
     // --- ASSESSMENTS ---
     async fetchAssessments(testType?: string) {
-        let query = supabase.from('assessments').select('*').order('date', { ascending: false });
+        // Limit to last 12 months of assessments to keep payload manageable
+        const from = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
+        let query = supabase.from('assessments').select('*').gte('date', from).order('date', { ascending: false });
         if (testType) query = query.eq('test_type', testType);
         const { data, error } = await query;
         if (error) throw error;
@@ -254,10 +269,13 @@ export const DatabaseService = {
     },
 
     async fetchRmAssessments() {
+        // Last 2 years of 1RM data — older records are unlikely to reflect current strength
+        const from = new Date(Date.now() - 730 * 86400000).toISOString().split('T')[0];
         const { data, error } = await supabase
             .from('assessments')
             .select('*')
             .in('test_type', ['1rm', 'rm_back_squat', 'rm_bench_press', 'rm_deadlift', 'rm_front_squat', 'rm_ohp'])
+            .gte('date', from)
             .order('date', { ascending: false });
         if (error) throw error;
         return data;
@@ -584,10 +602,14 @@ export const DatabaseService = {
 
     async fetchInjuryReports(teamId?: string) {
         const db = supabase as any;
+        // Last 12 months of injury reports
+        const from = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
         let query = db
             .from('injury_reports')
             .select('*')
-            .order('created_at', { ascending: false });
+            .gte('created_at', from)
+            .order('created_at', { ascending: false })
+            .limit(200);
 
         if (teamId) query = query.eq('team_id', teamId);
 
@@ -691,7 +713,9 @@ export const DatabaseService = {
     // --- TRAINING LOADS (ACWR) ---
 
     async fetchTrainingLoads(athleteId?: string) {
-        let query = (supabase as any).from('training_loads').select('*').order('date', { ascending: false });
+        // ACWR needs ~35 days of data (28-day chronic window + 7-day acute). Fetch 90 days for safety + trend visibility.
+        const from = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
+        let query = (supabase as any).from('training_loads').select('*').gte('date', from).order('date', { ascending: false });
         if (athleteId) query = query.eq('athlete_id', athleteId);
         const { data, error } = await query;
         if (error) throw error;

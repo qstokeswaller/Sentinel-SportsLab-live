@@ -28,6 +28,8 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
     const [rowData, setRowData] = useState<Record<string, Record<string, any>>>({});
     const [savedRows, setSavedRows] = useState<Set<string>>(new Set());
     const [saving, setSaving] = useState(false);
+    const [batchTab, setBatchTab] = useState<'standard' | 'vbt'>('standard');
+    const hasVbt = !!(test.vbtFields && test.vbtFields.length > 0);
 
     // Get team players
     const selectedTeam = useMemo(
@@ -44,8 +46,11 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
 
     // Only show required + number fields in table columns (skip text/notes)
     const tableFields = useMemo(
-        () => test.fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 8),
-        [test.fields]
+        () => {
+            const fields = batchTab === 'vbt' && hasVbt ? (test.vbtFields || []) : test.fields;
+            return fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 8);
+        },
+        [test.fields, test.vbtFields, batchTab, hasVbt]
     );
 
     const setFieldValue = useCallback((athleteId: string, fieldKey: string, value: any) => {
@@ -58,29 +63,32 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
 
     // Calculate derived values for a row
     const getCalculated = useCallback((athleteId: string) => {
-        if (!test.calculations?.length) return {};
+        const calcs = batchTab === 'vbt' && hasVbt ? (test.vbtCalculations || []) : (test.calculations || []);
+        if (!calcs.length) return {};
         const values = rowData[athleteId] || {};
         const result: Record<string, any> = {};
-        for (const calc of test.calculations) {
+        for (const calc of calcs) {
             result[calc.key] = calc.formula(values);
         }
         return result;
-    }, [rowData, test.calculations]);
+    }, [rowData, test.calculations, test.vbtCalculations, batchTab, hasVbt]);
 
     // Check if row has required fields filled
     const isRowReady = useCallback((athleteId: string) => {
         const values = rowData[athleteId] || {};
-        return test.fields
+        const fields = batchTab === 'vbt' && hasVbt ? (test.vbtFields || []) : test.fields;
+        return fields
             .filter(f => f.required)
             .every(f => values[f.key] != null && values[f.key] !== '');
-    }, [rowData, test.fields]);
+    }, [rowData, test.fields, test.vbtFields, batchTab, hasVbt]);
 
     // Save single row
     const saveRow = useCallback(async (athleteId: string) => {
         const values = rowData[athleteId] || {};
         const calculated = getCalculated(athleteId);
+        const metrics = batchTab === 'vbt' ? { ...values, ...calculated, _vbt: true, _date: date } : { ...values, ...calculated, _date: date };
         try {
-            await DatabaseService.logAssessment(test.id, athleteId, { ...values, ...calculated, _date: date }, date);
+            await DatabaseService.logAssessment(test.id, athleteId, metrics, date);
             setSavedRows(prev => new Set(prev).add(athleteId));
             showToast?.('Saved', 'success');
         } catch (err: any) {
@@ -101,7 +109,8 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
             const entries = readyIds.map(id => {
                 const values = rowData[id] || {};
                 const calculated = getCalculated(id);
-                return { testType: test.id, athleteId: id, metrics: { ...values, ...calculated, _date: date }, date };
+                const metrics = batchTab === 'vbt' ? { ...values, ...calculated, _vbt: true, _date: date } : { ...values, ...calculated, _date: date };
+                return { testType: test.id, athleteId: id, metrics, date };
             });
             await DatabaseService.batchLogAssessments(entries);
             setSavedRows(prev => {
@@ -170,6 +179,31 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                     </div>
                 </div>
             </div>
+
+            {/* VBT Tab Toggle (for barbell tests) */}
+            {hasVbt && selectedTeamId && (
+                <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Mode:</span>
+                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
+                        <button
+                            onClick={() => { setBatchTab('standard'); setRowData({}); setSavedRows(new Set()); }}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${batchTab === 'standard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            1RM Test
+                        </button>
+                        <button
+                            onClick={() => { setBatchTab('vbt'); setRowData({}); setSavedRows(new Set()); }}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${batchTab === 'vbt' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            VBT Tracking
+                        </button>
+                    </div>
+                    {batchTab === 'vbt' && (
+                        <span className="text-[10px] text-indigo-500 ml-2">Enter bar velocity from your encoder — system estimates intensity and 1RM</span>
+                    )}
+                </div>
+            )}
 
             {/* Batch table */}
             {selectedTeamId && teamPlayers.length > 0 && (

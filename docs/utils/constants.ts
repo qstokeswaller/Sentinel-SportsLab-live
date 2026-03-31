@@ -264,6 +264,81 @@ export const ACWR_UTILS = {
                 }
 
                 return reasons;
+            },
+
+            /**
+             * Solves for the daily load needed to achieve a target ACWR ratio on the next day.
+             * Derivation from EWMA:
+             *   acute_new  = load × λ_a + acute_old  × (1 − λ_a)
+             *   chronic_new = load × λ_c + chronic_old × (1 − λ_c)
+             *   target = acute_new / chronic_new
+             * Solving:  load = (acute×(1−λ_a) − target×chronic×(1−λ_c)) / (target×λ_c − λ_a)
+             *
+             * @param {Number} currentAcute  - Current EWMA acute value
+             * @param {Number} currentChronic - Current EWMA chronic value
+             * @param {Number} targetRatio   - Desired ACWR ratio (default 1.0)
+             * @param {Number} acuteN        - Acute window (default 7)
+             * @param {Number} chronicN      - Chronic window (default 28)
+             * @returns {Number} Recommended daily load (clamped to ≥ 0)
+             */
+            solveLoadForTargetACWR: (currentAcute, currentChronic, targetRatio = 1.0, acuteN = 7, chronicN = 28) => {
+                const lambda_a = 2 / (acuteN + 1);
+                const lambda_c = 2 / (chronicN + 1);
+                const denominator = targetRatio * lambda_c - lambda_a;
+                // When denominator ≈ 0 the target is effectively unreachable in one day — fall back to chronic level
+                if (Math.abs(denominator) < 1e-9) return Math.max(0, currentChronic);
+                const load = (currentAcute * (1 - lambda_a) - targetRatio * currentChronic * (1 - lambda_c)) / denominator;
+                return Math.max(0, load);
+            },
+
+            /**
+             * Projects optimal daily loads for the next N days to maintain a target ACWR.
+             * Each day's projection feeds into the next so the EWMA evolves realistically.
+             *
+             * @param {Number} currentAcute   - Starting EWMA acute
+             * @param {Number} currentChronic  - Starting EWMA chronic
+             * @param {Number} days            - Number of days to project (default 7)
+             * @param {Number} targetRatio     - Desired ACWR ratio (default 1.0)
+             * @param {Number} acuteN          - Acute window (default 7)
+             * @param {Number} chronicN        - Chronic window (default 28)
+             * @returns {Array<{day, load, acute, chronic, ratio}>}
+             */
+            projectOptimalWeek: (currentAcute, currentChronic, days = 7, targetRatio = 1.0, acuteN = 7, chronicN = 28) => {
+                const lambda_a = 2 / (acuteN + 1);
+                const lambda_c = 2 / (chronicN + 1);
+                let acute = currentAcute;
+                let chronic = currentChronic;
+                const projection = [];
+
+                for (let d = 1; d <= days; d++) {
+                    const load = ACWR_UTILS.solveLoadForTargetACWR(acute, chronic, targetRatio, acuteN, chronicN);
+                    acute = load * lambda_a + acute * (1 - lambda_a);
+                    chronic = load * lambda_c + chronic * (1 - lambda_c);
+                    const ratio = chronic > 0 ? parseFloat((acute / chronic).toFixed(2)) : 0;
+                    projection.push({ day: d, load: Math.round(load), acute: Math.round(acute), chronic: Math.round(chronic), ratio });
+                }
+                return projection;
+            },
+
+            /**
+             * Projects what the ACWR would be if a specific load sequence is applied.
+             * Used for "what-if" scenario comparison.
+             */
+            projectWithLoads: (currentAcute, currentChronic, dailyLoads = [], acuteN = 7, chronicN = 28) => {
+                const lambda_a = 2 / (acuteN + 1);
+                const lambda_c = 2 / (chronicN + 1);
+                let acute = currentAcute;
+                let chronic = currentChronic;
+                const projection = [];
+
+                for (let d = 0; d < dailyLoads.length; d++) {
+                    const load = dailyLoads[d];
+                    acute = load * lambda_a + acute * (1 - lambda_a);
+                    chronic = load * lambda_c + chronic * (1 - lambda_c);
+                    const ratio = chronic > 0 ? parseFloat((acute / chronic).toFixed(2)) : 0;
+                    projection.push({ day: d + 1, load: Math.round(load), acute: Math.round(acute), chronic: Math.round(chronic), ratio });
+                }
+                return projection;
             }
         };
 

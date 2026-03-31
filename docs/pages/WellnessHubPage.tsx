@@ -739,6 +739,7 @@ const ACWRMonitoringHub: React.FC = () => {
 // ── Main Page Component ─────────────────────────────────────────────────
 export const WellnessHubPage: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string | null>(null);
+    const { isLoading } = useAppState();
 
     if (activeSection) {
         return (
@@ -754,7 +755,13 @@ export const WellnessHubPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="min-h-[600px]">
+                <div className="min-h-[600px] relative">
+                    {isLoading && (
+                        <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
+                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                            <span className="text-xs font-medium text-slate-400">Loading {activeSection.toLowerCase()}...</span>
+                        </div>
+                    )}
                     {activeSection === 'Questionnaire Data' && <WellnessHub />}
                     {activeSection === 'Medical Reports' && <MedicalReports />}
                     {activeSection === 'Injury Report' && <InjuryReport />}
@@ -770,23 +777,44 @@ export const WellnessHubPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-slate-900">Wellness Hub</h2>
                 <p className="text-sm text-slate-500 mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {SECTIONS.map((section, i) => (
-                    <button key={i} onClick={() => setActiveSection(section.title)}
-                        className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]"
-                    >
-                        <div className="flex items-start gap-4 h-full">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
-                                <section.icon size={20} />
+            {isLoading ? (
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[150px] flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-lg bg-slate-100 animate-pulse shrink-0" />
+                                <div className="flex-1 space-y-2 py-1">
+                                    <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
+                                    <div className="h-3 w-full bg-slate-50 rounded animate-pulse" />
+                                    <div className="h-3 w-2/3 bg-slate-50 rounded animate-pulse" />
+                                </div>
                             </div>
-                            <div className="flex flex-col justify-center h-full">
-                                <h3 className="text-base font-semibold text-slate-900 mb-1 leading-tight">{section.title}</h3>
-                                <p className="text-xs text-slate-500 leading-relaxed">{section.desc}</p>
+                        ))}
+                    </div>
+                    <div className="flex flex-col items-center py-3">
+                        <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2" />
+                        <span className="text-xs font-medium text-slate-400">Loading wellness data...</span>
+                    </div>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {SECTIONS.map((section, i) => (
+                        <button key={i} onClick={() => setActiveSection(section.title)}
+                            className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]"
+                        >
+                            <div className="flex items-start gap-4 h-full">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                                    <section.icon size={20} />
+                                </div>
+                                <div className="flex flex-col justify-center h-full">
+                                    <h3 className="text-base font-semibold text-slate-900 mb-1 leading-tight">{section.title}</h3>
+                                    <p className="text-xs text-slate-500 leading-relaxed">{section.desc}</p>
+                                </div>
                             </div>
-                        </div>
-                    </button>
-                ))}
-            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

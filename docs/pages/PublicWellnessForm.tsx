@@ -220,16 +220,23 @@ const PublicWellnessForm: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
-            {/* Header */}
-            <header className="bg-white px-6 py-4 flex items-center justify-between border-b border-slate-100 sticky top-0 z-10">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center text-white">
-                        <Activity size={18} />
+            {/* Branding + Header */}
+            <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
+                <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                            <Activity size={13} className="text-white" />
+                        </div>
+                        <span className="font-bold text-sm text-slate-900 tracking-tight">
+                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                        </span>
                     </div>
-                    <span className="font-bold text-slate-900 tracking-tight">Sentinel SportsLab</span>
+                    <span className="text-[9px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
                 </div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Step {currentStep + 1} of {totalSteps}
+                <div className="px-6 py-2 flex items-center justify-end">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Step {currentStep + 1} of {totalSteps}
+                    </div>
                 </div>
             </header>
 

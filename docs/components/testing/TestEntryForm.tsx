@@ -14,15 +14,24 @@ interface Props {
 
 export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender, onSave, date }) => {
   const [values, setValues] = useState<Record<string, any>>({});
+  const [vbtValues, setVbtValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<'standard' | 'vbt'>('standard');
+
+  const hasVbt = !!(test.vbtFields && test.vbtFields.length > 0);
 
   const setValue = (key: string, val: any) => {
     setValues(prev => ({ ...prev, [key]: val }));
     setSaved(false);
   };
 
-  // Run calculations
+  const setVbtValue = (key: string, val: any) => {
+    setVbtValues(prev => ({ ...prev, [key]: val }));
+    setSaved(false);
+  };
+
+  // Run calculations for standard fields
   const calculated = useMemo(() => {
     if (!test.calculations?.length) return {};
     const result: Record<string, any> = {};
@@ -32,6 +41,16 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
     return result;
   }, [values, test.calculations]);
 
+  // Run VBT calculations
+  const vbtCalculated = useMemo(() => {
+    if (!test.vbtCalculations?.length) return {};
+    const result: Record<string, any> = {};
+    for (const calc of test.vbtCalculations) {
+      result[calc.key] = calc.formula(vbtValues);
+    }
+    return result;
+  }, [vbtValues, test.vbtCalculations]);
+
   // Merge values + calculated for norms lookup
   const allValues = useMemo(() => ({ ...values, ...calculated }), [values, calculated]);
 
@@ -39,33 +58,113 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
     if (!athleteId) return;
     setSaving(true);
     try {
-      await onSave(test.id, { ...values, ...calculated, _date: date });
+      if (activeTab === 'vbt') {
+        // Save VBT data with vbt_ prefix so it doesn't clash with standard fields
+        await onSave(test.id, { ...vbtValues, ...vbtCalculated, _vbt: true, _date: date });
+      } else {
+        await onSave(test.id, { ...values, ...calculated, _date: date });
+      }
       setSaved(true);
     } finally {
       setSaving(false);
     }
   };
 
-  const requiredFieldsFilled = test.fields
-    .filter(f => f.required)
-    .every(f => values[f.key] != null && values[f.key] !== '');
+  const requiredFieldsFilled = activeTab === 'vbt'
+    ? (test.vbtFields || []).filter(f => f.required).every(f => vbtValues[f.key] != null && vbtValues[f.key] !== '')
+    : test.fields.filter(f => f.required).every(f => values[f.key] != null && values[f.key] !== '');
 
   return (
     <div className="space-y-5">
-      {/* Form fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {test.fields.map(field => (
-          <FieldRenderer
-            key={field.key}
-            field={field}
-            value={values[field.key]}
-            onChange={(v) => setValue(field.key, v)}
-          />
-        ))}
-      </div>
+      {/* VBT Tab Toggle (only for barbell tests with VBT support) */}
+      {hasVbt && (
+        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg w-fit">
+          <button
+            onClick={() => setActiveTab('standard')}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === 'standard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            1RM Test
+          </button>
+          <button
+            onClick={() => setActiveTab('vbt')}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'vbt' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            VBT Tracking
+          </button>
+        </div>
+      )}
 
-      {/* Calculated metrics */}
-      {test.calculations && test.calculations.length > 0 && (
+      {/* Standard form fields */}
+      {activeTab === 'standard' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {test.fields.map(field => (
+            <FieldRenderer
+              key={field.key}
+              field={field}
+              value={values[field.key]}
+              onChange={(v) => setValue(field.key, v)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* VBT form fields */}
+      {activeTab === 'vbt' && hasVbt && (
+        <div className="space-y-4">
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
+            <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mb-1">Velocity-Based Training</div>
+            <p className="text-xs text-indigo-500/70">Enter the bar velocity from your encoder or sensor. The system will estimate intensity and 1RM from the load-velocity relationship.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(test.vbtFields || []).map(field => (
+              <FieldRenderer
+                key={field.key}
+                field={field}
+                value={vbtValues[field.key]}
+                onChange={(v) => setVbtValue(field.key, v)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VBT calculated metrics */}
+      {activeTab === 'vbt' && test.vbtCalculations && test.vbtCalculations.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">
+            <CalculatorIcon size={14} />
+            VBT Metrics
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {test.vbtCalculations.map(calc => {
+              const val = vbtCalculated[calc.key];
+              const isZone = calc.key === 'vbt_zone';
+              const zoneColor = isZone ? (
+                val === 'Speed-Strength' ? 'text-sky-600' :
+                val === 'Power' ? 'text-indigo-600' :
+                val === 'Strength-Speed' ? 'text-amber-600' :
+                val === 'Max Strength' ? 'text-orange-600' :
+                val === 'Near 1RM' ? 'text-rose-600' : 'text-slate-900'
+              ) : 'text-slate-900';
+              return (
+                <div key={calc.key} className="bg-white rounded-lg border border-indigo-100 p-3">
+                  <div className="text-[10px] text-indigo-400 uppercase tracking-wide">{calc.label}</div>
+                  <div className={`text-lg font-bold ${zoneColor}`}>
+                    {val != null ? val : '—'}
+                    {calc.unit && val != null && !isZone && (
+                      <span className="text-xs text-indigo-300 ml-1">{calc.unit}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Standard calculated metrics */}
+      {activeTab === 'standard' && test.calculations && test.calculations.length > 0 && (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
             <CalculatorIcon size={14} />
@@ -87,8 +186,8 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
         </div>
       )}
 
-      {/* Normative comparison */}
-      {test.norms && (
+      {/* Normative comparison (standard tab only) */}
+      {activeTab === 'standard' && test.norms && (
         <div className="bg-white border border-slate-200 rounded-xl p-4">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
             Normative Classification

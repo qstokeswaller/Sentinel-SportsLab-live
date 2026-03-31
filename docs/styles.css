@@ -46,16 +46,67 @@ body {
 }
 
 @media print {
-    body * {
+    @page {
+        margin: 8mm;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STANDALONE PUBLIC PAGES (.printing-standalone on body)
+       These are full-page routes with NO sidebar or app shell.
+       Print the page content naturally — only hide buttons.
+       ══════════════════════════════════════════════════════════════ */
+    body.printing-standalone .print\:hidden,
+    body.printing-standalone .no-print {
+        display: none !important;
+    }
+
+    body.printing-standalone .print\:break-inside-avoid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Reset ALL elements that could cause blank pages:
+       - height/min-height: 100vh forces full viewport = blank page
+       - overflow: hidden clips content in print
+       - position: fixed/absolute removes from flow */
+    body.printing-standalone,
+    body.printing-standalone html {
+        height: initial !important;
+        min-height: 0 !important;
+        overflow: initial !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body.printing-standalone #root,
+    body.printing-standalone #root > *,
+    body.printing-standalone #root > * > *,
+    body.printing-standalone .print-standalone,
+    body.printing-standalone [class*="min-h-screen"] {
+        height: initial !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        background: white !important;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INTERNAL APP PAGES (weightroom sheets via #print-packet)
+       Hide everything except #print-packet.
+       Only applies when body does NOT have .printing-standalone.
+       ══════════════════════════════════════════════════════════════ */
+    body:not(.printing-standalone) * {
         visibility: hidden;
     }
 
-    #print-packet,
-    #print-packet * {
+    body:not(.printing-standalone) #print-packet,
+    body:not(.printing-standalone) #print-packet * {
         visibility: visible;
     }
 
-    #print-packet {
+    body:not(.printing-standalone) #print-packet {
         position: absolute;
         left: 0;
         top: 0;
@@ -64,39 +115,15 @@ body {
         background: white !important;
     }
 
-    /* Standalone public pages (protocols, workouts, etc.) */
-    .print-standalone,
-    .print-standalone * {
-        visibility: visible !important;
-    }
-
-    .print-standalone {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        min-height: 0 !important;
-        background: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    /* Prevent exercise cards from splitting across pages */
-    .print-standalone .print\:break-inside-avoid {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-    }
-
-    /* Ensure parents don't clip during print */
-    body,
-    html {
+    body:not(.printing-standalone) body,
+    body:not(.printing-standalone) html {
         height: auto !important;
         overflow: visible !important;
     }
 
-    #root,
-    #root>div,
-    main {
+    body:not(.printing-standalone) #root,
+    body:not(.printing-standalone) #root > div,
+    body:not(.printing-standalone) main {
         height: auto !important;
         overflow: visible !important;
         position: static !important;
