@@ -57,7 +57,7 @@ const ExerciseTable = ({ exercises, sectionLabel, exerciseDetails }: { exercises
                     const hasDetail = desc || videoUrl || ex.notes;
 
                     return (
-                        <div key={ex.id || idx} className="bg-white border border-slate-200 rounded-lg print:border-slate-300 overflow-hidden print:break-inside-avoid">
+                        <div key={ex.id || idx} className="bg-white border border-slate-200 rounded-lg print:border-slate-300 overflow-hidden">
                             {/* Banner: Number + Name + Metrics — stacks on mobile */}
                             <div className="px-4 py-3">
                                 <div className="flex items-start gap-3">
@@ -149,23 +149,41 @@ const PublicWorkoutView: React.FC = () => {
     }, [workoutType, workoutId]);
 
     // ── Print / PDF ──
-    // Add class to body on mount so print CSS rules apply correctly.
-    // Also set background to white for clean print output.
     React.useEffect(() => {
         document.body.classList.add('printing-standalone');
-        document.body.style.background = 'white';
-        return () => {
-            document.body.classList.remove('printing-standalone');
-            document.body.style.background = '';
-        };
+        return () => document.body.classList.remove('printing-standalone');
     }, []);
 
-    const handlePrint = () => window.print();
+    const handlePrint = () => {
+        const el = document.getElementById('print-content');
+        const original = el?.style.minHeight;
+        if (el) el.style.minHeight = '0';
+        window.print();
+        if (el) el.style.minHeight = original || '';
+    };
+
+    // Also handle Ctrl+P
+    React.useEffect(() => {
+        const beforePrint = () => {
+            const el = document.getElementById('print-content');
+            if (el) el.style.minHeight = '0';
+        };
+        const afterPrint = () => {
+            const el = document.getElementById('print-content');
+            if (el) el.style.minHeight = '100dvh';
+        };
+        window.addEventListener('beforeprint', beforePrint);
+        window.addEventListener('afterprint', afterPrint);
+        return () => {
+            window.removeEventListener('beforeprint', beforePrint);
+            window.removeEventListener('afterprint', afterPrint);
+        };
+    }, []);
 
     // ── Loading state ───────────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F8F9FF] flex items-center justify-center">
+            <div className="h-screen bg-[#F8F9FF] flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-sm text-slate-500 font-medium">Loading workout...</p>
@@ -177,7 +195,7 @@ const PublicWorkoutView: React.FC = () => {
     // ── Error state ─────────────────────────────────────────────────────────
     if (error || !data) {
         return (
-            <div className="min-h-screen bg-[#F8F9FF] flex items-center justify-center px-4">
+            <div className="h-screen bg-[#F8F9FF] flex items-center justify-center px-4">
                 <div className="text-center max-w-sm">
                     <AlertCircle size={40} className="text-red-400 mx-auto mb-4" />
                     <h2 className="text-lg font-semibold text-slate-900 mb-2">Invalid Link</h2>
@@ -193,10 +211,10 @@ const PublicWorkoutView: React.FC = () => {
         const day = days[activeDay];
 
         return (
-            <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+            <div className="bg-[#F8F9FF] print-standalone" id="print-content" style={{minHeight: '100dvh'}}>
                 <BrandingBanner />
                 {/* Header */}
-                <div className="bg-white border-b border-slate-200 px-4 py-3 print:border-none print:px-0 print:py-2">
+                <div className="bg-white border-b border-slate-200 px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
@@ -274,11 +292,14 @@ const PublicWorkoutView: React.FC = () => {
                     </div>
                 )}
 
-                {/* Print view: all days expanded */}
+                {/* Print view: all days expanded, each day on its own page */}
                 <div className="hidden print:block max-w-3xl mx-auto px-4 mt-2">
                     {days.map((d: any, i: number) => (
-                        <div key={d.id || i} className="mb-8 break-inside-avoid">
-                            <h2 className="text-base font-bold text-slate-800 mb-1">{d.name || `Day ${d.day_number}`}</h2>
+                        <div key={d.id || i} style={i > 0 ? { pageBreakBefore: 'always' } : undefined}>
+                            <div className="mb-4 pb-2 border-b border-slate-200">
+                                <h2 className="text-lg font-bold text-slate-800">{d.name || `Day ${d.day_number}`}</h2>
+                                <p className="text-[10px] text-slate-400">{data.name} — Day {d.day_number || i + 1} of {days.length}</p>
+                            </div>
                             {d.instructions && <p className="text-sm text-slate-500 mb-3">{d.instructions}</p>}
                             {SECTION_ORDER.map(sec => {
                                 const exercises = (d.exercises || []).filter((e: any) => e.section === sec);
@@ -296,17 +317,17 @@ const PublicWorkoutView: React.FC = () => {
     const exerciseDetails = data.exercise_details || {};
 
     return (
-        <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+        <div className="bg-[#F8F9FF] print-standalone" id="print-content" style={{minHeight: '100dvh'}}>
             <BrandingBanner />
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 px-4 py-3 print:border-none print:px-0 print:py-2">
+            <div className="bg-white border-b border-slate-200 px-4 py-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
                             <Dumbbell size={16} />
                         </div>
                         <div>
-                            <h1 className="text-base font-bold text-slate-900 print:text-lg">{data.name}</h1>
+                            <h1 className="text-base font-bold text-slate-900">{data.name}</h1>
                             <div className="flex items-center gap-2 mt-0.5">
                                 {data.training_phase && (
                                     <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{data.training_phase}</span>

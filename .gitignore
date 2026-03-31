@@ -4,6 +4,7 @@ node_modules/
 # Build output
 archive/dist/
 
+
 # Environment / secrets
 .env
 .env.local

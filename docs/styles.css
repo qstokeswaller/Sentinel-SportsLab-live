@@ -60,10 +60,8 @@ body {
         display: none !important;
     }
 
-    body.printing-standalone .print\:break-inside-avoid {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-    }
+    /* Note: break-inside-avoid removed — it was pushing all exercises
+       to page 2 when header took space on page 1 */
 
     /* Reset ALL elements that could cause blank pages:
        - height/min-height: 100vh forces full viewport = blank page
@@ -83,13 +81,14 @@ body {
     body.printing-standalone #root > *,
     body.printing-standalone #root > * > *,
     body.printing-standalone .print-standalone,
-    body.printing-standalone [class*="min-h-screen"] {
-        height: initial !important;
+    body.printing-standalone #print-content {
+        height: auto !important;
         min-height: 0 !important;
         max-height: none !important;
         overflow: visible !important;
         position: static !important;
         background: white !important;
+        display: block !important;
     }
 
     /* ══════════════════════════════════════════════════════════════

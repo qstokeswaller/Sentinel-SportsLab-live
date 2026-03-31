@@ -89,18 +89,30 @@ export function useProgramWithDays(programId: string | null) {
       const dayIds = (days ?? []).map((d: WorkoutDay) => d.id);
       let exercises: WorkoutDayExercise[] = [];
       if (dayIds.length > 0) {
-        // Join with exercises table to resolve exercise names
         const { data: exData, error: eErr } = await supabase
           .from('workout_day_exercises')
-          .select('*, exercises(name)')
+          .select('*')
           .in('day_id', dayIds)
           .order('order_index');
         if (eErr) throw eErr;
-        // Attach resolved name onto each exercise row
+
+        // Resolve exercise names from the exercises table
+        const exerciseIds = [...new Set((exData ?? []).map((e: any) => e.exercise_id).filter(Boolean))];
+        let nameMap: Record<string, string> = {};
+        if (exerciseIds.length > 0) {
+          const { data: nameData, error: nameErr } = await supabase
+            .from('exercises')
+            .select('id, name')
+            .in('id', exerciseIds);
+          if (nameErr) console.warn('Could not resolve exercise names:', nameErr.message);
+          if (nameData) {
+            for (const n of nameData) { nameMap[n.id] = n.name; }
+          }
+        }
+
         exercises = (exData ?? []).map((e: any) => ({
           ...e,
-          exercise_name: e.exercises?.name || null,
-          exercises: undefined, // remove nested join object
+          exercise_name: nameMap[e.exercise_id] || null,
         })) as WorkoutDayExercise[];
       }
 

@@ -230,16 +230,7 @@ const PublicProtocolView: React.FC = () => {
         load();
     }, [protocolId]);
 
-    const handlePrint = () => {
-        document.body.classList.add('printing-standalone');
-        window.print();
-        document.body.classList.remove('printing-standalone');
-    };
-
-    React.useEffect(() => {
-        document.body.classList.add('printing-standalone');
-        return () => document.body.classList.remove('printing-standalone');
-    }, []);
+    const handlePrint = () => window.print();
 
     // ── Loading state ────────────────────────────────────────────────────────
     if (loading) {
@@ -270,7 +261,7 @@ const PublicProtocolView: React.FC = () => {
     const catColor = CATEGORY_COLORS[protocol.category] || CATEGORY_COLORS['Custom'];
 
     return (
-        <div className="min-h-screen bg-[#F8F9FF] print:bg-white print-standalone">
+        <div className="bg-[#F8F9FF] print-standalone">
             <BrandingBanner />
             {/* Header bar */}
             <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">

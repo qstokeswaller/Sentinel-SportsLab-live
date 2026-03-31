@@ -2034,25 +2034,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                     createdAt: t.created_at,
                 }));
                 setWorkoutTemplates(mapped);
-            } else if (loadedTemplates && loadedTemplates.length > 0) {
-                // Migrate legacy templates from StorageService to DB (fire-and-forget, don't block init)
+            } else if (dbTemplatesResult !== null && loadedTemplates && loadedTemplates.length > 0) {
+                // Only migrate if DB query succeeded but returned empty (not if it failed/null)
                 setWorkoutTemplates(loadedTemplates);
-                Promise.resolve().then(async () => {
-                    for (const tpl of loadedTemplates) {
-                        try {
-                            await DatabaseService.createWorkoutTemplate({
-                                name: tpl.name,
-                                training_phase: tpl.trainingPhase,
-                                load: tpl.load,
-                                sections: tpl.sections,
-                            });
-                        } catch (e) {
-                            console.warn("Could not migrate template to DB:", e.message);
-                        }
-                    }
-                });
             } else {
-                setWorkoutTemplates([]);
+                setWorkoutTemplates(loadedTemplates || []);
             }
 
             // Personal Exercise Library

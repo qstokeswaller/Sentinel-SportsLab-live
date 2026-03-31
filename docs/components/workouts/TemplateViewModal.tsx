@@ -30,6 +30,15 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
   const [expandedEx, setExpandedEx] = useState<string | null>(null);
   const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
 
+  // Build a name→info lookup for fallback (exerciseFullMap is keyed by UUID, packets use old IDs)
+  const exerciseNameMap = React.useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const info of Object.values(exerciseFullMap || {})) {
+      if (info.name) map[info.name.toLowerCase()] = info;
+    }
+    return map;
+  }, [exerciseFullMap]);
+
   if (!isOpen || !template) return null;
 
   const sections = template.sections || {};
@@ -109,7 +118,8 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                   const exId = ex.exerciseId || ex.exercise_id || '';
                   const name = ex.exerciseName || ex.exercise_name || ex.name || resolveExerciseName(exId);
                   const hasMeta = ex.sets || ex.reps || ex.rest || ex.rpe || ex.intensity || ex.tempo || ex.weight;
-                  const fullInfo = exerciseFullMap?.[exId];
+                  // Try ID lookup, then name-based lookup via pre-built map
+                  const fullInfo = exerciseFullMap?.[exId] || (name ? exerciseNameMap[name.toLowerCase()] : null);
                   const rawDesc = fullInfo?.description || '';
                   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
                   const rawVideoUrl = fullInfo?.video_url || '';

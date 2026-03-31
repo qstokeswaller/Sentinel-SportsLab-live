@@ -129,6 +129,14 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
 const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
   const [activeDay, setActiveDay] = useState(0);
   const [expandedEx, setExpandedEx] = useState<string | null>(null);
+  // Pre-built name→info map for fast fallback when exercise IDs don't match
+  const exerciseNameMap = React.useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const info of Object.values(exerciseFullMap || {})) {
+      if (info.name) map[info.name.toLowerCase()] = info;
+    }
+    return map;
+  }, [exerciseFullMap]);
   const days = program.days ?? [];
   const day = days[activeDay];
 
@@ -174,6 +182,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
                     letter={String(idx + 1)}
                     exerciseMap={exerciseMap}
                     exerciseFullMap={exerciseFullMap}
+                    exerciseNameMap={exerciseNameMap}
                     isExpanded={expandedEx === row.id}
                     onToggle={() => setExpandedEx(expandedEx === row.id ? null : row.id)}
                   />
@@ -193,11 +202,11 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
   );
 };
 
-const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, isExpanded, onToggle }) => {
+const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNameMap, isExpanded, onToggle }) => {
   const hasMeta = row.sets || row.reps || row.rest_min || row.rest_sec || row.rir || row.rpe || row.weight;
-  // Resolve name: try exercise_id map first, then fall back to the name stored on the row itself
   const exerciseName = exerciseMap[row.exercise_id] || row.exercise_name || row.name || row.exercise_id;
-  const fullInfo = exerciseFullMap?.[row.exercise_id];
+  // Try ID lookup, then name-based lookup via pre-built map
+  const fullInfo = exerciseFullMap?.[row.exercise_id] || (exerciseName ? exerciseNameMap?.[exerciseName.toLowerCase()] : null);
   const rawDesc = fullInfo?.description || '';
   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
   const rawVideoUrl = fullInfo?.video_url || '';
