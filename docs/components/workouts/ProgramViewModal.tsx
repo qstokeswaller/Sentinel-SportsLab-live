@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, LayersIcon, Share2Icon, ExternalLink, Weight } from 'lucide-react';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import { useProgramWithDays, useDeleteProgram, type WorkoutProgram } from '../../hooks/useWorkoutPrograms';
 import { ProgramBuilderModal } from './ProgramBuilderModal';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
@@ -81,17 +82,9 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
             <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
               <PencilIcon size={13} className="mr-1.5" /> Edit
             </Button>
-            {!confirmDelete ? (
-              <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 hover:bg-red-50">
-                <Trash2Icon size={13} className="mr-1.5" /> Delete
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-red-600">Confirm?</span>
-                <Button variant="destructive" size="sm" onClick={handleDelete}>Yes</Button>
-                <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(false)}>No</Button>
-              </div>
-            )}
+            <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 hover:bg-red-50">
+              <Trash2Icon size={13} className="mr-1.5" /> Delete
+            </Button>
             <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
               <XIcon size={16} />
             </button>
@@ -122,6 +115,13 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
           onClose={() => setShowShare(false)}
         />
       )}
+      <ConfirmDeleteModal
+        isOpen={confirmDelete}
+        title="Delete Program"
+        message={`Are you sure you want to delete "${program.name}"? This will remove all days and exercises.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 };

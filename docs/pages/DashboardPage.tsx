@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import InterventionModal from '../components/analytics/InterventionModal';
 import { DatabaseService } from '../services/databaseService';
+import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -67,6 +68,7 @@ export const DashboardPage = () => {
     const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
     const [completingSession, setCompletingSession] = React.useState(null);
+    const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
 
     const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
         try {
@@ -758,7 +760,7 @@ export const DashboardPage = () => {
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => {
-                                                                                        handleDeleteSession(session.id);
+                                                                                        setConfirmDeleteItem({ type: 'session', id: session.id, name: session.title || 'this session' });
                                                                                         setActiveSessionPopover(null);
                                                                                     }}
                                                                                     className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -848,7 +850,7 @@ export const DashboardPage = () => {
                                                                                         </button>
                                                                                         <button
                                                                                             onClick={() => {
-                                                                                                handleDeleteCalendarEvent(event.id);
+                                                                                                setConfirmDeleteItem({ type: 'event', id: event.id, name: event.title || 'this event' });
                                                                                                 setActivePopover(null);
                                                                                             }}
                                                                                             className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -1264,5 +1266,16 @@ export const DashboardPage = () => {
                             </div>
                         </div>
                     )}
+                    <ConfirmDeleteModal
+                        isOpen={!!confirmDeleteItem}
+                        title={confirmDeleteItem?.type === 'session' ? 'Delete Session' : 'Delete Event'}
+                        message={`Are you sure you want to delete "${confirmDeleteItem?.name}"?`}
+                        onConfirm={() => {
+                            if (confirmDeleteItem?.type === 'session') handleDeleteSession(confirmDeleteItem.id);
+                            else handleDeleteCalendarEvent(confirmDeleteItem.id);
+                            setConfirmDeleteItem(null);
+                        }}
+                        onCancel={() => setConfirmDeleteItem(null)}
+                    />
                 </>);
             }

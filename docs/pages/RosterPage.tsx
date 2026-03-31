@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TrainingRegister from '../components/roster/TrainingRegister';
+import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 
 type ViewMode     = 'list' | 'grid';
 type PlayerLayout = 'list' | 'cards';          // sub-toggle inside team drill-down
@@ -59,48 +60,7 @@ export const RosterPage = () => {
         }
     };
 
-    // ── Shared delete modal ────────────────────────────────────────────────
-    const DeleteModal = () => !confirmDelete ? null : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-7 w-full max-w-sm mx-4 animate-in zoom-in-95 duration-200">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
-                        <AlertTriangleIcon size={18} className="text-rose-500" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-900">
-                            Delete {confirmDelete.type === 'athlete' ? 'Athlete' : 'Team'}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
-                    </div>
-                </div>
-                <p className="text-sm text-slate-600 mb-6">
-                    Are you sure you want to delete{' '}
-                    <span className="font-semibold text-slate-900">"{confirmDelete.name}"</span>?
-                    {confirmDelete.type === 'team' && (
-                        <span className="block mt-1 text-amber-600 text-xs font-medium">
-                            Remove all athletes from this team first, or they may become unassigned.
-                        </span>
-                    )}
-                </p>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setConfirmDelete(null)}
-                        className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleConfirmDelete}
-                        disabled={deleting}
-                        className="flex-1 py-2.5 rounded-xl bg-rose-500 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-all"
-                    >
-                        {deleting ? 'Deleting…' : 'Delete'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    // Delete modal uses the shared ConfirmDeleteModal component
 
     // ── View toggle pill (shared) ──────────────────────────────────────────
     const ViewToggle = () => (
@@ -518,7 +478,15 @@ export const RosterPage = () => {
                         <UserPlusIcon size={13} /> Add Athlete
                     </Button>
                 </div>
-                <DeleteModal />
+                <ConfirmDeleteModal
+                    isOpen={!!confirmDelete}
+                    title={`Delete ${confirmDelete?.type === 'athlete' ? 'Athlete' : 'Team'}`}
+                    message={`Are you sure you want to delete "${confirmDelete?.name}"?`}
+                    warning={confirmDelete?.type === 'team' ? 'Remove all athletes from this team first, or they may become unassigned.' : undefined}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setConfirmDelete(null)}
+                    loading={deleting}
+                />
             </div>
         );
     }

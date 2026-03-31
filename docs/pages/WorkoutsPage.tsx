@@ -19,6 +19,7 @@ import {
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
+import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -197,6 +198,7 @@ export const WorkoutsPage = () => {
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [confirmDeleteTemplate, setConfirmDeleteTemplate] = useState<{ id: string; name: string } | null>(null);
 
     // ── Template view state ─────────────────────────────────────────────
     const [viewingTemplate, setViewingTemplate] = useState(null);
@@ -512,7 +514,7 @@ export const WorkoutsPage = () => {
                                                     <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit">
                                                         <PencilIcon size={12} />
                                                     </button>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }} className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
                                                         <Trash2Icon size={12} />
                                                     </button>
                                                 </div>
@@ -575,7 +577,7 @@ export const WorkoutsPage = () => {
                                                             <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Assign">
                                                                 <CalendarPlusIcon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
+                                                            <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
                                                                 <Trash2Icon size={13} />
                                                             </button>
                                                         </div>
@@ -591,18 +593,20 @@ export const WorkoutsPage = () => {
                 </SectionHeader>
 
                 {/* Delete confirm modal */}
-                {confirmDeleteId && (
-                    <div className="fixed inset-0 z-[800] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <div className="bg-white rounded-xl p-6 shadow-xl border border-slate-200 max-w-sm w-full animate-in zoom-in-95">
-                            <h3 className="text-base font-semibold text-slate-900 mb-1.5">Delete program?</h3>
-                            <p className="text-sm text-slate-500 mb-5">This will permanently delete the program, all days, and all exercises. This cannot be undone.</p>
-                            <div className="flex gap-2.5 justify-end">
-                                <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-all">Cancel</button>
-                                <button onClick={() => handleDeleteProgram(confirmDeleteId)} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-all">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <ConfirmDeleteModal
+                    isOpen={!!confirmDeleteId}
+                    title="Delete Program"
+                    message="This will permanently delete the program, all days, and all exercises."
+                    onConfirm={() => handleDeleteProgram(confirmDeleteId)}
+                    onCancel={() => setConfirmDeleteId(null)}
+                />
+                <ConfirmDeleteModal
+                    isOpen={!!confirmDeleteTemplate}
+                    title="Delete Workout Packet"
+                    message={`Are you sure you want to delete "${confirmDeleteTemplate?.name}"?`}
+                    onConfirm={() => { handleDeleteTemplate(confirmDeleteTemplate.id); setConfirmDeleteTemplate(null); }}
+                    onCancel={() => setConfirmDeleteTemplate(null)}
+                />
             </div>
 
             {/* Program Builder (full-screen overlay) */}

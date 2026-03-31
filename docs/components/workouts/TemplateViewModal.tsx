@@ -1,7 +1,8 @@
 // @ts-nocheck
 import React, { useState } from 'react';
-import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, DumbbellIcon, Share2Icon, ExternalLink, Weight } from 'lucide-react';
+import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, DumbbellIcon, Share2Icon, ExternalLink, Weight, AlertTriangleIcon } from 'lucide-react';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 
 type Section = 'warmup' | 'workout' | 'cooldown';
@@ -84,17 +85,11 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                 <PencilIcon size={13} /> Edit
               </button>
             )}
-            {onDelete && !confirmDelete ? (
+            {onDelete && (
               <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-red-500 rounded-lg text-xs font-medium transition-colors">
                 <Trash2Icon size={13} /> Delete
               </button>
-            ) : onDelete && confirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-red-600">Confirm?</span>
-                <button onClick={handleDelete} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium">Yes</button>
-                <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium">No</button>
-              </div>
-            ) : null}
+            )}
             <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
               <XIcon size={16} />
             </button>
@@ -216,6 +211,13 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
           onClose={() => setShowShare(false)}
         />
       )}
+      <ConfirmDeleteModal
+        isOpen={confirmDelete}
+        title="Delete Workout Packet"
+        message={`Are you sure you want to delete "${template.name}"?`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 };

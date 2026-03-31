@@ -4,6 +4,7 @@ import { SupabaseStorageService as StorageService } from '../../services/storage
 import { ProtocolEditor } from './ProtocolEditor';
 import { ProtocolViewer } from './ProtocolViewer';
 import { ShareProtocolPopover } from './ShareProtocolPopover';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import {
     PlusIcon, SearchIcon, FileTextIcon, CalendarIcon,
     LayersIcon, Trash2Icon, TagIcon, ClipboardListIcon,
@@ -119,6 +120,7 @@ export const ProtocolLibrary: React.FC = () => {
     const [pageView, setPageView] = useState<'list' | 'create' | 'edit' | 'view'>('list');
     const [activeProtocol, setActiveProtocol] = useState<Protocol | null>(null);
     const [search, setSearch] = useState('');
+    const [confirmDeleteProto, setConfirmDeleteProto] = useState<{ id: string; name: string } | null>(null);
     const [categoryFilter, setCategoryFilter] = useState('All');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
     const [shareTarget, setShareTarget] = useState<Protocol | null>(null);
@@ -180,10 +182,10 @@ export const ProtocolLibrary: React.FC = () => {
     }, [protocols, saveProtocols]);
 
     const handleDelete = useCallback((id: string) => {
-        if (!confirm('Delete this protocol?')) return;
         saveProtocols(protocols.filter(p => p.id !== id));
         setPageView('list');
         setActiveProtocol(null);
+        setConfirmDeleteProto(null);
     }, [protocols, saveProtocols]);
 
     // Filter protocols
@@ -225,7 +227,7 @@ export const ProtocolLibrary: React.FC = () => {
                     protocol={activeProtocol}
                     onBack={() => { setPageView('list'); setActiveProtocol(null); }}
                     onEdit={() => setPageView('edit')}
-                    onDelete={() => handleDelete(activeProtocol.id)}
+                    onDelete={() => setConfirmDeleteProto({ id: activeProtocol.id, name: activeProtocol.name })}
                     onShare={() => setShareTarget(activeProtocol)}
                 />
                 {shareTarget && (
@@ -413,7 +415,7 @@ export const ProtocolLibrary: React.FC = () => {
                                                     <Link2Icon size={14} />
                                                 </button>
                                                 <button
-                                                    onClick={e => { e.stopPropagation(); handleDelete(protocol.id); }}
+                                                    onClick={e => { e.stopPropagation(); setConfirmDeleteProto({ id: protocol.id, name: protocol.name }); }}
                                                     className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
                                                     title="Delete"
                                                 >
@@ -436,6 +438,13 @@ export const ProtocolLibrary: React.FC = () => {
                     onClose={() => setShareTarget(null)}
                 />
             )}
+            <ConfirmDeleteModal
+                isOpen={!!confirmDeleteProto}
+                title="Delete Protocol"
+                message={`Are you sure you want to delete "${confirmDeleteProto?.name}"?`}
+                onConfirm={() => handleDelete(confirmDeleteProto?.id)}
+                onCancel={() => setConfirmDeleteProto(null)}
+            />
         </div>
     );
 };

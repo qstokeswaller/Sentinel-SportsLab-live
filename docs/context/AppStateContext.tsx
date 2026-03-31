@@ -1447,7 +1447,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDeleteSession = async (sessionId) => {
-        if (!confirm("Are you sure you want to delete this session?")) return;
         try {
             setIsLoading(true);
             await DatabaseService.deleteSession(sessionId);
@@ -1505,7 +1504,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDeleteCalendarEvent = async (id) => {
-        if (!confirm("Are you sure you want to delete this event?")) return;
         try {
             setIsLoading(true);
             await DatabaseService.deleteCalendarEvent(id);
