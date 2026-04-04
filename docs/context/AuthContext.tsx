@@ -36,38 +36,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setNeedsPasswordUpdate(true);
     }
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // Always try to refresh first — this catches stale refresh tokens that
-        // getSession() can't detect (the local JWT looks valid but the server rejects it)
-        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError || !refreshed.session) {
-          // Refresh failed — session is truly dead. Clear everything so user gets redirected to login.
-          console.warn('Session refresh failed — signing out:', refreshError?.message);
-          await supabase.auth.signOut({ scope: 'local' });
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        // Refresh succeeded — use the fresh session
-        setSession(refreshed.session);
-        setUser(refreshed.session.user);
+        setSession(session);
+        setUser(session.user);
       }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-        setSession(session);
-        setUser(session?.user ?? null);
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setUser(null);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
+      setSession(session);
+      setUser(session?.user ?? null);
       if (event === 'PASSWORD_RECOVERY') {
         setNeedsPasswordUpdate(true);
       }

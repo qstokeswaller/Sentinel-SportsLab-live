@@ -70,10 +70,19 @@ const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
         </div>
 
         {program.overview && (
-            <p className="text-xs text-slate-400 leading-relaxed mb-3">{program.overview}</p>
+            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">{program.overview}</p>
         )}
 
-        <div className="mt-auto" />
+        <div className="mt-auto pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+            <div>
+                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Created</div>
+                <div className="text-xs text-slate-600">{formatDate(program.created_at)}</div>
+            </div>
+            <div>
+                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Last edit</div>
+                <div className="text-xs text-slate-600">{timeAgo(program.updated_at)}</div>
+            </div>
+        </div>
 
         <button
             onClick={onView}

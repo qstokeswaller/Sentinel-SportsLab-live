@@ -4,7 +4,7 @@ import {
   XIcon, PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
   SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
   Activity as ActivityIcon,
-  Timer as TimerIcon, CopyIcon,
+  Timer as TimerIcon,
 } from 'lucide-react';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
@@ -470,36 +470,6 @@ export const ProgramBuilderModal = ({
     }
   };
 
-  // Save as new program (duplicate) — always creates, never updates
-  const handleSaveAsNew = async () => {
-    if (!programName.trim()) { setError('Program name is required.'); return; }
-    setSaving(true);
-    setError('');
-    try {
-      const tags = programTags.split(',').map((t) => t.trim()).filter(Boolean);
-      const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage });
-
-      const dayPayloads = days.map((d, i) => ({
-        day_number: i + 1,
-        name: d.name,
-        instructions: d.instructions,
-        linked_sessions: d.linkedSessions,
-        exercises: [
-          ...d.warmup.map((r, oi) => rowToPayload(r, 'warmup', oi)),
-          ...d.workout.map((r, oi) => rowToPayload(r, 'workout', oi)),
-          ...d.cooldown.map((r, oi) => rowToPayload(r, 'cooldown', oi)),
-        ],
-      }));
-
-      await saveFull.mutateAsync({ programId: created.id, days: dayPayloads });
-      onClose();
-    } catch (e: any) {
-      setError(e.message ?? 'Save failed. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const activeDay = days[activeDayIdx];
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -521,26 +491,14 @@ export const ProgramBuilderModal = ({
               {editingProgram ? 'Edit Program' : 'Create a Program'}
             </h2>
           </div>
-          <div className="flex items-center gap-2">
-            {editingProgram && (
-              <button
-                onClick={handleSaveAsNew}
-                disabled={saving}
-                className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
-              >
-                <CopyIcon size={14} />
-                Save as New
-              </button>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
-            >
-              <SaveIcon size={16} />
-              {saving ? 'Saving...' : editingProgram ? 'Save Changes' : 'Save & Close'}
-            </button>
-          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <SaveIcon size={16} />
+            {saving ? 'Saving...' : 'Save & Close'}
+          </button>
         </div>
 
         {/* Scrollable content */}

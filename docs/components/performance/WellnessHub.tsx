@@ -2,16 +2,12 @@ import React, { useState, useMemo } from 'react';
 import {
     Search, Users, ChevronRight, ArrowLeft, ClipboardList, AlertTriangle,
     Share2, Calendar, Activity, CheckCircle2, Clock, Copy, Zap, Link2, Plus, X,
-    BarChart3, Trash2, ChevronUp, ChevronDown, Shield as ShieldIcon,
+    BarChart3, Trash2, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import QuestionnaireManager from './QuestionnaireManager';
 import WellnessChartCard from '../charts/WellnessChartCard';
-import WellnessHeatmap from '../wellness/WellnessHeatmap';
-import WellnessSparklines from '../wellness/WellnessSparklines';
-import WellnessFlagPanel from '../wellness/WellnessFlagPanel';
-import ComplianceTracker from '../wellness/ComplianceTracker';
 import { BodyMapArea } from '../../types/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -96,8 +92,6 @@ const WellnessHub: React.FC = () => {
     } = useAppState();
 
     const [viewMode, setViewMode] = useState<'selection' | 'dashboard' | 'athlete' | 'templates' | 'share'>('selection');
-    const [previewTemplate, setPreviewTemplate] = useState<'daily' | 'weekly' | null>(null);
-    const [expandedPreviewQ, setExpandedPreviewQ] = useState<string | null>(null);
     const [selectedTeamId, setSelectedTeamId]     = useState<string | null>(null);
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
     const [dashboardTab, setDashboardTab]           = useState<'overview' | 'insights'>('overview');
@@ -1145,30 +1139,6 @@ const WellnessHub: React.FC = () => {
             </div>
             </>)}
             {dashboardTab === 'insights' && renderInsightsTab()}
-
-            {/* FIFA Wellness Visualisations */}
-            {dashboardTab === 'overview' && selectedTeamId && activeTeam && (
-                <div className="space-y-5 mt-5">
-                    {/* Wellness Flags */}
-                    <WellnessFlagPanel
-                        teamId={selectedTeamId}
-                        athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
-                    />
-
-                    {/* Compliance Tracker */}
-                    <ComplianceTracker
-                        athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
-                        responses={wellnessResponses}
-                    />
-
-                    {/* Team Heatmap */}
-                    <WellnessHeatmap
-                        athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
-                        responses={wellnessResponses}
-                        days={14}
-                    />
-                </div>
-            )}
         </div>
     );
 
@@ -1343,16 +1313,6 @@ const WellnessHub: React.FC = () => {
                         })()}
                     </div>
                 </div>
-
-                {/* Sparklines for this athlete */}
-                {selectedAthleteId && activeAthlete && (
-                    <WellnessSparklines
-                        athleteId={selectedAthleteId}
-                        athleteName={activeAthlete.name}
-                        responses={wellnessResponses}
-                        days={14}
-                    />
-                )}
             </div>
         );
     };
@@ -1360,17 +1320,11 @@ const WellnessHub: React.FC = () => {
     // ── SHARE PANEL ──────────────────────────────────────────────────────────
     const renderSharePanel = () => {
         const previewLink = selectedTemplate
-            ? selectedTemplate.id === '__wellness_check__'
-                ? `${window.location.origin}/daily-wellness/${selectedTeamId}`
-                : selectedTemplate.id === '__weekly_health__'
-                    ? `${window.location.origin}/weekly-wellness/${selectedTeamId}`
-                    : `${window.location.origin}/wellness-form/${selectedTemplate.id}/${selectedTeamId}`
+            ? `${window.location.origin}/wellness-form/${selectedTemplate.id}/${selectedTeamId}`
             : '';
 
         const todayStr = new Date().toISOString().split('T')[0];
-        const isBuiltInTemplate = selectedTemplate?.id === '__wellness_check__' || selectedTemplate?.id === '__weekly_health__';
-        // Built-in forms are always "tracked" — they're permanent links, responses are recorded by date
-        const isTrackedToday = isBuiltInTemplate || shareSessions.some(s => s.shared_at?.split('T')[0] === todayStr);
+        const isTrackedToday = shareSessions.some(s => s.shared_at?.split('T')[0] === todayStr);
 
         const handleCopy = async () => {
             if (!previewLink) return;
@@ -1420,51 +1374,7 @@ const WellnessHub: React.FC = () => {
                     <div className="space-y-4">
                         <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide ml-1">Select Questionnaire</label>
                         <div className="space-y-3">
-                            {/* Built-in: Daily Wellness Check */}
-                            <div
-                                onClick={() => setSelectedTemplate({ id: '__wellness_check__', name: 'Wellness Check', questions: [] })}
-                                className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
-                                    selectedTemplate?.id === '__wellness_check__'
-                                        ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200 text-white'
-                                        : 'bg-white border-indigo-100 text-slate-900 hover:border-indigo-200'
-                                }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__wellness_check__' ? 'bg-white/20' : 'bg-indigo-50 text-indigo-500'}`}>
-                                        <Activity size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-base">Wellness Check</div>
-                                        <div className={`text-[9px] font-bold uppercase tracking-wide ${selectedTemplate?.id === '__wellness_check__' ? 'text-indigo-100' : 'text-indigo-400'}`}>
-                                            Daily check-in · 8 questions · &lt;2 min
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Built-in: Weekly Health Check */}
-                            <div
-                                onClick={() => setSelectedTemplate({ id: '__weekly_health__', name: 'Weekly Health Check', questions: [] })}
-                                className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
-                                    selectedTemplate?.id === '__weekly_health__'
-                                        ? 'bg-amber-600 border-amber-600 shadow-xl shadow-amber-200 text-white'
-                                        : 'bg-white border-amber-100 text-slate-900 hover:border-amber-200'
-                                }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__weekly_health__' ? 'bg-white/20' : 'bg-amber-50 text-amber-500'}`}>
-                                        <ShieldIcon size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-base">Weekly Health Check</div>
-                                        <div className={`text-[9px] font-bold uppercase tracking-wide ${selectedTemplate?.id === '__weekly_health__' ? 'text-amber-100' : 'text-amber-400'}`}>
-                                            Deep check · FIFA/IOC aligned · 5 min
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Custom templates */}
+                            {/* Existing templates */}
                             {wellnessTemplates.map((t: any) => {
                                 const isSelected = selectedTemplate?.id === t.id;
                                 return (
@@ -1633,259 +1543,6 @@ const WellnessHub: React.FC = () => {
                     >
                         <ArrowLeft size={14} /> Back to Hub
                     </button>
-
-                    {/* Built-in form templates */}
-                    <div>
-                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Built-in Templates</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div onClick={() => setPreviewTemplate('daily')} className="bg-white border-2 border-indigo-100 rounded-xl p-5 space-y-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                                        <Activity size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">Wellness Check</h4>
-                                        <p className="text-[10px] text-indigo-500 font-medium">Daily · 8 questions · &lt;2 min</p>
-                                    </div>
-                                    <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                                </div>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    Availability, health complaint, fatigue, soreness, sleep quality, stress, mood, sleep hours, readiness. Auto-generates wellness flags.
-                                </p>
-                            </div>
-                            <div onClick={() => setPreviewTemplate('weekly')} className="bg-white border-2 border-amber-100 rounded-xl p-5 space-y-2 cursor-pointer hover:border-amber-300 hover:shadow-md transition-all group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                                        <ShieldIcon size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-amber-600 transition-colors">Weekly Health Check</h4>
-                                        <p className="text-[10px] text-amber-500 font-medium">Deep check · FIFA/IOC aligned · 5 min</p>
-                                    </div>
-                                    <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-400 transition-colors" />
-                                </div>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    Problem classification, onset, recurrence, body area (FIFA), mechanism, impact, time-loss, wellness trends, recovery.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Preview modal for built-in templates */}
-                    {previewTemplate && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPreviewTemplate(null)} />
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                {/* Header */}
-                                <div className={`px-5 py-4 border-b ${previewTemplate === 'daily' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'} flex items-center justify-between`}>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${previewTemplate === 'daily' ? 'bg-indigo-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                            {previewTemplate === 'daily' ? <Activity size={16} /> : <ShieldIcon size={16} />}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-semibold text-slate-900">{previewTemplate === 'daily' ? 'Wellness Check' : 'Weekly Health Check'}</h3>
-                                            <p className="text-[10px] text-slate-500">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · ~5 min'}</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-                                        <X size={16} className="text-slate-400" />
-                                    </button>
-                                </div>
-
-                                {/* Preview content with expandable phone mockups */}
-                                <div className="flex-1 overflow-y-auto p-5 space-y-2">
-                                    <p className={`text-xs ${previewTemplate === 'daily' ? 'text-indigo-600' : 'text-amber-600'} font-semibold uppercase tracking-wide mb-4`}>
-                                        Tap any question to see how it looks on screen
-                                    </p>
-
-                                    {(() => {
-                                        const questions = previewTemplate === 'daily' ? [
-                                            { id: 'd1', label: 'Availability', type: 'Buttons', instruction: 'What is your training status today?', options: ['Fully Available', 'Modified Training', 'Unavailable — Training', 'Unavailable — Match'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-rose-500'] },
-                                            { id: 'd2', label: 'Health Check', type: 'Yes / No', instruction: 'Do you have any physical complaint today?', options: ['No', 'Yes'], colors: ['bg-emerald-500', 'bg-amber-500'] },
-                                            { id: 'd2b', label: 'Complaint Areas', type: 'Buttons', instruction: 'Tap affected area(s) on body map with severity.', options: ['Body Map — front & back view', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500'], note: 'Only shown if complaint = Yes' },
-                                            { id: 'd3', label: 'Fatigue', type: '1-10 Scale', instruction: '1 = Fully fresh → 10 = Completely exhausted', negative: true },
-                                            { id: 'd4', label: 'Muscle Soreness', type: '1-10 Scale', instruction: '1 = No soreness → 10 = Severe pain', negative: true },
-                                            { id: 'd5', label: 'Sleep Quality', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
-                                            { id: 'd6', label: 'Stress', type: '1-10 Scale', instruction: '1 = Completely relaxed → 10 = Extreme stress', negative: true },
-                                            { id: 'd7', label: 'Mood', type: '1-10 Scale', instruction: '1 = Very low → 10 = Exceptional', negative: false },
-                                            { id: 'd8', label: 'Sleep Duration', type: 'Number', instruction: 'Hours slept last night. Quick-select: 5-9h.', quickSelect: ['5h', '6h', '7h', '8h', '9h'] },
-                                            { id: 'd9', label: 'Readiness', type: 'Buttons', instruction: 'How ready are you to train today?', options: ['Ready to Train', 'Slightly Compromised', 'Not Ready'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
-                                        ] : [
-                                            { id: 'w0', label: 'Introduction', type: 'Buttons', instruction: 'Explains why the form is needed. Not a question.', options: ['Continue'], colors: ['bg-slate-800'], note: 'Auto-passes — info screen only' },
-                                            { id: 'w1', label: 'Problem Type', type: 'Buttons', instruction: 'What best describes your current issue?', options: ['Injury (musculoskeletal)', 'Illness'], colors: ['bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w2', label: 'Onset', type: 'Buttons', instruction: 'Was it a specific event or has it built up?', options: ['Sudden Onset', 'Gradual Onset'], colors: ['bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w3', label: 'Status', type: 'Buttons', instruction: 'Has this happened before in the same area?', options: ['New Problem', 'Recurrence (healed, came back)', 'Exacerbation (never fully healed)'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w4', label: 'Body Area', type: 'Buttons', instruction: 'Body map with reference image. Tap areas, tap again for severity.', options: ['FIFA body areas — front & back view', 'Hip and Groin separated', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w5', label: 'Side', type: 'Buttons', instruction: 'Which side is affected?', options: ['Left', 'Right', 'Bilateral (both)', 'Central'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w6', label: 'Mechanism', type: 'List', instruction: 'What activity caused or triggered it?', options: ['Running', 'Change of direction', 'Kicking', 'Landing', 'Tackle', 'Collision', 'Jumping', 'Other'], note: 'Only shown for sudden onset' },
-                                            { id: 'w7', label: 'Contact Type', type: 'List', instruction: 'Did this involve contact?', options: ['Non-contact', 'Indirect contact', 'Direct — Opponent', 'Direct — Teammate', 'Direct — Ball', 'Direct — Goal post'], note: 'Only shown for sudden onset' },
-                                            { id: 'w8', label: 'Performance Impact', type: 'Buttons', instruction: 'How much is this affecting your training?', options: ['No Impact', 'Minor (can fully train)', 'Moderate (reduced performance)', 'Severe (cannot complete session)'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w9', label: 'Expected Time-Loss', type: 'Buttons', instruction: 'How long do you expect this to affect availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w10', label: 'Fatigue Trend', type: 'Buttons', instruction: 'Over the past week, how has your fatigue trended?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w11', label: 'Sleep Trend', type: 'Buttons', instruction: 'Over the past week, how has your sleep trended?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w12', label: 'Nutrition', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
-                                            { id: 'w13', label: 'Hydration', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
-                                            { id: 'w14', label: 'Stress Sources', type: 'Multi', instruction: 'What are your main stress sources right now?', options: ['Football / Sport', 'Work / School', 'Personal', 'None'] },
-                                        ];
-
-                                        const negColors = ['bg-emerald-400', 'bg-emerald-400', 'bg-lime-400', 'bg-lime-400', 'bg-yellow-400', 'bg-yellow-400', 'bg-amber-400', 'bg-orange-400', 'bg-red-400', 'bg-red-500'];
-                                        const posColors = ['bg-red-500', 'bg-red-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-400', 'bg-yellow-400', 'bg-lime-400', 'bg-lime-400', 'bg-emerald-400', 'bg-emerald-400'];
-
-                                        return questions.map((q, i) => {
-                                            const isExpanded = expandedPreviewQ === q.id;
-                                            return (
-                                                <div key={q.id}>
-                                                    <div onClick={() => setExpandedPreviewQ(isExpanded ? null : q.id)}
-                                                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isExpanded ? 'bg-slate-100 ring-1 ring-slate-200' : 'bg-slate-50 hover:bg-slate-100'}`}>
-                                                        <div className="w-6 h-6 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold shrink-0">{i + 1}</div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs font-semibold text-slate-800">{q.label}</span>
-                                                                <span className="text-[9px] font-medium text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded">{q.type}</span>
-                                                            </div>
-                                                            {q.note && <p className="text-[9px] text-amber-500 italic mt-0.5">{q.note}</p>}
-                                                        </div>
-                                                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                                    </div>
-
-                                                    {/* Mini phone preview */}
-                                                    {isExpanded && (
-                                                        <div className="flex justify-center py-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                            <div className="w-[220px] bg-white rounded-[20px] shadow-xl border border-slate-200 overflow-hidden">
-                                                                {/* Phone notch */}
-                                                                <div className="bg-slate-50 px-4 pt-2 pb-1.5 flex items-center justify-between">
-                                                                    <div className="flex items-center gap-1">
-                                                                        <div className="w-4 h-4 bg-indigo-600 rounded-[4px] flex items-center justify-center">
-                                                                            <Activity size={8} className="text-white" />
-                                                                        </div>
-                                                                        <span className="text-[7px] font-bold text-slate-700">SportsLab</span>
-                                                                    </div>
-                                                                    <span className="text-[7px] text-slate-400">{i + 1}/{questions.length}</span>
-                                                                </div>
-                                                                {/* Progress bar */}
-                                                                <div className="h-[2px] bg-slate-100">
-                                                                    <div className={`h-full ${previewTemplate === 'daily' ? 'bg-cyan-500' : 'bg-amber-500'}`} style={{ width: `${((i + 1) / questions.length) * 100}%` }} />
-                                                                </div>
-                                                                {/* Content */}
-                                                                <div className="px-4 py-3 space-y-2">
-                                                                    <h3 className="text-[10px] font-bold text-slate-900">{q.label}</h3>
-                                                                    {q.instruction && <p className="text-[7px] text-slate-500">{q.instruction}</p>}
-
-                                                                    {/* Render based on type */}
-                                                                    {q.type === 'Buttons' && q.options && (
-                                                                        <div className="space-y-1">
-                                                                            {q.options.map((opt, j) => (
-                                                                                <div key={j} className={`px-2.5 py-1.5 rounded-lg border text-[7px] font-semibold ${j === 0 ? `${q.colors?.[j] || 'bg-slate-800'} text-white border-transparent` : 'bg-white border-slate-100 text-slate-600'}`}>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === 'Yes / No' && q.options && (
-                                                                        <div className="space-y-1">
-                                                                            {q.options.map((opt, j) => (
-                                                                                <div key={j} className={`px-2.5 py-2 rounded-lg border text-[8px] font-bold ${j === 0 ? `${q.colors?.[j] || 'bg-emerald-500'} text-white border-transparent` : 'bg-white border-slate-100 text-slate-600'}`}>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === '1-10 Scale' && (
-                                                                        <div>
-                                                                            <div className="flex justify-between text-[6px] text-slate-400 mb-1 px-0.5">
-                                                                                <span>{q.lowLabel}</span>
-                                                                                <span>{q.highLabel}</span>
-                                                                            </div>
-                                                                            <div className="grid grid-cols-5 gap-[3px]">
-                                                                                {[1,2,3,4,5,6,7,8,9,10].map(v => {
-                                                                                    const colors = q.negative ? negColors : posColors;
-                                                                                    return (
-                                                                                        <div key={v} className={`aspect-square rounded-md flex items-center justify-center text-[7px] font-bold ${v === 3 ? `${colors[v-1]} text-white` : 'bg-slate-100 text-slate-500'}`}>
-                                                                                            {v}
-                                                                                        </div>
-                                                                                    );
-                                                                                })}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === 'Number' && (
-                                                                        <div className="space-y-1.5">
-                                                                            <div className="bg-slate-50 border border-slate-200 rounded-lg py-2 text-center text-[12px] font-bold text-slate-900">7.5</div>
-                                                                            <div className="flex gap-1">
-                                                                                {(q.quickSelect || []).map(h => (
-                                                                                    <div key={h} className={`flex-1 py-1 rounded-md text-center text-[7px] font-bold ${h === '7h' ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500'}`}>{h}</div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === 'List' && q.options && (
-                                                                        <div className="space-y-[3px] max-h-[80px] overflow-y-auto">
-                                                                            {q.options.slice(0, 6).map((opt, j) => (
-                                                                                <div key={j} className={`px-2 py-1.5 rounded-md border text-[7px] font-semibold ${j === 0 ? 'bg-slate-800 text-white border-transparent' : 'bg-white border-slate-100 text-slate-600'}`}>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            ))}
-                                                                            {q.options.length > 6 && <div className="text-[7px] text-slate-400 text-center">+{q.options.length - 6} more</div>}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === 'Multi' && q.options && (
-                                                                        <div className="space-y-1">
-                                                                            {q.options.map((opt, j) => (
-                                                                                <div key={j} className={`px-2.5 py-1.5 rounded-lg border text-[7px] font-semibold ${j === 0 ? 'bg-cyan-500 text-white border-transparent' : 'bg-white border-slate-100 text-slate-600'}`}>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {q.type === 'Colour Scale' && q.options && (
-                                                                        <div className="space-y-1">
-                                                                            {q.options.map((opt, j) => (
-                                                                                <div key={j} className={`px-2.5 py-1.5 rounded-lg border text-[7px] font-semibold ${j === 0 ? `${q.colors?.[j] || 'bg-emerald-500'} text-white border-transparent` : 'bg-white border-slate-100 text-slate-600'}`}>
-                                                                                    {opt}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                {/* Footer */}
-                                                                <div className="px-4 py-2 border-t border-slate-100">
-                                                                    <div className="bg-slate-800 text-white text-[8px] font-bold text-center py-2 rounded-lg">Continue →</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        });
-                                    })()}
-
-                                    {/* Info callout */}
-                                    <div className={`mt-4 p-3 ${previewTemplate === 'daily' ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'} border rounded-xl`}>
-                                        <p className={`text-[10px] font-semibold ${previewTemplate === 'daily' ? 'text-rose-600' : 'text-amber-600'} uppercase tracking-wide mb-1`}>
-                                            {previewTemplate === 'daily' ? 'Auto-Flag & Trigger System' : 'FIFA/IOC Aligned'}
-                                        </p>
-                                        <p className={`text-[10px] ${previewTemplate === 'daily' ? 'text-rose-500' : 'text-amber-500'} leading-relaxed`}>
-                                            {previewTemplate === 'daily'
-                                                ? 'Red flags (Unavailable, complaint = yes, fatigue ≥ 8, sleep ≤ 5hrs) trigger an immediate prompt to complete the In-Depth Report after submission. If already completed within 7 days, athlete is asked if anything new has changed. Body map appears only when complaint = Yes.'
-                                                : 'Based on Waldén et al. (2023, BJSM) consensus. Body map uses FIFA areas with hip/groin split. Injury status distinguishes recurrence from exacerbation. Time-loss bins match FIFA severity. Body map includes reference image with severity tap cycling.'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Divider */}
-                    <div className="border-t border-slate-200 pt-2">
-                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Custom Templates</h3>
-                    </div>
-
                     <QuestionnaireManager
                         wellnessTemplates={wellnessTemplates}
                         setWellnessTemplates={setWellnessTemplates}

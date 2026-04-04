@@ -487,14 +487,6 @@ export const DatabaseService = {
         return data as string | null;
     },
 
-    // Check if athlete completed a weekly health check recently + get date
-    async getRecentWeeklyInfo(athleteId: string, days = 7): Promise<{ hasRecent: boolean; lastDate: string | null }> {
-        const db = supabase as any;
-        const { data, error } = await db.rpc('get_recent_weekly_info', { p_athlete_id: athleteId, p_days: days });
-        if (error) { console.warn('getRecentWeeklyInfo error:', error); return { hasRecent: false, lastDate: null }; }
-        return { hasRecent: !!data?.has_recent, lastDate: data?.last_date || null };
-    },
-
     // --- WELLNESS RESPONSES ---
     async saveWellnessResponse(response: {
         athlete_id: string;
@@ -506,9 +498,6 @@ export const DatabaseService = {
         availability?: 'available' | 'modified' | 'unavailable';
         injury_report?: any;
         share_session_id?: string;
-        tier?: 'daily' | 'weekly' | 'research';
-        health_problem_flag?: boolean;
-        readiness?: string;
     }) {
         const db = supabase as any;
         const { data, error } = await db
@@ -518,58 +507,6 @@ export const DatabaseService = {
             .single();
         if (error) throw error;
         return data;
-    },
-
-    // --- WELLNESS FLAGS ---
-    async fetchWellnessFlags(teamId: string, pendingOnly = true) {
-        const db = supabase as any;
-        let query = db.from('wellness_flags').select('*').eq('team_id', teamId).order('created_at', { ascending: false });
-        if (pendingOnly) query = query.eq('weekly_completed', false);
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
-    },
-
-    async createWellnessFlag(flag: {
-        athlete_id: string; team_id: string; flag_date: string;
-        flag_type: string; trigger_field: string; trigger_value?: string;
-        threshold_used?: string;
-    }) {
-        const { data: userData } = await supabase.auth.getUser();
-        const db = supabase as any;
-        const { data, error } = await db.from('wellness_flags').insert({
-            ...flag, user_id: userData?.user?.id,
-        }).select().single();
-        if (error) throw error;
-        return data;
-    },
-
-    async resolveWellnessFlag(flagId: string, weeklyResponseId?: string) {
-        const db = supabase as any;
-        const { error } = await db.from('wellness_flags').update({
-            weekly_completed: true, weekly_response_id: weeklyResponseId || null,
-        }).eq('id', flagId);
-        if (error) throw error;
-    },
-
-    // --- INJURY CLASSIFICATIONS ---
-    async saveInjuryClassification(classification: any) {
-        const { data: userData } = await supabase.auth.getUser();
-        const db = supabase as any;
-        const { data, error } = await db.from('injury_classifications').insert({
-            ...classification, user_id: userData?.user?.id,
-        }).select().single();
-        if (error) throw error;
-        return data;
-    },
-
-    async fetchInjuryClassifications(athleteId?: string) {
-        const db = supabase as any;
-        let query = db.from('injury_classifications').select('*').order('classification_date', { ascending: false });
-        if (athleteId) query = query.eq('athlete_id', athleteId);
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
     },
 
     async fetchWellnessResponses(teamId: string, dateFrom?: string, dateTo?: string) {
@@ -617,14 +554,6 @@ export const DatabaseService = {
             .delete()
             .eq('id', responseId);
         if (error) throw error;
-    },
-
-    // Called by FIFA daily form (anon) — fetches athlete names only via SECURITY DEFINER RPC
-    async getTeamAthletes(teamId: string) {
-        const db = supabase as any;
-        const { data, error } = await db.rpc('get_team_athletes', { p_team_id: teamId });
-        if (error) throw error;
-        return data as { athletes: { id: string; name: string }[] };
     },
 
     // Called by public form (anon) — fetches template + athlete names via SECURITY DEFINER RPC

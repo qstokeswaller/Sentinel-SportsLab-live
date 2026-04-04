@@ -212,7 +212,7 @@ export const ExerciseLibraryPage = () => {
                                             ) : <span className="text-slate-300 text-xs">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' ? (
+                                            {ex.categories?.[1] ? (
                                                 <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-medium text-emerald-600 border border-emerald-100">
                                                     {ex.categories[1]}
                                                 </span>
@@ -387,7 +387,7 @@ export const ExerciseLibraryPage = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' ? (
+                                        {ex.categories?.[1] ? (
                                             <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-medium text-emerald-600 border border-emerald-100">
                                                 {ex.categories[1]}
                                             </span>
