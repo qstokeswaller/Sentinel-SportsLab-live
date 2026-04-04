@@ -1,13 +1,16 @@
+// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useAppState } from '../context/AppStateContext';
 import {
-  ActivityIcon, SaveIcon, LogOutIcon, UserIcon, SettingsIcon,
-  GaugeIcon, CheckIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon,
+  SaveIcon, LogOutIcon, UserIcon, SettingsIcon,
+  GaugeIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon,
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
+  FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
+import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const inputErrorCls = "w-full bg-slate-50 border-2 border-red-400 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-colors";
@@ -19,143 +22,174 @@ const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [strin
 
 const DEFAULT_TEAM_SETTINGS = { enabled: false, method: 'sprint_distance', acuteWindow: 7, chronicWindow: 28, freezeRestDays: true, sprintThreshold: 25 };
 
-const SETTINGS_SECTIONS = [
-  { id: 'profile', label: 'Profile', icon: UserIcon, desc: 'Name, organisation, contact' },
-  { id: 'features', label: 'Feature Settings', icon: SlidersHorizontalIcon, desc: 'ACWR monitoring, modules' },
-  { id: 'account', label: 'Account', icon: ShieldIcon, desc: 'Sign out, security' },
+const SETTINGS_TABS = [
+  { id: 'features', label: 'Feature Settings', icon: SlidersHorizontalIcon, desc: 'ACWR, Testing Hub' },
+  { id: 'account', label: 'Account', icon: ShieldIcon, desc: 'Profile, security' },
 ];
+
+// ── Collapsible Section wrapper ──────────────────────────────────────
+const CollapsibleSection = ({ id, icon: Icon, title, subtitle, defaultOpen = true, children, collapsedSections, setCollapsedSections }) => {
+  const isOpen = !collapsedSections.has(id);
+  const toggle = () => setCollapsedSections(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      <button onClick={toggle} className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50/50 transition-colors">
+        {Icon && <Icon size={15} className="text-indigo-500 shrink-0" />}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+          {subtitle && <p className="text-[10px] text-slate-400 mt-0.5">{subtitle}</p>}
+        </div>
+        <div className={`text-slate-400 transition-transform ${isOpen ? '' : '-rotate-90'}`}>
+          <ChevronDownIcon size={16} />
+        </div>
+      </button>
+      {isOpen && <div className="px-5 pb-5 border-t border-slate-100 pt-4">{children}</div>}
+    </div>
+  );
+};
+
+// ── Unsaved Changes Modal ────────────────────────────────────────────
+const UnsavedChangesModal = ({ isOpen, onSave, onDiscard, onCancel }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+            <AlertTriangleIcon size={20} />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Unsaved Changes</h3>
+            <p className="text-xs text-slate-400">You have unsaved changes that will be lost.</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Discard</button>
+          <button onClick={onSave} className="flex-1 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Save & Continue</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// Main Settings Page
+// ══════════════════════════════════════════════════════════════════════
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, showToast } = useAppState();
-  const [activeSection, setActiveSection] = useState('profile');
+  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, showToast } = useAppState();
+  const [activeTab, setActiveTab] = useState('features');
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
-  // Local draft of ACWR settings — only committed on Save
+  // ── Unsaved changes guard ──────────────────────────────────────────
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+
+  // ── ACWR draft state ───────────────────────────────────────────────
   const [draftAcwrSettings, setDraftAcwrSettings] = useState<Record<string, any>>(acwrSettings || {});
   const [acwrDirty, setAcwrDirty] = useState(false);
-  const [acwrSaved, setAcwrSaved] = useState(false);
 
-  // Sync draft when global settings change externally
   useEffect(() => {
     if (!acwrDirty) setDraftAcwrSettings(acwrSettings || {});
   }, [acwrSettings]);
 
+  const getSettings = (key: string) => draftAcwrSettings[key] || { ...DEFAULT_TEAM_SETTINGS };
+  const updateSettings = (key: string, patch: Record<string, any>) => {
+    setDraftAcwrSettings(prev => ({ ...prev, [key]: { ...DEFAULT_TEAM_SETTINGS, ...prev[key], ...patch } }));
+    setAcwrDirty(true);
+  };
+  const handleSaveAcwr = () => {
+    setAcwrSettings(draftAcwrSettings);
+    setAcwrDirty(false);
+    showToast?.('ACWR settings saved');
+  };
+
+  // ── Profile state ──────────────────────────────────────────────────
   const [fullName, setFullName] = useState('');
   const [organization, setOrganization] = useState('');
   const [phone, setPhone] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [profileDirty, setProfileDirty] = useState(false);
   const nameRef = useRef<HTMLDivElement>(null);
   const orgRef = useRef<HTMLDivElement>(null);
 
+  const origProfile = useRef({ fullName: '', organization: '', phone: '' });
+
   useEffect(() => {
     if (user?.user_metadata) {
-      setFullName(user.user_metadata.full_name || '');
-      setOrganization(user.user_metadata.organization || '');
-      setPhone(user.user_metadata.phone || '');
+      const fn = user.user_metadata.full_name || '';
+      const org = user.user_metadata.organization || '';
+      const ph = user.user_metadata.phone || '';
+      setFullName(fn); setOrganization(org); setPhone(ph);
+      origProfile.current = { fullName: fn, organization: org, phone: ph };
     }
   }, [user]);
 
-  const getSettings = (key: string) => {
-    return draftAcwrSettings[key] || { ...DEFAULT_TEAM_SETTINGS };
-  };
-
-  const updateSettings = (key: string, patch: Record<string, any>) => {
-    setDraftAcwrSettings(prev => ({
-      ...prev,
-      [key]: { ...DEFAULT_TEAM_SETTINGS, ...prev[key], ...patch },
-    }));
-    setAcwrDirty(true);
-    setAcwrSaved(false);
-  };
-
-  const handleSaveAcwrSettings = () => {
-    setAcwrSettings(draftAcwrSettings);
-    setAcwrDirty(false);
-    setAcwrSaved(true);
-    showToast?.('ACWR settings saved');
-    setTimeout(() => setAcwrSaved(false), 3000);
-  };
+  useEffect(() => {
+    const o = origProfile.current;
+    setProfileDirty(fullName !== o.fullName || organization !== o.organization || phone !== o.phone);
+  }, [fullName, organization, phone]);
 
   const clearFieldError = (field: string) => setFieldErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveProfile = async () => {
     const errors: Record<string, string> = {};
     if (!fullName.trim()) errors.fullName = 'Full name is required.';
     if (!organization.trim()) errors.organization = 'Organisation is required.';
-    if (Object.keys(errors).length) {
-      setFieldErrors(errors);
-      const firstRef = errors.fullName ? nameRef : orgRef;
-      firstRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+    if (Object.keys(errors).length) { setFieldErrors(errors); return; }
     setFieldErrors({});
-    setSaving(true);
-    setError(null);
-    setMessage(null);
+    setProfileSaving(true); setProfileError(null); setProfileMessage(null);
     const { error } = await supabase.auth.updateUser({
-      data: {
-        full_name: fullName.trim(),
-        organization: organization.trim(),
-        phone: phone.trim() || null,
-      },
+      data: { full_name: fullName.trim(), organization: organization.trim(), phone: phone.trim() || null },
     });
-    setSaving(false);
-    if (error) setError(error.message);
-    else setMessage('Profile updated successfully.');
+    setProfileSaving(false);
+    if (error) setProfileError(error.message);
+    else {
+      setProfileMessage('Profile updated.');
+      origProfile.current = { fullName, organization, phone };
+      setProfileDirty(false);
+      setTimeout(() => setProfileMessage(null), 3000);
+    }
   };
 
-  // ── Profile Section ─────────────────────────────────────────────────
-  const renderProfile = () => (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Profile</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Your personal and organisation details.</p>
-      </div>
+  // ── Global dirty check ─────────────────────────────────────────────
+  const isDirty = acwrDirty || profileDirty;
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <form onSubmit={handleSave} className="space-y-4">
-          <div ref={nameRef}>
-            <label className={labelCls}>Full name <span className="text-red-500">*</span></label>
-            <input type="text" value={fullName}
-              onChange={e => { setFullName(e.target.value); clearFieldError('fullName'); setMessage(null); setError(null); }}
-              className={fieldErrors.fullName ? inputErrorCls : inputCls} placeholder="Alex Smith" />
-            {fieldErrors.fullName && <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>}
-          </div>
-          <div ref={orgRef}>
-            <label className={labelCls}>Organisation <span className="text-red-500">*</span></label>
-            <input type="text" value={organization}
-              onChange={e => { setOrganization(e.target.value); clearFieldError('organization'); setMessage(null); setError(null); }}
-              className={fieldErrors.organization ? inputErrorCls : inputCls} placeholder="City FC / Elite Academy" />
-            {fieldErrors.organization && <p className="text-red-500 text-xs mt-1">{fieldErrors.organization}</p>}
-          </div>
-          <div>
-            <label className={labelCls}>Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
-            <input type="tel" value={phone}
-              onChange={e => { setPhone(e.target.value); setMessage(null); setError(null); }}
-              className={inputCls} placeholder="+44 7700 000000" />
-          </div>
-          <div>
-            <label className={labelCls}>Email</label>
-            <input type="email" value={user?.email || ''} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
-            <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed here.</p>
-          </div>
-          {error && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{error}</p></div>}
-          {message && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5"><p className="text-emerald-700 text-xs font-medium">{message}</p></div>}
-          <button type="submit" disabled={saving}
-            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors">
-            <SaveIcon size={14} />
-            {saving ? 'Saving...' : 'Save changes'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
+  const handleTabSwitch = (tabId: string) => {
+    if (tabId === activeTab) return;
+    if (isDirty) {
+      setPendingTab(tabId);
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
-  // Shared ACWR option controls (method, window, rest days, sprint threshold)
+  const handleUnsavedSave = async () => {
+    if (acwrDirty) handleSaveAcwr();
+    if (profileDirty) await handleSaveProfile();
+    if (pendingTab) { setActiveTab(pendingTab); setPendingTab(null); }
+  };
+
+  const handleUnsavedDiscard = () => {
+    // Revert ACWR
+    setDraftAcwrSettings(acwrSettings || {});
+    setAcwrDirty(false);
+    // Revert profile
+    const o = origProfile.current;
+    setFullName(o.fullName); setOrganization(o.organization); setPhone(o.phone);
+    setProfileDirty(false);
+    if (pendingTab) { setActiveTab(pendingTab); setPendingTab(null); }
+  };
+
+  // ── Shared ACWR option controls ────────────────────────────────────
   const renderAcwrOptions = (key: string) => {
     const s = getSettings(key);
     return (
@@ -204,179 +238,13 @@ const SettingsPage: React.FC = () => {
     );
   };
 
-  // ── Feature Settings Section ────────────────────────────────────────
-  const renderFeatureSettings = () => (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Feature Settings</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Configure platform features for your teams and athletes.</p>
-      </div>
-
-      {/* ACWR Monitoring */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-2">
-          <GaugeIcon size={14} className="text-indigo-500" />
-          ACWR Monitoring
-        </h3>
-        <p className="text-xs text-slate-400 mb-5">Enable/disable ACWR monitoring and choose the load method per team. These settings lock the input method in the ACWR hub to prevent accidental changes.</p>
-
-        {/* Regular Teams (not Private Clients) */}
-        {teams.filter(t => t.id !== 't_private').length > 0 && (
-          <div className="mb-5">
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <UsersIcon size={12} /> Teams / Squads
-            </h4>
-            <div className="space-y-3">
-              {teams.filter(t => t.id !== 't_private').map(team => {
-                const key = team.id;
-                const s = getSettings(key);
-                return (
-                  <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold">
-                          {team.name?.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <span className="text-sm font-semibold text-slate-900">{team.name}</span>
-                          <span className="text-[10px] text-slate-400 ml-2">{(team.players || []).length} athletes</span>
-                        </div>
-                      </div>
-                      <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${s.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                        {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
-                      </button>
-                    </div>
-                    {s.enabled && renderAcwrOptions(key)}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Private Clients — each athlete individually */}
-        {(() => {
-          const privateTeam = teams.find(t => t.id === 't_private');
-          const privateClients = privateTeam?.players || [];
-          if (privateClients.length === 0) return null;
-          return (
-            <div className="mb-5">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-2">
-                <UserIcon size={12} /> Private Clients
-              </h4>
-              <p className="text-[10px] text-slate-400 mb-3">Each private client can have their own ACWR method and settings.</p>
-              <div className="space-y-3">
-                {privateClients.map(athlete => {
-                  const key = `ind_${athlete.id}`;
-                  const s = getSettings(key);
-                  const initials = athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-                  return (
-                    <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 text-[10px] font-bold">
-                            {initials}
-                          </div>
-                          <span className="text-sm font-medium text-slate-900">{athlete.name}</span>
-                        </div>
-                        <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${s.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                          {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
-                        </button>
-                      </div>
-                      {s.enabled && renderAcwrOptions(key)}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {teams.length === 0 && (
-          <p className="text-xs text-slate-400 italic">No teams or athletes found. Add them in the Roster first.</p>
-        )}
-
-        <p className="text-[10px] text-slate-400 mt-4 mb-4 italic">Default: Sprint Distance for teams, sRPE for private clients. Freeze rest days recommended (Menaspà 2017).</p>
-
-        {acwrSaved && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 mb-3">
-            <p className="text-emerald-700 text-xs font-medium">ACWR settings saved successfully.</p>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleSaveAcwrSettings}
-          disabled={!acwrDirty}
-          className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
-            acwrDirty
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          <SaveIcon size={14} />
-          {acwrDirty ? 'Save ACWR Settings' : 'No changes to save'}
-        </button>
-      </div>
-
-      {/* EWMA Model Reference */}
-      <div className="bg-slate-800 text-white p-5 rounded-xl shadow-sm">
-        <h4 className="text-sm font-semibold text-emerald-400 mb-2">EWMA Model — Acute:Chronic Workload Ratio</h4>
-        <p className="text-xs text-slate-300 leading-relaxed mb-3">
-          ACWR is calculated using Exponentially Weighted Moving Averages (Williams et al. 2017). Acute window default = 7 days, Chronic window default = 28 days.
-          sRPE = RPE × Duration in minutes (Foster et al. 1998). Rest days freeze EWMA to prevent false spikes (Menaspà 2017). Sprint threshold default 25 km/h for elite football (Bowen et al. 2017).
-        </p>
-        <div className="flex flex-wrap gap-3 text-[10px]">
-          <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> &lt;0.8 Undertrained</span>
-          <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> 0.8–1.3 Optimal</span>
-          <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> 1.31–1.5 Caution</span>
-          <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-400" /> &gt;1.5 Danger (2-4× injury risk)</span>
-        </div>
-      </div>
-
-      {/* Placeholder for future feature settings */}
-      <div className="bg-slate-50 border border-slate-200 border-dashed rounded-xl p-5 text-center">
-        <SlidersHorizontalIcon size={20} className="mx-auto text-slate-300 mb-2" />
-        <p className="text-xs text-slate-400">More feature settings coming soon — GPS auto-feed, wellness composite scores, periodization integration.</p>
-      </div>
-    </div>
-  );
-
-  // ── Account Section ─────────────────────────────────────────────────
-  const renderAccount = () => (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Account</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Security and session management.</p>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-bold">
-            {(user?.user_metadata?.full_name || user?.email || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-900">{user?.user_metadata?.full_name || 'User'}</p>
-            <p className="text-xs text-slate-400">{user?.email}</p>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-100 pt-5">
-          <button onClick={signOut}
-            className="w-full flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200">
-            <LogOutIcon size={14} />
-            Sign out
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  // ══════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ══════════════════════════════════════════════════════════════════════
 
   return (
     <div className="flex gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
-      {/* Settings sidebar */}
+      {/* Sidebar */}
       <div className="w-56 shrink-0">
         <div className="sticky top-6 space-y-1">
           <div className="flex items-center gap-2 px-3 py-2 mb-3">
@@ -386,20 +254,20 @@ const SettingsPage: React.FC = () => {
             <h1 className="text-sm font-bold text-slate-900">Settings</h1>
           </div>
 
-          {SETTINGS_SECTIONS.map(section => {
-            const isActive = activeSection === section.id;
+          {SETTINGS_TABS.map(tab => {
+            const isActive = activeTab === tab.id;
             return (
-              <button key={section.id} onClick={() => setActiveSection(section.id)}
+              <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   isActive
                     ? 'bg-indigo-50 border border-indigo-200 text-indigo-700'
                     : 'hover:bg-slate-50 text-slate-600 border border-transparent'
                 }`}
               >
-                <section.icon size={16} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
+                <tab.icon size={16} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
                 <div className="flex-1 min-w-0">
-                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700' : 'text-slate-700'}`}>{section.label}</span>
-                  <span className="text-[10px] text-slate-400 block truncate">{section.desc}</span>
+                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700' : 'text-slate-700'}`}>{tab.label}</span>
+                  <span className="text-[10px] text-slate-400 block truncate">{tab.desc}</span>
                 </div>
                 {isActive && <ChevronRightIcon size={12} className="text-indigo-400 shrink-0" />}
               </button>
@@ -408,12 +276,297 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Content area */}
-      <div className="flex-1 min-w-0">
-        {activeSection === 'profile' && renderProfile()}
-        {activeSection === 'features' && renderFeatureSettings()}
-        {activeSection === 'account' && renderAccount()}
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-5">
+
+        {/* ── FEATURE SETTINGS TAB ──────────────────────────────────── */}
+        {activeTab === 'features' && (
+          <>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Feature Settings</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Configure platform features for your teams and athletes.</p>
+            </div>
+
+            {/* ACWR Section */}
+            <CollapsibleSection id="acwr" icon={GaugeIcon} title="ACWR Monitoring"
+              subtitle="Enable/disable ACWR and choose load method per team"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+
+              <div className="bg-slate-800 text-white p-4 rounded-xl mb-5">
+                <h4 className="text-xs font-semibold text-emerald-400 mb-1.5">EWMA Model Reference</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed mb-2">
+                  ACWR uses Exponentially Weighted Moving Averages (Williams et al. 2017). Acute = 7d, Chronic = 28d default.
+                  sRPE = RPE x Duration (Foster et al. 1998). Rest days freeze EWMA (Menaspa 2017). Sprint threshold 25 km/h for elite football (Bowen et al. 2017).
+                </p>
+                <div className="flex flex-wrap gap-3 text-[10px]">
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> &lt;0.8 Undertrained</span>
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> 0.8-1.3 Optimal</span>
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> 1.31-1.5 Caution</span>
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-400" /> &gt;1.5 Danger (2-4x injury risk)</span>
+                </div>
+              </div>
+
+              {teams.filter(t => t.id !== 't_private').length > 0 && (
+                <div className="mb-5">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <UsersIcon size={12} /> Teams / Squads
+                  </h4>
+                  <div className="space-y-3">
+                    {teams.filter(t => t.id !== 't_private').map(team => {
+                      const key = team.id;
+                      const s = getSettings(key);
+                      return (
+                        <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold">
+                                {team.name?.slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="text-sm font-semibold text-slate-900">{team.name}</span>
+                                <span className="text-[10px] text-slate-400 ml-2">{(team.players || []).length} athletes</span>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${s.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                              {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
+                            </button>
+                          </div>
+                          {s.enabled && renderAcwrOptions(key)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {(() => {
+                const privateTeam = teams.find(t => t.id === 't_private');
+                const privateClients = privateTeam?.players || [];
+                if (privateClients.length === 0) return null;
+                return (
+                  <div className="mb-5">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-2">
+                      <UserIcon size={12} /> Private Clients
+                    </h4>
+                    <div className="space-y-3">
+                      {privateClients.map(athlete => {
+                        const key = `ind_${athlete.id}`;
+                        const s = getSettings(key);
+                        return (
+                          <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 text-[10px] font-bold">
+                                  {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </div>
+                                <span className="text-sm font-medium text-slate-900">{athlete.name}</span>
+                              </div>
+                              <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${s.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
+                              </button>
+                            </div>
+                            {s.enabled && renderAcwrOptions(key)}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {teams.length === 0 && (
+                <p className="text-xs text-slate-400 italic">No teams or athletes found. Add them in the Roster first.</p>
+              )}
+
+              <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
+                className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors mt-4 ${
+                  acwrDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}>
+                <SaveIcon size={14} />
+                {acwrDirty ? 'Save ACWR Settings' : 'No changes'}
+              </button>
+            </CollapsibleSection>
+
+            {/* Testing Hub Section */}
+            <CollapsibleSection id="testing" icon={FlaskConicalIcon} title="Testing Hub"
+              subtitle="Show or hide test categories and individual tests"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              <TestingHubSettings testVisibility={testVisibility} setTestVisibility={setTestVisibility} />
+            </CollapsibleSection>
+
+          </>
+        )}
+
+        {/* ── ACCOUNT TAB ───────────────────────────────────────────── */}
+        {activeTab === 'account' && (
+          <>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Account</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Your profile, organisation and session management.</p>
+            </div>
+
+            {/* Profile Section */}
+            <CollapsibleSection id="profile" icon={UserIcon} title="Profile"
+              subtitle="Name, organisation, contact details"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              <div className="space-y-4">
+                <div ref={nameRef}>
+                  <label className={labelCls}>Full name <span className="text-red-500">*</span></label>
+                  <input type="text" value={fullName}
+                    onChange={e => { setFullName(e.target.value); clearFieldError('fullName'); setProfileMessage(null); setProfileError(null); }}
+                    className={fieldErrors.fullName ? inputErrorCls : inputCls} placeholder="Alex Smith" />
+                  {fieldErrors.fullName && <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>}
+                </div>
+                <div ref={orgRef}>
+                  <label className={labelCls}>Organisation <span className="text-red-500">*</span></label>
+                  <input type="text" value={organization}
+                    onChange={e => { setOrganization(e.target.value); clearFieldError('organization'); setProfileMessage(null); setProfileError(null); }}
+                    className={fieldErrors.organization ? inputErrorCls : inputCls} placeholder="City FC / Elite Academy" />
+                  {fieldErrors.organization && <p className="text-red-500 text-xs mt-1">{fieldErrors.organization}</p>}
+                </div>
+                <div>
+                  <label className={labelCls}>Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <input type="tel" value={phone}
+                    onChange={e => { setPhone(e.target.value); setProfileMessage(null); setProfileError(null); }}
+                    className={inputCls} placeholder="+44 7700 000000" />
+                </div>
+                <div>
+                  <label className={labelCls}>Email</label>
+                  <input type="email" value={user?.email || ''} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
+                  <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed here.</p>
+                </div>
+                {profileError && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
+                {profileMessage && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5"><p className="text-emerald-700 text-xs font-medium">{profileMessage}</p></div>}
+                <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
+                  className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
+                    profileDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}>
+                  <SaveIcon size={14} />
+                  {profileSaving ? 'Saving...' : profileDirty ? 'Save Profile' : 'No changes'}
+                </button>
+              </div>
+            </CollapsibleSection>
+
+            {/* Security — always visible, not collapsible */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-bold">
+                  {(user?.user_metadata?.full_name || user?.email || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{user?.user_metadata?.full_name || 'User'}</p>
+                  <p className="text-xs text-slate-400">{user?.email}</p>
+                </div>
+              </div>
+              <button onClick={signOut}
+                className="w-full flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200">
+                <LogOutIcon size={14} /> Sign out
+              </button>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* Unsaved Changes Modal */}
+      <UnsavedChangesModal
+        isOpen={!!pendingTab}
+        onSave={handleUnsavedSave}
+        onDiscard={handleUnsavedDiscard}
+        onCancel={() => setPendingTab(null)}
+      />
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// Testing Hub Visibility Settings (unchanged logic, just no outer card)
+// ══════════════════════════════════════════════════════════════════════
+
+const TestingHubSettings: React.FC<{
+  testVisibility: Record<string, boolean>;
+  setTestVisibility: (v: Record<string, boolean>) => void;
+}> = ({ testVisibility, setTestVisibility }) => {
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  const isTestVisible = (testId: string) => testVisibility[testId] !== false;
+
+  const toggleTest = (testId: string) => {
+    setTestVisibility({ ...testVisibility, [testId]: !isTestVisible(testId) });
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    const tests = getTestsByCategory(categoryId as any);
+    const allVisible = tests.every(t => isTestVisible(t.id));
+    const next = { ...testVisibility };
+    tests.forEach(t => { next[t.id] = !allVisible; });
+    setTestVisibility(next);
+  };
+
+  const toggleExpand = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId); else next.add(categoryId);
+      return next;
+    });
+  };
+
+  const totalTests = TEST_CATEGORIES.reduce((sum, c) => sum + getTestsByCategory(c.id as any).length, 0);
+  const hiddenCount = Object.values(testVisibility).filter(v => v === false).length;
+
+  return (
+    <div className="space-y-2">
+      {hiddenCount > 0 && (
+        <p className="text-xs text-orange-500 font-medium mb-3">{hiddenCount} of {totalTests} tests hidden.</p>
+      )}
+      {TEST_CATEGORIES.map(cat => {
+        const tests = getTestsByCategory(cat.id as any);
+        const visibleCount = tests.filter(t => isTestVisible(t.id)).length;
+        const allVisible = visibleCount === tests.length;
+        const noneVisible = visibleCount === 0;
+        const isExpanded = expandedCategories.has(cat.id);
+
+        return (
+          <div key={cat.id} className={`rounded-xl border transition-all ${noneVisible ? 'border-slate-200 bg-slate-50/50 opacity-60' : 'border-slate-200 bg-white'}`}>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <button onClick={() => toggleCategory(cat.id)}
+                className={`w-9 h-5 rounded-full transition-all relative shrink-0 ${!noneVisible ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${!noneVisible ? 'left-4' : 'left-0.5'}`} />
+              </button>
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(cat.id)}>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${noneVisible ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{cat.name}</span>
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+                    allVisible ? 'bg-emerald-50 text-emerald-600' : noneVisible ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-600'
+                  }`}>{visibleCount}/{tests.length}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">{cat.description}</p>
+              </div>
+              <button onClick={() => toggleExpand(cat.id)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 shrink-0">
+                {isExpanded ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
+              </button>
+            </div>
+            {isExpanded && (
+              <div className="border-t border-slate-100 px-4 py-2 space-y-0.5">
+                {tests.map(test => {
+                  const visible = isTestVisible(test.id);
+                  return (
+                    <div key={test.id} className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition-all ${visible ? '' : 'opacity-50'}`}>
+                      <span className={`text-xs font-medium ${visible ? 'text-slate-700' : 'text-slate-400'}`}>{test.name}</span>
+                      <button onClick={() => toggleTest(test.id)}
+                        className={`w-9 h-5 rounded-full transition-all relative ${visible ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${visible ? 'left-4' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

@@ -43,15 +43,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [isPerformanceLabOpen, setIsPerformanceLabOpen] = useState(false);
 
+    // Public routes that should never trigger tab sync or app state
+    const isPublicRoute = (path: string) =>
+        path.startsWith('/workout/') || path.startsWith('/wellness-form') ||
+        path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
+        path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
+        path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
+        path === '/';
+
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
-        if (location.pathname.startsWith('/workout/')) return;
-        if (location.pathname.startsWith('/wellness-form')) return;
-        if (location.pathname.startsWith('/injury-form')) return;
-        if (location.pathname.startsWith('/protocol/')) return;
-        if (location.pathname.startsWith('/login')) return;
-        if (location.pathname.startsWith('/onboarding')) return;
-        if (location.pathname.startsWith('/settings')) return;
+        if (isPublicRoute(location.pathname)) return;
         const topSegment = location.pathname.slice(1).split('/')[0];
         const valid = ['dashboard', 'periodization', 'clients', 'workouts', 'library', 'conditioning', 'analytics', 'reports', 'wellness', 'testing'];
         if (valid.includes(topSegment) && topSegment !== activeTab)
@@ -60,13 +62,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // Sync activeTab → URL (skip on public/standalone routes and sub-routes)
     useEffect(() => {
-        if (location.pathname.startsWith('/workout/')) return;
-        if (location.pathname.startsWith('/wellness-form')) return;
-        if (location.pathname.startsWith('/injury-form')) return;
-        if (location.pathname.startsWith('/protocol/')) return;
-        if (location.pathname.startsWith('/login')) return;
-        if (location.pathname.startsWith('/onboarding')) return;
-        if (location.pathname.startsWith('/settings')) return;
+        if (isPublicRoute(location.pathname)) return;
         const current = location.pathname.slice(1) || 'dashboard';
         // Don't redirect if we're on a sub-route of the activeTab (e.g. /workouts/packets)
         if (current.startsWith(activeTab + '/')) return;
@@ -217,18 +213,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 color: riskColor
             };
         } else {
-            const agg = parseFloat(hamAggregate);
-            if (!agg) return null;
+            // Average mode: the entered value IS the average force across both limbs
+            const avgForce = parseFloat(hamAggregate);
+            if (!avgForce) return null;
 
             let relativeStrength = null;
             if (bw && bw > 0) {
-                relativeStrength = (agg / bw).toFixed(2);
+                relativeStrength = (avgForce / bw).toFixed(2);
             }
 
             return {
-                total: agg,
+                total: avgForce,
                 relativeStrength,
-                avg: agg / 2
+                avg: avgForce
             };
         }
     };
@@ -254,6 +251,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // --- PERSISTENCE STATE ---
     const exercisesLoadedRef = useRef(false); // Prevents re-fetching 3,242 exercises on every initData() call
+    const dataLoadedRef = useRef(false); // Guards ALL save effects — prevents writing empty data during stale session
     const [isLoading, setIsLoading] = useState(true);
     const [saveStatus, setSaveStatus] = useState(null);
 
@@ -275,25 +273,26 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
 
     // --- PERSISTENCE EFFECTS ---
-    // Removed JSON auto-saving hooks for teams & exercises because they are now SQL-driven!
+    // All save effects are guarded by dataLoadedRef to prevent writing empty data
+    // during stale auth sessions where fetches return empty but the app renders
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveSessions(scheduledSessions);
     }, [scheduledSessions, isLoading]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveQuestionnaires(questionnaires);
     }, [questionnaires, isLoading]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveWattbikeSessions(wattbikeSessions);
     }, [wattbikeSessions, isLoading]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveConditioningSessions(conditioningSessions);
     }, [conditioningSessions, isLoading]);
 
@@ -303,10 +302,29 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             return;
         }
         try {
-            await DatabaseService.logAssessment(data.type, athleteId, data);
+            const saved = await DatabaseService.logAssessment(data.type, athleteId, data);
             // Reload assessments for this athlete
             const records = await DatabaseService.fetchAssessmentsByAthlete(athleteId);
             setAthleteAssessments(records);
+
+            // Also update local teams state so AnalysisTab/views reflect the new data immediately
+            const newMetric = {
+                ...data,
+                id: saved?.id || `local_${Date.now()}`,
+                date: data.date || new Date().toISOString().split('T')[0],
+                type: data.type,
+            };
+            setTeams(prev => prev.map(t => ({
+                ...t,
+                players: t.players.map(p => {
+                    if (p.id !== athleteId) return p;
+                    return {
+                        ...p,
+                        performanceMetrics: [newMetric, ...(p.performanceMetrics || [])],
+                    };
+                }),
+            })));
+
             showToast?.(`${data.type.toUpperCase()} saved successfully`);
         } catch (err) {
             console.error("Error saving metric:", err);
@@ -314,7 +332,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
-    const handleDeleteMetric = (athleteId, metricId) => {
+    const handleDeleteMetric = async (athleteId, metricId) => {
         if (!metricId)
             return;
         // Find the record to delete and store it in history
@@ -324,6 +342,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setRecentDeletions(prev => [{ athleteId, ...recordToDelete }, ...prev].slice(0, 10));
             showToast(`Deleted ${recordToDelete.metric || recordToDelete.type}`, 'Undo', handleUndoDelete);
         }
+        // Remove from local state
         const newTeams = teams.map(t => ({
             ...t,
             players: t.players.map(p => {
@@ -337,6 +356,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             })
         }));
         setTeams(newTeams);
+        // Also delete from Supabase so it doesn't return on refresh
+        try {
+            await DatabaseService.deleteAssessment(metricId);
+        } catch (err) {
+            console.warn('Failed to delete assessment from DB:', err);
+        }
     };
 
     const handleUndoDelete = () => {
@@ -571,6 +596,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // { [athleteId]: { excluded: bool, excludedDate: string, returnDate?: string, frozenChronic?: number, frozenAcute?: number } }
     const [acwrExclusions, setAcwrExclusions] = useState<Record<string, any>>({});
 
+    // Testing Hub visibility — which tests are hidden
+    // { [testId]: false } means hidden; absent or true means visible
+    const [testVisibility, setTestVisibility] = useState<Record<string, boolean>>({});
+
     const [kpiRecords, setKpiRecords] = useState(MOCK_KPI_DATA);
 
     const [heatmapRecords, setHeatmapRecords] = useState(MOCK_HEATMAP_DATA);
@@ -684,35 +713,43 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const modules = [
         { id: 'load', title: 'Baseline & Trend Analysis', icon: TrendingUpIcon, description: 'Diagnostic baselines & trend classification' },
         { id: 'kpi', title: 'Performance Intelligence', icon: LineChartIcon, description: 'KPI trendlines & progression predictors' },
-        { id: 'scenario', title: 'Scenario Modelling', icon: ZapIcon, description: 'Simulate training decisions and assess future risk/readiness.' }
+        { id: 'scenario', title: 'Scenario Modelling', icon: ZapIcon, description: 'Simulate training decisions and assess future risk/readiness.' },
+        { id: 'dose_response', title: 'Dose-Response Analysis', icon: ActivityIcon, description: 'Did the training block produce performance gains? Compare load vs test deltas.' },
+        { id: 'fv_profile', title: 'Force-Velocity Profile', icon: ZapIcon, description: 'F-V profiling from CMJ, IMTP & sprint data. Identifies force/velocity deficits.' },
     ];
 
     const [wellnessData, setWellnessData] = useState([]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveLoadRecords(loadRecords);
     }, [loadRecords, isLoading]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveWellnessData(wellnessData);
     }, [wellnessData, isLoading]);
 
-    // Persist ACWR feature settings
+    // Persist ACWR feature settings → Supabase user_data
     useEffect(() => {
-        if (!isLoading)
-            localStorage.setItem('acwr_feature_settings', JSON.stringify(acwrSettings));
+        if (!isLoading && dataLoadedRef.current)
+            StorageService.saveAcwrSettings(acwrSettings);
     }, [acwrSettings, isLoading]);
 
-    // Persist ACWR exclusions
+    // Persist ACWR exclusions → Supabase user_data
     useEffect(() => {
-        if (!isLoading)
-            localStorage.setItem('acwr_exclusions', JSON.stringify(acwrExclusions));
+        if (!isLoading && dataLoadedRef.current)
+            StorageService.saveAcwrExclusions(acwrExclusions);
     }, [acwrExclusions, isLoading]);
 
+    // Persist testing hub visibility → Supabase user_data
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
+            StorageService.saveTestVisibility(testVisibility);
+    }, [testVisibility, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveBiometrics(biometricsRecords);
     }, [biometricsRecords, isLoading]);
 
@@ -742,7 +779,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [medicalReports, setMedicalReports] = useState([]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveMedicalReports(medicalReports);
     }, [medicalReports, isLoading]);
 
@@ -762,7 +799,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [injuryFilterAthleteId, setInjuryFilterAthleteId] = useState('All');
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveInjuryReports(injuryReports);
     }, [injuryReports, isLoading]);
 
@@ -842,7 +879,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [workoutLog, setWorkoutLog] = useState([]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveWorkoutLog(workoutLog);
     }, [workoutLog, isLoading]);
 
@@ -851,7 +888,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // Workout templates are now persisted to Supabase workout_templates table.
     // Legacy auto-save to StorageService kept as backup only.
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.saveWorkoutTemplates(workoutTemplates);
     }, [workoutTemplates, isLoading]);
 
@@ -859,7 +896,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [personalExerciseIds, setPersonalExerciseIds] = useState<string[]>([]);
 
     useEffect(() => {
-        if (!isLoading)
+        if (!isLoading && dataLoadedRef.current)
             StorageService.savePersonalExercises(personalExerciseIds);
     }, [personalExerciseIds, isLoading]);
 
@@ -1826,6 +1863,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // --- DATA LOADING ---
     const initData = useCallback(async () => {
+        // Skip initialization entirely for public form routes — they don't need app state
+        const path = window.location.pathname;
+        if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
+            path.startsWith('/wellness-form') || path.startsWith('/injury-form') ||
+            path.startsWith('/workout/') || path.startsWith('/protocol/')) {
+            setIsLoading(false);
+            return;
+        }
+
         setIsLoading(true);
         try {
             // Keep the JSON wrapper alive for legacy items we haven't migrated yet
@@ -2041,6 +2087,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
             // Personal Exercise Library
             setPersonalExerciseIds(loadedPersonalExercises || []);
+            // personalExerciseIds loaded — dataLoadedRef guards the save effect
 
             // Injury Reports
             if (dbInjuryResult && dbInjuryResult.length > 0) {
@@ -2131,20 +2178,42 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }));
             }
 
+            // If we got here, the try block succeeded
+            var initSuccess = true;
         } catch (error) {
             console.error("Critical error in initData:", error);
+            var initSuccess = false;
+            // dataLoadedRef stays false — save effects won't overwrite with empty data
         } finally {
-            // Load ACWR feature settings from localStorage
+            // Load settings from Supabase user_data (with localStorage fallback)
             try {
-                const saved = localStorage.getItem('acwr_feature_settings');
-                if (saved) {
-                    setAcwrSettings(JSON.parse(saved));
+                const savedAcwr = await StorageService.getAcwrSettings();
+                if (savedAcwr && Object.keys(savedAcwr).length > 0) setAcwrSettings(savedAcwr);
+                else {
+                    // Fallback: migrate from old localStorage if exists
+                    const legacyAcwr = localStorage.getItem('acwr_feature_settings');
+                    if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
                 }
-            } catch (e) { /* ignore parse errors */ }
+            } catch (e) { /* ignore */ }
             try {
-                const savedEx = localStorage.getItem('acwr_exclusions');
-                if (savedEx) setAcwrExclusions(JSON.parse(savedEx));
-            } catch (e) { /* ignore parse errors */ }
+                const savedEx = await StorageService.getAcwrExclusions();
+                if (savedEx && Object.keys(savedEx).length > 0) setAcwrExclusions(savedEx);
+                else {
+                    const legacyEx = localStorage.getItem('acwr_exclusions');
+                    if (legacyEx) { const parsed = JSON.parse(legacyEx); setAcwrExclusions(parsed); localStorage.removeItem('acwr_exclusions'); }
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                const savedVis = await StorageService.getTestVisibility();
+                if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
+                else {
+                    const legacyVis = localStorage.getItem('test_visibility');
+                    if (legacyVis) { const parsed = JSON.parse(legacyVis); setTestVisibility(parsed); localStorage.removeItem('test_visibility'); }
+                }
+            } catch (e) { /* ignore */ }
+            // Mark data as successfully loaded ONLY if try block completed
+            // This MUST be the last thing set, after all data + settings are loaded
+            if (initSuccess) dataLoadedRef.current = true;
             setIsLoading(false);
         }
     }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog]);
@@ -2647,6 +2716,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setAcwrSettings,
         acwrExclusions,
         setAcwrExclusions,
+        testVisibility,
+        setTestVisibility,
         getAthleteAcwrOptions,
         calculateACWR,
         calculateMonotony,

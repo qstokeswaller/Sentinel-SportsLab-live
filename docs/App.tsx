@@ -43,8 +43,16 @@ import {
     Trash2 as Trash2Icon,
     UserPlus as UserPlusIcon,
     X as XIcon,
-    Zap as ZapIcon
+    Zap as ZapIcon,
+    Heart as HeartIcon,
+    Shield as ShieldIcon,
+    FlaskConical as FlaskConicalIcon,
+    ChevronRight as ChevronRightIcon,
+    AlertTriangle as AlertTriangleIcon,
+    TrendingUp as TrendingUpIcon,
+    Gauge as GaugeIcon,
 } from 'lucide-react';
+import { ACWR_METRIC_TYPES } from './utils/constants';
 
 // Extracted Components (None used directly in App.tsx)
 
@@ -154,7 +162,7 @@ const AddAthleteModal = () => {
                             <div className="space-y-1.5">
                                 <label className={LABEL}>Assign to Team</label>
                                 <select value={newAthleteTeam} onChange={e => setNewAthleteTeam(e.target.value)} className={INPUT}>
-                                    <option value="">No Team (Individual)</option>
+                                    <option value="">Private Client (Individual)</option>
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </select>
                             </div>
@@ -278,7 +286,14 @@ const App = () => {
                         <Route path="/wellness" element={<WellnessHubPage />} />
                         <Route path="/testing" element={<TestingHubPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="*" element={(() => {
+                            // Don't redirect public form routes — they're handled by the outer Router
+                            const path = window.location.pathname;
+                            if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') || path.startsWith('/wellness-form') || path.startsWith('/injury-form') || path.startsWith('/workout/') || path.startsWith('/protocol/')) {
+                                return null;
+                            }
+                            return <Navigate to="/dashboard" replace />;
+                        })()} />
                     </Routes>
                 </div>
             </main>
@@ -1054,95 +1069,258 @@ const SessionModal = () => {
 };
 
 const AthleteProfileModal = () => {
-    const { viewingPlayer, setViewingPlayer } = useAppState();
+    const {
+        viewingPlayer, setViewingPlayer, teams,
+        loadRecords, wellnessData, injuryReports, acwrSettings,
+        calculateACWR, getAthleteAcwrOptions,
+    } = useAppState();
     if (!viewingPlayer) return null;
 
     const p = viewingPlayer;
     const initials = p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const playerTeam = teams.find(t => (t.players || []).some(pl => pl.id === p.id));
+    const teamId = playerTeam?.id;
 
-    const StatCard = ({ label, value }: { label: string; value: any }) => (
-        <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-            <div className="text-xs font-medium text-slate-500 mb-1">{label}</div>
-            <div className="text-base font-semibold text-slate-900 leading-tight">{value || <span className="text-slate-300">—</span>}</div>
+    // ── Derived data (all flexible — only shows if data exists) ──
+
+    // ACWR
+    const acwrEnabled = teamId && (teamId === 't_private'
+        ? acwrSettings[`ind_${p.id}`]?.enabled
+        : acwrSettings[teamId]?.enabled);
+    let acwrValue = null, acwrZone = null, acwrColor = '';
+    if (acwrEnabled) {
+        try {
+            acwrValue = calculateACWR(p.id);
+            if (acwrValue < 0.8) { acwrZone = 'Undertrained'; acwrColor = 'text-sky-600 bg-sky-50 border-sky-200'; }
+            else if (acwrValue <= 1.3) { acwrZone = 'Optimal'; acwrColor = 'text-emerald-600 bg-emerald-50 border-emerald-200'; }
+            else if (acwrValue <= 1.5) { acwrZone = 'Caution'; acwrColor = 'text-amber-600 bg-amber-50 border-amber-200'; }
+            else { acwrZone = 'Danger'; acwrColor = 'text-rose-600 bg-rose-50 border-rose-200'; }
+        } catch { acwrValue = null; }
+    }
+
+    // Latest wellness (flexible — shows whatever fields the response has)
+    const latestWellness = [...(wellnessData || [])].filter(d =>
+        d.athleteId === p.id || d.athlete_id === p.id
+    ).sort((a, b) => new Date(b.date || b.session_date || 0).getTime() - new Date(a.date || a.session_date || 0).getTime())[0];
+    const wellnessFields = latestWellness?.responses ? Object.entries(latestWellness.responses).filter(([k, v]) => typeof v === 'number') : [];
+
+    // Injuries (current)
+    const currentInjuries = (injuryReports || []).filter(r =>
+        (r.athleteId === p.id || r.athlete_id === p.id) && r.status !== 'resolved'
+    );
+
+    // Performance metrics (latest per test type — fully flexible)
+    const metrics = p.performanceMetrics || [];
+    const latestByType = new Map();
+    for (const m of metrics) {
+        const key = m.type;
+        if (!latestByType.has(key) || new Date(m.date) > new Date(latestByType.get(key).date)) {
+            latestByType.set(key, m);
+        }
+    }
+    const testResults = Array.from(latestByType.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+
+    // ACWR method + unit for this athlete's team
+    const acwrOpts = acwrEnabled ? getAthleteAcwrOptions(p.id) : null;
+    const loadMethod = acwrOpts?.metricType || 'srpe';
+    const loadUnit = ACWR_METRIC_TYPES[loadMethod]?.unit || 'AU';
+
+    // Recent load (last 7 days)
+    const now = new Date();
+    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+    const recentLoads = (loadRecords || []).filter(l =>
+        (l.athleteId === p.id || l.athlete_id === p.id) && new Date(l.date) >= weekAgo
+    );
+    const weeklyLoad = recentLoads.reduce((sum, l) => sum + (l.value || l.sRPE || 0), 0);
+
+    const bmi = p.height_cm && p.weight_kg ? (p.weight_kg / ((p.height_cm / 100) ** 2)).toFixed(1) : null;
+
+    const NoData = ({ text = 'No current data' }) => (
+        <p className="text-xs text-slate-300 italic py-1">{text}</p>
+    );
+
+    // ── Helpers ──
+    const Stat = ({ label, value, unit = '' }) => (
+        <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
+            <div className="text-[10px] font-medium text-slate-400">{label}</div>
+            <div className="text-sm font-semibold text-slate-800 mt-0.5">{value != null ? `${value}${unit}` : <span className="text-slate-300">—</span>}</div>
         </div>
     );
 
-    const bmi = p.height_cm && p.weight_kg
-        ? (p.weight_kg / ((p.height_cm / 100) ** 2)).toFixed(1)
-        : null;
+    const SectionHeader = ({ icon: Icon, label }) => (
+        <div className="flex items-center gap-2 mb-2">
+            {Icon && <Icon size={12} className="text-slate-400" />}
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{label}</span>
+        </div>
+    );
+
+    const formatTestValue = (m) => {
+        if (m.type === 'hamstring') {
+            const avg = m.avgForce || m.value;
+            return avg ? `${parseFloat(avg).toFixed(0)}N avg` : '—';
+        }
+        if (m.value != null) return `${m.value}${m.unit ? ` ${m.unit}` : ''}`;
+        if (m.weight) return `${m.weight}kg`;
+        if (m.time) return `${m.time}s`;
+        if (m.height) return `${m.height}cm`;
+        return '—';
+    };
+
+    const formatTestName = (m) => {
+        const names = {
+            hamstring: 'Nordic Force', '1rm': '1RM', dsi: 'DSI', rsi: 'RSI', cmj: 'CMJ',
+            cmj_advanced: 'CMJ Adv', squat_jump: 'Squat Jump', imtp_basic: 'IMTP',
+            imtp_advanced: 'IMTP Adv', drop_jump: 'Drop Jump', broad_jump: 'Broad Jump',
+        };
+        if (names[m.type]) return names[m.type];
+        // For RM tests: show exercise name
+        if (m.type?.startsWith('rm_')) return m.exerciseLabel || m.type.replace('rm_', '').replace(/_/g, ' ');
+        // For sprint tests
+        if (m.type?.startsWith('sprint_')) return m.type.replace('sprint_', '').replace('m', 'm Sprint');
+        return m.type?.replace(/_/g, ' ') || 'Test';
+    };
 
     return (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col text-slate-900">
+            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col text-slate-900">
 
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
-                    <div className="flex items-center gap-3.5">
+                {/* ── Header ── */}
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm shrink-0">
                             {initials}
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-900">{p.name}</h2>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-medium text-emerald-600 flex items-center gap-1">
-                                    <BadgeCheckIcon size={11} /> Athlete Profile
-                                </span>
-                                {p.sport && <span className="text-xs text-slate-400">{p.sport}</span>}
-                                {p.position && <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2 py-0.5 rounded-full">{p.position}</span>}
+                            <h2 className="text-base font-semibold text-slate-900">{p.name}</h2>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                {playerTeam && <span className="text-[10px] text-slate-400">{playerTeam.name}</span>}
+                                {p.sport && <span className="text-[10px] text-slate-400">· {p.sport}</span>}
+                                {p.position && <span className="text-[10px] bg-indigo-50 text-indigo-600 font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
                             </div>
                         </div>
                     </div>
                     <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-100 transition-colors">
-                        <XIcon size={18} />
+                        <XIcon size={16} />
                     </button>
                 </div>
 
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-5 no-scrollbar space-y-5">
+                {/* ── Status bar (only shows if data exists) ── */}
+                {(acwrValue != null || currentInjuries.length > 0 || latestWellness) && (
+                    <div className="px-5 py-2.5 border-b border-slate-100 flex items-center gap-2 flex-wrap bg-slate-50/50">
+                        {acwrValue != null && (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${acwrColor}`}>
+                                ACWR {acwrValue} · {acwrZone}
+                            </span>
+                        )}
+                        {currentInjuries.length > 0 && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+                                {currentInjuries.length} Active Injur{currentInjuries.length > 1 ? 'ies' : 'y'}
+                            </span>
+                        )}
+                        {latestWellness && (
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-200 bg-white text-slate-500">
+                                Wellness: {latestWellness.date || latestWellness.session_date || '—'}
+                            </span>
+                        )}
+                    </div>
+                )}
 
-                    {/* Physical stats row */}
+                {/* ── Body ── */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+                    {/* Physical Profile */}
                     <div>
-                        <div className="text-xs font-medium text-slate-500 mb-2.5">Physical Profile</div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                            <StatCard label="Age" value={p.age ? `${p.age} yrs` : null} />
-                            <StatCard label="Gender" value={p.gender} />
-                            <StatCard label="Height" value={p.height_cm ? `${p.height_cm} cm` : null} />
-                            <StatCard label="Weight" value={p.weight_kg ? `${p.weight_kg} kg` : null} />
-                        </div>
+                        <SectionHeader icon={BadgeCheckIcon} label="Physical Profile" />
+                        {(p.age || p.gender || p.height_cm || p.weight_kg) ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                {p.age && <Stat label="Age" value={p.age} unit=" yrs" />}
+                                {p.gender && <Stat label="Gender" value={p.gender} />}
+                                {p.height_cm && <Stat label="Height" value={p.height_cm} unit=" cm" />}
+                                {p.weight_kg && <Stat label="Weight" value={p.weight_kg} unit=" kg" />}
+                                {bmi && <Stat label="BMI" value={bmi} />}
+                            </div>
+                        ) : <NoData text="No physical profile recorded" />}
                     </div>
 
-                    {/* Sport & BMI row */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                        <StatCard label="Sport" value={p.sport} />
-                        <StatCard label="Position / Event" value={p.position} />
-                        <StatCard label="BMI" value={bmi ? `${bmi}` : null} />
+                    {/* Training Load */}
+                    <div>
+                        <SectionHeader icon={GaugeIcon} label="Training Load" />
+                        {(acwrValue != null || weeklyLoad > 0) ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {acwrValue != null && <Stat label="ACWR" value={acwrValue} />}
+                                {weeklyLoad > 0 && <Stat label={`7-Day Load`} value={Math.round(weeklyLoad)} unit={` ${loadUnit}`} />}
+                                {recentLoads.length > 0 && <Stat label="Sessions (7d)" value={recentLoads.length} />}
+                                {acwrOpts && <Stat label="Method" value={ACWR_METRIC_TYPES[loadMethod]?.label || loadMethod} />}
+                            </div>
+                        ) : <NoData text="No training load data" />}
                     </div>
 
-                    {/* Goals */}
-                    <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-                        <div className="text-xs font-medium text-indigo-500 mb-1.5">Training Goals</div>
-                        {p.goals
-                            ? <p className="text-sm text-slate-700 leading-relaxed">{p.goals}</p>
-                            : <p className="text-sm text-slate-300 italic">No goals recorded.</p>
-                        }
+                    {/* Wellness (flexible — shows whatever fields exist in the latest response) */}
+                    <div>
+                        <SectionHeader icon={HeartIcon} label="Latest Wellness" />
+                        {wellnessFields.length > 0 ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                {wellnessFields.slice(0, 8).map(([key, val]) => (
+                                    <Stat key={key} label={key.replace(/_/g, ' ')} value={val} />
+                                ))}
+                            </div>
+                        ) : <NoData text="No wellness responses" />}
                     </div>
 
-                    {/* Notes */}
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                        <div className="text-xs font-medium text-slate-500 mb-1.5">Notes</div>
-                        {p.notes
-                            ? <p className="text-sm text-slate-600 leading-relaxed">{p.notes}</p>
-                            : <p className="text-sm text-slate-300 italic">No notes recorded.</p>
-                        }
+                    {/* Injuries */}
+                    <div>
+                        <SectionHeader icon={AlertTriangleIcon} label="Injuries" />
+                        {currentInjuries.length > 0 ? (
+                            <div className="space-y-1.5">
+                                {currentInjuries.slice(0, 3).map((inj, i) => (
+                                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-rose-50 border border-rose-100 rounded-lg">
+                                        <div>
+                                            <span className="text-xs font-medium text-rose-700">{inj.body_area || inj.area || 'Injury'}</span>
+                                            {inj.severity && <span className="text-[10px] text-rose-400 ml-2">Severity: {inj.severity}</span>}
+                                        </div>
+                                        {inj.date && <span className="text-[10px] text-rose-400">{inj.date}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <NoData text="No active injuries" />}
                     </div>
 
-                    {/* Adherence pill if available */}
-                    {p.adherence != null && (
-                        <div className="bg-white rounded-lg p-4 border border-slate-200 flex items-center justify-between">
-                            <div className="text-xs font-medium text-slate-500">Session Adherence</div>
-                            <div className="text-xl font-bold text-slate-900">{p.adherence}%</div>
-                        </div>
-                    )}
+                    {/* Performance Testing (flexible — shows latest result per unique test type) */}
+                    <div>
+                        <SectionHeader icon={FlaskConicalIcon} label="Latest Test Results" />
+                        {testResults.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {testResults.map((m, i) => (
+                                    <div key={i} className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
+                                        <div className="text-[10px] font-medium text-slate-400 capitalize">{formatTestName(m)}</div>
+                                        <div className="text-sm font-semibold text-slate-800 mt-0.5">{formatTestValue(m)}</div>
+                                        <div className="text-[9px] text-slate-300 mt-0.5">{m.date?.slice(0, 10)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <NoData text="No test results" />}
+                    </div>
+
+                    {/* Goals & Notes */}
+                    <div>
+                        <SectionHeader icon={null} label="Notes & Goals" />
+                        {(p.goals || p.notes) ? (
+                            <>
+                                {p.goals && (
+                                    <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 mb-2">
+                                        <div className="text-[10px] font-medium text-indigo-500 mb-1">Training Goals</div>
+                                        <p className="text-xs text-slate-700 leading-relaxed">{p.goals}</p>
+                                    </div>
+                                )}
+                                {p.notes && (
+                                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                                        <div className="text-[10px] font-medium text-slate-400 mb-1">Notes</div>
+                                        <p className="text-xs text-slate-600 leading-relaxed">{p.notes}</p>
+                                    </div>
+                                )}
+                            </>
+                        ) : <NoData text="No notes or goals recorded" />}
+                    </div>
                 </div>
             </div>
         </div>

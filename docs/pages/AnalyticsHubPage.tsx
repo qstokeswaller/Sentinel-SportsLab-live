@@ -6,6 +6,8 @@ import { BaselineTrendTerminal } from '../components/analytics/BaselineTrendTerm
 import { PerformanceIntelligenceTerminal } from '../components/analytics/PerformanceIntelligenceTerminal';
 import { ScenarioModellingTerminal } from '../components/analytics/ScenarioModellingTerminal';
 import { KpiWatchlistModal } from '../components/analytics/KpiWatchlistModal';
+import DoseResponseTerminal from '../components/analytics/DoseResponseTerminal';
+import ForceVelocityTerminal from '../components/analytics/ForceVelocityTerminal';
 import { DatabaseService } from '../services/databaseService';
 
 export const AnalyticsHubPage = () => {
@@ -233,6 +235,22 @@ export const AnalyticsHubPage = () => {
                         teams={teams}
                     />
                 </div>
+            )}
+
+            {activeAnalyticsModule === 'dose_response' && (
+                <DoseResponseTerminal
+                    selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
+                    subjectAthleteIds={subjectAthleteIds}
+                    analyticsStartDate={analyticsStartDate}
+                    analyticsEndDate={analyticsEndDate}
+                />
+            )}
+
+            {activeAnalyticsModule === 'fv_profile' && (
+                <ForceVelocityTerminal
+                    selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
+                    subjectAthleteIds={subjectAthleteIds}
+                />
             )}
 
             <KpiWatchlistModal

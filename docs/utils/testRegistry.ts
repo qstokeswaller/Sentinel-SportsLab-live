@@ -137,7 +137,7 @@ export const TEST_CATEGORIES: CategoryInfo[] = [
   { id: 'flexibility',     name: 'Flexibility / Mobility',     description: 'Sit & Reach, ROM & Shoulder Mobility',        icon: 'Move',     testCount: 8 },
   { id: 'aerobic',         name: 'Aerobic Capacity',           description: 'VO₂max, Beep Test, Yo-Yo & Cooper Test',      icon: 'Heart',    testCount: 10 },
   { id: 'anaerobic',       name: 'Anaerobic Capacity',         description: 'Wingate, RAST & Repeat Sprint',               icon: 'Flame',    testCount: 5 },
-  { id: 'anthropometry',   name: 'Anthropometry',              description: 'Height, Weight, Skinfolds & Body Composition', icon: 'Ruler',    testCount: 9 },
+  { id: 'anthropometry',   name: 'Anthropometry',              description: 'Height, Weight, Skinfolds, InBody & Body Composition', icon: 'Ruler',    testCount: 10 },
   { id: 'sport_specific',  name: 'Sport-Specific',             description: 'Ice Hockey, Sport-Specific Endurance',         icon: 'Trophy',   testCount: 3 },
 ];
 
@@ -2132,6 +2132,83 @@ const anthropometryTests: TestDefinition[] = [
       { key: 'weight', label: 'Weight', type: 'number', unit: 'kg', step: 0.1 },
     ],
     equipmentRequired: ['BIA device'], estimatedDuration: '5 min' },
+
+  // ── InBody Scan (full body composition) ──────────────────────────
+  { id: 'inbody', name: 'InBody Scan', shortName: 'InBody', category: 'anthropometry',
+    description: 'InBody body composition analysis — full segmental breakdown, body water, and muscle-fat analysis. Attach the original PDF report.',
+    fields: [
+      // ── Primary metrics ──
+      { key: 'weight', label: 'Weight', type: 'number', unit: 'kg', required: true, step: 0.1 },
+      { key: 'smm', label: 'Skeletal Muscle Mass', type: 'number', unit: 'kg', required: true, step: 0.1, helpText: 'Total skeletal muscle mass' },
+      { key: 'bfm', label: 'Body Fat Mass', type: 'number', unit: 'kg', required: true, step: 0.1 },
+      { key: 'pbf', label: 'Percent Body Fat', type: 'number', unit: '%', required: true, step: 0.1 },
+      { key: 'tbw', label: 'Total Body Water', type: 'number', unit: 'L', step: 0.1, helpText: 'Total body water in litres' },
+      { key: 'ecw_tbw', label: 'ECW/TBW Ratio', type: 'number', step: 0.001, helpText: 'Normal range 0.360–0.390. Above 0.400 may indicate inflammation or overtraining' },
+      { key: 'phase_angle', label: 'Phase Angle', type: 'number', unit: '°', step: 0.1, helpText: 'Cell membrane integrity. Higher = better muscle quality' },
+      { key: 'inbody_score', label: 'InBody Score', type: 'number', step: 1, helpText: 'Proprietary composite score (0–100)' },
+
+      // ── Segmental Lean Mass ──
+      { key: 'lean_ra', label: 'Lean Mass — Right Arm', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'lean_la', label: 'Lean Mass — Left Arm', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'lean_tr', label: 'Lean Mass — Trunk', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'lean_rl', label: 'Lean Mass — Right Leg', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'lean_ll', label: 'Lean Mass — Left Leg', type: 'number', unit: 'kg', step: 0.01 },
+
+      // ── Segmental Fat Mass ──
+      { key: 'fat_ra', label: 'Fat Mass — Right Arm', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'fat_la', label: 'Fat Mass — Left Arm', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'fat_tr', label: 'Fat Mass — Trunk', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'fat_rl', label: 'Fat Mass — Right Leg', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'fat_ll', label: 'Fat Mass — Left Leg', type: 'number', unit: 'kg', step: 0.01 },
+
+      // ── Advanced ──
+      { key: 'icw', label: 'Intracellular Water', type: 'number', unit: 'L', step: 0.1 },
+      { key: 'ecw', label: 'Extracellular Water', type: 'number', unit: 'L', step: 0.1 },
+      { key: 'lbm', label: 'Lean Body Mass', type: 'number', unit: 'kg', step: 0.1 },
+      { key: 'ffm', label: 'Fat-Free Mass', type: 'number', unit: 'kg', step: 0.1 },
+      { key: 'bmr', label: 'Basal Metabolic Rate', type: 'number', unit: 'kcal', step: 1 },
+      { key: 'vfl', label: 'Visceral Fat Level', type: 'number', step: 1, helpText: 'Scale 1–20. Athletes typically 1–6' },
+      { key: 'protein', label: 'Protein', type: 'number', unit: 'kg', step: 0.1 },
+      { key: 'minerals', label: 'Minerals', type: 'number', unit: 'kg', step: 0.01 },
+      { key: 'bmi', label: 'BMI', type: 'number', unit: 'kg/m²', step: 0.1 },
+    ],
+    calculations: [
+      { key: 'arm_lean_asymmetry', label: 'Arm Lean Asymmetry', unit: '%',
+        formula: (v) => {
+          if (!v.lean_ra || !v.lean_la) return null;
+          const max = Math.max(v.lean_ra, v.lean_la);
+          return max > 0 ? +(Math.abs(v.lean_ra - v.lean_la) / max * 100).toFixed(1) : null;
+        }},
+      { key: 'leg_lean_asymmetry', label: 'Leg Lean Asymmetry', unit: '%',
+        formula: (v) => {
+          if (!v.lean_rl || !v.lean_ll) return null;
+          const max = Math.max(v.lean_rl, v.lean_ll);
+          return max > 0 ? +(Math.abs(v.lean_rl - v.lean_ll) / max * 100).toFixed(1) : null;
+        }},
+      { key: 'smm_weight_ratio', label: 'SMM / Weight', unit: '%',
+        formula: (v) => v.smm && v.weight ? +(v.smm / v.weight * 100).toFixed(1) : null },
+    ],
+    norms: {
+      primaryField: 'pbf',
+      genderSpecific: true,
+      male: [
+        { label: 'Essential', color: 'red', max: 5 },
+        { label: 'Athletic', color: 'emerald', min: 5, max: 13 },
+        { label: 'Fitness', color: 'sky', min: 13, max: 17 },
+        { label: 'Average', color: 'amber', min: 17, max: 25 },
+        { label: 'Obese', color: 'red', min: 25 },
+      ],
+      female: [
+        { label: 'Essential', color: 'red', max: 13 },
+        { label: 'Athletic', color: 'emerald', min: 13, max: 20 },
+        { label: 'Fitness', color: 'sky', min: 20, max: 24 },
+        { label: 'Average', color: 'amber', min: 24, max: 32 },
+        { label: 'Obese', color: 'red', min: 32 },
+      ],
+    },
+    equipmentRequired: ['InBody 770/580/270'],
+    estimatedDuration: '5 min',
+  },
 ];
 
 // ─── SPORT-SPECIFIC TESTS (3) ─────────────────────────────────────
