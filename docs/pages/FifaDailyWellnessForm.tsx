@@ -158,7 +158,7 @@ const FifaDailyWellnessForm: React.FC = () => {
             await DatabaseService.saveWellnessResponse({
                 athlete_id: selectedAthleteId,
                 team_id: teamId,
-                session_date: new Date().toISOString().split('T')[0],
+                session_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
                 responses: {
                     fatigue: responses.fatigue,
                     soreness: responses.soreness,

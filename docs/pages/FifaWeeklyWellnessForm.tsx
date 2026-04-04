@@ -193,7 +193,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             const wellnessResponse = await DatabaseService.saveWellnessResponse({
                 athlete_id: athleteId,
                 team_id: teamId,
-                session_date: new Date().toISOString().split('T')[0],
+                session_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
                 responses: {
                     fatigue_trend: responses.fatigue_trend,
                     sleep_trend: responses.sleep_trend,
@@ -218,7 +218,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                 contact_type: responses.contact_type,
                 performance_impact: responses.impact,
                 time_loss_category: responses.time_loss,
-                classification_date: new Date().toISOString().split('T')[0],
+                classification_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
             });
 
             setSubmitted(true);
