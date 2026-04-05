@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
@@ -107,9 +107,25 @@ const STEP_IDS = [
     'problem_type', 'onset', 'status',
     'body_area', 'body_side', 'mechanism', 'contact_type',
     'impact', 'time_loss',
+    'urti_hoarseness', 'urti_blocked_nose', 'urti_runny_nose', 'urti_sinus_pressure',
+    'urti_sneezing', 'urti_dry_cough', 'urti_wet_cough', 'urti_headache',
+    'illness_impact', 'illness_time_loss',
     'fatigue_trend', 'sleep_trend',
     'nutrition', 'hydration', 'stress_sources',
 ];
+
+// URTI illness symptom definitions (from existing mocks data)
+const URTI_SYMPTOMS = [
+    { key: 'urti_hoarseness',    label: 'Hoarseness (Voice roughness)' },
+    { key: 'urti_blocked_nose',  label: 'Blocked / Plugged Nose' },
+    { key: 'urti_runny_nose',    label: 'Runny Nose' },
+    { key: 'urti_sinus_pressure',label: 'Sinus Pressure (Facial pressure)' },
+    { key: 'urti_sneezing',      label: 'Sneezing' },
+    { key: 'urti_dry_cough',     label: 'Dry Cough' },
+    { key: 'urti_wet_cough',     label: 'Wet Cough (sputum / mucus)' },
+    { key: 'urti_headache',      label: 'Headache' },
+];
+const URTI_OPTIONS = ['No Symptoms', 'Mild', 'Moderate', 'Severe'];
 
 // ═══════════════════════════════════════════════════════════════════════
 // Component
@@ -117,6 +133,9 @@ const STEP_IDS = [
 
 const FifaWeeklyWellnessForm: React.FC = () => {
     const { teamId, athleteId: urlAthleteId } = useParams<{ teamId: string; athleteId?: string }>();
+    const [searchParams] = useSearchParams();
+    // complaint param passed from daily form: 'injury' | 'illness' | 'both'
+    const preFilledComplaint = searchParams.get('complaint') || null;
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -126,7 +145,10 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const [selectedAthleteId, setSelectedAthleteId] = useState(urlAthleteId || '');
     const [athleteName, setAthleteName] = useState('');
     const [currentStep, setCurrentStep] = useState(0);
-    const [responses, setResponses] = useState<Record<string, any>>({});
+    // Pre-fill problem_type from daily form if passed via URL
+    const [responses, setResponses] = useState<Record<string, any>>(
+        preFilledComplaint ? { problem_type: preFilledComplaint } : {}
+    );
 
     // Team-wide mode: no athleteId in URL → athlete selects name first
     const isTeamMode = !urlAthleteId;
@@ -162,9 +184,19 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     // Conditional step visibility — add athlete_select step for team mode
     const allSteps = isTeamMode ? ['athlete_select', ...STEP_IDS] : STEP_IDS;
+    const isInjury = responses.problem_type === 'injury' || responses.problem_type === 'both';
+    const isIllness = responses.problem_type === 'illness' || responses.problem_type === 'both';
     const visibleSteps = allSteps.filter(id => {
-        if (id === 'mechanism' || id === 'contact_type') return responses.onset === 'sudden';
-        if (id === 'body_side') return !!responses.body_area;
+        // Skip problem_type if already pre-filled from daily form
+        if (id === 'problem_type') return !preFilledComplaint;
+        // Injury-only steps
+        if (['onset', 'status', 'body_area', 'impact', 'time_loss'].includes(id)) return isInjury;
+        if (id === 'body_side') return isInjury;
+        if (id === 'mechanism' || id === 'contact_type') return isInjury && responses.onset === 'sudden';
+        // Illness-only steps
+        if (['urti_hoarseness', 'urti_blocked_nose', 'urti_runny_nose', 'urti_sinus_pressure',
+             'urti_sneezing', 'urti_dry_cough', 'urti_wet_cough', 'urti_headache',
+             'illness_impact', 'illness_time_loss'].includes(id)) return isIllness;
         return true;
     });
 
@@ -176,9 +208,12 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const canContinue = (() => {
         if (stepId === 'athlete_select') return !!selectedAthleteId;
         if (stepId === 'intro') return true;
-        if (stepId === 'body_area') return (responses.body_areas || []).length > 0; // body map needs at least one area
+        if (stepId === 'body_area') return (responses.body_areas || []).length > 0;
         if (stepId === 'stress_sources') return (responses.stress_sources || []).length > 0;
         if (stepId === 'nutrition' || stepId === 'hydration') return responses[stepId] >= 1;
+        if (URTI_SYMPTOMS.some(s => s.key === stepId)) return responses[stepId] !== undefined;
+        if (stepId === 'illness_impact') return responses.illness_impact !== undefined && responses.illness_impact !== '';
+        if (stepId === 'illness_time_loss') return responses.illness_time_loss !== undefined && responses.illness_time_loss !== '';
         return responses[stepId] !== undefined && responses[stepId] !== null && responses[stepId] !== '';
     })();
 
@@ -189,37 +224,54 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         if (!athleteId || !teamId) return;
         setSubmitting(true);
         try {
-            // Save wellness response (weekly tier)
+            const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+
+            // Save wellness response (weekly tier) — includes both injury and illness metric data
             const wellnessResponse = await DatabaseService.saveWellnessResponse({
                 athlete_id: athleteId,
                 team_id: teamId,
-                session_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
+                session_date: today,
                 responses: {
                     fatigue_trend: responses.fatigue_trend,
                     sleep_trend: responses.sleep_trend,
                     nutrition: responses.nutrition,
                     hydration: responses.hydration,
                     stress_sources: responses.stress_sources,
+                    // illness symptom data (URTI)
+                    ...(isIllness && {
+                        urti_hoarseness: responses.urti_hoarseness,
+                        urti_blocked_nose: responses.urti_blocked_nose,
+                        urti_runny_nose: responses.urti_runny_nose,
+                        urti_sinus_pressure: responses.urti_sinus_pressure,
+                        urti_sneezing: responses.urti_sneezing,
+                        urti_dry_cough: responses.urti_dry_cough,
+                        urti_wet_cough: responses.urti_wet_cough,
+                        urti_headache: responses.urti_headache,
+                        illness_impact: responses.illness_impact,
+                        illness_time_loss: responses.illness_time_loss,
+                    }),
                 },
                 tier: 'weekly',
                 injury_report: responses.body_areas?.length > 0 ? { areas: responses.body_areas } : undefined,
             });
 
-            // Save injury classification
-            await DatabaseService.saveInjuryClassification({
-                athlete_id: athleteId,
-                wellness_response_id: wellnessResponse?.id,
-                problem_type: responses.problem_type,
-                onset: responses.onset,
-                status: responses.status,
-                body_area: responses.body_area,
-                body_side: responses.body_side,
-                mechanism: responses.mechanism,
-                contact_type: responses.contact_type,
-                performance_impact: responses.impact,
-                time_loss_category: responses.time_loss,
-                classification_date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
-            });
+            // Only save injury classification when problem involves a physical injury
+            if (isInjury) {
+                await DatabaseService.saveInjuryClassification({
+                    athlete_id: athleteId,
+                    wellness_response_id: wellnessResponse?.id,
+                    problem_type: responses.problem_type,
+                    onset: responses.onset,
+                    status: responses.status,
+                    body_area: responses.body_area,
+                    body_side: responses.body_side,
+                    mechanism: responses.mechanism,
+                    contact_type: responses.contact_type,
+                    performance_impact: responses.impact,
+                    time_loss_category: responses.time_loss,
+                    classification_date: today,
+                });
+            }
 
             setSubmitted(true);
         } catch (err) {
@@ -311,7 +363,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     const stepHeadings: Record<string, { heading: string; instruction: string }> = {
         athlete_select: { heading: 'Who are you?', instruction: 'Select your name to begin.' },
-        intro: { heading: `Hi ${athleteName.split(' ')[0] || ''}`, instruction: 'Based on your recent check-ins, we\'d like a bit more detail to help manage your load better. This takes about 5 minutes.' },
+        intro: { heading: `Hi ${athleteName.split(' ')[0] || ''}`, instruction: 'Based on your recent check-ins, we\'d like a bit more detail to help manage your load better. This takes between 2–5 minutes.' },
         problem_type: { heading: 'Type of Problem', instruction: 'What best describes your current issue?' },
         onset: { heading: 'How Did It Start?', instruction: 'Was it a specific event or has it built up gradually?' },
         status: { heading: 'Is This New?', instruction: 'Has this happened before in the same area?' },
@@ -321,6 +373,16 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         contact_type: { heading: 'Was There Contact?', instruction: 'Did this involve contact with a person or object?' },
         impact: { heading: 'Impact on Performance', instruction: 'How much is this affecting your ability to train?' },
         time_loss: { heading: 'Expected Time Out', instruction: 'How long do you expect this to affect your availability?' },
+        urti_hoarseness:    { heading: 'Hoarseness', instruction: 'Rate any voice roughness or hoarseness you\'re experiencing.' },
+        urti_blocked_nose:  { heading: 'Blocked / Plugged Nose', instruction: 'Rate how blocked or plugged your nose feels.' },
+        urti_runny_nose:    { heading: 'Runny Nose', instruction: 'Rate any runny nose you\'re experiencing.' },
+        urti_sinus_pressure:{ heading: 'Sinus Pressure', instruction: 'Rate any facial pressure or sinus pain you\'re experiencing.' },
+        urti_sneezing:      { heading: 'Sneezing', instruction: 'Rate how frequently you\'re sneezing.' },
+        urti_dry_cough:     { heading: 'Dry Cough', instruction: 'Rate any dry, unproductive cough you\'re experiencing.' },
+        urti_wet_cough:     { heading: 'Wet Cough', instruction: 'Rate any cough that produces mucus or sputum.' },
+        urti_headache:      { heading: 'Headache', instruction: 'Rate any headache you\'re currently experiencing.' },
+        illness_impact:     { heading: 'Impact on Performance', instruction: 'How much is this illness affecting your ability to train?' },
+        illness_time_loss:  { heading: 'Expected Time Out', instruction: 'How long do you expect this illness to affect your availability?' },
         fatigue_trend: { heading: 'Fatigue Trend', instruction: 'Over the past week, how has your fatigue been trending?' },
         sleep_trend: { heading: 'Sleep Trend', instruction: 'Over the past week, how has your sleep quality been trending?' },
         nutrition: { heading: 'Nutrition', instruction: 'Rate your nutritional consistency this week.' },
@@ -398,6 +460,48 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                         <div className="space-y-2.5">
                             <OptionButton value="injury" label="Injury" desc="Musculoskeletal issue (muscle, joint, bone)" isSelected={responses.problem_type === 'injury'} onClick={() => setVal('problem_type', 'injury')} />
                             <OptionButton value="illness" label="Illness" desc="Non-musculoskeletal (cold, flu, stomach, etc.)" isSelected={responses.problem_type === 'illness'} onClick={() => setVal('problem_type', 'illness')} />
+                            <OptionButton value="both" label="Injury + Illness" desc="I have both physical pain and illness symptoms" isSelected={responses.problem_type === 'both'} onClick={() => setVal('problem_type', 'both')} />
+                        </div>
+                    )}
+
+                    {/* URTI illness symptom steps — one per screen */}
+                    {URTI_SYMPTOMS.some(s => s.key === stepId) && (
+                        <div className="space-y-2.5">
+                            {URTI_OPTIONS.map((opt, idx) => {
+                                const isSelected = responses[stepId] === idx;
+                                return (
+                                    <OptionButton
+                                        key={opt}
+                                        value={idx}
+                                        label={opt}
+                                        isSelected={isSelected}
+                                        onClick={() => setVal(stepId, idx)}
+                                        color={idx === 0 ? 'emerald' : idx === 1 ? 'lime' : idx === 2 ? 'amber' : 'rose'}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Illness impact — reuse IMPACT_LEVELS */}
+                    {stepId === 'illness_impact' && (
+                        <div className="space-y-2.5">
+                            {IMPACT_LEVELS.map(il => (
+                                <OptionButton key={il.value} value={il.value} label={il.label} desc={il.desc} color={il.color}
+                                    isSelected={responses.illness_impact === il.value}
+                                    onClick={() => setVal('illness_impact', il.value)} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Illness time loss — reuse TIME_LOSS_BINS */}
+                    {stepId === 'illness_time_loss' && (
+                        <div className="space-y-2.5">
+                            {TIME_LOSS_BINS.map(tl => (
+                                <OptionButton key={tl.value} value={tl.value} label={tl.label} desc={tl.desc}
+                                    isSelected={responses.illness_time_loss === tl.value}
+                                    onClick={() => setVal('illness_time_loss', tl.value)} />
+                            ))}
                         </div>
                     )}
 

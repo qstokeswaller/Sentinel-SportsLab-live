@@ -58,7 +58,7 @@ interface FormStep {
     id: string;
     heading: string;
     instruction?: string;
-    type: 'athlete_select' | 'availability' | 'yes_no' | 'scale_negative' | 'scale_positive' | 'number' | 'readiness' | 'body_map';
+    type: 'athlete_select' | 'availability' | 'yes_no' | 'health_type' | 'scale_negative' | 'scale_positive' | 'number' | 'readiness' | 'body_map';
     lowLabel?: string;
     highLabel?: string;
     conditional?: boolean;  // only show if certain condition met
@@ -67,7 +67,7 @@ interface FormStep {
 const ALL_STEPS: FormStep[] = [
     { id: 'athlete', heading: 'Who are you?', instruction: 'Select your name to begin.', type: 'athlete_select' },
     { id: 'availability', heading: 'Availability', instruction: 'What is your training status today?', type: 'availability' },
-    { id: 'health_complaint', heading: 'Health Check', instruction: 'Do you have any physical complaint today?', type: 'yes_no' },
+    { id: 'health_complaint', heading: 'Health Check', instruction: 'Do you have any physical (medical) complaint today?', type: 'health_type' },
     { id: 'complaint_areas', heading: 'Where is the problem?', instruction: 'Tap the affected area(s) on the body map. Tap again to increase severity.', type: 'body_map', conditional: true },
     { id: 'fatigue', heading: 'Fatigue', instruction: 'How fatigued do you feel right now?', type: 'scale_negative', lowLabel: 'Fully fresh', highLabel: 'Completely exhausted' },
     { id: 'soreness', heading: 'Muscle Soreness', instruction: 'Rate your overall muscle soreness.', type: 'scale_negative', lowLabel: 'No soreness', highLabel: 'Severe pain' },
@@ -108,7 +108,8 @@ const FifaDailyWellnessForm: React.FC = () => {
     const [selectedAthleteId, setSelectedAthleteId] = useState('');
     const [weeklyTriggered, setWeeklyTriggered] = useState(false);
     const [weeklyFollowUp, setWeeklyFollowUp] = useState(false);
-    const [lastWeeklyDate, setLastWeeklyDate] = useState<string | null>(null); // when they last did the in-depth form
+    const [lastWeeklyDate, setLastWeeklyDate] = useState<string | null>(null);   // last deep check date
+    const [repeatTriggerDate, setRepeatTriggerDate] = useState<string | null>(null); // last daily with same flag
 
     useEffect(() => {
         const load = async () => {
@@ -126,9 +127,9 @@ const FifaDailyWellnessForm: React.FC = () => {
         load();
     }, [teamId]);
 
-    // Filter steps — show complaint_areas only when health_complaint = Yes
+    // Filter steps — show complaint_areas only when complaint involves an injury
     const STEPS = ALL_STEPS.filter(s => {
-        if (s.id === 'complaint_areas') return responses.health_complaint === 'Yes';
+        if (s.id === 'complaint_areas') return responses.health_complaint === 'injury' || responses.health_complaint === 'both';
         return true;
     });
 
@@ -171,7 +172,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                 },
                 availability,
                 tier: 'daily',
-                health_problem_flag: responses.health_complaint === 'Yes',
+                health_problem_flag: responses.health_complaint && responses.health_complaint !== 'no',
                 readiness: responses.readiness,
                 injury_report: responses.complaint_areas?.length > 0 ? { areas: responses.complaint_areas } : undefined,
             });
@@ -180,18 +181,50 @@ const FifaDailyWellnessForm: React.FC = () => {
             // Check if this response triggered a flag → prompt weekly form
             const isRedFlag =
                 availability === 'unavailable' ||
-                responses.health_complaint === 'Yes' ||
+                (responses.health_complaint && responses.health_complaint !== 'no') ||
                 responses.fatigue >= 8 ||
                 (responses.sleep_hours != null && responses.sleep_hours <= 5);
 
             if (isRedFlag) {
                 try {
+                    const localDate = (offset = 0) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - offset);
+                        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    };
+                    const todayStr = localDate(0);
+
+                    // Step 1: already completed a deep check this week → ask if anything new
                     const info = await DatabaseService.getRecentWeeklyInfo(selectedAthleteId, 7);
-                    if (!info.hasRecent) {
-                        setWeeklyTriggered(true);
-                    } else {
+                    if (info.hasRecent) {
                         setWeeklyFollowUp(true);
                         setLastWeeklyDate(info.lastDate);
+                    } else {
+                        // Step 2: same flag type in last 3 daily check-ins → ask rather than force
+                        const recentDaily = await DatabaseService.fetchWellnessResponsesByAthlete(
+                            selectedAthleteId, localDate(3)
+                        );
+                        const todayHealthFlag = responses.health_complaint && responses.health_complaint !== 'no';
+                        const todayFatigueFlag = responses.fatigue >= 8;
+                        const todaySleepFlag  = responses.sleep_hours != null && responses.sleep_hours <= 5;
+                        const todayAvailFlag  = availability === 'unavailable';
+
+                        const prevMatch = recentDaily.find(r => {
+                            if ((r.session_date || '').split('T')[0] === todayStr) return false;
+                            if (r.tier === 'weekly') return false;
+                            const rr = r.responses || {};
+                            return (todayHealthFlag && rr.health_complaint && rr.health_complaint !== 'no') ||
+                                   (todayFatigueFlag && rr.fatigue >= 8) ||
+                                   (todaySleepFlag  && rr.sleep_hours != null && rr.sleep_hours <= 5) ||
+                                   (todayAvailFlag  && r.availability === 'unavailable');
+                        });
+
+                        if (prevMatch) {
+                            setWeeklyFollowUp(true);
+                            setRepeatTriggerDate((prevMatch.session_date || '').split('T')[0]);
+                        } else {
+                            setWeeklyTriggered(true);
+                        }
                     }
                 } catch { setWeeklyTriggered(true); }
             }
@@ -299,47 +332,59 @@ const FifaDailyWellnessForm: React.FC = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">One more step</h1>
                     <p className="text-slate-500 mb-6 max-w-sm leading-relaxed">
-                        Based on your responses, your coaching staff need a bit more detail about what you're experiencing. This is a short follow-up — different from your daily check-in — and takes about 5 minutes.
+                        Based on your responses, your coaching staff need a bit more detail about what you're experiencing. This is a short follow-up — different from your daily check-in — and takes between 2–5 minutes.
                     </p>
                     <a
-                        href={`/weekly-wellness/${teamId}/${selectedAthleteId}`}
-                        className="w-full max-w-xs px-6 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xl shadow-rose-200 active:scale-95 transition-all text-base flex items-center justify-center gap-2 mb-4"
+                        href={`/weekly-wellness/${teamId}/${selectedAthleteId}${responses.health_complaint && responses.health_complaint !== 'no' ? `?complaint=${responses.health_complaint}` : ''}`}
+                        className="w-full max-w-xs px-6 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xl shadow-rose-200 active:scale-95 transition-all text-base flex items-center justify-center gap-2"
                     >
                         <AlertTriangle size={18} /> Complete In-Depth Report
                     </a>
-                    <button onClick={() => window.location.reload()} className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
-                        Skip for now
-                    </button>
                 </>
             ) : weeklyFollowUp ? (
-                /* ── STATE 2: Still flagging but recent weekly exists — ask if anything new ── */
+                /* ── STATE 2: Repeat trigger or recent deep check — ask if anything new ── */
                 <>
                     <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-5">
                         <CheckCircle2 size={40} />
                     </div>
                     <h1 className="text-xl font-bold text-slate-900 mb-3">Daily Check-in Saved</h1>
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 max-w-sm text-left">
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                            You completed an <strong>in-depth health report</strong>
-                            {lastWeeklyDate && <> on <strong>{new Date(lastWeeklyDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</strong></>}.
-                            Your daily responses are still flagging similar concerns.
-                        </p>
-                        <p className="text-sm text-slate-600 mt-3 font-medium">
-                            Has anything changed or is there something new since that report?
-                        </p>
+                        {lastWeeklyDate ? (
+                            <>
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    You completed an <strong>in-depth health report</strong> on{' '}
+                                    <strong>{new Date(lastWeeklyDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</strong>.
+                                    Your daily responses are still flagging similar concerns.
+                                </p>
+                                <p className="text-sm text-slate-600 mt-3 font-medium">
+                                    Has anything changed or is there something new since that report?
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    We noticed you flagged a similar concern on{' '}
+                                    <strong>{repeatTriggerDate ? new Date(repeatTriggerDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }) : 'a recent day'}</strong>.
+                                    Your coaching staff are already aware of this.
+                                </p>
+                                <p className="text-sm text-slate-600 mt-3 font-medium">
+                                    Is this the same issue with no new developments, or has something changed?
+                                </p>
+                            </>
+                        )}
                     </div>
                     <div className="w-full max-w-xs space-y-3">
                         <a
-                            href={`/weekly-wellness/${teamId}/${selectedAthleteId}`}
+                            href={`/weekly-wellness/${teamId}/${selectedAthleteId}${responses.health_complaint && responses.health_complaint !== 'no' ? `?complaint=${responses.health_complaint}` : ''}`}
                             className="w-full px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
                         >
-                            Yes — I have something new to report
+                            Yes — something has changed
                         </a>
                         <button
                             onClick={() => window.location.reload()}
                             className="w-full px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all text-sm"
                         >
-                            No change — nothing new
+                            No change — same issue as before
                         </button>
                     </div>
                 </>
@@ -433,28 +478,13 @@ const FifaDailyWellnessForm: React.FC = () => {
                     {/* Availability */}
                     {step.type === 'availability' && renderOptionCards(AVAILABILITY_OPTIONS, 'availability')}
 
-                    {/* Yes/No (health complaint) */}
-                    {step.type === 'yes_no' && (
-                        <div className="space-y-3">
-                            {['No', 'Yes'].map(opt => {
-                                const isSelected = responses[step.id] === opt;
-                                const isYes = opt === 'Yes';
-                                return (
-                                    <button key={opt} type="button"
-                                        onClick={() => setVal(step.id, opt)}
-                                        className={`w-full p-5 rounded-2xl border-2 text-left font-bold text-lg transition-all active:scale-[0.98] ${
-                                            isSelected
-                                                ? isYes
-                                                    ? 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]'
-                                                    : 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]'
-                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                                        }`}>
-                                        {opt}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
+                    {/* Health type — 4 options driving deep check routing */}
+                    {step.type === 'health_type' && renderOptionCards([
+                        { value: 'no',      label: 'No',                      desc: 'No complaints today',                                      color: 'emerald' },
+                        { value: 'injury',  label: 'Yes — Injury related',    desc: 'Physical pain, discomfort or musculoskeletal issue',        color: 'amber' },
+                        { value: 'illness', label: 'Yes — Illness related',   desc: 'Cold, flu, fever or other non-musculoskeletal concern',     color: 'amber' },
+                        { value: 'both',    label: 'Yes — Injury + Illness',  desc: 'Both physical pain and illness symptoms',                   color: 'rose' },
+                    ], 'health_complaint')}
 
                     {/* Negative scale (1=good, 10=bad): fatigue, soreness, stress */}
                     {step.type === 'scale_negative' && renderScale(step.id, false)}
@@ -476,19 +506,6 @@ const FifaDailyWellnessForm: React.FC = () => {
                                 placeholder="e.g. 7.5"
                                 className="w-full text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-6 outline-none focus:border-cyan-500 transition-colors"
                             />
-                            <div className="flex justify-center gap-2">
-                                {[5, 6, 7, 8, 9].map(h => (
-                                    <button key={h} type="button"
-                                        onClick={() => setVal('sleep_hours', h)}
-                                        className={`px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all ${
-                                            responses.sleep_hours === h
-                                                ? 'bg-cyan-500 border-cyan-500 text-white'
-                                                : 'bg-white border-slate-200 text-slate-600'
-                                        }`}>
-                                        {h}h
-                                    </button>
-                                ))}
-                            </div>
                         </div>
                     )}
 

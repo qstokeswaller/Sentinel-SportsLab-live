@@ -370,7 +370,7 @@ const WellnessHub: React.FC = () => {
             { key: 'sleep_hours',   label: 'Sleep Hours',   max: 12, negative: false, color: '#0ea5e9', form: 'daily', type: 'number' },
             { key: 'availability',  label: 'Availability',  max: 0,  negative: false, color: '#22c55e', form: 'daily', type: 'category', options: ['available', 'modified', 'unavailable'] },
             { key: 'readiness',     label: 'Readiness',     max: 0,  negative: false, color: '#6366f1', form: 'daily', type: 'category', options: ['ready', 'compromised', 'not_ready'] },
-            { key: 'health_complaint', label: 'Health Complaint', max: 0, negative: false, color: '#ef4444', form: 'daily', type: 'yesno' },
+            { key: 'health_complaint', label: 'Health Complaint', max: 0, negative: false, color: '#ef4444', form: 'daily', type: 'category', options: ['no', 'injury', 'illness', 'both'] },
         ];
 
         // View options per metric type
@@ -392,7 +392,7 @@ const WellnessHub: React.FC = () => {
                 { id: 'donut',       label: 'Donut Chart' },
                 { id: 'count_bar',   label: 'Count Bar' },
             ],
-            yesno:    [
+            yesno: [
                 { id: 'donut',       label: 'Donut Chart' },
                 { id: 'count_bar',   label: 'Count Bar' },
             ],
@@ -508,16 +508,43 @@ const WellnessHub: React.FC = () => {
                     </div>
                     {trend.length >= 2 && (
                         <div className="w-full max-w-md">
-                            <div className="text-[9px] text-slate-300 font-semibold uppercase mb-2">Daily Average Trend</div>
+                            <div className="text-[9px] text-slate-400 font-semibold uppercase mb-1">Daily Average Trend</div>
                             {(() => {
                                 const tVals = trend.map(t => t.avg);
-                                const min = Math.min(...tVals), max = Math.max(...tVals);
-                                const range = max - min || 1;
-                                const w = 300, h = 60;
-                                const pts = tVals.map((v, i) => `${(i / (tVals.length - 1)) * w},${h - ((v - min) / range) * (h - 10) - 5}`).join(' ');
+                                const yMax = activeDef.max || 10;
+                                const PAD_L = 22, PAD_B = 14, PAD_T = 4, PAD_R = 4;
+                                const W = 300, H = 70;
+                                const plotW = W - PAD_L - PAD_R;
+                                const plotH = H - PAD_T - PAD_B;
+                                const xPos = (i: number) => PAD_L + (tVals.length > 1 ? (i / (tVals.length - 1)) * plotW : plotW / 2);
+                                const yPos = (v: number) => PAD_T + plotH - (v / yMax) * plotH;
+                                const gridVals = activeDef.key === 'sleep_hours' ? [0, 6, 12] : [0, 5, 10];
                                 return (
-                                    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-14">
-                                        <polyline points={pts} fill="none" stroke={activeDef.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16">
+                                        {gridVals.map(gv => (
+                                            <g key={gv}>
+                                                <line x1={PAD_L} y1={yPos(gv)} x2={W - PAD_R} y2={yPos(gv)} stroke="#f1f5f9" strokeWidth="1" />
+                                                <text x={PAD_L - 3} y={yPos(gv) + 3} textAnchor="end" fontSize="6" fill="#cbd5e1">{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
+                                            </g>
+                                        ))}
+                                        <polygon
+                                            points={[
+                                                ...tVals.map((v, i) => `${xPos(i)},${yPos(v)}`),
+                                                `${xPos(tVals.length - 1)},${PAD_T + plotH}`,
+                                                `${xPos(0)},${PAD_T + plotH}`,
+                                            ].join(' ')}
+                                            fill={activeDef.color} fillOpacity="0.1"
+                                        />
+                                        <polyline points={tVals.map((v, i) => `${xPos(i)},${yPos(v)}`).join(' ')} fill="none" stroke={activeDef.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        {tVals.map((v, i) => {
+                                            const showLabel = tVals.length <= 10 || i === 0 || i === tVals.length - 1;
+                                            return (
+                                                <g key={i}>
+                                                    <circle cx={xPos(i)} cy={yPos(v)} r="2.5" fill={activeDef.color} />
+                                                    {showLabel && <text x={xPos(i)} y={H - 2} textAnchor="middle" fontSize="6" fill="#94a3b8">{trend[i].date}</text>}
+                                                </g>
+                                            );
+                                        })}
                                     </svg>
                                 );
                             })()}
@@ -582,28 +609,75 @@ const WellnessHub: React.FC = () => {
             });
             const trend = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([d, vs]) => ({
                 date: d.slice(5),
-                avg: vs.reduce((s, v) => s + v, 0) / vs.length,
+                avg: +(vs.reduce((s, v) => s + v, 0) / vs.length).toFixed(1),
                 count: vs.length,
             }));
 
             if (trend.length < 2) return <p className="text-xs text-slate-300 italic py-8 text-center">Need at least 2 days of data for trends</p>;
 
-            const tVals = trend.map(t => t.avg);
-            const min = Math.min(...tVals), maxV = Math.max(...tVals);
-            const range = maxV - min || 1;
-            const w = 400, h = 100;
-            const pts = tVals.map((v, i) => ({ x: (i / (tVals.length - 1)) * w, y: h - ((v - min) / range) * (h - 20) - 10 }));
+            // Fixed scale: use metric max (10 for scales, 12 for sleep_hours)
+            const yMax = activeDef.max || 10;
+            const yMin = 0;
+            // SVG dimensions — leave room for Y-axis labels (left) and X-axis labels (bottom)
+            const PAD_L = 28, PAD_B = 18, PAD_T = 8, PAD_R = 8;
+            const W = 400, H = 110;
+            const plotW = W - PAD_L - PAD_R;
+            const plotH = H - PAD_T - PAD_B;
+
+            const xPos = (i: number) => PAD_L + (trend.length > 1 ? (i / (trend.length - 1)) * plotW : plotW / 2);
+            const yPos = (v: number) => PAD_T + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+            // Y grid lines at 0, 25%, 50%, 75%, 100% of scale
+            const gridVals = activeDef.key === 'sleep_hours'
+                ? [0, 3, 6, 9, 12]
+                : [0, 2.5, 5, 7.5, 10];
 
             return (
-                <div className="py-4">
-                    <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full h-32">
-                        <polyline points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke={activeDef.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        {pts.map((p, i) => (
-                            <g key={i}>
-                                <circle cx={p.x} cy={p.y} r="3" fill={activeDef.color} />
-                                <text x={p.x} y={h + 14} textAnchor="middle" className="text-[6px]" fill="#94a3b8">{trend[i].date}</text>
-                            </g>
-                        ))}
+                <div className="py-2">
+                    <div className="text-[9px] text-slate-400 font-semibold mb-1 ml-7">
+                        {activeDef.label} — daily team average · scale {yMin}–{yMax}{activeDef.key === 'sleep_hours' ? 'h' : ''}
+                    </div>
+                    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: '140px' }}>
+                        {/* Grid lines + Y labels */}
+                        {gridVals.map(gv => {
+                            const gy = yPos(gv);
+                            return (
+                                <g key={gv}>
+                                    <line x1={PAD_L} y1={gy} x2={W - PAD_R} y2={gy} stroke="#f1f5f9" strokeWidth="1" />
+                                    <text x={PAD_L - 4} y={gy + 3} textAnchor="end" fontSize="7" fill="#94a3b8">{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
+                                </g>
+                            );
+                        })}
+                        {/* X axis baseline */}
+                        <line x1={PAD_L} y1={PAD_T + plotH} x2={W - PAD_R} y2={PAD_T + plotH} stroke="#e2e8f0" strokeWidth="1" />
+                        {/* Fill area under line */}
+                        <polygon
+                            points={[
+                                ...trend.map((t, i) => `${xPos(i)},${yPos(t.avg)}`),
+                                `${xPos(trend.length - 1)},${PAD_T + plotH}`,
+                                `${xPos(0)},${PAD_T + plotH}`,
+                            ].join(' ')}
+                            fill={activeDef.color}
+                            fillOpacity="0.08"
+                        />
+                        {/* Line */}
+                        <polyline
+                            points={trend.map((t, i) => `${xPos(i)},${yPos(t.avg)}`).join(' ')}
+                            fill="none" stroke={activeDef.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        />
+                        {/* Dots + X labels */}
+                        {trend.map((t, i) => {
+                            const showLabel = trend.length <= 14 || i % Math.ceil(trend.length / 10) === 0 || i === trend.length - 1;
+                            return (
+                                <g key={i}>
+                                    <circle cx={xPos(i)} cy={yPos(t.avg)} r="3" fill={activeDef.color} />
+                                    <title>{`${t.date}: ${t.avg}${activeDef.key === 'sleep_hours' ? 'h' : ''} (${t.count} responses)`}</title>
+                                    {showLabel && (
+                                        <text x={xPos(i)} y={H - 4} textAnchor="middle" fontSize="7" fill="#94a3b8">{t.date}</text>
+                                    )}
+                                </g>
+                            );
+                        })}
                     </svg>
                 </div>
             );
@@ -648,7 +722,7 @@ const WellnessHub: React.FC = () => {
                 if (noResp > 0) counts['No Response'] = noResp;
             }
 
-            const COLORS = { available: '#22c55e', modified: '#f59e0b', unavailable: '#ef4444', ready: '#22c55e', compromised: '#f59e0b', not_ready: '#ef4444', Yes: '#ef4444', No: '#22c55e', 'No Response': '#e2e8f0' };
+            const COLORS = { available: '#22c55e', modified: '#f59e0b', unavailable: '#ef4444', ready: '#22c55e', compromised: '#f59e0b', not_ready: '#ef4444', no: '#22c55e', injury: '#f59e0b', illness: '#3b82f6', both: '#ef4444', 'No Response': '#e2e8f0' };
             const data = Object.entries(counts).map(([label, count]) => ({ label, count, color: COLORS[label] || '#6366f1' }));
             const total = data.reduce((s, d) => s + d.count, 0);
 
@@ -690,7 +764,7 @@ const WellnessHub: React.FC = () => {
                 const v = getVal(r);
                 if (v) counts[v] = (counts[v] || 0) + 1;
             });
-            const COLORS = { available: '#22c55e', modified: '#f59e0b', unavailable: '#ef4444', ready: '#22c55e', compromised: '#f59e0b', not_ready: '#ef4444', Yes: '#ef4444', No: '#22c55e' };
+            const COLORS = { available: '#22c55e', modified: '#f59e0b', unavailable: '#ef4444', ready: '#22c55e', compromised: '#f59e0b', not_ready: '#ef4444', no: '#22c55e', injury: '#f59e0b', illness: '#3b82f6', both: '#ef4444' };
             const data = Object.entries(counts).sort((a, b) => b[1] - a[1]);
             const maxC = Math.max(...data.map(([, c]) => c), 1);
 
@@ -754,32 +828,45 @@ const WellnessHub: React.FC = () => {
             const maxVal = 10;
             const barW = 100 / rows.length;
 
+            const isSameMetric = activeDef.key === compareDef.key;
             return (
                 <div>
+                    {/* Explanation */}
+                    <p className="text-[10px] text-slate-400 mb-3 leading-relaxed">
+                        Each athlete shows two bars side-by-side — <span className="font-semibold" style={{ color: activeDef.color }}>{activeDef.label}</span> (left) vs <span className="font-semibold" style={{ color: compareDef.color }}>{compareDef.label}</span> (right). Both use the 1–10 scale. Useful for spotting patterns, e.g. high fatigue + low mood together.
+                    </p>
+                    {isSameMetric && (
+                        <p className="text-[10px] text-amber-500 font-semibold mb-2 bg-amber-50 rounded-lg px-3 py-1.5">Both metrics are the same — select a different metric to compare in the "Compare With" selector above.</p>
+                    )}
                     {/* Legend */}
-                    <div className="flex items-center gap-4 mb-4 px-2">
-                        <span className="flex items-center gap-1.5 text-[10px] font-semibold">
-                            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeDef.color }} /> {activeDef.label}
+                    <div className="flex items-center gap-4 mb-3 px-2">
+                        <span className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-700">
+                            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeDef.color }} /> {activeDef.label} (left bar)
                         </span>
-                        <span className="flex items-center gap-1.5 text-[10px] font-semibold">
-                            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: compareDef.color }} /> {compareDef.label}
+                        <span className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-700">
+                            <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: compareDef.color }} /> {compareDef.label} (right bar)
                         </span>
                     </div>
-                    {/* Grouped bars */}
-                    <div className="flex items-end gap-1 h-48 px-2 pb-6 relative">
+                    {/* Grouped bars with SVG for proper grid lines */}
+                    <div className="relative" style={{ height: '180px' }}>
                         {/* Y-axis labels */}
-                        <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[7px] text-slate-300 font-semibold w-6">
-                            <span>10</span><span>5</span><span>0</span>
+                        <div className="absolute left-0 top-0 bottom-5 flex flex-col justify-between text-[7px] text-slate-300 font-semibold w-6">
+                            <span>10</span><span>7.5</span><span>5</span><span>2.5</span><span>0</span>
                         </div>
-                        <div className="flex-1 flex items-end gap-[2px] ml-7">
+                        {/* Grid lines */}
+                        <div className="absolute left-6 right-0 top-0 bottom-5 flex flex-col justify-between pointer-events-none">
+                            {[0,1,2,3,4].map(i => <div key={i} className="border-t border-slate-100 w-full" />)}
+                        </div>
+                        {/* Bars */}
+                        <div className="absolute left-7 right-0 bottom-5 top-0 flex items-end gap-[3px]">
                             {rows.map((r, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
-                                    <div className="flex gap-[1px] items-end w-full justify-center" style={{ height: '160px' }}>
+                                <div key={i} className="flex-1 flex flex-col items-center gap-0.5 min-w-0 h-full justify-end">
+                                    <div className="flex gap-[2px] items-end w-full justify-center" style={{ height: 'calc(100% - 14px)' }}>
                                         {r.v1 != null && (
-                                            <div className="rounded-t-sm transition-all duration-500" style={{ width: '45%', height: `${(r.v1 / maxVal) * 100}%`, backgroundColor: activeDef.color }} title={`${activeDef.label}: ${r.v1}`} />
+                                            <div className="rounded-t transition-all duration-500" style={{ width: '45%', height: `${(r.v1 / maxVal) * 100}%`, backgroundColor: activeDef.color }} title={`${activeDef.label}: ${r.v1}`} />
                                         )}
                                         {r.v2 != null && (
-                                            <div className="rounded-t-sm transition-all duration-500" style={{ width: '45%', height: `${(r.v2 / maxVal) * 100}%`, backgroundColor: compareDef.color }} title={`${compareDef.label}: ${r.v2}`} />
+                                            <div className="rounded-t transition-all duration-500" style={{ width: '45%', height: `${(r.v2 / maxVal) * 100}%`, backgroundColor: compareDef.color }} title={`${compareDef.label}: ${r.v2}`} />
                                         )}
                                     </div>
                                     <span className="text-[7px] font-semibold text-slate-400 truncate w-full text-center" title={r.name}>{r.name}</span>
@@ -1882,7 +1969,7 @@ const WellnessHub: React.FC = () => {
                                     <div>
                                         <div className="font-semibold text-base">Weekly Health Check</div>
                                         <div className={`text-[9px] font-bold uppercase tracking-wide ${selectedTemplate?.id === '__weekly_health__' ? 'text-amber-100' : 'text-amber-400'}`}>
-                                            Deep check · FIFA/IOC aligned · 5 min
+                                            Deep check · FIFA/IOC aligned · 2–5 min
                                         </div>
                                     </div>
                                 </div>
@@ -2084,7 +2171,7 @@ const WellnessHub: React.FC = () => {
                                     </div>
                                     <div className="flex-1">
                                         <h4 className="text-sm font-semibold text-slate-900 group-hover:text-amber-600 transition-colors">Weekly Health Check</h4>
-                                        <p className="text-[10px] text-amber-500 font-medium">Deep check · FIFA/IOC aligned · 5 min</p>
+                                        <p className="text-[10px] text-amber-500 font-medium">Deep check · FIFA/IOC aligned · 2–5 min</p>
                                     </div>
                                     <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-400 transition-colors" />
                                 </div>
@@ -2108,7 +2195,7 @@ const WellnessHub: React.FC = () => {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-semibold text-slate-900">{previewTemplate === 'daily' ? 'Wellness Check' : 'Weekly Health Check'}</h3>
-                                            <p className="text-[10px] text-slate-500">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · ~5 min'}</p>
+                                            <p className="text-[10px] text-slate-500">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · 2–5 min'}</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
@@ -2125,31 +2212,44 @@ const WellnessHub: React.FC = () => {
                                     {(() => {
                                         const questions = previewTemplate === 'daily' ? [
                                             { id: 'd1', label: 'Availability', type: 'Buttons', instruction: 'What is your training status today?', options: ['Fully Available', 'Modified Training', 'Unavailable — Training', 'Unavailable — Match'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-rose-500'] },
-                                            { id: 'd2', label: 'Health Check', type: 'Yes / No', instruction: 'Do you have any physical complaint today?', options: ['No', 'Yes'], colors: ['bg-emerald-500', 'bg-amber-500'] },
-                                            { id: 'd2b', label: 'Complaint Areas', type: 'Buttons', instruction: 'Tap affected area(s) on body map with severity.', options: ['Body Map — front & back view', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500'], note: 'Only shown if complaint = Yes' },
+                                            { id: 'd2', label: 'Health Check', type: 'Buttons', instruction: 'Do you have any physical (medical) complaint today?', options: ['No', 'Yes — Injury related', 'Yes — Illness related', 'Yes — Injury + Illness'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-amber-500', 'bg-rose-500'] },
+                                            { id: 'd2b', label: 'Complaint Areas', type: 'Body Map', instruction: 'Tap affected area(s) on body map. Tap again to increase severity.', options: ['Body Map — front & back view', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500'], note: 'Only shown if Injury or Both selected' },
                                             { id: 'd3', label: 'Fatigue', type: '1-10 Scale', instruction: '1 = Fully fresh → 10 = Completely exhausted', negative: true },
                                             { id: 'd4', label: 'Muscle Soreness', type: '1-10 Scale', instruction: '1 = No soreness → 10 = Severe pain', negative: true },
                                             { id: 'd5', label: 'Sleep Quality', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
                                             { id: 'd6', label: 'Stress', type: '1-10 Scale', instruction: '1 = Completely relaxed → 10 = Extreme stress', negative: true },
                                             { id: 'd7', label: 'Mood', type: '1-10 Scale', instruction: '1 = Very low → 10 = Exceptional', negative: false },
-                                            { id: 'd8', label: 'Sleep Duration', type: 'Number', instruction: 'Hours slept last night. Quick-select: 5-9h.', quickSelect: ['5h', '6h', '7h', '8h', '9h'] },
+                                            { id: 'd8', label: 'Sleep Duration', type: 'Number', instruction: 'Enter hours slept last night (any value, e.g. 3, 7.5, 10).' },
                                             { id: 'd9', label: 'Readiness', type: 'Buttons', instruction: 'How ready are you to train today?', options: ['Ready to Train', 'Slightly Compromised', 'Not Ready'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
                                         ] : [
-                                            { id: 'w0', label: 'Introduction', type: 'Buttons', instruction: 'Explains why the form is needed. Not a question.', options: ['Continue'], colors: ['bg-slate-800'], note: 'Auto-passes — info screen only' },
-                                            { id: 'w1', label: 'Problem Type', type: 'Buttons', instruction: 'What best describes your current issue?', options: ['Injury (musculoskeletal)', 'Illness'], colors: ['bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w2', label: 'Onset', type: 'Buttons', instruction: 'Was it a specific event or has it built up?', options: ['Sudden Onset', 'Gradual Onset'], colors: ['bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w3', label: 'Status', type: 'Buttons', instruction: 'Has this happened before in the same area?', options: ['New Problem', 'Recurrence (healed, came back)', 'Exacerbation (never fully healed)'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w4', label: 'Body Area', type: 'Buttons', instruction: 'Body map with reference image. Tap areas, tap again for severity.', options: ['FIFA body areas — front & back view', 'Hip and Groin separated', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w5', label: 'Side', type: 'Buttons', instruction: 'Which side is affected?', options: ['Left', 'Right', 'Bilateral (both)', 'Central'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w6', label: 'Mechanism', type: 'List', instruction: 'What activity caused or triggered it?', options: ['Running', 'Change of direction', 'Kicking', 'Landing', 'Tackle', 'Collision', 'Jumping', 'Other'], note: 'Only shown for sudden onset' },
-                                            { id: 'w7', label: 'Contact Type', type: 'List', instruction: 'Did this involve contact?', options: ['Non-contact', 'Indirect contact', 'Direct — Opponent', 'Direct — Teammate', 'Direct — Ball', 'Direct — Goal post'], note: 'Only shown for sudden onset' },
-                                            { id: 'w8', label: 'Performance Impact', type: 'Buttons', instruction: 'How much is this affecting your training?', options: ['No Impact', 'Minor (can fully train)', 'Moderate (reduced performance)', 'Severe (cannot complete session)'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w9', label: 'Expected Time-Loss', type: 'Buttons', instruction: 'How long do you expect this to affect availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'] },
-                                            { id: 'w10', label: 'Fatigue Trend', type: 'Buttons', instruction: 'Over the past week, how has your fatigue trended?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w11', label: 'Sleep Trend', type: 'Buttons', instruction: 'Over the past week, how has your sleep trended?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
-                                            { id: 'w12', label: 'Nutrition', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
-                                            { id: 'w13', label: 'Hydration', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding', negative: false },
-                                            { id: 'w14', label: 'Stress Sources', type: 'Multi', instruction: 'What are your main stress sources right now?', options: ['Football / Sport', 'Work / School', 'Personal', 'None'] },
+                                            { id: 'w0', label: 'Introduction', type: 'Info screen', instruction: 'Explains why the form is needed. Auto-continues.', options: ['Confirm & Continue'], colors: ['bg-slate-800'], note: 'No input required — context screen only' },
+                                            { id: 'w1', label: 'Problem Type', type: 'Buttons', instruction: 'What best describes your current issue?', options: ['Injury', 'Illness', 'Injury + Illness'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800'], note: 'Skipped if triggered from daily form (already answered)' },
+                                            // ── INJURY PATH (shown only if Injury or Both) ──
+                                            { id: 'w2', label: 'Onset', type: 'Buttons', instruction: 'Was it a specific event or has it built up gradually?', options: ['Sudden Onset', 'Gradual Onset'], colors: ['bg-slate-800', 'bg-slate-800'], note: 'Injury path only' },
+                                            { id: 'w3', label: 'Status', type: 'Buttons', instruction: 'Has this happened before in the same area?', options: ['New Problem', 'Recurrence (fully healed, came back)', 'Exacerbation (never fully healed)'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800'], note: 'Injury path only' },
+                                            { id: 'w4', label: 'Body Area', type: 'Body Map', instruction: 'Select the primary area affected. FIFA-aligned body regions.', options: ['FIFA body areas — front & back view', 'Hip/Groin separated', 'Severity: Minor → Moderate → Severe'], colors: ['bg-slate-800', 'bg-amber-500', 'bg-rose-500'], note: 'Injury path only' },
+                                            { id: 'w5', label: 'Which Side?', type: 'Buttons', instruction: 'Which side is affected?', options: ['Left', 'Right', 'Bilateral (both)', 'Central'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'], note: 'Injury path only' },
+                                            { id: 'w6', label: 'Mechanism', type: 'List', instruction: 'What activity caused or triggered it?', options: ['Running', 'Change of direction', 'Kicking', 'Landing', 'Tackle', 'Collision', 'Jumping', 'Other'], note: 'Injury path · sudden onset only' },
+                                            { id: 'w7', label: 'Contact Type', type: 'List', instruction: 'Did this involve contact with a person or object?', options: ['Non-contact', 'Indirect contact', 'Direct — Opponent', 'Direct — Teammate', 'Direct — Ball', 'Direct — Goal post', 'Direct — Other'], note: 'Injury path · sudden onset only' },
+                                            { id: 'w8', label: 'Performance Impact', type: 'Buttons', instruction: 'How much is this injury affecting your ability to train?', options: ['No Impact', 'Minor — can fully train', 'Moderate — reduced performance', 'Severe — cannot complete session'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Injury path only' },
+                                            { id: 'w9', label: 'Expected Time-Loss', type: 'Buttons', instruction: 'How long do you expect this injury to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-orange-500', 'bg-rose-500'], note: 'Injury path only' },
+                                            // ── ILLNESS PATH (shown only if Illness or Both) ──
+                                            { id: 'w_ill1', label: 'Hoarseness', type: 'Severity', instruction: 'Rate any voice roughness or hoarseness you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill2', label: 'Blocked / Plugged Nose', type: 'Severity', instruction: 'Rate how blocked or plugged your nose feels.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill3', label: 'Runny Nose', type: 'Severity', instruction: 'Rate any runny nose you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill4', label: 'Sinus Pressure', type: 'Severity', instruction: 'Rate any facial pressure or sinus pain.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill5', label: 'Sneezing', type: 'Severity', instruction: 'Rate how frequently you\'re sneezing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill6', label: 'Dry Cough', type: 'Severity', instruction: 'Rate any dry, unproductive cough.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill7', label: 'Wet Cough', type: 'Severity', instruction: 'Rate any cough that produces mucus or sputum.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill8', label: 'Headache', type: 'Severity', instruction: 'Rate any headache you\'re currently experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill9', label: 'Illness Impact', type: 'Buttons', instruction: 'How much is this illness affecting your ability to train?', options: ['No Impact', 'Minor', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill10', label: 'Illness Time-Loss', type: 'Buttons', instruction: 'How long do you expect this illness to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-orange-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            // ── SHARED CLOSING (always shown) ──
+                                            { id: 'w10', label: 'Fatigue Trend', type: 'Buttons', instruction: 'Over the past week, how has your fatigue been trending?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
+                                            { id: 'w11', label: 'Sleep Trend', type: 'Buttons', instruction: 'Over the past week, how has your sleep quality been trending?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
+                                            { id: 'w12', label: 'Nutrition', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding consistency this week', negative: false },
+                                            { id: 'w13', label: 'Hydration', type: '1-10 Scale', instruction: '1 = Very poor → 10 = Outstanding consistency this week', negative: false },
+                                            { id: 'w14', label: 'Stress Sources', type: 'Multi-select', instruction: 'What are your main stress sources right now? Select all that apply.', options: ['Football / Sport', 'Work / School', 'Personal', 'None'] },
                                         ];
 
                                         const negColors = ['bg-emerald-400', 'bg-emerald-400', 'bg-lime-400', 'bg-lime-400', 'bg-yellow-400', 'bg-yellow-400', 'bg-amber-400', 'bg-orange-400', 'bg-red-400', 'bg-red-500'];
