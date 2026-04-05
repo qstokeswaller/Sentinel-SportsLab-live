@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
-    UploadIcon, PlusIcon, ChevronRightIcon,
+    UploadIcon, PlusIcon, ChevronRightIcon, ShieldIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -14,12 +14,19 @@ import InterventionModal from '../components/analytics/InterventionModal';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../utils/constants';
 import { DatabaseService } from '../services/databaseService';
 import ACWRLineChart from '../components/analytics/ACWRLineChart';
+import IndividualizedThresholds from '../components/analytics/IndividualizedThresholds';
+import SmartCsvMapper from '../components/ui/SmartCsvMapper';
+import { getAcwrSchema } from '../utils/csvSchemas';
+import { processAthleteMatching } from '../utils/athleteMatcher';
+import UnmatchedAthleteResolver from '../components/ui/UnmatchedAthleteResolver';
+import type { ResolvedEntry } from '../components/ui/UnmatchedAthleteResolver';
 
 const SECTIONS = [
     { title: 'Questionnaire Data', desc: 'Wellness check-in responses, readiness scores & team trends', icon: ClipboardListIcon },
     { title: 'Medical Reports',    desc: 'Athlete opt-outs, medical status and strategic notes',       icon: StethoscopeIcon },
     { title: 'Injury Report',      desc: 'Injury tracking, body map analysis & return-to-play',        icon: ShieldAlertIcon },
     { title: 'ACWR Monitoring',    desc: 'Track acute:chronic workload ratios to prevent overtraining and optimise load', icon: ActivityIcon },
+    { title: 'Load Thresholds',   desc: 'Individualized ACWR thresholds — personal safe training bands per athlete', icon: ShieldIcon },
 ];
 
 // Helper: get initials from a name
@@ -35,6 +42,16 @@ const ACWRMonitoringHub: React.FC = () => {
     const [isInterventionOpen, setIsInterventionOpen] = useState(false);
     const [drilldownFilter, setDrilldownFilter] = useState<'28d' | '7d' | 'all'>('28d');
     const csvRef = useRef<HTMLInputElement>(null);
+    const [isCsvMapperOpen, setIsCsvMapperOpen] = useState(false);
+    const [csvMapperHeaders, setCsvMapperHeaders] = useState<string[]>([]);
+    const [csvMapperRows, setCsvMapperRows] = useState<Record<string, string>[]>([]);
+
+    // Unmatched athlete resolver state
+    const [showAcwrResolver, setShowAcwrResolver] = useState(false);
+    const [acwrUnmatched, setAcwrUnmatched] = useState<{ csvName: string; rowCount: number }[]>([]);
+    const [acwrPendingMatched, setAcwrPendingMatched] = useState<any[]>([]);
+    const [acwrPendingUnmatched, setAcwrPendingUnmatched] = useState<any[]>([]);
+    const [acwrPendingMapping, setAcwrPendingMapping] = useState<Record<string, string>>({});
 
     // Teams with ACWR enabled (excluding t_private which is handled per-athlete)
     const enabledTeams = teams.filter(t => t.id !== 't_private' && acwrSettings[t.id]?.enabled);
@@ -258,47 +275,102 @@ const ACWRMonitoringHub: React.FC = () => {
         return { total, critical, warning, clear, noData, excluded };
     }, [rosterData]);
 
-    // CSV import handler
-    const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // CSV import — Step 1: read file and open SmartCsvMapper
+    const handleCsvFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const text = evt.target?.result as string;
-            const lines = text.trim().split('\n');
+            const text = (evt.target?.result as string).trim();
+            const lines = text.split('\n');
             if (lines.length < 2) { showToast?.('CSV file is empty or invalid'); return; }
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const dateIdx = headers.findIndex(h => ['date', 'session_date', 'training_date'].includes(h));
-            const athleteIdx = headers.findIndex(h => ['athlete', 'player', 'name', 'athlete_name', 'player_name'].includes(h));
-            const rpeIdx = headers.findIndex(h => ['rpe', 'session_rpe', 'srpe_rating'].includes(h));
-            const durationIdx = headers.findIndex(h => ['duration', 'duration_min', 'minutes', 'session_duration'].includes(h));
-            const srpeIdx = headers.findIndex(h => ['srpe', 'session_load', 'training_load', 'load'].includes(h));
-            const typeIdx = headers.findIndex(h => ['type', 'session_type'].includes(h));
-            if (athleteIdx === -1) { showToast?.('CSV must contain an athlete/player name column'); return; }
-            if (srpeIdx === -1 && (rpeIdx === -1 || durationIdx === -1)) { showToast?.('CSV must contain sRPE or RPE + Duration columns'); return; }
-            let imported = 0;
-            const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
-            for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.trim());
-                const nameRaw = cols[athleteIdx]?.toLowerCase() || '';
-                const matched = allPlayers.find(p => p.name?.toLowerCase() === nameRaw || p.name?.toLowerCase().includes(nameRaw) || nameRaw.includes(p.name?.toLowerCase()));
-                if (!matched) continue;
-                const date = dateIdx >= 0 ? cols[dateIdx] : new Date().toISOString().split('T')[0];
-                const rpeVal = rpeIdx >= 0 ? Number(cols[rpeIdx]) || 0 : 0;
-                const durVal = durationIdx >= 0 ? Number(cols[durationIdx]) || 0 : 0;
-                const srpeVal = srpeIdx >= 0 ? Number(cols[srpeIdx]) || (rpeVal * durVal) : rpeVal * durVal;
-                const sessionType = typeIdx >= 0 ? cols[typeIdx]?.toLowerCase() || 'training' : 'training';
-                if (srpeVal > 0) {
-                    try {
-                        DatabaseService.saveTrainingLoad({ athlete_id: matched.id, team_id: matched.teamId, date, metric_type: teamSettings?.method || 'srpe', value: srpeVal, session_type: sessionType, rpe: rpeVal || null, duration_minutes: durVal || null });
-                        imported++;
-                    } catch (err) {}
-                }
-            }
-            showToast?.(`Imported ${imported} training load records from CSV`);
+            const headers = lines[0].split(',').map(h => h.trim());
+            const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+                const cols = line.split(',').map(c => c.trim());
+                const obj: Record<string, string> = {};
+                headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+                return obj;
+            });
+            setCsvMapperHeaders(headers);
+            setCsvMapperRows(rows);
+            setIsCsvMapperOpen(true);
         };
         reader.readAsText(file);
         e.target.value = '';
+    };
+
+    // CSV import — Step 2: SmartCsvMapper confirmed → check for unmatched athletes
+    const handleCsvMapperConfirm = ({ rows, mapping }: { rows: Record<string, string>[]; mapping: Record<string, string> }) => {
+        setIsCsvMapperOpen(false);
+        setAcwrPendingMapping(mapping);
+        const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ id: p.id, name: p.name, teamId: t.id })));
+        const getVal = (row: any, fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
+
+        const { matchedRows, unmatchedNames, unmatchedRows } = processAthleteMatching(
+            rows, allPlayers, (row) => getVal(row, 'athlete')
+        );
+
+        setAcwrPendingMatched(matchedRows);
+        setAcwrPendingUnmatched(unmatchedRows);
+
+        if (unmatchedNames.length > 0) {
+            setAcwrUnmatched(unmatchedNames);
+            setShowAcwrResolver(true);
+        } else {
+            doAcwrImport(matchedRows, mapping);
+        }
+    };
+
+    const handleAcwrResolverConfirm = (resolved: ResolvedEntry[]) => {
+        setShowAcwrResolver(false);
+        const resolvedMap = new Map<string, string>();
+        for (const r of resolved) {
+            if (r.action === 'assign' && r.athleteId) resolvedMap.set(r.csvName.toLowerCase(), r.athleteId);
+        }
+        const newlyMatched = acwrPendingUnmatched
+            .filter(row => resolvedMap.has((row._csvName || '').toLowerCase()))
+            .map(row => ({ ...row, _athleteId: resolvedMap.get((row._csvName || '').toLowerCase()) }));
+        doAcwrImport([...acwrPendingMatched, ...newlyMatched], acwrPendingMapping);
+    };
+
+    const doAcwrImport = (rows: any[], mapping: Record<string, string>) => {
+        const lockedMethod = teamSettings?.method || 'srpe';
+        const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
+        let imported = 0;
+
+        for (const row of rows) {
+            const athleteId = row._athleteId;
+            const player = allPlayers.find(p => p.id === athleteId);
+            if (!player) continue;
+            const getVal = (fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
+
+            const date = getVal('date') || new Date().toISOString().split('T')[0];
+            const sessionType = (getVal('session_type') || 'training').toLowerCase();
+            let value = 0;
+
+            if (lockedMethod === 'srpe') {
+                const directSrpe = Number(getVal('srpe')) || 0;
+                const rpeVal = Number(getVal('rpe')) || 0;
+                const durVal = Number(getVal('duration')) || 0;
+                value = directSrpe > 0 ? directSrpe : rpeVal * durVal;
+            } else {
+                value = Number(getVal('value')) || 0;
+            }
+
+            if (value > 0) {
+                try {
+                    DatabaseService.saveTrainingLoad({
+                        athlete_id: player.id, team_id: player.teamId, date,
+                        metric_type: lockedMethod, value,
+                        session_type: sessionType,
+                        rpe: Number(getVal('rpe')) || null,
+                        duration_minutes: Number(getVal('duration')) || null,
+                    });
+                    imported++;
+                } catch (err) {}
+            }
+        }
+        showToast?.(`Imported ${imported} training load records from CSV`);
     };
 
     // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
@@ -505,8 +577,8 @@ const ACWRMonitoringHub: React.FC = () => {
             {/* Controls bar */}
             {(enabledTeams.length > 0 || enabledPrivateClients.length > 0) && (
                 <>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+                    <div data-tour="acwr-controls" className="flex flex-wrap items-center gap-3">
+                        <div data-tour="acwr-team-selector" className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
                             <UsersIcon size={14} className="text-slate-400" />
                             <select value={selectedTeamId} onChange={e => setSelectedTeamId(e.target.value)} className="bg-transparent text-sm text-slate-700 outline-none">
                                 {enabledTeams.length > 0 && (
@@ -522,13 +594,13 @@ const ACWRMonitoringHub: React.FC = () => {
                             </select>
                         </div>
                         <div className="flex-1" />
-                        <button onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <PlusIcon size={14} /> Log Training Load
                         </button>
-                        <button onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <UploadIcon size={14} /> Import CSV
                         </button>
-                        <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+                        <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFileSelect} />
                     </div>
 
                     {/* Team EWMA trendline — line chart */}
@@ -732,6 +804,24 @@ const ACWRMonitoringHub: React.FC = () => {
                 wellnessData={wellnessData || []}
                 acwrOptions={interventionAthlete?.settings || {}}
             />
+
+            <SmartCsvMapper
+                isOpen={isCsvMapperOpen}
+                onClose={() => setIsCsvMapperOpen(false)}
+                onConfirm={handleCsvMapperConfirm}
+                schema={getAcwrSchema(teamSettings?.method || 'srpe')}
+                csvHeaders={csvMapperHeaders}
+                csvRows={csvMapperRows}
+            />
+
+            <UnmatchedAthleteResolver
+                isOpen={showAcwrResolver}
+                onClose={() => setShowAcwrResolver(false)}
+                onConfirm={handleAcwrResolverConfirm}
+                unmatchedNames={acwrUnmatched}
+                allAthletes={teams.flatMap(t => (t.players || []).map(p => ({ id: p.id, name: p.name })))}
+                teams={teams}
+            />
         </div>
     );
 };
@@ -766,6 +856,7 @@ export const WellnessHubPage: React.FC = () => {
                     {activeSection === 'Medical Reports' && <MedicalReports />}
                     {activeSection === 'Injury Report' && <InjuryReport />}
                     {activeSection === 'ACWR Monitoring' && <ACWRMonitoringHub />}
+                    {activeSection === 'Load Thresholds' && <IndividualizedThresholds />}
                 </div>
             </div>
         );

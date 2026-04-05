@@ -4,7 +4,7 @@ import {
   XIcon, PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
   SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
   Activity as ActivityIcon,
-  Timer as TimerIcon,
+  Timer as TimerIcon, CopyIcon,
 } from 'lucide-react';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
@@ -470,6 +470,36 @@ export const ProgramBuilderModal = ({
     }
   };
 
+  // Save as new program (duplicate) — always creates, never updates
+  const handleSaveAsNew = async () => {
+    if (!programName.trim()) { setError('Program name is required.'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const tags = programTags.split(',').map((t) => t.trim()).filter(Boolean);
+      const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage });
+
+      const dayPayloads = days.map((d, i) => ({
+        day_number: i + 1,
+        name: d.name,
+        instructions: d.instructions,
+        linked_sessions: d.linkedSessions,
+        exercises: [
+          ...d.warmup.map((r, oi) => rowToPayload(r, 'warmup', oi)),
+          ...d.workout.map((r, oi) => rowToPayload(r, 'workout', oi)),
+          ...d.cooldown.map((r, oi) => rowToPayload(r, 'cooldown', oi)),
+        ],
+      }));
+
+      await saveFull.mutateAsync({ programId: created.id, days: dayPayloads });
+      onClose();
+    } catch (e: any) {
+      setError(e.message ?? 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const activeDay = days[activeDayIdx];
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -491,14 +521,27 @@ export const ProgramBuilderModal = ({
               {editingProgram ? 'Edit Program' : 'Create a Program'}
             </h2>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <SaveIcon size={16} />
-            {saving ? 'Saving...' : 'Save & Close'}
-          </button>
+          <div className="flex items-center gap-2">
+            {editingProgram && (
+              <button
+                onClick={handleSaveAsNew}
+                disabled={saving}
+                className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+              >
+                <CopyIcon size={14} />
+                Save as New
+              </button>
+            )}
+            <button
+              data-tour="program-save-button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+            >
+              <SaveIcon size={16} />
+              {saving ? 'Saving...' : editingProgram ? 'Save Changes' : 'Save & Close'}
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content */}
@@ -506,10 +549,11 @@ export const ProgramBuilderModal = ({
           <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
 
             {/* Program meta */}
-            <div className="grid grid-cols-2 gap-4">
+            <div data-tour="program-meta" className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Name *</label>
                 <input
+                  data-tour="program-name-input"
                   value={programName}
                   onChange={(e) => setProgramName(e.target.value)}
                   placeholder="e.g. Push Pull Legs 2 Rotations"
@@ -663,6 +707,7 @@ export const ProgramBuilderModal = ({
                       )}
 
                       {/* Sections */}
+                      <div data-tour="program-day-sections">
                       {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => (
                         <div key={sec} className="space-y-3">
                           <div className="flex items-center gap-3">
@@ -692,6 +737,7 @@ export const ProgramBuilderModal = ({
                         </div>
                       ))}
 
+                      </div>
                       {/* Day instructions */}
                       <div>
                         <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>

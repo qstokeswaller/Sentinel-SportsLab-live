@@ -6,6 +6,8 @@ import { BaselineTrendTerminal } from '../components/analytics/BaselineTrendTerm
 import { PerformanceIntelligenceTerminal } from '../components/analytics/PerformanceIntelligenceTerminal';
 import { ScenarioModellingTerminal } from '../components/analytics/ScenarioModellingTerminal';
 import { KpiWatchlistModal } from '../components/analytics/KpiWatchlistModal';
+import DoseResponseTerminal from '../components/analytics/DoseResponseTerminal';
+import ForceVelocityTerminal from '../components/analytics/ForceVelocityTerminal';
 import { DatabaseService } from '../services/databaseService';
 
 export const AnalyticsHubPage = () => {
@@ -59,7 +61,7 @@ export const AnalyticsHubPage = () => {
                         <p className="text-sm text-slate-500 mt-0.5">Diagnostic monitoring terminals for elite high-performance units.</p>
                     </div>
                     {/* Subject selector */}
-                    <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 gap-2">
+                    <div data-tour="analytics-selector" className="relative flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 gap-2">
                         <UserIcon size={14} className="text-slate-400 shrink-0" />
                         <select
                             value={selectedAnalyticsAthleteId || ''}
@@ -113,7 +115,7 @@ export const AnalyticsHubPage = () => {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div data-tour="analytics-modules" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {modules.map(mod => (
                         <button
                             key={mod.id}
@@ -168,7 +170,7 @@ export const AnalyticsHubPage = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-200">
+                <div data-tour="analytics-dates" className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-200">
                     <CalendarIcon size={13} className="text-slate-400" />
                     <input type="date" value={analyticsStartDate} onChange={(e) => setAnalyticsStartDate(e.target.value)} className="text-xs text-slate-700 outline-none bg-transparent w-28 cursor-pointer" />
                     <span className="text-slate-300 text-xs">–</span>
@@ -233,6 +235,22 @@ export const AnalyticsHubPage = () => {
                         teams={teams}
                     />
                 </div>
+            )}
+
+            {activeAnalyticsModule === 'dose_response' && (
+                <DoseResponseTerminal
+                    selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
+                    subjectAthleteIds={subjectAthleteIds}
+                    analyticsStartDate={analyticsStartDate}
+                    analyticsEndDate={analyticsEndDate}
+                />
+            )}
+
+            {activeAnalyticsModule === 'fv_profile' && (
+                <ForceVelocityTerminal
+                    selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
+                    subjectAthleteIds={subjectAthleteIds}
+                />
             )}
 
             <KpiWatchlistModal

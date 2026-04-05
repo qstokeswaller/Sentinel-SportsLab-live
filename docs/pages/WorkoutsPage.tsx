@@ -70,19 +70,10 @@ const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
         </div>
 
         {program.overview && (
-            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">{program.overview}</p>
+            <p className="text-xs text-slate-400 leading-relaxed mb-3">{program.overview}</p>
         )}
 
-        <div className="mt-auto pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-            <div>
-                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Created</div>
-                <div className="text-xs text-slate-600">{formatDate(program.created_at)}</div>
-            </div>
-            <div>
-                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Last edit</div>
-                <div className="text-xs text-slate-600">{timeAgo(program.updated_at)}</div>
-            </div>
-        </div>
+        <div className="mt-auto" />
 
         <button
             onClick={onView}
@@ -331,6 +322,7 @@ export const WorkoutsPage = () => {
                 </div>
 
                 {/* ──────── PROGRAMS SECTION (collapsible) ──────── */}
+                <div data-tour="workout-programs">
                 <SectionHeader
                     title="Workout Programs"
                     subtitle="Multi-day structured programs"
@@ -343,6 +335,7 @@ export const WorkoutsPage = () => {
                         <>
                             <ViewToggle view={programsView} setView={setProgramsView} />
                             <button
+                                data-tour="workout-create"
                                 onClick={(e) => { e.stopPropagation(); setEditingProgram(null); setIsProgramBuilderOpen(true); }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all"
                             >
@@ -443,7 +436,9 @@ export const WorkoutsPage = () => {
                     </div>
                 </SectionHeader>
 
+                </div>
                 {/* ──────── WORKOUT PACKETS SECTION (collapsible) ──────── */}
+                <div data-tour="workout-packets">
                 <SectionHeader
                     title="Workout Packets"
                     subtitle="One-off workout templates — assign & schedule to athletes"
@@ -591,6 +586,7 @@ export const WorkoutsPage = () => {
                         )}
                     </div>
                 </SectionHeader>
+                </div>
 
                 {/* Delete confirm modal */}
                 <ConfirmDeleteModal
