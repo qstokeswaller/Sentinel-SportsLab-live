@@ -26,12 +26,9 @@ interface LocalExRow {
   exerciseBodyParts: string[];
   sets: string;
   reps: string;
-  rest_min: number;
-  rest_sec: number;
+  rest: string;
   rir: string;
   rpe: string;
-  intensity: string;
-  tempo: string;
   notes: string;
   weight: string;
 }
@@ -121,12 +118,9 @@ const emptyRow = (ex: { id: string; name: string; categories: string[]; body_par
   exerciseBodyParts: ex.body_parts ?? [],
   sets: '',
   reps: '',
-  rest_min: 0,
-  rest_sec: 0,
+  rest: '',
   rir: '',
   rpe: '',
-  intensity: '',
-  tempo: '',
   notes: '',
   weight: '',
 });
@@ -182,7 +176,7 @@ const ExRow = ({
           <Trash2Icon size={14} />
         </button>
       </div>
-      <div className="grid grid-cols-4 lg:grid-cols-9 gap-2 px-4 py-3">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 px-4 py-3">
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sets</label>
           <input className={inputCls} placeholder="3" value={row.sets} onChange={(e) => upd('sets', e.target.value)} />
@@ -191,17 +185,9 @@ const ExRow = ({
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Reps</label>
           <input className={inputCls} placeholder="8-12" value={row.reps} onChange={(e) => upd('reps', e.target.value)} />
         </div>
-        <div className="flex gap-1">
-          <div className="flex-1">
-            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Rest Min</label>
-            <input type="number" min={0} className={inputCls} value={row.rest_min}
-              onChange={(e) => upd('rest_min', parseInt(e.target.value) || 0)} />
-          </div>
-          <div className="flex-1">
-            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sec</label>
-            <input type="number" min={0} max={59} className={inputCls} value={row.rest_sec}
-              onChange={(e) => upd('rest_sec', parseInt(e.target.value) || 0)} />
-          </div>
+        <div>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Rest (s)</label>
+          <input className={inputCls} placeholder="90" value={row.rest} onChange={(e) => upd('rest', e.target.value)} />
         </div>
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">RIR</label>
@@ -212,18 +198,10 @@ const ExRow = ({
           <input className={inputCls} placeholder="8" value={row.rpe} onChange={(e) => upd('rpe', e.target.value)} />
         </div>
         <div>
-          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Intensity</label>
-          <input className={inputCls} placeholder="75%" value={row.intensity} onChange={(e) => upd('intensity', e.target.value)} />
-        </div>
-        <div>
-          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Tempo</label>
-          <input className={inputCls} placeholder="3-1-2" value={row.tempo} onChange={(e) => upd('tempo', e.target.value)} />
-        </div>
-        <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Weight (kg)</label>
           <input className={inputCls} placeholder="80" value={row.weight} onChange={(e) => upd('weight', e.target.value)} />
         </div>
-        <div className="col-span-4 lg:col-span-9">
+        <div className="col-span-3 lg:col-span-6">
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Notes</label>
           <input className={inputCls} placeholder="e.g. Full ROM, control the eccentric" value={row.notes}
             onChange={(e) => upd('notes', e.target.value)} />
@@ -289,15 +267,16 @@ export const ProgramBuilderModal = ({
 
       const mapRow = (e: any): LocalExRow => {
         const exInfo = exerciseFullMap[e.exercise_id];
+        const restSec = (e.rest_min ?? 0) * 60 + (e.rest_sec ?? 0);
         return {
           tempId: e.id, exerciseId: e.exercise_id,
-          exerciseName: exInfo?.name || e.exercise_id,
-          exerciseCategories: exInfo?.categories || [],
-          exerciseBodyParts: exInfo?.body_parts || [],
+          exerciseName: e.exercise_name || exInfo?.name || e.exercise_id,
+          exerciseCategories: exInfo?.categories || e.categories || [],
+          exerciseBodyParts: exInfo?.body_parts || e.body_parts || [],
           sets: e.sets ?? '', reps: e.reps ?? '',
-          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
+          rest: restSec > 0 ? String(restSec) : '',
           rir: e.rir ?? '', rpe: e.rpe ?? '',
-          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
+          notes: e.notes ?? '',
           weight: e.weight ?? '',
         };
       };
@@ -422,14 +401,20 @@ export const ProgramBuilderModal = ({
 
   // ── Save ─────────────────────────────────────────────────────────────────
 
+  const parseRest = (s: string): { rest_min: number; rest_sec: number } => {
+    if (!s || !s.trim()) return { rest_min: 0, rest_sec: 0 };
+    const totalSec = parseInt(s) || 0;
+    return { rest_min: Math.floor(totalSec / 60), rest_sec: totalSec % 60 };
+  };
+
   const rowToPayload = (r: LocalExRow, section: Section, oi: number) => ({
     exercise_id: r.exerciseId,
     section,
     order_index: oi,
     sets: r.sets, reps: r.reps,
-    rest_min: r.rest_min, rest_sec: r.rest_sec,
+    ...parseRest(r.rest),
     rir: r.rir, rpe: r.rpe,
-    intensity: r.intensity, tempo: r.tempo, notes: r.notes,
+    intensity: null, tempo: null, notes: r.notes,
     weight: r.weight,
   });
 

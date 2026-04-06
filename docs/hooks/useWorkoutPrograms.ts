@@ -96,23 +96,27 @@ export function useProgramWithDays(programId: string | null) {
           .order('order_index');
         if (eErr) throw eErr;
 
-        // Resolve exercise names from the exercises table
+        // Resolve exercise metadata from the exercises table
         const exerciseIds = [...new Set((exData ?? []).map((e: any) => e.exercise_id).filter(Boolean))];
-        let nameMap: Record<string, string> = {};
+        let exMetaMap: Record<string, { name: string; description?: string; body_parts?: string[]; categories?: string[]; video_url?: string }> = {};
         if (exerciseIds.length > 0) {
-          const { data: nameData, error: nameErr } = await supabase
+          const { data: metaData, error: metaErr } = await supabase
             .from('exercises')
-            .select('id, name')
+            .select('id, name, description, body_parts, categories, video_url')
             .in('id', exerciseIds);
-          if (nameErr) console.warn('Could not resolve exercise names:', nameErr.message);
-          if (nameData) {
-            for (const n of nameData) { nameMap[n.id] = n.name; }
+          if (metaErr) console.warn('Could not resolve exercise metadata:', metaErr.message);
+          if (metaData) {
+            for (const n of metaData) { exMetaMap[n.id] = n; }
           }
         }
 
         exercises = (exData ?? []).map((e: any) => ({
           ...e,
-          exercise_name: nameMap[e.exercise_id] || null,
+          exercise_name: exMetaMap[e.exercise_id]?.name || null,
+          description: exMetaMap[e.exercise_id]?.description || null,
+          body_parts: exMetaMap[e.exercise_id]?.body_parts || [],
+          categories: exMetaMap[e.exercise_id]?.categories || [],
+          video_url: exMetaMap[e.exercise_id]?.video_url || null,
         })) as WorkoutDayExercise[];
       }
 

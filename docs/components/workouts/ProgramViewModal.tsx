@@ -204,15 +204,15 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
 
 const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNameMap, isExpanded, onToggle }) => {
   const hasMeta = row.sets || row.reps || row.rest_min || row.rest_sec || row.rir || row.rpe || row.weight;
-  const exerciseName = exerciseMap[row.exercise_id] || row.exercise_name || row.name || row.exercise_id;
-  // Try ID lookup, then name-based lookup via pre-built map
-  const fullInfo = exerciseFullMap?.[row.exercise_id] || (exerciseName ? exerciseNameMap?.[exerciseName.toLowerCase()] : null);
-  const rawDesc = fullInfo?.description || '';
+  const exerciseName = row.exercise_name || exerciseMap[row.exercise_id] || row.name || row.exercise_id;
+  // Use metadata fetched with the program first, fall back to exerciseFullMap from AppState
+  const mapInfo = exerciseFullMap?.[row.exercise_id] || (exerciseName ? exerciseNameMap?.[exerciseName.toLowerCase()] : null);
+  const rawDesc = row.description || mapInfo?.description || '';
   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
-  const rawVideoUrl = fullInfo?.video_url || '';
+  const rawVideoUrl = row.video_url || mapInfo?.video_url || '';
   const videoUrl = rawVideoUrl && rawVideoUrl.startsWith('http') ? rawVideoUrl : '';
-  const bodyParts = fullInfo?.body_parts || [];
-  const categories = fullInfo?.categories || [];
+  const bodyParts = (row.body_parts?.length ? row.body_parts : null) || mapInfo?.body_parts || [];
+  const categories = (row.categories?.length ? row.categories : null) || mapInfo?.categories || [];
   const hasDetail = true; // Always expandable
 
   return (
