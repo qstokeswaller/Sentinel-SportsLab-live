@@ -21,6 +21,7 @@ export interface WorkoutDay {
   day_number: number;
   name: string | null;
   instructions: string | null;
+  is_rest_day: boolean;
   created_at: string;
 }
 
@@ -194,6 +195,7 @@ export interface SaveDayPayload {
   day_number: number;
   name: string;
   instructions: string;
+  is_rest_day?: boolean;
   exercises: {
     exercise_id: string;
     section: 'warmup' | 'workout' | 'cooldown';
@@ -248,6 +250,7 @@ export function useSaveProgramFull() {
             day_number: d.day_number,
             name: d.name,
             instructions: d.instructions,
+            is_rest_day: d.is_rest_day ?? false,
           }))
         )
         .select();
