@@ -189,6 +189,7 @@ export const WorkoutsPage = () => {
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState(null);
     const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+    const [editingProgramBasic, setEditingProgramBasic] = useState(null);
     const { data: editingFullProgram } = useProgramWithDays(editingProgramId);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmDeleteTemplate, setConfirmDeleteTemplate] = useState<{ id: string; name: string } | null>(null);
@@ -386,7 +387,7 @@ export const WorkoutsPage = () => {
                                         key={p.id}
                                         program={p}
                                         onView={() => { setViewingProgram(p); setIsViewModalOpen(true); }}
-                                        onEdit={() => { setEditingProgram(null); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }}
+                                        onEdit={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }}
                                         onDelete={() => setConfirmDeleteId(p.id)}
                                         onShare={() => setShareTarget({ type: 'program', id: p.id, name: p.name })}
                                     />
@@ -424,7 +425,7 @@ export const WorkoutsPage = () => {
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         <button onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Share"><Share2Icon size={13} /></button>
-                                                        <button onClick={() => { setEditingProgram(null); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
+                                                        <button onClick={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
                                                         <button onClick={() => setConfirmDeleteId(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete"><Trash2Icon size={13} /></button>
                                                         <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all" title="View"><EyeIcon size={13} /></button>
                                                     </div>
@@ -610,8 +611,8 @@ export const WorkoutsPage = () => {
             {/* Program Builder (full-screen overlay) */}
             <ProgramBuilderModal
                 isOpen={isProgramBuilderOpen}
-                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgram(null); setEditingProgramId(null); }}
-                editingProgram={editingFullProgram ?? editingProgram}
+                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgram(null); setEditingProgramId(null); setEditingProgramBasic(null); }}
+                editingProgram={editingFullProgram ?? editingProgram ?? editingProgramBasic}
             />
 
             {/* Program View Modal */}

@@ -164,6 +164,16 @@ export const DatabaseService = {
         return data || [];
     },
 
+    // --- WORKOUT PROGRAM EXERCISE IDs (for recently-used tracking) ---
+    async fetchProgramExerciseIds(): Promise<string[]> {
+        const { data, error } = await (supabase as any)
+            .from('workout_day_exercises')
+            .select('exercise_id')
+            .limit(1000);
+        if (error) throw error;
+        return [...new Set((data || []).map((r: any) => r.exercise_id).filter(Boolean))];
+    },
+
     // --- WORKOUT TEMPLATES ---
     async fetchWorkoutTemplates() {
         const { data, error } = await (supabase as any)

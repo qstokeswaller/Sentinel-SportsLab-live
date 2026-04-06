@@ -909,8 +909,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
     const isInPersonalLibrary = (exerciseId: string) => personalExerciseIds.includes(exerciseId);
 
+    const [programExerciseIds, setProgramExerciseIds] = useState<string[]>([]);
+
+    // Fetch exercise IDs used in workout programs (stored in workout_day_exercises table)
+    useEffect(() => {
+        if (isLoading) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const ids = await DatabaseService.fetchProgramExerciseIds();
+                if (!cancelled) setProgramExerciseIds(ids);
+            } catch { /* non-critical */ }
+        })();
+        return () => { cancelled = true; };
+    }, [isLoading]);
+
     const recentlyUsedExerciseIds = useMemo(() => {
         const idSet = new Set<string>();
+        // From workout packets (in AppState)
         (workoutTemplates || []).forEach((tpl: any) => {
             const sections = tpl.sections || {};
             ['warmup', 'workout', 'cooldown'].forEach(sec => {
@@ -919,8 +935,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 });
             });
         });
+        // From workout programs (fetched from DB)
+        programExerciseIds.forEach(id => idSet.add(id));
         return Array.from(idSet);
-    }, [workoutTemplates]);
+    }, [workoutTemplates, programExerciseIds]);
 
     const [quickLogForm, setQuickLogForm] = useState({ exercise: '', sets: '', reps: '', weight: '', rpe: '', pattern: 'Squat' });
 
