@@ -493,19 +493,32 @@ const ACWRMonitoringHub: React.FC = () => {
                     ))}
                 </div>
 
-                {/* ACWR Trend Line Chart */}
-                {acwrResult.ratioHistory?.length > 2 && (
-                    <ACWRLineChart
-                        dates={acwrResult.dates || []}
-                        ratioHistory={acwrResult.ratioHistory || []}
-                        acuteHistory={acwrResult.acuteHistory}
-                        chronicHistory={acwrResult.chronicHistory}
-                        restDays={acwrResult.restDays}
-                        height={200}
-                        showAcuteChronic={true}
-                        title={`ACWR Trend — ${playerData.name}`}
-                    />
-                )}
+                {/* ACWR Trend Line Chart — sliced to active filter window */}
+                {acwrResult.ratioHistory?.length > 2 && (() => {
+                    const chartN = drilldownFilter === '7d' ? 7 : drilldownFilter === '28d' ? 28 : 9999;
+                    const allDates = acwrResult.dates || [];
+                    const allRatios = acwrResult.ratioHistory || [];
+                    const allAcute = acwrResult.acuteHistory || [];
+                    const allChronic = acwrResult.chronicHistory || [];
+                    const sliceFrom = Math.max(0, allDates.length - chartN);
+                    const chartDates   = allDates.slice(sliceFrom);
+                    const chartRatios  = allRatios.slice(sliceFrom);
+                    const chartAcute   = allAcute.slice(sliceFrom);
+                    const chartChronic = allChronic.slice(sliceFrom);
+                    if (chartRatios.length < 2) return null;
+                    return (
+                        <ACWRLineChart
+                            dates={chartDates}
+                            ratioHistory={chartRatios}
+                            acuteHistory={chartAcute}
+                            chronicHistory={chartChronic}
+                            restDays={acwrResult.restDays}
+                            height={200}
+                            showAcuteChronic={true}
+                            title={`ACWR Trend — ${playerData.name} (Last ${drilldownFilter === 'all' ? 'All' : drilldownFilter})`}
+                        />
+                    );
+                })()}
 
                 {/* Daily breakdown table */}
                 {dailyData.length > 0 && (
