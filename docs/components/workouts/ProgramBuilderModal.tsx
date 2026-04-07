@@ -4,7 +4,7 @@ import {
   XIcon, PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
   SaveIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon,
   Activity as ActivityIcon,
-  Timer as TimerIcon, CopyIcon, MoonIcon,
+  Timer as TimerIcon,
 } from 'lucide-react';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
@@ -26,9 +26,12 @@ interface LocalExRow {
   exerciseBodyParts: string[];
   sets: string;
   reps: string;
-  rest: string;
+  rest_min: number;
+  rest_sec: number;
   rir: string;
   rpe: string;
+  intensity: string;
+  tempo: string;
   notes: string;
   weight: string;
 }
@@ -37,7 +40,6 @@ interface LocalDay {
   tempId: string;
   name: string;
   instructions: string;
-  isRestDay: boolean;
   warmup: LocalExRow[];
   workout: LocalExRow[];
   cooldown: LocalExRow[];
@@ -105,7 +107,6 @@ const newDay = (n: number): LocalDay => ({
   tempId: tempId(),
   name: `Day ${n}`,
   instructions: '',
-  isRestDay: false,
   warmup: [],
   workout: [],
   cooldown: [],
@@ -120,9 +121,12 @@ const emptyRow = (ex: { id: string; name: string; categories: string[]; body_par
   exerciseBodyParts: ex.body_parts ?? [],
   sets: '',
   reps: '',
-  rest: '',
+  rest_min: 0,
+  rest_sec: 0,
   rir: '',
   rpe: '',
+  intensity: '',
+  tempo: '',
   notes: '',
   weight: '',
 });
@@ -178,7 +182,7 @@ const ExRow = ({
           <Trash2Icon size={14} />
         </button>
       </div>
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 px-4 py-3">
+      <div className="grid grid-cols-4 lg:grid-cols-9 gap-2 px-4 py-3">
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sets</label>
           <input className={inputCls} placeholder="3" value={row.sets} onChange={(e) => upd('sets', e.target.value)} />
@@ -187,9 +191,17 @@ const ExRow = ({
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Reps</label>
           <input className={inputCls} placeholder="8-12" value={row.reps} onChange={(e) => upd('reps', e.target.value)} />
         </div>
-        <div>
-          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Rest (s)</label>
-          <input className={inputCls} placeholder="90" value={row.rest} onChange={(e) => upd('rest', e.target.value)} />
+        <div className="flex gap-1">
+          <div className="flex-1">
+            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Rest Min</label>
+            <input type="number" min={0} className={inputCls} value={row.rest_min}
+              onChange={(e) => upd('rest_min', parseInt(e.target.value) || 0)} />
+          </div>
+          <div className="flex-1">
+            <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Sec</label>
+            <input type="number" min={0} max={59} className={inputCls} value={row.rest_sec}
+              onChange={(e) => upd('rest_sec', parseInt(e.target.value) || 0)} />
+          </div>
         </div>
         <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">RIR</label>
@@ -200,10 +212,18 @@ const ExRow = ({
           <input className={inputCls} placeholder="8" value={row.rpe} onChange={(e) => upd('rpe', e.target.value)} />
         </div>
         <div>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Intensity</label>
+          <input className={inputCls} placeholder="75%" value={row.intensity} onChange={(e) => upd('intensity', e.target.value)} />
+        </div>
+        <div>
+          <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Tempo</label>
+          <input className={inputCls} placeholder="3-1-2" value={row.tempo} onChange={(e) => upd('tempo', e.target.value)} />
+        </div>
+        <div>
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Weight (kg)</label>
           <input className={inputCls} placeholder="80" value={row.weight} onChange={(e) => upd('weight', e.target.value)} />
         </div>
-        <div className="col-span-3 lg:col-span-6">
+        <div className="col-span-4 lg:col-span-9">
           <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Notes</label>
           <input className={inputCls} placeholder="e.g. Full ROM, control the eccentric" value={row.notes}
             onChange={(e) => upd('notes', e.target.value)} />
@@ -269,16 +289,15 @@ export const ProgramBuilderModal = ({
 
       const mapRow = (e: any): LocalExRow => {
         const exInfo = exerciseFullMap[e.exercise_id];
-        const restSec = (e.rest_min ?? 0) * 60 + (e.rest_sec ?? 0);
         return {
           tempId: e.id, exerciseId: e.exercise_id,
-          exerciseName: e.exercise_name || exInfo?.name || e.exercise_id,
-          exerciseCategories: exInfo?.categories || e.categories || [],
-          exerciseBodyParts: exInfo?.body_parts || e.body_parts || [],
+          exerciseName: exInfo?.name || e.exercise_id,
+          exerciseCategories: exInfo?.categories || [],
+          exerciseBodyParts: exInfo?.body_parts || [],
           sets: e.sets ?? '', reps: e.reps ?? '',
-          rest: restSec > 0 ? String(restSec) : '',
+          rest_min: e.rest_min ?? 0, rest_sec: e.rest_sec ?? 0,
           rir: e.rir ?? '', rpe: e.rpe ?? '',
-          notes: e.notes ?? '',
+          intensity: e.intensity ?? '', tempo: e.tempo ?? '', notes: e.notes ?? '',
           weight: e.weight ?? '',
         };
       };
@@ -286,7 +305,6 @@ export const ProgramBuilderModal = ({
         tempId: d.id,
         name: d.name ?? `Day ${d.day_number}`,
         instructions: d.instructions ?? '',
-        isRestDay: d.is_rest_day ?? false,
         warmup: d.exercises.filter((e) => e.section === 'warmup').map(mapRow),
         workout: d.exercises.filter((e) => e.section === 'workout').map(mapRow),
         cooldown: d.exercises.filter((e) => e.section === 'cooldown').map(mapRow),
@@ -373,17 +391,6 @@ export const ProgramBuilderModal = ({
   const updateDay = (idx: number, field: keyof LocalDay, val: string) =>
     setDays((prev) => prev.map((d, i) => (i === idx ? { ...d, [field]: val } : d)));
 
-  const toggleRestDay = (idx: number) =>
-    setDays((prev) => prev.map((d, i) => {
-      if (i !== idx) return d;
-      const nowRest = !d.isRestDay;
-      return {
-        ...d,
-        isRestDay: nowRest,
-        name: nowRest ? 'Rest Day' : (d.name === 'Rest Day' ? `Day ${idx + 1}` : d.name),
-      };
-    }));
-
   // ── Exercise helpers ─────────────────────────────────────────────────────
 
   const addExercise = (ex: { id: string; name: string; categories: string[]; body_parts?: string[] }) => {
@@ -415,20 +422,14 @@ export const ProgramBuilderModal = ({
 
   // ── Save ─────────────────────────────────────────────────────────────────
 
-  const parseRest = (s: string): { rest_min: number; rest_sec: number } => {
-    if (!s || !s.trim()) return { rest_min: 0, rest_sec: 0 };
-    const totalSec = parseInt(s) || 0;
-    return { rest_min: Math.floor(totalSec / 60), rest_sec: totalSec % 60 };
-  };
-
   const rowToPayload = (r: LocalExRow, section: Section, oi: number) => ({
     exercise_id: r.exerciseId,
     section,
     order_index: oi,
     sets: r.sets, reps: r.reps,
-    ...parseRest(r.rest),
+    rest_min: r.rest_min, rest_sec: r.rest_sec,
     rir: r.rir, rpe: r.rpe,
-    intensity: null, tempo: null, notes: r.notes,
+    intensity: r.intensity, tempo: r.tempo, notes: r.notes,
     weight: r.weight,
   });
 
@@ -452,9 +453,8 @@ export const ProgramBuilderModal = ({
         day_number: i + 1,
         name: d.name,
         instructions: d.instructions,
-        is_rest_day: d.isRestDay,
         linked_sessions: d.linkedSessions,
-        exercises: d.isRestDay ? [] : [
+        exercises: [
           ...d.warmup.map((r, oi) => rowToPayload(r, 'warmup', oi)),
           ...d.workout.map((r, oi) => rowToPayload(r, 'workout', oi)),
           ...d.cooldown.map((r, oi) => rowToPayload(r, 'cooldown', oi)),
@@ -462,37 +462,6 @@ export const ProgramBuilderModal = ({
       }));
 
       await saveFull.mutateAsync({ programId, days: dayPayloads });
-      onClose();
-    } catch (e: any) {
-      setError(e.message ?? 'Save failed. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Save as new program (duplicate) — always creates, never updates
-  const handleSaveAsNew = async () => {
-    if (!programName.trim()) { setError('Program name is required.'); return; }
-    setSaving(true);
-    setError('');
-    try {
-      const tags = programTags.split(',').map((t) => t.trim()).filter(Boolean);
-      const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage });
-
-      const dayPayloads = days.map((d, i) => ({
-        day_number: i + 1,
-        name: d.name,
-        instructions: d.instructions,
-        is_rest_day: d.isRestDay,
-        linked_sessions: d.linkedSessions,
-        exercises: d.isRestDay ? [] : [
-          ...d.warmup.map((r, oi) => rowToPayload(r, 'warmup', oi)),
-          ...d.workout.map((r, oi) => rowToPayload(r, 'workout', oi)),
-          ...d.cooldown.map((r, oi) => rowToPayload(r, 'cooldown', oi)),
-        ],
-      }));
-
-      await saveFull.mutateAsync({ programId: created.id, days: dayPayloads });
       onClose();
     } catch (e: any) {
       setError(e.message ?? 'Save failed. Please try again.');
@@ -522,27 +491,14 @@ export const ProgramBuilderModal = ({
               {editingProgram ? 'Edit Program' : 'Create a Program'}
             </h2>
           </div>
-          <div className="flex items-center gap-2">
-            {editingProgram && (
-              <button
-                onClick={handleSaveAsNew}
-                disabled={saving}
-                className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
-              >
-                <CopyIcon size={14} />
-                Save as New
-              </button>
-            )}
-            <button
-              data-tour="program-save-button"
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
-            >
-              <SaveIcon size={16} />
-              {saving ? 'Saving...' : editingProgram ? 'Save Changes' : 'Save & Close'}
-            </button>
-          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <SaveIcon size={16} />
+            {saving ? 'Saving...' : 'Save & Close'}
+          </button>
         </div>
 
         {/* Scrollable content */}
@@ -550,11 +506,10 @@ export const ProgramBuilderModal = ({
           <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
 
             {/* Program meta */}
-            <div data-tour="program-meta" className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Name *</label>
                 <input
-                  data-tour="program-name-input"
                   value={programName}
                   onChange={(e) => setProgramName(e.target.value)}
                   placeholder="e.g. Push Pull Legs 2 Rotations"
@@ -631,18 +586,13 @@ export const ProgramBuilderModal = ({
                         <button
                           key={d.tempId}
                           onClick={() => setActiveDayIdx(globalIdx)}
-                          className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
+                          className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-t-lg transition-all border-b-2 ${
                             activeDayIdx === globalIdx
-                              ? d.isRestDay
-                                ? 'border-slate-400 text-slate-500 bg-white'
-                                : 'border-indigo-600 text-indigo-600 bg-white'
+                              ? 'border-indigo-600 text-indigo-600 bg-white'
                               : 'border-transparent text-slate-400 hover:text-slate-700'
                           }`}
                         >
                           Day {i + 1}
-                          {d.isRestDay && (
-                            <span className="w-3.5 h-3.5 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-[7px] font-black shrink-0">R</span>
-                          )}
                         </button>
                       );
                     })}
@@ -661,27 +611,14 @@ export const ProgramBuilderModal = ({
                   {/* Active day content — only rendered for the week that owns it */}
                   {isActiveWeek && activeDay && (
                     <div className="p-6 space-y-6">
-                      {/* Day name + rest day toggle + delete */}
+                      {/* Day name + delete */}
                       <div className="flex items-center gap-3">
                         <input
                           value={activeDay.name}
                           onChange={(e) => updateDay(activeDayIdx, 'name', e.target.value)}
                           placeholder="Day Name *"
-                          className={`flex-1 border rounded-xl px-4 py-2.5 text-sm font-bold outline-none transition-colors bg-white ${activeDay.isRestDay ? 'border-slate-300 text-slate-500 focus:border-slate-400' : 'border-slate-200 focus:border-indigo-500'}`}
+                          className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-indigo-500 bg-white"
                         />
-                        <button
-                          type="button"
-                          onClick={() => toggleRestDay(activeDayIdx)}
-                          title={activeDay.isRestDay ? 'Convert to training day' : 'Mark as rest day'}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all shrink-0 ${
-                            activeDay.isRestDay
-                              ? 'bg-slate-800 text-white border-slate-800 hover:bg-slate-700'
-                              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700'
-                          }`}
-                        >
-                          <MoonIcon size={13} />
-                          {activeDay.isRestDay ? 'Rest Day' : 'Rest Day'}
-                        </button>
                         {days.length > 1 && (
                           <button
                             onClick={() => removeDay(activeDayIdx)}
@@ -693,28 +630,8 @@ export const ProgramBuilderModal = ({
                         )}
                       </div>
 
-                      {/* Rest Day block */}
-                      {activeDay.isRestDay && (
-                        <div className="flex flex-col items-center justify-center py-12 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-center space-y-3">
-                          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                            <MoonIcon size={22} className="text-slate-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-600">Rest Day</p>
-                            <p className="text-xs text-slate-400 mt-0.5">No exercises scheduled — recovery is part of the plan.</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => toggleRestDay(activeDayIdx)}
-                            className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-700 underline underline-offset-2 transition-colors"
-                          >
-                            Convert to training day
-                          </button>
-                        </div>
-                      )}
-
                       {/* Volume sets */}
-                      {!activeDay.isRestDay && (Object.keys(volume.byBodyPart).length > 0 || Object.keys(volume.byRegion).length > 0) && (
+                      {(Object.keys(volume.byBodyPart).length > 0 || Object.keys(volume.byRegion).length > 0) && (
                         <div className="space-y-2">
                           {Object.keys(volume.byBodyPart).length > 0 && (
                             <div className="flex flex-wrap gap-2 items-center">
@@ -746,7 +663,6 @@ export const ProgramBuilderModal = ({
                       )}
 
                       {/* Sections */}
-                      {!activeDay.isRestDay && <div data-tour="program-day-sections">
                       {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => (
                         <div key={sec} className="space-y-3">
                           <div className="flex items-center gap-3">
@@ -776,21 +692,20 @@ export const ProgramBuilderModal = ({
                         </div>
                       ))}
 
-                      </div>}
-                      {/* Day instructions — visible for all day types */}
+                      {/* Day instructions */}
                       <div>
                         <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
                         <textarea
                           value={activeDay.instructions}
                           onChange={(e) => updateDay(activeDayIdx, 'instructions', e.target.value)}
-                          placeholder={activeDay.isRestDay ? "Optional notes, e.g. light walk, mobility work..." : "Coaching notes, warm-up protocol, session intent..."}
+                          placeholder="Coaching notes, warm-up protocol, session intent..."
                           rows={3}
                           className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-indigo-500 bg-white resize-none"
                         />
                       </div>
 
-                      {/* Linked Sessions — only for training days */}
-                      {!activeDay.isRestDay && <LinkedSessionsPicker
+                      {/* Linked Sessions for this day */}
+                      <LinkedSessionsPicker
                         linked={activeDay.linkedSessions}
                         onChange={(updated) => setDays(prev => prev.map((d, i) => i === activeDayIdx ? { ...d, linkedSessions: updated } : d))}
                         label="Linked Sessions"
@@ -812,7 +727,7 @@ export const ProgramBuilderModal = ({
                             items: (conditioningSessions || []).map(s => ({ id: s.id, title: s.title, meta: s.energySystem })),
                           },
                         ]}
-                      />}
+                      />
                     </div>
                   )}
                 </div>
@@ -833,7 +748,7 @@ export const ProgramBuilderModal = ({
       </div>
 
       {/* ── Right Panel: Exercise Chooser ── */}
-      <div className={`w-72 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden ${activeDay?.isRestDay ? 'pointer-events-none opacity-40' : ''}`}>
+      <div className="w-72 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden">
 
         {/* Header / filters */}
         <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">

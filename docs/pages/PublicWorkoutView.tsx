@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
-import { AlertCircle, Dumbbell, Printer, ChevronRight, ExternalLink, Weight, Activity as ActivityIcon, Moon as MoonIcon } from 'lucide-react';
+import { AlertCircle, Dumbbell, Printer, ChevronRight, ExternalLink, Weight, Activity as ActivityIcon } from 'lucide-react';
 
 // ── Branding Banner (shared across public pages + PDF exports) ───────────────
 const BrandingBanner = () => (
@@ -260,18 +260,13 @@ const PublicWorkoutView: React.FC = () => {
                                 <button
                                     key={d.id || i}
                                     onClick={() => setActiveDay(i)}
-                                    className={`px-4 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                                    className={`px-4 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
                                         activeDay === i
-                                            ? d.is_rest_day
-                                                ? 'bg-slate-600 text-white shadow-sm'
-                                                : 'bg-indigo-600 text-white shadow-sm'
+                                            ? 'bg-indigo-600 text-white shadow-sm'
                                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                                     }`}
                                 >
                                     {d.name || `Day ${d.day_number}`}
-                                    {d.is_rest_day && (
-                                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-black shrink-0 ${activeDay === i ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>R</span>
-                                    )}
                                 </button>
                             ))}
                         </div>
@@ -281,38 +276,18 @@ const PublicWorkoutView: React.FC = () => {
                 {/* Active Day Content (screen) */}
                 {day && (
                     <div className="max-w-3xl mx-auto px-4 mt-4 pb-12 print:hidden">
-                        {day.is_rest_day ? (
-                            <div className="flex flex-col items-center justify-center py-16 rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center space-y-4 mt-2">
-                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                                    <MoonIcon size={28} className="text-slate-400" />
-                                </div>
-                                <div>
-                                    <p className="text-xl font-bold text-slate-700">Rest Day</p>
-                                    <p className="text-sm text-slate-400 mt-1">Recovery is part of the program.</p>
-                                    <p className="text-sm text-slate-400">Sleep well, eat well, hydrate.</p>
-                                </div>
-                                {day.instructions && (
-                                    <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 max-w-sm">
-                                        <p className="text-xs text-slate-500">{day.instructions}</p>
-                                    </div>
-                                )}
+                        {day.instructions && (
+                            <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 mb-4 text-sm text-slate-600">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Instructions</span>
+                                {day.instructions}
                             </div>
-                        ) : (
-                            <>
-                                {day.instructions && (
-                                    <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 mb-4 text-sm text-slate-600">
-                                        <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Instructions</span>
-                                        {day.instructions}
-                                    </div>
-                                )}
-                                {SECTION_ORDER.map(sec => {
-                                    const exercises = (day.exercises || []).filter((e: any) => e.section === sec);
-                                    return <ExerciseTable key={sec} exercises={exercises} sectionLabel={SECTION_LABELS[sec]} />;
-                                })}
-                                {(!day.exercises || day.exercises.length === 0) && (
-                                    <p className="text-center text-sm text-slate-400 py-8">No exercises on this day</p>
-                                )}
-                            </>
+                        )}
+                        {SECTION_ORDER.map(sec => {
+                            const exercises = (day.exercises || []).filter((e: any) => e.section === sec);
+                            return <ExerciseTable key={sec} exercises={exercises} sectionLabel={SECTION_LABELS[sec]} />;
+                        })}
+                        {(!day.exercises || day.exercises.length === 0) && (
+                            <p className="text-center text-sm text-slate-400 py-8">No exercises on this day</p>
                         )}
                     </div>
                 )}
@@ -321,32 +296,15 @@ const PublicWorkoutView: React.FC = () => {
                 <div className="hidden print:block max-w-3xl mx-auto px-4 mt-2">
                     {days.map((d: any, i: number) => (
                         <div key={d.id || i} style={i > 0 ? { pageBreakBefore: 'always' } : undefined}>
-                            <div className="mb-4 pb-2 border-b border-slate-200 flex items-center gap-3">
-                                <div>
-                                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                        {d.name || `Day ${d.day_number}`}
-                                        {d.is_rest_day && (
-                                            <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Rest</span>
-                                        )}
-                                    </h2>
-                                    <p className="text-[10px] text-slate-400">{data.name} — Day {d.day_number || i + 1} of {days.length}</p>
-                                </div>
+                            <div className="mb-4 pb-2 border-b border-slate-200">
+                                <h2 className="text-lg font-bold text-slate-800">{d.name || `Day ${d.day_number}`}</h2>
+                                <p className="text-[10px] text-slate-400">{data.name} — Day {d.day_number || i + 1} of {days.length}</p>
                             </div>
-                            {d.is_rest_day ? (
-                                <div className="py-8 text-center border border-slate-200 rounded-lg bg-slate-50">
-                                    <p className="text-base font-bold text-slate-600 mb-1">Rest Day</p>
-                                    <p className="text-xs text-slate-400">Recovery · Sleep · Hydration</p>
-                                    {d.instructions && <p className="text-xs text-slate-500 mt-2 italic">{d.instructions}</p>}
-                                </div>
-                            ) : (
-                                <>
-                                    {d.instructions && <p className="text-sm text-slate-500 mb-3">{d.instructions}</p>}
-                                    {SECTION_ORDER.map(sec => {
-                                        const exercises = (d.exercises || []).filter((e: any) => e.section === sec);
-                                        return <ExerciseTable key={sec} exercises={exercises} sectionLabel={SECTION_LABELS[sec]} />;
-                                    })}
-                                </>
-                            )}
+                            {d.instructions && <p className="text-sm text-slate-500 mb-3">{d.instructions}</p>}
+                            {SECTION_ORDER.map(sec => {
+                                const exercises = (d.exercises || []).filter((e: any) => e.section === sec);
+                                return <ExerciseTable key={sec} exercises={exercises} sectionLabel={SECTION_LABELS[sec]} />;
+                            })}
                         </div>
                     ))}
                 </div>

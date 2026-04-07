@@ -212,7 +212,7 @@ export const ExerciseLibraryPage = () => {
                                             ) : <span className="text-slate-300 text-xs">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' ? (
+                                            {ex.categories?.[1] ? (
                                                 <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-medium text-emerald-600 border border-emerald-100">
                                                     {ex.categories[1]}
                                                 </span>
@@ -387,7 +387,7 @@ export const ExerciseLibraryPage = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' ? (
+                                        {ex.categories?.[1] ? (
                                             <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-medium text-emerald-600 border border-emerald-100">
                                                 {ex.categories[1]}
                                             </span>
@@ -501,7 +501,6 @@ export const ExerciseLibraryPage = () => {
                                             Exercises
                                         </button>
                                         <button
-                                            data-tour="library-personal"
                                             onClick={() => { setLibraryViewMode('exercises'); setLibrarySource('personal'); setPersonalPage(1); }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'exercises' && librarySource === 'personal' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                         >
@@ -525,7 +524,7 @@ export const ExerciseLibraryPage = () => {
 
                             {/* Filters + Add button row */}
                             {libraryViewMode === 'exercises' && (
-                            <div data-tour="library-search" className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap">
                                         {/* Body Region Filter */}
                                         <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 gap-2">
                                             <span className="text-xs font-medium text-slate-400">Region</span>

@@ -5,12 +5,9 @@ import App from './App';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import PublicWellnessForm from './pages/PublicWellnessForm';
-import FifaDailyWellnessForm from './pages/FifaDailyWellnessForm';
-import FifaWeeklyWellnessForm from './pages/FifaWeeklyWellnessForm';
 import PublicInjuryForm from './pages/PublicInjuryForm';
 import PublicWorkoutView from './pages/PublicWorkoutView';
 import PublicProtocolView from './pages/PublicProtocolView';
-import LandingPage from './pages/LandingPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -26,7 +23,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -40,25 +37,15 @@ const AppRouter: React.FC = () => {
 
   return (
     <Routes>
-      {/* PUBLIC FORM ROUTES — must be first and completely independent of auth */}
+      <Route
+        path="/login"
+        element={loading ? null : user ? <Navigate to="/" replace /> : <LoginPage />}
+      />
       <Route path="/wellness-form/:templateId/:teamId" element={<PublicWellnessForm />} />
-      <Route path="/daily-wellness/:teamId" element={<FifaDailyWellnessForm />} />
-      <Route path="/weekly-wellness/:teamId/:athleteId" element={<FifaWeeklyWellnessForm />} />
-      <Route path="/weekly-wellness/:teamId" element={<FifaWeeklyWellnessForm />} />
       <Route path="/injury-form/:teamId" element={<PublicInjuryForm />} />
       <Route path="/injury-form/:teamId/:athleteId" element={<PublicInjuryForm />} />
       <Route path="/workout/:workoutType/:workoutId" element={<PublicWorkoutView />} />
       <Route path="/protocol/:protocolId" element={<PublicProtocolView />} />
-
-      {/* AUTH ROUTES */}
-      <Route
-        path="/"
-        element={loading ? null : user ? <Navigate to="/dashboard" replace /> : <LandingPage />}
-      />
-      <Route
-        path="/login"
-        element={loading ? null : user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
-      />
       <Route
         path="/onboarding"
         element={
@@ -67,8 +54,6 @@ const AppRouter: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
-      {/* APP CATCH-ALL */}
       <Route
         path="/*"
         element={

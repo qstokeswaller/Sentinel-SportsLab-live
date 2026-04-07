@@ -1,10 +1,9 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, DumbbellIcon, Share2Icon, ExternalLink, Weight, AlertTriangleIcon } from 'lucide-react';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
-import { supabase } from '../../lib/supabase';
 
 type Section = 'warmup' | 'workout' | 'cooldown';
 
@@ -31,35 +30,8 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
   const [showShare, setShowShare] = useState(false);
   const [expandedEx, setExpandedEx] = useState<string | null>(null);
   const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
-  // Fetched-fresh exercise metadata keyed by exercise ID
-  const [fetchedExMeta, setFetchedExMeta] = useState<Record<string, any>>({});
 
-  // Fetch exercise descriptions/metadata directly from DB whenever template changes
-  useEffect(() => {
-    if (!isOpen || !template) return;
-    const sections = template.sections || {};
-    const ids = [...new Set(
-      ['warmup', 'workout', 'cooldown'].flatMap(sec =>
-        (sections[sec] || []).map((r: any) => r.exerciseId || r.exercise_id).filter(Boolean)
-      )
-    )];
-    if (!ids.length) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from('exercises')
-        .select('id, name, description, body_parts, categories, video_url')
-        .in('id', ids);
-      if (!cancelled && data) {
-        const map: Record<string, any> = {};
-        for (const e of data) map[e.id] = e;
-        setFetchedExMeta(map);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [isOpen, template]);
-
-  // Build a name→info lookup as final fallback
+  // Build a name→info lookup for fallback (exerciseFullMap is keyed by UUID, packets use old IDs)
   const exerciseNameMap = React.useMemo(() => {
     const map: Record<string, any> = {};
     for (const info of Object.values(exerciseFullMap || {})) {
@@ -140,9 +112,9 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                   const exKey = ex.id || `${sec}_${idx}`;
                   const exId = ex.exerciseId || ex.exercise_id || '';
                   const name = ex.exerciseName || ex.exercise_name || ex.name || resolveExerciseName(exId);
-                  const hasMeta = ex.sets || ex.reps || ex.rest || ex.rpe || ex.weight;
-                  // Priority: freshly fetched DB data > exerciseFullMap from AppState > name-based fallback
-                  const fullInfo = fetchedExMeta[exId] || exerciseFullMap?.[exId] || (name ? exerciseNameMap[name.toLowerCase()] : null);
+                  const hasMeta = ex.sets || ex.reps || ex.rest || ex.rpe || ex.intensity || ex.tempo || ex.weight;
+                  // Try ID lookup, then name-based lookup via pre-built map
+                  const fullInfo = exerciseFullMap?.[exId] || (name ? exerciseNameMap[name.toLowerCase()] : null);
                   const rawDesc = fullInfo?.description || '';
                   const desc = rawDesc && rawDesc.toLowerCase() !== 'no description provided.' ? rawDesc : '';
                   const rawVideoUrl = fullInfo?.video_url || '';
@@ -176,6 +148,8 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                               )}
                               {ex.rest && <span>Rest: <span className="text-slate-600">{ex.rest}s</span></span>}
                               {ex.rpe && <span>RPE: <span className="text-slate-600">{ex.rpe}</span></span>}
+                              {ex.intensity && <span>Int: <span className="text-slate-600">{ex.intensity}</span></span>}
+                              {ex.tempo && <span>Tempo: <span className="text-slate-600">{ex.tempo}</span></span>}
                             </div>
                           )}
                         </div>

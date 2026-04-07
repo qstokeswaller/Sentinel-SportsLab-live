@@ -35,7 +35,7 @@ type HubView = 'categories' | 'compare' | 'export';
 
 export const TestingHubPage: React.FC = () => {
     const {
-        teams, showToast, isLoading, testVisibility,
+        teams, showToast, isLoading,
     } = useAppState();
 
     // ─── Page-local state-based navigation ────────────────────────────
@@ -60,19 +60,8 @@ export const TestingHubPage: React.FC = () => {
     );
 
     const categoryTests = useMemo(
-        () => activeCategory
-            ? getTestsByCategory(activeCategory).filter(t => testVisibility[t.id] !== false)
-            : [],
-        [activeCategory, testVisibility]
-    );
-
-    // Filter categories: hide any category where ALL tests are toggled off
-    const visibleCategories = useMemo(
-        () => TEST_CATEGORIES.filter(cat => {
-            const tests = getTestsByCategory(cat.id);
-            return tests.some(t => testVisibility[t.id] !== false);
-        }),
-        [testVisibility]
+        () => activeCategory ? getTestsByCategory(activeCategory) : [],
+        [activeCategory]
     );
 
     const activeTest = useMemo(
@@ -307,7 +296,7 @@ export const TestingHubPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <span className="text-xs text-slate-400">{categoryTests.length} test{categoryTests.length !== 1 ? 's' : ''}</span>
+                    <span className="text-xs text-slate-400">{categoryTests.length} tests</span>
                 </div>
 
                 {/* Search within category */}
@@ -418,7 +407,7 @@ export const TestingHubPage: React.FC = () => {
             </div>
 
             {/* Quick tools row */}
-            <div data-tour="test-tools" className="flex gap-3">
+            <div className="flex gap-3">
                 <button
                     onClick={() => setHubView('compare')}
                     className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-indigo-200 hover:shadow-sm transition-all"
@@ -455,10 +444,9 @@ export const TestingHubPage: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div data-tour="test-categories" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {visibleCategories.map(cat => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {TEST_CATEGORIES.map(cat => {
                         const IconComponent = ICON_MAP[cat.icon] || ActivityIcon;
-                        const visibleTestCount = getTestsByCategory(cat.id).filter(t => testVisibility[t.id] !== false).length;
                         return (
                             <button
                                 key={cat.id}
@@ -472,7 +460,7 @@ export const TestingHubPage: React.FC = () => {
                                     <div className="flex flex-col justify-center h-full">
                                         <h3 className="text-base font-semibold text-slate-900 mb-1 leading-tight">{cat.name}</h3>
                                         <p className="text-xs text-slate-500 leading-relaxed">{cat.description}</p>
-                                        <span className="text-[10px] text-slate-400 mt-1.5">{visibleTestCount} tests</span>
+                                        <span className="text-[10px] text-slate-400 mt-1.5">{cat.testCount} tests</span>
                                     </div>
                                 </div>
                             </button>

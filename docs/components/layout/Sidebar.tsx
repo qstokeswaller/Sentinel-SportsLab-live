@@ -42,7 +42,7 @@ export const Sidebar = () => {
     const userInitial = displayName[0]?.toUpperCase() ?? '?';
 
     return (
-        <nav data-tour="sidebar-nav" className={`${collapsed ? 'w-16' : 'w-60'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-30 transition-all duration-300 print:hidden`}>
+        <nav className={`${collapsed ? 'w-16' : 'w-60'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-30 transition-all duration-300 print:hidden`}>
 
             {/* Logo */}
             <div className={`flex items-center gap-3 border-b border-slate-100 shrink-0 ${collapsed ? 'justify-center px-3 py-5' : 'px-4 py-5'}`}>

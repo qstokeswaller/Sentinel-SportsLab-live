@@ -3,7 +3,6 @@ import React from 'react';
 import { CalendarIcon, UserIcon, Trash2Icon } from 'lucide-react';
 import type { TestDefinition } from '../../utils/testRegistry';
 import { NormativeBar } from './NormativeBar';
-import { BenchmarkBadge } from './BenchmarkBadge';
 
 interface Props {
   test: TestDefinition;
@@ -41,11 +40,6 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1"><CalendarIcon size={12} />{date}</span>
           {athleteName && <span className="flex items-center gap-1"><UserIcon size={12} />{athleteName}</span>}
-          {record.athlete_id && (() => {
-            const primaryVal = Number(metrics[test.fields[0]?.key] || metrics.value || metrics.weight || metrics.time || 0);
-            const isTime = test.id.includes('sprint') || test.id.includes('agility') || test.id.includes('hop');
-            return primaryVal > 0 ? <BenchmarkBadge testType={test.id} value={primaryVal} athleteId={record.athlete_id} lowerIsBetter={isTime} /> : null;
-          })()}
         </div>
         {onDelete && (
           <button

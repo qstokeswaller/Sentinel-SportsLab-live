@@ -21,7 +21,6 @@ export interface WorkoutDay {
   day_number: number;
   name: string | null;
   instructions: string | null;
-  is_rest_day: boolean;
   created_at: string;
 }
 
@@ -97,27 +96,23 @@ export function useProgramWithDays(programId: string | null) {
           .order('order_index');
         if (eErr) throw eErr;
 
-        // Resolve exercise metadata from the exercises table
+        // Resolve exercise names from the exercises table
         const exerciseIds = [...new Set((exData ?? []).map((e: any) => e.exercise_id).filter(Boolean))];
-        let exMetaMap: Record<string, { name: string; description?: string; body_parts?: string[]; categories?: string[]; video_url?: string }> = {};
+        let nameMap: Record<string, string> = {};
         if (exerciseIds.length > 0) {
-          const { data: metaData, error: metaErr } = await supabase
+          const { data: nameData, error: nameErr } = await supabase
             .from('exercises')
-            .select('id, name, description, body_parts, categories, video_url')
+            .select('id, name')
             .in('id', exerciseIds);
-          if (metaErr) console.warn('Could not resolve exercise metadata:', metaErr.message);
-          if (metaData) {
-            for (const n of metaData) { exMetaMap[n.id] = n; }
+          if (nameErr) console.warn('Could not resolve exercise names:', nameErr.message);
+          if (nameData) {
+            for (const n of nameData) { nameMap[n.id] = n.name; }
           }
         }
 
         exercises = (exData ?? []).map((e: any) => ({
           ...e,
-          exercise_name: exMetaMap[e.exercise_id]?.name || null,
-          description: exMetaMap[e.exercise_id]?.description || null,
-          body_parts: exMetaMap[e.exercise_id]?.body_parts || [],
-          categories: exMetaMap[e.exercise_id]?.categories || [],
-          video_url: exMetaMap[e.exercise_id]?.video_url || null,
+          exercise_name: nameMap[e.exercise_id] || null,
         })) as WorkoutDayExercise[];
       }
 
@@ -195,7 +190,6 @@ export interface SaveDayPayload {
   day_number: number;
   name: string;
   instructions: string;
-  is_rest_day?: boolean;
   exercises: {
     exercise_id: string;
     section: 'warmup' | 'workout' | 'cooldown';
@@ -250,7 +244,6 @@ export function useSaveProgramFull() {
             day_number: d.day_number,
             name: d.name,
             instructions: d.instructions,
-            is_rest_day: d.is_rest_day ?? false,
           }))
         )
         .select();

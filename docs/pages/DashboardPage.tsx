@@ -188,24 +188,8 @@ export const DashboardPage = () => {
     }, [activePopover, activeSessionPopover, overflowDay]);
 
     const renderMorningReport = () => {
-        // Show empty state when ACWR is not enabled
-        if (!hasAnyAcwrEnabled) return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
-                        <AlertTriangleIcon size={14} />
-                    </div>
-                    <div>
-                        <h3 className="text-[13px] font-semibold text-slate-900">Morning Report</h3>
-                        <p className="text-[10px] text-slate-500">ACWR readiness</p>
-                    </div>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                    <p className="text-xs text-slate-400">No ACWR monitoring enabled.</p>
-                    <p className="text-[10px] text-slate-300 mt-1">Enable ACWR for your teams in Settings → Feature Settings to see the morning readiness report.</p>
-                </div>
-            </div>
-        );
+        // Only include athletes with ACWR enabled
+        if (!hasAnyAcwrEnabled) return null;
 
         // Active at-risk athletes
         const activeAtRisk = teams.flatMap(t => t.players)
@@ -293,18 +277,8 @@ export const DashboardPage = () => {
                         </>
                     ) : (
                         <div className="py-8 flex flex-col items-center justify-center text-slate-300 gap-2">
-                            {(loadRecords || []).length === 0 ? (
-                                <>
-                                    <AlertTriangleIcon size={22} className="text-slate-300" />
-                                    <p className="text-[11px] text-slate-400 text-center">No training load data recorded yet.</p>
-                                    <p className="text-[10px] text-slate-300 text-center">Log sessions or import CSV data in the ACWR Monitoring hub to see the morning readiness report.</p>
-                                </>
-                            ) : (
-                                <>
-                                    <CheckCircle2Icon size={28} className="text-emerald-400/40" />
-                                    <p className="text-[11px] text-slate-400">All monitored athletes within safe range</p>
-                                </>
-                            )}
+                            <CheckCircle2Icon size={28} className="text-emerald-400/40" />
+                            <p className="text-[11px] text-slate-400">All cleared</p>
                         </div>
                     )}
                 </div>
@@ -395,7 +369,7 @@ export const DashboardPage = () => {
                     <div className="space-y-6 animate-in fade-in duration-700">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Morning Readiness Report Column */}
-                            <div data-tour="morning-report" className="lg:col-span-1 relative">
+                            <div className="lg:col-span-1 relative">
                                 {isLoading && (
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
                                         <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center gap-2.5">
@@ -426,7 +400,7 @@ export const DashboardPage = () => {
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
                                 {/* Squad Readiness Heatmap */}
-                                <div data-tour="heatmap" className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full flex flex-col">
+                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full flex flex-col">
                                     <div>
                                         <h4 className="text-sm font-semibold text-slate-900">
                                             {dashboardFilterTarget === 'All Athletes' ? 'Squad Readiness Heatmap' : 'Individual Readiness Heatmap'}
@@ -527,7 +501,7 @@ export const DashboardPage = () => {
                         </div>
 
                         {/* Full Size Calendar */}
-                        <div data-tour="calendar" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
                             {/* Calendar Header */}
                             <div className="px-5 py-4 border-b border-slate-100 flex flex-col gap-3 bg-white">
                                 <div className="flex flex-col xl:flex-row justify-between items-center gap-4">
@@ -657,10 +631,10 @@ export const DashboardPage = () => {
                                                 onDragOver={dateObj ? (e) => handleDragOver(e, dateObj.dateStr) : undefined}
                                                 onDragLeave={dateObj ? handleDragLeave : undefined}
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
-                                                className={`relative min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-2.5 flex flex-col justify-between ${dateObj
+                                                className={`relative min-h-[96px] rounded-lg border transition-all group p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
                                                     : 'bg-slate-50/30 border-transparent'} ${isDragOver
-                                                        ? 'bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
+                                                        ? 'bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 shadow-md'
                                                         : isToday
                                                         ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-200'
                                                         : 'bg-white border-slate-100 hover:border-slate-300'}`}

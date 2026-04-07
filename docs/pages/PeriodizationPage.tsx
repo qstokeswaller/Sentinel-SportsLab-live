@@ -213,7 +213,7 @@ export const PeriodizationPage = () => {
                         </button>
                     </div>
                 ) : (
-                    <div data-tour="planner-main" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredPlans.map(plan => (
                             <div key={plan.id}
                                 onClick={() => { setActivePlanId(plan.id); setPlanDrillPath([]); }}
