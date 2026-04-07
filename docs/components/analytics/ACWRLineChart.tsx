@@ -84,7 +84,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
         && acuteHistory.length > 1 && chronicHistory.length > 1;
 
     /* ── layout ─────────────────────────────────────────── */
-    const PAD = { top: 28, right: hasSecondary ? 52 : 20, bottom: 52, left: 46 };
+    const PAD = { top: 28, right: 20, bottom: 52, left: 46 };
     const W = 640;
     const H = height;
     const cW = W - PAD.left - PAD.right;
@@ -342,27 +342,6 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                     </text>
                 ))}
 
-                {/* ── Y axis (right) labels for load scale ── */}
-                {hasSecondary && loadScale && loadScale.ticks.map(v => (
-                    <text key={`yr-${v}`}
-                        x={W - PAD.right + 8} y={loadScale.y(v) + 3.5}
-                        textAnchor="start" fontSize="8" fill="#a5b4c4"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                    >
-                        {v}
-                    </text>
-                ))}
-                {hasSecondary && (
-                    <text
-                        x={W - PAD.right + 8} y={PAD.top - 6}
-                        textAnchor="start" fontSize="7" fill="#94a3b8"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                        fontWeight="600"
-                    >
-                        AU
-                    </text>
-                )}
-
                 {/* ── X axis date labels ── */}
                 {dateLabels.map(({ i, label }) => (
                     <text key={`xl-${i}`}
@@ -384,12 +363,6 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                     y1={PAD.top + cH} y2={PAD.top + cH}
                     stroke="#cbd5e1" strokeWidth="1"
                 />
-                {hasSecondary && (
-                    <line x1={PAD.left + cW} x2={PAD.left + cW}
-                        y1={PAD.top} y2={PAD.top + cH}
-                        stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="2,2"
-                    />
-                )}
 
                 {/* ── Current value badge ── */}
                 <rect
