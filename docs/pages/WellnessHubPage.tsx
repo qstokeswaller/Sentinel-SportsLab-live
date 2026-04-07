@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
-    UploadIcon, PlusIcon, ChevronRightIcon,
+    UploadIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ShieldIcon, TableIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -14,12 +14,19 @@ import InterventionModal from '../components/analytics/InterventionModal';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../utils/constants';
 import { DatabaseService } from '../services/databaseService';
 import ACWRLineChart from '../components/analytics/ACWRLineChart';
+import IndividualizedThresholds from '../components/analytics/IndividualizedThresholds';
+import SmartCsvMapper from '../components/ui/SmartCsvMapper';
+import { getAcwrSchema } from '../utils/csvSchemas';
+import { processAthleteMatching } from '../utils/athleteMatcher';
+import UnmatchedAthleteResolver from '../components/ui/UnmatchedAthleteResolver';
+import type { ResolvedEntry } from '../components/ui/UnmatchedAthleteResolver';
 
 const SECTIONS = [
     { title: 'Questionnaire Data', desc: 'Wellness check-in responses, readiness scores & team trends', icon: ClipboardListIcon },
     { title: 'Medical Reports',    desc: 'Athlete opt-outs, medical status and strategic notes',       icon: StethoscopeIcon },
     { title: 'Injury Report',      desc: 'Injury tracking, body map analysis & return-to-play',        icon: ShieldAlertIcon },
     { title: 'ACWR Monitoring',    desc: 'Track acute:chronic workload ratios to prevent overtraining and optimise load', icon: ActivityIcon },
+    { title: 'Load Thresholds',   desc: 'Individualized ACWR thresholds — personal safe training bands per athlete', icon: ShieldIcon },
 ];
 
 // Helper: get initials from a name
@@ -29,12 +36,43 @@ const getInitials = (name: string) => name?.split(' ').map(n => n[0]).join('').s
 const ACWRMonitoringHub: React.FC = () => {
     const { teams, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, showToast, isLoading } = useAppState();
     const [selectedTeamId, setSelectedTeamId] = useState<string>('');
-    const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete'>('roster');
+    const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete' | 'history'>('roster');
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
     const [interventionAthlete, setInterventionAthlete] = useState<any>(null);
     const [isInterventionOpen, setIsInterventionOpen] = useState(false);
-    const [drilldownFilter, setDrilldownFilter] = useState<'28d' | '7d' | 'all'>('28d');
+    const [drilldownFilter, setDrilldownFilter] = useState<'7d' | '28d' | '90d' | 'all' | 'custom'>('28d');
+    const [drilldownFrom, setDrilldownFrom] = useState<string>(() => {
+        const d = new Date(); d.setDate(d.getDate() - 27); return d.toISOString().split('T')[0];
+    });
+    const [drilldownTo, setDrilldownTo] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+    // Load History state
+    const [historyWeekStart, setHistoryWeekStart] = useState<Date>(() => {
+        const d = new Date();
+        const dow = d.getDay();
+        const diff = d.getDate() - dow + (dow === 0 ? -6 : 1); // Monday
+        d.setDate(diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
+    const [historyChartFrom, setHistoryChartFrom] = useState<string>(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 27);
+        return d.toISOString().split('T')[0];
+    });
+    const [historyChartTo, setHistoryChartTo] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
     const csvRef = useRef<HTMLInputElement>(null);
+    const [isCsvMapperOpen, setIsCsvMapperOpen] = useState(false);
+    const [csvMapperHeaders, setCsvMapperHeaders] = useState<string[]>([]);
+    const [csvMapperRows, setCsvMapperRows] = useState<Record<string, string>[]>([]);
+
+    // Unmatched athlete resolver state
+    const [showAcwrResolver, setShowAcwrResolver] = useState(false);
+    const [acwrUnmatched, setAcwrUnmatched] = useState<{ csvName: string; rowCount: number }[]>([]);
+    const [acwrPendingMatched, setAcwrPendingMatched] = useState<any[]>([]);
+    const [acwrPendingUnmatched, setAcwrPendingUnmatched] = useState<any[]>([]);
+    const [acwrPendingMapping, setAcwrPendingMapping] = useState<Record<string, string>>({});
 
     // Teams with ACWR enabled (excluding t_private which is handled per-athlete)
     const enabledTeams = teams.filter(t => t.id !== 't_private' && acwrSettings[t.id]?.enabled);
@@ -246,6 +284,47 @@ const ACWRMonitoringHub: React.FC = () => {
         return ACWR_UTILS.calculateTeamACWR(loadRecords || [], playerIds, options);
     }, [selectedTeamId, selectedTeam, loadRecords, teamSettings, acwrExclusions, isPrivateClientSelected, privateClientId, acwrSettings]);
 
+    // ── Load History computed data ──────────────────────────────────────
+    const weekDays = useMemo(() => {
+        const days: string[] = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(historyWeekStart);
+            d.setDate(d.getDate() + i);
+            days.push(d.toISOString().split('T')[0]);
+        }
+        return days;
+    }, [historyWeekStart]);
+
+    const weekMaxLoad = useMemo(() => {
+        let max = 0;
+        for (const player of uniquePlayers) {
+            for (const day of weekDays) {
+                const rec = (loadRecords || []).find(r =>
+                    (r.athlete_id === player.id || r.athleteId === player.id) && r.date === day
+                );
+                if (rec && rec.value > max) max = rec.value;
+            }
+        }
+        return max || 1;
+    }, [uniquePlayers, loadRecords, weekDays]);
+
+    const historyChartData = useMemo(() => {
+        if (!teamTrendline || !teamTrendline.dates?.length) return null;
+        const dates = teamTrendline.dates;
+        const filtered = dates.map((d, i) => i).filter(i => dates[i] >= historyChartFrom && dates[i] <= historyChartTo);
+        if (filtered.length < 2) return null;
+        const s = filtered[0], e = filtered[filtered.length - 1] + 1;
+        return {
+            dates: dates.slice(s, e),
+            ratioHistory: (teamTrendline.ratioHistory || []).slice(s, e),
+            acuteHistory: (teamTrendline.acuteHistory || []).slice(s, e),
+            chronicHistory: (teamTrendline.chronicHistory || []).slice(s, e),
+        };
+    }, [teamTrendline, historyChartFrom, historyChartTo]);
+
+    const goWeekBack = () => setHistoryWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() - 7); return d; });
+    const goWeekForward = () => setHistoryWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() + 7); return d; });
+
     // Summary stats
     const summary = useMemo(() => {
         const total = rosterData.length;
@@ -258,47 +337,102 @@ const ACWRMonitoringHub: React.FC = () => {
         return { total, critical, warning, clear, noData, excluded };
     }, [rosterData]);
 
-    // CSV import handler
-    const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // CSV import — Step 1: read file and open SmartCsvMapper
+    const handleCsvFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const text = evt.target?.result as string;
-            const lines = text.trim().split('\n');
+            const text = (evt.target?.result as string).trim();
+            const lines = text.split('\n');
             if (lines.length < 2) { showToast?.('CSV file is empty or invalid'); return; }
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const dateIdx = headers.findIndex(h => ['date', 'session_date', 'training_date'].includes(h));
-            const athleteIdx = headers.findIndex(h => ['athlete', 'player', 'name', 'athlete_name', 'player_name'].includes(h));
-            const rpeIdx = headers.findIndex(h => ['rpe', 'session_rpe', 'srpe_rating'].includes(h));
-            const durationIdx = headers.findIndex(h => ['duration', 'duration_min', 'minutes', 'session_duration'].includes(h));
-            const srpeIdx = headers.findIndex(h => ['srpe', 'session_load', 'training_load', 'load'].includes(h));
-            const typeIdx = headers.findIndex(h => ['type', 'session_type'].includes(h));
-            if (athleteIdx === -1) { showToast?.('CSV must contain an athlete/player name column'); return; }
-            if (srpeIdx === -1 && (rpeIdx === -1 || durationIdx === -1)) { showToast?.('CSV must contain sRPE or RPE + Duration columns'); return; }
-            let imported = 0;
-            const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
-            for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(c => c.trim());
-                const nameRaw = cols[athleteIdx]?.toLowerCase() || '';
-                const matched = allPlayers.find(p => p.name?.toLowerCase() === nameRaw || p.name?.toLowerCase().includes(nameRaw) || nameRaw.includes(p.name?.toLowerCase()));
-                if (!matched) continue;
-                const date = dateIdx >= 0 ? cols[dateIdx] : new Date().toISOString().split('T')[0];
-                const rpeVal = rpeIdx >= 0 ? Number(cols[rpeIdx]) || 0 : 0;
-                const durVal = durationIdx >= 0 ? Number(cols[durationIdx]) || 0 : 0;
-                const srpeVal = srpeIdx >= 0 ? Number(cols[srpeIdx]) || (rpeVal * durVal) : rpeVal * durVal;
-                const sessionType = typeIdx >= 0 ? cols[typeIdx]?.toLowerCase() || 'training' : 'training';
-                if (srpeVal > 0) {
-                    try {
-                        DatabaseService.saveTrainingLoad({ athlete_id: matched.id, team_id: matched.teamId, date, metric_type: teamSettings?.method || 'srpe', value: srpeVal, session_type: sessionType, rpe: rpeVal || null, duration_minutes: durVal || null });
-                        imported++;
-                    } catch (err) {}
-                }
-            }
-            showToast?.(`Imported ${imported} training load records from CSV`);
+            const headers = lines[0].split(',').map(h => h.trim());
+            const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+                const cols = line.split(',').map(c => c.trim());
+                const obj: Record<string, string> = {};
+                headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+                return obj;
+            });
+            setCsvMapperHeaders(headers);
+            setCsvMapperRows(rows);
+            setIsCsvMapperOpen(true);
         };
         reader.readAsText(file);
         e.target.value = '';
+    };
+
+    // CSV import — Step 2: SmartCsvMapper confirmed → check for unmatched athletes
+    const handleCsvMapperConfirm = ({ rows, mapping }: { rows: Record<string, string>[]; mapping: Record<string, string> }) => {
+        setIsCsvMapperOpen(false);
+        setAcwrPendingMapping(mapping);
+        const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ id: p.id, name: p.name, teamId: t.id })));
+        const getVal = (row: any, fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
+
+        const { matchedRows, unmatchedNames, unmatchedRows } = processAthleteMatching(
+            rows, allPlayers, (row) => getVal(row, 'athlete')
+        );
+
+        setAcwrPendingMatched(matchedRows);
+        setAcwrPendingUnmatched(unmatchedRows);
+
+        if (unmatchedNames.length > 0) {
+            setAcwrUnmatched(unmatchedNames);
+            setShowAcwrResolver(true);
+        } else {
+            doAcwrImport(matchedRows, mapping);
+        }
+    };
+
+    const handleAcwrResolverConfirm = (resolved: ResolvedEntry[]) => {
+        setShowAcwrResolver(false);
+        const resolvedMap = new Map<string, string>();
+        for (const r of resolved) {
+            if (r.action === 'assign' && r.athleteId) resolvedMap.set(r.csvName.toLowerCase(), r.athleteId);
+        }
+        const newlyMatched = acwrPendingUnmatched
+            .filter(row => resolvedMap.has((row._csvName || '').toLowerCase()))
+            .map(row => ({ ...row, _athleteId: resolvedMap.get((row._csvName || '').toLowerCase()) }));
+        doAcwrImport([...acwrPendingMatched, ...newlyMatched], acwrPendingMapping);
+    };
+
+    const doAcwrImport = (rows: any[], mapping: Record<string, string>) => {
+        const lockedMethod = teamSettings?.method || 'srpe';
+        const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
+        let imported = 0;
+
+        for (const row of rows) {
+            const athleteId = row._athleteId;
+            const player = allPlayers.find(p => p.id === athleteId);
+            if (!player) continue;
+            const getVal = (fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
+
+            const date = getVal('date') || new Date().toISOString().split('T')[0];
+            const sessionType = (getVal('session_type') || 'training').toLowerCase();
+            let value = 0;
+
+            if (lockedMethod === 'srpe') {
+                const directSrpe = Number(getVal('srpe')) || 0;
+                const rpeVal = Number(getVal('rpe')) || 0;
+                const durVal = Number(getVal('duration')) || 0;
+                value = directSrpe > 0 ? directSrpe : rpeVal * durVal;
+            } else {
+                value = Number(getVal('value')) || 0;
+            }
+
+            if (value > 0) {
+                try {
+                    DatabaseService.saveTrainingLoad({
+                        athlete_id: player.id, team_id: player.teamId, date,
+                        metric_type: lockedMethod, value,
+                        session_type: sessionType,
+                        rpe: Number(getVal('rpe')) || null,
+                        duration_minutes: Number(getVal('duration')) || null,
+                    });
+                    imported++;
+                } catch (err) {}
+            }
+        }
+        showToast?.(`Imported ${imported} training load records from CSV`);
     };
 
     // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
@@ -323,15 +457,13 @@ const ACWRMonitoringHub: React.FC = () => {
     const dailyData = useMemo(() => {
         if (!drilldownPlayerData) return [];
         const { acwrResult } = drilldownPlayerData;
-        const filterDays = drilldownFilter === '7d' ? 7 : drilldownFilter === '28d' ? 28 : 9999;
-        const cutoff = new Date(Date.now() - filterDays * 86400000).toISOString().split('T')[0];
         const days = [];
         const ratioHist = acwrResult.ratioHistory || [];
         const dates = acwrResult.dates || [];
         const loads = acwrResult.loads || [];
         const restDaySet = acwrResult.restDays || new Set();
         for (let i = 0; i < dates.length; i++) {
-            if (dates[i] < cutoff) continue;
+            if (dates[i] < drilldownFrom || dates[i] > drilldownTo) continue;
             const isRestDay = restDaySet.has(dates[i]);
             days.push({
                 date: dates[i], load: loads[i], ratio: ratioHist[i] || 0, isRestDay,
@@ -339,7 +471,7 @@ const ACWRMonitoringHub: React.FC = () => {
             });
         }
         return days.reverse();
-    }, [drilldownPlayerData, drilldownFilter]);
+    }, [drilldownPlayerData, drilldownFrom, drilldownTo]);
 
     // ── Log Training Load sub-view ──────────────────────────────────────
     if (acwrView === 'log') {
@@ -362,9 +494,7 @@ const ACWRMonitoringHub: React.FC = () => {
         const athleteLoad = (loadRecords || []).filter(r => (r.athleteId === selectedAthleteId || r.athlete_id === selectedAthleteId));
         const sortedLoad = [...athleteLoad].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        const filterDays = drilldownFilter === '7d' ? 7 : drilldownFilter === '28d' ? 28 : 9999;
-        const cutoff = new Date(Date.now() - filterDays * 86400000).toISOString().split('T')[0];
-        const filteredLoad = sortedLoad.filter(r => r.date >= cutoff);
+        const filteredLoad = sortedLoad.filter(r => r.date >= drilldownFrom && r.date <= drilldownTo);
 
         const methodLabel = ACWR_METRIC_TYPES[playerSettings?.metricType]?.label || playerSettings?.metricType || 'sRPE';
 
@@ -410,53 +540,99 @@ const ACWRMonitoringHub: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Filter tabs */}
-                <div className="flex items-center gap-2">
-                    {(['7d', '28d', 'all'] as const).map(f => (
-                        <button key={f} onClick={() => setDrilldownFilter(f)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                drilldownFilter === f ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                            }`}
-                        >{f === 'all' ? 'All Data' : `Last ${f}`}</button>
-                    ))}
+                {/* Date range controls */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
+                    {/* Quick buttons */}
+                    <div className="flex items-center gap-1.5">
+                        {([['7d', '7 days'], ['28d', '28 days'], ['90d', '90 days'], ['all', 'All time']] as const).map(([key, label]) => (
+                            <button key={key} onClick={() => {
+                                const to = new Date().toISOString().split('T')[0];
+                                const days = key === '7d' ? 7 : key === '28d' ? 28 : key === '90d' ? 90 : 9999;
+                                const from = days === 9999
+                                    ? (acwrResult.dates?.[0] || to)
+                                    : new Date(Date.now() - (days - 1) * 86400000).toISOString().split('T')[0];
+                                setDrilldownFilter(key);
+                                setDrilldownFrom(from);
+                                setDrilldownTo(to);
+                            }} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            }`}>{label}</button>
+                        ))}
+                    </div>
+                    <div className="w-px h-5 bg-slate-200" />
+                    {/* Custom date pickers */}
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span className="text-slate-400">From</span>
+                        <input type="date" value={drilldownFrom}
+                            onChange={e => { setDrilldownFrom(e.target.value); setDrilldownFilter('custom'); }}
+                            className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                        />
+                        <span className="text-slate-400">to</span>
+                        <input type="date" value={drilldownTo}
+                            onChange={e => { setDrilldownTo(e.target.value); setDrilldownFilter('custom'); }}
+                            className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                        />
+                    </div>
+                    <div className="ml-auto text-[10px] text-slate-400">
+                        {dailyData.length} day{dailyData.length !== 1 ? 's' : ''}
+                    </div>
                 </div>
 
-                {/* ACWR Trend Line Chart */}
-                {acwrResult.ratioHistory?.length > 2 && (
-                    <ACWRLineChart
-                        dates={acwrResult.dates || []}
-                        ratioHistory={acwrResult.ratioHistory || []}
-                        acuteHistory={acwrResult.acuteHistory}
-                        chronicHistory={acwrResult.chronicHistory}
-                        restDays={acwrResult.restDays}
-                        height={200}
-                        showAcuteChronic={true}
-                        title={`ACWR Trend — ${playerData.name}`}
-                    />
-                )}
+                {/* ACWR Trend Line Chart — filtered to date range */}
+                {acwrResult.ratioHistory?.length > 2 && (() => {
+                    const allDates = acwrResult.dates || [];
+                    const allRatios = acwrResult.ratioHistory || [];
+                    const allAcute = acwrResult.acuteHistory || [];
+                    const allChronic = acwrResult.chronicHistory || [];
+                    const indices = allDates.map((d, i) => i).filter(i => allDates[i] >= drilldownFrom && allDates[i] <= drilldownTo);
+                    if (indices.length < 2) return (
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center text-xs text-slate-400">
+                            Not enough data in selected range for a chart.
+                        </div>
+                    );
+                    const s = indices[0], e = indices[indices.length - 1] + 1;
+                    return (
+                        <ACWRLineChart
+                            dates={allDates.slice(s, e)}
+                            ratioHistory={allRatios.slice(s, e)}
+                            acuteHistory={allAcute.slice(s, e)}
+                            chronicHistory={allChronic.slice(s, e)}
+                            restDays={acwrResult.restDays}
+                            height={200}
+                            showAcuteChronic={true}
+                            title={`ACWR Trend — ${playerData.name}`}
+                        />
+                    );
+                })()}
 
                 {/* Daily breakdown table */}
-                {dailyData.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
-                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Daily Load & ACWR</h4>
-                        </div>
-                        <div className="divide-y divide-slate-100 max-h-[350px] overflow-y-auto">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    {/* Column headers */}
+                    <div className="grid grid-cols-4 gap-4 px-5 py-2.5 bg-slate-50 border-b border-slate-100">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Date</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Load</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">ACWR</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Status</span>
+                    </div>
+                    {dailyData.length === 0 ? (
+                        <div className="px-5 py-8 text-center text-sm text-slate-400">No data in selected range.</div>
+                    ) : (
+                        <div className="divide-y divide-slate-50">
                             {dailyData.map((day, i) => (
-                                <div key={i} className={`grid grid-cols-4 gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/50 text-slate-400' : ''}`}>
+                                <div key={i} className={`grid grid-cols-4 gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 text-slate-400' : 'hover:bg-slate-50/60'}`}>
                                     <span className="font-medium text-slate-700">
-                                        {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                        {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}
                                     </span>
-                                    <span className={day.isRestDay ? 'italic' : 'font-medium text-slate-900'}>
-                                        {day.isRestDay ? 'Rest Day' : `${day.load} ${ACWR_METRIC_TYPES[playerSettings.metricType]?.unit || 'AU'}`}
+                                    <span className={day.isRestDay ? 'italic text-xs' : 'font-medium text-slate-900'}>
+                                        {day.isRestDay ? 'Rest' : `${day.load} ${ACWR_METRIC_TYPES[playerSettings.metricType]?.unit || 'AU'}`}
                                     </span>
-                                    <span className={`font-bold ${day.status.color}`}>{day.ratio.toFixed(2)}</span>
-                                    <span className={`text-xs font-medium ${day.status.color}`}>{day.status.label}</span>
+                                    <span className={`font-bold ${day.status.color}`}>{day.ratio > 0 ? day.ratio.toFixed(2) : '—'}</span>
+                                    <span className={`text-xs font-medium ${day.status.color}`}>{day.ratio > 0 ? day.status.label : '—'}</span>
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Risk Analysis */}
                 {reasons.length > 0 && (
@@ -478,6 +654,200 @@ const ACWRMonitoringHub: React.FC = () => {
                         })}
                     </div>
                 )}
+            </div>
+        );
+    }
+
+    // ── Load History View ───────────────────────────────────────────────
+    if (acwrView === 'history') {
+        const fmtShort = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        const metricUnit = ACWR_METRIC_TYPES[teamSettings?.method]?.unit || 'AU';
+
+        return (
+            <div className="space-y-4 animate-in fade-in duration-200">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                    <ArrowLeftIcon size={14} /> Back to Roster
+                </button>
+
+                {/* Team ACWR chart with date range picker */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between">
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Team ACWR — Custom Range</h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                            <span className="text-slate-400">From</span>
+                            <input
+                                type="date" value={historyChartFrom}
+                                onChange={e => setHistoryChartFrom(e.target.value)}
+                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                            />
+                            <span className="text-slate-400">to</span>
+                            <input
+                                type="date" value={historyChartTo}
+                                onChange={e => setHistoryChartTo(e.target.value)}
+                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                            />
+                        </div>
+                    </div>
+                    {historyChartData ? (
+                        <ACWRLineChart
+                            dates={historyChartData.dates}
+                            ratioHistory={historyChartData.ratioHistory}
+                            acuteHistory={historyChartData.acuteHistory}
+                            chronicHistory={historyChartData.chronicHistory}
+                            restDays={teamTrendline?.restDays}
+                            height={220}
+                            showAcuteChronic={true}
+                            title={`${selectedTeam?.name || 'Team'} — ACWR ${historyChartFrom} → ${historyChartTo}`}
+                        />
+                    ) : (
+                        <div className="p-10 text-center text-sm text-slate-400">No team ACWR data in selected range.</div>
+                    )}
+                </div>
+
+                {/* Weekly load table */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    {/* Week nav header */}
+                    <div className="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between">
+                        <div className="flex items-center gap-2">
+                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors">
+                                <ChevronLeftIcon size={14} />
+                            </button>
+                            <span className="text-xs font-semibold text-slate-700 min-w-[160px] text-center">
+                                {fmtShort(weekDays[0])} — {fmtShort(weekDays[6])}
+                            </span>
+                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors">
+                                <ChevronRightIcon size={14} />
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <span>Jump to week:</span>
+                            <input
+                                type="date"
+                                onChange={e => {
+                                    if (!e.target.value) return;
+                                    const d = new Date(e.target.value + 'T00:00:00');
+                                    const dow = d.getDay();
+                                    const diff = d.getDate() - dow + (dow === 0 ? -6 : 1);
+                                    d.setDate(diff);
+                                    setHistoryWeekStart(new Date(d));
+                                }}
+                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                            />
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 ml-auto">
+                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-100" /> Low</span>
+                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-300" /> Medium</span>
+                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-300" /> High</span>
+                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-rose-300" /> Peak</span>
+                        </div>
+                    </div>
+
+                    {/* Column headers */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[720px] text-xs">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-100">
+                                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500 w-36">Athlete</th>
+                                    {weekDays.map(d => (
+                                        <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 w-20">
+                                            <div>{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}</div>
+                                            <div className="text-[10px] text-slate-300">{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                                        </th>
+                                    ))}
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 w-16">Total</th>
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 w-16">ACWR</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {uniquePlayers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={10} className="px-4 py-8 text-center text-slate-400 text-sm">No athletes in this team.</td>
+                                    </tr>
+                                ) : uniquePlayers.map(player => {
+                                    const playerRoster = rosterData.find(r => r.id === player.id);
+                                    const acwrResult = playerRoster?.acwrResult;
+
+                                    const dayLoads = weekDays.map(day => {
+                                        const rec = (loadRecords || []).find(r =>
+                                            (r.athlete_id === player.id || r.athleteId === player.id) && r.date === day
+                                        );
+                                        return rec?.value ?? null;
+                                    });
+
+                                    const weekTotal = dayLoads.reduce((sum: number, v) => sum + (v || 0), 0);
+
+                                    // ACWR as of last day of the week that has ratio data
+                                    let weekAcwr = 0;
+                                    if (acwrResult?.dates?.length) {
+                                        for (let i = weekDays.length - 1; i >= 0; i--) {
+                                            const idx = acwrResult.dates.indexOf(weekDays[i]);
+                                            if (idx !== -1 && acwrResult.ratioHistory?.[idx] > 0) {
+                                                weekAcwr = acwrResult.ratioHistory[idx];
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    const acwrStatus = weekAcwr > 0 ? ACWR_UTILS.getRatioStatus(weekAcwr) : null;
+
+                                    return (
+                                        <tr key={player.id}
+                                            className="hover:bg-slate-50 cursor-pointer transition-colors"
+                                            onClick={() => { setSelectedAthleteId(player.id); setAcwrView('athlete'); }}
+                                        >
+                                            <td className="px-4 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                                        playerRoster?.excluded ? 'bg-indigo-100 text-indigo-600'
+                                                        : weekAcwr > 1.5 ? 'bg-rose-100 text-rose-700'
+                                                        : weekAcwr > 1.3 ? 'bg-amber-100 text-amber-700'
+                                                        : weekAcwr > 0 ? 'bg-emerald-100 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                    }`}>{getInitials(player.name)}</div>
+                                                    <span className="font-medium text-slate-800 text-xs truncate max-w-[90px]">{player.name}</span>
+                                                </div>
+                                            </td>
+                                            {dayLoads.map((load, i) => {
+                                                const intensity = (load || 0) / weekMaxLoad;
+                                                const bg = load === null ? '' :
+                                                    load === 0 ? 'bg-slate-100 text-slate-400' :
+                                                    intensity > 0.8 ? 'bg-rose-200 text-rose-800' :
+                                                    intensity > 0.6 ? 'bg-amber-200 text-amber-800' :
+                                                    intensity > 0.3 ? 'bg-emerald-200 text-emerald-800' :
+                                                    'bg-emerald-100 text-emerald-700';
+                                                return (
+                                                    <td key={i} className="px-1 py-2 text-center">
+                                                        {load === null ? (
+                                                            <span className="text-slate-200">—</span>
+                                                        ) : (
+                                                            <span className={`inline-block w-full rounded px-1 py-0.5 font-medium text-[11px] ${bg}`}>
+                                                                {load === 0 ? 'Rest' : load}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className="px-2 py-2 text-center">
+                                                <span className="font-bold text-slate-700 text-xs">{weekTotal > 0 ? weekTotal : '—'}</span>
+                                                {weekTotal > 0 && <div className="text-[9px] text-slate-400">{metricUnit}</div>}
+                                            </td>
+                                            <td className="px-2 py-2 text-center">
+                                                {acwrStatus ? (
+                                                    <>
+                                                        <div className={`font-bold text-xs ${acwrStatus.color}`}>{weekAcwr.toFixed(2)}</div>
+                                                        <div className={`text-[9px] ${acwrStatus.color}`}>{acwrStatus.label}</div>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-slate-300 text-xs">—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -505,8 +875,8 @@ const ACWRMonitoringHub: React.FC = () => {
             {/* Controls bar */}
             {(enabledTeams.length > 0 || enabledPrivateClients.length > 0) && (
                 <>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+                    <div data-tour="acwr-controls" className="flex flex-wrap items-center gap-3">
+                        <div data-tour="acwr-team-selector" className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
                             <UsersIcon size={14} className="text-slate-400" />
                             <select value={selectedTeamId} onChange={e => setSelectedTeamId(e.target.value)} className="bg-transparent text-sm text-slate-700 outline-none">
                                 {enabledTeams.length > 0 && (
@@ -522,13 +892,16 @@ const ACWRMonitoringHub: React.FC = () => {
                             </select>
                         </div>
                         <div className="flex-1" />
-                        <button onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button onClick={() => setAcwrView('history')} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
+                            <TableIcon size={14} /> Load History
+                        </button>
+                        <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <PlusIcon size={14} /> Log Training Load
                         </button>
-                        <button onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <UploadIcon size={14} /> Import CSV
                         </button>
-                        <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+                        <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFileSelect} />
                     </div>
 
                     {/* Team EWMA trendline — line chart */}
@@ -732,6 +1105,24 @@ const ACWRMonitoringHub: React.FC = () => {
                 wellnessData={wellnessData || []}
                 acwrOptions={interventionAthlete?.settings || {}}
             />
+
+            <SmartCsvMapper
+                isOpen={isCsvMapperOpen}
+                onClose={() => setIsCsvMapperOpen(false)}
+                onConfirm={handleCsvMapperConfirm}
+                schema={getAcwrSchema(teamSettings?.method || 'srpe')}
+                csvHeaders={csvMapperHeaders}
+                csvRows={csvMapperRows}
+            />
+
+            <UnmatchedAthleteResolver
+                isOpen={showAcwrResolver}
+                onClose={() => setShowAcwrResolver(false)}
+                onConfirm={handleAcwrResolverConfirm}
+                unmatchedNames={acwrUnmatched}
+                allAthletes={teams.flatMap(t => (t.players || []).map(p => ({ id: p.id, name: p.name })))}
+                teams={teams}
+            />
         </div>
     );
 };
@@ -766,6 +1157,7 @@ export const WellnessHubPage: React.FC = () => {
                     {activeSection === 'Medical Reports' && <MedicalReports />}
                     {activeSection === 'Injury Report' && <InjuryReport />}
                     {activeSection === 'ACWR Monitoring' && <ACWRMonitoringHub />}
+                    {activeSection === 'Load Thresholds' && <IndividualizedThresholds />}
                 </div>
             </div>
         );
