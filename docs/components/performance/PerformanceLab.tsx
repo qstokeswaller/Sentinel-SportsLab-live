@@ -5,6 +5,7 @@ import {
     MonitorIcon
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import SmartTestImport from './SmartTestImport';
 
 const ONE_RM_EXERCISES = {
     'Lower Body': [
@@ -161,11 +162,17 @@ const PerformanceLab = ({ isOpen, onClose }) => {
             else if (rs >= 3.37 && rs < 4.47) { riskText = 'Moderate Risk'; riskColor = 'text-orange-500'; }
             return { avg, relativeStrength, asymmetry: asymmetry.toFixed(1), riskText, color: riskColor };
         } else {
-            const agg = parseFloat(hamAggregate);
-            if (!agg) return null;
+            // Average mode: the entered value IS the average force across both limbs
+            const avgForce = parseFloat(hamAggregate);
+            if (!avgForce) return null;
             let relativeStrength = null;
-            if (bw && bw > 0) relativeStrength = (agg / bw).toFixed(2);
-            return { total: agg, relativeStrength, avg: agg / 2 };
+            if (bw && bw > 0) relativeStrength = (avgForce / bw).toFixed(2);
+            const rs = parseFloat(relativeStrength || 0);
+            let riskText = 'Low Risk';
+            let riskColor = 'text-emerald-500';
+            if (rs > 0 && rs < 3.37) { riskText = 'High Risk'; riskColor = 'text-rose-500'; }
+            else if (rs >= 3.37 && rs < 4.47) { riskText = 'Moderate Risk'; riskColor = 'text-orange-500'; }
+            return { total: avgForce, relativeStrength, avg: avgForce, riskText, color: riskColor };
         }
     }, [hamAssessmentMode, hamLeft, hamRight, hamAggregate, hamBodyWeight]);
 
@@ -213,9 +220,10 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                     mode: 'aggregate',
                     aggregate: hamAggregate,
                     avgForce: hamResults.avg.toFixed(1),
+                    value: hamResults.avg,
                     bodyWeight: hamBodyWeight,
                     relativeStrength: hamResults.relativeStrength,
-                    riskText: hamResults.riskText || 'N/A'
+                    riskText: hamResults.riskText
                 };
             }
         }
@@ -502,7 +510,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             <div className="flex bg-slate-100 p-1 rounded-xl">
                                 <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Split (L/R)</button>
-                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Aggregate</button>
+                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Average</button>
                             </div>
                             {hamAssessmentMode === 'split' ? (
                                 <div className="space-y-6">
@@ -538,18 +546,28 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                             ) : (
                                 <div className="space-y-6">
                                     <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl text-xs text-orange-900 leading-relaxed">
-                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 text-[10px]">Nordic Aggregate Assessment</strong>
-                                        <p>Input total peak force and body weight to calculate relative strength.</p>
+                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 text-[10px]">Nordic Average Assessment</strong>
+                                        <p>Input average force across both limbs and body weight to calculate relative strength.</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Total Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 700" /></div>
+                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
                                         <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
                                     </div>
                                     {hamResults && (
-                                        <div className="bg-slate-900 rounded-xl p-6 text-white text-center">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-2">Relative Nordic Strength</span>
-                                            <div className="text-5xl font-semibold tracking-tighter text-orange-400">{hamResults.relativeStrength || '--'}</div>
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-2">N/kg</div>
+                                        <div className="bg-slate-900 rounded-xl p-6 text-white space-y-4">
+                                            <div className="grid grid-cols-2 gap-4 text-center">
+                                                <div>
+                                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Avg Force</span>
+                                                    <div className="text-2xl font-semibold">{Math.round(hamResults.avg)}N</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Rel. Strength</span>
+                                                    <div className="text-2xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'} <span className="text-sm">N/kg</span></div>
+                                                </div>
+                                            </div>
+                                            <div className="pt-3 border-t border-slate-800 text-center">
+                                                <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -566,34 +584,12 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
 
                     {activeTab === 'import' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-center hover:bg-slate-100 transition-colors cursor-pointer relative">
-                                <input type="file" accept=".csv, .pdf" onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    if (file.type === 'application/pdf') handlePdfUpload(file);
-                                    else {
-                                        const reader = new FileReader();
-                                        reader.onload = (evt) => setCsvContent(evt.target.result);
-                                        reader.readAsText(file);
-                                    }
-                                }} className="absolute inset-0 opacity-0 cursor-pointer" />
-                                <div className="flex flex-col items-center gap-2 text-slate-400"><FileDownIcon size={32} /><span className="text-xs font-bold uppercase tracking-wide">Drop CSV or PDF here</span><span className="text-[10px]">or click to browse</span></div>
-                            </div>
-                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500">
-                                <p className="font-bold mb-2">Bulk Import</p>
-                                <p>Supported: <strong>CSV</strong> (text) or <strong>PDF</strong> (scanned reports).</p>
-                                <p className="mt-2">Format: <code>Athlete Name, Type, Value1, Value2</code></p>
-                                <ul className="list-disc pl-4 mt-2 space-y-1">
-                                    <li><strong>DSI:</strong> Name, DSI, Ballistic, Isometric</li>
-                                    <li><strong>RSI:</strong> Name, RSI, Height, ContactTime</li>
-                                    <li><strong>PDF:</strong> Auto-extracts "Name", "Peak Force", "Jump Height" tables.</li>
-                                </ul>
-                            </div>
-                            <textarea value={csvContent} onChange={(e) => setCsvContent(e.target.value)} className="w-full h-40 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-mono outline-none focus:border-indigo-500" placeholder={`John Doe, DSI, 2500, 3200\nJane Smith, RSI, 0.45, 0.18`} />
-                            <button onClick={handleImport} className="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-black transition-colors">Process Text Import</button>
-                            {importStatus && <div className="text-center text-xs font-bold text-emerald-600 animate-in fade-in">{importStatus}</div>}
-                        </div>
+                        <SmartTestImport
+                            allAthletes={allAthletes}
+                            teams={teams}
+                            handleSaveMetric={handleSaveMetric}
+                            showToast={showToast}
+                        />
                     )}
 
                     {saveStatus && (

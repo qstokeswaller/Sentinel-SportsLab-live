@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
-import { useWorkoutPrograms, useDeleteProgram } from '../hooks/useWorkoutPrograms';
+import { useWorkoutPrograms, useDeleteProgram, useProgramWithDays } from '../hooks/useWorkoutPrograms';
 import { DatabaseService } from '../services/databaseService';
 import { ProgramBuilderModal } from '../components/workouts/ProgramBuilderModal';
 import { ProgramViewModal } from '../components/workouts/ProgramViewModal';
@@ -70,19 +70,10 @@ const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
         </div>
 
         {program.overview && (
-            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">{program.overview}</p>
+            <p className="text-xs text-slate-400 leading-relaxed mb-3">{program.overview}</p>
         )}
 
-        <div className="mt-auto pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-            <div>
-                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Created</div>
-                <div className="text-xs text-slate-600">{formatDate(program.created_at)}</div>
-            </div>
-            <div>
-                <div className="text-[10px] font-medium text-slate-400 mb-0.5">Last edit</div>
-                <div className="text-xs text-slate-600">{timeAgo(program.updated_at)}</div>
-            </div>
-        </div>
+        <div className="mt-auto" />
 
         <button
             onClick={onView}
@@ -197,6 +188,9 @@ export const WorkoutsPage = () => {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
     const [editingProgram, setEditingProgram] = useState(null);
+    const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+    const [editingProgramBasic, setEditingProgramBasic] = useState(null);
+    const { data: editingFullProgram } = useProgramWithDays(editingProgramId);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmDeleteTemplate, setConfirmDeleteTemplate] = useState<{ id: string; name: string } | null>(null);
 
@@ -331,6 +325,7 @@ export const WorkoutsPage = () => {
                 </div>
 
                 {/* ──────── PROGRAMS SECTION (collapsible) ──────── */}
+                <div data-tour="workout-programs">
                 <SectionHeader
                     title="Workout Programs"
                     subtitle="Multi-day structured programs"
@@ -343,6 +338,7 @@ export const WorkoutsPage = () => {
                         <>
                             <ViewToggle view={programsView} setView={setProgramsView} />
                             <button
+                                data-tour="workout-create"
                                 onClick={(e) => { e.stopPropagation(); setEditingProgram(null); setIsProgramBuilderOpen(true); }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all"
                             >
@@ -391,7 +387,7 @@ export const WorkoutsPage = () => {
                                         key={p.id}
                                         program={p}
                                         onView={() => { setViewingProgram(p); setIsViewModalOpen(true); }}
-                                        onEdit={() => { setEditingProgram(p); setIsProgramBuilderOpen(true); }}
+                                        onEdit={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }}
                                         onDelete={() => setConfirmDeleteId(p.id)}
                                         onShare={() => setShareTarget({ type: 'program', id: p.id, name: p.name })}
                                     />
@@ -429,7 +425,7 @@ export const WorkoutsPage = () => {
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         <button onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Share"><Share2Icon size={13} /></button>
-                                                        <button onClick={() => { setEditingProgram(p); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
+                                                        <button onClick={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
                                                         <button onClick={() => setConfirmDeleteId(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete"><Trash2Icon size={13} /></button>
                                                         <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all" title="View"><EyeIcon size={13} /></button>
                                                     </div>
@@ -443,7 +439,9 @@ export const WorkoutsPage = () => {
                     </div>
                 </SectionHeader>
 
+                </div>
                 {/* ──────── WORKOUT PACKETS SECTION (collapsible) ──────── */}
+                <div data-tour="workout-packets">
                 <SectionHeader
                     title="Workout Packets"
                     subtitle="One-off workout templates — assign & schedule to athletes"
@@ -591,6 +589,7 @@ export const WorkoutsPage = () => {
                         )}
                     </div>
                 </SectionHeader>
+                </div>
 
                 {/* Delete confirm modal */}
                 <ConfirmDeleteModal
@@ -612,8 +611,8 @@ export const WorkoutsPage = () => {
             {/* Program Builder (full-screen overlay) */}
             <ProgramBuilderModal
                 isOpen={isProgramBuilderOpen}
-                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgram(null); }}
-                editingProgram={editingProgram}
+                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgram(null); setEditingProgramId(null); setEditingProgramBasic(null); }}
+                editingProgram={editingFullProgram ?? editingProgram ?? editingProgramBasic}
             />
 
             {/* Program View Modal */}

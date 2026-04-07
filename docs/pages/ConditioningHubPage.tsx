@@ -263,7 +263,7 @@ ${setsHtml}
                     </div>
 
                     {/* Meta Fields */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+                    <div data-tour="cond-meta-fields" className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-slate-500">Session Name</label>
@@ -282,7 +282,7 @@ ${setsHtml}
                         </div>
 
                         {/* Energy System Selector */}
-                        <div className="space-y-1.5">
+                        <div data-tour="cond-energy-system" className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500">Target Energy System</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {ENERGY_SYSTEMS.map(es => (
@@ -306,7 +306,7 @@ ${setsHtml}
                     </div>
 
                     {/* Sets */}
-                    <div className="space-y-3">
+                    <div data-tour="cond-interval-sets" className="space-y-3">
                         <div className="flex justify-between items-center">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Interval Sets</h4>
                             <button onClick={addCondSet} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-all"><PlusIcon size={13} /> Add Set</button>
@@ -750,7 +750,7 @@ ${sectionsHtml}
                 </div>
             )}
             {!activeConditioningModule && !isLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div data-tour="conditioning-main" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div
                         onClick={() => setActiveConditioningModule('wattbike')}
                         className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"

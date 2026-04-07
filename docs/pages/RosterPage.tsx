@@ -5,6 +5,7 @@ import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
     ArrowLeftIcon, LayoutListIcon, ClipboardListIcon,
+    ChevronDownIcon, ChevronUpIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TrainingRegister from '../components/roster/TrainingRegister';
@@ -28,6 +29,7 @@ export const RosterPage = () => {
     const [viewMode, setViewMode]           = useState<ViewMode>('list');
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [playerLayout, setPlayerLayout]   = useState<PlayerLayout>('cards');
+    const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(new Set());
     const [teamDetailTab, setTeamDetailTab] = useState<TeamDetailTab>('athletes');
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
@@ -91,7 +93,7 @@ export const RosterPage = () => {
                     <h1 className="text-2xl font-semibold text-slate-900">Athlete Roster</h1>
                     <p className="text-sm text-slate-500 mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
                     <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
                         <UserPlusIcon size={14} /> Add Athlete
@@ -99,7 +101,7 @@ export const RosterPage = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div data-tour="team-list" className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Table header */}
                 <div className="grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-2.5 border-b border-slate-100 bg-slate-50">
                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Athlete</span>
@@ -108,14 +110,27 @@ export const RosterPage = () => {
                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</span>
                 </div>
 
-                {teams.map((team, teamIdx) => (
+                {teams.map((team, teamIdx) => {
+                    const isCollapsed = collapsedTeams.has(team.id);
+                    const toggleCollapse = () => setCollapsedTeams(prev => {
+                        const next = new Set(prev);
+                        if (next.has(team.id)) next.delete(team.id); else next.add(team.id);
+                        return next;
+                    });
+                    return (
                     <div key={team.id}>
-                        <div className="px-4 py-2 bg-slate-50/60 border-b border-slate-100 flex items-center gap-2 group/team">
+                        <div
+                            className="px-4 py-2.5 bg-slate-50/60 border-b border-slate-100 flex items-center gap-2 group/team cursor-pointer select-none"
+                            onClick={toggleCollapse}
+                        >
+                            <button className="p-0.5 text-slate-400 transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                                <ChevronDownIcon size={14} />
+                            </button>
                             <ShieldIcon size={12} className="text-indigo-400" />
                             <span className="text-xs font-semibold text-slate-600">{team.name}</span>
                             <span className="text-xs text-slate-400">· {(team.players || []).length} athletes</span>
                             <button
-                                onClick={() => setConfirmDelete({ type: 'team', id: team.id, name: team.name })}
+                                onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
                                 className="ml-auto p-1 rounded text-slate-300 hover:text-rose-400 hover:bg-rose-50 transition-all opacity-0 group-hover/team:opacity-100"
                                 title="Delete team"
                             >
@@ -123,45 +138,49 @@ export const RosterPage = () => {
                             </button>
                         </div>
 
-                        {(team.players || []).length > 0 ? (team.players || []).map((player, playerIdx) => (
-                            <div
-                                key={player.id}
-                                className={`grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 transition-colors group ${
-                                    playerIdx < (team.players || []).length - 1 || teamIdx < teams.length - 1 ? 'border-b border-slate-100' : ''
-                                }`}
-                                onClick={() => setViewingPlayer(player)}
-                            >
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">
-                                        {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        {!isCollapsed && (
+                            (team.players || []).length > 0 ? (team.players || []).map((player, playerIdx) => (
+                                <div
+                                    key={player.id}
+                                    {...(playerIdx === 0 && teamIdx === 0 ? { 'data-tour': 'athlete-row' } : {})}
+                                    className={`grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 transition-colors group ${
+                                        playerIdx < (team.players || []).length - 1 || teamIdx < teams.length - 1 ? 'border-b border-slate-100' : ''
+                                    }`}
+                                    onClick={() => setViewingPlayer(player)}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">
+                                            {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                        </div>
+                                        <span className="text-sm font-medium text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{player.name}</span>
                                     </div>
-                                    <span className="text-sm font-medium text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{player.name}</span>
+                                    <span className="text-sm text-slate-500 truncate">{team.name}</span>
+                                    <span className="text-sm text-slate-500 truncate">{player.sport || <span className="text-slate-300">—</span>}</span>
+                                    <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                            onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
+                                            className="p-1.5 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                                            title="Delete athlete"
+                                        >
+                                            <Trash2Icon size={13} />
+                                        </button>
+                                        <span
+                                            onClick={() => setViewingPlayer(player)}
+                                            className="text-xs text-indigo-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                        >
+                                            View <ChevronRightIcon size={12} />
+                                        </span>
+                                    </div>
                                 </div>
-                                <span className="text-sm text-slate-500 truncate">{team.name}</span>
-                                <span className="text-sm text-slate-500 truncate">{player.sport || <span className="text-slate-300">—</span>}</span>
-                                <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                                    <button
-                                        onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
-                                        className="p-1.5 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
-                                        title="Delete athlete"
-                                    >
-                                        <Trash2Icon size={13} />
-                                    </button>
-                                    <span
-                                        onClick={() => setViewingPlayer(player)}
-                                        className="text-xs text-indigo-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                    >
-                                        View <ChevronRightIcon size={12} />
-                                    </span>
+                            )) : (
+                                <div className="px-4 py-4 text-sm text-slate-400 italic border-b border-slate-100">
+                                    No athletes assigned to this team yet.
                                 </div>
-                            </div>
-                        )) : (
-                            <div className="px-4 py-4 text-sm text-slate-400 italic border-b border-slate-100">
-                                No athletes assigned to this team yet.
-                            </div>
+                            )
                         )}
                     </div>
-                ))}
+                    );
+                })}
 
                 <div className="px-4 py-3 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-xs text-slate-400">{allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}</span>
@@ -185,7 +204,7 @@ export const RosterPage = () => {
                     <h1 className="text-2xl font-semibold text-slate-900">Athlete Roster</h1>
                     <p className="text-sm text-slate-500 mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
                     <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
                         <UserPlusIcon size={14} /> Add Athlete
@@ -534,7 +553,15 @@ export const RosterPage = () => {
                     ? renderTeamDetail()
                     : renderTeamsGrid()
             }
-            <DeleteModal />
+            <ConfirmDeleteModal
+                isOpen={!!confirmDelete}
+                title={`Delete ${confirmDelete?.type === 'athlete' ? 'Athlete' : 'Team'}`}
+                message={`Are you sure you want to delete "${confirmDelete?.name}"?`}
+                warning={confirmDelete?.type === 'team' ? 'Remove all athletes from this team first, or they may become unassigned.' : undefined}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setConfirmDelete(null)}
+                loading={deleting}
+            />
         </div>
     );
 };

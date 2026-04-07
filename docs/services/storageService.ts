@@ -117,4 +117,12 @@ export const SupabaseStorageService = {
   savePeriodizationPlans: (d: any) => save('periodization_plans', d),
   getPersonalExercises: () => get('personal_exercises'),
   savePersonalExercises: (d: any) => save('personal_exercises', d),
+  getAcwrSettings: () => get('acwr_feature_settings'),
+  saveAcwrSettings: (d: any) => save('acwr_feature_settings', d),
+  getAcwrExclusions: () => get('acwr_exclusions'),
+  saveAcwrExclusions: (d: any) => save('acwr_exclusions', d),
+  getTestVisibility: () => get('test_visibility'),
+  saveTestVisibility: (d: any) => save('test_visibility', d),
+  getTourState: () => get('tour_state'),
+  saveTourState: (d: any) => save('tour_state', d),
 };

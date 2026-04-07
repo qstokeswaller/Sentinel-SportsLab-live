@@ -13,6 +13,8 @@ import { useExerciseMap } from '../hooks/useExerciseMap';
 import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 import GpsColumnMapper, { findMatchingProfile } from '../components/performance/GpsColumnMapper';
 import type { GpsProfile, ProfileMatchResult } from '../components/performance/GpsColumnMapper';
+import SmartCsvMapper from '../components/ui/SmartCsvMapper';
+import { HR_SCHEMA } from '../utils/csvSchemas';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
     CalendarIcon, HeartPulseIcon, DumbbellIcon, FlameIcon, BatteryIcon, ShieldAlertIcon,
@@ -79,6 +81,9 @@ export const ReportingHubPage = () => {
     const [hrImportMessage, setHrImportMessage] = useState('');
     const [hrReportSelectedTeam, setHrReportSelectedTeam] = useState('');
     const hrFileRef = useRef<HTMLInputElement>(null);
+    const [isHrMapperOpen, setIsHrMapperOpen] = useState(false);
+    const [hrCsvHeaders, setHrCsvHeaders] = useState<string[]>([]);
+    const [hrCsvRows, setHrCsvRows] = useState<Record<string, string>[]>([]);
     const [trackingTab, setTrackingTab] = useState('Tonnage Trends');
     const [trackingSelectedAthlete, setTrackingSelectedAthlete] = useState('');
     const [trackingDateRange, setTrackingDateRange] = useState(() => {
@@ -114,66 +119,63 @@ export const ReportingHubPage = () => {
         return 'Z5';
     };
 
-    const processHrCSV = (csvText: string) => {
-        const lines = csvText.split('\n').filter(l => l.trim());
-        if (lines.length < 2) { setHrImportStatus('error'); setHrImportMessage('CSV file is empty or has no data rows.'); return; }
+    // HR CSV — Step 1: read file, open SmartCsvMapper
+    const handleHrFileUpload = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const text = (ev.target.result as string).trim();
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length < 2) { setHrImportStatus('error'); setHrImportMessage('CSV file is empty.'); return; }
+            const headers = lines[0].split(',').map(h => h.trim());
+            const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+                const cols = line.split(',').map(c => c.trim());
+                const obj: Record<string, string> = {};
+                headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+                return obj;
+            });
+            setHrCsvHeaders(headers);
+            setHrCsvRows(rows);
+            setIsHrMapperOpen(true);
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
 
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
-
-        // Map common header variations
-        const findCol = (candidates: string[]) => headers.findIndex(h => candidates.some(c => h.includes(c)));
-        const dateIdx = findCol(['date', 'session_date', 'timestamp']);
-        const sessionIdx = findCol(['session', 'session_name', 'session_type', 'activity', 'type']);
-        const athleteIdx = findCol(['athlete', 'player', 'name', 'athlete_name', 'player_name']);
-        const avgHrIdx = findCol(['avg_hr', 'average_hr', 'avg_heart_rate', 'mean_hr', 'avghr']);
-        const maxHrIdx = findCol(['max_hr', 'peak_hr', 'max_heart_rate', 'maxhr']);
-        const minHrIdx = findCol(['min_hr', 'resting_hr', 'rest_hr', 'minhr']);
-        const durationIdx = findCol(['duration', 'session_duration', 'time', 'total_time', 'duration_min']);
-        const trimpIdx = findCol(['trimp', 'training_impulse']);
-        const caloriesIdx = findCol(['calories', 'kcal', 'energy']);
-        const z1Idx = findCol(['z1', 'zone_1', 'zone1', 'time_z1']);
-        const z2Idx = findCol(['z2', 'zone_2', 'zone2', 'time_z2']);
-        const z3Idx = findCol(['z3', 'zone_3', 'zone3', 'time_z3']);
-        const z4Idx = findCol(['z4', 'zone_4', 'zone4', 'time_z4']);
-        const z5Idx = findCol(['z5', 'zone_5', 'zone5', 'time_z5']);
-        const recoveryIdx = findCol(['recovery_hr', 'hrr', 'hr_recovery', 'recovery']);
-
-        if (avgHrIdx === -1 && maxHrIdx === -1) {
-            setHrImportStatus('error');
-            setHrImportMessage('CSV must contain at least avg_hr or max_hr columns. Supported columns: date, session, athlete, avg_hr, max_hr, min_hr, duration, trimp, calories, z1-z5, recovery_hr');
-            return;
-        }
-
-        const rows = lines.slice(1);
+    // HR CSV — Step 2: SmartCsvMapper confirmed → process mapped data
+    const handleHrMapperConfirm = ({ rows, mapping }: { rows: Record<string, string>[]; mapping: Record<string, string> }) => {
+        setIsHrMapperOpen(false);
+        const getVal = (row: Record<string, string>, fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
         const parsed = [];
-        for (const line of rows) {
-            const cols = line.split(',').map(c => c.trim());
-            const num = (idx: number) => idx >= 0 ? parseFloat(cols[idx]) || 0 : 0;
-            const str = (idx: number) => idx >= 0 ? cols[idx] || '' : '';
 
-            const avgHr = num(avgHrIdx);
-            const maxHr = num(maxHrIdx);
-            if (!avgHr && !maxHr) continue; // skip empty rows
+        for (const row of rows) {
+            const num = (fieldId: string) => parseFloat(getVal(row, fieldId)) || 0;
+            const str = (fieldId: string) => getVal(row, fieldId) || '';
+
+            const avgHr = num('avg_hr');
+            const maxHr = num('max_hr');
+            if (!avgHr && !maxHr) continue;
 
             parsed.push({
                 id: `hr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-                date: str(dateIdx) || new Date().toISOString().split('T')[0],
-                session: str(sessionIdx) || 'Session',
-                athlete: str(athleteIdx) || '',
+                date: str('date') || new Date().toISOString().split('T')[0],
+                session: str('session') || 'Session',
+                athlete: str('athlete') || '',
                 avgHr, maxHr,
-                minHr: num(minHrIdx),
-                duration: num(durationIdx),
-                trimp: num(trimpIdx),
-                calories: num(caloriesIdx),
+                minHr: num('min_hr'),
+                duration: num('duration'),
+                trimp: num('trimp'),
+                calories: num('calories'),
                 zones: {
-                    z1: num(z1Idx), z2: num(z2Idx), z3: num(z3Idx), z4: num(z4Idx), z5: num(z5Idx),
+                    z1: num('z1'), z2: num('z2'), z3: num('z3'), z4: num('z4'), z5: num('z5'),
                 },
-                recoveryHr: num(recoveryIdx),
+                recoveryHr: num('recovery_hr'),
                 zone: classifyZone(avgHr, maxHr || 200),
             });
         }
 
-        if (parsed.length === 0) { setHrImportStatus('error'); setHrImportMessage('No valid HR rows found in CSV.'); return; }
+        if (parsed.length === 0) { setHrImportStatus('error'); setHrImportMessage('No valid HR rows found after mapping.'); return; }
 
         const updated = [...(Array.isArray(hrData) ? hrData : []), ...parsed];
         setHrData(updated);
@@ -181,15 +183,6 @@ export const ReportingHubPage = () => {
         setHrImportStatus('success');
         setHrImportMessage(`Imported ${parsed.length} session${parsed.length > 1 ? 's' : ''} successfully.`);
         setTimeout(() => setHrImportStatus(null), 5000);
-    };
-
-    const handleHrFileUpload = (e: any) => {
-        const file = e.target?.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => { processHrCSV(ev.target.result as string); };
-        reader.readAsText(file);
-        e.target.value = '';
     };
 
     const handleClearHrData = () => {
@@ -1670,6 +1663,15 @@ export const ReportingHubPage = () => {
                         anomalyMode={gpsAnomalyMode}
                     />
                 )}
+
+                <SmartCsvMapper
+                    isOpen={isHrMapperOpen}
+                    onClose={() => setIsHrMapperOpen(false)}
+                    onConfirm={handleHrMapperConfirm}
+                    schema={HR_SCHEMA}
+                    csvHeaders={hrCsvHeaders}
+                    csvRows={hrCsvRows}
+                />
             </div>
         );
     };
@@ -1994,7 +1996,7 @@ export const ReportingHubPage = () => {
                 <p className="text-sm text-slate-500 mt-0.5">Performance intelligence reports and data exports.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div data-tour="report-cards" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[
                     { title: 'Heart Rate Metrics', desc: 'Session Intensity, Peaks & Zone Distribution', icon: HeartIcon },
                     { title: 'Data Hub', desc: 'Daily Activity Logs & Raw Registry Export', icon: TableIcon },

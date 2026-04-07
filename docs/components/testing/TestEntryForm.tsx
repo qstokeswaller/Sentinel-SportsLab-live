@@ -1,8 +1,9 @@
 // @ts-nocheck
 import React, { useState, useMemo } from 'react';
-import { SaveIcon, CalculatorIcon, InfoIcon } from 'lucide-react';
+import { SaveIcon, CalculatorIcon, InfoIcon, PaperclipIcon, FileTextIcon, XIcon } from 'lucide-react';
 import type { TestDefinition, TestField } from '../../utils/testRegistry';
 import { NormativeBar } from './NormativeBar';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
   test: TestDefinition;
@@ -18,6 +19,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'standard' | 'vbt'>('standard');
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
   const hasVbt = !!(test.vbtFields && test.vbtFields.length > 0);
 
@@ -58,13 +60,30 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
     if (!athleteId) return;
     setSaving(true);
     try {
+      let attachmentUrl = null;
+
+      // Upload attachment if present
+      if (attachedFile) {
+        const ext = attachedFile.name.split('.').pop() || 'pdf';
+        const path = `${athleteId}/${test.id}_${date || new Date().toISOString().split('T')[0]}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('assessment-attachments')
+          .upload(path, attachedFile, { contentType: attachedFile.type, upsert: true });
+        if (uploadError) {
+          console.warn('Attachment upload failed:', uploadError.message);
+          // Save the assessment data anyway, just without the attachment
+        } else {
+          attachmentUrl = path; // Store the storage path — access via signed URL when viewing
+        }
+      }
+
       if (activeTab === 'vbt') {
-        // Save VBT data with vbt_ prefix so it doesn't clash with standard fields
-        await onSave(test.id, { ...vbtValues, ...vbtCalculated, _vbt: true, _date: date });
+        await onSave(test.id, { ...vbtValues, ...vbtCalculated, _vbt: true, _date: date, ...(attachmentUrl ? { attachmentUrl } : {}) });
       } else {
-        await onSave(test.id, { ...values, ...calculated, _date: date });
+        await onSave(test.id, { ...values, ...calculated, _date: date, ...(attachmentUrl ? { attachmentUrl } : {}) });
       }
       setSaved(true);
+      setAttachedFile(null);
     } finally {
       setSaving(false);
     }
@@ -97,7 +116,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
 
       {/* Standard form fields */}
       {activeTab === 'standard' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div data-tour="test-field-inputs" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {test.fields.map(field => (
             <FieldRenderer
               key={field.key}
@@ -200,9 +219,30 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
         </div>
       )}
 
-      {/* Save button */}
+      {/* Attachment upload (PDF / document) */}
       <div className="flex items-center gap-3">
+        {attachedFile ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <FileTextIcon size={14} className="text-indigo-500 shrink-0" />
+            <span className="text-xs font-medium text-indigo-700 truncate max-w-[200px]">{attachedFile.name}</span>
+            <span className="text-[10px] text-indigo-400">{(attachedFile.size / 1024).toFixed(0)}KB</span>
+            <button onClick={() => setAttachedFile(null)} className="p-0.5 text-indigo-300 hover:text-rose-500 transition-colors">
+              <XIcon size={12} />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 hover:border-indigo-300 hover:text-indigo-600 transition-all cursor-pointer">
+            <PaperclipIcon size={13} />
+            Attach Report (PDF)
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) setAttachedFile(e.target.files[0]); e.target.value = ''; }} className="hidden" />
+          </label>
+        )}
+      </div>
+
+      {/* Save button */}
+      <div data-tour="test-save-area" className="flex items-center gap-3">
         <button
+          data-tour="test-save-button"
           onClick={handleSave}
           disabled={!athleteId || !requiredFieldsFilled || saving}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
