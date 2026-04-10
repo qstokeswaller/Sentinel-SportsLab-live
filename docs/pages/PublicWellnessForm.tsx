@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
+import { supabase } from '../lib/supabase';
 import { CheckCircle2, AlertCircle, Clock, ChevronRight, ChevronLeft, Send, Activity } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { BODY_MAP_AREAS } from '../utils/mocks';
@@ -33,6 +34,13 @@ const PublicWellnessForm: React.FC = () => {
     const [selectedAthleteId, setSelectedAthleteId] = useState('');
     const [responses, setResponses] = useState<Record<string, any>>({});
     const [currentStep, setCurrentStep] = useState(0); // 0 = Name selection, 1..N = Questions
+
+    // Public form: clear any stale/expired session so the anon key is used on submit.
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => {
+            if (!data.session) supabase.auth.signOut({ scope: 'local' });
+        });
+    }, []);
 
     useEffect(() => {
         const loadData = async () => {
