@@ -13,6 +13,7 @@ interface HeatmapProps {
     athletes: { id: string; name: string }[];
     responses: any[];  // wellness_responses with session_date, athlete_id, responses JSONB
     days?: number;     // how many days to show (default 14)
+    anchorDate?: string; // end date of window, ISO YYYY-MM-DD (default = today)
 }
 
 /** Compute composite wellness from a response's JSONB values (0-10 scale, higher = better) */
@@ -52,19 +53,18 @@ function scoreToColor(score: number | null): string {
     return 'bg-rose-400';
 }
 
-const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 14 }) => {
-    // Build date columns
+const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 14, anchorDate }) => {
+    // Build date columns ending at anchorDate (or today if not provided)
     const dateColumns = useMemo(() => {
         const cols: string[] = [];
-        const today = new Date();
+        const anchor = anchorDate ? new Date(anchorDate + 'T12:00:00') : new Date();
         for (let i = days - 1; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            // Use local date to match session_date stored in local timezone
+            const d = new Date(anchor);
+            d.setDate(anchor.getDate() - i);
             cols.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
         }
         return cols;
-    }, [days]);
+    }, [days, anchorDate]);
 
     // Build lookup: athleteId → date → composite score
     const heatData = useMemo(() => {
@@ -90,64 +90,47 @@ const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 1
     if (athletes.length === 0) return null;
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                    <h4 className="text-sm font-semibold text-slate-800">Team Wellness Heatmap</h4>
-                    <p className="text-[10px] text-slate-400">Last {days} days · Green = good, Red = concern</p>
-                </div>
-                <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-                    <div className="flex gap-0.5">
-                        {['bg-rose-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-300', 'bg-lime-300', 'bg-emerald-300', 'bg-emerald-400'].map((c, i) => (
-                            <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
-                        ))}
-                    </div>
-                    <span>Low → High</span>
-                </div>
-            </div>
-
-            <div className="overflow-x-auto">
-                <table className="w-full text-[10px]">
-                    <thead>
-                        <tr>
-                            <th className="sticky left-0 bg-white z-10 px-3 py-2 text-left text-[9px] font-semibold text-slate-400 uppercase tracking-wide w-32 min-w-[128px]">Athlete</th>
-                            {dateColumns.map(d => {
-                                const dayNum = new Date(d).getDate();
-                                const dayName = new Date(d).toLocaleDateString('en', { weekday: 'narrow' });
-                                return (
-                                    <th key={d} className="px-0.5 py-2 text-center text-[8px] text-slate-400 min-w-[28px]">
-                                        <div>{dayName}</div>
-                                        <div className="font-bold">{dayNum}</div>
-                                    </th>
-                                );
-                            })}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {athletes.map((athlete, idx) => {
-                            const athleteData = heatData.get(athlete.id);
+        <div className="overflow-x-auto">
+            <table className="w-full text-[10px]">
+                <thead>
+                    <tr>
+                        <th className="sticky left-0 bg-white z-10 px-3 py-2 text-left text-[9px] font-semibold text-slate-400 uppercase tracking-wide w-32 min-w-[128px]">Athlete</th>
+                        {dateColumns.map(d => {
+                            const dayNum = new Date(d + 'T12:00:00').getDate();
+                            const dayName = new Date(d + 'T12:00:00').toLocaleDateString('en', { weekday: 'narrow' });
                             return (
-                                <tr key={athlete.id} className={idx % 2 === 0 ? '' : 'bg-slate-50/30'}>
-                                    <td className="sticky left-0 bg-white z-10 px-3 py-1.5 font-medium text-slate-700 truncate max-w-[128px]">
-                                        {athlete.name}
-                                    </td>
-                                    {dateColumns.map(d => {
-                                        const score = athleteData?.get(d) ?? null;
-                                        return (
-                                            <td key={d} className="px-0.5 py-1">
-                                                <div
-                                                    className={`w-6 h-6 mx-auto rounded-md ${scoreToColor(score)} transition-colors`}
-                                                    title={score !== null ? `${athlete.name}: ${score.toFixed(1)}/10 on ${d}` : `No data`}
-                                                />
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
+                                <th key={d} className="px-0.5 py-2 text-center text-[8px] text-slate-400 min-w-[28px]">
+                                    <div>{dayName}</div>
+                                    <div className="font-bold">{dayNum}</div>
+                                </th>
                             );
                         })}
-                    </tbody>
-                </table>
-            </div>
+                    </tr>
+                </thead>
+                <tbody>
+                    {athletes.map((athlete, idx) => {
+                        const athleteData = heatData.get(athlete.id);
+                        return (
+                            <tr key={athlete.id} className={idx % 2 === 0 ? '' : 'bg-slate-50/30'}>
+                                <td className="sticky left-0 bg-white z-10 px-3 py-1.5 font-medium text-slate-700 truncate max-w-[128px]">
+                                    {athlete.name}
+                                </td>
+                                {dateColumns.map(d => {
+                                    const score = athleteData?.get(d) ?? null;
+                                    return (
+                                        <td key={d} className="px-0.5 py-1">
+                                            <div
+                                                className={`w-6 h-6 mx-auto rounded-md ${scoreToColor(score)} transition-colors`}
+                                                title={score !== null ? `${athlete.name}: ${score.toFixed(1)}/10 on ${d}` : `No data`}
+                                            />
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 };

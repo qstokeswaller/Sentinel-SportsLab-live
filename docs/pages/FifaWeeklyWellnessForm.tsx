@@ -14,7 +14,8 @@ import { DatabaseService } from '../services/databaseService';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import type { BodyMapConfig } from '../types/types';
-import { DEFAULT_BODY_MAP_CONFIG } from '../utils/mocks';
+// DEFAULT_BODY_MAP_CONFIG retained in case other components need it, but this form uses FIFA_BODY_MAP_CONFIG
+
 
 // FIFA-aligned body map config — areas match Waldén et al. (2023) Table 4
 const FIFA_BODY_MAP_CONFIG: BodyMapConfig = {
@@ -456,7 +457,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                             Sentinel <span className="text-indigo-600">SportsLab</span>
                         </span>
                     </div>
-                    <span className="text-[9px] text-slate-400 tracking-wide uppercase">Weekly Health Check</span>
+                    <span className="text-[9px] text-slate-400 tracking-wide uppercase">Deep Health Check</span>
                 </div>
                 <div className="px-6 py-2 flex items-center justify-between">
                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{sh.heading}</div>
@@ -586,7 +587,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                 if (areas.length > 0) setVal('body_area', areas[0].area);
                                 else setVal('body_area', '');
                             }}
-                            config={DEFAULT_BODY_MAP_CONFIG}
+                            config={FIFA_BODY_MAP_CONFIG}
                         />
                     )}
 

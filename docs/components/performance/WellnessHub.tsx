@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
-    Search, Users, ChevronRight, ArrowLeft, ClipboardList, AlertTriangle,
+    Search, Users, ChevronRight, ChevronLeft, ArrowLeft, ClipboardList, AlertTriangle,
     Share2, Calendar, Activity, CheckCircle2, Clock, Copy, Zap, Link2, Plus, X,
-    BarChart3, Trash2, ChevronUp, ChevronDown, Shield as ShieldIcon,
+    BarChart3, Trash2, ChevronUp, ChevronDown, Shield as ShieldIcon, Thermometer,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
@@ -120,6 +120,11 @@ const WellnessHub: React.FC = () => {
     const [responseViewDate, setResponseViewDate] = useState(TODAY);
     const [showDailyTracker, setShowDailyTracker] = useState(false);
     const [isRundownOpen, setIsRundownOpen] = useState(true);
+    const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
+    const [rundownFrom, setRundownFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 27); return d.toISOString().split('T')[0]; });
+    const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
+    const [heatmapDays, setHeatmapDays] = useState<number>(14);
+    const [heatmapAnchor, setHeatmapAnchor] = useState<string>(() => localDateStr());
 
     // Resolve wellnessDateRange to local dateFrom/dateTo
     const dateRange = useMemo(() => {
@@ -171,6 +176,24 @@ const WellnessHub: React.FC = () => {
     const dailyResponses = useMemo(() =>
         filteredResponses.filter(r => r.tier !== 'weekly'),
     [filteredResponses]);
+
+    // Weekly-only responses — NOT filtered by the global date picker (deep checks are sparse;
+    // filtering by 7d/today would hide all historical data). Uses the full 30d loaded set.
+    const weeklyResponses = useMemo(() =>
+        wellnessResponses.filter(r => r.team_id === selectedTeamId && r.tier === 'weekly'),
+    [wellnessResponses, selectedTeamId]);
+
+    // Rundown-specific filtered responses — own date range independent of global wellness period
+    const rundownDailyFiltered = useMemo(() =>
+        dailyResponses.filter(r => r.session_date >= rundownFrom && r.session_date <= rundownTo),
+    [dailyResponses, rundownFrom, rundownTo]);
+
+    const rundownDeepChecks = useMemo(() =>
+        (wellnessResponses || [])
+            .filter(r => r.team_id === selectedTeamId && r.tier === 'weekly')
+            .filter(r => { const d = r.session_date || r.created_at?.split('T')[0]; return d && d >= rundownFrom && d <= rundownTo; })
+            .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || '') || (b.submitted_at || '').localeCompare(a.submitted_at || '')),
+    [wellnessResponses, selectedTeamId, rundownFrom, rundownTo]);
 
     const activeTeam = teams.find(t => t.id === selectedTeamId);
 
@@ -231,7 +254,9 @@ const WellnessHub: React.FC = () => {
                 || (resp.fatigue >= 8)
                 || (resp.soreness >= 8)
                 || (resp.stress >= 8)
-                || (resp.sleep_hours != null && resp.sleep_hours <= 5);
+                || (resp.sleep_hours != null && resp.sleep_hours <= 5)
+                || resp.health_complaint === 'illness'
+                || resp.health_complaint === 'both';
         };
         return {
             total:       latestPerAthlete.length,
@@ -371,6 +396,8 @@ const WellnessHub: React.FC = () => {
             { key: 'availability',  label: 'Availability',  max: 0,  negative: false, color: '#22c55e', form: 'daily', type: 'category', options: ['available', 'modified', 'unavailable'] },
             { key: 'readiness',     label: 'Readiness',     max: 0,  negative: false, color: '#6366f1', form: 'daily', type: 'category', options: ['ready', 'compromised', 'not_ready'] },
             { key: 'health_complaint', label: 'Health Complaint', max: 0, negative: false, color: '#ef4444', form: 'daily', type: 'category', options: ['no', 'injury', 'illness', 'both'] },
+            { key: 'hydration',     label: 'Hydration',     max: 10, negative: false, color: '#06b6d4', form: 'weekly', type: 'scale' },
+            { key: 'nutrition',     label: 'Nutrition',     max: 10, negative: false, color: '#10b981', form: 'weekly', type: 'scale' },
         ];
 
         // View options per metric type
@@ -404,12 +431,15 @@ const WellnessHub: React.FC = () => {
         // Ensure current view is valid for the selected metric type
         const activeView = viewOptions.find(v => v.id === insightView) ? insightView : viewOptions[0]?.id || 'bar_sorted';
 
-        // Available dates
-        const availDates = Array.from(new Set(dailyResponses.map(r => r.session_date))).sort((a, b) => b.localeCompare(a));
+        // Use the correct response set for the selected metric type
+        const insightSource = activeDef.form === 'weekly' ? weeklyResponses : dailyResponses;
+
+        // Available dates derived from the active source (weekly metrics use weekly dates)
+        const availDates = Array.from(new Set(insightSource.map(r => r.session_date))).sort((a, b) => b.localeCompare(a));
 
         // Responses for selected date OR full period
-        const dateResponses = dailyResponses.filter(r => r.session_date === insightDate);
-        const chartResponses = insightPeriodMode ? dailyResponses : dateResponses;
+        const dateResponses = insightSource.filter(r => r.session_date === insightDate);
+        const chartResponses = insightPeriodMode ? insightSource : dateResponses;
         const totalAthletes = activeTeam?.players?.length || 0;
         const periodLabel = insightPeriodMode
             ? (wellnessDateRange === 'today' ? 'Today' : wellnessDateRange === '7d' ? 'Last 7 Days' : 'Last 30 Days')
@@ -482,9 +512,9 @@ const WellnessHub: React.FC = () => {
             const vals = chartResponses.map(r => getVal(r)).filter(v => typeof v === 'number');
             const avg = vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
 
-            // Historical daily averages for trend
+            // Historical averages for trend — use same source as the selected metric type
             const byDate: Record<string, number[]> = {};
-            dailyResponses.forEach(r => {
+            insightSource.forEach(r => {
                 const v = r.responses?.[activeDef.key];
                 if (typeof v === 'number') {
                     if (!byDate[r.session_date]) byDate[r.session_date] = [];
@@ -597,10 +627,10 @@ const WellnessHub: React.FC = () => {
             );
         };
 
-        // TREND — line chart of daily team averages over the whole date range
+        // TREND — line chart of team averages over the whole date range
         const renderTrend = () => {
             const byDate: Record<string, number[]> = {};
-            dailyResponses.forEach(r => {
+            insightSource.forEach(r => {
                 const v = r.responses?.[activeDef.key];
                 if (typeof v === 'number') {
                     if (!byDate[r.session_date]) byDate[r.session_date] = [];
@@ -1038,6 +1068,116 @@ const WellnessHub: React.FC = () => {
                     })}
                 </div>
 
+                {/* Deep Check Insights — aggregate panel for weekly/deep check data */}
+                {weeklyResponses.length > 0 && (() => {
+                    const URTI_KEYS = ['urti_hoarseness','urti_blocked_nose','urti_runny_nose','urti_sinus_pressure','urti_sneezing','urti_dry_cough','urti_wet_cough','urti_headache'];
+                    const URTI_LABELS2: Record<string,string> = { urti_hoarseness:'Hoarseness', urti_blocked_nose:'Blocked Nose', urti_runny_nose:'Runny Nose', urti_sinus_pressure:'Sinus Pressure', urti_sneezing:'Sneezing', urti_dry_cough:'Dry Cough', urti_wet_cough:'Wet Cough', urti_headache:'Headache' };
+
+                    // Infer path from matching daily response
+                    const withPath = weeklyResponses.map(dc => {
+                        const daily = dailyResponses.find(d => d.athlete_id === dc.athlete_id && d.session_date === dc.session_date);
+                        const complaint = daily?.responses?.health_complaint;
+                        const path = complaint === 'injury' ? 'injury' : complaint === 'illness' ? 'illness' : complaint === 'both' ? 'both' : 'trends';
+                        return { ...dc, path };
+                    });
+
+                    const pathCounts = { injury: 0, illness: 0, both: 0, trends: 0 };
+                    withPath.forEach(d => { pathCounts[d.path as keyof typeof pathCounts]++; });
+
+                    // Hydration / nutrition averages
+                    const hydVals = weeklyResponses.map(r => r.responses?.hydration).filter(v => typeof v === 'number');
+                    const nutVals = weeklyResponses.map(r => r.responses?.nutrition).filter(v => typeof v === 'number');
+                    const avgHyd = hydVals.length ? (hydVals.reduce((s:number,v:number) => s+v, 0)/hydVals.length).toFixed(1) : null;
+                    const avgNut = nutVals.length ? (nutVals.reduce((s:number,v:number) => s+v, 0)/nutVals.length).toFixed(1) : null;
+
+                    // Symptom frequency across illness-path checks
+                    const illnessChecks = weeklyResponses.filter(dc => URTI_KEYS.some(k => (dc.responses?.[k] || 0) > 0));
+                    const symptomFreq = URTI_KEYS.map(k => ({
+                        label: URTI_LABELS2[k],
+                        count: illnessChecks.filter(dc => (dc.responses?.[k] || 0) > 0).length,
+                        avgSev: illnessChecks.length ? +(illnessChecks.reduce((s, dc) => s + (dc.responses?.[k] || 0), 0) / illnessChecks.length).toFixed(1) : 0,
+                    })).filter(s => s.count > 0).sort((a,b) => b.count - a.count);
+
+                    const PATH_STYLES: Record<string,string> = { injury:'bg-rose-50 text-rose-700 border-rose-100', illness:'bg-blue-50 text-blue-700 border-blue-100', both:'bg-purple-50 text-purple-700 border-purple-100', trends:'bg-slate-50 text-slate-600 border-slate-200' };
+                    const PATH_LABELS: Record<string,string> = { injury:'Injury', illness:'Illness', both:'Injury + Illness', trends:'Health Trends' };
+
+                    return (
+                        <div className="bg-white rounded-xl border-2 border-indigo-50 shadow-sm p-6 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                                        <Thermometer size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Deep Check Insights</h3>
+                                        <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{weeklyResponses.length} deep check{weeklyResponses.length !== 1 ? 's' : ''} completed in period</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Path breakdown */}
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Check Paths</p>
+                                    <div className="space-y-2">
+                                        {Object.entries(pathCounts).filter(([,c]) => c > 0).map(([path, count]) => (
+                                            <div key={path} className="flex items-center justify-between">
+                                                <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${PATH_STYLES[path]}`}>{PATH_LABELS[path]}</span>
+                                                <span className="text-sm font-bold text-slate-700">{count}</span>
+                                            </div>
+                                        ))}
+                                        {Object.values(pathCounts).every(c => c === 0) && (
+                                            <p className="text-xs text-slate-300 italic">No path data</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Hydration + Nutrition */}
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Avg Scores (Team)</p>
+                                    <div className="space-y-3">
+                                        {avgHyd != null && (
+                                            <div className="flex items-center justify-between p-3 bg-cyan-50 border border-cyan-100 rounded-xl">
+                                                <span className="text-[10px] font-bold text-cyan-700 uppercase">Hydration</span>
+                                                <span className="text-xl font-bold text-cyan-600">{avgHyd}<span className="text-xs font-medium opacity-50">/10</span></span>
+                                            </div>
+                                        )}
+                                        {avgNut != null && (
+                                            <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                                                <span className="text-[10px] font-bold text-emerald-700 uppercase">Nutrition</span>
+                                                <span className="text-xl font-bold text-emerald-600">{avgNut}<span className="text-xs font-medium opacity-50">/10</span></span>
+                                            </div>
+                                        )}
+                                        {avgHyd == null && avgNut == null && <p className="text-xs text-slate-300 italic">No data</p>}
+                                    </div>
+                                </div>
+
+                                {/* Symptom frequency */}
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                                        Illness Symptoms{illnessChecks.length > 0 ? ` (${illnessChecks.length} checks)` : ''}
+                                    </p>
+                                    {symptomFreq.length > 0 ? (
+                                        <div className="space-y-1.5">
+                                            {symptomFreq.map(s => (
+                                                <div key={s.label} className="flex items-center gap-2">
+                                                    <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                        <div className="bg-blue-400 h-full rounded-full" style={{ width: `${(s.count / illnessChecks.length) * 100}%` }} />
+                                                    </div>
+                                                    <span className="text-[9px] font-semibold text-slate-500 w-20 truncate">{s.label}</span>
+                                                    <span className="text-[9px] font-bold text-slate-700 w-6 text-right">{s.count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-slate-300 italic">No illness checks in period</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+
                 {/* Individual breakdown table (only for single-day mode) */}
                 {!insightPeriodMode && (
                     <div className="bg-white rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden">
@@ -1325,7 +1465,9 @@ const WellnessHub: React.FC = () => {
                                         || resp.fatigue >= 8
                                         || resp.soreness >= 8
                                         || resp.stress >= 8
-                                        || (resp.sleep_hours != null && resp.sleep_hours <= 5);
+                                        || (resp.sleep_hours != null && resp.sleep_hours <= 5)
+                                        || resp.health_complaint === 'illness'
+                                        || resp.health_complaint === 'both';
                                 })
                                 .slice(0, 6)
                                 .map(r => {
@@ -1336,6 +1478,8 @@ const WellnessHub: React.FC = () => {
                                     const reason = r.injury_report ? 'Injury Reported'
                                         : resolveAvailability(r) === 'unavailable' ? 'Unavailable'
                                         : resp.readiness === 'not_ready' ? 'Not Ready'
+                                        : resp.health_complaint === 'illness' ? 'Illness Reported'
+                                        : resp.health_complaint === 'both' ? 'Injury + Illness'
                                         : resp.fatigue >= 8 ? `Fatigue ${resp.fatigue}/10`
                                         : resp.soreness >= 8 ? `Soreness ${resp.soreness}/10`
                                         : resp.stress >= 8 ? `Stress ${resp.stress}/10`
@@ -1375,67 +1519,76 @@ const WellnessHub: React.FC = () => {
 
             {/* Individual Rundown — full width below the grid, collapsible */}
             <div className="bg-white rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-                    <button onClick={() => setIsRundownOpen(v => !v)} className="flex items-center gap-2 hover:text-indigo-600 transition-colors">
+                {/* ── Header ── */}
+                <div className="p-5 border-b border-slate-100 bg-slate-50/30 flex flex-wrap items-center gap-3">
+                    <button onClick={() => setIsRundownOpen(v => !v)} className="flex items-center gap-2 hover:text-indigo-600 transition-colors mr-auto">
                         <div className={`text-slate-400 transition-transform ${isRundownOpen ? '' : '-rotate-90'}`}><ChevronDown size={16} /></div>
                         <h3 className="text-sm font-semibold uppercase text-slate-900 tracking-wide">Individual Rundown</h3>
-                        <span className="text-[9px] text-slate-400 font-medium ml-1">({dailyResponses.length > 0 ? `${new Set(dailyResponses.filter(r => r.session_date === TODAY).map(r => r.athlete_id)).size} today` : '0'})</span>
+                        <span className="text-[9px] text-slate-400 font-medium ml-1">({new Set(dailyResponses.filter(r => r.session_date === TODAY).map(r => r.athlete_id)).size} today)</span>
                     </button>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowDailyTracker(v => !v)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${
-                                showDailyTracker
-                                    ? 'bg-cyan-50 border-cyan-200 text-cyan-700'
-                                    : 'bg-white border-slate-200 text-slate-400 hover:text-slate-700 hover:border-slate-400'
-                            }`}
-                        >
+                    {/* Date range pickers */}
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
+                        <span className="text-[9px] uppercase tracking-wide text-slate-400">From</span>
+                        <input type="date" value={rundownFrom} max={rundownTo}
+                            onChange={e => setRundownFrom(e.target.value)}
+                            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
+                        />
+                        <span className="text-[9px] uppercase tracking-wide text-slate-400">To</span>
+                        <input type="date" value={rundownTo} max={TODAY} min={rundownFrom}
+                            onChange={e => setRundownTo(e.target.value)}
+                            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
+                        />
+                    </div>
+                    {rundownTab === 'daily' && (
+                        <button onClick={() => setShowDailyTracker(v => !v)}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${showDailyTracker ? 'bg-cyan-50 border-cyan-200 text-cyan-700' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-700 hover:border-slate-400'}`}>
                             <Calendar size={12} />
                             {showDailyTracker ? 'Hide' : 'Daily'} Tracker
                         </button>
-                        <div className="relative">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Find athlete..."
-                                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-bold outline-none focus:ring-2 focus:ring-cyan-500/10 w-40"
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                    )}
+                    <div className="relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input type="text" placeholder="Find athlete..."
+                            className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-bold outline-none focus:ring-2 focus:ring-cyan-500/10 w-36"
+                            value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
 
                 {isRundownOpen && (<>
+                {/* ── Tab switcher ── */}
+                <div className="flex border-b border-slate-100">
+                    {([['daily', 'Daily Responses', rundownDailyFiltered.length], ['deepcheck', 'Deep Checks', rundownDeepChecks.length]] as const).map(([tab, label, count]) => (
+                        <button key={tab} onClick={() => setRundownTab(tab)}
+                            className={`flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${
+                                rundownTab === tab
+                                    ? 'border-indigo-500 text-indigo-600 bg-indigo-50/30'
+                                    : 'border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-200'
+                            }`}>
+                            {label}
+                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${rundownTab === tab ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>{count}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* ── DAILY RESPONSES TAB ── */}
+                {rundownTab === 'daily' && (<>
                 {/* Collapsible Daily Response Tracker */}
                 {showDailyTracker && (
                     <div className="border-b border-slate-100 bg-slate-50/40 animate-in slide-in-from-top-2 duration-300">
                         <div className="px-6 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-7 h-7 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-600">
-                                    <Calendar size={14} />
-                                </div>
+                                <div className="w-7 h-7 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-600"><Calendar size={14} /></div>
                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Who responded on</span>
-                                <input
-                                    type="date"
-                                    value={responseViewDate}
-                                    onChange={e => setResponseViewDate(e.target.value)}
-                                    max={TODAY}
+                                <input type="date" value={responseViewDate} onChange={e => setResponseViewDate(e.target.value)} max={TODAY}
                                     className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
                                 />
                             </div>
                             {(() => {
-                                const dayCount = filteredResponses.filter(r => r.session_date === responseViewDate).length;
+                                const respondedSet = new Set(rundownDailyFiltered.filter(r => r.session_date === responseViewDate).map(r => r.athlete_id));
                                 const totalAthletes = activeTeam?.players?.length || 0;
-                                const respondedSet = new Set(filteredResponses.filter(r => r.session_date === responseViewDate).map(r => r.athlete_id));
                                 return (
-                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold ${
-                                        respondedSet.size === totalAthletes && totalAthletes > 0
-                                            ? 'bg-emerald-100 text-emerald-600'
-                                            : respondedSet.size === 0
-                                                ? 'bg-slate-100 text-slate-400'
-                                                : 'bg-amber-100 text-amber-600'
-                                    }`}>
+                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold ${respondedSet.size === totalAthletes && totalAthletes > 0 ? 'bg-emerald-100 text-emerald-600' : respondedSet.size === 0 ? 'bg-slate-100 text-slate-400' : 'bg-amber-100 text-amber-600'}`}>
                                         {respondedSet.size} of {totalAthletes} responded
                                     </span>
                                 );
@@ -1443,21 +1596,17 @@ const WellnessHub: React.FC = () => {
                         </div>
                         <div className="px-6 pb-4">
                             {(() => {
-                                const dayResponses = filteredResponses.filter(r => r.session_date === responseViewDate);
-                                const respondedIds = new Set(dayResponses.map(r => r.athlete_id));
+                                const respondedIds = new Set(rundownDailyFiltered.filter(r => r.session_date === responseViewDate).map(r => r.athlete_id));
                                 const allAthletes = activeTeam?.players || [];
-                                const responded = allAthletes.filter(a => respondedIds.has(a.id));
-                                const notResponded = allAthletes.filter(a => !respondedIds.has(a.id));
-
                                 return (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                                        {responded.map(a => (
+                                        {allAthletes.filter(a => respondedIds.has(a.id)).map(a => (
                                             <div key={a.id} className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-lg">
                                                 <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
                                                 <span className="text-[10px] font-semibold text-emerald-700 truncate">{a.name}</span>
                                             </div>
                                         ))}
-                                        {notResponded.map(a => (
+                                        {allAthletes.filter(a => !respondedIds.has(a.id)).map(a => (
                                             <div key={a.id} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-100 rounded-lg">
                                                 <Clock size={12} className="text-slate-300 shrink-0" />
                                                 <span className="text-[10px] font-semibold text-slate-400 truncate">{a.name}</span>
@@ -1476,117 +1625,86 @@ const WellnessHub: React.FC = () => {
                                 <th className="px-4 py-4 w-8" />
                                 <th className="px-6 py-4">Athlete</th>
                                 <th className="px-4 py-4">Availability</th>
+                                <th className="px-4 py-4">Sleep</th>
                                 <th className="px-4 py-4">Fatigue</th>
-                                <th className="px-4 py-4">Injuries</th>
+                                <th className="px-4 py-4">Soreness</th>
+                                <th className="px-4 py-4">Health</th>
                                 <th className="px-6 py-4 text-right">Detail</th>
                             </tr>
                         </thead>
                         <tbody>
                             {(() => {
-                                const playerMap = Object.fromEntries(
-                                    (activeTeam?.players || []).map(p => [p.id, p])
+                                const playerMap = Object.fromEntries((activeTeam?.players || []).map(p => [p.id, p]));
+
+                                const sorted = [...rundownDailyFiltered]
+                                    .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || '') || (b.submitted_at || '').localeCompare(a.submitted_at || ''));
+
+                                const visible = sorted.filter(res => {
+                                    if (!searchQuery) return true;
+                                    return playerMap[res.athlete_id]?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                });
+
+                                if (visible.length === 0) return (
+                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-slate-300 text-xs">
+                                        No responses in this date range
+                                    </td></tr>
                                 );
 
-                                // Only daily responses, deduplicated to latest per athlete
-                                const latestByAthlete = new Map();
-                                dailyResponses
-                                    .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || '') || (b.submitted_at || '').localeCompare(a.submitted_at || ''))
-                                    .forEach(res => {
-                                        if (!latestByAthlete.has(res.athlete_id)) latestByAthlete.set(res.athlete_id, res);
-                                    });
-
-                                const visibleResponses = Array.from(latestByAthlete.values()).filter(res => {
-                                    if (!searchQuery) return true;
-                                    const player = playerMap[res.athlete_id];
-                                    return player?.name.toLowerCase().includes(searchQuery.toLowerCase());
-                                });
-
-                                if (visibleResponses.length === 0) {
-                                    return (
-                                        <tr>
-                                            <td colSpan={6} className="px-6 py-12 text-center text-slate-300 text-xs">
-                                                No responses found
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-
-                                const sorted = [...visibleResponses].sort((a, b) => {
-                                    const d = (b.session_date || '').localeCompare(a.session_date || '');
-                                    return d !== 0 ? d : (b.submitted_at || '').localeCompare(a.submitted_at || '');
-                                });
-
-                                // Group by session_date
-                                const groups: { date: string; items: typeof sorted }[] = [];
-                                sorted.forEach(res => {
+                                const groups: { date: string; items: typeof visible }[] = [];
+                                visible.forEach(res => {
                                     const last = groups[groups.length - 1];
-                                    if (last && last.date === res.session_date) {
-                                        last.items.push(res);
-                                    } else {
-                                        groups.push({ date: res.session_date, items: [res] });
-                                    }
+                                    if (last && last.date === res.session_date) last.items.push(res);
+                                    else groups.push({ date: res.session_date, items: [res] });
                                 });
 
-                                const formatDateLabel = (dateStr: string) => {
+                                const fmtDate = (dateStr: string) => {
                                     const [y, m, d] = dateStr.split('-').map(Number);
                                     const dt = new Date(y, m - 1, d);
-                                    const today = new Date();
-                                    const todayStr = localDateStr(today);
-                                    const yest = new Date(today); yest.setDate(today.getDate() - 1);
-                                    const yesterdayStr = localDateStr(yest);
-                                    const weekday = dt.toLocaleDateString('en-GB', { weekday: 'long' });
-                                    const dayNum  = dt.toLocaleDateString('en-GB', { day: 'numeric' });
-                                    const month   = dt.toLocaleDateString('en-GB', { month: 'short' });
-                                    const year    = dt.toLocaleDateString('en-GB', { year: 'numeric' });
-                                    const label   = `${weekday}  ${dayNum} ${month} ${year}`;
-                                    const badge   = dateStr === todayStr ? 'Today' : dateStr === yesterdayStr ? 'Yesterday' : null;
+                                    const todayStr = localDateStr(new Date());
+                                    const yest = new Date(); yest.setDate(yest.getDate() - 1);
+                                    const label = `${dt.toLocaleDateString('en-GB', { weekday: 'long' })}  ${dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                                    const badge = dateStr === todayStr ? 'Today' : dateStr === localDateStr(yest) ? 'Yesterday' : null;
                                     return { label, badge };
                                 };
 
                                 return groups.flatMap(({ date, items }) => {
-                                    const { label, badge } = formatDateLabel(date);
+                                    const { label, badge } = fmtDate(date);
                                     const rows: React.ReactNode[] = [
                                         <tr key={`date-${date}`} className="border-t-2 border-slate-100 bg-slate-50/60">
-                                            <td colSpan={6} className="px-5 py-2">
+                                            <td colSpan={8} className="px-5 py-2">
                                                 <div className="flex items-center gap-2.5">
                                                     <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</span>
-                                                    {badge && (
-                                                        <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">{badge}</span>
-                                                    )}
-                                                    <span className="ml-auto text-[8px] font-semibold text-slate-300 uppercase tracking-wide">
-                                                        {items.length} response{items.length !== 1 ? 's' : ''}
-                                                    </span>
+                                                    {badge && <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">{badge}</span>}
+                                                    <span className="ml-auto text-[8px] font-semibold text-slate-300 uppercase tracking-wide">{items.length} response{items.length !== 1 ? 's' : ''}</span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ];
 
                                     items.forEach(res => {
-                                        const player      = playerMap[res.athlete_id];
-                                        const status      = getAthleteStatus(res);
+                                        const player = playerMap[res.athlete_id];
+                                        const status = getAthleteStatus(res);
                                         const injuryCount = res?.injury_report?.areas?.length || 0;
+                                        const resp = res?.responses || {};
+                                        const sleepH = resp.sleep_hours;
+                                        const soreness = resp.soreness;
                                         rows.push(
                                             <tr key={res.id} className="group hover:bg-slate-50/50 transition-colors border-t border-slate-50">
                                                 <td className="pl-5 pr-1 py-4">
-                                                    {status
-                                                        ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} />
-                                                        : <span className="w-3 h-3 rounded-full block bg-slate-200" />
-                                                    }
+                                                    {status ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} /> : <span className="w-3 h-3 rounded-full block bg-slate-200" />}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {player ? (
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
-                                                                <span className="text-[10px] font-bold text-indigo-600">{player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</span>
+                                                                <span className="text-[10px] font-bold text-indigo-600">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0, 2).toUpperCase()}</span>
                                                             </div>
                                                             <div>
                                                                 <div className="text-xs font-semibold text-slate-900">{player.name}</div>
                                                                 <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{player.subsection}</div>
                                                             </div>
                                                         </div>
-                                                    ) : (
-                                                        <span className="text-slate-400 text-xs">Unknown athlete</span>
-                                                    )}
+                                                    ) : <span className="text-slate-400 text-xs">Unknown athlete</span>}
                                                 </td>
                                                 <td className="px-4 py-4 font-semibold uppercase text-[9px]">
                                                     {(() => {
@@ -1598,52 +1716,54 @@ const WellnessHub: React.FC = () => {
                                                     })()}
                                                 </td>
                                                 <td className="px-4 py-4">
+                                                    {sleepH != null
+                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${sleepH >= 7 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : sleepH >= 6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>{sleepH}h</span>
+                                                        : <span className="text-slate-300 text-[10px] font-bold">—</span>}
+                                                </td>
+                                                <td className="px-4 py-4">
                                                     {(() => {
-                                                        const fatigueVal = res?.responses?.fatigue || res?.rpe;
-                                                        if (!fatigueVal) return <span className="text-slate-300 text-[10px] font-bold">—</span>;
-                                                        return <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${getRpeBadge(fatigueVal)}`}>{fatigueVal}/10</span>;
+                                                        const f = resp.fatigue || res?.rpe;
+                                                        if (!f) return <span className="text-slate-300 text-[10px] font-bold">—</span>;
+                                                        return <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${getRpeBadge(f)}`}>{f}/10</span>;
                                                     })()}
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    {injuryCount > 0 ? (
-                                                        <div className="flex items-center gap-1.5 text-rose-500">
-                                                            <AlertTriangle size={13} />
-                                                            <span className="text-[10px] font-semibold">{injuryCount} Area{injuryCount > 1 ? 's' : ''}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5 text-emerald-500">
-                                                            <CheckCircle2 size={13} />
-                                                            <span className="text-[10px] font-semibold uppercase">Clear</span>
-                                                        </div>
-                                                    )}
+                                                    {soreness != null
+                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${soreness >= 7 ? 'bg-rose-50 text-rose-700 border-rose-100' : soreness >= 4 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>{soreness}/10</span>
+                                                        : <span className="text-slate-300 text-[10px] font-bold">—</span>}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {(() => {
+                                                        const complaint = resp.health_complaint;
+                                                        const hasInjury = injuryCount > 0 || complaint === 'injury' || complaint === 'both';
+                                                        const hasIllness = complaint === 'illness' || complaint === 'both';
+                                                        if (!hasInjury && !hasIllness) return (
+                                                            <div className="flex items-center gap-1.5 text-emerald-500">
+                                                                <CheckCircle2 size={13} /><span className="text-[10px] font-semibold uppercase">Clear</span>
+                                                            </div>
+                                                        );
+                                                        return (
+                                                            <div className="flex flex-col gap-1">
+                                                                {hasInjury && <div className="flex items-center gap-1 text-rose-500"><AlertTriangle size={12} /><span className="text-[10px] font-semibold">Injury{injuryCount > 0 ? ` (${injuryCount})` : ''}</span></div>}
+                                                                {hasIllness && <div className="flex items-center gap-1 text-blue-500"><Thermometer size={12} /><span className="text-[10px] font-semibold">Illness</span></div>}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
                                                         {confirmDeleteId === res.id ? (
                                                             <div className="flex items-center gap-1">
                                                                 <span className="text-[9px] font-bold text-rose-500 uppercase">Delete?</span>
-                                                                <button
-                                                                    onClick={() => handleDeleteResponse(res.id)}
-                                                                    className="px-1.5 py-1 bg-rose-50 border border-rose-200 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100 transition-all"
-                                                                >Yes</button>
-                                                                <button
-                                                                    onClick={() => setConfirmDeleteId(null)}
-                                                                    className="px-1.5 py-1 bg-white border border-slate-200 rounded text-[9px] font-bold text-slate-500 hover:bg-slate-50 transition-all"
-                                                                >No</button>
+                                                                <button onClick={() => handleDeleteResponse(res.id)} className="px-1.5 py-1 bg-rose-50 border border-rose-200 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100">Yes</button>
+                                                                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-1 bg-white border border-slate-200 rounded text-[9px] font-bold text-slate-500 hover:bg-slate-50">No</button>
                                                             </div>
                                                         ) : (
-                                                            <button
-                                                                onClick={() => setConfirmDeleteId(res.id)}
-                                                                className="p-2 bg-white border border-slate-100 rounded-lg text-slate-300 hover:text-rose-400 hover:border-rose-100 hover:shadow-sm transition-all"
-                                                                title="Delete response"
-                                                            >
+                                                            <button onClick={() => setConfirmDeleteId(res.id)} className="p-2 bg-white border border-slate-100 rounded-lg text-slate-300 hover:text-rose-400 hover:border-rose-100 hover:shadow-sm transition-all" title="Delete response">
                                                                 <Trash2 size={13} />
                                                             </button>
                                                         )}
-                                                        <button
-                                                            onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }}
-                                                            className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all"
-                                                        >
+                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
                                                             <ChevronRight size={16} />
                                                         </button>
                                                     </div>
@@ -1651,13 +1771,142 @@ const WellnessHub: React.FC = () => {
                                             </tr>
                                         );
                                     });
-
                                     return rows;
                                 });
                             })()}
                         </tbody>
                     </table>
                 </div>
+                </>)}
+
+                {/* ── DEEP CHECKS TAB ── */}
+                {rundownTab === 'deepcheck' && (
+                    <div className="overflow-x-auto">
+                        {rundownDeepChecks.length === 0 ? (
+                            <div className="px-6 py-16 text-center">
+                                <Thermometer size={36} className="mx-auto text-slate-200 mb-4" />
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">No deep checks in this period</p>
+                                <p className="text-[10px] text-slate-300 mt-2">Adjust the date range or share the Deep Health Check form with your athletes.</p>
+                            </div>
+                        ) : (
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 text-[9px] text-slate-400 uppercase tracking-[0.15em] font-semibold">
+                                    <tr>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Athlete</th>
+                                        <th className="px-4 py-4">Trigger</th>
+                                        <th className="px-4 py-4">Path</th>
+                                        <th className="px-4 py-4">Severity / Symptoms</th>
+                                        <th className="px-4 py-4">Impact</th>
+                                        <th className="px-4 py-4">Time Loss</th>
+                                        <th className="px-6 py-4 text-right">Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(() => {
+                                        const playerMap = Object.fromEntries((activeTeam?.players || []).map(p => [p.id, p]));
+                                        const URTI_SHORT: Record<string,string> = { urti_hoarseness:'Hoarseness', urti_blocked_nose:'Blocked Nose', urti_runny_nose:'Runny Nose', urti_sinus_pressure:'Sinus', urti_sneezing:'Sneezing', urti_dry_cough:'Dry Cough', urti_wet_cough:'Wet Cough', urti_headache:'Headache' };
+                                        const SEV_LABELS = ['None','Mild','Moderate','Severe'];
+
+                                        const visible = rundownDeepChecks.filter(dc => {
+                                            if (!searchQuery) return true;
+                                            return playerMap[dc.athlete_id]?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                        });
+
+                                        if (visible.length === 0) return (
+                                            <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-300 text-xs">No matching athletes</td></tr>
+                                        );
+
+                                        return visible.map(dc => {
+                                            const player = playerMap[dc.athlete_id];
+                                            const resp = dc.responses || {};
+
+                                            // Infer path and trigger from matching daily response
+                                            const daily = dailyResponses.find(d => d.athlete_id === dc.athlete_id && d.session_date === dc.session_date);
+                                            const complaint = daily?.responses?.health_complaint;
+                                            const wasTriggered = daily?.health_problem_flag === true;
+                                            const path = complaint === 'injury' ? 'Injury' : complaint === 'illness' ? 'Illness' : complaint === 'both' ? 'Both' : 'Health Trends';
+
+                                            // Active URTI symptoms
+                                            const activeSymptoms = Object.entries(URTI_SHORT)
+                                                .filter(([k]) => (resp[k] || 0) > 0)
+                                                .map(([k, label]) => `${label} (${SEV_LABELS[resp[k]] || resp[k]})`);
+
+                                            // Severity from daily illness_severity
+                                            const illnessSev = daily?.responses?.illness_severity;
+
+                                            // Date formatting
+                                            const [y, m, d] = (dc.session_date || '').split('-').map(Number);
+                                            const dt = new Date(y, m - 1, d);
+                                            const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
+                                            const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 text-rose-700 border-rose-100', Illness:'bg-blue-50 text-blue-700 border-blue-100', Both:'bg-purple-50 text-purple-700 border-purple-100', 'Health Trends':'bg-slate-50 text-slate-500 border-slate-200' };
+
+                                            return (
+                                                <tr key={dc.id} className="group hover:bg-slate-50/50 transition-colors border-t border-slate-50">
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-[10px] font-semibold text-slate-700">{dateLabel}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {player ? (
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center border border-white shadow-sm ring-1 ring-slate-100 shrink-0">
+                                                                    <span className="text-[9px] font-bold text-indigo-600">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
+                                                                </div>
+                                                                <span className="text-xs font-semibold text-slate-900">{player.name}</span>
+                                                            </div>
+                                                        ) : <span className="text-slate-400 text-xs">Unknown</span>}
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase ${wasTriggered ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                                                            {wasTriggered ? 'Daily Flag' : 'Coach Sent'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold ${PATH_STYLES[path] || 'bg-slate-50 text-slate-500 border-slate-200'}`}>{path}</span>
+                                                    </td>
+                                                    <td className="px-4 py-4 max-w-[200px]">
+                                                        {activeSymptoms.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {activeSymptoms.slice(0, 3).map(s => (
+                                                                    <span key={s} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[8px] font-semibold">{s}</span>
+                                                                ))}
+                                                                {activeSymptoms.length > 3 && <span className="text-[8px] text-slate-400 font-semibold">+{activeSymptoms.length - 3} more</span>}
+                                                            </div>
+                                                        ) : illnessSev ? (
+                                                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold border capitalize ${illnessSev === 'severe' ? 'bg-rose-50 text-rose-700 border-rose-100' : illnessSev === 'moderate' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{illnessSev}</span>
+                                                        ) : complaint === 'injury' || complaint === 'both' ? (
+                                                            <span className="text-[9px] text-slate-400 italic">See detail →</span>
+                                                        ) : <span className="text-slate-300 text-[10px]">—</span>}
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        {(() => {
+                                                            const impact = resp.illness_impact || resp.impact;
+                                                            if (!impact || impact === 'none') return <span className="text-slate-300 text-[10px]">—</span>;
+                                                            return <span className="text-[10px] font-semibold text-slate-600 capitalize">{String(impact).replace(/_/g,' ')}</span>;
+                                                        })()}
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        {(() => {
+                                                            const tl = resp.illness_time_loss || resp.time_loss;
+                                                            if (!tl || tl === '0') return <span className="text-slate-300 text-[10px]">—</span>;
+                                                            return <span className="text-[10px] font-semibold text-slate-600">{tl}</span>;
+                                                        })()}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white border border-slate-100 rounded-lg text-slate-400 hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
+                                                            <ChevronRight size={16} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        });
+                                    })()}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
                 </>)}
             </div>
             </>)}
@@ -1673,11 +1922,85 @@ const WellnessHub: React.FC = () => {
                     />
 
                     {/* Team Heatmap */}
-                    <WellnessHeatmap
-                        athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
-                        responses={wellnessResponses}
-                        days={14}
-                    />
+                    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        {/* Heatmap title + nav controls */}
+                        <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+                            {/* Title */}
+                            <h4 className="text-sm font-semibold text-slate-800">Team Wellness Heatmap</h4>
+                            {/* Period navigation */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(heatmapAnchor + 'T12:00:00');
+                                        d.setDate(d.getDate() - heatmapDays);
+                                        setHeatmapAnchor(d.toISOString().split('T')[0]);
+                                    }}
+                                    className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+                                    title="Previous period"
+                                >
+                                    <ChevronLeft size={14} />
+                                </button>
+                                <span className="text-[11px] font-semibold text-slate-700 min-w-[140px] text-center">
+                                    {(() => {
+                                        const end = new Date(heatmapAnchor + 'T12:00:00');
+                                        const start = new Date(end);
+                                        start.setDate(end.getDate() - heatmapDays + 1);
+                                        const fmt = (d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'short' });
+                                        return `${fmt(start)} – ${fmt(end)}`;
+                                    })()}
+                                </span>
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(heatmapAnchor + 'T12:00:00');
+                                        d.setDate(d.getDate() + heatmapDays);
+                                        const today = localDateStr();
+                                        const next = d.toISOString().split('T')[0];
+                                        setHeatmapAnchor(next > today ? today : next);
+                                    }}
+                                    disabled={heatmapAnchor >= localDateStr()}
+                                    className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    title="Next period"
+                                >
+                                    <ChevronRight size={14} />
+                                </button>
+                                <button
+                                    onClick={() => setHeatmapAnchor(localDateStr())}
+                                    disabled={heatmapAnchor >= localDateStr()}
+                                    className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    Today
+                                </button>
+                            </div>
+                            {/* Day-width toggle + colour legend */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5" title="Low → High wellness">
+                                    {['bg-rose-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-300', 'bg-lime-300', 'bg-emerald-300', 'bg-emerald-400'].map((c, i) => (
+                                        <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
+                                    ))}
+                                </div>
+                                <div className="w-px h-4 bg-slate-200" />
+                                {([7, 14, 30] as const).map(d => (
+                                    <button
+                                        key={d}
+                                        onClick={() => setHeatmapDays(d)}
+                                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                                            heatmapDays === d
+                                                ? 'bg-indigo-600 text-white'
+                                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        {d}d
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <WellnessHeatmap
+                            athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
+                            responses={wellnessResponses}
+                            days={heatmapDays}
+                            anchorDate={heatmapAnchor}
+                        />
+                    </div>
                 </div>
             )}
         </div>
@@ -1685,7 +2008,14 @@ const WellnessHub: React.FC = () => {
 
     // ── ATHLETE VIEW ─────────────────────────────────────────────────────────
     const renderAthleteView = () => {
-        const res    = filteredResponses.find(r => r.athlete_id === selectedAthleteId);
+        // Separate latest daily and latest weekly for this athlete
+        const dailyRes = [...filteredResponses]
+            .filter(r => r.athlete_id === selectedAthleteId && r.tier !== 'weekly')
+            .sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''))[0];
+        const weeklyRes = [...wellnessResponses]
+            .filter(r => r.athlete_id === selectedAthleteId && r.tier === 'weekly')
+            .sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''))[0];
+        const res    = dailyRes;
         const status = getAthleteStatus(res);
 
         return (
@@ -1729,45 +2059,193 @@ const WellnessHub: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Metric chips */}
+                    {/* Entry Analysis */}
                     <div className="bg-white p-8 rounded-xl border-2 border-slate-100 shadow-sm space-y-6">
                         <h3 className="text-sm font-semibold uppercase text-slate-900">Entry Analysis</h3>
-                        {res ? (
-                            <div className="flex flex-wrap gap-3">
-                                {Object.entries(res.responses).map(([qid, val]: [string, any]) => {
-                                    if (typeof val !== 'number') return null;
-                                    const question = wellnessTemplates.flatMap((t: any) => t.questions || [])
-                                        .find((q: any) => q.id === qid);
-                                    const qText = question?.text || qid;
-                                    const qType = question?.type || '';
-                                    // Resolve scale max from question type or numericMap
-                                    const scaleMax = qType === 'scale_1_10' ? 10
-                                        : qType === 'scale_0_5' ? 5
-                                        : qType === 'scale_0_3' ? 3
-                                        : qType === 'scale' && question?.scaleMax ? question.scaleMax
-                                        : question?.numericMap?.length ? Math.max(...question.numericMap)
-                                        : null;
-                                    // Color chip by sentiment — high-bad vs high-good
-                                    const qLow = qid.toLowerCase();
-                                    const isHighBad = ['rpe', 'stress', 'fatigue', 'soreness'].some(k => qLow.includes(k));
-                                    const isHighGood = ['energy', 'motivation', 'sleep'].some(k => qLow.includes(k));
-                                    const pct = scaleMax ? val / scaleMax : 0;
-                                    let chipColor = 'bg-slate-50 text-slate-700 border-slate-100';
-                                    if (isHighBad && scaleMax) {
-                                        chipColor = pct >= 0.8 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct >= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                                    } else if (isHighGood && scaleMax) {
-                                        chipColor = pct <= 0.4 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct <= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                                    }
-                                    return (
-                                        <div key={qid} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold ${chipColor}`}>
-                                            <span className="uppercase tracking-tight text-[9px] font-bold opacity-60">{qText.slice(0, 18)}</span>
-                                            <span className="text-sm">{val}</span>
-                                            {scaleMax && <span className="text-[8px] font-medium opacity-40">/ {scaleMax}</span>}
+                        {(dailyRes || weeklyRes) ? (() => {
+                            const complaint = dailyRes?.responses?.health_complaint;
+                            // Show injury section if daily flagged injury OR if a deep check has an injury path
+                            const weeklyHasInjury = weeklyRes?.responses?.problem_type === 'injury' || weeklyRes?.responses?.problem_type === 'both';
+                            const hasInjury = complaint === 'injury' || complaint === 'both' || weeklyHasInjury;
+                            // Show illness section if daily flagged illness OR if a deep check has URTI/illness data
+                            const weeklyHasIllness = weeklyRes != null && (
+                                weeklyRes.responses?.problem_type === 'illness' ||
+                                weeklyRes.responses?.problem_type === 'both' ||
+                                Object.keys(weeklyRes.responses || {}).some(k => k.startsWith('urti_') && (weeklyRes.responses[k] || 0) > 0)
+                            );
+                            const hasIllness = complaint === 'illness' || complaint === 'both' || weeklyHasIllness;
+
+                            // Helper: numeric chip
+                            const NumChip = ({ id, val, max, label }: { id: string; val: number; max: number | null; label: string }) => {
+                                const qLow = id.toLowerCase();
+                                const isHighBad = ['rpe', 'stress', 'fatigue', 'soreness'].some(k => qLow.includes(k));
+                                const isHighGood = ['energy', 'motivation', 'sleep', 'hydration', 'nutrition', 'mood'].some(k => qLow.includes(k));
+                                const pct = max ? val / max : 0;
+                                let chipColor = 'bg-slate-50 text-slate-700 border-slate-100';
+                                if (isHighBad && max) {
+                                    chipColor = pct >= 0.8 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct >= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                                } else if (isHighGood && max) {
+                                    chipColor = pct <= 0.4 ? 'bg-rose-50 text-rose-700 border-rose-100' : pct <= 0.6 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                                }
+                                return (
+                                    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold ${chipColor}`}>
+                                        <span className="uppercase tracking-tight text-[9px] font-bold opacity-60">{label.slice(0, 18)}</span>
+                                        <span className="text-sm">{val}</span>
+                                        {max && <span className="text-[8px] font-medium opacity-40">/ {max}</span>}
+                                    </div>
+                                );
+                            };
+
+                            // Helper: string pill (categorical)
+                            const StrPill = ({ label, val, colorMap }: { label: string; val: string; colorMap?: Record<string, string> }) => {
+                                const defaultCls = 'bg-slate-50 text-slate-600 border-slate-200';
+                                const cls = colorMap?.[val] || defaultCls;
+                                return (
+                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wide ${cls}`}>
+                                        <span className="opacity-50">{label}</span>
+                                        <span>{val.replace(/_/g, ' ')}</span>
+                                    </div>
+                                );
+                            };
+
+                            const READINESS_COLORS: Record<string, string> = {
+                                ready: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                compromised: 'bg-amber-50 text-amber-700 border-amber-100',
+                                not_ready: 'bg-rose-50 text-rose-700 border-rose-100',
+                            };
+                            const SEVERITY_COLORS: Record<string, string> = {
+                                mild: 'bg-amber-50 text-amber-700 border-amber-100',
+                                moderate: 'bg-orange-50 text-orange-700 border-orange-100',
+                                severe: 'bg-rose-50 text-rose-700 border-rose-100',
+                            };
+                            const TREND_COLORS: Record<string, string> = {
+                                improving: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                stable: 'bg-slate-50 text-slate-600 border-slate-200',
+                                declining: 'bg-rose-50 text-rose-700 border-rose-100',
+                                worsening: 'bg-rose-50 text-rose-700 border-rose-100',
+                            };
+                            const URTI_LABELS: Record<string, string> = {
+                                urti_hoarseness: 'Hoarseness', urti_blocked_nose: 'Blocked Nose', urti_runny_nose: 'Runny Nose',
+                                urti_sinus_pressure: 'Sinus Pressure', urti_sneezing: 'Sneezing', urti_dry_cough: 'Dry Cough',
+                                urti_wet_cough: 'Wet Cough', urti_headache: 'Headache',
+                            };
+                            const URTI_SEVERITY = ['None', 'Mild', 'Moderate', 'Severe'];
+
+                            const dailyResp = dailyRes?.responses || {};
+                            const weeklyResp = weeklyRes?.responses || {};
+
+                            const urtiFields = Object.keys(URTI_LABELS).filter(k => weeklyResp[k] != null && weeklyResp[k] > 0);
+
+                            return (
+                                <div className="space-y-5">
+                                    {/* Daily wellness metrics */}
+                                    {dailyRes && (
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">Daily Wellness</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {dailyResp.readiness && (
+                                                    <StrPill label="Readiness" val={dailyResp.readiness} colorMap={READINESS_COLORS} />
+                                                )}
+                                                {(['fatigue','soreness','sleep_quality','stress','mood'] as const).map(k =>
+                                                    typeof dailyResp[k] === 'number' ? (
+                                                        <NumChip key={k} id={k} val={dailyResp[k]} max={10} label={k.replace(/_/g,' ')} />
+                                                    ) : null
+                                                )}
+                                                {typeof dailyResp.sleep_hours === 'number' && (
+                                                    <NumChip id="sleep_hours" val={dailyResp.sleep_hours} max={12} label="Sleep hrs" />
+                                                )}
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
+                                    )}
+
+                                    {/* Injury section */}
+                                    {hasInjury && (
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-rose-400 mb-3 flex items-center gap-1.5">
+                                                <AlertTriangle size={10} /> Injury
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <StrPill label="Complaint" val="Injury flagged" colorMap={{ 'Injury flagged': 'bg-rose-50 text-rose-700 border-rose-100' }} />
+                                                {dailyRes?.injury_report?.areas?.map((a: any) => (
+                                                    <span key={a.area} className="px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-rose-50 text-rose-700 border-rose-100 uppercase">
+                                                        {a.area.replace(/_/g,' ')}
+                                                    </span>
+                                                ))}
+                                                {/* Injury classification details from deep check */}
+                                                {weeklyHasInjury && weeklyResp.onset && (
+                                                    <StrPill label="Onset" val={weeklyResp.onset} colorMap={{ sudden: 'bg-rose-50 text-rose-700 border-rose-100', gradual: 'bg-amber-50 text-amber-700 border-amber-100' }} />
+                                                )}
+                                                {weeklyHasInjury && weeklyResp.status && (
+                                                    <StrPill label="Status" val={weeklyResp.status} colorMap={{ new: 'bg-rose-50 text-rose-700 border-rose-100', recurrence: 'bg-orange-50 text-orange-700 border-orange-100', exacerbation: 'bg-amber-50 text-amber-700 border-amber-100' }} />
+                                                )}
+                                                {weeklyHasInjury && weeklyResp.impact && weeklyResp.impact !== 'none' && (
+                                                    <StrPill label="Impact" val={weeklyResp.impact} colorMap={{ minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-orange-50 text-orange-700 border-orange-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
+                                                )}
+                                                {weeklyHasInjury && weeklyResp.time_loss && weeklyResp.time_loss !== '0' && (
+                                                    <StrPill label="Time loss" val={weeklyResp.time_loss} colorMap={{}} />
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Illness section */}
+                                    {hasIllness && (
+                                        <div>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-3 flex items-center gap-1.5">
+                                                <Thermometer size={10} /> Illness
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {dailyResp.illness_severity && (
+                                                    <StrPill label="Severity" val={dailyResp.illness_severity} colorMap={SEVERITY_COLORS} />
+                                                )}
+                                                {/* URTI symptoms from weekly if present */}
+                                                {urtiFields.map(k => (
+                                                    <div key={k} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-100">
+                                                        <span className="opacity-50">{URTI_LABELS[k]}</span>
+                                                        <span>{URTI_SEVERITY[weeklyResp[k]] || weeklyResp[k]}</span>
+                                                    </div>
+                                                ))}
+                                                {weeklyResp.illness_impact && weeklyResp.illness_impact !== 'none' && (
+                                                    <StrPill label="Impact" val={weeklyResp.illness_impact} colorMap={{ no_impact: 'bg-emerald-50 text-emerald-700 border-emerald-100', minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-orange-50 text-orange-700 border-orange-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
+                                                )}
+                                                {weeklyResp.illness_time_loss && weeklyResp.illness_time_loss !== '0' && (
+                                                    <StrPill label="Time loss" val={weeklyResp.illness_time_loss} colorMap={{}} />
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Weekly health data */}
+                                    {weeklyRes && (
+                                        <div className="border-t border-slate-100 pt-4">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-3">Deep Health Report</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {typeof weeklyResp.hydration === 'number' && (
+                                                    <NumChip id="hydration" val={weeklyResp.hydration} max={10} label="Hydration" />
+                                                )}
+                                                {typeof weeklyResp.nutrition === 'number' && (
+                                                    <NumChip id="nutrition" val={weeklyResp.nutrition} max={10} label="Nutrition" />
+                                                )}
+                                                {weeklyResp.sleep_trend && (
+                                                    <StrPill label="Sleep trend" val={weeklyResp.sleep_trend} colorMap={TREND_COLORS} />
+                                                )}
+                                                {weeklyResp.fatigue_trend && (
+                                                    <StrPill label="Fatigue trend" val={weeklyResp.fatigue_trend} colorMap={TREND_COLORS} />
+                                                )}
+                                                {Array.isArray(weeklyResp.stress_sources) && weeklyResp.stress_sources.filter((s: string) => s !== 'None').length > 0 && (
+                                                    <div className="w-full flex flex-wrap gap-1.5 mt-1">
+                                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 w-full">Stress sources</span>
+                                                        {weeklyResp.stress_sources.filter((s: string) => s !== 'None').map((s: string) => (
+                                                            <span key={s} className="px-2.5 py-1 rounded-lg border text-[10px] font-semibold bg-pink-50 text-pink-700 border-pink-100">{s}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })() : (
                             <div className="p-10 text-center border-2 border-dashed border-slate-100 rounded-xl">
                                 <Clock size={40} className="mx-auto text-slate-200 mb-4" />
                                 <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">No response for this date range.</p>
@@ -1953,9 +2431,9 @@ const WellnessHub: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Built-in: Weekly Health Check */}
+                            {/* Built-in: Deep Health Check */}
                             <div
-                                onClick={() => setSelectedTemplate({ id: '__weekly_health__', name: 'Weekly Health Check', questions: [] })}
+                                onClick={() => setSelectedTemplate({ id: '__weekly_health__', name: 'Deep Health Check', questions: [] })}
                                 className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
                                     selectedTemplate?.id === '__weekly_health__'
                                         ? 'bg-amber-600 border-amber-600 shadow-xl shadow-amber-200 text-white'
@@ -1967,7 +2445,7 @@ const WellnessHub: React.FC = () => {
                                         <ShieldIcon size={20} />
                                     </div>
                                     <div>
-                                        <div className="font-semibold text-base">Weekly Health Check</div>
+                                        <div className="font-semibold text-base">Deep Health Check</div>
                                         <div className={`text-[9px] font-bold uppercase tracking-wide ${selectedTemplate?.id === '__weekly_health__' ? 'text-amber-100' : 'text-amber-400'}`}>
                                             Deep check · FIFA/IOC aligned · 2–5 min
                                         </div>
@@ -2170,7 +2648,7 @@ const WellnessHub: React.FC = () => {
                                         <ShieldIcon size={20} />
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-amber-600 transition-colors">Weekly Health Check</h4>
+                                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-amber-600 transition-colors">Deep Health Check</h4>
                                         <p className="text-[10px] text-amber-500 font-medium">Deep check · FIFA/IOC aligned · 2–5 min</p>
                                     </div>
                                     <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-400 transition-colors" />
@@ -2194,7 +2672,7 @@ const WellnessHub: React.FC = () => {
                                             {previewTemplate === 'daily' ? <Activity size={16} /> : <ShieldIcon size={16} />}
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-semibold text-slate-900">{previewTemplate === 'daily' ? 'Wellness Check' : 'Weekly Health Check'}</h3>
+                                            <h3 className="text-sm font-semibold text-slate-900">{previewTemplate === 'daily' ? 'Wellness Check' : 'Deep Health Check'}</h3>
                                             <p className="text-[10px] text-slate-500">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · 2–5 min'}</p>
                                         </div>
                                     </div>

@@ -348,7 +348,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                         href={`/weekly-wellness/${teamId}/${selectedAthleteId}${responses.health_complaint && responses.health_complaint !== 'no' ? `?complaint=${responses.health_complaint}` : ''}`}
                         className="w-full max-w-xs px-6 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xl shadow-rose-200 active:scale-95 transition-all text-base flex items-center justify-center gap-2"
                     >
-                        <AlertTriangle size={18} /> Complete In-Depth Report
+                        <AlertTriangle size={18} /> Complete Deep Health Check
                     </a>
                 </>
             ) : weeklyFollowUp ? (
@@ -362,7 +362,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                         {lastWeeklyDate ? (
                             <>
                                 <p className="text-sm text-slate-700 leading-relaxed">
-                                    You completed an <strong>in-depth health report</strong> on{' '}
+                                    You completed a <strong>deep health check</strong> on{' '}
                                     <strong>{new Date(lastWeeklyDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</strong>.
                                     Your daily responses are still flagging similar concerns.
                                 </p>
