@@ -10,6 +10,7 @@ import {
 import InterventionModal from '../components/analytics/InterventionModal';
 import { DatabaseService } from '../services/databaseService';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
+import { computeComposite, computeAthleteBaseline, scoreToHex } from '../utils/wellnessScoring';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -24,7 +25,7 @@ const PRESET_COLORS = [
 
 export const DashboardPage = () => {
     const {
-        teams, scheduledSessions, setScheduledSessions, wellnessData, bodyHeatmapData, isLoading,
+        teams, scheduledSessions, setScheduledSessions, wellnessData, wellnessResponses, bodyHeatmapData, isLoading,
         dashboardFilterTarget, setDashboardFilterTarget,
         calendarFilterCategory, setCalendarFilterCategory,
         calendarFilterTeamId, setCalendarFilterTeamId,
@@ -482,45 +483,72 @@ export const DashboardPage = () => {
                                                 <span className="text-[10px] font-medium text-slate-400">Loading squad readiness heatmap...</span>
                                             </div>
                                         )}
-                                        {teams.flatMap(team => team.players.map(p => ({ ...p, teamName: team.name })))
-                                            .filter(p => heatmapTeamFilter === 'All Teams' || p.teamName === heatmapTeamFilter)
-                                            .sort((a, b) => {
-                                                const wA = wellnessData.filter(d => d.athleteId === a.id).slice(-1)[0] || { energy: 5, stress: 5 };
-                                                const wB = wellnessData.filter(d => d.athleteId === b.id).slice(-1)[0] || { energy: 5, stress: 5 };
-                                                return (wA.energy - wA.stress) - (wB.energy - wB.stress);
-                                            })
-                                            .map(p => {
-                                                const isSelected = dashboardFilterTarget === 'All Athletes' || p.name === dashboardFilterTarget;
-                                                const isStrictFocus = p.name === dashboardFilterTarget;
-                                                const lastW = wellnessData.filter(d => d.athleteId === p.id).slice(-1)[0];
-                                                const energy = lastW ? lastW.energy : 5;
-                                                const stress = lastW ? lastW.stress : 5;
-                                                const readiness = energy - stress;
-                                                const color = readiness >= 4 ? 'bg-emerald-500' :
-                                                    readiness >= 1 ? 'bg-amber-400' :
-                                                        readiness >= -2 ? 'bg-orange-400' : 'bg-rose-500';
-                                                const initials = p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                                        {(() => {
+                                            // Build per-athlete baselines from wellnessResponses (daily tier only)
+                                            const dailyResponses = (wellnessResponses || []).filter(r => !r.tier || r.tier === 'daily');
+                                            const baselineMap = new Map();
+                                            const groupedByAthlete = new Map();
+                                            for (const r of dailyResponses) {
+                                                const aid = r.athlete_id || r.athleteId;
+                                                if (!aid || !r.responses) continue;
+                                                if (!groupedByAthlete.has(aid)) groupedByAthlete.set(aid, []);
+                                                groupedByAthlete.get(aid).push(r.responses);
+                                            }
+                                            for (const [aid, respObjects] of groupedByAthlete.entries()) {
+                                                baselineMap.set(aid, computeAthleteBaseline(respObjects));
+                                            }
 
-                                                return (
-                                                    <div key={p.id} className={`group relative transition-all duration-300 ${isSelected ? 'opacity-100 scale-100' : 'opacity-20 scale-90 grayscale'}`}>
-                                                        <div onClick={() => setDashboardFilterTarget(isStrictFocus ? 'All Athletes' : p.name)}
-                                                            className={`aspect-square rounded-xl ${color} shadow-sm border-2 transition-all hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center ${isStrictFocus ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-white'}`}
-                                                        >
-                                                            <span className="text-[10px] font-semibold text-white mix-blend-overlay opacity-80">{initials}</span>
-                                                        </div>
-                                                        <div className={`absolute -top-14 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-medium px-2.5 py-2 rounded-lg whitespace-nowrap transition-all z-10 shadow-xl flex flex-col items-center gap-1 border border-slate-700 ${isStrictFocus ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-                                                            <div className="text-slate-400 leading-none mb-0.5 text-[9px]">{p.teamName}</div>
-                                                            <div>{p.name}</div>
-                                                            <div className="flex gap-2 text-slate-400">
-                                                                <span>Energy: {energy}/10</span>
-                                                                <span className="w-px h-2 bg-slate-700"></span>
-                                                                <span>Stress: {stress}/10</span>
+                                            // Get most recent daily response per athlete
+                                            const latestByAthlete = new Map();
+                                            for (const r of [...dailyResponses].sort((a, b) =>
+                                                (a.session_date || a.date || '').localeCompare(b.session_date || b.date || ''))) {
+                                                const aid = r.athlete_id || r.athleteId;
+                                                if (aid) latestByAthlete.set(aid, r);
+                                            }
+
+                                            return teams.flatMap(team => team.players.map(p => ({ ...p, teamName: team.name })))
+                                                .filter(p => heatmapTeamFilter === 'All Teams' || p.teamName === heatmapTeamFilter)
+                                                .sort((a, b) => {
+                                                    const rA = latestByAthlete.get(a.id);
+                                                    const rB = latestByAthlete.get(b.id);
+                                                    const sA = rA ? (computeComposite(rA.responses || {}, baselineMap.get(a.id)) ?? 5) : 5;
+                                                    const sB = rB ? (computeComposite(rB.responses || {}, baselineMap.get(b.id)) ?? 5) : 5;
+                                                    return sA - sB; // ascending: worst first (most attention needed)
+                                                })
+                                                .map(p => {
+                                                    const isSelected = dashboardFilterTarget === 'All Athletes' || p.name === dashboardFilterTarget;
+                                                    const isStrictFocus = p.name === dashboardFilterTarget;
+                                                    const lastR = latestByAthlete.get(p.id);
+                                                    const score = lastR
+                                                        ? (computeComposite(lastR.responses || {}, baselineMap.get(p.id)) ?? null)
+                                                        : null;
+                                                    const dotColor = scoreToHex(score);
+                                                    const initials = p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                                                    const scoreLabel = score !== null ? `${score.toFixed(1)}/10` : 'No data';
+                                                    const dateLabel = lastR ? (lastR.session_date || lastR.date || '').split('T')[0] : '—';
+
+                                                    return (
+                                                        <div key={p.id} className={`group relative transition-all duration-300 ${isSelected ? 'opacity-100 scale-100' : 'opacity-20 scale-90 grayscale'}`}>
+                                                            <div onClick={() => setDashboardFilterTarget(isStrictFocus ? 'All Athletes' : p.name)}
+                                                                style={{ backgroundColor: dotColor }}
+                                                                className={`aspect-square rounded-xl shadow-sm border-2 transition-all hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center ${isStrictFocus ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-white'}`}
+                                                            >
+                                                                <span className="text-[10px] font-semibold text-white mix-blend-overlay opacity-80">{initials}</span>
                                                             </div>
+                                                            <div className={`absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-medium px-2.5 py-2 rounded-lg whitespace-nowrap transition-all z-10 shadow-xl flex flex-col items-center gap-1 border border-slate-700 ${isStrictFocus ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+                                                                <div className="text-slate-400 leading-none mb-0.5 text-[9px]">{p.teamName}</div>
+                                                                <div>{p.name}</div>
+                                                                <div className="flex gap-2 text-slate-400">
+                                                                    <span>Readiness: {scoreLabel}</span>
+                                                                    <span className="w-px h-2 bg-slate-700"></span>
+                                                                    <span>{dateLabel}</span>
+                                                                </div>
+                                                            </div>
+                                                            {isStrictFocus && <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[8px] font-medium text-indigo-600">Focus</div>}
                                                         </div>
-                                                        {isStrictFocus && <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[8px] font-medium text-indigo-600">Focus</div>}
-                                                    </div>
-                                                );
-                                            })}
+                                                    );
+                                                });
+                                        })()}
                                     </div>
                                 </div>
                             </div>

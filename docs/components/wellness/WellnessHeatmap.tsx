@@ -2,55 +2,26 @@
 /**
  * WellnessHeatmap — Team × Days matrix
  *
- * Rows = athletes, Columns = days (last 14 or 30 days)
- * Cells coloured by composite wellness score (green → amber → red)
- * Shows patterns: who's consistently low, who had a bad spell, team-wide dips
+ * Rows = athletes, Columns = days (last N days ending at anchorDate)
+ * Cells coloured by evidence-based composite wellness score (green → amber → red)
+ *
+ * Algorithm: z-score normalization per athlete + weighted Hooper dimensions
+ * Research: research/WELLNESS-SCORING-RESEARCH.md
+ * Scoring:  docs/utils/wellnessScoring.ts
  */
 
 import React, { useMemo } from 'react';
+import {
+    computeComposite,
+    computeAthleteBaseline,
+    scoreToColor,
+} from '../../utils/wellnessScoring';
 
 interface HeatmapProps {
     athletes: { id: string; name: string }[];
     responses: any[];  // wellness_responses with session_date, athlete_id, responses JSONB
     days?: number;     // how many days to show (default 14)
     anchorDate?: string; // end date of window, ISO YYYY-MM-DD (default = today)
-}
-
-/** Compute composite wellness from a response's JSONB values (0-10 scale, higher = better) */
-function computeComposite(resp: Record<string, any>): number | null {
-    // Extract available numeric wellness metrics
-    const metrics: number[] = [];
-
-    // For FIFA daily form: fatigue/soreness/stress are negative (invert), sleep_quality/mood are positive
-    const negativeKeys = ['fatigue', 'soreness', 'stress'];
-    const positiveKeys = ['sleep_quality', 'mood', 'energy', 'sleep'];
-
-    for (const [key, val] of Object.entries(resp)) {
-        if (typeof val !== 'number' || val < 0 || val > 10) continue;
-        if (negativeKeys.some(k => key.toLowerCase().includes(k))) {
-            metrics.push(10 - val); // invert: high fatigue = low wellness
-        } else if (positiveKeys.some(k => key.toLowerCase().includes(k))) {
-            metrics.push(val);
-        } else if (!isNaN(val) && val >= 1 && val <= 10) {
-            // Unknown metric — assume higher is better (generic questionnaire)
-            metrics.push(val);
-        }
-    }
-
-    if (metrics.length === 0) return null;
-    return metrics.reduce((a, b) => a + b, 0) / metrics.length;
-}
-
-/** Map composite (0-10) to a Tailwind background color */
-function scoreToColor(score: number | null): string {
-    if (score === null) return 'bg-slate-100';
-    if (score >= 8) return 'bg-emerald-400';
-    if (score >= 7) return 'bg-emerald-300';
-    if (score >= 6) return 'bg-lime-300';
-    if (score >= 5) return 'bg-yellow-300';
-    if (score >= 4) return 'bg-amber-400';
-    if (score >= 3) return 'bg-orange-400';
-    return 'bg-rose-400';
 }
 
 const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 14, anchorDate }) => {
@@ -66,26 +37,46 @@ const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 1
         return cols;
     }, [days, anchorDate]);
 
+    // Build per-athlete baselines from all available daily responses (up to 28d)
+    // This allows z-score normalization: each day is scored relative to that athlete's norm.
+    const athleteBaselines = useMemo(() => {
+        const map = new Map<string, ReturnType<typeof computeAthleteBaseline>>();
+        const grouped = new Map<string, Record<string, any>[]>();
+
+        for (const r of responses) {
+            if (r.tier && r.tier !== 'daily') continue;
+            const aid = r.athlete_id || r.athleteId;
+            if (!aid || !r.responses) continue;
+            if (!grouped.has(aid)) grouped.set(aid, []);
+            grouped.get(aid)!.push(r.responses);
+        }
+
+        for (const [aid, respObjects] of grouped.entries()) {
+            map.set(aid, computeAthleteBaseline(respObjects));
+        }
+        return map;
+    }, [responses]);
+
     // Build lookup: athleteId → date → composite score
     const heatData = useMemo(() => {
         const map = new Map<string, Map<string, number | null>>();
 
         for (const r of responses) {
-            // Only use daily tier responses for heatmap (avoid mixing with weekly classification data)
             if (r.tier && r.tier !== 'daily') continue;
             const aid = r.athlete_id || r.athleteId;
             const date = (r.session_date || r.date || '').split('T')[0];
-            if (!aid || !date) continue;
+            if (!aid || !date || !r.responses) continue;
 
             if (!map.has(aid)) map.set(aid, new Map());
-            // Always overwrite — last response for the day wins (sorted chronologically)
-            const composite = computeComposite(r.responses || {});
+
+            const baseline = athleteBaselines.get(aid);
+            const composite = computeComposite(r.responses, baseline);
             if (composite !== null) {
                 map.get(aid)!.set(date, composite);
             }
         }
         return map;
-    }, [responses]);
+    }, [responses, athleteBaselines]);
 
     if (athletes.length === 0) return null;
 
