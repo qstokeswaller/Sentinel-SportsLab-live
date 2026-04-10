@@ -14,6 +14,7 @@ import { DatabaseService } from '../services/databaseService';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import type { BodyMapConfig } from '../types/types';
+import { DEFAULT_BODY_MAP_CONFIG } from '../utils/mocks';
 
 // FIFA-aligned body map config — areas match Waldén et al. (2023) Table 4
 const FIFA_BODY_MAP_CONFIG: BodyMapConfig = {
@@ -190,8 +191,9 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         // Skip problem_type if already pre-filled from daily form
         if (id === 'problem_type') return !preFilledComplaint;
         // Injury-only steps
-        if (['onset', 'status', 'body_area', 'impact', 'time_loss'].includes(id)) return isInjury;
-        if (id === 'body_side') return isInjury;
+        if (['onset', 'status', 'impact', 'time_loss'].includes(id)) return isInjury;
+        // body_area and body_side: only show when injury and NOT triggered from daily (daily already captured area)
+        if (id === 'body_area' || id === 'body_side') return isInjury && !preFilledComplaint;
         if (id === 'mechanism' || id === 'contact_type') return isInjury && responses.onset === 'sudden';
         // Illness-only steps
         if (['urti_hoarseness', 'urti_blocked_nose', 'urti_runny_nose', 'urti_sinus_pressure',
@@ -304,16 +306,30 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         );
     };
 
+    const SCALE_COLORS_POSITIVE = {
+        1:  { sel: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 text-red-700' },
+        2:  { sel: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 text-red-700' },
+        3:  { sel: 'bg-orange-500 border-orange-500 text-white shadow-lg scale-[1.02]',   un: 'bg-orange-50 border-orange-200 text-orange-700' },
+        4:  { sel: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]',     un: 'bg-amber-50 border-amber-200 text-amber-700' },
+        5:  { sel: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.02]',   un: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
+        6:  { sel: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.02]',   un: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
+        7:  { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]',       un: 'bg-lime-50 border-lime-200 text-lime-700' },
+        8:  { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]',       un: 'bg-lime-50 border-lime-200 text-lime-700' },
+        9:  { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        10: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+    };
+
     const renderScale110 = (id: string) => {
         const labels = { 1: 'Very poor', 2: 'Poor', 3: 'Below average', 4: 'Fair', 5: 'Moderate', 6: 'Above average', 7: 'Good', 8: 'Very good', 9: 'Excellent', 10: 'Outstanding' };
         return (
             <div className="space-y-1.5">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => {
                     const isSelected = responses[id] === val;
+                    const c = SCALE_COLORS_POSITIVE[val];
                     return (
                         <button key={val} type="button" onClick={() => setVal(id, val)}
                             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
-                                isSelected ? 'bg-cyan-500 border-cyan-500 text-white shadow-lg scale-[1.02]' : 'bg-white border-slate-200 text-slate-600'
+                                isSelected ? c.sel : c.un
                             }`}>
                             <span className="text-lg font-bold w-7 text-center shrink-0">{val}</span>
                             <span className="text-sm">{labels[val]}</span>
@@ -344,6 +360,31 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Deep Check Complete</h1>
             <p className="text-slate-500 mb-8 max-w-xs">Thank you for the detail. Your coaching staff will review this and adjust your program accordingly.</p>
+            {preFilledComplaint ? (
+                /* Triggered from daily — send back to the daily check-in */
+                <a
+                    href={`/daily-wellness/${teamId}`}
+                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm"
+                >
+                    Back to Daily Check-in
+                </a>
+            ) : isTeamMode ? (
+                /* Team-wide direct link — reload to athlete picker */
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm"
+                >
+                    Submit for Another Athlete
+                </button>
+            ) : (
+                /* Individual direct link — reload to same athlete's intro */
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm"
+                >
+                    Submit Again
+                </button>
+            )}
         </div>
     );
 
@@ -361,9 +402,19 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     // Step content
     // ═══════════════════════════════════════════════════════════════════
 
+    const complaintLabel = preFilledComplaint === 'injury' ? 'injury'
+        : preFilledComplaint === 'illness' ? 'illness'
+        : preFilledComplaint === 'both' ? 'injury and illness'
+        : null;
+
     const stepHeadings: Record<string, { heading: string; instruction: string }> = {
         athlete_select: { heading: 'Who are you?', instruction: 'Select your name to begin.' },
-        intro: { heading: `Hi ${athleteName.split(' ')[0] || ''}`, instruction: 'Based on your recent check-ins, we\'d like a bit more detail to help manage your load better. This takes between 2–5 minutes.' },
+        intro: {
+            heading: `Hi ${athleteName.split(' ')[0] || ''}`,
+            instruction: complaintLabel
+                ? `Your coaching staff want a bit more detail to help manage your ${complaintLabel} better. This takes between 2–5 minutes.`
+                : 'Your coaching staff have sent you this form to better understand your current health and wellbeing. This takes between 2–5 minutes.',
+        },
         problem_type: { heading: 'Type of Problem', instruction: 'What best describes your current issue?' },
         onset: { heading: 'How Did It Start?', instruction: 'Was it a specific event or has it built up gradually?' },
         status: { heading: 'Is This New?', instruction: 'Has this happened before in the same area?' },
@@ -449,9 +500,12 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                 <span className="font-semibold text-amber-800">Why am I seeing this?</span>
                             </div>
                             <p className="text-sm text-amber-700 leading-relaxed">
-                                Your recent daily check-ins flagged some areas that your coaching staff want to understand better.
-                                This helps them adjust your training and recovery plan. It's not a test — just honest answers.
+                                {complaintLabel
+                                    ? `Your daily check-in flagged a ${complaintLabel === 'injury and illness' ? 'health concern (injury and illness)' : complaintLabel}. Your coaching staff want to understand it better so they can adjust your training and recovery plan accordingly.`
+                                    : 'Your coaching staff have shared this form to get a better picture of your current health and wellbeing. It covers injury, illness, and how you\'ve been feeling overall.'
+                                }
                             </p>
+                            <p className="text-sm text-amber-600 font-medium">It's not a test — just honest answers help us help you.</p>
                         </div>
                     )}
 
@@ -532,7 +586,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                 if (areas.length > 0) setVal('body_area', areas[0].area);
                                 else setVal('body_area', '');
                             }}
-                            config={FIFA_BODY_MAP_CONFIG}
+                            config={DEFAULT_BODY_MAP_CONFIG}
                         />
                     )}
 

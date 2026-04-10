@@ -119,6 +119,26 @@ const ACWRMonitoringHub: React.FC = () => {
         return teamPlayers.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
     }, [teamPlayers]);
 
+    // Auto-detect the metric type actually present in loadRecords for this team.
+    // Falls back to the configured method only if data exists for it; otherwise uses
+    // whatever metric_type dominates the actual records so charts always show data.
+    const teamMetricType = useMemo(() => {
+        const configured = teamSettings?.method || 'srpe';
+        const playerIds = new Set(uniquePlayers.map(p => p.id));
+        if (playerIds.size === 0) return configured;
+        const teamRecords = (loadRecords || []).filter(r => playerIds.has(r.athlete_id || r.athleteId));
+        if (teamRecords.length === 0) return configured;
+        // Count records per metric_type
+        const counts: Record<string, number> = {};
+        for (const r of teamRecords) {
+            const mt = r.metric_type || 'srpe';
+            counts[mt] = (counts[mt] || 0) + 1;
+        }
+        // If the configured method has data, honour it; otherwise use the dominant metric
+        if (counts[configured]) return configured;
+        return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    }, [loadRecords, uniquePlayers, teamSettings]);
+
     // Exclusion helpers
     const isExcluded = (athleteId: string) => acwrExclusions[athleteId]?.excluded === true;
     const getExclusion = (athleteId: string) => acwrExclusions[athleteId] || null;
@@ -181,7 +201,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 ? (acwrSettings[`ind_${player.id}`] || {})
                 : (acwrSettings[player.teamId] || {});
             const options = {
-                metricType: settings.method || 'srpe',
+                metricType: teamMetricType,
                 acuteN: settings.acuteWindow || 7,
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
@@ -255,7 +275,7 @@ const ACWRMonitoringHub: React.FC = () => {
             if (!a.excluded && b.excluded) return -1;
             return b.ratio - a.ratio;
         });
-    }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, selectedTeam]);
+    }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, selectedTeam, teamMetricType]);
 
     // ACWR trendline — team average or individual client EWMA
     const teamTrendline = useMemo(() => {
@@ -264,7 +284,7 @@ const ACWRMonitoringHub: React.FC = () => {
             // Individual client: show their personal EWMA
             const settings = acwrSettings[selectedTeamId] || {};
             const options = {
-                metricType: settings.method || 'srpe',
+                metricType: teamMetricType,
                 acuteN: settings.acuteWindow || 7,
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
@@ -276,13 +296,13 @@ const ACWRMonitoringHub: React.FC = () => {
         const playerIds = (selectedTeam.players || []).filter(p => !isExcluded(p.id)).map(p => p.id);
         if (playerIds.length === 0) return null;
         const options = {
-            metricType: teamSettings.method || 'srpe',
+            metricType: teamMetricType,
             acuteN: teamSettings.acuteWindow || 7,
             chronicN: teamSettings.chronicWindow || 28,
             freezeRestDays: teamSettings.freezeRestDays !== false,
         };
         return ACWR_UTILS.calculateTeamACWR(loadRecords || [], playerIds, options);
-    }, [selectedTeamId, selectedTeam, loadRecords, teamSettings, acwrExclusions, isPrivateClientSelected, privateClientId, acwrSettings]);
+    }, [selectedTeamId, selectedTeam, loadRecords, teamSettings, acwrExclusions, isPrivateClientSelected, privateClientId, acwrSettings, teamMetricType]);
 
     // ── Load History computed data ──────────────────────────────────────
     const weekDays = useMemo(() => {
@@ -300,13 +320,14 @@ const ACWRMonitoringHub: React.FC = () => {
         for (const player of uniquePlayers) {
             for (const day of weekDays) {
                 const rec = (loadRecords || []).find(r =>
-                    (r.athlete_id === player.id || r.athleteId === player.id) && r.date === day
+                    (r.athlete_id === player.id || r.athleteId === player.id) &&
+                    r.date === day && r.metric_type === teamMetricType
                 );
-                if (rec && rec.value > max) max = rec.value;
+                if (rec && Number(rec.value) > max) max = Number(rec.value);
             }
         }
         return max || 1;
-    }, [uniquePlayers, loadRecords, weekDays]);
+    }, [uniquePlayers, loadRecords, weekDays, teamMetricType]);
 
     const historyChartData = useMemo(() => {
         if (!teamTrendline || !teamTrendline.dates?.length) return null;
@@ -769,9 +790,10 @@ const ACWRMonitoringHub: React.FC = () => {
 
                                     const dayLoads = weekDays.map(day => {
                                         const rec = (loadRecords || []).find(r =>
-                                            (r.athlete_id === player.id || r.athleteId === player.id) && r.date === day
+                                            (r.athlete_id === player.id || r.athleteId === player.id) &&
+                                            r.date === day && r.metric_type === teamMetricType
                                         );
-                                        return rec?.value ?? null;
+                                        return rec != null ? Number(rec.value) : null;
                                     });
 
                                     const weekTotal = dayLoads.reduce((sum: number, v) => sum + (v || 0), 0);

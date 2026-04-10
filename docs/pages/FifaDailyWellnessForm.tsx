@@ -67,7 +67,8 @@ interface FormStep {
 const ALL_STEPS: FormStep[] = [
     { id: 'athlete', heading: 'Who are you?', instruction: 'Select your name to begin.', type: 'athlete_select' },
     { id: 'availability', heading: 'Availability', instruction: 'What is your training status today?', type: 'availability' },
-    { id: 'health_complaint', heading: 'Health Check', instruction: 'Do you have any physical (medical) complaint today?', type: 'health_type' },
+    { id: 'health_complaint', heading: 'Health Check', instruction: 'Do you have any physical complaint today? (e.g. pain, illness — flag to medical team if yes)', type: 'health_type' },
+    { id: 'illness_severity', heading: 'Illness Severity', instruction: 'How would you describe your illness symptoms today?', type: 'health_type', conditional: true },
     { id: 'complaint_areas', heading: 'Where is the problem?', instruction: 'Tap the affected area(s) on the body map. Tap again to increase severity.', type: 'body_map', conditional: true },
     { id: 'fatigue', heading: 'Fatigue', instruction: 'How fatigued do you feel right now?', type: 'scale_negative', lowLabel: 'Fully fresh', highLabel: 'Completely exhausted' },
     { id: 'soreness', heading: 'Muscle Soreness', instruction: 'Rate your overall muscle soreness.', type: 'scale_negative', lowLabel: 'No soreness', highLabel: 'Severe pain' },
@@ -75,7 +76,7 @@ const ALL_STEPS: FormStep[] = [
     { id: 'stress', heading: 'Stress', instruction: 'Rate your non-training stress level.', type: 'scale_negative', lowLabel: 'No stress', highLabel: 'Extreme stress' },
     { id: 'mood', heading: 'Mood', instruction: 'How are you feeling mentally today?', type: 'scale_positive', lowLabel: 'Very low', highLabel: 'Very positive' },
     { id: 'sleep_hours', heading: 'Sleep Duration', instruction: 'How many hours did you sleep last night?', type: 'number' },
-    { id: 'readiness', heading: 'Readiness', instruction: 'How ready are you to train today?', type: 'readiness' },
+    { id: 'readiness', heading: 'Post-Session Feeling', instruction: 'How are you feeling after today\'s session?', type: 'readiness' },
 ];
 
 const AVAILABILITY_OPTIONS = [
@@ -86,9 +87,9 @@ const AVAILABILITY_OPTIONS = [
 ];
 
 const READINESS_OPTIONS = [
-    { value: 'ready', label: 'Ready to Train', desc: 'Feeling good, no concerns', color: 'emerald' },
-    { value: 'compromised', label: 'Slightly Compromised', desc: 'Can train but not 100%', color: 'amber' },
-    { value: 'not_ready', label: 'Not Ready', desc: 'Should not train at full intensity', color: 'rose' },
+    { value: 'ready', label: 'Feeling Good', desc: 'Recovered well, no concerns after today', color: 'emerald' },
+    { value: 'compromised', label: 'Somewhat Fatigued', desc: 'A little tired or sore, but manageable', color: 'amber' },
+    { value: 'not_ready', label: 'Heavily Fatigued', desc: 'Significant fatigue or discomfort after today', color: 'rose' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -127,8 +128,9 @@ const FifaDailyWellnessForm: React.FC = () => {
         load();
     }, [teamId]);
 
-    // Filter steps — show complaint_areas only when complaint involves an injury
+    // Filter steps — show illness_severity when illness/both, complaint_areas when injury/both
     const STEPS = ALL_STEPS.filter(s => {
+        if (s.id === 'illness_severity') return responses.health_complaint === 'illness' || responses.health_complaint === 'both';
         if (s.id === 'complaint_areas') return responses.health_complaint === 'injury' || responses.health_complaint === 'both';
         return true;
     });
@@ -144,6 +146,7 @@ const FifaDailyWellnessForm: React.FC = () => {
         if (step.id === 'athlete') return !!selectedAthleteId;
         if (step.id === 'complaint_areas') return true; // body map is optional — can continue without selection
         if (step.id === 'sleep_hours') return responses.sleep_hours != null && responses.sleep_hours > 0;
+        if (step.id === 'illness_severity') return !!responses.illness_severity;
         return responses[step.id] !== undefined && responses[step.id] !== null && responses[step.id] !== '';
     })();
 
@@ -169,6 +172,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                     sleep_hours: responses.sleep_hours,
                     health_complaint: responses.health_complaint,
                     readiness: responses.readiness,
+                    ...(responses.illness_severity && { illness_severity: responses.illness_severity }),
                 },
                 availability,
                 tier: 'daily',
@@ -332,7 +336,13 @@ const FifaDailyWellnessForm: React.FC = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">One more step</h1>
                     <p className="text-slate-500 mb-6 max-w-sm leading-relaxed">
-                        Based on your responses, your coaching staff need a bit more detail about what you're experiencing. This is a short follow-up — different from your daily check-in — and takes between 2–5 minutes.
+                        {responses.health_complaint === 'injury'
+                            ? 'Your coaching staff need a bit more detail to help manage your injury better. This short follow-up takes between 2–5 minutes.'
+                            : responses.health_complaint === 'illness'
+                            ? 'Your coaching staff need a bit more detail to help manage your illness better. This short follow-up takes between 2–5 minutes.'
+                            : responses.health_complaint === 'both'
+                            ? 'Your coaching staff need a bit more detail to help manage your injury and illness better. This short follow-up takes between 2–5 minutes.'
+                            : 'Based on your responses, your coaching staff need a bit more detail about what you\'re experiencing. This short follow-up takes between 2–5 minutes.'}
                     </p>
                     <a
                         href={`/weekly-wellness/${teamId}/${selectedAthleteId}${responses.health_complaint && responses.health_complaint !== 'no' ? `?complaint=${responses.health_complaint}` : ''}`}
@@ -395,7 +405,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                         <CheckCircle2 size={40} />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">Check-in Complete!</h1>
-                    <p className="text-slate-500 mb-8 max-w-xs">Your wellness data has been recorded. Have a great session!</p>
+                    <p className="text-slate-500 mb-8 max-w-xs">Your wellness data has been recorded. Great work today!</p>
                     <button onClick={() => window.location.reload()} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
                         Submit for Another Athlete
                     </button>
@@ -479,12 +489,19 @@ const FifaDailyWellnessForm: React.FC = () => {
                     {step.type === 'availability' && renderOptionCards(AVAILABILITY_OPTIONS, 'availability')}
 
                     {/* Health type — 4 options driving deep check routing */}
-                    {step.type === 'health_type' && renderOptionCards([
+                    {step.type === 'health_type' && step.id === 'health_complaint' && renderOptionCards([
                         { value: 'no',      label: 'No',                      desc: 'No complaints today',                                      color: 'emerald' },
                         { value: 'injury',  label: 'Yes — Injury related',    desc: 'Physical pain, discomfort or musculoskeletal issue',        color: 'amber' },
                         { value: 'illness', label: 'Yes — Illness related',   desc: 'Cold, flu, fever or other non-musculoskeletal concern',     color: 'amber' },
                         { value: 'both',    label: 'Yes — Injury + Illness',  desc: 'Both physical pain and illness symptoms',                   color: 'rose' },
                     ], 'health_complaint')}
+
+                    {/* Illness severity — shown when illness or both selected */}
+                    {step.id === 'illness_severity' && renderOptionCards([
+                        { value: 'mild',     label: 'Mild',     desc: 'Feeling off but able to train normally',            color: 'amber' },
+                        { value: 'moderate', label: 'Moderate', desc: 'Noticeable symptoms, training may need adjustment', color: 'rose' },
+                        { value: 'severe',   label: 'Severe',   desc: 'Significantly unwell, cannot train at full capacity', color: 'rose' },
+                    ], 'illness_severity')}
 
                     {/* Negative scale (1=good, 10=bad): fatigue, soreness, stress */}
                     {step.type === 'scale_negative' && renderScale(step.id, false)}
