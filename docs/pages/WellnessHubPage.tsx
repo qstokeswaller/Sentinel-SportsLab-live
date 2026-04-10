@@ -160,7 +160,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 ? (acwrSettings[`ind_${athleteId}`] || {})
                 : (acwrSettings[teamId] || {});
             const acwrResult = ACWR_UTILS.calculateAthleteACWR(loadRecords || [], athleteId, {
-                metricType: settings.method || 'srpe',
+                metricType: teamMetricType,
                 acuteN: settings.acuteWindow || 7,
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
@@ -512,7 +512,10 @@ const ACWRMonitoringHub: React.FC = () => {
         if (!playerData) { setAcwrView('roster'); return null; }
 
         const { acwrResult, status, reasons, spark, settings: playerSettings } = playerData;
-        const athleteLoad = (loadRecords || []).filter(r => (r.athleteId === selectedAthleteId || r.athlete_id === selectedAthleteId));
+        const athleteLoad = (loadRecords || []).filter(r =>
+            (r.athleteId === selectedAthleteId || r.athlete_id === selectedAthleteId) &&
+            r.metric_type === teamMetricType
+        );
         const sortedLoad = [...athleteLoad].sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const filteredLoad = sortedLoad.filter(r => r.date >= drilldownFrom && r.date <= drilldownTo);
