@@ -65,6 +65,7 @@ const LandingPage: React.FC = () => {
     const rFeatHead = useReveal();
     const rFeat1 = useReveal(0), rFeat2 = useReveal(80), rFeat3 = useReveal(160), rFeat4 = useReveal(240), rFeat5 = useReveal(320), rFeat6 = useReveal(400);
     const rDiff = useReveal();
+    const rVision = useReveal(100);
     const rPrice = useReveal();
     const rCta = useReveal();
 
@@ -440,6 +441,56 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
+            {/* ═══════ MANIFESTO ═══════ */}
+            <section className="py-32 relative overflow-hidden">
+                <div className={`absolute inset-0 ${dark ? 'bg-[#06060B]' : 'bg-slate-950'}`} />
+                {/* Subtle texture */}
+                <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(rgba(99,102,241,0.06) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+                {/* Ambient glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)' }} />
+
+                <div ref={rVision.ref} style={rVision.style} className="relative max-w-4xl mx-auto px-4 sm:px-8 text-center">
+
+                    {/* Opening statement — editorial */}
+                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-indigo-400 mb-10">Our Philosophy</p>
+
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+                        Not built for every system.
+                        <br />
+                        <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                            Built for those who refuse to guess.
+                        </span>
+                    </h2>
+
+                    {/* Body — editorial medium */}
+                    <div className="mt-14 max-w-2xl mx-auto space-y-6 text-lg text-slate-400 leading-relaxed text-left">
+                        <p>
+                            Sentinel exists to serve environments where decisions carry real weight — where time cannot be wasted and guesswork is not an option. We don't scale for the sake of reach. We refine for the sake of impact.
+                        </p>
+                        <p>
+                            We partner with practitioners who hold their programs to a higher standard. Equipping them to move faster, act with conviction, and create an environment where the best decisions are also the most informed ones.
+                        </p>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="my-14 flex items-center gap-6 max-w-2xl mx-auto">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/10" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/10" />
+                    </div>
+
+                    {/* Closing declaration */}
+                    <div className="space-y-2">
+                        <p className={`text-xl sm:text-2xl font-semibold text-slate-500 line-through decoration-slate-600`}>
+                            We don't promise more data.
+                        </p>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+                            We deliver conviction in every decision.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             {/* ═══════ PRICING ═══════ */}
             <section id="pricing" className="py-16 sm:py-32">
                 <div ref={rPrice.ref} style={rPrice.style} className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -488,9 +539,11 @@ const LandingPage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700" />
                 <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
                 <div ref={rCta.ref} style={rCta.style} className="relative max-w-3xl mx-auto px-4 sm:px-8 text-center">
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">Ready to elevate your sport science?</h2>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+                        Precision over convenience.<br />Impact over reach.
+                    </h2>
                     <p className="mt-6 text-lg text-indigo-200 max-w-xl mx-auto leading-relaxed">
-                        Research-backed tools for monitoring, testing, and optimising athlete performance.
+                        If you hold your program to a higher standard, Sentinel was built for you.
                     </p>
                     <button onClick={() => nav('/login')}
                         className="mt-10 px-10 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-2xl hover:shadow-[0_20px_60px_rgba(255,255,255,0.2)] hover:bg-indigo-50 transition-all active:scale-[0.97] text-[15px]">
