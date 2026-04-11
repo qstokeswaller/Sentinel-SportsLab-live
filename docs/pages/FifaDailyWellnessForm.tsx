@@ -189,9 +189,9 @@ const FifaDailyWellnessForm: React.FC = () => {
                 readiness: responses.readiness,
                 injury_report: responses.complaint_areas?.length > 0 ? { areas: responses.complaint_areas } : undefined,
             });
-            setSubmitted(true);
 
-            // Check if this response triggered a flag → prompt weekly form
+            // Determine weekly state BEFORE showing success screen — prevents flash of
+            // "Submit for Another Athlete" screen being replaced by deep check prompt.
             const isRedFlag =
                 availability === 'unavailable' ||
                 (responses.health_complaint && responses.health_complaint !== 'no') ||
@@ -207,13 +207,11 @@ const FifaDailyWellnessForm: React.FC = () => {
                     };
                     const todayStr = localDate(0);
 
-                    // Step 1: already completed a deep check this week → ask if anything new
                     const info = await DatabaseService.getRecentWeeklyInfo(selectedAthleteId, 7);
                     if (info.hasRecent) {
                         setWeeklyFollowUp(true);
                         setLastWeeklyDate(info.lastDate);
                     } else {
-                        // Step 2: same flag type in last 3 daily check-ins → ask rather than force
                         const recentDaily = await DatabaseService.fetchWellnessResponsesByAthlete(
                             selectedAthleteId, localDate(3)
                         );
@@ -241,6 +239,9 @@ const FifaDailyWellnessForm: React.FC = () => {
                     }
                 } catch { setWeeklyTriggered(true); }
             }
+
+            // Show success screen only after all state is determined
+            setSubmitted(true);
 
         } catch (err) {
             console.error(err);
@@ -469,8 +470,8 @@ const FifaDailyWellnessForm: React.FC = () => {
             </div>
 
             {/* Content */}
-            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full">
-                <div key={currentStep} className="animate-in fade-in duration-200">
+            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full bg-slate-50">
+                <div key={step?.id} className="animate-in fade-in duration-150 bg-slate-50 min-h-full">
                     <h2 className="text-xl font-bold text-slate-900 leading-tight">{step.heading}</h2>
                     {step.instruction && <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{step.instruction}</p>}
                     {!step.instruction && <div className="mb-3" />}

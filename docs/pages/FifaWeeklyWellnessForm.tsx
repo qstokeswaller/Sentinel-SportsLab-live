@@ -478,8 +478,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                 <div className="h-full bg-amber-500 transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
             </div>
 
-            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full">
-                <div key={sh?.id} className="animate-in fade-in duration-150 bg-slate-50">
+            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full bg-slate-50">
+                <div key={stepId} className="animate-in fade-in duration-150 bg-slate-50 min-h-full">
                     <h2 className="text-xl font-bold text-slate-900 leading-tight">{sh.heading}</h2>
                     <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{sh.instruction}</p>
 

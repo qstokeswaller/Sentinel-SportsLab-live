@@ -583,11 +583,11 @@ export const DatabaseService = {
     async saveInjuryClassification(classification: any) {
         const { data: userData } = await supabase.auth.getUser();
         const db = supabase as any;
-        const { data, error } = await db.from('injury_classifications').insert({
+        // No .select() — avoids INSERT...RETURNING RLS check on anon (PostgreSQL 15)
+        const { error } = await db.from('injury_classifications').insert({
             ...classification, user_id: userData?.user?.id,
-        }).select().single();
+        });
         if (error) throw error;
-        return data;
     },
 
     async fetchInjuryClassifications(athleteId?: string) {
