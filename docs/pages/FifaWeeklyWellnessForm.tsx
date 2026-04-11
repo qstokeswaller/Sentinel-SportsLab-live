@@ -309,8 +309,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         const c = colorMap[color] || colorMap.slate;
         return (
             <button type="button" onClick={onClick}
-                className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${isSelected ? c.sel : `${c.un} text-slate-700 hover:border-slate-300`}`}>
-                <div className="font-bold text-base">{label}</div>
+                className={`w-full px-4 py-3 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${isSelected ? c.sel : `${c.un} text-slate-700 hover:border-slate-300`}`}>
+                <div className="font-bold text-sm">{label}</div>
                 {desc && <div className={`text-xs mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{desc}</div>}
             </button>
         );
@@ -332,13 +332,13 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const renderScale110 = (id: string) => {
         const labels = { 1: 'Very poor', 2: 'Poor', 3: 'Below average', 4: 'Fair', 5: 'Moderate', 6: 'Above average', 7: 'Good', 8: 'Very good', 9: 'Excellent', 10: 'Outstanding' };
         return (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => {
                     const isSelected = responses[id] === val;
                     const c = SCALE_COLORS_POSITIVE[val];
                     return (
                         <button key={val} type="button" onClick={() => setVal(id, val)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
+                            className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
                                 isSelected ? c.sel : c.un
                             }`}>
                             <span className="text-lg font-bold w-7 text-center shrink-0">{val}</span>
@@ -454,7 +454,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const sh = stepHeadings[stepId] || { heading: '', instruction: '' };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="h-dvh bg-slate-50 flex flex-col overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
@@ -478,10 +478,10 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                 <div className="h-full bg-amber-500 transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
             </div>
 
-            <main className="flex-1 overflow-y-auto p-6 pb-2 max-w-md mx-auto w-full">
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <h2 className="text-2xl font-bold text-slate-900 leading-tight">{sh.heading}</h2>
-                    <p className="text-slate-500 font-medium mt-1 mb-6">{sh.instruction}</p>
+            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full">
+                <div key={currentStep} className="animate-in fade-in duration-200">
+                    <h2 className="text-xl font-bold text-slate-900 leading-tight">{sh.heading}</h2>
+                    <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{sh.instruction}</p>
 
                     {/* Intro */}
                     {/* Athlete selection (team-wide mode) */}

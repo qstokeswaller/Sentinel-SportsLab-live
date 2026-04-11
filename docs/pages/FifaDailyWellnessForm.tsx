@@ -273,7 +273,7 @@ const FifaDailyWellnessForm: React.FC = () => {
             : { 1: 'None', 2: 'Very low', 3: 'Low', 4: 'Mild', 5: 'Moderate', 6: 'Noticeable', 7: 'High', 8: 'Very high', 9: 'Severe', 10: 'Extreme' });
 
         return (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
                 {values.map(val => {
                     const isSelected = responses[id] === val;
                     const c = colors[val];
@@ -282,12 +282,12 @@ const FifaDailyWellnessForm: React.FC = () => {
                             key={val}
                             type="button"
                             onClick={() => setVal(id, val)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
+                            className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
                                 isSelected ? c.selected : c.unselected
                             }`}
                         >
-                            <span className="text-lg font-bold w-7 text-center shrink-0">{val}</span>
-                            <span className="text-sm">{labels[val]}</span>
+                            <span className="text-base font-bold w-6 text-center shrink-0">{val}</span>
+                            <span className="text-xs">{labels[val]}</span>
                         </button>
                     );
                 })}
@@ -296,7 +296,7 @@ const FifaDailyWellnessForm: React.FC = () => {
     };
 
     const renderOptionCards = (options: { value: string; label: string; desc: string; color: string }[], id: string) => (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
             {options.map(opt => {
                 const isSelected = responses[id] === opt.value;
                 const colorMap = {
@@ -310,11 +310,11 @@ const FifaDailyWellnessForm: React.FC = () => {
                         key={opt.value}
                         type="button"
                         onClick={() => setVal(id, opt.value)}
-                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
+                        className={`w-full px-4 py-3 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
                             isSelected ? c.selected : `${c.unselected} text-slate-700 hover:border-slate-300`
                         }`}
                     >
-                        <div className="font-bold text-base">{opt.label}</div>
+                        <div className="font-bold text-sm">{opt.label}</div>
                         <div className={`text-xs mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{opt.desc}</div>
                     </button>
                 );
@@ -439,7 +439,7 @@ const FifaDailyWellnessForm: React.FC = () => {
     // ═══════════════════════════════════════════════════════════════════
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="h-dvh bg-slate-50 flex flex-col overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
@@ -469,11 +469,11 @@ const FifaDailyWellnessForm: React.FC = () => {
             </div>
 
             {/* Content */}
-            <main className="flex-1 overflow-y-auto p-6 pb-2 max-w-md mx-auto w-full">
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <h2 className="text-2xl font-bold text-slate-900 leading-tight">{step.heading}</h2>
-                    {step.instruction && <p className="text-slate-500 font-medium mt-1 mb-6">{step.instruction}</p>}
-                    {!step.instruction && <div className="mb-6" />}
+            <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full">
+                <div key={currentStep} className="animate-in fade-in duration-200">
+                    <h2 className="text-xl font-bold text-slate-900 leading-tight">{step.heading}</h2>
+                    {step.instruction && <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{step.instruction}</p>}
+                    {!step.instruction && <div className="mb-3" />}
 
                     {/* Athlete selection */}
                     {step.type === 'athlete_select' && (
