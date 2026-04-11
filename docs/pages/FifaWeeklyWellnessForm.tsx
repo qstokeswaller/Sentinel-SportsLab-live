@@ -341,8 +341,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                             className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
                                 isSelected ? c.sel : c.un
                             }`}>
-                            <span className="text-lg font-bold w-7 text-center shrink-0">{val}</span>
-                            <span className="text-sm">{labels[val]}</span>
+                            <span className="text-base font-bold w-6 text-center shrink-0">{val}</span>
+                            <span className="text-xs">{labels[val]}</span>
                         </button>
                     );
                 })}
@@ -479,7 +479,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             </div>
 
             <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full">
-                <div key={currentStep} className="animate-in fade-in duration-200">
+                <div key={sh?.id} className="animate-in fade-in duration-150 bg-slate-50">
                     <h2 className="text-xl font-bold text-slate-900 leading-tight">{sh.heading}</h2>
                     <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{sh.instruction}</p>
 
