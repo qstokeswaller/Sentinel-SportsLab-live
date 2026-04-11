@@ -7,6 +7,8 @@ import { AuthProvider } from './context/AuthContext';
 import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppRouter from './Router';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const queryClient = new QueryClient();
 
@@ -29,5 +31,7 @@ root.render(
         </ErrorBoundary>
       </QueryClientProvider>
     </BrowserRouter>
+    <Analytics />
+    <SpeedInsights />
   </React.StrictMode>
 );
