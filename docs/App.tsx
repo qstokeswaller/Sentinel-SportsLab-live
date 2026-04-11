@@ -86,10 +86,11 @@ const AddAthleteModal = () => {
 
     const [step, setStep] = useState(1);
 
-    // Auto-select newest team when teams list changes (e.g. after creating a team)
+    // Auto-select newest real team when teams list changes (e.g. after creating a team)
     useEffect(() => {
-        if (teams.length > 0 && (!newAthleteTeam || !teams.some(t => t.id === newAthleteTeam))) {
-            setNewAthleteTeam(teams[teams.length - 1]?.id || '');
+        const realTeams = teams.filter(t => t.id !== 't_private');
+        if (realTeams.length > 0 && (!newAthleteTeam || newAthleteTeam === 't_private' || !realTeams.some(t => t.id === newAthleteTeam))) {
+            setNewAthleteTeam(realTeams[realTeams.length - 1]?.id || '');
         }
     }, [teams]);
 
@@ -163,8 +164,8 @@ const AddAthleteModal = () => {
                             <div className="space-y-1.5">
                                 <label className={LABEL}>Assign to Team</label>
                                 <select value={newAthleteTeam} onChange={e => setNewAthleteTeam(e.target.value)} className={INPUT}>
-                                    <option value="">Private Client (Individual)</option>
-                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                    <option value="">Individual (Private Client)</option>
+                                    {teams.filter(t => t.id !== 't_private').map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </select>
                             </div>
                         </div>

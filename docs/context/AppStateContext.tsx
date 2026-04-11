@@ -1045,7 +1045,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [newAthleteName, setNewAthleteName] = useState('');
 
-    const [newAthleteTeam, setNewAthleteTeam] = useState(teams[0]?.id || '');
+    const [newAthleteTeam, setNewAthleteTeam] = useState(teams.find(t => t.id !== 't_private')?.id || '');
 
     const [newAthleteProfile, setNewAthleteProfile] = useState({
         age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: ''
@@ -1358,7 +1358,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (addAthleteMode === 'athlete') {
                 await DatabaseService.createAthlete({
                     name: newAthleteName,
-                    team_id: newAthleteTeam && newAthleteTeam !== 'All' ? newAthleteTeam : null,
+                    team_id: newAthleteTeam && newAthleteTeam !== 'All' && newAthleteTeam !== 't_private' ? newAthleteTeam : null,
                     age: newAthleteProfile.age ? parseInt(newAthleteProfile.age) : undefined,
                     gender: newAthleteProfile.gender || undefined,
                     height_cm: newAthleteProfile.height_cm ? parseFloat(newAthleteProfile.height_cm) : undefined,
@@ -1377,7 +1377,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             initData(); // refresh roster in background — don't block modal close
         } catch (err) {
             console.error("Error adding athlete/team:", err);
-            alert("Failed to add. Ensure the database schema has been applied.");
+            const msg = err instanceof Error ? err.message : String(err);
+            alert(`Failed to add: ${msg}`);
         }
     };
 
@@ -1391,7 +1392,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setAddAthleteMode('athlete'); // auto-switch back so user can add athlete to new team
         } catch (err) {
             console.error("Error adding team:", err);
-            alert("Failed to add team. Ensure the database schema has been applied.");
+            const msg = err instanceof Error ? err.message : String(err);
+            alert(`Failed to add team: ${msg}`);
         }
     };
 
@@ -2207,8 +2209,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             // Load settings from Supabase user_data (with localStorage fallback)
             try {
                 const savedAcwr = await StorageService.getAcwrSettings();
-                if (savedAcwr && Object.keys(savedAcwr).length > 0) setAcwrSettings(savedAcwr);
-                else {
+                if (savedAcwr && Object.keys(savedAcwr).length > 0) {
+                    setAcwrSettings(savedAcwr);
+                    if (savedAcwr._heatmapDefault) setHeatmapTeamFilter(savedAcwr._heatmapDefault);
+                } else {
                     // Fallback: migrate from old localStorage if exists
                     const legacyAcwr = localStorage.getItem('acwr_feature_settings');
                     if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
@@ -2236,6 +2240,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
                 // If no tour state exists, it stays empty — PageTour will create defaults on first render
             } catch (e) { /* ignore */ }
+            // Pre-load wellness responses for the dashboard heatmap (last 30 days, all teams)
+            try {
+                const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
+                const wrRecords = await DatabaseService.fetchAllWellnessResponses(wrFrom, localDate());
+                setWellnessResponses(wrRecords || []);
+            } catch (e) { /* non-blocking — heatmap just shows grey if this fails */ }
             // Mark data as successfully loaded ONLY if try block completed
             // This MUST be the last thing set, after all data + settings are loaded
             if (initSuccess) dataLoadedRef.current = true;

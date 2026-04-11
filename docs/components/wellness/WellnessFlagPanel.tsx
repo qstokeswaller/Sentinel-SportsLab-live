@@ -113,7 +113,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
                                 <div className="flex items-center gap-2">
                                     {group.hasPending ? (
                                         <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600">
-                                            <ClockIcon size={10} /> Weekly pending
+                                            <ClockIcon size={10} /> Deep Check pending
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600">
@@ -127,7 +127,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
                                             rel="noopener"
                                             className="flex items-center gap-1 text-[9px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                                         >
-                                            <ExternalLinkIcon size={9} /> Weekly link
+                                            <ExternalLinkIcon size={9} /> Deep Check link
                                         </a>
                                     )}
                                 </div>

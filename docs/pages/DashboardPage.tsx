@@ -3,7 +3,7 @@ import React from 'react';
 import { useAppState } from '../context/AppStateContext';
 import {
     AlertTriangleIcon, CalendarIcon, FilterIcon,
-    ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, PlusIcon, CheckCircle2Icon,
+    ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, UsersIcon, PlusIcon, CheckCircle2Icon,
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
     Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
 } from 'lucide-react';
@@ -197,21 +197,39 @@ export const DashboardPage = () => {
                         <AlertTriangleIcon size={14} />
                     </div>
                     <div>
-                        <h3 className="text-[13px] font-semibold text-slate-900">Morning Report</h3>
+                        <h3 className="text-[13px] font-semibold text-slate-900">Performance Report</h3>
                         <p className="text-[10px] text-slate-500">ACWR readiness</p>
                     </div>
                 </div>
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
                     <p className="text-xs text-slate-400">No ACWR monitoring enabled.</p>
-                    <p className="text-[10px] text-slate-300 mt-1">Enable ACWR for your teams in Settings → Feature Settings to see the morning readiness report.</p>
+                    <p className="text-[10px] text-slate-300 mt-1">Enable ACWR for your teams in Settings → Feature Settings to see the performance report.</p>
                 </div>
             </div>
         );
 
-        // Active at-risk athletes
+        // Staleness check — only show athletes with load data in the last 7 days
+        const sevenDaysAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+        const athleteLastLoadDate = new Map<string, string>();
+        for (const r of (loadRecords || [])) {
+            const aid = r.athlete_id || r.athleteId;
+            const d = r.date || '';
+            if (aid && d && (!athleteLastLoadDate.has(aid) || d > athleteLastLoadDate.get(aid)!)) {
+                athleteLastLoadDate.set(aid, d);
+            }
+        }
+        // Most recent load date overall (for "as of" label)
+        const mostRecentLoadDate = [...athleteLastLoadDate.values()].sort().reverse()[0] || null;
+        const hasRecentData = mostRecentLoadDate && mostRecentLoadDate >= sevenDaysAgoStr;
+
+        // Active at-risk athletes — only those with data within the last 7 days
         const activeAtRisk = teams.flatMap(t => t.players)
             .filter(player => acwrEnabledAthleteIds.has(player.id))
             .filter(player => !acwrExclusions?.[player.id]?.excluded)
+            .filter(player => {
+                const last = athleteLastLoadDate.get(player.id);
+                return last && last >= sevenDaysAgoStr;
+            })
             .map(player => {
                 const acwr = parseFloat(calculateACWR(player.id));
                 let riskLevel = 'Stable';
@@ -270,14 +288,34 @@ export const DashboardPage = () => {
                             <AlertTriangleIcon size={14} />
                         </div>
                         <div>
-                            <h3 className="text-[13px] font-semibold text-slate-900">Morning Report</h3>
-                            <p className="text-[10px] text-slate-500">ACWR readiness</p>
+                            <h3 className="text-[13px] font-semibold text-slate-900">Performance Report</h3>
+                            <p className="text-[10px] text-slate-500">
+                                {mostRecentLoadDate ? (() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                                    const label = mostRecentLoadDate === today ? 'today'
+                                        : mostRecentLoadDate === yesterday ? 'yesterday'
+                                        : new Date(mostRecentLoadDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+                                    return `ACWR from last session — ${label}`;
+                                })() : 'ACWR readiness'}
+                            </p>
                         </div>
                     </div>
                     <span className="px-2 py-0.5 bg-white border border-rose-200 rounded-full text-[10px] font-medium text-rose-600 shrink-0">{atRiskAthletes.length}</span>
                 </div>
                 <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
-                    {atRiskAthletes.length > 0 ? (
+                    {!hasRecentData ? (
+                        <div className="py-8 flex flex-col items-center justify-center gap-2">
+                            <ClockIcon size={22} className="text-slate-300" />
+                            <p className="text-[11px] text-slate-400 text-center font-medium">No recent data</p>
+                            <p className="text-[10px] text-slate-300 text-center">
+                                {mostRecentLoadDate
+                                    ? `Last entry was ${mostRecentLoadDate} — more than 7 days ago.`
+                                    : 'No training load recorded yet.'}
+                            </p>
+                            <p className="text-[10px] text-slate-300 text-center">Log sessions or import CSV to see readiness.</p>
+                        </div>
+                    ) : atRiskAthletes.length > 0 ? (
                         <>
                             {visible.map(player => renderCompactRow(player, () => {
                                 setSelectedInterventionAthlete(player);
@@ -294,18 +332,8 @@ export const DashboardPage = () => {
                         </>
                     ) : (
                         <div className="py-8 flex flex-col items-center justify-center text-slate-300 gap-2">
-                            {(loadRecords || []).length === 0 ? (
-                                <>
-                                    <AlertTriangleIcon size={22} className="text-slate-300" />
-                                    <p className="text-[11px] text-slate-400 text-center">No training load data recorded yet.</p>
-                                    <p className="text-[10px] text-slate-300 text-center">Log sessions or import CSV data in the ACWR Monitoring hub to see the morning readiness report.</p>
-                                </>
-                            ) : (
-                                <>
-                                    <CheckCircle2Icon size={28} className="text-emerald-400/40" />
-                                    <p className="text-[11px] text-slate-400">All monitored athletes within safe range</p>
-                                </>
-                            )}
+                            <CheckCircle2Icon size={28} className="text-emerald-400/40" />
+                            <p className="text-[11px] text-slate-400">All monitored athletes within safe range</p>
                         </div>
                     )}
                 </div>
@@ -395,7 +423,7 @@ export const DashboardPage = () => {
                 return (<>
                     <div className="space-y-6 animate-in fade-in duration-700">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Morning Readiness Report Column */}
+                            {/* Performance Report Column */}
                             <div data-tour="morning-report" className="lg:col-span-1 relative">
                                 {isLoading && (
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
@@ -417,7 +445,7 @@ export const DashboardPage = () => {
                                         </div>
                                         <div className="flex flex-col items-center py-4">
                                             <div className="w-5 h-5 border-2 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-1.5" />
-                                            <span className="text-[10px] font-medium text-slate-400">Loading morning performance report...</span>
+                                            <span className="text-[10px] font-medium text-slate-400">Loading performance report...</span>
                                         </div>
                                     </div>
                                 )}
@@ -426,14 +454,12 @@ export const DashboardPage = () => {
 
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
-                                {/* Squad Readiness Heatmap */}
+                                {/* Readiness Heatmap */}
                                 <div data-tour="heatmap" className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full flex flex-col">
                                     <div>
-                                        <h4 className="text-sm font-semibold text-slate-900">
-                                            {dashboardFilterTarget === 'All Athletes' ? 'Squad Readiness Heatmap' : 'Individual Readiness Heatmap'}
-                                        </h4>
+                                        <h4 className="text-sm font-semibold text-slate-900">Readiness Heatmap</h4>
                                         <p className="text-xs text-slate-500 mt-0.5">
-                                            {dashboardFilterTarget === 'All Athletes' ? 'Daily team energy & stress distribution' : `Deep-dive performance readiness — ${dashboardFilterTarget}`}
+                                            {dashboardFilterTarget === 'All Athletes' ? 'Daily wellness-based readiness by athlete' : `Deep-dive readiness — ${dashboardFilterTarget}`}
                                         </p>
                                     </div>
 
@@ -457,30 +483,42 @@ export const DashboardPage = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col items-end gap-1.5 text-right">
-                                            <div className="flex gap-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div><span className="text-[10px] text-slate-400">Optimal</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div><span className="text-[10px] text-slate-400">Fatigue</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div><span className="text-[10px] text-slate-400">Overreaching</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 bg-rose-500 rounded-full"></div><span className="text-[10px] text-slate-400">High Risk</span>
-                                                </div>
+                                        <div className="flex flex-col items-end gap-1 text-right">
+                                            <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                                                {[
+                                                    { color: '#10b981', label: 'Optimal' },
+                                                    { color: '#34d399', label: 'Good' },
+                                                    { color: '#a3e635', label: 'Fair' },
+                                                    { color: '#fde047', label: 'Caution' },
+                                                    { color: '#fb923c', label: 'Fatigue' },
+                                                    { color: '#f97316', label: 'Overreaching' },
+                                                    { color: '#f43f5e', label: 'High Risk' },
+                                                    { color: '#e2e8f0', label: 'No data' },
+                                                ].map(({ color, label }) => (
+                                                    <div key={label} className="flex items-center gap-1.5">
+                                                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }}></div>
+                                                        <span className="text-[10px] text-slate-400">{label}</span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-6 sm:grid-cols-10 gap-2 relative">
+                                    {heatmapTeamFilter === 'prompt' ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 text-center">
+                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                                                <UsersIcon size={18} className="text-slate-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-600">Select a team to display</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">Use the Team filter above to load the heatmap</p>
+                                            </div>
+                                        </div>
+                                    ) : null}
+                                    <div className={`grid grid-cols-6 sm:grid-cols-10 gap-2 relative ${heatmapTeamFilter === 'prompt' ? 'hidden' : ''}`}>
                                         {isLoading && (
                                             <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 rounded-lg col-span-full">
                                                 <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                                <span className="text-[10px] font-medium text-slate-400">Loading squad readiness heatmap...</span>
+                                                <span className="text-[10px] font-medium text-slate-400">Loading readiness heatmap...</span>
                                             </div>
                                         )}
                                         {(() => {

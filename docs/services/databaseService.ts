@@ -599,6 +599,24 @@ export const DatabaseService = {
         return data || [];
     },
 
+    // Fetch all wellness responses across all of the user's teams (used for dashboard heatmap)
+    async fetchAllWellnessResponses(dateFrom?: string, dateTo?: string) {
+        const db = supabase as any;
+        let query = db
+            .from('wellness_responses')
+            .select('*')
+            .order('session_date', { ascending: false })
+            .order('submitted_at', { ascending: false });
+        if (dateFrom) query = query.gte('session_date', dateFrom);
+        if (dateTo) query = query.lte('session_date', dateTo);
+        const { data, error } = await query;
+        if (error) {
+            console.error('fetchAllWellnessResponses error:', error);
+            return [];
+        }
+        return data || [];
+    },
+
     async fetchWellnessResponses(teamId: string, dateFrom?: string, dateTo?: string) {
         const db = supabase as any;
         let query = db

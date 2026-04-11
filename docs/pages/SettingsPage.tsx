@@ -9,7 +9,7 @@ import {
   GaugeIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon,
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
-  MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon,
+  MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
@@ -27,8 +27,8 @@ const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [strin
 const DEFAULT_TEAM_SETTINGS = { enabled: false, method: 'sprint_distance', acuteWindow: 7, chronicWindow: 28, freezeRestDays: true, sprintThreshold: 25 };
 
 const SETTINGS_TABS = [
-  { id: 'features', label: 'Feature Settings', icon: SlidersHorizontalIcon, desc: 'ACWR, Testing Hub' },
   { id: 'account', label: 'Account', icon: ShieldIcon, desc: 'Profile, security' },
+  { id: 'features', label: 'Feature Settings', icon: SlidersHorizontalIcon, desc: 'ACWR, Heatmap, Testing' },
   { id: 'walkthrough', label: 'Walkthrough', icon: MapIcon, desc: 'Page tours' },
 ];
 
@@ -90,8 +90,9 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast } = useAppState();
-  const [activeTab, setActiveTab] = useState('features');
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState('account');
+  // All sections start collapsed
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile']));
 
   // ── Unsaved changes guard ──────────────────────────────────────────
   const [pendingTab, setPendingTab] = useState<string | null>(null);
@@ -393,6 +394,36 @@ const SettingsPage: React.FC = () => {
                 <SaveIcon size={14} />
                 {acwrDirty ? 'Save ACWR Settings' : 'No changes'}
               </button>
+            </CollapsibleSection>
+
+            {/* Readiness Heatmap Section */}
+            <CollapsibleSection id="heatmap_settings" icon={LayoutGridIcon} title="Readiness Heatmap"
+              subtitle="Set the default team shown on the dashboard heatmap"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">Choose which team is displayed by default when you open the dashboard, or prompt to select each time.</p>
+                <div>
+                  <label className={labelCls}>Default team</label>
+                  <select
+                    value={draftAcwrSettings._heatmapDefault || 'All Teams'}
+                    onChange={e => { setDraftAcwrSettings(prev => ({ ...prev, _heatmapDefault: e.target.value })); setAcwrDirty(true); }}
+                    className={inputCls}
+                  >
+                    <option value="All Teams">All Teams</option>
+                    <option value="prompt">Prompt on open</option>
+                    {teams.filter(t => t.id !== 't_private').map(t => (
+                      <option key={t.id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
+                  className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
+                    acwrDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}>
+                  <SaveIcon size={14} />
+                  {acwrDirty ? 'Save Settings' : 'No changes'}
+                </button>
+              </div>
             </CollapsibleSection>
 
             {/* Testing Hub Section */}
