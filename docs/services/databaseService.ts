@@ -521,13 +521,30 @@ export const DatabaseService = {
         readiness?: string;
     }) {
         const db = supabase as any;
-        const { data, error } = await db
+        // No .select() on insert — avoids INSERT...RETURNING triggering the SELECT RLS
+        // policy check on anon users (PostgreSQL 15 throws rather than silently filtering).
+        const { error } = await db
             .from('wellness_responses')
-            .insert(response)
-            .select()
-            .single();
+            .insert(response);
         if (error) throw error;
-        return data;
+
+        // Fetch the ID of the row we just inserted (needed for injury classification linkage).
+        // Uses a separate SELECT which goes through the authenticated SELECT policy (coach sessions)
+        // or returns null for anon (injury classification will still save, just without the link).
+        try {
+            const { data: inserted } = await db
+                .from('wellness_responses')
+                .select('id')
+                .eq('athlete_id', response.athlete_id)
+                .eq('team_id', response.team_id)
+                .eq('session_date', response.session_date)
+                .order('submitted_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            return inserted ?? undefined;
+        } catch {
+            return undefined;
+        }
     },
 
     // --- WELLNESS FLAGS ---
