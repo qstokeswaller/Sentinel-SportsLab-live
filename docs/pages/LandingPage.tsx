@@ -455,8 +455,6 @@ const LandingPage: React.FC = () => {
                     <p className="text-sm font-semibold uppercase tracking-[0.25em] text-indigo-400 mb-10">Our Philosophy</p>
 
                     <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-                        Not built for every system.
-                        <br />
                         <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
                             Built for those who refuse to guess.
                         </span>
