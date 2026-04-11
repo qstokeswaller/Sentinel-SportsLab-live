@@ -154,7 +154,7 @@ const FifaDailyWellnessForm: React.FC = () => {
         if (!step) return false;
         if (step.id === 'athlete') return !!selectedAthleteId;
         if (step.id === 'complaint_areas') return true; // body map is optional — can continue without selection
-        if (step.id === 'sleep_hours') return responses.sleep_hours != null && responses.sleep_hours > 0;
+        if (step.id === 'sleep_hours') return responses.sleep_hours != null && !isNaN(responses.sleep_hours) && responses.sleep_hours >= 0;
         if (step.id === 'illness_severity') return !!responses.illness_severity;
         return responses[step.id] !== undefined && responses[step.id] !== null && responses[step.id] !== '';
     })();
@@ -520,21 +520,45 @@ const FifaDailyWellnessForm: React.FC = () => {
                     {step.type === 'scale_positive' && renderScale(step.id, true)}
 
                     {/* Sleep hours */}
-                    {step.type === 'number' && (
-                        <div className="space-y-4">
-                            <input
-                                type="number"
-                                inputMode="decimal"
-                                min={0}
-                                max={24}
-                                step={0.5}
-                                value={responses.sleep_hours || ''}
-                                onChange={e => setVal('sleep_hours', parseFloat(e.target.value) || 0)}
-                                placeholder="e.g. 7.5"
-                                className="w-full text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-6 outline-none focus:border-cyan-500 transition-colors"
-                            />
-                        </div>
-                    )}
+                    {step.type === 'number' && (() => {
+                        const sleepVal = responses.sleep_hours ?? null;
+                        const step05 = (dir: 1 | -1) => {
+                            const cur = sleepVal ?? 7;
+                            const next = Math.round((cur + dir * 0.5) * 10) / 10;
+                            setVal('sleep_hours', Math.min(24, Math.max(0, next)));
+                        };
+                        return (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <button type="button" onClick={() => step05(-1)}
+                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
+                                        −
+                                    </button>
+                                    <input
+                                        type="number"
+                                        inputMode="decimal"
+                                        min={0}
+                                        max={24}
+                                        step={0.5}
+                                        value={sleepVal ?? ''}
+                                        onChange={e => {
+                                            const v = e.target.value;
+                                            if (v === '') { setVal('sleep_hours', null); return; }
+                                            const n = parseFloat(v);
+                                            if (!isNaN(n)) setVal('sleep_hours', Math.min(24, Math.max(0, n)));
+                                        }}
+                                        placeholder="7.5"
+                                        className="flex-1 text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-5 outline-none focus:border-cyan-500 transition-colors"
+                                    />
+                                    <button type="button" onClick={() => step05(1)}
+                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
+                                        +
+                                    </button>
+                                </div>
+                                <p className="text-center text-xs text-slate-400 font-medium">hours · tap +/− to step by 0.5, or type any value</p>
+                            </div>
+                        );
+                    })()}
 
                     {/* Readiness */}
                     {/* Body map for complaint areas */}
