@@ -58,23 +58,48 @@ export const ReportingHubPage = () => {
     const [gpsFilterTarget, setGpsFilterTarget] = useState('All Athletes');
     const [gpsFilterDateMode, setGpsFilterDateMode] = useState<'range' | 'single'>('range');
     const [gpsRangeStart, setGpsRangeStart] = useState(() => {
-        const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0];
+        const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().split('T')[0];
     });
     const [gpsRangeEnd, setGpsRangeEnd] = useState(() => new Date().toISOString().split('T')[0]);
     const [gpsSpecificDate, setGpsSpecificDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [gpsImportStatus, setGpsImportStatus] = useState<'success' | 'error' | null>(null);
     const [gpsImportMessage, setGpsImportMessage] = useState('');
-
-    // GPS Column Mapper state
-    const [isGpsMapperOpen, setIsGpsMapperOpen] = useState(false);
-    const [gpsCsvHeaders, setGpsCsvHeaders] = useState<string[]>([]);
-    const [gpsCsvPreviewRows, setGpsCsvPreviewRows] = useState<Record<string, string>[]>([]);
-    const [gpsCsvParsedData, setGpsCsvParsedData] = useState<Record<string, string>[]>([]);
-    const [gpsAnomalyMode, setGpsAnomalyMode] = useState<{ profile: GpsProfile; newColumns: string[]; missingColumns: string[] } | null>(null);
     const [gpsImportTeamId, setGpsImportTeamId] = useState<string>('');
-    const [gpsProfiles, setGpsProfiles] = useState<GpsProfile[]>(() => {
-        try { return JSON.parse(localStorage.getItem('gps_column_profiles') || '[]'); } catch { return []; }
+    const [collapsedPhases, setCollapsedPhases] = useState<Set<string>>(new Set());
+
+    // Smart GPS import dialog state
+    const [gpsSmartDialog, setGpsSmartDialog] = useState<{
+        headers: string[];
+        rows: Record<string, string>[];
+        athleteCol: string;
+        dateCol: string;
+        phaseCol: string;
+    } | null>(null);
+
+    // GPS dialog field selections (proper state, not IIFE hooks)
+    const [gpsDialogAthleteCol, setGpsDialogAthleteCol] = useState('');
+    const [gpsDialogDateCol, setGpsDialogDateCol] = useState('');
+    const [gpsDialogPhaseCol, setGpsDialogPhaseCol] = useState('');
+
+    // GPS column visibility config (persisted to localStorage)
+    const [gpsColumnConfig, setGpsColumnConfig] = useState<{key: string; visible: boolean; retired?: boolean}[]>(() => {
+        try { return JSON.parse(localStorage.getItem('gps_col_cfg') || '[]'); } catch { return []; }
     });
+    const [gpsColConfigOpen, setGpsColConfigOpen] = useState(false);
+
+    // Post-import unlinked athlete dialog
+    const [gpsUnlinkedDialog, setGpsUnlinkedDialog] = useState<{name: string}[] | null>(null);
+
+    // GPS tab: 'import' | 'manual'
+    const [gpsTab, setGpsTab] = useState<'import' | 'manual'>('import');
+
+    // Manual entry state
+    const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [manualTeamId, setManualTeamId] = useState('');
+    const [manualRows, setManualRows] = useState<Record<string, Record<string, string>>>({});
+    const [manualColConfig, setManualColConfig] = useState<{key: string; label: string}[]>([]);
+    const [manualColPickerOpen, setManualColPickerOpen] = useState(false);
+    const [newManualColName, setNewManualColName] = useState('');
 
     const [hrReportDateRange, setHrReportDateRange] = useState({ start: '2025-01-01', end: new Date().toISOString().split('T')[0] });
     const [hrImportStatus, setHrImportStatus] = useState<'success' | 'error' | null>(null);
@@ -1224,444 +1249,408 @@ export const ReportingHubPage = () => {
     };
     const renderGPSDataReport = () => {
 
-        // --- GPS CSV Import with Column Mapper ---
+        // ── Helper: fuzzy detect a column from headers ──────────────────────
+        const detectCol = (headers: string[], aliases: string[]): string => {
+            const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (const alias of aliases) {
+                const a = norm(alias);
+                const exact = headers.find(h => norm(h) === a);
+                if (exact) return exact;
+            }
+            for (const alias of aliases) {
+                const a = norm(alias);
+                const partial = headers.find(h => norm(h).includes(a) || a.includes(norm(h)));
+                if (partial) return partial;
+            }
+            return '';
+        };
+
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            // Reset file input so re-uploading same file works
             event.target.value = '';
-
             const reader = new FileReader();
             reader.onload = (e) => {
-                const text = e.target.result;
-                parseAndOpenMapper(text);
+                const text = (e.target.result as string);
+                const lines = text.split('\n').filter(l => l.trim() !== '');
+                if (lines.length < 2) { setGpsImportStatus('error'); setGpsImportMessage('CSV file is empty.'); return; }
+                const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                const rows = lines.slice(1).map(row => {
+                    const values = row.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                    const obj: Record<string, string> = {};
+                    headers.forEach((h, i) => { obj[h] = values[i] ?? ''; });
+                    return obj;
+                });
+                const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const detectCol = (aliases: string[]): string => {
+                    for (const alias of aliases) {
+                        const a = norm(alias);
+                        const exact = headers.find(h => norm(h) === a);
+                        if (exact) return exact;
+                    }
+                    for (const alias of aliases) {
+                        const a = norm(alias);
+                        const partial = headers.find(h => norm(h).includes(a) || a.includes(norm(h)));
+                        if (partial) return partial;
+                    }
+                    return '';
+                };
+                setGpsSmartDialog({
+                    headers,
+                    rows,
+                    athleteCol: detectCol(['player name','player','athlete','name','athlete name','full name','athlete_name','player_name']),
+                    dateCol: detectCol(['session_date','session date','date','start time','match date','activity date']),
+                    phaseCol: detectCol(['phase name','phase','period','section','drill','split']),
+                });
             };
             reader.readAsText(file);
         };
 
-        // Step 1: Parse CSV, check for matching profile, then route accordingly
-        const parseAndOpenMapper = (csvText) => {
-            const lines = csvText.split('\n');
-            if (lines.length < 2) {
-                setGpsImportStatus('error');
-                setGpsImportMessage('CSV file is empty or invalid.');
-                return;
-            }
-
-            const headers = lines[0].split(',').map(h => h.trim());
-            const rows = lines.slice(1).filter(line => line.trim() !== '');
-
-            const parsedData = rows.map(row => {
-                const values = row.split(',').map(v => v.trim());
-                const obj = {};
-                headers.forEach((header, i) => { obj[header] = values[i]; });
-                return obj;
-            });
-
-            setGpsCsvHeaders(headers);
-            setGpsCsvPreviewRows(parsedData.slice(0, 4));
-            setGpsCsvParsedData(parsedData);
-
-            // Try to auto-match against saved profiles
-            const match = findMatchingProfile(headers, gpsProfiles, gpsImportTeamId || undefined);
-
-            if (match && match.matchType === 'exact') {
-                // Perfect match — auto-import, skip the mapper entirely
-                setGpsImportStatus('success');
-                setGpsImportMessage(`Auto-matched profile "${match.profile.name}". Importing...`);
-                handleMapperConfirm(match.profile.mapping);
-                return;
-            }
-
-            if (match && match.matchType === 'partial' && match.newColumns.length > 0) {
-                // Partial match — new columns detected, show anomaly prompt
-                setGpsAnomalyMode({
-                    profile: match.profile,
-                    newColumns: match.newColumns,
-                    missingColumns: match.missingColumns,
-                });
-                setIsGpsMapperOpen(true);
-                return;
-            }
-
-            // No match — show full mapper
-            setGpsAnomalyMode(null);
-            setIsGpsMapperOpen(true);
-        };
-
-        // Step 2: User confirms mapping → process data with their column choices
-        const handleMapperConfirm = (mapping) => {
-            setIsGpsMapperOpen(false);
-
+        const handleSmartImport = (athleteCol: string, dateCol: string, phaseCol: string) => {
+            if (!gpsSmartDialog) return;
+            const { rows, headers } = gpsSmartDialog;
             const allPlayers = teams.flatMap(t => t.players);
-
-            const standardizedData = gpsCsvParsedData.map(entry => {
-                const getVal = (fieldId) => {
-                    const csvCol = mapping[fieldId];
-                    return csvCol ? (entry[csvCol] || null) : null;
-                };
-
-                const name = getVal('athlete_name');
-                const date = getVal('date') || new Date().toISOString().split('T')[0];
-
-                return {
-                    id: 'gps_' + Date.now() + Math.random().toString(36).substr(2, 5),
-                    date,
-                    playerName: name || 'Unknown',
-                    totalDistance: parseFloat(getVal('total_distance')) || 0,
-                    hsr: parseFloat(getVal('hsr') || getVal('sprint_distance')) || 0,
-                    sprints: parseInt(getVal('sprints')) || 0,
-                    maxSpeed: parseFloat(getVal('max_speed')) || 0,
-                    accelerations: parseInt(getVal('accelerations')) || 0,
-                    decelerations: parseInt(getVal('decelerations')) || 0,
-                    playerLoad: parseFloat(getVal('player_load')) || 0,
-                    heartRateAvg: parseFloat(getVal('heart_rate_avg')) || 0,
-                    heartRateMax: parseFloat(getVal('heart_rate_max')) || 0,
-                    durationMinutes: parseFloat(getVal('duration_minutes')) || 0,
-                    metabolicPower: parseFloat(getVal('metabolic_power')) || 0,
-                    impacts: parseInt(getVal('impacts')) || 0,
-                    distancePerMin: parseFloat(getVal('distance_per_min')) || 0,
-                    timestamp: new Date().toISOString()
-                };
-            });
-
-            const alignedData = standardizedData.map(entry => {
+            const normaliseDate = (s: string): string => {
+                if (!s) return new Date().toISOString().split('T')[0];
+                if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+                const dmY = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+                if (dmY) return `${dmY[3]}-${dmY[2].padStart(2,'0')}-${dmY[1].padStart(2,'0')}`;
+                const mdY = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (mdY) return `${mdY[3]}-${mdY[1].padStart(2,'0')}-${mdY[2].padStart(2,'0')}`;
+                const d = new Date(s); return isNaN(d.getTime()) ? new Date().toISOString().split('T')[0] : d.toISOString().split('T')[0];
+            };
+            const newRecords = rows.map(row => {
+                const athleteName = row[athleteCol] || 'Unknown';
+                const date = normaliseDate(row[dateCol] || '');
+                const phase = phaseCol ? (row[phaseCol] || '') : '';
+                const rawColumns: Record<string, string> = {};
+                for (const h of headers) {
+                    if (h === athleteCol || h === dateCol) continue;
+                    const val = row[h];
+                    if (val === undefined || val === null || val === '') continue;
+                    // Normalise HH:MM:SS duration values to minutes
+                    const hms = val.match(/^(\d+):(\d{2}):(\d{2})$/);
+                    rawColumns[h] = hms ? String((parseInt(hms[1])*60 + parseInt(hms[2]) + parseInt(hms[3])/60).toFixed(1)) : val;
+                }
                 const player = allPlayers.find(p =>
-                    p.name.toLowerCase().includes(entry.playerName.toLowerCase()) ||
-                    entry.playerName.toLowerCase().includes(p.name.toLowerCase())
+                    p.name.toLowerCase().includes(athleteName.toLowerCase()) ||
+                    athleteName.toLowerCase().includes(p.name.toLowerCase())
                 );
                 return {
-                    ...entry,
+                    id: 'gps_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                    date, playerName: athleteName, phase,
                     athleteId: player ? player.id : 'unknown',
-                    matchedName: player ? player.name : entry.playerName
+                    matchedName: player ? player.name : athleteName,
+                    rawColumns,
+                    timestamp: new Date().toISOString(),
                 };
             });
-
-            const updatedGpsData = [...gpsData, ...alignedData];
-            setGpsData(updatedGpsData);
-            StorageService.saveGpsData(updatedGpsData);
-
+            const updated = [...gpsData, ...newRecords];
+            setGpsData(updated);
+            StorageService.saveGpsData(updated);
+            setGpsSmartDialog(null);
             setGpsImportStatus('success');
-            setGpsImportMessage(`Imported ${alignedData.length} records (${Object.keys(mapping).length} fields mapped).`);
-            setTimeout(() => setGpsImportStatus(null), 5000);
-        };
-
-        const handleSaveGpsProfile = (profile) => {
-            // Ensure fingerprint is set from current headers
-            if (!profile.headerFingerprint || profile.headerFingerprint.length === 0) {
-                profile.headerFingerprint = gpsCsvHeaders.map(h => h.toLowerCase().trim());
-            }
-            const updated = [...gpsProfiles.filter(p => p.name !== profile.name), profile];
-            setGpsProfiles(updated);
-            localStorage.setItem('gps_column_profiles', JSON.stringify(updated));
-            showToast?.(`Profile "${profile.name}" saved for ${profile.teamName}`);
-        };
-
-        const handleDeleteGpsProfile = (name) => {
-            const updated = gpsProfiles.filter(p => p.name !== name);
-            setGpsProfiles(updated);
-            localStorage.setItem('gps_column_profiles', JSON.stringify(updated));
-            showToast?.(`Profile deleted`);
+            setGpsImportMessage(`Imported ${newRecords.length} rows · ${headers.length} columns`);
+            setTimeout(() => setGpsImportStatus(null), 6000);
         };
 
         const clearGpsData = () => {
-            if (confirm('Are you sure you want to clear all GPS telemetry data?')) {
-                setGpsData([]);
-                StorageService.saveGpsData([]);
-            }
+            if (confirm('Clear all GPS telemetry data?')) { setGpsData([]); StorageService.saveGpsData([]); }
         };
 
+        // ── Filter ───────────────────────────────────────────────────────────
         const filteredGPSRecords = gpsData.filter(d => {
-            // Date Filter
-            let dateInRange = false;
-            if (gpsFilterDateMode === 'single') {
-                dateInRange = d.date === gpsSpecificDate;
-            } else {
-                // Custom Date Range
-                dateInRange = d.date >= gpsRangeStart && d.date <= gpsRangeEnd;
-            }
-
-            if (!dateInRange) return false;
-
-            // Target Filter
+            const dateOk = gpsFilterDateMode === 'single'
+                ? d.date === gpsSpecificDate
+                : d.date >= gpsRangeStart && d.date <= gpsRangeEnd;
+            if (!dateOk) return false;
             if (gpsFilterTarget === 'All Athletes') return true;
-
             const targetTeam = teams.find(t => t.name === gpsFilterTarget);
-            if (targetTeam) {
-                return targetTeam.players.some(p => p.id === d.athleteId);
-            }
-
+            if (targetTeam) return targetTeam.players.some(p => p.id === d.athleteId);
             const targetPlayer = teams.flatMap(t => t.players).find(p => p.name === gpsFilterTarget);
-            if (targetPlayer) {
-                return d.athleteId === targetPlayer.id;
-            }
-
+            if (targetPlayer) return d.athleteId === targetPlayer.id;
             return false;
         });
 
-        const stats = {
-            avgDist: (filteredGPSRecords.reduce((acc, r) => acc + r.totalDistance, 0) / (filteredGPSRecords.length || 1)).toFixed(0),
-            avgHsr: (filteredGPSRecords.reduce((acc, r) => acc + r.hsr, 0) / (filteredGPSRecords.length || 1)).toFixed(0),
-            maxVelocity: Math.max(...filteredGPSRecords.map(r => r.maxSpeed), 0).toFixed(1),
-            totalSprints: filteredGPSRecords.reduce((acc, r) => acc + r.sprints, 0)
-        };
-
-        // Team Aggregation Logic
-        const isTeamSelected = teams.some(t => t.name === gpsFilterTarget);
-        let displayRecords = filteredGPSRecords;
-
-        if (isTeamSelected) {
-            const playerGroups = filteredGPSRecords.reduce((acc, r) => {
-                if (!acc[r.athleteId]) {
-                    acc[r.athleteId] = {
-                        athleteId: r.athleteId,
-                        matchedName: r.matchedName,
-                        records: []
-                    };
-                }
-                acc[r.athleteId].records.push(r);
-                return acc;
-            }, {});
-
-            displayRecords = Object.values(playerGroups).map(group => {
-                const count = group.records.length;
-                return {
-                    athleteId: group.athleteId,
-                    matchedName: group.matchedName,
-                    date: `${count} Sessions`,
-                    totalDistance: (group.records.reduce((sum, r) => sum + r.totalDistance, 0) / count).toFixed(0),
-                    hsr: (group.records.reduce((sum, r) => sum + r.hsr, 0) / count).toFixed(0),
-                    sprints: (group.records.reduce((sum, r) => sum + r.sprints, 0) / count).toFixed(1),
-                    maxSpeed: Math.max(...group.records.map(r => r.maxSpeed), 0).toFixed(1),
-                    isAggregated: true,
-                    sessionCount: count
-                };
-            });
+        // ── Dynamic column list (first-appearance order) ────────────────────
+        const colKeyOrder: string[] = [];
+        const seenColKeys = new Set<string>();
+        for (const r of filteredGPSRecords) {
+            for (const k of Object.keys(r.rawColumns || {})) {
+                if (!seenColKeys.has(k)) { colKeyOrder.push(k); seenColKeys.add(k); }
+            }
         }
 
-        const formatDistance = (m) => {
-            const val = Number(m);
-            if (val >= 1000) {
-                return (val / 1000).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'km';
+        // ── Phase detection ──────────────────────────────────────────────────
+        const hasPhases = filteredGPSRecords.some(r => r.phase && r.phase.trim() !== '');
+        const allPhases = hasPhases
+            ? [...new Set(filteredGPSRecords.map(r => r.phase || '').filter(Boolean))]
+            : [];
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+        const fmtVal = (v: string | undefined): string => {
+            if (v === undefined || v === null || v === '') return '—';
+            const n = parseFloat(v);
+            return isNaN(n) ? v : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+        };
+        const colLabel = (k: string) => k.replace(/_/g, ' ').replace(/\[.*?\]/g, '').trim();
+
+        const computeTotals = (rows: typeof filteredGPSRecords): Record<string, string> => {
+            const totals: Record<string, string> = {};
+            for (const k of colKeyOrder) {
+                const vals = rows.map(r => parseFloat(r.rawColumns?.[k] || '')).filter(v => !isNaN(v));
+                totals[k] = vals.length === rows.length && vals.length > 0
+                    ? vals.reduce((a, b) => a + b, 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
+                    : '—';
             }
-            return val.toLocaleString(undefined, { maximumFractionDigits: 0 }) + 'm';
+            return totals;
+        };
+
+        const colCount = 2 + colKeyOrder.length;
+
+        // ── TableSection component (defined inline to access state) ──────────
+        const TableSection = ({ title, rows }: { title: string; rows: typeof filteredGPSRecords }) => {
+            const isCollapsed = collapsedPhases.has(title);
+            const totals = computeTotals(rows);
+            return (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div
+                        className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors select-none"
+                        onClick={() => setCollapsedPhases(prev => { const n = new Set(prev); n.has(title) ? n.delete(title) : n.add(title); return n; })}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
+                                <TableIcon size={14} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wide">{rows.length} athletes · {colKeyOrder.length} columns</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">{rows.length} rows</span>
+                            <ChevronDownIcon size={16} className={`text-slate-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
+                        </div>
+                    </div>
+                    {!isCollapsed && (
+                        <div className="overflow-x-auto">
+                            <table className="text-left" style={{ minWidth: `${Math.max(700, colCount * 110)}px` }}>
+                                <thead>
+                                    <tr className="bg-slate-50/60 border-b border-slate-100">
+                                        <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">Athlete</th>
+                                        <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">Date</th>
+                                        {colKeyOrder.map(k => (
+                                            <th key={k} className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">{colLabel(k)}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {rows.map(r => (
+                                        <tr key={r.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50/50 px-4 py-3 whitespace-nowrap">
+                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{r.matchedName}</span>
+                                                <span className={`block text-[8px] font-medium uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-slate-400'}`}>
+                                                    {r.athleteId === 'unknown' ? 'UNLINKED' : 'VERIFIED'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm font-medium text-slate-600 whitespace-nowrap">{r.date}</td>
+                                            {colKeyOrder.map(k => (
+                                                <td key={k} className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{fmtVal(r.rawColumns?.[k])}</td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                    <tr className="bg-slate-50 border-t-2 border-slate-200">
+                                        <td className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-500 whitespace-nowrap">TOTAL</td>
+                                        <td className="px-4 py-3 text-slate-400 text-xs">—</td>
+                                        {colKeyOrder.map(k => (
+                                            <td key={k} className="px-4 py-3 text-sm font-bold text-slate-800 whitespace-nowrap">{totals[k]}</td>
+                                        ))}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            );
         };
 
         return (
-            <div className="space-y-10 animate-in fade-in duration-500">
-                {/* Filter Control Hub */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 relative overflow-hidden">
-                    {/* Title + actions row */}
+            <div className="space-y-6 animate-in fade-in duration-500">
+
+                {/* Smart Import Dialog */}
+                {gpsSmartDialog && (() => {
+                    const [localAthleteCol, setLocalAthleteCol] = React.useState(gpsSmartDialog.athleteCol);
+                    const [localDateCol, setLocalDateCol] = React.useState(gpsSmartDialog.dateCol);
+                    const [localPhaseCol, setLocalPhaseCol] = React.useState(gpsSmartDialog.phaseCol);
+                    const previewHeaders = gpsSmartDialog.headers.slice(0, 8);
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsSmartDialog(null)} />
+                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 rounded-t-2xl flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
+                                        <ActivityIcon size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-semibold text-slate-900">Smart GPS Import</h3>
+                                        <p className="text-xs text-slate-400">{gpsSmartDialog.rows.length} rows · {gpsSmartDialog.headers.length} columns — all will be imported</p>
+                                    </div>
+                                </div>
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {[
+                                            { label: 'Athlete Column', required: true, val: localAthleteCol, set: setLocalAthleteCol, badge: 'ATHLETE', color: 'indigo' },
+                                            { label: 'Date Column', required: true, val: localDateCol, set: setLocalDateCol, badge: 'DATE', color: 'emerald' },
+                                            { label: 'Phase / Section', required: false, val: localPhaseCol, set: setLocalPhaseCol, badge: 'PHASE', color: 'amber' },
+                                        ].map(({ label, required, val, set, color }) => (
+                                            <div key={label} className="space-y-1.5">
+                                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">
+                                                    {label} {required && <span className="text-rose-400">*</span>}
+                                                </label>
+                                                <select value={val} onChange={e => set(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none">
+                                                    <option value="">— {required ? 'select' : 'none'} —</option>
+                                                    {gpsSmartDialog.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                                                </select>
+                                                {val
+                                                    ? <p className={`text-[10px] text-${color}-600 font-medium`}>✓ {val}</p>
+                                                    : !required && <p className="text-[10px] text-slate-400">Optional — enables section grouping</p>
+                                                }
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide mb-2">Preview — first 3 rows · first 8 columns</p>
+                                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                                            <table className="text-left text-xs w-full">
+                                                <thead>
+                                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                                        {previewHeaders.map(h => (
+                                                            <th key={h} className={`px-3 py-2 font-semibold whitespace-nowrap ${h === localAthleteCol ? 'text-indigo-600 bg-indigo-50' : h === localDateCol ? 'text-emerald-600 bg-emerald-50' : h === localPhaseCol ? 'text-amber-600 bg-amber-50' : 'text-slate-500'}`}>{h}</th>
+                                                        ))}
+                                                        {gpsSmartDialog.headers.length > 8 && <th className="px-3 py-2 text-slate-300 italic">+{gpsSmartDialog.headers.length - 8} more…</th>}
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {gpsSmartDialog.rows.slice(0,3).map((row, i) => (
+                                                        <tr key={i} className="hover:bg-slate-50">
+                                                            {previewHeaders.map(h => <td key={h} className="px-3 py-2 text-slate-600 whitespace-nowrap">{row[h] || '—'}</td>)}
+                                                            {gpsSmartDialog.headers.length > 8 && <td className="px-3 py-2 text-slate-300">…</td>}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                        <p className="text-xs text-slate-400">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
+                                        <div className="flex items-center gap-3">
+                                            <button onClick={() => setGpsSmartDialog(null)} className="px-4 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">Cancel</button>
+                                            <button
+                                                disabled={!localAthleteCol || !localDateCol}
+                                                onClick={() => handleSmartImport(localAthleteCol, localDateCol, localPhaseCol)}
+                                                className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                                                Import {gpsSmartDialog.rows.length} Rows
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* Filter + Import Bar */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-slate-900">GPS Intelligence Filters</h3>
+                        <h3 className="text-lg font-semibold text-slate-900">GPS Telemetry</h3>
                         <div className="flex items-center gap-2">
-                            {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'} animate-pulse`}>{gpsImportMessage}</span>}
-                            <select
-                                value={gpsImportTeamId}
-                                onChange={e => setGpsImportTeamId(e.target.value)}
-                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-[10px] font-medium text-slate-600"
-                                title="Select team for this import"
-                            >
-                                <option value="">Team / Group...</option>
-                                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
-                            <label className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer active:scale-95">
-                                <FileIcon size={13} /> Import Telemetry
+                            {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>{gpsImportMessage}</span>}
+                            <label className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer">
+                                <FileIcon size={13} /> Import CSV
                                 <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                             </label>
-                            <button onClick={clearGpsData} title="Clear Records" className="p-2 text-slate-300 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-rose-50"><Trash2Icon size={15} /></button>
+                            <button onClick={clearGpsData} title="Clear all" className="p-2 text-slate-300 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-rose-50"><Trash2Icon size={15} /></button>
                         </div>
                     </div>
-                    {/* Filters row — all items baseline-aligned */}
                     <div className="flex flex-wrap items-end gap-4">
-                        {/* Target Selector */}
                         <div className="space-y-1.5 min-w-[220px]">
                             <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Target Squad / Athlete</label>
                             <div className="relative">
-                                <select
-                                    value={gpsFilterTarget}
-                                    onChange={(e) => setGpsFilterTarget(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-8 shadow-sm"
-                                >
+                                <select value={gpsFilterTarget} onChange={e => setGpsFilterTarget(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none pr-8">
                                     <option>All Athletes</option>
-                                    <optgroup label="Squads">
-                                        {teams.map(t => <option key={t.id}>{t.name}</option>)}
-                                    </optgroup>
+                                    <optgroup label="Squads">{teams.map(t => <option key={t.id}>{t.name}</option>)}</optgroup>
                                     <optgroup label="Individual Athletes">
-                                        {teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
+                                        {teams.flatMap(t => t.players).sort((a,b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
                                     </optgroup>
                                 </select>
                                 <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
-
-                        {/* Date Mode Toggle */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Timeline Mode</label>
+                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date Mode</label>
                             <div className="flex bg-slate-100 p-1 rounded-lg">
-                                <button
-                                    onClick={() => setGpsFilterDateMode('range')}
-                                    className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    Date Range
-                                </button>
-                                <button
-                                    onClick={() => setGpsFilterDateMode('single')}
-                                    className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    One Day
-                                </button>
+                                <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Range</button>
+                                <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Single</button>
                             </div>
                         </div>
-
-                        {/* Contextual Date Selectors */}
                         {gpsFilterDateMode === 'range' ? (
                             <>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Start Date</label>
-                                    <input
-                                        type="date"
-                                        value={gpsRangeStart}
-                                        onChange={(e) => setGpsRangeStart(e.target.value)}
-                                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                    />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">From</label>
+                                    <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">End Date</label>
-                                    <input
-                                        type="date"
-                                        value={gpsRangeEnd}
-                                        onChange={(e) => setGpsRangeEnd(e.target.value)}
-                                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                    />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">To</label>
+                                    <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
                                 </div>
                             </>
                         ) : (
-                            <div className="space-y-1.5 min-w-[180px]">
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Session Date</label>
-                                <input
-                                    type="date"
-                                    value={gpsSpecificDate}
-                                    onChange={(e) => setGpsSpecificDate(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-300 transition-all shadow-sm"
-                                />
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date</label>
+                                <input type="date" value={gpsSpecificDate} onChange={e => setGpsSpecificDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
-                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Avg Distance</div>
-                        <div className="text-2xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{formatDistance(stats.avgDist)}</div>
-                        <div className="text-[9px] text-slate-400 uppercase">Across Filter Selection</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-indigo-200 transition-all">
-                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Avg HSR</div>
-                        <div className="text-2xl font-bold text-indigo-600 group-hover:text-indigo-400 transition-colors">{formatDistance(stats.avgHsr)}</div>
-                        <div className="text-[9px] text-slate-400 uppercase">High Speed Running</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-emerald-200 transition-all">
-                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Max Velocity</div>
-                        <div className="text-2xl font-bold text-emerald-600 group-hover:text-emerald-500 transition-colors">{stats.maxVelocity}<span className="text-xs ml-1 font-semibold">KM/H</span></div>
-                        <div className="text-[9px] text-slate-400 uppercase">Squad Peak Velocity</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 group hover:border-orange-200 transition-all">
-                        <div className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Total Sprints</div>
-                        <div className="text-2xl font-bold text-orange-500 group-hover:text-orange-400 transition-colors">{stats.totalSprints}</div>
-                        <div className="text-[9px] text-slate-400 uppercase">Frequency Count</div>
-                    </div>
-                </div>
-
-                {/* Telemetry Table */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center text-white">
-                                <TableIcon size={16} />
-                            </div>
-                            <div>
-                                <h4 className="text-base font-semibold text-slate-900">GPS Telemetry Log</h4>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wide">
-                                    {isTeamSelected ? 'Team Aggregation View' : 'Individual Session Log'} · {gpsFilterTarget}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
-                            {displayRecords.length} rows
+                {/* Empty state */}
+                {filteredGPSRecords.length === 0 && gpsData.length === 0 && (
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-20 flex flex-col items-center gap-4 text-center">
+                        <ActivityIcon size={48} className="text-slate-100" />
+                        <div>
+                            <p className="text-sm font-semibold text-slate-600">No GPS telemetry data</p>
+                            <p className="text-xs text-slate-400 mt-1">Click "Import CSV" to upload from any GPS provider — all columns imported as-is</p>
                         </div>
                     </div>
-                    <div className="overflow-x-auto no-scrollbar">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide">Athlete</th>
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Sessions' : 'Session Date'}</th>
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg Distance' : 'Total Distance'}</th>
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg HSR' : 'HSR'}</th>
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Avg Sprints' : 'Sprints'}</th>
-                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide text-center">{isTeamSelected ? 'Max Velocity' : 'Top Speed'}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {(isTeamSelected ? displayRecords : displayRecords.slice().reverse()).map((r) => (
-                                    <tr key={r.id || r.athleteId} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-4 py-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{r.matchedName}</span>
-                                                <span className={`text-[8px] font-medium uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-slate-400'}`}>
-                                                    {r.athleteId === 'unknown' ? 'UNLINKED PROFILE' : 'VERIFIED ATHLETE'}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-sm font-medium text-slate-600">{r.date}</td>
-                                        <td className="px-4 py-3 text-center font-semibold text-slate-900">
-                                            {formatDistance(r.totalDistance)}
-                                        </td>
-                                        <td className="px-4 py-3 text-center font-semibold text-indigo-600">
-                                            {formatDistance(r.hsr)}
-                                        </td>
-                                        <td className="px-4 py-3 text-center font-semibold text-orange-500">
-                                            {Number(r.sprints).toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                                        </td>
-                                        <td className="px-4 py-3 text-center font-semibold text-emerald-600">
-                                            {Number(r.maxSpeed).toLocaleString(undefined, { maximumFractionDigits: 1 })} KM/H
-                                        </td>
-                                    </tr>
-                                ))}
-                                {displayRecords.length === 0 && (
-                                    <tr>
-                                        <td colSpan="6" className="p-24 text-center">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <ActivityIcon size={48} className="text-slate-100" />
-                                                <div>
-                                                    <p className="text-slate-400 italic text-sm font-medium">No telemetry records match your current filter criteria.</p>
-                                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Try adjusting the Date Range or Target Selection</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                )}
 
-                {/* GPS Column Mapper Modal */}
-                {isGpsMapperOpen && (
-                    <GpsColumnMapper
-                        csvHeaders={gpsCsvHeaders}
-                        csvPreviewRows={gpsCsvPreviewRows}
-                        onConfirm={(mapping) => { setIsGpsMapperOpen(false); setGpsAnomalyMode(null); handleMapperConfirm(mapping); }}
-                        onCancel={() => { setIsGpsMapperOpen(false); setGpsAnomalyMode(null); }}
-                        savedProfiles={gpsProfiles}
-                        onSaveProfile={handleSaveGpsProfile}
-                        onDeleteProfile={handleDeleteGpsProfile}
-                        teams={teams.map(t => ({ id: t.id, name: t.name }))}
-                        preSelectedTeamId={gpsImportTeamId}
-                        anomalyMode={gpsAnomalyMode}
-                    />
+                {filteredGPSRecords.length === 0 && gpsData.length > 0 && (
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 flex flex-col items-center gap-3 text-center">
+                        <p className="text-sm font-semibold text-slate-600">No records match the current filters</p>
+                        <p className="text-xs text-slate-400">{gpsData.length} total records in storage — adjust the date range or athlete filter</p>
+                    </div>
+                )}
+
+                {/* Phase-grouped tables or flat table */}
+                {filteredGPSRecords.length > 0 && colKeyOrder.length > 0 && (
+                    hasPhases ? (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-semibold text-slate-700">{allPhases.length} Phases · {filteredGPSRecords.length} total rows</p>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setCollapsedPhases(new Set(allPhases))} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Collapse All</button>
+                                    <button onClick={() => setCollapsedPhases(new Set())} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Expand All</button>
+                                </div>
+                            </div>
+                            {allPhases.map(phase => (
+                                <TableSection key={phase} title={phase} rows={filteredGPSRecords.filter(r => (r.phase || '') === phase)} />
+                            ))}
+                        </div>
+                    ) : (
+                        <TableSection title="GPS Telemetry Log" rows={filteredGPSRecords} />
+                    )
                 )}
 
                 <SmartCsvMapper
