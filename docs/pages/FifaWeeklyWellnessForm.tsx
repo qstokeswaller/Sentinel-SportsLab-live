@@ -110,9 +110,7 @@ const STEP_IDS = [
     'problem_type', 'onset', 'status',
     'body_area', 'body_side', 'mechanism', 'contact_type',
     'impact', 'time_loss',
-    'urti_hoarseness', 'urti_blocked_nose', 'urti_runny_nose', 'urti_sinus_pressure',
-    'urti_sneezing', 'urti_dry_cough', 'urti_wet_cough', 'urti_headache',
-    'illness_impact', 'illness_time_loss',
+    'illness_symptoms', 'illness_impact', 'illness_time_loss',
     'fatigue_trend', 'sleep_trend',
     'nutrition', 'hydration', 'stress_sources',
 ];
@@ -206,9 +204,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         if (id === 'body_area' || id === 'body_side') return isInjury && !preFilledComplaint;
         if (id === 'mechanism' || id === 'contact_type') return isInjury && responses.onset === 'sudden';
         // Illness-only steps
-        if (['urti_hoarseness', 'urti_blocked_nose', 'urti_runny_nose', 'urti_sinus_pressure',
-             'urti_sneezing', 'urti_dry_cough', 'urti_wet_cough', 'urti_headache',
-             'illness_impact', 'illness_time_loss'].includes(id)) return isIllness;
+        if (['illness_symptoms', 'illness_impact', 'illness_time_loss'].includes(id)) return isIllness;
         return true;
     });
 
@@ -223,7 +219,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         if (stepId === 'body_area') return (responses.body_areas || []).length > 0;
         if (stepId === 'stress_sources') return (responses.stress_sources || []).length > 0;
         if (stepId === 'nutrition' || stepId === 'hydration') return responses[stepId] >= 1;
-        if (URTI_SYMPTOMS.some(s => s.key === stepId)) return responses[stepId] !== undefined;
+        if (stepId === 'illness_symptoms') return URTI_SYMPTOMS.some(s => responses[s.key] !== undefined);
         if (stepId === 'illness_impact') return responses.illness_impact !== undefined && responses.illness_impact !== '';
         if (stepId === 'illness_time_loss') return responses.illness_time_loss !== undefined && responses.illness_time_loss !== '';
         return responses[stepId] !== undefined && responses[stepId] !== null && responses[stepId] !== '';
@@ -434,14 +430,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         contact_type: { heading: 'Was There Contact?', instruction: 'Did this involve contact with a person or object?' },
         impact: { heading: 'Impact on Performance', instruction: 'How much is this affecting your ability to train?' },
         time_loss: { heading: 'Expected Time Out', instruction: 'How long do you expect this to affect your availability?' },
-        urti_hoarseness:    { heading: 'Hoarseness', instruction: 'Rate any voice roughness or hoarseness you\'re experiencing.' },
-        urti_blocked_nose:  { heading: 'Blocked / Plugged Nose', instruction: 'Rate how blocked or plugged your nose feels.' },
-        urti_runny_nose:    { heading: 'Runny Nose', instruction: 'Rate any runny nose you\'re experiencing.' },
-        urti_sinus_pressure:{ heading: 'Sinus Pressure', instruction: 'Rate any facial pressure or sinus pain you\'re experiencing.' },
-        urti_sneezing:      { heading: 'Sneezing', instruction: 'Rate how frequently you\'re sneezing.' },
-        urti_dry_cough:     { heading: 'Dry Cough', instruction: 'Rate any dry, unproductive cough you\'re experiencing.' },
-        urti_wet_cough:     { heading: 'Wet Cough', instruction: 'Rate any cough that produces mucus or sputum.' },
-        urti_headache:      { heading: 'Headache', instruction: 'Rate any headache you\'re currently experiencing.' },
+        illness_symptoms:   { heading: 'Illness Symptoms', instruction: 'Rate each symptom. Tap a symptom to rate its severity — skip any that don\'t apply.' },
         illness_impact:     { heading: 'Impact on Performance', instruction: 'How much is this illness affecting your ability to train?' },
         illness_time_loss:  { heading: 'Expected Time Out', instruction: 'How long do you expect this illness to affect your availability?' },
         fatigue_trend: { heading: 'Fatigue Trend', instruction: 'Over the past week, how has your fatigue been trending?' },
@@ -528,22 +517,40 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                         </div>
                     )}
 
-                    {/* URTI illness symptom steps — one per screen */}
-                    {URTI_SYMPTOMS.some(s => s.key === stepId) && (
-                        <div className="space-y-2.5">
-                            {URTI_OPTIONS.map((opt, idx) => {
-                                const isSelected = responses[stepId] === idx;
+                    {/* Illness symptoms — single compact screen with all 8 URTI symptoms */}
+                    {stepId === 'illness_symptoms' && (
+                        <div className="space-y-3">
+                            {URTI_SYMPTOMS.map(sym => {
+                                const current = responses[sym.key];
                                 return (
-                                    <OptionButton
-                                        key={opt}
-                                        value={idx}
-                                        label={opt}
-                                        isSelected={isSelected}
-                                        onClick={() => setVal(stepId, idx)}
-                                        color={idx === 0 ? 'emerald' : idx === 1 ? 'lime' : idx === 2 ? 'amber' : 'rose'}
-                                    />
+                                    <div key={sym.key} className="bg-white border border-slate-100 rounded-2xl p-3">
+                                        <p className="text-xs font-semibold text-slate-600 mb-2">{sym.label}</p>
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                            {URTI_OPTIONS.map((opt, idx) => {
+                                                const isSelected = current === idx;
+                                                const colorCls = idx === 0
+                                                    ? isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                                    : idx === 1
+                                                    ? isSelected ? 'bg-lime-500 border-lime-500 text-white' : 'bg-lime-50 border-lime-200 text-lime-700'
+                                                    : idx === 2
+                                                    ? isSelected ? 'bg-amber-500 border-amber-500 text-white' : 'bg-amber-50 border-amber-200 text-amber-700'
+                                                    : isSelected ? 'bg-rose-500 border-rose-500 text-white' : 'bg-rose-50 border-rose-200 text-rose-700';
+                                                return (
+                                                    <button
+                                                        key={opt}
+                                                        type="button"
+                                                        onClick={() => setVal(sym.key, idx)}
+                                                        className={`py-2 px-1 rounded-xl border-2 text-[10px] font-bold transition-all active:scale-95 text-center ${colorCls}`}
+                                                    >
+                                                        {opt}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 );
                             })}
+                            <p className="text-[11px] text-slate-400 text-center font-medium pt-1">Rate what applies — skip any you don't have.</p>
                         </div>
                     )}
 
