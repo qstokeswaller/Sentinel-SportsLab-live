@@ -141,8 +141,8 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                 )}
             </div>
 
-            {/* Reference image — hidden in selectOnly to save vertical space */}
-            {cfg.referenceImageUrl && !selectOnly && (
+            {/* Reference image */}
+            {cfg.referenceImageUrl && (
                 <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
                     <img
                         src={cfg.referenceImageUrl}
