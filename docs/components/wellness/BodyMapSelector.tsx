@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, memo } from 'react';
+import React, { useRef, useCallback, memo, FC } from 'react';
 import { BodyMapArea, BodyMapConfig, BodyMapAreaDef } from '../../types/types';
 import { DEFAULT_BODY_MAP_CONFIG } from '../../utils/mocks';
 import { Info } from 'lucide-react';
@@ -61,48 +61,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
     const frontAreas = cfg.areas.filter(a => a.view === 'front');
     const backAreas = cfg.areas.filter(a => a.view === 'back');
 
-    const AreaButton = memo(({ area, selected, onToggle, readOnly: ro, selectOnlyMode }: {
-        area: BodyMapAreaDef;
-        selected?: BodyMapArea;
-        onToggle: (key: string) => void;
-        readOnly?: boolean;
-        selectOnlyMode?: boolean;
-    }) => {
-        const useSeverity = area.hasSeverity !== false && !selectOnlyMode;
-        const sevColor = selected && useSeverity ? severityColorMap[selected.severity] : undefined;
-        const isSimpleSelected = selected && (!useSeverity);
-        return (
-            <button
-                type="button"
-                onClick={() => onToggle(area.key)}
-                disabled={ro}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl border-2 text-[11px] font-semibold transition-all ${ro ? '' : 'active:scale-95'} ${
-                    isSimpleSelected
-                        ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
-                        : selected && useSeverity
-                            ? 'text-white'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
-                style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
-            >
-                <span className="flex items-center gap-1.5 min-w-0">
-                    <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: area.color }}
-                    />
-                    <span className="truncate">{area.label}</span>
-                </span>
-                {selected && useSeverity && (
-                    <span className="text-[9px] font-bold opacity-80 ml-1 shrink-0">
-                        {severityLabelMap[selected.severity]}
-                    </span>
-                )}
-                {isSimpleSelected && (
-                    <span className="text-[10px] font-bold opacity-80 ml-1 shrink-0">✓</span>
-                )}
-            </button>
-        );
-    });
+    // AreaButton is referenced below — defined at module scope (after component) for stable memo identity
 
     return (
         <div className="space-y-4">
@@ -155,7 +114,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                         <div className="flex-1 h-px bg-slate-200" />
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
-                        {frontAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} />)}
+                        {frontAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} severityColorMap={severityColorMap} severityLabelMap={severityLabelMap} />)}
                     </div>
                 </div>
             )}
@@ -177,12 +136,60 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                         <div className="flex-1 h-px bg-slate-200" />
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
-                        {backAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} />)}
+                        {backAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} severityColorMap={severityColorMap} severityLabelMap={severityLabelMap} />)}
                     </div>
                 </div>
             )}
         </div>
     );
 };
+
+// ── Module-level AreaButton — stable identity so React.memo actually works ──
+// Defined outside BodyMapSelector so it isn't recreated on every parent render.
+// Receives severityColorMap / severityLabelMap as props instead of closing over them.
+interface AreaButtonProps {
+    area: BodyMapAreaDef;
+    selected?: BodyMapArea;
+    onToggle: (key: string) => void;
+    readOnly?: boolean;
+    selectOnlyMode?: boolean;
+    severityColorMap: Record<number, string>;
+    severityLabelMap: Record<number, string>;
+}
+
+const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOnly: ro, selectOnlyMode, severityColorMap, severityLabelMap }) => {
+    const useSeverity = area.hasSeverity !== false && !selectOnlyMode;
+    const sevColor = selected && useSeverity ? severityColorMap[selected.severity] : undefined;
+    const isSimpleSelected = !!selected && !useSeverity;
+    return (
+        <button
+            type="button"
+            onClick={() => onToggle(area.key)}
+            disabled={ro}
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl border-2 text-[11px] font-semibold transition-all ${ro ? '' : 'active:scale-95'} ${
+                isSimpleSelected
+                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
+                    : selected && useSeverity
+                        ? 'text-white'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+            } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
+            style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
+        >
+            <span className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
+                <span className="truncate">{area.label}</span>
+            </span>
+            {selected && useSeverity && (
+                <span className="text-[9px] font-bold opacity-80 ml-1 shrink-0">
+                    {severityLabelMap[selected.severity]}
+                </span>
+            )}
+            {isSimpleSelected && (
+                <span className="text-[10px] font-bold opacity-80 ml-1 shrink-0">✓</span>
+            )}
+        </button>
+    );
+});
+AreaButton.displayName = 'AreaButton';
 
 export default BodyMapSelector;

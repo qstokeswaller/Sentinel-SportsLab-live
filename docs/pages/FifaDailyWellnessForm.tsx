@@ -150,18 +150,25 @@ const FifaDailyWellnessForm: React.FC = () => {
     });
 
     const step = STEPS[currentStep];
-    // Total virtual steps = STEPS + one per selected area (severity sub-flow)
     const totalSteps = STEPS.length;
+
+    // Must be declared before canContinue / virtualCurrentStep to avoid temporal dead zone
+    const selectedAreas = (responses.complaint_areas || []) as { area: string; severity: number }[];
+
+    // Total virtual steps = STEPS + one per selected area (severity sub-flow)
     const severityAreaCount = selectedAreas.length;
     const totalVirtualSteps = totalSteps + severityAreaCount;
-    // Virtual position: after complaint_areas step, severity steps are inserted
+
+    // Virtual position: severity pages are inserted after the complaint_areas step.
+    // Guard complaintAreaStepIdx >= 0 — when complaint_areas is not in STEPS (health === 'no'),
+    // findIndex returns -1 and currentStep > -1 is always true, inflating the progress counter.
     const complaintAreaStepIdx = STEPS.findIndex(s => s.id === 'complaint_areas');
     const virtualCurrentStep = severityStepIdx !== null
-        ? complaintAreaStepIdx + 1 + severityStepIdx
-        : severityStepIdx === null && currentStep > complaintAreaStepIdx
-            ? currentStep + severityAreaCount
-            : currentStep;
-    const progress = ((virtualCurrentStep + 1) / totalVirtualSteps) * 100;
+        ? complaintAreaStepIdx + 1 + severityStepIdx          // inside severity sub-flow
+        : complaintAreaStepIdx >= 0 && currentStep > complaintAreaStepIdx
+            ? currentStep + severityAreaCount                  // past body map, offset by severity pages
+            : currentStep;                                     // before body map or no body map in flow
+    const progress = ((virtualCurrentStep + 1) / Math.max(1, totalVirtualSteps)) * 100;
 
     const setVal = (key: string, val: any) => setResponses(prev => ({ ...prev, [key]: val }));
 
@@ -171,9 +178,6 @@ const FifaDailyWellnessForm: React.FC = () => {
         for (const a of DEFAULT_BODY_MAP_CONFIG.areas) map[a.key] = a.label;
         return map;
     }, []);
-
-    // Areas selected in the body map (in order of selection)
-    const selectedAreas = (responses.complaint_areas || []) as { area: string; severity: number }[];
 
     const canContinue = (() => {
         // In severity sub-flow: must have picked a severity for the current area
