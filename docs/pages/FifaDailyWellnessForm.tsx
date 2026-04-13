@@ -672,7 +672,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                             const n = parseFloat(v);
                                             if (!isNaN(n)) setVal('sleep_hours', Math.min(24, Math.max(0, n)));
                                         }}
-                                        placeholder="7.5"
+                                        placeholder="7"
                                         className="flex-1 text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-5 outline-none focus:border-cyan-500 transition-colors"
                                     />
                                     <button type="button" onClick={() => step05(1)}

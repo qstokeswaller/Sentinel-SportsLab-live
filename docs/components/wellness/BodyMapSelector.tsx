@@ -76,7 +76,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                 type="button"
                 onClick={() => onToggle(area.key)}
                 disabled={ro}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all ${ro ? '' : 'active:scale-95'} ${
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl border-2 text-[11px] font-semibold transition-all ${ro ? '' : 'active:scale-95'} ${
                     isSimpleSelected
                         ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
                         : selected && useSeverity
@@ -85,15 +85,15 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                 } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
                 style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
             >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 min-w-0">
                     <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: area.color }}
                     />
-                    {area.label}
+                    <span className="truncate">{area.label}</span>
                 </span>
                 {selected && useSeverity && (
-                    <span className="text-[10px] font-bold opacity-80 ml-1 shrink-0">
+                    <span className="text-[9px] font-bold opacity-80 ml-1 shrink-0">
                         {severityLabelMap[selected.severity]}
                     </span>
                 )}
@@ -136,32 +136,51 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                 )}
             </div>
 
-            {/* Reference image */}
-            {cfg.referenceImageUrl && (
+            {/* Reference image — hidden in selectOnly to save vertical space */}
+            {cfg.referenceImageUrl && !selectOnly && (
                 <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
                     <img
                         src={cfg.referenceImageUrl}
                         alt="Body reference — front and back"
-                        className="w-full object-contain max-h-56"
+                        className="w-full object-contain max-h-40"
                     />
                 </div>
             )}
 
-            {/* Two-column area list */}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                {frontAreas.length > 0 && (
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Front</p>
+            {/* Front section */}
+            {frontAreas.length > 0 && (
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Front of Body</p>
+                        <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
                         {frontAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} />)}
                     </div>
-                )}
-                {backAreas.length > 0 && (
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">Back</p>
+                </div>
+            )}
+
+            {/* Divider between front and back */}
+            {frontAreas.length > 0 && backAreas.length > 0 && (
+                <div className="flex items-center gap-2 py-1">
+                    <div className="flex-1 h-0.5 bg-slate-200 rounded-full" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 px-1">↑ Front · Back ↓</span>
+                    <div className="flex-1 h-0.5 bg-slate-200 rounded-full" />
+                </div>
+            )}
+
+            {/* Back section */}
+            {backAreas.length > 0 && (
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Back of Body</p>
+                        <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
                         {backAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} />)}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
