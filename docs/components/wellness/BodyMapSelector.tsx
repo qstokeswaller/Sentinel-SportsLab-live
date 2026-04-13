@@ -109,6 +109,50 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
     const frontAreas = cfg.areas.filter(a => a.view === 'front');
     const backAreas = cfg.areas.filter(a => a.view === 'back');
 
+    // Group areas by their group label, preserving insertion order
+    const groupAreas = (areas: typeof frontAreas) => {
+        const groups: { label: string; areas: typeof frontAreas }[] = [];
+        const seen = new Map<string, number>();
+        for (const area of areas) {
+            const g = area.group || '';
+            if (!seen.has(g)) {
+                seen.set(g, groups.length);
+                groups.push({ label: g, areas: [] });
+            }
+            groups[seen.get(g)!].areas.push(area);
+        }
+        return groups;
+    };
+
+    const frontGroups = groupAreas(frontAreas);
+    const backGroups = groupAreas(backAreas);
+
+    const renderGroups = (groups: ReturnType<typeof groupAreas>) => (
+        <div className="space-y-3">
+            {groups.map(g => (
+                <div key={g.label}>
+                    {g.label && (
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{g.label}</p>
+                    )}
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {g.areas.map(area => (
+                            <AreaButton
+                                key={area.key}
+                                area={area}
+                                selected={value.find(v => v.area === area.key)}
+                                onToggle={toggleArea}
+                                readOnly={readOnly}
+                                selectOnlyMode={selectOnly}
+                                severityColorMap={severityColorMap}
+                                severityLabelMap={severityLabelMap}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+
     return (
         <div className="space-y-4">
             {/* Instructions */}
@@ -153,20 +197,18 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             )}
 
             {/* Front section */}
-            {frontAreas.length > 0 && (
-                <div className="space-y-2">
+            {frontGroups.length > 0 && (
+                <div className="space-y-3">
                     <div className="flex items-center gap-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Front of Body</p>
                         <div className="flex-1 h-px bg-slate-200" />
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {frontAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} severityColorMap={severityColorMap} severityLabelMap={severityLabelMap} />)}
-                    </div>
+                    {renderGroups(frontGroups)}
                 </div>
             )}
 
             {/* Divider between front and back */}
-            {frontAreas.length > 0 && backAreas.length > 0 && (
+            {frontGroups.length > 0 && backGroups.length > 0 && (
                 <div className="flex items-center gap-2 py-1">
                     <div className="flex-1 h-0.5 bg-slate-200 rounded-full" />
                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 px-1">↑ Front · Back ↓</span>
@@ -175,15 +217,13 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             )}
 
             {/* Back section */}
-            {backAreas.length > 0 && (
-                <div className="space-y-2">
+            {backGroups.length > 0 && (
+                <div className="space-y-3">
                     <div className="flex items-center gap-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Back of Body</p>
                         <div className="flex-1 h-px bg-slate-200" />
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {backAreas.map(area => <AreaButton key={area.key} area={area} selected={value.find(v => v.area === area.key)} onToggle={toggleArea} readOnly={readOnly} selectOnlyMode={selectOnly} severityColorMap={severityColorMap} severityLabelMap={severityLabelMap} />)}
-                    </div>
+                    {renderGroups(backGroups)}
                 </div>
             )}
         </div>

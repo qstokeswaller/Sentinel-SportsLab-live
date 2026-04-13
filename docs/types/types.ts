@@ -209,6 +209,7 @@ export interface BodyMapAreaDef {
   view: 'front' | 'back';
   color: string;
   hasSeverity?: boolean; // true = cycle severity levels, false = simple on/off toggle
+  group?: string;        // optional grouping label for display (e.g. 'Arm & Shoulder')
 }
 
 export interface SeverityLevel {
