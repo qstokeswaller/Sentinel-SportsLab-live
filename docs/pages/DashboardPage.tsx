@@ -219,7 +219,8 @@ export const DashboardPage = () => {
             }
         }
         // Most recent load date overall (for "as of" label)
-        const mostRecentLoadDate = [...athleteLastLoadDate.values()].sort().reverse()[0] || null;
+        const loadDateValues = [...athleteLastLoadDate.values()];
+        const mostRecentLoadDate = loadDateValues.length > 0 ? loadDateValues.sort().reverse()[0] : null;
         const hasRecentData = mostRecentLoadDate && mostRecentLoadDate >= sevenDaysAgoStr;
 
         // Active at-risk athletes — only those with data within the last 7 days

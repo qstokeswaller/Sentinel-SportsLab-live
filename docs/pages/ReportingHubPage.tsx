@@ -93,6 +93,9 @@ export const ReportingHubPage = () => {
     // GPS tab: 'import' | 'manual'
     const [gpsTab, setGpsTab] = useState<'import' | 'manual'>('import');
 
+    // Separate warning state for missing columns (non-blocking, distinct from import success/error)
+    const [gpsMissingColWarning, setGpsMissingColWarning] = useState<string[]>([]);
+
     // Manual entry state
     const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [manualTeamId, setManualTeamId] = useState('');
@@ -100,6 +103,28 @@ export const ReportingHubPage = () => {
     const [manualColConfig, setManualColConfig] = useState<{key: string; label: string}[]>([]);
     const [manualColPickerOpen, setManualColPickerOpen] = useState(false);
     const [newManualColName, setNewManualColName] = useState('');
+
+    // Stable derivation of all column keys ever seen across gpsData (memoised — avoids stale reads inside render fn)
+    const gpsHistoricalColKeys = useMemo(() => {
+        const keys: string[] = [];
+        const seen = new Set<string>();
+        for (const r of Array.isArray(gpsData) ? gpsData : []) {
+            for (const k of Object.keys(r.rawColumns || {})) {
+                if (!seen.has(k)) { keys.push(k); seen.add(k); }
+            }
+        }
+        return keys;
+    }, [gpsData]);
+
+    // Merged column config: stable, accounts for new columns and retired ones
+    const gpsMergedColConfig = useMemo(() => {
+        const existing = new Map(gpsColumnConfig.map(c => [c.key, c]));
+        const seen = new Set(gpsHistoricalColKeys);
+        for (const k of gpsHistoricalColKeys) {
+            if (!existing.has(k)) existing.set(k, { key: k, visible: true });
+        }
+        return [...existing.values()].map(c => ({ ...c, retired: !seen.has(c.key) }));
+    }, [gpsHistoricalColKeys, gpsColumnConfig]);
 
     const [hrReportDateRange, setHrReportDateRange] = useState({ start: '2025-01-01', end: new Date().toISOString().split('T')[0] });
     const [hrImportStatus, setHrImportStatus] = useState<'success' | 'error' | null>(null);
@@ -1265,30 +1290,10 @@ export const ReportingHubPage = () => {
             return '';
         };
 
-        // ── Derive known columns from historical gpsData (for column config) ──
-        const historicalColKeys: string[] = [];
-        const seenHistorical = new Set<string>();
-        for (const r of gpsData) {
-            for (const k of Object.keys(r.rawColumns || {})) {
-                if (!seenHistorical.has(k)) { historicalColKeys.push(k); seenHistorical.add(k); }
-            }
-        }
-        // Merge with gpsColumnConfig — add new keys, mark missing ones as retired
-        const mergedColConfig = (() => {
-            const existing = new Map(gpsColumnConfig.map(c => [c.key, c]));
-            // New columns seen in data but not yet in config
-            for (const k of historicalColKeys) {
-                if (!existing.has(k)) existing.set(k, { key: k, visible: true });
-            }
-            // Mark configured columns not in current data as retired
-            const result = [...existing.values()].map(c => ({
-                ...c,
-                retired: !seenHistorical.has(c.key),
-            }));
-            return result;
-        })();
+        // Use memoised derivations from component scope (not re-derived on every render)
+        const historicalColKeys = gpsHistoricalColKeys;
+        const mergedColConfig = gpsMergedColConfig;
 
-        // Save updated config if it changed
         const saveColConfig = (cfg: typeof mergedColConfig) => {
             setGpsColumnConfig(cfg);
             try { localStorage.setItem('gps_col_cfg', JSON.stringify(cfg)); } catch {}
@@ -1319,11 +1324,8 @@ export const ReportingHubPage = () => {
                 setGpsDialogAthleteCol(ac);
                 setGpsDialogDateCol(dc);
                 setGpsDialogPhaseCol(pc);
-                // Warn about missing historical columns (non-blocking)
-                if (missingFromFile.length > 0) {
-                    setGpsImportMessage(`⚠ ${missingFromFile.length} column(s) from prior imports not in this file — will show as empty`);
-                    setGpsImportStatus('error');
-                }
+                // Warn about missing historical columns — separate state, non-blocking
+                setGpsMissingColWarning(missingFromFile);
             };
             reader.readAsText(file);
         };
@@ -1358,7 +1360,7 @@ export const ReportingHubPage = () => {
                     athleteName.toLowerCase().includes(p.name.toLowerCase())
                 );
                 return {
-                    id: 'gps_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                    id: `gps_${crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2,9))}`,
                     date, playerName: athleteName, phase,
                     athleteId: player ? player.id : 'unknown',
                     matchedName: player ? player.name : athleteName,
@@ -1375,6 +1377,7 @@ export const ReportingHubPage = () => {
             if (unlinked.length > 0) {
                 setGpsUnlinkedDialog(unlinked.map(name => ({ name })));
             }
+            setGpsMissingColWarning([]); // clear pre-import warning once data lands
             setGpsImportStatus('success');
             setGpsImportMessage(`Imported ${newRecords.length} rows · ${headers.length} columns`);
             setTimeout(() => setGpsImportStatus(null), 8000);
@@ -1519,7 +1522,7 @@ export const ReportingHubPage = () => {
                     if (row[col.key] !== undefined && row[col.key] !== '') rawColumns[col.key] = row[col.key];
                 }
                 return {
-                    id: 'gps_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                    id: `gps_${crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2,9))}`,
                     date: manualDate, playerName: p.name, phase: '',
                     athleteId: p.id, matchedName: p.name, rawColumns,
                     timestamp: new Date().toISOString(),
@@ -1576,13 +1579,13 @@ export const ReportingHubPage = () => {
                                     ))}
                                 </div>
                                 {/* Missing columns warning */}
-                                {historicalColKeys.filter(k => !gpsSmartDialog.headers.includes(k)).length > 0 && (
+                                {gpsMissingColWarning.length > 0 && (
                                     <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
                                         <AlertTriangleIcon size={14} className="text-amber-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-xs font-semibold text-amber-700">Columns from previous imports missing in this file</p>
-                                            <p className="text-[10px] text-amber-600 mt-0.5">{historicalColKeys.filter(k => !gpsSmartDialog.headers.includes(k)).join(', ')}</p>
-                                            <p className="text-[10px] text-amber-500 mt-1">These will show as empty for rows from this import. You can hide or keep them in column config.</p>
+                                            <p className="text-xs font-semibold text-amber-700">Columns from previous imports not in this file</p>
+                                            <p className="text-[10px] text-amber-600 mt-0.5">{gpsMissingColWarning.join(', ')}</p>
+                                            <p className="text-[10px] text-amber-500 mt-1">These will show as empty for rows from this import. Manage visibility in the Columns panel.</p>
                                         </div>
                                     </div>
                                 )}
