@@ -1250,19 +1250,48 @@ export const ReportingHubPage = () => {
     const renderGPSDataReport = () => {
 
         // ── Helper: fuzzy detect a column from headers ──────────────────────
-        const detectCol = (headers: string[], aliases: string[]): string => {
-            const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const detectColFromHeaders = (headers: string[], aliases: string[]): string => {
             for (const alias of aliases) {
-                const a = norm(alias);
-                const exact = headers.find(h => norm(h) === a);
+                const a = normStr(alias);
+                const exact = headers.find(h => normStr(h) === a);
                 if (exact) return exact;
             }
             for (const alias of aliases) {
-                const a = norm(alias);
-                const partial = headers.find(h => norm(h).includes(a) || a.includes(norm(h)));
+                const a = normStr(alias);
+                const partial = headers.find(h => normStr(h).includes(a) || a.includes(normStr(h)));
                 if (partial) return partial;
             }
             return '';
+        };
+
+        // ── Derive known columns from historical gpsData (for column config) ──
+        const historicalColKeys: string[] = [];
+        const seenHistorical = new Set<string>();
+        for (const r of gpsData) {
+            for (const k of Object.keys(r.rawColumns || {})) {
+                if (!seenHistorical.has(k)) { historicalColKeys.push(k); seenHistorical.add(k); }
+            }
+        }
+        // Merge with gpsColumnConfig — add new keys, mark missing ones as retired
+        const mergedColConfig = (() => {
+            const existing = new Map(gpsColumnConfig.map(c => [c.key, c]));
+            // New columns seen in data but not yet in config
+            for (const k of historicalColKeys) {
+                if (!existing.has(k)) existing.set(k, { key: k, visible: true });
+            }
+            // Mark configured columns not in current data as retired
+            const result = [...existing.values()].map(c => ({
+                ...c,
+                retired: !seenHistorical.has(c.key),
+            }));
+            return result;
+        })();
+
+        // Save updated config if it changed
+        const saveColConfig = (cfg: typeof mergedColConfig) => {
+            setGpsColumnConfig(cfg);
+            try { localStorage.setItem('gps_col_cfg', JSON.stringify(cfg)); } catch {}
         };
 
         const handleFileUpload = (event) => {
@@ -1281,27 +1310,20 @@ export const ReportingHubPage = () => {
                     headers.forEach((h, i) => { obj[h] = values[i] ?? ''; });
                     return obj;
                 });
-                const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const detectCol = (aliases: string[]): string => {
-                    for (const alias of aliases) {
-                        const a = norm(alias);
-                        const exact = headers.find(h => norm(h) === a);
-                        if (exact) return exact;
-                    }
-                    for (const alias of aliases) {
-                        const a = norm(alias);
-                        const partial = headers.find(h => norm(h).includes(a) || a.includes(norm(h)));
-                        if (partial) return partial;
-                    }
-                    return '';
-                };
-                setGpsSmartDialog({
-                    headers,
-                    rows,
-                    athleteCol: detectCol(['player name','player','athlete','name','athlete name','full name','athlete_name','player_name']),
-                    dateCol: detectCol(['session_date','session date','date','start time','match date','activity date']),
-                    phaseCol: detectCol(['phase name','phase','period','section','drill','split']),
-                });
+                const ac = detectColFromHeaders(headers, ['player name','player','athlete','name','athlete name','full name','athlete_name','player_name']);
+                const dc = detectColFromHeaders(headers, ['session_date','session date','date','start time','match date','activity date']);
+                const pc = detectColFromHeaders(headers, ['phase name','phase','period','section','drill','split']);
+                // Detect columns missing vs history (appeared before, not in this file)
+                const missingFromFile = historicalColKeys.filter(k => !headers.includes(k));
+                setGpsSmartDialog({ headers, rows, athleteCol: ac, dateCol: dc, phaseCol: pc });
+                setGpsDialogAthleteCol(ac);
+                setGpsDialogDateCol(dc);
+                setGpsDialogPhaseCol(pc);
+                // Warn about missing historical columns (non-blocking)
+                if (missingFromFile.length > 0) {
+                    setGpsImportMessage(`⚠ ${missingFromFile.length} column(s) from prior imports not in this file — will show as empty`);
+                    setGpsImportStatus('error');
+                }
             };
             reader.readAsText(file);
         };
@@ -1328,7 +1350,6 @@ export const ReportingHubPage = () => {
                     if (h === athleteCol || h === dateCol) continue;
                     const val = row[h];
                     if (val === undefined || val === null || val === '') continue;
-                    // Normalise HH:MM:SS duration values to minutes
                     const hms = val.match(/^(\d+):(\d{2}):(\d{2})$/);
                     rawColumns[h] = hms ? String((parseInt(hms[1])*60 + parseInt(hms[2]) + parseInt(hms[3])/60).toFixed(1)) : val;
                 }
@@ -1349,9 +1370,14 @@ export const ReportingHubPage = () => {
             setGpsData(updated);
             StorageService.saveGpsData(updated);
             setGpsSmartDialog(null);
+            // Detect names that didn't match roster
+            const unlinked = [...new Set(newRecords.filter(r => r.athleteId === 'unknown').map(r => r.playerName))];
+            if (unlinked.length > 0) {
+                setGpsUnlinkedDialog(unlinked.map(name => ({ name })));
+            }
             setGpsImportStatus('success');
             setGpsImportMessage(`Imported ${newRecords.length} rows · ${headers.length} columns`);
-            setTimeout(() => setGpsImportStatus(null), 6000);
+            setTimeout(() => setGpsImportStatus(null), 8000);
         };
 
         const clearGpsData = () => {
@@ -1399,14 +1425,14 @@ export const ReportingHubPage = () => {
             const totals: Record<string, string> = {};
             for (const k of colKeyOrder) {
                 const vals = rows.map(r => parseFloat(r.rawColumns?.[k] || '')).filter(v => !isNaN(v));
-                totals[k] = vals.length === rows.length && vals.length > 0
+                totals[k] = vals.length > 0
                     ? vals.reduce((a, b) => a + b, 0).toLocaleString(undefined, { maximumFractionDigits: 1 })
                     : '—';
             }
             return totals;
         };
 
-        const colCount = 2 + colKeyOrder.length;
+        const colCount = 2 + visibleColKeys.length;
 
         // ── TableSection component (defined inline to access state) ──────────
         const TableSection = ({ title, rows }: { title: string; rows: typeof filteredGPSRecords }) => {
@@ -1424,7 +1450,7 @@ export const ReportingHubPage = () => {
                             </div>
                             <div>
                                 <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wide">{rows.length} athletes · {colKeyOrder.length} columns</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wide">{rows.length} rows · {visibleColKeys.length} visible columns</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1439,7 +1465,7 @@ export const ReportingHubPage = () => {
                                     <tr className="bg-slate-50/60 border-b border-slate-100">
                                         <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">Athlete</th>
                                         <th className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">Date</th>
-                                        {colKeyOrder.map(k => (
+                                        {visibleColKeys.map(k => (
                                             <th key={k} className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">{colLabel(k)}</th>
                                         ))}
                                     </tr>
@@ -1454,7 +1480,7 @@ export const ReportingHubPage = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-sm font-medium text-slate-600 whitespace-nowrap">{r.date}</td>
-                                            {colKeyOrder.map(k => (
+                                            {visibleColKeys.map(k => (
                                                 <td key={k} className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">{fmtVal(r.rawColumns?.[k])}</td>
                                             ))}
                                         </tr>
@@ -1462,7 +1488,7 @@ export const ReportingHubPage = () => {
                                     <tr className="bg-slate-50 border-t-2 border-slate-200">
                                         <td className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-500 whitespace-nowrap">TOTAL</td>
                                         <td className="px-4 py-3 text-slate-400 text-xs">—</td>
-                                        {colKeyOrder.map(k => (
+                                        {visibleColKeys.map(k => (
                                             <td key={k} className="px-4 py-3 text-sm font-bold text-slate-800 whitespace-nowrap">{totals[k]}</td>
                                         ))}
                                     </tr>
@@ -1474,184 +1500,412 @@ export const ReportingHubPage = () => {
             );
         };
 
+        // ── Visible columns (respects config) ───────────────────────────────
+        const visibleColKeys = colKeyOrder.filter(k => {
+            const cfg = mergedColConfig.find(c => c.key === k);
+            return cfg ? cfg.visible !== false : true;
+        });
+
+        // ── Manual entry helpers ─────────────────────────────────────────────
+        const manualTeam = teams.find(t => t.id === manualTeamId);
+        const manualAthletes = manualTeam ? manualTeam.players : [];
+
+        const handleManualSave = () => {
+            if (!manualTeamId || !manualDate) return;
+            const newRecords = manualAthletes.map(p => {
+                const row = manualRows[p.id] || {};
+                const rawColumns: Record<string, string> = {};
+                for (const col of manualColConfig) {
+                    if (row[col.key] !== undefined && row[col.key] !== '') rawColumns[col.key] = row[col.key];
+                }
+                return {
+                    id: 'gps_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                    date: manualDate, playerName: p.name, phase: '',
+                    athleteId: p.id, matchedName: p.name, rawColumns,
+                    timestamp: new Date().toISOString(),
+                };
+            }).filter(r => Object.keys(r.rawColumns).length > 0);
+            if (newRecords.length === 0) return;
+            const updated = [...gpsData, ...newRecords];
+            setGpsData(updated);
+            StorageService.saveGpsData(updated);
+            setManualRows({});
+            setGpsImportStatus('success');
+            setGpsImportMessage(`Saved ${newRecords.length} manual rows`);
+            setTimeout(() => setGpsImportStatus(null), 5000);
+        };
+
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
 
-                {/* Smart Import Dialog */}
-                {gpsSmartDialog && (() => {
-                    const [localAthleteCol, setLocalAthleteCol] = React.useState(gpsSmartDialog.athleteCol);
-                    const [localDateCol, setLocalDateCol] = React.useState(gpsSmartDialog.dateCol);
-                    const [localPhaseCol, setLocalPhaseCol] = React.useState(gpsSmartDialog.phaseCol);
-                    const previewHeaders = gpsSmartDialog.headers.slice(0, 8);
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsSmartDialog(null)} />
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 rounded-t-2xl flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
-                                        <ActivityIcon size={18} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-slate-900">Smart GPS Import</h3>
-                                        <p className="text-xs text-slate-400">{gpsSmartDialog.rows.length} rows · {gpsSmartDialog.headers.length} columns — all will be imported</p>
-                                    </div>
+                {/* ── Smart CSV Import Dialog ──────────────────────────────── */}
+                {gpsSmartDialog && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsSmartDialog(null)} />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 rounded-t-2xl flex items-center gap-3">
+                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
+                                    <ActivityIcon size={18} />
                                 </div>
-                                <div className="p-6 space-y-6">
-                                    <div className="grid grid-cols-3 gap-4">
-                                        {[
-                                            { label: 'Athlete Column', required: true, val: localAthleteCol, set: setLocalAthleteCol, badge: 'ATHLETE', color: 'indigo' },
-                                            { label: 'Date Column', required: true, val: localDateCol, set: setLocalDateCol, badge: 'DATE', color: 'emerald' },
-                                            { label: 'Phase / Section', required: false, val: localPhaseCol, set: setLocalPhaseCol, badge: 'PHASE', color: 'amber' },
-                                        ].map(({ label, required, val, set, color }) => (
-                                            <div key={label} className="space-y-1.5">
-                                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">
-                                                    {label} {required && <span className="text-rose-400">*</span>}
-                                                </label>
-                                                <select value={val} onChange={e => set(e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none">
-                                                    <option value="">— {required ? 'select' : 'none'} —</option>
-                                                    {gpsSmartDialog.headers.map(h => <option key={h} value={h}>{h}</option>)}
-                                                </select>
-                                                {val
-                                                    ? <p className={`text-[10px] text-${color}-600 font-medium`}>✓ {val}</p>
-                                                    : !required && <p className="text-[10px] text-slate-400">Optional — enables section grouping</p>
-                                                }
-                                            </div>
-                                        ))}
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-900">Smart GPS Import</h3>
+                                    <p className="text-xs text-slate-400">{gpsSmartDialog.rows.length} rows · {gpsSmartDialog.headers.length} columns — all imported as-is</p>
+                                </div>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                <div className="grid grid-cols-3 gap-4">
+                                    {[
+                                        { label: 'Athlete Column', required: true, val: gpsDialogAthleteCol, set: setGpsDialogAthleteCol, color: 'indigo' },
+                                        { label: 'Date Column', required: true, val: gpsDialogDateCol, set: setGpsDialogDateCol, color: 'emerald' },
+                                        { label: 'Phase / Section', required: false, val: gpsDialogPhaseCol, set: setGpsDialogPhaseCol, color: 'amber' },
+                                    ].map(({ label, required, val, set, color }) => (
+                                        <div key={label} className="space-y-1.5">
+                                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">
+                                                {label} {required && <span className="text-rose-400">*</span>}
+                                            </label>
+                                            <select value={val} onChange={e => set(e.target.value)}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none">
+                                                <option value="">— {required ? 'select' : 'none'} —</option>
+                                                {gpsSmartDialog.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                                            </select>
+                                            {val
+                                                ? <p className={`text-[10px] text-${color}-600 font-medium`}>✓ {val}</p>
+                                                : !required && <p className="text-[10px] text-slate-400">Optional — enables section grouping</p>
+                                            }
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Missing columns warning */}
+                                {historicalColKeys.filter(k => !gpsSmartDialog.headers.includes(k)).length > 0 && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
+                                        <AlertTriangleIcon size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-semibold text-amber-700">Columns from previous imports missing in this file</p>
+                                            <p className="text-[10px] text-amber-600 mt-0.5">{historicalColKeys.filter(k => !gpsSmartDialog.headers.includes(k)).join(', ')}</p>
+                                            <p className="text-[10px] text-amber-500 mt-1">These will show as empty for rows from this import. You can hide or keep them in column config.</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide mb-2">Preview — first 3 rows · first 8 columns</p>
-                                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                                            <table className="text-left text-xs w-full">
-                                                <thead>
-                                                    <tr className="bg-slate-50 border-b border-slate-200">
-                                                        {previewHeaders.map(h => (
-                                                            <th key={h} className={`px-3 py-2 font-semibold whitespace-nowrap ${h === localAthleteCol ? 'text-indigo-600 bg-indigo-50' : h === localDateCol ? 'text-emerald-600 bg-emerald-50' : h === localPhaseCol ? 'text-amber-600 bg-amber-50' : 'text-slate-500'}`}>{h}</th>
-                                                        ))}
-                                                        {gpsSmartDialog.headers.length > 8 && <th className="px-3 py-2 text-slate-300 italic">+{gpsSmartDialog.headers.length - 8} more…</th>}
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100">
-                                                    {gpsSmartDialog.rows.slice(0,3).map((row, i) => (
-                                                        <tr key={i} className="hover:bg-slate-50">
-                                                            {previewHeaders.map(h => <td key={h} className="px-3 py-2 text-slate-600 whitespace-nowrap">{row[h] || '—'}</td>)}
-                                                            {gpsSmartDialog.headers.length > 8 && <td className="px-3 py-2 text-slate-300">…</td>}
-                                                        </tr>
+                                )}
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide mb-2">Preview — first 3 rows</p>
+                                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                                        <table className="text-left text-xs w-full">
+                                            <thead>
+                                                <tr className="bg-slate-50 border-b border-slate-200">
+                                                    {gpsSmartDialog.headers.slice(0, 8).map(h => (
+                                                        <th key={h} className={`px-3 py-2 font-semibold whitespace-nowrap ${h === gpsDialogAthleteCol ? 'text-indigo-600 bg-indigo-50' : h === gpsDialogDateCol ? 'text-emerald-600 bg-emerald-50' : h === gpsDialogPhaseCol ? 'text-amber-600 bg-amber-50' : 'text-slate-500'}`}>{h}</th>
                                                     ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                        <p className="text-xs text-slate-400">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
-                                        <div className="flex items-center gap-3">
-                                            <button onClick={() => setGpsSmartDialog(null)} className="px-4 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">Cancel</button>
-                                            <button
-                                                disabled={!localAthleteCol || !localDateCol}
-                                                onClick={() => handleSmartImport(localAthleteCol, localDateCol, localPhaseCol)}
-                                                className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                                                Import {gpsSmartDialog.rows.length} Rows
-                                            </button>
-                                        </div>
+                                                    {gpsSmartDialog.headers.length > 8 && <th className="px-3 py-2 text-slate-300 italic">+{gpsSmartDialog.headers.length - 8} more…</th>}
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {gpsSmartDialog.rows.slice(0, 3).map((row, i) => (
+                                                    <tr key={i} className="hover:bg-slate-50">
+                                                        {gpsSmartDialog.headers.slice(0, 8).map(h => <td key={h} className="px-3 py-2 text-slate-600 whitespace-nowrap">{row[h] || '—'}</td>)}
+                                                        {gpsSmartDialog.headers.length > 8 && <td className="px-3 py-2 text-slate-300">…</td>}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    );
-                })()}
-
-                {/* Filter + Import Bar */}
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-slate-900">GPS Telemetry</h3>
-                        <div className="flex items-center gap-2">
-                            {gpsImportStatus && <span className={`text-[10px] font-bold ${gpsImportStatus === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>{gpsImportMessage}</span>}
-                            <label className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer">
-                                <FileIcon size={13} /> Import CSV
-                                <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                            </label>
-                            <button onClick={clearGpsData} title="Clear all" className="p-2 text-slate-300 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-rose-50"><Trash2Icon size={15} /></button>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="space-y-1.5 min-w-[220px]">
-                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Target Squad / Athlete</label>
-                            <div className="relative">
-                                <select value={gpsFilterTarget} onChange={e => setGpsFilterTarget(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none pr-8">
-                                    <option>All Athletes</option>
-                                    <optgroup label="Squads">{teams.map(t => <option key={t.id}>{t.name}</option>)}</optgroup>
-                                    <optgroup label="Individual Athletes">
-                                        {teams.flatMap(t => t.players).sort((a,b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
-                                    </optgroup>
-                                </select>
-                                <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date Mode</label>
-                            <div className="flex bg-slate-100 p-1 rounded-lg">
-                                <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Range</button>
-                                <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Single</button>
-                            </div>
-                        </div>
-                        {gpsFilterDateMode === 'range' ? (
-                            <>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">From</label>
-                                    <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                    <p className="text-xs text-slate-400">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => setGpsSmartDialog(null)} className="px-4 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">Cancel</button>
+                                        <button
+                                            disabled={!gpsDialogAthleteCol || !gpsDialogDateCol}
+                                            onClick={() => handleSmartImport(gpsDialogAthleteCol, gpsDialogDateCol, gpsDialogPhaseCol)}
+                                            className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                                            Import {gpsSmartDialog.rows.length} Rows
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">To</label>
-                                    <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
-                                </div>
-                            </>
-                        ) : (
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date</label>
-                                <input type="date" value={gpsSpecificDate} onChange={e => setGpsSpecificDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Empty state */}
-                {filteredGPSRecords.length === 0 && gpsData.length === 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-20 flex flex-col items-center gap-4 text-center">
-                        <ActivityIcon size={48} className="text-slate-100" />
-                        <div>
-                            <p className="text-sm font-semibold text-slate-600">No GPS telemetry data</p>
-                            <p className="text-xs text-slate-400 mt-1">Click "Import CSV" to upload from any GPS provider — all columns imported as-is</p>
                         </div>
                     </div>
                 )}
 
-                {filteredGPSRecords.length === 0 && gpsData.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 flex flex-col items-center gap-3 text-center">
-                        <p className="text-sm font-semibold text-slate-600">No records match the current filters</p>
-                        <p className="text-xs text-slate-400">{gpsData.length} total records in storage — adjust the date range or athlete filter</p>
+                {/* ── Unlinked athlete quick-add dialog ───────────────────── */}
+                {gpsUnlinkedDialog && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsUnlinkedDialog(null)} />
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-6 py-5 border-b border-slate-100 bg-amber-50 rounded-t-2xl flex items-center gap-3">
+                                <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shrink-0">
+                                    <AlertTriangleIcon size={18} />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-900">Unlinked Athletes</h3>
+                                    <p className="text-xs text-slate-500">These names in the CSV didn't match your roster</p>
+                                </div>
+                            </div>
+                            <div className="p-6 space-y-3">
+                                {gpsUnlinkedDialog.map(({ name }) => (
+                                    <div key={name} className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+                                        <span className="text-sm font-medium text-slate-700">{name}</span>
+                                        <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">UNLINKED</span>
+                                    </div>
+                                ))}
+                                <p className="text-[11px] text-slate-400 pt-1">GPS data was still imported. Go to Roster to add these athletes, then re-import to link them.</p>
+                                <div className="flex justify-end pt-2">
+                                    <button onClick={() => setGpsUnlinkedDialog(null)} className="px-5 py-2.5 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition-all">OK</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                {/* Phase-grouped tables or flat table */}
-                {filteredGPSRecords.length > 0 && colKeyOrder.length > 0 && (
-                    hasPhases ? (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm font-semibold text-slate-700">{allPhases.length} Phases · {filteredGPSRecords.length} total rows</p>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setCollapsedPhases(new Set(allPhases))} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Collapse All</button>
-                                    <button onClick={() => setCollapsedPhases(new Set())} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Expand All</button>
-                                </div>
+                {/* ── Column Config Panel ──────────────────────────────────── */}
+                {gpsColConfigOpen && (
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 className="text-sm font-semibold text-slate-900">Column Visibility</h4>
+                                <p className="text-[10px] text-slate-400 mt-0.5">Toggle which columns appear in the table. Retired columns had data in previous imports but not in recent ones.</p>
                             </div>
-                            {allPhases.map(phase => (
-                                <TableSection key={phase} title={phase} rows={filteredGPSRecords.filter(r => (r.phase || '') === phase)} />
+                            <button onClick={() => setGpsColConfigOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><XIcon size={14} /></button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+                            {mergedColConfig.map(col => (
+                                <label key={col.key} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${col.visible !== false ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-slate-50'}`}>
+                                    <input type="checkbox" checked={col.visible !== false} onChange={() => {
+                                        const updated = mergedColConfig.map(c => c.key === col.key ? { ...c, visible: c.visible === false } : c);
+                                        saveColConfig(updated);
+                                    }} className="rounded accent-indigo-600" />
+                                    <span className="text-xs font-medium text-slate-700 flex-1 min-w-0 truncate">{col.key.replace(/_/g, ' ')}</span>
+                                    {col.retired && <span className="text-[8px] font-bold text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded shrink-0">RETIRED</span>}
+                                </label>
                             ))}
                         </div>
-                    ) : (
-                        <TableSection title="GPS Telemetry Log" rows={filteredGPSRecords} />
-                    )
+                        {mergedColConfig.length === 0 && (
+                            <p className="text-xs text-slate-400 text-center py-4">No columns yet — import a CSV first</p>
+                        )}
+                    </div>
                 )}
+
+                {/* ── Top bar: tabs + status + actions ────────────────────── */}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                            <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                <span className="flex items-center gap-1.5"><UploadIcon size={12} />Data Import</span>
+                            </button>
+                            <button onClick={() => setGpsTab('manual')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'manual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                <span className="flex items-center gap-1.5"><Edit3Icon size={12} />Manual Entry</span>
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {gpsImportStatus && (
+                                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${gpsImportStatus === 'success' ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'}`}>
+                                    {gpsImportMessage}
+                                </span>
+                            )}
+                            {historicalColKeys.length > 0 && (
+                                <button onClick={() => setGpsColConfigOpen(v => !v)} className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${gpsColConfigOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
+                                    <SlidersIcon size={13} />Columns
+                                </button>
+                            )}
+                            <button onClick={clearGpsData} title="Clear all GPS data" className="p-2 text-slate-300 hover:text-rose-500 transition-colors border border-slate-200 rounded-lg hover:bg-rose-50"><Trash2Icon size={15} /></button>
+                        </div>
+                    </div>
+
+                    {/* ── TAB: DATA IMPORT ── */}
+                    {gpsTab === 'import' && (
+                        <div className="space-y-4 pt-1">
+                            <div className="flex flex-wrap items-end gap-4">
+                                <div className="space-y-1.5 min-w-[220px]">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Target Squad / Athlete</label>
+                                    <div className="relative">
+                                        <select value={gpsFilterTarget} onChange={e => setGpsFilterTarget(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none pr-8">
+                                            <option>All Athletes</option>
+                                            <optgroup label="Squads">{teams.filter(t => t.id !== 't_private').map(t => <option key={t.id}>{t.name}</option>)}</optgroup>
+                                            <optgroup label="Individual Athletes">
+                                                {teams.flatMap(t => t.players).sort((a,b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
+                                            </optgroup>
+                                        </select>
+                                        <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date Mode</label>
+                                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                                        <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Range</button>
+                                        <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-600'}`}>Single</button>
+                                    </div>
+                                </div>
+                                {gpsFilterDateMode === 'range' ? (<>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">From</label>
+                                        <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">To</label>
+                                        <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
+                                    </div>
+                                </>) : (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Date</label>
+                                        <input type="date" value={gpsSpecificDate} onChange={e => setGpsSpecificDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
+                                    </div>
+                                )}
+                                <label className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap">
+                                    <UploadIcon size={13} /> Import CSV
+                                    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── TAB: MANUAL ENTRY ── */}
+                    {gpsTab === 'manual' && (
+                        <div className="space-y-4 pt-1">
+                            <div className="flex flex-wrap items-end gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Team</label>
+                                    <div className="relative">
+                                        <select value={manualTeamId} onChange={e => { setManualTeamId(e.target.value); setManualRows({}); }}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none pr-8">
+                                            <option value="">— select team —</option>
+                                            {teams.filter(t => t.id !== 't_private').map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                        </select>
+                                        <ChevronDownIcon size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide pl-1">Session Date</label>
+                                    <input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 outline-none" />
+                                </div>
+                                <button onClick={() => setManualColPickerOpen(v => !v)} className={`px-3 py-2.5 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${manualColPickerOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                                    <PlusCircleIcon size={13} /> Configure Columns
+                                </button>
+                                {manualAthletes.length > 0 && manualColConfig.length > 0 && (
+                                    <button onClick={handleManualSave} className="px-4 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-all flex items-center gap-1.5">
+                                        <CheckIcon size={13} /> Save Session
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Column picker */}
+                            {manualColPickerOpen && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                                    <p className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">Active Columns</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {manualColConfig.map(col => (
+                                            <div key={col.key} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700">
+                                                {col.label}
+                                                <button onClick={() => setManualColConfig(prev => prev.filter(c => c.key !== col.key))} className="text-slate-300 hover:text-rose-500 transition-colors"><XIcon size={11} /></button>
+                                            </div>
+                                        ))}
+                                        {manualColConfig.length === 0 && <p className="text-xs text-slate-400">No columns configured yet</p>}
+                                    </div>
+                                    {/* Add from history or new */}
+                                    {historicalColKeys.length > 0 && (
+                                        <div className="space-y-1.5">
+                                            <p className="text-[10px] text-slate-400">Add from import history:</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {historicalColKeys.filter(k => !manualColConfig.some(c => c.key === k)).map(k => (
+                                                    <button key={k} onClick={() => setManualColConfig(prev => [...prev, { key: k, label: k.replace(/_/g, ' ') }])}
+                                                        className="text-[10px] bg-white border border-slate-200 rounded-md px-2.5 py-1 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-all">
+                                                        + {k}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <input value={newManualColName} onChange={e => setNewManualColName(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter' && newManualColName.trim()) { setManualColConfig(prev => [...prev, { key: newManualColName.trim().replace(/\s+/g,'_'), label: newManualColName.trim() }]); setNewManualColName(''); }}}
+                                            placeholder="Or type a new column name…" className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
+                                        <button onClick={() => { if (newManualColName.trim()) { setManualColConfig(prev => [...prev, { key: newManualColName.trim().replace(/\s+/g,'_'), label: newManualColName.trim() }]); setNewManualColName(''); }}}
+                                            className="px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-all">Add</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Manual entry grid */}
+                            {manualTeamId && manualColConfig.length > 0 && manualAthletes.length > 0 && (
+                                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                                    <table className="text-left w-full" style={{ minWidth: `${(manualColConfig.length + 1) * 140}px` }}>
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-200">
+                                                <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">Athlete</th>
+                                                {manualColConfig.map(col => (
+                                                    <th key={col.key} className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 tracking-wide whitespace-nowrap">{col.label}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {manualAthletes.map(p => (
+                                                <tr key={p.id} className="hover:bg-slate-50/50">
+                                                    <td className="sticky left-0 z-10 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 whitespace-nowrap">{p.name}</td>
+                                                    {manualColConfig.map(col => (
+                                                        <td key={col.key} className="px-4 py-2">
+                                                            <input
+                                                                type="number"
+                                                                value={manualRows[p.id]?.[col.key] || ''}
+                                                                onChange={e => setManualRows(prev => ({
+                                                                    ...prev,
+                                                                    [p.id]: { ...(prev[p.id] || {}), [col.key]: e.target.value }
+                                                                }))}
+                                                                placeholder="—"
+                                                                className="w-28 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-center outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+                                                            />
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                            {manualTeamId && manualAthletes.length === 0 && (
+                                <p className="text-sm text-slate-400 text-center py-6">No athletes in this team yet</p>
+                            )}
+                            {!manualTeamId && (
+                                <p className="text-sm text-slate-400 text-center py-6">Select a team to start entering data</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Data view (import tab only) ──────────────────────────── */}
+                {gpsTab === 'import' && (<>
+                    {filteredGPSRecords.length === 0 && gpsData.length === 0 && (
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-20 flex flex-col items-center gap-4 text-center">
+                            <ActivityIcon size={48} className="text-slate-100" />
+                            <div>
+                                <p className="text-sm font-semibold text-slate-600">No GPS telemetry data</p>
+                                <p className="text-xs text-slate-400 mt-1">Click "Import CSV" to upload from any GPS provider — all columns imported as-is</p>
+                            </div>
+                        </div>
+                    )}
+                    {filteredGPSRecords.length === 0 && gpsData.length > 0 && (
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 flex flex-col items-center gap-3 text-center">
+                            <p className="text-sm font-semibold text-slate-600">No records match the current filters</p>
+                            <p className="text-xs text-slate-400">{gpsData.length} total records in storage — adjust the date range or athlete filter</p>
+                        </div>
+                    )}
+                    {filteredGPSRecords.length > 0 && visibleColKeys.length > 0 && (
+                        hasPhases ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold text-slate-700">{allPhases.length} Phases · {filteredGPSRecords.length} total rows</p>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setCollapsedPhases(new Set(allPhases))} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Collapse All</button>
+                                        <button onClick={() => setCollapsedPhases(new Set())} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 px-2 py-1 border border-slate-200 rounded hover:bg-slate-50">Expand All</button>
+                                    </div>
+                                </div>
+                                {allPhases.map(phase => (
+                                    <TableSection key={phase} title={phase} rows={filteredGPSRecords.filter(r => (r.phase || '') === phase)} />
+                                ))}
+                            </div>
+                        ) : (
+                            <TableSection title="GPS Telemetry Log" rows={filteredGPSRecords} />
+                        )
+                    )}
+                </>)}
 
                 <SmartCsvMapper
                     isOpen={isHrMapperOpen}
