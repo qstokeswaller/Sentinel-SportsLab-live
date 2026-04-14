@@ -123,9 +123,9 @@ const WellnessHub: React.FC = () => {
     const [showAllAlerts, setShowAllAlerts] = useState(false);
     const [alertsModalOpen, setAlertsModalOpen] = useState(false);
     const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
-    const [rundownFrom, setRundownFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 27); return d.toISOString().split('T')[0]; });
+    const [rundownFrom, setRundownFrom] = useState<string>(() => localDateStr());
     const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
-    const [heatmapDays, setHeatmapDays] = useState<number>(14);
+    const [heatmapDays, setHeatmapDays] = useState<number>(7);
     const [heatmapAnchor, setHeatmapAnchor] = useState<string>(() => localDateStr());
 
     // Resolve wellnessDateRange to local dateFrom/dateTo
@@ -227,6 +227,39 @@ const WellnessHub: React.FC = () => {
                 return wMs >= triggerMs && wMs <= triggerMs + 3 * 86400000;
             });
             return !completed;
+        }).sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''));
+    }, [wellnessResponses, selectedTeamId, rundownFrom, rundownTo]);
+
+    // Daily flags where athlete responded "no change — same issue" (sentinel weekly with weekly_followup='no_change')
+    const triggeredNoChange = useMemo(() => {
+        if (!selectedTeamId) return [];
+        const dailyForTeam = (wellnessResponses || []).filter(
+            r => r.team_id === selectedTeamId && r.tier !== 'weekly'
+        );
+        const weeklyForTeam = (wellnessResponses || []).filter(
+            r => r.team_id === selectedTeamId && r.tier === 'weekly'
+        );
+        return dailyForTeam.filter(r => {
+            const date = r.session_date || r.created_at?.split('T')[0];
+            if (!date || date < rundownFrom || date > rundownTo) return false;
+            const rr = r.responses || {};
+            const isFlag =
+                (rr.health_complaint && rr.health_complaint !== 'no') ||
+                (rr.fatigue != null && rr.fatigue >= 8) ||
+                (rr.sleep_hours != null && rr.sleep_hours <= 5) ||
+                r.availability === 'unavailable';
+            if (!isFlag) return false;
+            const [fy, fm, fd] = date.split('-').map(Number);
+            const triggerMs = new Date(fy, fm - 1, fd).getTime();
+            return weeklyForTeam.some(w => {
+                if (w.athlete_id !== r.athlete_id) return false;
+                const wd = w.session_date || w.created_at?.split('T')[0];
+                if (!wd) return false;
+                const [wy, wm, wday] = wd.split('-').map(Number);
+                const wMs = new Date(wy, wm - 1, wday).getTime();
+                return wMs >= triggerMs && wMs <= triggerMs + 3 * 86400000
+                    && w.responses?.weekly_followup === 'no_change';
+            });
         }).sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''));
     }, [wellnessResponses, selectedTeamId, rundownFrom, rundownTo]);
 
@@ -1637,7 +1670,7 @@ const WellnessHub: React.FC = () => {
                 {isRundownOpen && (<>
                 {/* ── Tab switcher ── */}
                 <div className="flex border-b border-slate-100">
-                    {([['daily', 'Daily Responses', rundownDailyFiltered.length], ['deepcheck', 'Deep Checks', rundownDeepChecks.length + triggeredIncomplete.length]] as const).map(([tab, label, count]) => (
+                    {([['daily', 'Daily Responses', rundownDailyFiltered.length], ['deepcheck', 'Deep Checks', rundownDeepChecks.length + triggeredIncomplete.length + triggeredNoChange.length]] as const).map(([tab, label, count]) => (
                         <button key={tab} onClick={() => setRundownTab(tab)}
                             className={`flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${
                                 rundownTab === tab
@@ -1933,13 +1966,94 @@ const WellnessHub: React.FC = () => {
                             );
                         })()}
 
-                        {rundownDeepChecks.length === 0 && triggeredIncomplete.length === 0 ? (
+                        {/* ── Same Issue — No Change section ── */}
+                        {triggeredNoChange.length > 0 && (() => {
+                            const playerMap = Object.fromEntries((activeTeam?.players || []).map(p => [p.id, p]));
+                            return (
+                                <div className="border-b border-slate-100">
+                                    <div className="px-6 py-3 bg-slate-50 flex items-center gap-2">
+                                        <CheckCircle2 size={14} className="text-slate-400 shrink-0" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                            Same Issue — No Change ({triggeredNoChange.length})
+                                        </span>
+                                        <span className="text-[9px] text-slate-400 ml-1">Athletes who flagged and confirmed no new developments since their last report</span>
+                                    </div>
+                                    <table className="w-full text-left">
+                                        <thead className="bg-slate-50/50 text-[9px] text-slate-400 uppercase tracking-[0.15em] font-semibold border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-6 py-3">Date</th>
+                                                <th className="px-6 py-3">Athlete</th>
+                                                <th className="px-4 py-3">Flag Reason</th>
+                                                <th className="px-4 py-3">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {triggeredNoChange
+                                                .filter(r => !searchQuery || playerMap[r.athlete_id]?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                .map(r => {
+                                                    const player = playerMap[r.athlete_id];
+                                                    const rr = r.responses || {};
+                                                    const reasons: string[] = [];
+                                                    if (rr.health_complaint && rr.health_complaint !== 'no') reasons.push(rr.health_complaint === 'injury' ? 'Injury' : rr.health_complaint === 'illness' ? 'Illness' : 'Health Complaint');
+                                                    if (rr.fatigue != null && rr.fatigue >= 8) reasons.push(`Fatigue ${rr.fatigue}/10`);
+                                                    if (rr.sleep_hours != null && rr.sleep_hours <= 5) reasons.push(`Sleep ${rr.sleep_hours}h`);
+                                                    if (r.availability === 'unavailable') reasons.push('Unavailable');
+                                                    const [fy, fm, fd] = (r.session_date || '').split('-').map(Number);
+                                                    const dt = new Date(fy, fm - 1, fd);
+                                                    const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                                    return (
+                                                        <tr key={r.id} className="border-t border-slate-50 hover:bg-slate-50/40 transition-colors">
+                                                            <td className="px-6 py-3.5">
+                                                                <span className="text-[10px] font-semibold text-slate-700">{dateLabel}</span>
+                                                            </td>
+                                                            <td className="px-6 py-3.5">
+                                                                {player ? (
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                                                            <span className="text-[9px] font-bold text-slate-500">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
+                                                                        </div>
+                                                                        <span className="text-xs font-semibold text-slate-900">{player.name}</span>
+                                                                    </div>
+                                                                ) : <span className="text-slate-400 text-xs">Unknown</span>}
+                                                            </td>
+                                                            <td className="px-4 py-3.5">
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {reasons.map(reason => (
+                                                                        <span key={reason} className="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-semibold">{reason}</span>
+                                                                    ))}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3.5">
+                                                                <span className="px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
+                                                                    No Change
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
+
+                        {rundownDeepChecks.length === 0 && triggeredIncomplete.length === 0 && triggeredNoChange.length === 0 ? (
                             <div className="px-6 py-16 text-center">
                                 <Thermometer size={36} className="mx-auto text-slate-200 mb-4" />
                                 <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">No deep checks in this period</p>
                                 <p className="text-[10px] text-slate-300 mt-2">Adjust the date range or share the Deep Health Check form with your athletes.</p>
                             </div>
                         ) : rundownDeepChecks.length === 0 ? null : (
+                            <>
+                            {/* ── Completed Deep Checks heading ── */}
+                            <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
+                                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                                    Completed Deep Checks ({rundownDeepChecks.length})
+                                </span>
+                                <span className="text-[9px] text-emerald-500 ml-1">Athletes who completed the full deep health check form</span>
+                            </div>
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 text-[9px] text-slate-400 uppercase tracking-[0.15em] font-semibold">
                                     <tr>
@@ -2055,6 +2169,7 @@ const WellnessHub: React.FC = () => {
                                     })()}
                                 </tbody>
                             </table>
+                            </>
                         )}
                     </div>
                 )}

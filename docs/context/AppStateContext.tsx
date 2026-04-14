@@ -625,7 +625,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [wellnessTemplates, setWellnessTemplates] = useState<any[]>([]);
     const [wellnessResponses, setWellnessResponses] = useState<any[]>([]);
     const [wellnessSelectedTeamId, setWellnessSelectedTeamId] = useState<string>('all');
-    const [wellnessDateRange, setWellnessDateRange] = useState<string>('7d');
+    const [wellnessDateRange, setWellnessDateRange] = useState<string>('today');
 
     const athletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
 

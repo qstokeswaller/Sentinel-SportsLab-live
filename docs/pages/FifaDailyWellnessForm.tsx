@@ -483,7 +483,22 @@ const FifaDailyWellnessForm: React.FC = () => {
                             Yes — something has changed
                         </a>
                         <button
-                            onClick={() => window.location.reload()}
+                            onClick={async () => {
+                                // Save a sentinel weekly record so the system knows this trigger was
+                                // acknowledged — prevents this athlete appearing in "Triggered — No Response".
+                                try {
+                                    const d = new Date();
+                                    const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                                    await DatabaseService.saveWellnessResponse({
+                                        athlete_id: selectedAthleteId,
+                                        team_id: teamId,
+                                        session_date: today,
+                                        responses: { weekly_followup: 'no_change' },
+                                        tier: 'weekly',
+                                    });
+                                } catch { /* best-effort — reload regardless */ }
+                                window.location.reload();
+                            }}
                             className="w-full px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all text-sm"
                         >
                             No change — same issue as before
