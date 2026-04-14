@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppState } from './context/AppStateContext';
 import { DatabaseService } from './services/databaseService';
@@ -87,8 +87,8 @@ const AddAthleteModal = () => {
     const [step, setStep] = useState(1);
     const [addingNext, setAddingNext] = useState(false);
 
-    // Reset to step 1 every time the modal opens
-    useEffect(() => {
+    // Reset to step 1 before paint every time the modal opens — useLayoutEffect prevents flash of step 2
+    useLayoutEffect(() => {
         if (isAddAthleteModalOpen) setStep(1);
     }, [isAddAthleteModalOpen]);
 
@@ -110,9 +110,9 @@ const AddAthleteModal = () => {
 
     const handleAddAndNext = async () => {
         setAddingNext(true);
-        await handleAddAthlete(true); // keep modal open
-        setStep(1);                   // back to name entry
+        const ok = await handleAddAthlete(true); // keep modal open
         setAddingNext(false);
+        if (ok) setStep(1); // only go back to step 1 if save succeeded
     };
 
     const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";

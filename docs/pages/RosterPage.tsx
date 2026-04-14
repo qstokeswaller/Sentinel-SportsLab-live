@@ -5,11 +5,12 @@ import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
     ArrowLeftIcon, LayoutListIcon, ClipboardListIcon,
-    ChevronDownIcon, ChevronUpIcon,
+    ChevronDownIcon, ChevronUpIcon, FileSpreadsheetIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TrainingRegister from '../components/roster/TrainingRegister';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
+import { ImportRosterModal } from '../components/roster/ImportRosterModal';
 
 type ViewMode     = 'list' | 'grid';
 type PlayerLayout = 'list' | 'cards';          // sub-toggle inside team drill-down
@@ -33,6 +34,7 @@ export const RosterPage = () => {
     const [teamDetailTab, setTeamDetailTab] = useState<TeamDetailTab>('athletes');
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
+    const [showImport, setShowImport]       = useState(false);
 
     const allAthletes = teams.flatMap(team =>
         (team.players || []).map(player => ({ ...player, teamName: team.name, teamId: team.id }))
@@ -95,6 +97,9 @@ export const RosterPage = () => {
                 </div>
                 <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
+                    <Button variant="outline" onClick={() => setShowImport(true)}>
+                        <FileSpreadsheetIcon size={14} /> Import CSV
+                    </Button>
                     <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
                         <UserPlusIcon size={14} /> Add Athlete
                     </Button>
@@ -562,6 +567,7 @@ export const RosterPage = () => {
                 onCancel={() => setConfirmDelete(null)}
                 loading={deleting}
             />
+            {showImport && <ImportRosterModal onClose={() => setShowImport(false)} />}
         </div>
     );
 };

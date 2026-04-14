@@ -1353,7 +1353,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleAddAthlete = async (keepOpen = false) => {
-        if (!newAthleteName.trim()) return;
+        if (!newAthleteName.trim()) return false;
         try {
             if (addAthleteMode === 'athlete') {
                 await DatabaseService.createAthlete({
@@ -1375,10 +1375,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setNewAthleteName('');
             setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '' });
             initData(); // refresh roster in background — don't block modal close
+            return true;
         } catch (err) {
             console.error("Error adding athlete/team:", err);
             const msg = err instanceof Error ? err.message : String(err);
             alert(`Failed to add: ${msg}`);
+            return false;
         }
     };
 
