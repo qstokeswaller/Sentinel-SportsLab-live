@@ -30,14 +30,24 @@ export const RosterPage = () => {
     const [viewMode, setViewMode]           = useState<ViewMode>('list');
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [playerLayout, setPlayerLayout]   = useState<PlayerLayout>('cards');
-    const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(new Set());
+    // Start all teams collapsed — user expands the ones they want to see
+    const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(() => new Set(teams.map(t => t.id)));
     const [teamDetailTab, setTeamDetailTab] = useState<TeamDetailTab>('athletes');
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
     const [showImport, setShowImport]       = useState(false);
 
+    // Keep newly-loaded teams collapsed on first data load
+    React.useEffect(() => {
+        setCollapsedTeams(prev => {
+            const next = new Set(prev);
+            teams.forEach(t => { if (!next.has(t.id)) next.add(t.id); });
+            return next;
+        });
+    }, [teams.map(t => t.id).join(',')]);
+
     const allAthletes = teams.flatMap(team =>
-        (team.players || []).map(player => ({ ...player, teamName: team.name, teamId: team.id }))
+        [...(team.players || [])].sort((a, b) => a.name.localeCompare(b.name)).map(player => ({ ...player, teamName: team.name, teamId: team.id }))
     );
 
     const selectedTeam = teams.find(t => t.id === selectedTeamId) ?? null;
@@ -144,7 +154,7 @@ export const RosterPage = () => {
                         </div>
 
                         {!isCollapsed && (
-                            (team.players || []).length > 0 ? (team.players || []).map((player, playerIdx) => (
+                            (team.players || []).length > 0 ? [...(team.players || [])].sort((a, b) => a.name.localeCompare(b.name)).map((player, playerIdx) => (
                                 <div
                                     key={player.id}
                                     {...(playerIdx === 0 && teamIdx === 0 ? { 'data-tour': 'athlete-row' } : {})}
@@ -220,7 +230,7 @@ export const RosterPage = () => {
             {/* Team cards grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {teams.map(team => {
-                    const players   = team.players || [];
+                    const players   = [...(team.players || [])].sort((a, b) => a.name.localeCompare(b.name));
                     const preview   = players.slice(0, 4);
                     const overflow  = players.length - 4;
 

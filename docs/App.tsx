@@ -52,6 +52,9 @@ import {
     AlertTriangle as AlertTriangleIcon,
     TrendingUp as TrendingUpIcon,
     Gauge as GaugeIcon,
+    CheckCircle2 as CheckCircle2Icon,
+    XCircle as XCircleIcon,
+    Info as InfoIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from './utils/constants';
 
@@ -64,6 +67,48 @@ import { ACWR_METRIC_TYPES } from './utils/constants';
 const StorageService = SupabaseStorageService;
 StorageService.init();
 
+
+// ── Toast Notification Container ─────────────────────────────────────────────
+const ToastContainer = () => {
+    const { toasts, setToasts } = useAppState();
+    if (!toasts || toasts.length === 0) return null;
+
+    const dismiss = (id: number) => setToasts(prev => prev.filter(t => t.id !== id));
+
+    return (
+        <div className="fixed bottom-5 right-5 z-[1000] flex flex-col gap-2 items-end pointer-events-none">
+            {toasts.map(t => {
+                const isSuccess = t.type === 'success';
+                const isError   = t.type === 'error';
+                return (
+                    <div
+                        key={t.id}
+                        className="pointer-events-auto flex items-center gap-3 min-w-[260px] max-w-sm bg-slate-900 text-white rounded-xl shadow-2xl px-4 py-3 border border-white/10 animate-in slide-in-from-bottom-2 fade-in duration-300"
+                    >
+                        {isSuccess && <CheckCircle2Icon size={16} className="text-emerald-400 shrink-0" />}
+                        {isError   && <XCircleIcon      size={16} className="text-rose-400 shrink-0" />}
+                        {!isSuccess && !isError && <InfoIcon size={16} className="text-slate-400 shrink-0" />}
+                        <span className="text-sm font-medium flex-1 leading-tight">{t.message}</span>
+                        {t.actionLabel && t.actionHandler && (
+                            <button
+                                onClick={() => { t.actionHandler(); dismiss(t.id); }}
+                                className="text-xs font-bold text-indigo-300 hover:text-indigo-200 shrink-0 transition-colors"
+                            >
+                                {t.actionLabel}
+                            </button>
+                        )}
+                        <button
+                            onClick={() => dismiss(t.id)}
+                            className="p-0.5 text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+                        >
+                            <XIcon size={13} />
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
 
 const AddAthleteModal = () => {
     const {
@@ -335,6 +380,7 @@ const App = () => {
             <PerformanceLab isOpen={isPerformanceLabOpen} onClose={() => setIsPerformanceLabOpen(false)} />
             <WattbikeMapCalculator />
             <PageTour tourState={tourState || {}} setTourState={setTourState} />
+            <ToastContainer />
         </div>
     );
 };

@@ -234,12 +234,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // --- TOAST SYSTEM ---
     const [toasts, setToasts] = useState([]);
 
-    const showToast = (message, actionLabel = null, actionHandler = null) => {
+    const showToast = (message, typeOrActionLabel = null, actionHandler = null) => {
         const id = Date.now();
-        setToasts(prev => [...prev, { id, message, actionLabel, actionHandler }]);
+        const isType = ['success', 'error', 'info'].includes(typeOrActionLabel);
+        const type = isType ? typeOrActionLabel : null;
+        const actionLabel = isType ? null : typeOrActionLabel;
+        setToasts(prev => [...prev, { id, message, type, actionLabel, actionHandler }]);
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
-        }, 5000);
+        }, 4000);
     };
 
     // --- EXERCISE LIBRARY STATE ---
@@ -1356,9 +1359,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!newAthleteName.trim()) return false;
         try {
             if (addAthleteMode === 'athlete') {
-                await DatabaseService.createAthlete({
+                const resolvedTeamId = newAthleteTeam && newAthleteTeam !== 'All' && newAthleteTeam !== 't_private' ? newAthleteTeam : null;
+                const newAthlete = await DatabaseService.createAthlete({
                     name: newAthleteName,
-                    team_id: newAthleteTeam && newAthleteTeam !== 'All' && newAthleteTeam !== 't_private' ? newAthleteTeam : null,
+                    team_id: resolvedTeamId,
                     age: newAthleteProfile.age ? parseInt(newAthleteProfile.age) : undefined,
                     gender: newAthleteProfile.gender || undefined,
                     height_cm: newAthleteProfile.height_cm ? parseFloat(newAthleteProfile.height_cm) : undefined,
@@ -1368,18 +1372,31 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                     goals: newAthleteProfile.goals || undefined,
                     notes: newAthleteProfile.notes || undefined,
                 });
+                // Optimistically add to local state — no full reload, no loading flash
+                if (newAthlete) {
+                    const athleteRecord = { ...newAthlete, performanceMetrics: [], performanceHistory: [] };
+                    setTeams(prev => prev.map(t => {
+                        if (t.id === resolvedTeamId) {
+                            const players = [...(t.players || []), athleteRecord]
+                                .sort((a, b) => a.name.localeCompare(b.name));
+                            return { ...t, players };
+                        }
+                        return t;
+                    }));
+                }
+                showToast(`${newAthleteName} added to roster`, 'success');
             } else {
                 await DatabaseService.createTeam(newAthleteName, 'Football');
+                showToast(`Team "${newAthleteName}" created`, 'success');
+                initData(); // team creation requires full reload to get team ID
             }
             if (!keepOpen) setIsAddAthleteModalOpen(false);
             setNewAthleteName('');
             setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '' });
-            initData(); // refresh roster in background — don't block modal close
             return true;
         } catch (err) {
             console.error("Error adding athlete/team:", err);
-            const msg = err instanceof Error ? err.message : String(err);
-            alert(`Failed to add: ${msg}`);
+            showToast('Failed to add athlete — please try again', 'error');
             return false;
         }
     };
@@ -1400,12 +1417,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDeleteAthlete = async (athleteId: string) => {
+        // Capture name before removing from state for the toast message
+        const deletedName = teams.flatMap(t => t.players || []).find(p => p.id === athleteId)?.name;
+        // Optimistically remove from local state immediately — no loading flash
+        setTeams(prev => prev.map(t => ({
+            ...t,
+            players: (t.players || []).filter(p => p.id !== athleteId),
+        })));
         try {
             await DatabaseService.deleteAthlete(athleteId);
-            initData();
+            showToast(deletedName ? `${deletedName} removed from roster` : 'Athlete removed', 'success');
         } catch (err) {
             console.error("Error deleting athlete:", err);
-            alert("Failed to delete athlete.");
+            // Roll back the optimistic removal by reloading
+            initData();
+            showToast('Failed to delete athlete — please try again', 'error');
         }
     };
 
