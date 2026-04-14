@@ -57,6 +57,7 @@ import {
     Info as InfoIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from './utils/constants';
+import { useAuth } from './context/AuthContext';
 
 // Extracted Components (None used directly in App.tsx)
 
@@ -67,6 +68,64 @@ import { ACWR_METRIC_TYPES } from './utils/constants';
 const StorageService = SupabaseStorageService;
 StorageService.init();
 
+
+// ── Welcome Splash Screen ─────────────────────────────────────────────────────
+const WelcomeSplash = () => {
+    const { isLoading } = useAppState();
+    const { user } = useAuth();
+    const [visible, setVisible] = useState(true);
+    const [fading, setFading] = useState(false);
+
+    useEffect(() => {
+        if (!isLoading && visible) {
+            // Small grace period before fading so the screen doesn't flash away immediately
+            const fadeTimer = setTimeout(() => setFading(true), 400);
+            const hideTimer = setTimeout(() => setVisible(false), 900);
+            return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+        }
+    }, [isLoading, visible]);
+
+    if (!visible) return null;
+
+    const firstName = user?.user_metadata?.full_name
+        ? user.user_metadata.full_name.split(' ')[0]
+        : user?.user_metadata?.name
+        ? user.user_metadata.name.split(' ')[0]
+        : user?.email
+        ? user.email.split('@')[0]
+        : 'Coach';
+
+    return (
+        <div
+            className={`fixed inset-0 z-[2000] flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}
+        >
+            {/* Logo mark */}
+            <div className="flex flex-col items-center gap-6">
+                <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+                    <ShieldIcon size={30} className="text-white" />
+                </div>
+
+                <div className="text-center space-y-1">
+                    <p className="text-slate-400 text-sm font-medium tracking-widest uppercase">Sentinel <span className="text-indigo-400">SportsLab</span></p>
+                </div>
+
+                {/* Welcome text */}
+                <div className="text-center space-y-2 mt-2">
+                    <h1 className="text-2xl font-bold text-white">Welcome, {firstName}</h1>
+                    <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
+                        We are getting your Sentinel SportsLab ready for you,<br />please wait a moment
+                    </p>
+                </div>
+
+                {/* Spinner */}
+                <div className="mt-4 flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-indigo-500/30 border-t-indigo-400 rounded-full animate-spin" />
+                    <span className="text-slate-500 text-xs font-medium tracking-wide">Loading your data…</span>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // ── Toast Notification Container ─────────────────────────────────────────────
 const ToastContainer = () => {
@@ -318,7 +377,7 @@ const AddAthleteModal = () => {
                                     </button>
                                 )}
                                 <button
-                                    onClick={addAthleteMode === 'athlete' ? handleAddAthlete : handleAddTeam}
+                                    onClick={addAthleteMode === 'athlete' ? () => handleAddAthlete() : handleAddTeam}
                                     className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors flex items-center gap-2"
                                 >
                                     <UserPlusIcon size={14} /> {addAthleteMode === 'athlete' ? 'Add Athlete' : 'Create Team'}
@@ -381,6 +440,7 @@ const App = () => {
             <WattbikeMapCalculator />
             <PageTour tourState={tourState || {}} setTourState={setTourState} />
             <ToastContainer />
+            <WelcomeSplash />
         </div>
     );
 };

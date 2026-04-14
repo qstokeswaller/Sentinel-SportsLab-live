@@ -307,14 +307,14 @@ export const DashboardPage = () => {
                 <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
                     {!hasRecentData ? (
                         <div className="py-8 flex flex-col items-center justify-center gap-2">
-                            <ClockIcon size={22} className="text-slate-300" />
-                            <p className="text-[11px] text-slate-400 text-center font-medium">No recent data</p>
-                            <p className="text-[10px] text-slate-300 text-center">
+                            <ClockIcon size={22} className="text-slate-400" />
+                            <p className="text-[11px] text-slate-600 text-center font-medium">No recent data</p>
+                            <p className="text-[10px] text-slate-500 text-center">
                                 {mostRecentLoadDate
                                     ? `Last entry was ${mostRecentLoadDate} — more than 7 days ago.`
                                     : 'No training load recorded yet.'}
                             </p>
-                            <p className="text-[10px] text-slate-300 text-center">Log sessions or import CSV to see readiness.</p>
+                            <p className="text-[10px] text-slate-500 text-center">Log sessions or import CSV to see readiness.</p>
                         </div>
                     ) : atRiskAthletes.length > 0 ? (
                         <>
