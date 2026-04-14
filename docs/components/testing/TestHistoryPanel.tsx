@@ -4,6 +4,7 @@ import { DatabaseService } from '../../services/databaseService';
 import type { TestDefinition } from '../../utils/testRegistry';
 import { TestResultCard } from './TestResultCard';
 import { ClockIcon, ChevronDownIcon, ChevronUpIcon, Trash2Icon } from 'lucide-react';
+import { useAppState } from '../../context/AppStateContext';
 
 interface Props {
     test: TestDefinition;
@@ -18,6 +19,7 @@ interface Props {
  * Auto-loads when athleteId changes. Supports deletion.
  */
 export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName, athleteGender, refreshKey }) => {
+    const { showToast } = useAppState();
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(true);
@@ -43,10 +45,12 @@ export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName
         try {
             await DatabaseService.deleteAssessment(id);
             setResults(prev => prev.filter(r => r.id !== id));
+            showToast('Test result deleted', 'success');
         } catch (err) {
             console.error('Delete error:', err);
+            showToast('Failed to delete result — please try again', 'error');
         }
-    }, []);
+    }, [showToast]);
 
     if (!athleteId) return null;
     if (results.length === 0 && !loading) return null;

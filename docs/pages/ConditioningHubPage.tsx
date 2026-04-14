@@ -10,6 +10,7 @@ import {
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsPicker';
+import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 
 const ICON_MAP = {
     'Activity': ActivityIcon,
@@ -47,6 +48,10 @@ export const ConditioningHubPage = () => {
     const [schedTargetType, setSchedTargetType] = React.useState<'Team' | 'Individual'>('Team');
     const [schedTargetId, setSchedTargetId] = React.useState('');
     const [scheduling, setScheduling] = React.useState(false);
+
+    // ── Confirm delete state ───────────────────────────────────────────
+    const [confirmDeleteWattbike, setConfirmDeleteWattbike] = React.useState<{ id: string; title: string } | null>(null);
+    const [confirmDeleteCond, setConfirmDeleteCond] = React.useState<{ id: string; title: string } | null>(null);
 
     const allPlayers = React.useMemo(() => teams.flatMap(t => t.players || []), [teams]);
 
@@ -186,7 +191,7 @@ export const ConditioningHubPage = () => {
         StorageService.saveConditioningSessions(updated);
         setConditioningView('grid');
         setNewConditioningSession({ ...emptyConditioningSession });
-        showToast(isEdit ? "Session Updated!" : "Session Created!");
+        showToast(isEdit ? "Session updated" : "Session created", 'success');
     };
 
     const handlePrintCondSession = (session) => {
@@ -473,7 +478,7 @@ ${setsHtml}
             if (StorageService && StorageService.saveWattbikeSessions) StorageService.saveWattbikeSessions(updatedSessions);
             setWattbikeView('grid');
             setNewWattbikeSession({ title: '', duration: '', type: 'Conditioning', sections: [], linkedSessions: [] });
-            showToast(isEdit ? "Session Updated Successfully!" : "Session Created Successfully!");
+            showToast(isEdit ? "Session updated" : "Session created", 'success');
         };
         return (
             <div className="max-w-4xl mx-auto pb-10 animate-in fade-in duration-300">
@@ -874,14 +879,7 @@ ${sectionsHtml}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (confirm(`Are you sure you want to delete "${session.title}"?`)) {
-                                                        setWattbikeSessions(prev => {
-                                                            const filtered = prev.filter(s => s.id !== session.id);
-                                                            if (StorageService.saveWattbikeSessions) StorageService.saveWattbikeSessions(filtered);
-                                                            return filtered;
-                                                        });
-                                                        showToast("Session Deleted");
-                                                    }
+                                                    setConfirmDeleteWattbike({ id: session.id, title: session.title });
                                                 }}
                                                 className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-all"
                                                 title="Delete Session"
@@ -973,14 +971,7 @@ ${sectionsHtml}
                                                 </button>
                                                 <button onClick={e => {
                                                     e.stopPropagation();
-                                                    if (confirm(`Delete "${session.title}"?`)) {
-                                                        setConditioningSessions(prev => {
-                                                            const filtered = prev.filter(s => s.id !== session.id);
-                                                            StorageService.saveConditioningSessions(filtered);
-                                                            return filtered;
-                                                        });
-                                                        showToast("Session Deleted");
-                                                    }
+                                                    setConfirmDeleteCond({ id: session.id, title: session.title });
                                                 }} className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-all" title="Delete">
                                                     <Trash2Icon size={15} />
                                                 </button>
@@ -1027,6 +1018,38 @@ ${sectionsHtml}
                     <RunningMechanicsLibrary />
                 </div>
             )}
+
+            {/* ── Confirm delete modals ── */}
+            <ConfirmDeleteModal
+                isOpen={!!confirmDeleteWattbike}
+                title="Delete Wattbike Session"
+                message={`Delete "${confirmDeleteWattbike?.title}"?`}
+                onConfirm={() => {
+                    setWattbikeSessions(prev => {
+                        const filtered = prev.filter(s => s.id !== confirmDeleteWattbike.id);
+                        if (StorageService.saveWattbikeSessions) StorageService.saveWattbikeSessions(filtered);
+                        return filtered;
+                    });
+                    showToast(`"${confirmDeleteWattbike.title}" deleted`, 'success');
+                    setConfirmDeleteWattbike(null);
+                }}
+                onCancel={() => setConfirmDeleteWattbike(null)}
+            />
+            <ConfirmDeleteModal
+                isOpen={!!confirmDeleteCond}
+                title="Delete Conditioning Session"
+                message={`Delete "${confirmDeleteCond?.title}"?`}
+                onConfirm={() => {
+                    setConditioningSessions(prev => {
+                        const filtered = prev.filter(s => s.id !== confirmDeleteCond.id);
+                        StorageService.saveConditioningSessions(filtered);
+                        return filtered;
+                    });
+                    showToast(`"${confirmDeleteCond.title}" deleted`, 'success');
+                    setConfirmDeleteCond(null);
+                }}
+                onCancel={() => setConfirmDeleteCond(null)}
+            />
         </div>
     );
 };
