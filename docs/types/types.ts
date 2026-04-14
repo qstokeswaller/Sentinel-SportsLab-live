@@ -143,6 +143,8 @@ export interface CalendarEvent {
   start_time?: string;
   end_time?: string;
   created_at?: string;
+  assigned_to_type?: 'team' | 'individual' | null;
+  assigned_to_id?: string | null;
 }
 
 export interface CustomEventType {

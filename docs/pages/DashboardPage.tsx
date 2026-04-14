@@ -393,7 +393,40 @@ export const DashboardPage = () => {
         return true;
     });
 
-    const showCalendarEvents = calendarFilterCategory === 'all' || calendarFilterCategory === 'trainer';
+    // Determine which general (trainer) events to show alongside sessions.
+    // In 'all' or 'trainer' mode: show all. In 'teams'/'athletes' mode: show only events
+    // assigned to the currently selected team/athlete so they surface in context.
+    const filteredCalendarEventsForView = React.useMemo(() => {
+        if (!calendarEvents) return [];
+        if (calendarFilterCategory === 'all' || calendarFilterCategory === 'trainer') {
+            return calendarEvents;
+        }
+        if (calendarFilterCategory === 'teams') {
+            if (calendarFilterTeamId) {
+                return calendarEvents.filter(e =>
+                    (e.assigned_to_type === 'team' && e.assigned_to_id === calendarFilterTeamId) ||
+                    (e.assigned_to_type === 'individual' && selectedTeamPlayerIds.includes(e.assigned_to_id))
+                );
+            }
+            // All teams selected — show all team-assigned events
+            return calendarEvents.filter(e => e.assigned_to_type === 'team');
+        }
+        if (calendarFilterCategory === 'athletes') {
+            if (calendarFilterAthleteId) {
+                return calendarEvents.filter(e =>
+                    e.assigned_to_type === 'individual' && e.assigned_to_id === calendarFilterAthleteId
+                );
+            }
+            if (calendarFilterTeamId) {
+                return calendarEvents.filter(e =>
+                    (e.assigned_to_type === 'team' && e.assigned_to_id === calendarFilterTeamId) ||
+                    (e.assigned_to_type === 'individual' && selectedTeamPlayerIds.includes(e.assigned_to_id))
+                );
+            }
+            return calendarEvents.filter(e => e.assigned_to_type === 'individual');
+        }
+        return calendarEvents;
+    }, [calendarEvents, calendarFilterCategory, calendarFilterTeamId, calendarFilterAthleteId, selectedTeamPlayerIds]);
 
     // Filter label for display
     const calendarFilterLabel = React.useMemo(() => {
@@ -743,10 +776,9 @@ export const DashboardPage = () => {
                                                             {(() => {
                                                                 const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
                                                                     .map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s }));
-                                                                const dayEvents = showCalendarEvents
-                                                                    ? (calendarEvents || []).filter(e => e.start_date === dateObj.dateStr)
-                                                                        .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }))
-                                                                    : [];
+                                                                const dayEvents = filteredCalendarEventsForView
+                                                                    .filter(e => e.start_date === dateObj.dateStr)
+                                                                    .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }));
                                                                 const merged = [...daySessions, ...dayEvents]
                                                                     .sort((a, b) => a.time.localeCompare(b.time))
                                                                     .slice(0, 3);
@@ -963,10 +995,9 @@ export const DashboardPage = () => {
                                                             {(() => {
                                                                 const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
                                                                     .map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s }));
-                                                                const dayEvents = showCalendarEvents
-                                                                    ? (calendarEvents || []).filter(e => e.start_date === dateObj.dateStr)
-                                                                        .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }))
-                                                                    : [];
+                                                                const dayEvents = filteredCalendarEventsForView
+                                                                    .filter(e => e.start_date === dateObj.dateStr)
+                                                                    .map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e }));
                                                                 const allItems = [...daySessions, ...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
                                                                 const total = allItems.length;
                                                                 const hidden = total - 3;
@@ -1153,6 +1184,50 @@ export const DashboardPage = () => {
                                             </div>
                                         </div>
 
+                                        {/* Assign To */}
+                                        <div>
+                                            <label className={LABEL}>Assign To</label>
+                                            <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit mb-2">
+                                                {(['none', 'team', 'individual'] as const).map(opt => (
+                                                    <button
+                                                        key={opt}
+                                                        onClick={() => setEditingEvent({ ...editingEvent, assigned_to_type: opt === 'none' ? null : opt, assigned_to_id: null })}
+                                                        className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${(opt === 'none' ? !editingEvent.assigned_to_type : editingEvent.assigned_to_type === opt) ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                                    >
+                                                        {opt === 'team' && <UsersIcon size={12} />}
+                                                        {opt === 'individual' && <UserIcon size={12} />}
+                                                        {opt === 'none' ? 'No one' : opt === 'team' ? 'Team' : 'Athlete'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {editingEvent.assigned_to_type === 'team' && (
+                                                <select
+                                                    value={editingEvent.assigned_to_id || ''}
+                                                    onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
+                                                    className={INPUT + ' appearance-none'}
+                                                >
+                                                    <option value="">Select a team...</option>
+                                                    {(teams || []).map((t: any) => (
+                                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                            {editingEvent.assigned_to_type === 'individual' && (
+                                                <select
+                                                    value={editingEvent.assigned_to_id || ''}
+                                                    onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
+                                                    className={INPUT + ' appearance-none'}
+                                                >
+                                                    <option value="">Select an athlete...</option>
+                                                    {(teams || []).flatMap((t: any) =>
+                                                        (t.players || []).map((p: any) => (
+                                                            <option key={p.id} value={p.id}>{p.name}{t.name ? ` — ${t.name}` : ''}</option>
+                                                        ))
+                                                    )}
+                                                </select>
+                                            )}
+                                        </div>
+
                                         {/* All Day Toggle */}
                                         <div className="flex items-center gap-3">
                                             <button onClick={() => setEditingEvent({ ...editingEvent, all_day: !editingEvent.all_day })}
@@ -1208,6 +1283,8 @@ export const DashboardPage = () => {
                                                     end_date: editingEvent.start_date,
                                                     start_time: editingEvent.all_day ? null : (editingEvent.start_time || null),
                                                     end_time: editingEvent.all_day ? null : (editingEvent.end_time || null),
+                                                    assigned_to_type: editingEvent.assigned_to_type || null,
+                                                    assigned_to_id: editingEvent.assigned_to_id || null,
                                                 });
                                                 setEditingEvent(null);
                                             }}

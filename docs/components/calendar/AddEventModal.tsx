@@ -12,6 +12,8 @@ import {
     Repeat as RepeatIcon,
     Calendar as CalendarIcon,
     Trash2 as Trash2Icon,
+    Users as UsersIcon,
+    User as UserIcon,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ const AddEventModal = () => {
         handleAddCalendarEvent,
         handleSaveCustomEventTypes,
         showToast,
+        teams,
     } = useAppState();
 
     // Form state
@@ -61,6 +64,10 @@ const AddEventModal = () => {
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
     const titleRef = React.useRef(null);
     const datesRef = React.useRef(null);
+
+    // Assignment
+    const [assignType, setAssignType] = useState<'none' | 'team' | 'individual'>('none');
+    const [assignId, setAssignId] = useState('');
 
     // Custom type inline form
     const [showCustomTypeForm, setShowCustomTypeForm] = useState(false);
@@ -85,6 +92,8 @@ const AddEventModal = () => {
         setScheduleMode('range');
         setSelectedDates([]);
         setDateToAdd(new Date().toISOString().split('T')[0]);
+        setAssignType('none');
+        setAssignId('');
         setShowCustomTypeForm(false);
         setNewTypeLabel('');
         setCreating(false);
@@ -153,6 +162,8 @@ const AddEventModal = () => {
             all_day: allDay,
             start_time: allDay ? null : startTime || null,
             end_time: allDay ? null : endTime || null,
+            assigned_to_type: assignType === 'none' ? null : assignType,
+            assigned_to_id: assignType === 'none' ? null : (assignId || null),
         };
 
         if (scheduleMode === 'dates' && selectedDates.length > 0) {
@@ -339,6 +350,50 @@ const AddEventModal = () => {
                                 className={INPUT + ' pl-9'}
                             />
                         </div>
+                    </div>
+
+                    {/* Assign To */}
+                    <div>
+                        <label className={LABEL}>Assign To</label>
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit mb-2">
+                            {(['none', 'team', 'individual'] as const).map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => { setAssignType(opt); setAssignId(''); }}
+                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                >
+                                    {opt === 'team' && <UsersIcon size={12} />}
+                                    {opt === 'individual' && <UserIcon size={12} />}
+                                    {opt === 'none' ? 'No one' : opt === 'team' ? 'Team' : 'Athlete'}
+                                </button>
+                            ))}
+                        </div>
+                        {assignType === 'team' && (
+                            <select
+                                value={assignId}
+                                onChange={e => setAssignId(e.target.value)}
+                                className={INPUT + ' appearance-none'}
+                            >
+                                <option value="">Select a team...</option>
+                                {(teams || []).map((t: any) => (
+                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                ))}
+                            </select>
+                        )}
+                        {assignType === 'individual' && (
+                            <select
+                                value={assignId}
+                                onChange={e => setAssignId(e.target.value)}
+                                className={INPUT + ' appearance-none'}
+                            >
+                                <option value="">Select an athlete...</option>
+                                {(teams || []).flatMap((t: any) =>
+                                    (t.players || []).map((p: any) => (
+                                        <option key={p.id} value={p.id}>{p.name}{t.name ? ` — ${t.name}` : ''}</option>
+                                    ))
+                                )}
+                            </select>
+                        )}
                     </div>
 
                     {/* All Day Toggle */}
