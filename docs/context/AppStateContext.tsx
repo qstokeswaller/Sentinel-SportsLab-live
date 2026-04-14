@@ -1352,7 +1352,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         document.body.removeChild(link);
     };
 
-    const handleAddAthlete = async () => {
+    const handleAddAthlete = async (keepOpen = false) => {
         if (!newAthleteName.trim()) return;
         try {
             if (addAthleteMode === 'athlete') {
@@ -1371,7 +1371,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             } else {
                 await DatabaseService.createTeam(newAthleteName, 'Football');
             }
-            setIsAddAthleteModalOpen(false);
+            if (!keepOpen) setIsAddAthleteModalOpen(false);
             setNewAthleteName('');
             setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '' });
             initData(); // refresh roster in background — don't block modal close

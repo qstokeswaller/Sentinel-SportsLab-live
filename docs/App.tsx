@@ -85,6 +85,12 @@ const AddAthleteModal = () => {
     } = useAppState();
 
     const [step, setStep] = useState(1);
+    const [addingNext, setAddingNext] = useState(false);
+
+    // Reset to step 1 every time the modal opens
+    useEffect(() => {
+        if (isAddAthleteModalOpen) setStep(1);
+    }, [isAddAthleteModalOpen]);
 
     // Auto-select newest real team when teams list changes (e.g. after creating a team)
     useEffect(() => {
@@ -101,6 +107,13 @@ const AddAthleteModal = () => {
     const canProceed = newAthleteName.trim().length > 0;
 
     const handleClose = () => { setIsAddAthleteModalOpen(false); setStep(1); };
+
+    const handleAddAndNext = async () => {
+        setAddingNext(true);
+        await handleAddAthlete(true); // keep modal open
+        setStep(1);                   // back to name entry
+        setAddingNext(false);
+    };
 
     const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
     const LABEL = "text-xs font-medium text-slate-600 block mb-1.5";
@@ -249,12 +262,23 @@ const AddAthleteModal = () => {
                             </button>
                         )}
                         {(addAthleteMode === 'team' || (addAthleteMode === 'athlete' && step === 2)) && (
-                            <button
-                                onClick={addAthleteMode === 'athlete' ? handleAddAthlete : handleAddTeam}
-                                className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors flex items-center gap-2"
-                            >
-                                <UserPlusIcon size={14} /> {addAthleteMode === 'athlete' ? 'Add Athlete' : 'Create Team'}
-                            </button>
+                            <>
+                                {addAthleteMode === 'athlete' && (
+                                    <button
+                                        onClick={handleAddAndNext}
+                                        disabled={addingNext}
+                                        className="px-5 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        <UserPlusIcon size={14} /> Add &amp; Next
+                                    </button>
+                                )}
+                                <button
+                                    onClick={addAthleteMode === 'athlete' ? handleAddAthlete : handleAddTeam}
+                                    className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors flex items-center gap-2"
+                                >
+                                    <UserPlusIcon size={14} /> {addAthleteMode === 'athlete' ? 'Add Athlete' : 'Create Team'}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
