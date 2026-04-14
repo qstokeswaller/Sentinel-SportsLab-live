@@ -174,7 +174,7 @@ const SectionHeader = ({ title, subtitle, count, collapsed, onToggle, icon: Icon
 export const WorkoutsPage = () => {
     const navigate = useNavigate();
     const {
-        workoutTemplates, setWorkoutTemplates, isLoading,
+        workoutTemplates, setWorkoutTemplates, isLoading, showToast,
     } = useAppState();
 
     // ── Section collapse state ─────────────────────────────────────────
@@ -229,16 +229,24 @@ export const WorkoutsPage = () => {
     }, [programSearch.suggestions, templateSearch.suggestions]);
 
     const handleDeleteProgram = async (id: string) => {
-        await deleteProgram.mutateAsync(id);
+        const name = programs.find(p => p.id === id)?.name;
+        try {
+            await deleteProgram.mutateAsync(id);
+            showToast(name ? `"${name}" deleted` : 'Program deleted', 'success');
+        } catch (e) {
+            showToast('Failed to delete program — please try again', 'error');
+        }
         setConfirmDeleteId(null);
     };
 
     const handleDeleteTemplate = async (id: string) => {
+        const tpl = workoutTemplates.find(t => t.id === id);
         setWorkoutTemplates(prev => prev.filter(t => t.id !== id));
         try {
             await DatabaseService.deleteWorkoutTemplate(id);
+            showToast(tpl?.name ? `"${tpl.name}" deleted` : 'Packet deleted', 'success');
         } catch (e) {
-            console.warn("Could not delete template from DB:", e.message);
+            showToast('Failed to delete packet — please try again', 'error');
         }
     };
 

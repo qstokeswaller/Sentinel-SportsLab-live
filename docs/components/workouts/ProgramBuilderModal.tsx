@@ -226,7 +226,7 @@ export const ProgramBuilderModal = ({
   onClose,
   editingProgram = null,
 }: ProgramBuilderModalProps) => {
-  const { wattbikeSessions, conditioningSessions, personalExerciseIds } = useAppState();
+  const { wattbikeSessions, conditioningSessions, personalExerciseIds, showToast } = useAppState();
 
   // Program meta
   const [programName, setProgramName]         = useState('');
@@ -462,6 +462,7 @@ export const ProgramBuilderModal = ({
       }));
 
       await saveFull.mutateAsync({ programId, days: dayPayloads });
+      showToast(editingProgram ? `"${programName}" updated` : `"${programName}" created`, 'success');
       onClose();
     } catch (e: any) {
       setError(e.message ?? 'Save failed. Please try again.');
@@ -493,6 +494,7 @@ export const ProgramBuilderModal = ({
       }));
 
       await saveFull.mutateAsync({ programId: created.id, days: dayPayloads });
+      showToast(`"${programName}" saved as new program`, 'success');
       onClose();
     } catch (e: any) {
       setError(e.message ?? 'Save failed. Please try again.');
