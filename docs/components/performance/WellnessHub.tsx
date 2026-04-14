@@ -120,6 +120,7 @@ const WellnessHub: React.FC = () => {
     const [responseViewDate, setResponseViewDate] = useState(TODAY);
     const [showDailyTracker, setShowDailyTracker] = useState(false);
     const [isRundownOpen, setIsRundownOpen] = useState(true);
+    const [showAllAlerts, setShowAllAlerts] = useState(false);
     const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
     const [rundownFrom, setRundownFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 27); return d.toISOString().split('T')[0]; });
     const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
@@ -1489,8 +1490,8 @@ const WellnessHub: React.FC = () => {
                             </div>
                         </div>
                         <div className="space-y-3">
-                            {latestPerAthlete
-                                .filter(r => {
+                            {(() => {
+                                const flagged = latestPerAthlete.filter(r => {
                                     const resp = r.responses || {};
                                     return r.injury_report
                                         || resolveAvailability(r) === 'unavailable'
@@ -1501,41 +1502,57 @@ const WellnessHub: React.FC = () => {
                                         || (resp.sleep_hours != null && resp.sleep_hours <= 5)
                                         || resp.health_complaint === 'illness'
                                         || resp.health_complaint === 'both';
-                                })
-                                .slice(0, 6)
-                                .map(r => {
-                                    const a      = athletes.find(att => att.id === r.athlete_id);
-                                    const resp   = r.responses || {};
-                                    const status = getAthleteStatus(r);
-                                    // Determine the most severe flag reason
-                                    const reason = r.injury_report ? 'Injury Reported'
-                                        : resolveAvailability(r) === 'unavailable' ? 'Unavailable'
-                                        : resp.readiness === 'not_ready' ? 'Not Ready'
-                                        : resp.health_complaint === 'illness' ? 'Illness Reported'
-                                        : resp.health_complaint === 'both' ? 'Injury + Illness'
-                                        : resp.fatigue >= 8 ? `Fatigue ${resp.fatigue}/10`
-                                        : resp.soreness >= 8 ? `Soreness ${resp.soreness}/10`
-                                        : resp.stress >= 8 ? `Stress ${resp.stress}/10`
-                                        : resp.sleep_hours <= 5 ? `Sleep ${resp.sleep_hours}h`
-                                        : 'Flagged';
-                                    return (
-                                        <div
-                                            key={r.id}
-                                            onClick={() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); }}
-                                            className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
-                                        >
-                                            {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
-                                            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border border-slate-200 shrink-0">
-                                                <span className="text-[10px] font-bold text-indigo-600">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="text-xs font-semibold text-slate-900 truncate">{a?.name || 'Unknown'}</div>
-                                                <div className="text-[9px] font-bold text-rose-500 uppercase">{reason}</div>
-                                            </div>
-                                            <ChevronRight size={13} className="text-slate-300 group-hover:text-rose-500 shrink-0" />
-                                        </div>
-                                    );
-                                })}
+                                });
+                                const PREVIEW = 6;
+                                const visible = showAllAlerts ? flagged : flagged.slice(0, PREVIEW);
+                                const hiddenCount = flagged.length - PREVIEW;
+                                return (
+                                    <>
+                                        {visible.map(r => {
+                                            const a      = athletes.find(att => att.id === r.athlete_id);
+                                            const resp   = r.responses || {};
+                                            const status = getAthleteStatus(r);
+                                            const reason = r.injury_report ? 'Injury Reported'
+                                                : resolveAvailability(r) === 'unavailable' ? 'Unavailable'
+                                                : resp.readiness === 'not_ready' ? 'Not Ready'
+                                                : resp.health_complaint === 'illness' ? 'Illness Reported'
+                                                : resp.health_complaint === 'both' ? 'Injury + Illness'
+                                                : resp.fatigue >= 8 ? `Fatigue ${resp.fatigue}/10`
+                                                : resp.soreness >= 8 ? `Soreness ${resp.soreness}/10`
+                                                : resp.stress >= 8 ? `Stress ${resp.stress}/10`
+                                                : resp.sleep_hours <= 5 ? `Sleep ${resp.sleep_hours}h`
+                                                : 'Flagged';
+                                            return (
+                                                <div
+                                                    key={r.id}
+                                                    onClick={() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); }}
+                                                    className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
+                                                >
+                                                    {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
+                                                    <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border border-slate-200 shrink-0">
+                                                        <span className="text-[10px] font-bold text-indigo-600">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-xs font-semibold text-slate-900 truncate">{a?.name || 'Unknown'}</div>
+                                                        <div className="text-[9px] font-bold text-rose-500 uppercase">{reason}</div>
+                                                    </div>
+                                                    <ChevronRight size={13} className="text-slate-300 group-hover:text-rose-500 shrink-0" />
+                                                </div>
+                                            );
+                                        })}
+                                        {flagged.length > PREVIEW && (
+                                            <button
+                                                onClick={() => setShowAllAlerts(prev => !prev)}
+                                                className="w-full py-2.5 rounded-xl border border-dashed border-rose-200 text-xs font-semibold text-rose-500 hover:bg-rose-50 transition-colors"
+                                            >
+                                                {showAllAlerts
+                                                    ? 'Show less'
+                                                    : `Show ${hiddenCount} more flagged athlete${hiddenCount !== 1 ? 's' : ''}`}
+                                            </button>
+                                        )}
+                                    </>
+                                );
+                            })()}
 
                             {kpi.alerts === 0 && (
                                 <div className="text-center py-10">
