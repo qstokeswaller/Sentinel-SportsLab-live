@@ -2,13 +2,13 @@
 /**
  * WellnessFlagPanel — Shows flagged athletes from the auto-detection engine
  *
- * Displays red and amber flags with trigger details, pending/completed weekly status,
- * and links to the weekly deep check form.
+ * Displays red and amber flags with trigger details, grouped by date with
+ * date separator rows (matching the Individual Rundown table pattern).
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { DatabaseService } from '../../services/databaseService';
-import { AlertTriangleIcon, AlertCircleIcon, CheckCircleIcon, ClockIcon, ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { AlertTriangleIcon, CheckCircleIcon, ClockIcon, ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon, XIcon } from 'lucide-react';
 
 interface FlagPanelProps {
     teamId: string;
@@ -24,6 +24,19 @@ const FLAG_LABELS: Record<string, string> = {
     stress: 'Stress',
     readiness: 'Readiness',
     mood: 'Mood',
+};
+
+const localDateStr = () => new Date().toISOString().split('T')[0];
+
+const formatDateSep = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const todayStr = localDateStr();
+    const yest = new Date(); yest.setDate(yest.getDate() - 1);
+    const yesterdayStr = yest.toISOString().split('T')[0];
+    const label = `${dt.toLocaleDateString('en-GB', { weekday: 'long' })}  ${dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    const badge = dateStr === todayStr ? 'Today' : dateStr === yesterdayStr ? 'Yesterday' : null;
+    return { label, badge };
 };
 
 const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
@@ -51,37 +64,25 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
         return m;
     }, [athletes]);
 
-    // Group flags by athlete, show most recent per athlete
-    const groupedFlags = useMemo(() => {
-        const groups = new Map<string, any[]>();
-        for (const f of flags) {
-            const aid = f.athlete_id;
-            if (!groups.has(aid)) groups.set(aid, []);
-            groups.get(aid)!.push(f);
+    // Group flags by date descending — each entry is one flag row
+    const byDate = useMemo(() => {
+        const sorted = [...flags].sort((a, b) => b.flag_date.localeCompare(a.flag_date));
+        const groups: { date: string; items: any[] }[] = [];
+        for (const f of sorted) {
+            const last = groups[groups.length - 1];
+            if (last && last.date === f.flag_date) last.items.push(f);
+            else groups.push({ date: f.flag_date, items: [f] });
         }
-        // Sort each group by date descending
-        for (const [, arr] of groups) arr.sort((a, b) => b.flag_date.localeCompare(a.flag_date));
-        // Sort groups: red first, then by flag count
-        return Array.from(groups.entries())
-            .map(([athleteId, athleteFlags]) => ({
-                athleteId,
-                name: athleteMap.get(athleteId) || 'Unknown',
-                flags: athleteFlags,
-                hasRed: athleteFlags.some(f => f.flag_type === 'red'),
-                hasPending: athleteFlags.some(f => !f.weekly_completed),
-            }))
-            .sort((a, b) => {
-                if (a.hasRed && !b.hasRed) return -1;
-                if (!a.hasRed && b.hasRed) return 1;
-                return b.flags.length - a.flags.length;
-            });
-    }, [flags, athleteMap]);
+        return groups;
+    }, [flags]);
 
-    const pendingCount = groupedFlags.filter(g => g.hasPending).length;
-    const totalFlags = flags.length;
+    const pendingCount = useMemo(() => {
+        const pendingAthletes = new Set(flags.filter(f => !f.weekly_completed).map(f => f.athlete_id));
+        return pendingAthletes.size;
+    }, [flags]);
 
     if (loading) return null;
-    if (totalFlags === 0) return null; // no flags = nothing to show
+    if (flags.length === 0) return null;
 
     return (
         <div className="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
@@ -91,9 +92,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
             >
                 <div className="flex items-center gap-2">
                     <AlertTriangleIcon size={16} className="text-amber-600" />
-                    <span className="text-sm font-semibold text-slate-800">
-                        Wellness Flags
-                    </span>
+                    <span className="text-sm font-semibold text-slate-800">Wellness Flags</span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
                         {pendingCount} pending
                     </span>
@@ -103,50 +102,61 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
 
             {expanded && (
                 <div className="divide-y divide-slate-100">
-                    {groupedFlags.map(group => (
-                        <div key={group.athleteId} className="px-4 py-3">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full shrink-0 ${group.hasRed ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                    <span className="text-xs font-semibold text-slate-800">{group.name}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {group.hasPending ? (
-                                        <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600">
-                                            <ClockIcon size={10} /> Deep Check pending
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600">
-                                            <CheckCircleIcon size={10} /> Resolved
+                    {byDate.map(({ date, items }) => {
+                        const { label, badge } = formatDateSep(date);
+                        return (
+                            <React.Fragment key={date}>
+                                {/* ── Date separator ── */}
+                                <div className="px-4 py-2 bg-slate-50/70 border-t border-slate-100 flex items-center gap-2.5">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</span>
+                                    {badge && (
+                                        <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">
+                                            {badge}
                                         </span>
                                     )}
-                                    {group.hasPending && (
-                                        <a
-                                            href={`/weekly-wellness/${teamId}/${group.athleteId}`}
-                                            target="_blank"
-                                            rel="noopener"
-                                            className="flex items-center gap-1 text-[9px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                                        >
-                                            <ExternalLinkIcon size={9} /> Deep Check link
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                                {group.flags.slice(0, 4).map((f, i) => (
-                                    <span key={i} className={`text-[9px] font-medium px-2 py-0.5 rounded-full ${
-                                        f.flag_type === 'red' ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
-                                    }`}>
-                                        {FLAG_LABELS[f.trigger_field] || f.trigger_field}: {f.trigger_value}
-                                        <span className="text-slate-300 ml-1">{f.flag_date?.slice(5)}</span>
+                                    <span className="ml-auto text-[8px] font-semibold text-slate-300 uppercase tracking-wide">
+                                        {items.length} flag{items.length !== 1 ? 's' : ''}
                                     </span>
-                                ))}
-                                {group.flags.length > 4 && (
-                                    <span className="text-[9px] text-slate-400">+{group.flags.length - 4} more</span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                                </div>
+
+                                {/* ── Flags for this date ── */}
+                                {items.map((f, i) => {
+                                    const name = athleteMap.get(f.athlete_id) || 'Unknown';
+                                    const isRed = f.flag_type === 'red';
+                                    return (
+                                        <div key={`${f.athlete_id}-${f.trigger_field}-${i}`} className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+                                            <span className={`w-2 h-2 rounded-full shrink-0 ${isRed ? 'bg-rose-500' : 'bg-amber-400'}`} />
+                                            <span className="text-xs font-semibold text-slate-800 min-w-[120px] truncate">{name}</span>
+                                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${isRed ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
+                                                {FLAG_LABELS[f.trigger_field] || f.trigger_field}: {f.trigger_value}
+                                            </span>
+                                            <span className="ml-auto flex items-center gap-2 shrink-0">
+                                                {!f.weekly_completed ? (
+                                                    <>
+                                                        <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600">
+                                                            <ClockIcon size={10} /> Pending
+                                                        </span>
+                                                        <a
+                                                            href={`/weekly-wellness/${teamId}/${f.athlete_id}`}
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                            className="flex items-center gap-1 text-[9px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                                                        >
+                                                            <ExternalLinkIcon size={9} /> Deep Check
+                                                        </a>
+                                                    </>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600">
+                                                        <CheckCircleIcon size={10} /> Done
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
             )}
         </div>

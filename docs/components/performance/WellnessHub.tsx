@@ -121,6 +121,7 @@ const WellnessHub: React.FC = () => {
     const [showDailyTracker, setShowDailyTracker] = useState(false);
     const [isRundownOpen, setIsRundownOpen] = useState(true);
     const [showAllAlerts, setShowAllAlerts] = useState(false);
+    const [alertsModalOpen, setAlertsModalOpen] = useState(false);
     const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
     const [rundownFrom, setRundownFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 27); return d.toISOString().split('T')[0]; });
     const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
@@ -1503,52 +1504,80 @@ const WellnessHub: React.FC = () => {
                                         || resp.health_complaint === 'illness'
                                         || resp.health_complaint === 'both';
                                 });
-                                const PREVIEW = 6;
-                                const visible = showAllAlerts ? flagged : flagged.slice(0, PREVIEW);
+                                const PREVIEW = 5;
+                                const visible = flagged.slice(0, PREVIEW);
                                 const hiddenCount = flagged.length - PREVIEW;
+
+                                const renderAlertCard = (r: any, onClick?: () => void) => {
+                                    const a      = athletes.find(att => att.id === r.athlete_id);
+                                    const resp   = r.responses || {};
+                                    const status = getAthleteStatus(r);
+                                    const reason = r.injury_report ? 'Injury Reported'
+                                        : resolveAvailability(r) === 'unavailable' ? 'Unavailable'
+                                        : resp.readiness === 'not_ready' ? 'Not Ready'
+                                        : resp.health_complaint === 'illness' ? 'Illness Reported'
+                                        : resp.health_complaint === 'both' ? 'Injury + Illness'
+                                        : resp.fatigue >= 8 ? `Fatigue ${resp.fatigue}/10`
+                                        : resp.soreness >= 8 ? `Soreness ${resp.soreness}/10`
+                                        : resp.stress >= 8 ? `Stress ${resp.stress}/10`
+                                        : resp.sleep_hours <= 5 ? `Sleep ${resp.sleep_hours}h`
+                                        : 'Flagged';
+                                    return (
+                                        <div
+                                            key={r.id}
+                                            onClick={onClick || (() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); })}
+                                            className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
+                                        >
+                                            {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
+                                            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border border-slate-200 shrink-0">
+                                                <span className="text-[10px] font-bold text-indigo-600">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-xs font-semibold text-slate-900 truncate">{a?.name || 'Unknown'}</div>
+                                                <div className="text-[9px] font-bold text-rose-500 uppercase">{reason}</div>
+                                            </div>
+                                            <ChevronRight size={13} className="text-slate-300 group-hover:text-rose-500 shrink-0" />
+                                        </div>
+                                    );
+                                };
+
                                 return (
                                     <>
-                                        {visible.map(r => {
-                                            const a      = athletes.find(att => att.id === r.athlete_id);
-                                            const resp   = r.responses || {};
-                                            const status = getAthleteStatus(r);
-                                            const reason = r.injury_report ? 'Injury Reported'
-                                                : resolveAvailability(r) === 'unavailable' ? 'Unavailable'
-                                                : resp.readiness === 'not_ready' ? 'Not Ready'
-                                                : resp.health_complaint === 'illness' ? 'Illness Reported'
-                                                : resp.health_complaint === 'both' ? 'Injury + Illness'
-                                                : resp.fatigue >= 8 ? `Fatigue ${resp.fatigue}/10`
-                                                : resp.soreness >= 8 ? `Soreness ${resp.soreness}/10`
-                                                : resp.stress >= 8 ? `Stress ${resp.stress}/10`
-                                                : resp.sleep_hours <= 5 ? `Sleep ${resp.sleep_hours}h`
-                                                : 'Flagged';
-                                            return (
-                                                <div
-                                                    key={r.id}
-                                                    onClick={() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); }}
-                                                    className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
-                                                >
-                                                    {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
-                                                    <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border border-slate-200 shrink-0">
-                                                        <span className="text-[10px] font-bold text-indigo-600">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="text-xs font-semibold text-slate-900 truncate">{a?.name || 'Unknown'}</div>
-                                                        <div className="text-[9px] font-bold text-rose-500 uppercase">{reason}</div>
-                                                    </div>
-                                                    <ChevronRight size={13} className="text-slate-300 group-hover:text-rose-500 shrink-0" />
-                                                </div>
-                                            );
-                                        })}
-                                        {flagged.length > PREVIEW && (
+                                        {visible.map(r => renderAlertCard(r))}
+                                        {hiddenCount > 0 && (
                                             <button
-                                                onClick={() => setShowAllAlerts(prev => !prev)}
+                                                onClick={() => setAlertsModalOpen(true)}
                                                 className="w-full py-2.5 rounded-xl border border-dashed border-rose-200 text-xs font-semibold text-rose-500 hover:bg-rose-50 transition-colors"
                                             >
-                                                {showAllAlerts
-                                                    ? 'Show less'
-                                                    : `Show ${hiddenCount} more flagged athlete${hiddenCount !== 1 ? 's' : ''}`}
+                                                + {hiddenCount} more flagged athlete{hiddenCount !== 1 ? 's' : ''}
                                             </button>
+                                        )}
+
+                                        {/* ── All Alerts Modal ── */}
+                                        {alertsModalOpen && (
+                                            <div className="fixed inset-0 z-[800] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setAlertsModalOpen(false)}>
+                                                <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md flex flex-col max-h-[80vh] animate-in zoom-in-95 fade-in duration-200" onClick={e => e.stopPropagation()}>
+                                                    {/* Header */}
+                                                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-9 h-9 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
+                                                                <AlertTriangle size={18} />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-sm font-semibold text-slate-900">All Priority Alerts</h3>
+                                                                <p className="text-[10px] text-rose-500 font-bold uppercase mt-0.5">{flagged.length} athlete{flagged.length !== 1 ? 's' : ''} flagged today</p>
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => setAlertsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                    {/* List */}
+                                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                                        {flagged.map(r => renderAlertCard(r, () => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); setAlertsModalOpen(false); }))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
                                     </>
                                 );
