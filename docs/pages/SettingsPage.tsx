@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -10,13 +10,13 @@ import {
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
   MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
-  ActivityIcon, TagIcon, CheckIcon, LinkIcon,
+  ActivityIcon, TagIcon, CheckIcon, LinkIcon, XIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
 import { PAGE_TOURS, WORKFLOW_TOURS, getDefaultTourState } from '../utils/tourSteps';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
-import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
+import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, saveGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import type { GpsTeamProfile } from '../components/performance/GpsConfigModal';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
@@ -31,8 +31,7 @@ const DEFAULT_TEAM_SETTINGS = { enabled: false, method: 'sprint_distance', acute
 
 const SETTINGS_TABS = [
   { id: 'account',     label: 'Account',          icon: ShieldIcon,           desc: 'Profile, security' },
-  { id: 'features',   label: 'Feature Settings',  icon: SlidersHorizontalIcon,desc: 'ACWR, Heatmap, Testing' },
-  { id: 'gps',        label: 'GPS Data',           icon: ActivityIcon,         desc: 'Import profiles, categories' },
+  { id: 'features',   label: 'Feature Settings',  icon: SlidersHorizontalIcon,desc: 'ACWR, Heatmap, Testing, GPS' },
   { id: 'walkthrough',label: 'Walkthrough',        icon: MapIcon,              desc: 'Page tours' },
 ];
 
@@ -86,6 +85,82 @@ const UnsavedChangesModal = ({ isOpen, onSave, onDiscard, onCancel }) => {
   );
 };
 
+// ── GPS Column Rename Modal ──────────────────────────────────────────
+const GPS_META_NAMES = new Set(['Player number', 'Player name', 'Session name', 'Phase name', 'Type']);
+
+const GpsColumnRenameModal: React.FC<{
+  profile: GpsTeamProfile;
+  onClose: () => void;
+  onSaved: () => void;
+}> = ({ profile, onClose, onSaved }) => {
+  const mappings = Array.isArray(profile.columnMapping) ? profile.columnMapping : [];
+  const [drafts, setDrafts] = useState<Record<string, string>>(
+    Object.fromEntries(mappings.map(m => [m.csvColumn, m.displayName || m.csvColumn]))
+  );
+  const visible = mappings.filter(m => !GPS_META_NAMES.has(m.csvColumn));
+
+  const handleSave = () => {
+    const updated: GpsTeamProfile = {
+      ...profile,
+      columnMapping: mappings.map(m => ({ ...m, displayName: drafts[m.csvColumn] ?? m.displayName })),
+    };
+    const all = loadGpsProfiles();
+    const idx = all.findIndex(p => p.teamId === profile.teamId);
+    if (idx >= 0) all[idx] = updated; else all.push(updated);
+    saveGpsProfiles(all);
+    onSaved();
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[82vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Column Display Names — {profile.teamName}</h2>
+            <p className="text-[10px] text-slate-400 mt-0.5">{visible.length} columns · CSV import name (left) → how it appears in GPS Hub (right)</p>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+            <XIcon size={14} />
+          </button>
+        </div>
+
+        {/* Column list */}
+        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
+          {visible.length === 0 && (
+            <p className="text-xs text-slate-400 italic">No column mappings found. Upload a CSV in Configure first.</p>
+          )}
+          {visible.map(m => (
+            <div key={m.csvColumn} className="flex items-center gap-3 group">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-slate-400 font-mono truncate mb-0.5" title={m.csvColumn}>{m.csvColumn}</p>
+              </div>
+              <div className="text-slate-300 text-xs shrink-0">→</div>
+              <input
+                value={drafts[m.csvColumn] ?? ''}
+                onChange={e => setDrafts(prev => ({ ...prev, [m.csvColumn]: e.target.value }))}
+                placeholder={m.csvColumn}
+                className="flex-1 text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors bg-slate-50 text-slate-900"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+          <p className="text-[10px] text-slate-400">Changes apply immediately in GPS Hub after saving.</p>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
+            <button onClick={handleSave} className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Save Names</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ══════════════════════════════════════════════════════════════════════
 // Main Settings Page
 // ══════════════════════════════════════════════════════════════════════
@@ -95,8 +170,8 @@ const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
   const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
-  // All sections start collapsed
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile']));
+  // All sections start collapsed (GPS sections also collapsed by default)
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_profiles', 'gps_categories']));
 
   // ── Unsaved changes guard ──────────────────────────────────────────
   const [pendingTab, setPendingTab] = useState<string | null>(null);
@@ -125,7 +200,6 @@ const SettingsPage: React.FC = () => {
   const [organization, setOrganization] = useState('');
   const [phone, setPhone] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
-  const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [profileDirty, setProfileDirty] = useState(false);
@@ -157,22 +231,22 @@ const SettingsPage: React.FC = () => {
     if (!organization.trim()) errors.organization = 'Organisation is required.';
     if (Object.keys(errors).length) { setFieldErrors(errors); return; }
     setFieldErrors({});
-    setProfileSaving(true); setProfileError(null); setProfileMessage(null);
+    setProfileSaving(true); setProfileError(null);
     const { error } = await supabase.auth.updateUser({
       data: { full_name: fullName.trim(), organization: organization.trim(), phone: phone.trim() || null },
     });
     setProfileSaving(false);
-    if (error) setProfileError(error.message);
+    if (error) { setProfileError(error.message); showToast?.(error.message, 'error'); }
     else {
-      setProfileMessage('Profile updated.');
       origProfile.current = { fullName, organization, phone };
       setProfileDirty(false);
-      setTimeout(() => setProfileMessage(null), 3000);
+      showToast?.('Profile updated');
     }
   };
 
   // ── GPS Data tab state ─────────────────────────────────────────────
   const [gpsConfigTarget, setGpsConfigTarget] = useState<{ teamId: string; teamName: string } | null>(null);
+  const [gpsPreviewProfile, setGpsPreviewProfile] = useState<GpsTeamProfile | null>(null);
   const [gpsProfilesVersion, setGpsProfilesVersion] = useState(0); // increment to force re-read
   const allGpsProfiles = useMemo(() => loadGpsProfiles(), [gpsProfilesVersion]);
 
@@ -442,6 +516,86 @@ const SettingsPage: React.FC = () => {
               <TestingHubSettings testVisibility={testVisibility} setTestVisibility={setTestVisibility} />
             </CollapsibleSection>
 
+            {/* Import Profiles */}
+            <CollapsibleSection
+              id="gps_profiles" icon={LinkIcon}
+              title="GPS Import Profiles"
+              subtitle="Map CSV columns once per team — imports auto-apply the saved profile"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
+            >
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Click <strong>Configure</strong> next to a team to upload a sample CSV and map its columns to platform fields.
+                  Once saved, every future import from that team will auto-apply the mapping — no manual work needed.
+                  You can also set which column feeds the ACWR engine.
+                </p>
+
+                {teams.filter(t => t.id !== 't_private').length === 0 && (
+                  <p className="text-xs text-slate-400 italic">No teams found — add teams in the Roster first.</p>
+                )}
+
+                <div className="space-y-2">
+                  {teams.filter(t => t.id !== 't_private').map(team => {
+                    const profile = allGpsProfiles.find(p => p.teamId === team.id);
+                    return (
+                      <div key={team.id}
+                        onClick={() => profile && setGpsPreviewProfile(profile)}
+                        className={`flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 cursor-pointer' : 'border-slate-200 bg-slate-50/50'}`}
+                      >
+                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
+                          {team.name?.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900">{team.name}</p>
+                          {profile ? (
+                            <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                              <CheckIcon size={10} />
+                              {profile.provider ? `${profile.provider} — ` : ''}
+                              {Array.isArray(profile.columnMapping) ? profile.columnMapping.filter(m => m.platformField).length : 0} columns mapped
+                              · ACWR: {profile.acwrColumn ? <span className="font-mono">{profile.acwrColumn.slice(0, 30)}{profile.acwrColumn.length > 30 ? '…' : ''}</span> : <span className="text-amber-600">not bound</span>}
+                              · saved {profile.savedAt ? new Date(profile.savedAt).toLocaleDateString() : '—'}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">No profile configured — ACWR won't read GPS data until set up</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                          {profile && (
+                            <button
+                              onClick={() => setGpsPreviewProfile(profile)}
+                              className="px-3 py-2 rounded-lg text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all"
+                            >
+                              Rename Cols
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
+                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                              profile
+                                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            }`}
+                          >
+                            {profile ? 'Reconfigure' : 'Configure'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Session Categories */}
+            <CollapsibleSection
+              id="gps_categories" icon={TagIcon}
+              title="GPS Session Categories"
+              subtitle="Tag GPS imports as Training, Matchday, Recovery, etc."
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
+            >
+              <GpsCategoryManager />
+            </CollapsibleSection>
+
           </>
         )}
 
@@ -484,7 +638,6 @@ const SettingsPage: React.FC = () => {
                   <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed here.</p>
                 </div>
                 {profileError && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
-                {profileMessage && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5"><p className="text-emerald-700 text-xs font-medium">{profileMessage}</p></div>}
                 <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
                     profileDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
@@ -511,83 +664,6 @@ const SettingsPage: React.FC = () => {
                 <LogOutIcon size={14} /> Sign out
               </button>
             </div>
-          </>
-        )}
-
-        {/* ── GPS DATA TAB ─────────────────────────────────────────── */}
-        {activeTab === 'gps' && (
-          <>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">GPS Data</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Configure CSV import profiles per team and manage session categories.</p>
-            </div>
-
-            {/* Import Profiles */}
-            <CollapsibleSection
-              id="gps_profiles" icon={LinkIcon}
-              title="Import Profiles"
-              subtitle="Map CSV columns once per team — imports auto-apply the saved profile"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
-            >
-              <div className="space-y-3">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Click <strong>Configure</strong> next to a team to upload a sample CSV and map its columns to platform fields.
-                  Once saved, every future import from that team will auto-apply the mapping — no manual work needed.
-                  You can also set which column feeds the ACWR engine.
-                </p>
-
-                {teams.filter(t => t.id !== 't_private').length === 0 && (
-                  <p className="text-xs text-slate-400 italic">No teams found — add teams in the Roster first.</p>
-                )}
-
-                <div className="space-y-2">
-                  {teams.filter(t => t.id !== 't_private').map(team => {
-                    const profile = allGpsProfiles.find(p => p.teamId === team.id);
-                    return (
-                      <div key={team.id} className={`flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
-                          {team.name?.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">{team.name}</p>
-                          {profile ? (
-                            <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
-                              <CheckIcon size={10} />
-                              {profile.provider ? `${profile.provider} — ` : ''}
-                              {profile.columnMapping.filter(m => m.platformField).length} columns mapped
-                              · ACWR: {profile.acwrColumn ? <span className="font-mono">{profile.acwrColumn.slice(0, 30)}{profile.acwrColumn.length > 30 ? '…' : ''}</span> : <span className="text-amber-600">not bound</span>}
-                              · saved {new Date(profile.savedAt).toLocaleDateString()}
-                            </p>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 mt-0.5">No profile configured — ACWR won't read GPS data until set up</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
-                          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
-                            profile
-                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                          }`}
-                        >
-                          {profile ? 'Reconfigure' : 'Configure'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </CollapsibleSection>
-
-            {/* Session Categories */}
-            <CollapsibleSection
-              id="gps_categories" icon={TagIcon}
-              title="Session Categories"
-              subtitle="Tag GPS imports as Training, Matchday, Recovery, etc."
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
-            >
-              <GpsCategoryManager />
-            </CollapsibleSection>
           </>
         )}
 
@@ -630,6 +706,7 @@ const SettingsPage: React.FC = () => {
                               const updated = { ...tourState, [tour.pageId]: 'pending' };
                               setTourState(updated);
                               StorageService.saveTourState(updated);
+                              showToast?.(`${tour.pageName} tour reset`);
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition-colors"
                           >
@@ -674,6 +751,7 @@ const SettingsPage: React.FC = () => {
                               const updated = { ...tourState, [wf.id]: 'pending' };
                               setTourState(updated);
                               StorageService.saveTourState(updated);
+                              showToast?.(`${wf.name} reset`);
                               navigate(PAGE_TOURS.find(p => p.pageId === wf.parentPageId)?.route || '/');
                             }}
                             className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded-md text-[10px] font-medium transition-colors"
@@ -720,7 +798,16 @@ const SettingsPage: React.FC = () => {
           teamId={gpsConfigTarget.teamId}
           teamName={gpsConfigTarget.teamName}
           onClose={() => setGpsConfigTarget(null)}
-          onSaved={() => setGpsProfilesVersion(v => v + 1)}
+          onSaved={() => { setGpsProfilesVersion(v => v + 1); showToast?.('GPS profile saved', 'success'); }}
+        />
+      )}
+
+      {/* GPS Column Rename Modal */}
+      {gpsPreviewProfile && (
+        <GpsColumnRenameModal
+          profile={gpsPreviewProfile}
+          onClose={() => setGpsPreviewProfile(null)}
+          onSaved={() => { setGpsProfilesVersion(v => v + 1); showToast?.('Column names updated', 'success'); setGpsPreviewProfile(null); }}
         />
       )}
     </div>
