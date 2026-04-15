@@ -10,11 +10,14 @@ import {
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
   MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
+  ActivityIcon, TagIcon, CheckIcon, LinkIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
 import { PAGE_TOURS, WORKFLOW_TOURS, getDefaultTourState } from '../utils/tourSteps';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
+import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
+import type { GpsTeamProfile } from '../components/performance/GpsConfigModal';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const inputErrorCls = "w-full bg-slate-50 border-2 border-red-400 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-colors";
@@ -27,9 +30,10 @@ const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [strin
 const DEFAULT_TEAM_SETTINGS = { enabled: false, method: 'sprint_distance', acuteWindow: 7, chronicWindow: 28, freezeRestDays: true, sprintThreshold: 25 };
 
 const SETTINGS_TABS = [
-  { id: 'account', label: 'Account', icon: ShieldIcon, desc: 'Profile, security' },
-  { id: 'features', label: 'Feature Settings', icon: SlidersHorizontalIcon, desc: 'ACWR, Heatmap, Testing' },
-  { id: 'walkthrough', label: 'Walkthrough', icon: MapIcon, desc: 'Page tours' },
+  { id: 'account',     label: 'Account',          icon: ShieldIcon,           desc: 'Profile, security' },
+  { id: 'features',   label: 'Feature Settings',  icon: SlidersHorizontalIcon,desc: 'ACWR, Heatmap, Testing' },
+  { id: 'gps',        label: 'GPS Data',           icon: ActivityIcon,         desc: 'Import profiles, categories' },
+  { id: 'walkthrough',label: 'Walkthrough',        icon: MapIcon,              desc: 'Page tours' },
 ];
 
 // ── Collapsible Section wrapper ──────────────────────────────────────
@@ -166,6 +170,11 @@ const SettingsPage: React.FC = () => {
       setTimeout(() => setProfileMessage(null), 3000);
     }
   };
+
+  // ── GPS Data tab state ─────────────────────────────────────────────
+  const [gpsConfigTarget, setGpsConfigTarget] = useState<{ teamId: string; teamName: string } | null>(null);
+  const [gpsProfilesVersion, setGpsProfilesVersion] = useState(0); // increment to force re-read
+  const allGpsProfiles = useMemo(() => loadGpsProfiles(), [gpsProfilesVersion]);
 
   // ── Global dirty check ─────────────────────────────────────────────
   const isDirty = acwrDirty || profileDirty;
@@ -505,6 +514,83 @@ const SettingsPage: React.FC = () => {
           </>
         )}
 
+        {/* ── GPS DATA TAB ─────────────────────────────────────────── */}
+        {activeTab === 'gps' && (
+          <>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">GPS Data</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Configure CSV import profiles per team and manage session categories.</p>
+            </div>
+
+            {/* Import Profiles */}
+            <CollapsibleSection
+              id="gps_profiles" icon={LinkIcon}
+              title="Import Profiles"
+              subtitle="Map CSV columns once per team — imports auto-apply the saved profile"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
+            >
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Click <strong>Configure</strong> next to a team to upload a sample CSV and map its columns to platform fields.
+                  Once saved, every future import from that team will auto-apply the mapping — no manual work needed.
+                  You can also set which column feeds the ACWR engine.
+                </p>
+
+                {teams.filter(t => t.id !== 't_private').length === 0 && (
+                  <p className="text-xs text-slate-400 italic">No teams found — add teams in the Roster first.</p>
+                )}
+
+                <div className="space-y-2">
+                  {teams.filter(t => t.id !== 't_private').map(team => {
+                    const profile = allGpsProfiles.find(p => p.teamId === team.id);
+                    return (
+                      <div key={team.id} className={`flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
+                          {team.name?.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900">{team.name}</p>
+                          {profile ? (
+                            <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                              <CheckIcon size={10} />
+                              {profile.provider ? `${profile.provider} — ` : ''}
+                              {profile.columnMapping.filter(m => m.platformField).length} columns mapped
+                              · ACWR: {profile.acwrColumn ? <span className="font-mono">{profile.acwrColumn.slice(0, 30)}{profile.acwrColumn.length > 30 ? '…' : ''}</span> : <span className="text-amber-600">not bound</span>}
+                              · saved {new Date(profile.savedAt).toLocaleDateString()}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">No profile configured — ACWR won't read GPS data until set up</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
+                          className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                            profile
+                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          }`}
+                        >
+                          {profile ? 'Reconfigure' : 'Configure'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Session Categories */}
+            <CollapsibleSection
+              id="gps_categories" icon={TagIcon}
+              title="Session Categories"
+              subtitle="Tag GPS imports as Training, Matchday, Recovery, etc."
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
+            >
+              <GpsCategoryManager />
+            </CollapsibleSection>
+          </>
+        )}
+
         {/* ── WALKTHROUGH TAB ──────────────────────────────────────── */}
         {activeTab === 'walkthrough' && (
           <>
@@ -627,6 +713,16 @@ const SettingsPage: React.FC = () => {
         onDiscard={handleUnsavedDiscard}
         onCancel={() => setPendingTab(null)}
       />
+
+      {/* GPS Config Modal */}
+      {gpsConfigTarget && (
+        <GpsConfigModal
+          teamId={gpsConfigTarget.teamId}
+          teamName={gpsConfigTarget.teamName}
+          onClose={() => setGpsConfigTarget(null)}
+          onSaved={() => setGpsProfilesVersion(v => v + 1)}
+        />
+      )}
     </div>
   );
 };

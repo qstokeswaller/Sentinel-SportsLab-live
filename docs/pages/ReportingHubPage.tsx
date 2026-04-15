@@ -13,6 +13,8 @@ import { useExerciseMap } from '../hooks/useExerciseMap';
 import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 import GpsColumnMapper, { findMatchingProfile } from '../components/performance/GpsColumnMapper';
 import type { GpsProfile, ProfileMatchResult } from '../components/performance/GpsColumnMapper';
+import { loadGpsProfiles, loadGpsCategories, saveGpsCategories, getProfileForTeam } from '../components/performance/GpsConfigModal';
+import type { GpsTeamProfile, GpsCategory } from '../components/performance/GpsConfigModal';
 import SmartCsvMapper from '../components/ui/SmartCsvMapper';
 import { HR_SCHEMA } from '../utils/csvSchemas';
 import {
@@ -95,6 +97,14 @@ export const ReportingHubPage = () => {
 
     // Separate warning state for missing columns (non-blocking, distinct from import success/error)
     const [gpsMissingColWarning, setGpsMissingColWarning] = useState<string[]>([]);
+
+    // GPS profile + category state for import dialog
+    const [gpsImportCategory, setGpsImportCategory]   = useState<string>('training');
+    const [gpsNewCatLabel, setGpsNewCatLabel]         = useState('');
+    const [gpsShowNewCat, setGpsShowNewCat]           = useState(false);
+    const [gpsDialogCategories, setGpsDialogCategories] = useState<GpsCategory[]>(() => loadGpsCategories());
+    const [gpsMatchedProfile, setGpsMatchedProfile]   = useState<GpsTeamProfile | null>(null);
+    const [gpsNewColumns, setGpsNewColumns]           = useState<string[]>([]); // columns in file not in saved profile
 
     // Manual entry state
     const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -1318,12 +1328,45 @@ export const ReportingHubPage = () => {
                 const ac = detectColFromHeaders(headers, ['player name','player','athlete','name','athlete name','full name','athlete_name','player_name']);
                 const dc = detectColFromHeaders(headers, ['session_date','session date','date','start time','match date','activity date']);
                 const pc = detectColFromHeaders(headers, ['phase name','phase','period','section','drill','split']);
+
+                // ── Profile detection ────────────────────────────────────────
+                // Try selected team's profile first, then scan all profiles by header fingerprint
+                const normalised = headers.map(h => h.toLowerCase().trim()).sort();
+                let matchedProfile: GpsTeamProfile | null = null;
+                let newCols: string[] = [];
+
+                const tryProfile = (p: GpsTeamProfile | null) => {
+                    if (!p || !p.headerFingerprint?.length) return false;
+                    const saved = new Set(p.headerFingerprint.map(h => h.toLowerCase().trim()));
+                    const overlap = normalised.filter(h => saved.has(h)).length;
+                    if (overlap / p.headerFingerprint.length >= 0.8) {
+                        matchedProfile = p;
+                        newCols = normalised.filter(h => !saved.has(h));
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Check selected team first
+                if (gpsImportTeamId) {
+                    tryProfile(getProfileForTeam(gpsImportTeamId));
+                }
+                // Fallback: scan all profiles
+                if (!matchedProfile) {
+                    for (const p of loadGpsProfiles()) { if (tryProfile(p)) break; }
+                }
+
+                setGpsMatchedProfile(matchedProfile);
+                setGpsNewColumns(newCols);
+
                 // Detect columns missing vs history (appeared before, not in this file)
                 const missingFromFile = historicalColKeys.filter(k => !headers.includes(k));
                 setGpsSmartDialog({ headers, rows, athleteCol: ac, dateCol: dc, phaseCol: pc });
                 setGpsDialogAthleteCol(ac);
                 setGpsDialogDateCol(dc);
                 setGpsDialogPhaseCol(pc);
+                // Refresh categories in case settings changed
+                setGpsDialogCategories(loadGpsCategories());
                 // Warn about missing historical columns — separate state, non-blocking
                 setGpsMissingColWarning(missingFromFile);
             };
@@ -1343,6 +1386,9 @@ export const ReportingHubPage = () => {
                 if (mdY) return `${mdY[3]}-${mdY[1].padStart(2,'0')}-${mdY[2].padStart(2,'0')}`;
                 const d = new Date(s); return isNaN(d.getTime()) ? new Date().toISOString().split('T')[0] : d.toISOString().split('T')[0];
             };
+            // Resolve ACWR column from matched profile
+            const acwrCol = gpsMatchedProfile?.acwrColumn || '';
+
             const newRecords = rows.map(row => {
                 const athleteName = row[athleteCol] || 'Unknown';
                 const date = normaliseDate(row[dateCol] || '');
@@ -1365,6 +1411,8 @@ export const ReportingHubPage = () => {
                     athleteId: player ? player.id : 'unknown',
                     matchedName: player ? player.name : athleteName,
                     rawColumns,
+                    category: gpsImportCategory || 'training',
+                    acwrValue: acwrCol && rawColumns[acwrCol] ? parseFloat(rawColumns[acwrCol]) || 0 : null,
                     timestamp: new Date().toISOString(),
                 };
             });
@@ -1422,7 +1470,15 @@ export const ReportingHubPage = () => {
             const n = parseFloat(v);
             return isNaN(n) ? v : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
         };
-        const colLabel = (k: string) => k.replace(/_/g, ' ').replace(/\[.*?\]/g, '').trim();
+        // colLabel: use saved display name from profile if available, else clean up raw header
+        const activeProfile = gpsImportTeamId ? getProfileForTeam(gpsImportTeamId) : null;
+        const colLabel = (k: string) => {
+            if (activeProfile) {
+                const mapping = activeProfile.columnMapping.find(m => m.csvColumn === k);
+                if (mapping?.displayName && mapping.displayName !== k) return mapping.displayName;
+            }
+            return k.replace(/_/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
+        };
 
         const computeTotals = (rows: typeof filteredGPSRecords): Record<string, string> => {
             const totals: Record<string, string> = {};
@@ -1556,6 +1612,112 @@ export const ReportingHubPage = () => {
                                 </div>
                             </div>
                             <div className="p-6 space-y-6">
+
+                                {/* ── Profile match banner ── */}
+                                {gpsMatchedProfile ? (
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                                        <CheckCircleIcon size={16} className="text-emerald-500 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-emerald-800">
+                                                Profile matched — {gpsMatchedProfile.teamName}{gpsMatchedProfile.provider ? ` · ${gpsMatchedProfile.provider}` : ''}
+                                            </p>
+                                            <p className="text-[10px] text-emerald-600 mt-0.5">
+                                                {gpsMatchedProfile.columnMapping.filter(m => m.platformField).length} columns pre-mapped
+                                                {gpsMatchedProfile.acwrColumn ? ` · ACWR bound to "${gpsMatchedProfile.acwrColumn.slice(0,40)}${gpsMatchedProfile.acwrColumn.length > 40 ? '…' : ''}"` : ' · ACWR column not bound'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                                        <AlertTriangleIcon size={16} className="text-amber-500 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-amber-800">No profile found for this file</p>
+                                            <p className="text-[10px] text-amber-600 mt-0.5">
+                                                ACWR won't read GPS data until a profile is configured in Settings → GPS Data. Import will still proceed.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── New columns warning ── */}
+                                {gpsNewColumns.length > 0 && (
+                                    <div className="bg-sky-50 border border-sky-200 rounded-xl px-4 py-3 flex items-start gap-3">
+                                        <InfoIcon size={15} className="text-sky-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-xs font-semibold text-sky-800">{gpsNewColumns.length} new column{gpsNewColumns.length > 1 ? 's' : ''} not in saved profile</p>
+                                            <p className="text-[10px] text-sky-600 mt-0.5">
+                                                {gpsNewColumns.slice(0, 3).join(', ')}{gpsNewColumns.length > 3 ? ` +${gpsNewColumns.length - 3} more` : ''} — imported as-is. Update the profile in Settings to map them.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Team + Category row ── */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">Team <span className="text-slate-400 font-normal">(for profile lookup)</span></label>
+                                        <select
+                                            value={gpsImportTeamId}
+                                            onChange={e => setGpsImportTeamId(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none"
+                                        >
+                                            <option value="">— Select team —</option>
+                                            {teams.filter(t => t.id !== 't_private').map(t => (
+                                                <option key={t.id} value={t.id}>{t.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 tracking-wide">Session Category</label>
+                                        {gpsShowNewCat ? (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    value={gpsNewCatLabel}
+                                                    onChange={e => setGpsNewCatLabel(e.target.value)}
+                                                    placeholder="Category name…"
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter' && gpsNewCatLabel.trim()) {
+                                                            const id = gpsNewCatLabel.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+                                                            const newCat: GpsCategory = { id, label: gpsNewCatLabel.trim(), color: 'indigo' };
+                                                            const updated = [...gpsDialogCategories, newCat];
+                                                            setGpsDialogCategories(updated);
+                                                            saveGpsCategories(updated);
+                                                            setGpsImportCategory(id);
+                                                            setGpsNewCatLabel('');
+                                                            setGpsShowNewCat(false);
+                                                            showToast(`Category "${newCat.label}" added`, 'success');
+                                                        }
+                                                        if (e.key === 'Escape') { setGpsShowNewCat(false); setGpsNewCatLabel(''); }
+                                                    }}
+                                                    className="flex-1 bg-white border border-indigo-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500"
+                                                />
+                                                <button onClick={() => { setGpsShowNewCat(false); setGpsNewCatLabel(''); }} className="px-2 py-2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <select
+                                                    value={gpsImportCategory}
+                                                    onChange={e => setGpsImportCategory(e.target.value)}
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none"
+                                                >
+                                                    {gpsDialogCategories.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.label}</option>
+                                                    ))}
+                                                </select>
+                                                <button
+                                                    onClick={() => setGpsShowNewCat(true)}
+                                                    title="Add new category"
+                                                    className="px-2.5 py-2 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 rounded-lg border border-slate-200 transition-colors text-xs font-bold"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-3 gap-4">
                                     {[
                                         { label: 'Athlete Column', required: true, val: gpsDialogAthleteCol, set: setGpsDialogAthleteCol, color: 'indigo' },
