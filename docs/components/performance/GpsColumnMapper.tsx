@@ -127,13 +127,12 @@ export const ALIAS_MAP: Record<string, string[]> = {
 
     // Distance & Speed
     total_distance: ['total distance', 'distance', 'total distance (m)', 'total distance (km)', 'dist', 'distance (m)', 'meters', 'total dist', 'td', 'total_distance', 'totaldistance', 'distance covered', 'total distance covered', 'odometer'],
-    distance_per_min: ['distance per min', 'm/min', 'dist/min', 'meters per minute', 'distance_per_min', 'work rate', 'distance per minute', 'distance per minute (m/min)'],
+    distance_per_min: ['distance per min', 'm/min', 'dist/min', 'meters per minute', 'distance_per_min', 'work rate', 'distance per minute', 'distance per minute (m/min)', 'distance / min', 'distance / min [m/min]'],
     max_speed: ['top speed', 'max speed', 'velocity max', 'max speed (km/h)', 'max speed (m/s)', 'v max', 'vmax', 'peak speed', 'max velocity', 'max_speed', 'maximum speed', 'top speed (km/h)', 'peak velocity', 'max velocity (km/h)'],
     avg_speed: ['avg speed', 'average speed', 'avg speed (km/h)', 'average speed (km/h)', 'mean speed', 'average velocity'],
 
     // High Intensity
     hsr: ['hsr', 'high speed running', 'hsr (m)', 'high speed dist', 'high speed distance', 'hsr distance', 'hsr_distance', 'high_speed_running', 'high speed running (m)', 'hsr distance (m)', 'high speed running distance', 'high speed running distance (m)', 'hsd', 'high intensity running distance'],
-    sprint_distance: ['sprint distance', 'sprint dist', 'sprint_distance', 'sprint distance (m)', 'very high speed running', 'vhsr', 'vhsr distance', 'vhsr (m)'],
     sprints: ['sprints', 'sprint count', 'sprinting', 'sprint_count', 'number of sprints', 'sprint efforts', 'no. sprints', 'total sprints', 'no of sprints'],
     hml_distance: ['hml distance', 'hml', 'high metabolic load distance', 'high metabolic load distance (m)', 'hmld', 'high metabolic power distance', 'hml distance (m)'],
 
@@ -146,7 +145,7 @@ export const ALIAS_MAP: Record<string, string[]> = {
     speed_zone_5: ['speed zone 5', 'speed zone 5 distance', 'speed zone 5 (m)', 'speed zone 5 distance (m)', 'velocity band 5 distance', 'velocity band 5 distance (m)', 'sz5', 'distance in speed zone 5', 'distance in speed zone 5 [m]'],
     speed_zone_6: ['speed zone 6', 'speed zone 6 distance', 'speed zone 6 (m)', 'speed zone 6 distance (m)', 'velocity band 6 distance', 'velocity band 6 distance (m)', 'sz6', 'distance in speed zone 6', 'distance in speed zone 6 [m]'],
 
-    // Sprint distance — also catches Polar speed zone 5 (>25 km/h) explicitly
+    // Sprint distance — includes Polar speed zone 5 (>25 km/h) bracket format explicitly
     sprint_distance: ['sprint distance', 'sprint dist', 'sprint_distance', 'sprint distance (m)', 'very high speed running', 'vhsr', 'vhsr distance', 'vhsr (m)', 'distance in speed zone 5 [m] (25.00- km/h)', 'distance in speed zone 5 (25.00- km/h)'],
 
     // Acceleration / Deceleration — Polar uses "Number of accelerations (x - y m/s²)" for both
@@ -157,7 +156,7 @@ export const ALIAS_MAP: Record<string, string[]> = {
     max_deceleration: ['max deceleration', 'max deceleration (m/s/s)', 'max decel', 'max deceleration (m/s²)', 'peak deceleration'],
 
     // Load — extended with Polar muscle load aliases
-    player_load: ['player load', 'playerload', 'player_load', 'body load', 'pl', 'total player load', 'accumulated player load', 'player load (au)', 'muscle load', 'total muscle load'],
+    player_load: ['player load', 'playerload', 'player_load', 'body load', 'pl', 'total player load', 'accumulated player load', 'player load (au)', 'total muscle load'],
     player_load_per_min: ['player load per min', 'pl/min', 'player load/min', 'player load per min (au/min)', 'playerload per min'],
     dynamic_stress_load: ['dynamic stress load', 'dsl', 'dynamic_stress_load', 'stress load'],
     metabolic_power: ['metabolic power', 'avg metabolic power', 'metabolic_power', 'mp', 'avg mp', 'metabolic power (w/kg)', 'metabolic power avg', 'metabolic power avg (w/kg)'],
@@ -171,8 +170,8 @@ export const ALIAS_MAP: Record<string, string[]> = {
     // Heart Rate — extended with Polar bracket-format zone names
     heart_rate_avg: ['avg hr', 'average heart rate', 'hr avg', 'heart rate avg', 'avg_hr', 'mean hr', 'hr mean', 'average hr', 'avg hr (bpm)', 'average heart rate (bpm)', 'hr avg (bpm)'],
     heart_rate_max: ['max hr', 'maximum heart rate', 'hr max', 'heart rate max', 'max_hr', 'peak hr', 'peak heart rate', 'max hr (bpm)', 'maximum heart rate (bpm)'],
-    trimp: ['trimp', 'trimp (au)', 'training load (trimp)', 'training impulse', 'training load score'],
-    hr_exertion: ['hr exertion', 'hr exertion (au)', 'heart rate exertion', 'exertion', 'cardio load'],
+    trimp: ['trimp', 'trimp (au)', 'training load (trimp)', 'training impulse'],
+    hr_exertion: ['hr exertion', 'hr exertion (au)', 'heart rate exertion', 'exertion'],
     hr_zone_1: ['hr zone 1', 'hr zone 1 time', 'hr zone 1 duration', 'hr zone 1 (s)', 'hr zone 1 time (s)', 'heart rate zone 1', 'time in hr zone 1', 'time in hr zone 1 (50 - 59 %)', 'time in hr zone 1 (50-59%)'],
     hr_zone_2: ['hr zone 2', 'hr zone 2 time', 'hr zone 2 duration', 'hr zone 2 (s)', 'hr zone 2 time (s)', 'heart rate zone 2', 'time in hr zone 2', 'time in hr zone 2 (60 - 69 %)', 'time in hr zone 2 (60-69%)'],
     hr_zone_3: ['hr zone 3', 'hr zone 3 time', 'hr zone 3 duration', 'hr zone 3 (s)', 'hr zone 3 time (s)', 'heart rate zone 3', 'time in hr zone 3', 'time in hr zone 3 (70 - 79 %)', 'time in hr zone 3 (70-79%)'],
