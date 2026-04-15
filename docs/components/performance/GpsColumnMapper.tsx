@@ -29,6 +29,7 @@ export const PLATFORM_FIELDS = [
     // ── Identification (required) ──
     { id: 'athlete_name', label: 'Athlete Name', required: true, group: 'Identity', description: 'Player / athlete identifier' },
     { id: 'date', label: 'Session Date', required: true, group: 'Identity', description: 'Date of the session' },
+    { id: 'gps_pod_number', label: 'GPS Pod Number', required: false, group: 'Identity', description: 'Physical GPS device/pod number assigned to the player' },
 
     // ── Distance & Speed ──
     { id: 'total_distance', label: 'Total Distance (m)', required: false, group: 'Distance & Speed', description: 'Total metres covered' },
@@ -96,6 +97,18 @@ export const PLATFORM_FIELDS = [
     { id: 'training_effect_aerobic', label: 'Training Effect (Aerobic)', required: false, group: 'Recovery', description: 'Aerobic training effect score (Firstbeat)' },
     { id: 'training_effect_anaerobic', label: 'Training Effect (Anaerobic)', required: false, group: 'Recovery', description: 'Anaerobic training effect score (Firstbeat)' },
     { id: 'calories', label: 'Calories (kcal)', required: false, group: 'Recovery', description: 'Estimated energy expenditure' },
+    { id: 'recovery_time_h', label: 'Recovery Time (h)', required: false, group: 'Recovery', description: 'Estimated recovery time in hours (Polar)' },
+
+    // ── Polar-specific Load ──
+    { id: 'polar_training_load', label: 'Training Load Score', required: false, group: 'Load', description: 'Polar HR-based training load score (≈ TRIMP)' },
+    { id: 'polar_cardio_load', label: 'Cardio Load', required: false, group: 'Load', description: 'Polar cardio load metric' },
+    { id: 'polar_muscle_load', label: 'Muscle Load', required: false, group: 'Load', description: 'Polar muscle load (≈ Player Load)' },
+
+    // ── HRV (Polar, Firstbeat, Garmin) ──
+    { id: 'hrv_rmssd', label: 'HRV RMSSD (ms)', required: false, group: 'HRV', description: 'Root mean square of successive RR differences' },
+    { id: 'rr_min', label: 'RR Min (ms)', required: false, group: 'HRV', description: 'Minimum RR interval' },
+    { id: 'rr_max', label: 'RR Max (ms)', required: false, group: 'HRV', description: 'Maximum RR interval' },
+    { id: 'rr_avg', label: 'RR Avg (ms)', required: false, group: 'HRV', description: 'Average RR interval' },
 
     // ── Asymmetry (STATSports) ──
     { id: 'step_balance', label: 'Step Balance (%)', required: false, group: 'Asymmetry', description: 'Left/right ground contact asymmetry (STATSports)' },
@@ -110,6 +123,7 @@ export const ALIAS_MAP: Record<string, string[]> = {
     // Identity
     athlete_name: ['player', 'name', 'athlete', 'full name', 'first name', 'surname', 'player name', 'athlete name', 'player_name', 'playername', 'player id', 'jersey number'],
     date: ['date', 'session date', 'day', 'match date', 'session_date', 'activity date', 'start time', 'start date'],
+    gps_pod_number: ['player number', 'pod number', 'gps pod', 'device number', 'unit number', 'pod id', 'gps number', 'device id', 'unit id', 'tag number', 'sensor number'],
 
     // Distance & Speed
     total_distance: ['total distance', 'distance', 'total distance (m)', 'total distance (km)', 'dist', 'distance (m)', 'meters', 'total dist', 'td', 'total_distance', 'totaldistance', 'distance covered', 'total distance covered', 'odometer'],
@@ -123,41 +137,51 @@ export const ALIAS_MAP: Record<string, string[]> = {
     sprints: ['sprints', 'sprint count', 'sprinting', 'sprint_count', 'number of sprints', 'sprint efforts', 'no. sprints', 'total sprints', 'no of sprints'],
     hml_distance: ['hml distance', 'hml', 'high metabolic load distance', 'high metabolic load distance (m)', 'hmld', 'high metabolic power distance', 'hml distance (m)'],
 
-    // Speed zones
-    speed_zone_1: ['speed zone 1', 'speed zone 1 distance', 'speed zone 1 (m)', 'speed zone 1 distance (m)', 'velocity band 1 distance', 'velocity band 1 distance (m)', 'sz1'],
-    speed_zone_2: ['speed zone 2', 'speed zone 2 distance', 'speed zone 2 (m)', 'speed zone 2 distance (m)', 'velocity band 2 distance', 'velocity band 2 distance (m)', 'sz2'],
-    speed_zone_3: ['speed zone 3', 'speed zone 3 distance', 'speed zone 3 (m)', 'speed zone 3 distance (m)', 'velocity band 3 distance', 'velocity band 3 distance (m)', 'sz3'],
-    speed_zone_4: ['speed zone 4', 'speed zone 4 distance', 'speed zone 4 (m)', 'speed zone 4 distance (m)', 'velocity band 4 distance', 'velocity band 4 distance (m)', 'sz4'],
-    speed_zone_5: ['speed zone 5', 'speed zone 5 distance', 'speed zone 5 (m)', 'speed zone 5 distance (m)', 'velocity band 5 distance', 'velocity band 5 distance (m)', 'sz5'],
-    speed_zone_6: ['speed zone 6', 'speed zone 6 distance', 'speed zone 6 (m)', 'speed zone 6 distance (m)', 'velocity band 6 distance', 'velocity band 6 distance (m)', 'sz6'],
+    // Speed zones — extended with Polar long-form bracket names
+    speed_zone_1: ['speed zone 1', 'speed zone 1 distance', 'speed zone 1 (m)', 'speed zone 1 distance (m)', 'velocity band 1 distance', 'velocity band 1 distance (m)', 'sz1', 'distance in speed zone 1', 'distance in speed zone 1 [m]'],
+    speed_zone_2: ['speed zone 2', 'speed zone 2 distance', 'speed zone 2 (m)', 'speed zone 2 distance (m)', 'velocity band 2 distance', 'velocity band 2 distance (m)', 'sz2', 'distance in speed zone 2', 'distance in speed zone 2 [m]'],
+    speed_zone_3: ['speed zone 3', 'speed zone 3 distance', 'speed zone 3 (m)', 'speed zone 3 distance (m)', 'velocity band 3 distance', 'velocity band 3 distance (m)', 'sz3', 'distance in speed zone 3', 'distance in speed zone 3 [m]'],
+    speed_zone_4: ['speed zone 4', 'speed zone 4 distance', 'speed zone 4 (m)', 'speed zone 4 distance (m)', 'velocity band 4 distance', 'velocity band 4 distance (m)', 'sz4', 'distance in speed zone 4', 'distance in speed zone 4 [m]'],
+    // Speed zone 5 = >25 km/h sprint zone — the ACWR load metric for sprint_distance method
+    speed_zone_5: ['speed zone 5', 'speed zone 5 distance', 'speed zone 5 (m)', 'speed zone 5 distance (m)', 'velocity band 5 distance', 'velocity band 5 distance (m)', 'sz5', 'distance in speed zone 5', 'distance in speed zone 5 [m]'],
+    speed_zone_6: ['speed zone 6', 'speed zone 6 distance', 'speed zone 6 (m)', 'speed zone 6 distance (m)', 'velocity band 6 distance', 'velocity band 6 distance (m)', 'sz6', 'distance in speed zone 6', 'distance in speed zone 6 [m]'],
 
-    // Acceleration / Deceleration
-    accelerations: ['accels', 'accelerations', 'accel', 'total accelerations', 'high accels', 'acc', 'accel count', 'total_accelerations', 'acceleration efforts', 'total accel efforts'],
-    decelerations: ['decels', 'decelerations', 'decel', 'total decelerations', 'high decels', 'dec', 'decel count', 'total_decelerations', 'deceleration efforts', 'total decel efforts'],
+    // Sprint distance — also catches Polar speed zone 5 (>25 km/h) explicitly
+    sprint_distance: ['sprint distance', 'sprint dist', 'sprint_distance', 'sprint distance (m)', 'very high speed running', 'vhsr', 'vhsr distance', 'vhsr (m)', 'distance in speed zone 5 [m] (25.00- km/h)', 'distance in speed zone 5 (25.00- km/h)'],
+
+    // Acceleration / Deceleration — Polar uses "Number of accelerations (x - y m/s²)" for both
+    // Positive ranges = accelerations, negative ranges = decelerations
+    accelerations: ['accels', 'accelerations', 'accel', 'total accelerations', 'high accels', 'acc', 'accel count', 'total_accelerations', 'acceleration efforts', 'total accel efforts', 'number of accelerations (3.00 - 50.00 m/s²)', 'number of accelerations (2.00 - 2.99 m/s²)', 'number of accelerations (1.00 - 1.99 m/s²)', 'number of accelerations (0.50 - 0.99 m/s²)'],
+    decelerations: ['decels', 'decelerations', 'decel', 'total decelerations', 'high decels', 'dec', 'decel count', 'total_decelerations', 'deceleration efforts', 'total decel efforts', 'number of accelerations (-50.00 - -3.00 m/s²)', 'number of accelerations (-2.99 - -2.00 m/s²)', 'number of accelerations (-1.99 - -1.00 m/s²)', 'number of accelerations (-0.99 - -0.50 m/s²)'],
     max_acceleration: ['max acceleration', 'max acceleration (m/s/s)', 'max accel', 'max acceleration (m/s²)', 'peak acceleration'],
     max_deceleration: ['max deceleration', 'max deceleration (m/s/s)', 'max decel', 'max deceleration (m/s²)', 'peak deceleration'],
 
-    // Load
-    player_load: ['player load', 'playerload', 'player_load', 'body load', 'pl', 'total player load', 'accumulated player load', 'player load (au)'],
+    // Load — extended with Polar muscle load aliases
+    player_load: ['player load', 'playerload', 'player_load', 'body load', 'pl', 'total player load', 'accumulated player load', 'player load (au)', 'muscle load', 'total muscle load'],
     player_load_per_min: ['player load per min', 'pl/min', 'player load/min', 'player load per min (au/min)', 'playerload per min'],
     dynamic_stress_load: ['dynamic stress load', 'dsl', 'dynamic_stress_load', 'stress load'],
     metabolic_power: ['metabolic power', 'avg metabolic power', 'metabolic_power', 'mp', 'avg mp', 'metabolic power (w/kg)', 'metabolic power avg', 'metabolic power avg (w/kg)'],
     equivalent_distance: ['equivalent distance', 'equivalent distance (m)', 'eq distance', 'equiv dist', 'equivalent_distance'],
 
-    // Heart Rate
+    // Polar-specific load metrics
+    polar_training_load: ['training load score', 'training load', 'polar training load', 'training load (polar)', 'session training load'],
+    polar_cardio_load: ['cardio load', 'cardiac load', 'polar cardio load'],
+    polar_muscle_load: ['muscle load', 'polar muscle load'],
+
+    // Heart Rate — extended with Polar bracket-format zone names
     heart_rate_avg: ['avg hr', 'average heart rate', 'hr avg', 'heart rate avg', 'avg_hr', 'mean hr', 'hr mean', 'average hr', 'avg hr (bpm)', 'average heart rate (bpm)', 'hr avg (bpm)'],
     heart_rate_max: ['max hr', 'maximum heart rate', 'hr max', 'heart rate max', 'max_hr', 'peak hr', 'peak heart rate', 'max hr (bpm)', 'maximum heart rate (bpm)'],
-    trimp: ['trimp', 'trimp (au)', 'training load (trimp)', 'training impulse'],
-    hr_exertion: ['hr exertion', 'hr exertion (au)', 'heart rate exertion', 'exertion'],
-    hr_zone_1: ['hr zone 1', 'hr zone 1 time', 'hr zone 1 duration', 'hr zone 1 (s)', 'hr zone 1 time (s)', 'heart rate zone 1'],
-    hr_zone_2: ['hr zone 2', 'hr zone 2 time', 'hr zone 2 duration', 'hr zone 2 (s)', 'hr zone 2 time (s)', 'heart rate zone 2'],
-    hr_zone_3: ['hr zone 3', 'hr zone 3 time', 'hr zone 3 duration', 'hr zone 3 (s)', 'hr zone 3 time (s)', 'heart rate zone 3'],
-    hr_zone_4: ['hr zone 4', 'hr zone 4 time', 'hr zone 4 duration', 'hr zone 4 (s)', 'hr zone 4 time (s)', 'heart rate zone 4'],
-    hr_zone_5: ['hr zone 5', 'hr zone 5 time', 'hr zone 5 duration', 'hr zone 5 (s)', 'hr zone 5 time (s)', 'heart rate zone 5'],
+    trimp: ['trimp', 'trimp (au)', 'training load (trimp)', 'training impulse', 'training load score'],
+    hr_exertion: ['hr exertion', 'hr exertion (au)', 'heart rate exertion', 'exertion', 'cardio load'],
+    hr_zone_1: ['hr zone 1', 'hr zone 1 time', 'hr zone 1 duration', 'hr zone 1 (s)', 'hr zone 1 time (s)', 'heart rate zone 1', 'time in hr zone 1', 'time in hr zone 1 (50 - 59 %)', 'time in hr zone 1 (50-59%)'],
+    hr_zone_2: ['hr zone 2', 'hr zone 2 time', 'hr zone 2 duration', 'hr zone 2 (s)', 'hr zone 2 time (s)', 'heart rate zone 2', 'time in hr zone 2', 'time in hr zone 2 (60 - 69 %)', 'time in hr zone 2 (60-69%)'],
+    hr_zone_3: ['hr zone 3', 'hr zone 3 time', 'hr zone 3 duration', 'hr zone 3 (s)', 'hr zone 3 time (s)', 'heart rate zone 3', 'time in hr zone 3', 'time in hr zone 3 (70 - 79 %)', 'time in hr zone 3 (70-79%)'],
+    hr_zone_4: ['hr zone 4', 'hr zone 4 time', 'hr zone 4 duration', 'hr zone 4 (s)', 'hr zone 4 time (s)', 'heart rate zone 4', 'time in hr zone 4', 'time in hr zone 4 (80 - 89 %)', 'time in hr zone 4 (80-89%)'],
+    hr_zone_5: ['hr zone 5', 'hr zone 5 time', 'hr zone 5 duration', 'hr zone 5 (s)', 'hr zone 5 time (s)', 'heart rate zone 5', 'time in hr zone 5', 'time in hr zone 5 (90 - 100 %)', 'time in hr zone 5 (90-100%)'],
 
-    // Session
+    // Session — Polar uses "Phase name" for period/drill label
     duration_minutes: ['duration', 'duration (min)', 'time', 'session duration', 'minutes', 'session time', 'total time', 'drill duration', 'duration (s)', 'duration (hh:mm:ss)'],
-    session_title: ['session', 'session title', 'session name', 'drill title', 'activity', 'period name'],
+    session_title: ['session', 'session title', 'session name', 'drill title', 'activity', 'period name', 'phase name'],
     session_type: ['session type', 'type', 'activity type'],
     position: ['position', 'position name', 'pos'],
 
@@ -172,11 +196,18 @@ export const ALIAS_MAP: Record<string, string[]> = {
     ima_cod_right: ['ima cod right', 'ima cod right (count)', 'ima change of direction right'],
     jump_count: ['jump count', 'jumps', 'jump count high', 'total jumps', 'jump count (count)'],
 
-    // Recovery
+    // Recovery — extended with Polar recovery time
     epoc: ['epoc', 'epoc (ml/kg)', 'excess post-exercise oxygen consumption'],
     training_effect_aerobic: ['training effect', 'training effect (aerobic)', 'aerobic training effect', 'aerobic te'],
     training_effect_anaerobic: ['training effect (anaerobic)', 'anaerobic training effect', 'anaerobic te'],
     calories: ['calories', 'calories (kcal)', 'energy', 'energy (kcal)', 'cal'],
+    recovery_time_h: ['recovery time', 'recovery time [h]', 'recovery time (h)', 'recovery hours', 'recommended recovery time'],
+
+    // HRV — Polar, Firstbeat, Garmin
+    hrv_rmssd: ['hrv', 'hrv (rmssd)', 'rmssd', 'hrv rmssd', 'heart rate variability', 'hrv score'],
+    rr_min: ['min rr', 'min rr interval', 'rr min', 'minimum rr interval', 'rr min (ms)'],
+    rr_max: ['max rr', 'max rr interval', 'rr max', 'maximum rr interval', 'rr max (ms)'],
+    rr_avg: ['avg rr', 'avg rr interval', 'rr avg', 'average rr interval', 'rr avg (ms)', 'mean rr'],
 
     // Asymmetry
     step_balance: ['step balance', 'step balance (%)', 'step_balance', 'l/r balance', 'ground contact balance'],
