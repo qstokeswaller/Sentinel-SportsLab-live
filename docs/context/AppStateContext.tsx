@@ -545,6 +545,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [addSessionCategory, setAddSessionCategory] = useState('All');
 
+    // --- GPS PROFILES STATE (source of truth — populated from Supabase in initData) ---
+    const [gpsProfiles, setGpsProfiles] = useState<any[]>([]);
+
     // --- CALENDAR EVENTS STATE ---
     const [calendarEvents, setCalendarEvents] = useState([]);
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
@@ -2080,8 +2083,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 StorageService.getGpsCategories(),
             ]);
 
-            // Sync GPS profiles + categories from Supabase → localStorage so GpsConfigModal can read them
+            // Sync GPS profiles + categories from Supabase → state + localStorage
             if (Array.isArray(loadedGpsProfiles) && loadedGpsProfiles.length > 0) {
+                setGpsProfiles(loadedGpsProfiles);
                 try { localStorage.setItem('gps_team_profiles', JSON.stringify(loadedGpsProfiles)); } catch {}
             }
             if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
@@ -2818,6 +2822,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         selectedAthleteId,
         setSelectedAthleteId,
         athletes,
+        // GPS profiles (React state — no localStorage race condition)
+        gpsProfiles,
+        setGpsProfiles,
         // Calendar events
         calendarEvents,
         setCalendarEvents,

@@ -169,7 +169,7 @@ const GpsColumnRenameModal: React.FC<{
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, isLoading } = useAppState();
+  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -248,14 +248,9 @@ const SettingsPage: React.FC = () => {
   // ── GPS Data tab state ─────────────────────────────────────────────
   const [gpsConfigTarget, setGpsConfigTarget] = useState<{ teamId: string; teamName: string } | null>(null);
   const [gpsPreviewProfile, setGpsPreviewProfile] = useState<GpsTeamProfile | null>(null);
-  const [gpsProfilesVersion, setGpsProfilesVersion] = useState(0); // increment to force re-read
-  const allGpsProfiles = useMemo(() => loadGpsProfiles(), [gpsProfilesVersion]);
-
-  // Re-read GPS profiles from localStorage once AppStateContext has finished
-  // writing Supabase data into localStorage (fixes race condition on first load)
-  useEffect(() => {
-    if (!isLoading) setGpsProfilesVersion(v => v + 1);
-  }, [isLoading]);
+  // GPS profiles come directly from AppStateContext (populated from Supabase in initData)
+  // No localStorage race condition — React state is always up to date
+  const allGpsProfiles = gpsProfiles;
 
   // ── Global dirty check ─────────────────────────────────────────────
   const isDirty = acwrDirty || profileDirty;
@@ -288,12 +283,12 @@ const SettingsPage: React.FC = () => {
 
   // ── Update GPS acwrColumn on a team profile ───────────────────────
   const handleUpdateAcwrColumn = (teamId: string, column: string) => {
-    const all = loadGpsProfiles();
+    const all = [...allGpsProfiles];
     const idx = all.findIndex(p => p.teamId === teamId);
     if (idx < 0) return;
     all[idx] = { ...all[idx], acwrColumn: column };
-    saveGpsProfiles(all);
-    setGpsProfilesVersion(v => v + 1);
+    saveGpsProfiles(all);   // localStorage + Supabase
+    setGpsProfiles(all);    // React state — instant UI update
     showToast?.('ACWR GPS column updated');
   };
 
@@ -866,7 +861,7 @@ const SettingsPage: React.FC = () => {
           teamId={gpsConfigTarget.teamId}
           teamName={gpsConfigTarget.teamName}
           onClose={() => setGpsConfigTarget(null)}
-          onSaved={() => { setGpsProfilesVersion(v => v + 1); showToast?.('GPS profile saved', 'success'); }}
+          onSaved={() => { setGpsProfiles(loadGpsProfiles()); showToast?.('GPS profile saved', 'success'); }}
         />
       )}
 
@@ -875,7 +870,7 @@ const SettingsPage: React.FC = () => {
         <GpsColumnRenameModal
           profile={gpsPreviewProfile}
           onClose={() => setGpsPreviewProfile(null)}
-          onSaved={() => { setGpsProfilesVersion(v => v + 1); showToast?.('Column names updated', 'success'); setGpsPreviewProfile(null); }}
+          onSaved={() => { setGpsProfiles(loadGpsProfiles()); showToast?.('Column names updated', 'success'); setGpsPreviewProfile(null); }}
         />
       )}
     </div>
