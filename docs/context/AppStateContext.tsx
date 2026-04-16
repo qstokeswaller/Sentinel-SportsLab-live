@@ -2079,21 +2079,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
             // 5. Load unmigrated Legacy Data (Schedules, Questionnaires, GPS)
             // Each item catches independently — a large GPS payload timing out won't kill the whole group
-            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsProfiles, loadedGpsCategories] = await Promise.all([
+            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsCategories] = await Promise.all([
                 StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
                 StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
                 StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); return []; }),
                 StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
                 StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
-                StorageService.getGpsProfiles().catch(e => { console.warn('GPS profiles load failed:', e.message); return []; }),
                 StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
             ]);
 
-            // Sync GPS profiles + categories from Supabase → state + localStorage
-            if (Array.isArray(loadedGpsProfiles) && loadedGpsProfiles.length > 0) {
-                setGpsProfiles(loadedGpsProfiles);
-                try { localStorage.setItem('gps_team_profiles', JSON.stringify(loadedGpsProfiles)); } catch {}
-            }
+            // Sync GPS categories from Supabase → localStorage
             if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
                 try { localStorage.setItem('gps_categories', JSON.stringify(loadedGpsCategories)); } catch {}
             }
@@ -2254,6 +2249,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             var initSuccess = false;
             // dataLoadedRef stays false — save effects won't overwrite with empty data
         } finally {
+            // Load GPS profiles in finally — guaranteed to run even if try block fails/times out
+            try {
+                const savedGpsProfiles = await StorageService.getGpsProfiles();
+                if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
+                    setGpsProfiles(savedGpsProfiles);
+                    try { localStorage.setItem('gps_team_profiles', JSON.stringify(savedGpsProfiles)); } catch {}
+                }
+            } catch (e) { /* ignore — settings load must not block */ }
             // Load settings from Supabase user_data (with localStorage fallback)
             try {
                 const savedAcwr = await StorageService.getAcwrSettings();
@@ -2300,7 +2303,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (initSuccess) dataLoadedRef.current = true;
             setIsLoading(false);
         }
-    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog]);
+    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles]);
 
     const handleLoadWellnessResponses = useCallback(async (teamId: string, rangeOrStart?: any, endDate?: string) => {
         if (!teamId || teamId === 'all') return;
