@@ -171,7 +171,7 @@ const SettingsPage: React.FC = () => {
   const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_profiles', 'gps_categories']));
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
 
   // ── Unsaved changes guard ──────────────────────────────────────────
   const [pendingTab, setPendingTab] = useState<string | null>(null);
@@ -291,12 +291,8 @@ const SettingsPage: React.FC = () => {
   };
 
   // ── Shared ACWR option controls ────────────────────────────────────
-  const renderAcwrOptions = (key: string, teamId?: string) => {
+  const renderAcwrOptions = (key: string) => {
     const s = getSettings(key);
-    const gpsProfile = teamId ? allGpsProfiles.find(p => p.teamId === teamId) : null;
-    const gpsColumns = gpsProfile && Array.isArray(gpsProfile.columnMapping)
-      ? gpsProfile.columnMapping.filter(m => !GPS_META_NAMES.has(m.csvColumn))
-      : [];
 
     return (
       <div className="space-y-3 pt-2 border-t border-slate-200/60">
@@ -341,46 +337,6 @@ const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* GPS Load Column binding — only shown for team entries */}
-        {teamId && (
-          <div className="pt-2 border-t border-slate-200/40">
-            <label className={labelCls}>GPS Load Column</label>
-            {!gpsProfile ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                <LinkIcon size={12} className="text-slate-300 shrink-0" />
-                <span className="text-xs text-slate-400 italic">No GPS profile configured — set up GPS Import Profile below to bind a column</span>
-              </div>
-            ) : gpsColumns.length === 0 ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                <AlertTriangleIcon size={12} className="text-amber-400 shrink-0" />
-                <span className="text-xs text-amber-600">GPS profile exists but has no column mappings — click Reconfigure in GPS Import Profiles</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <select
-                  value={gpsProfile.acwrColumn || ''}
-                  onChange={e => handleUpdateAcwrColumn(teamId, e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="">— Select column —</option>
-                  {gpsColumns.map(m => (
-                    <option key={m.csvColumn} value={m.csvColumn}>
-                      {m.displayName || m.csvColumn}
-                    </option>
-                  ))}
-                </select>
-                {gpsProfile.acwrColumn && (
-                  <span className="text-[10px] text-emerald-600 font-medium shrink-0 flex items-center gap-1">
-                    <CheckIcon size={10} /> Bound
-                  </span>
-                )}
-              </div>
-            )}
-            <p className="text-[10px] text-slate-400 mt-1.5">
-              When GPS CSVs are imported for this team, this column's value is used as the daily training load for ACWR.
-            </p>
-          </div>
-        )}
       </div>
     );
   };
@@ -479,7 +435,7 @@ const SettingsPage: React.FC = () => {
                               {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
                             </button>
                           </div>
-                          {s.enabled && renderAcwrOptions(key, team.id)}
+                          {s.enabled && renderAcwrOptions(key)}
                         </div>
                       );
                     })}
@@ -573,84 +529,132 @@ const SettingsPage: React.FC = () => {
               <TestingHubSettings testVisibility={testVisibility} setTestVisibility={setTestVisibility} />
             </CollapsibleSection>
 
-            {/* Import Profiles */}
+            {/* GPS Configuration (Import Profiles + ACWR Column + Session Categories) */}
             <CollapsibleSection
-              id="gps_profiles" icon={LinkIcon}
-              title="GPS Import Profiles"
-              subtitle="Map CSV columns once per team — imports auto-apply the saved profile"
+              id="gps_config" icon={LinkIcon}
+              title="GPS Configuration"
+              subtitle="Import profiles, ACWR column binding, and session categories"
               collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
             >
-              <div className="space-y-3">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Click <strong>Configure</strong> next to a team to upload a sample CSV and map its columns to platform fields.
-                  Once saved, every future import from that team will auto-apply the mapping — no manual work needed.
-                  You can also set which column feeds the ACWR engine.
-                </p>
+              <div className="space-y-4">
+                {/* ── Import Profiles ── */}
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <LinkIcon size={11} /> Import Profiles
+                  </h4>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-3">
+                    Click <strong>Configure</strong> next to a team to upload a sample CSV and map its columns.
+                    Once saved, every future import auto-applies the mapping. Set the <strong>ACWR column</strong> to tell the platform which GPS field drives training load.
+                  </p>
 
-                {teams.filter(t => t.id !== 't_private').length === 0 && (
-                  <p className="text-xs text-slate-400 italic">No teams found — add teams in the Roster first.</p>
-                )}
+                  {teams.filter(t => t.id !== 't_private').length === 0 && (
+                    <p className="text-xs text-slate-400 italic">No teams found — add teams in the Roster first.</p>
+                  )}
 
-                <div className="space-y-2">
-                  {teams.filter(t => t.id !== 't_private').map(team => {
-                    const profile = allGpsProfiles.find(p => p.teamId === team.id);
-                    return (
-                      <div key={team.id}
-                        onClick={() => profile && setGpsPreviewProfile(profile)}
-                        className={`flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 cursor-pointer' : 'border-slate-200 bg-slate-50/50'}`}
-                      >
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
-                          {team.name?.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">{team.name}</p>
-                          {profile ? (
-                            <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
-                              <CheckIcon size={10} />
-                              {profile.provider ? `${profile.provider} — ` : ''}
-                              {Array.isArray(profile.columnMapping) ? profile.columnMapping.filter(m => m.platformField).length : 0} columns mapped
-                              · ACWR: {profile.acwrColumn ? <span className="font-mono">{profile.acwrColumn.slice(0, 30)}{profile.acwrColumn.length > 30 ? '…' : ''}</span> : <span className="text-amber-600">not bound</span>}
-                              · saved {profile.savedAt ? new Date(profile.savedAt).toLocaleDateString() : '—'}
-                            </p>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 mt-0.5">No profile configured — ACWR won't read GPS data until set up</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                          {profile && (
-                            <button
-                              onClick={() => setGpsPreviewProfile(profile)}
-                              className="px-3 py-2 rounded-lg text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all"
-                            >
-                              Rename Cols
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
-                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                              profile
-                                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                            }`}
+                  <div className="space-y-3">
+                    {teams.filter(t => t.id !== 't_private').map(team => {
+                      const profile = allGpsProfiles.find(p => p.teamId === team.id);
+                      const gpsColumns = profile && Array.isArray(profile.columnMapping)
+                        ? profile.columnMapping.filter(m => !GPS_META_NAMES.has(m.csvColumn))
+                        : [];
+                      return (
+                        <div key={team.id} className={`rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-slate-50/50'}`}>
+                          {/* Header row */}
+                          <div
+                            onClick={() => profile && setGpsPreviewProfile(profile)}
+                            className={`flex items-center gap-4 px-4 py-3.5 ${profile ? 'hover:bg-emerald-50/40 cursor-pointer' : ''} rounded-t-xl transition-all`}
                           >
-                            {profile ? 'Reconfigure' : 'Configure'}
-                          </button>
+                            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
+                              {team.name?.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-slate-900">{team.name}</p>
+                              {profile ? (
+                                <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                                  <CheckIcon size={10} />
+                                  {profile.provider ? `${profile.provider} — ` : ''}
+                                  {Array.isArray(profile.columnMapping) ? profile.columnMapping.filter(m => m.platformField).length : 0} columns mapped
+                                  · saved {profile.savedAt ? new Date(profile.savedAt).toLocaleDateString() : '—'}
+                                </p>
+                              ) : (
+                                <p className="text-[10px] text-slate-400 mt-0.5">No profile configured — GPS data won't feed ACWR until set up</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                              {profile && (
+                                <button
+                                  onClick={() => setGpsPreviewProfile(profile)}
+                                  className="px-3 py-2 rounded-lg text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all"
+                                >
+                                  Rename Cols
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
+                                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                                  profile
+                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                }`}
+                              >
+                                {profile ? 'Reconfigure' : 'Configure'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* ACWR column binding — always visible when profile exists */}
+                          <div className={`px-4 pb-4 border-t border-slate-200/60 pt-3 ${!profile ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                              <GaugeIcon size={10} className="text-indigo-400" /> ACWR Load Column
+                            </label>
+                            {!profile ? (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg">
+                                <span className="text-xs text-slate-400 italic">Configure profile first to bind an ACWR column</span>
+                              </div>
+                            ) : gpsColumns.length === 0 ? (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                <AlertTriangleIcon size={12} className="text-amber-400 shrink-0" />
+                                <span className="text-xs text-amber-600">Profile has no column mappings — click Reconfigure above</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={profile.acwrColumn || ''}
+                                  onChange={e => handleUpdateAcwrColumn(team.id, e.target.value)}
+                                  className={inputCls}
+                                >
+                                  <option value="">— Select load column —</option>
+                                  {gpsColumns.map(m => (
+                                    <option key={m.csvColumn} value={m.csvColumn}>
+                                      {m.displayName || m.csvColumn}
+                                    </option>
+                                  ))}
+                                </select>
+                                {profile.acwrColumn && (
+                                  <span className="text-[10px] text-emerald-600 font-medium shrink-0 flex items-center gap-1 whitespace-nowrap">
+                                    <CheckIcon size={10} /> Bound
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <p className="text-[10px] text-slate-400 mt-1.5">
+                              The selected GPS column's value is used as the daily training load for ACWR calculations on import.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ── Session Categories divider ── */}
+                <div className="border-t border-slate-200 pt-4">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <TagIcon size={11} /> Session Categories
+                  </h4>
+                  <GpsCategoryManager />
                 </div>
               </div>
-            </CollapsibleSection>
-
-            {/* Session Categories */}
-            <CollapsibleSection
-              id="gps_categories" icon={TagIcon}
-              title="GPS Session Categories"
-              subtitle="Tag GPS imports as Training, Matchday, Recovery, etc."
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
-            >
-              <GpsCategoryManager />
             </CollapsibleSection>
 
           </>

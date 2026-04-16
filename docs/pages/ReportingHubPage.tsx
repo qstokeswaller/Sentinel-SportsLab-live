@@ -245,7 +245,7 @@ const GpsDateRangeView = React.memo(({ records, cols, colLabel, onHideCol, categ
 
 export const ReportingHubPage = () => {
     const {
-        teams, setTeams, loadRecords, wellnessData, habitRecords, scheduledSessions,
+        teams, setTeams, loadRecords, setLoadRecords, wellnessData, habitRecords, scheduledSessions,
         gpsData, setGpsData, hrData, setHrData, kpiRecords, volumeRecords,
         selectedAnalyticsAthleteId, setSelectedAnalyticsAthleteId,
         activeReport, setActiveReport, reportMode, setReportMode,
@@ -258,6 +258,7 @@ export const ReportingHubPage = () => {
         optOutForm, setOptOutForm,
         optOuts, setOptOuts,
         showToast, wellnessDateRange, setWellnessDateRange, calculateACWR, calculateMonotony,
+        acwrSettings,
         isLoading,
     } = useAppState();
 
@@ -326,6 +327,73 @@ export const ReportingHubPage = () => {
     const gpsSessionDates = useMemo(() =>
         [...new Set((Array.isArray(gpsData) ? gpsData : []).map(r => r.date).filter(Boolean))].sort((a, b) => b.localeCompare(a))
     , [gpsData]);
+
+    // ── GPS → ACWR auto-sync ─────────────────────────────────────────────────
+    // Runs once on mount and whenever gpsData changes to ensure GPS records
+    // with a configured ACWR column are reflected in training_loads.
+    const gpsSyncedRef = useRef(false);
+
+    const syncGpsToLoadRecords = useCallback(async (records: any[]) => {
+        const profiles = loadGpsProfiles();
+        const toSync: any[] = [];
+        for (const rec of records) {
+            if (!rec.athleteId || rec.athleteId === 'unknown') continue;
+            // Find team this athlete belongs to
+            const team = teams.find(t => (t.players || []).some((p: any) => p.id === rec.athleteId));
+            if (!team) continue;
+            // Find GPS profile for that team
+            const profile = profiles.find(p => p.teamId === team.id);
+            if (!profile?.acwrColumn) continue;
+            // Get value: use pre-computed acwrValue, or extract from rawColumns
+            let val = rec.acwrValue;
+            if ((val === null || val === undefined) && rec.rawColumns?.[profile.acwrColumn] !== undefined) {
+                val = parseFloat(rec.rawColumns[profile.acwrColumn]);
+            }
+            if (val === null || val === undefined || isNaN(val)) continue;
+            // Metric type: use the team's configured ACWR method (default sprint_distance)
+            const metric_type = acwrSettings?.[team.id]?.method || 'sprint_distance';
+            toSync.push({
+                athlete_id: rec.athleteId,
+                team_id: team.id,
+                date: rec.date,
+                metric_type,
+                value: val,
+                session_type: rec.category || 'training',
+            });
+        }
+        if (toSync.length === 0) return;
+        try {
+            await DatabaseService.saveTrainingLoadsBatch(toSync);
+            // Refresh load records in state
+            const fresh = await DatabaseService.fetchTrainingLoads();
+            const mapped = fresh.map((r: any) => ({
+                athleteId: r.athlete_id,
+                athlete_id: r.athlete_id,
+                date: r.date,
+                sRPE: r.metric_type === 'srpe' ? Number(r.value) : 0,
+                value: Number(r.value),
+                metric_type: r.metric_type,
+                session_type: r.session_type,
+            }));
+            setLoadRecords((prev: any[]) => {
+                const dbKeys = new Set(mapped.map((r: any) => `${r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type}`));
+                const localOnly = (prev || []).filter((r: any) => {
+                    const key = `${r.athleteId || r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type || 'srpe'}`;
+                    return !dbKeys.has(key);
+                });
+                return [...localOnly, ...mapped];
+            });
+        } catch (e) {
+            console.warn('GPS→ACWR sync failed:', e);
+        }
+    }, [teams, acwrSettings, setLoadRecords]);
+
+    // Auto-sync on mount (covers existing GPS data already in storage)
+    useEffect(() => {
+        if (gpsSyncedRef.current || !gpsData?.length || !teams?.length) return;
+        gpsSyncedRef.current = true;
+        syncGpsToLoadRecords(gpsData);
+    }, [gpsData, teams]);
 
     // Stable derivation of all column keys ever seen across gpsData (memoised — avoids stale reads inside render fn)
     const gpsHistoricalColKeys = useMemo(() => {
@@ -1699,6 +1767,8 @@ export const ReportingHubPage = () => {
             const updated = [...gpsData, ...newRecords];
             setGpsData(updated);
             StorageService.saveGpsData(updated);
+            // Auto-sync new GPS records to training_loads for ACWR
+            syncGpsToLoadRecords(newRecords);
             setGpsSmartDialog(null);
             // Detect names that didn't match roster
             const unlinked = [...new Set(newRecords.filter(r => r.athleteId === 'unknown').map(r => r.playerName))];
