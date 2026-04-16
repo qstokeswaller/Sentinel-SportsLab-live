@@ -2069,14 +2069,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 exercisesLoadedRef.current = true;
             }
 
-            // 5. Load unmigrated Legacy Data (Schedules, Questionnaires)
-            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates] = await Promise.all([
+            // 5. Load unmigrated Legacy Data (Schedules, Questionnaires, GPS)
+            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsProfiles, loadedGpsCategories] = await Promise.all([
                 StorageService.getSessions(),
                 StorageService.getQuestionnaires(),
                 StorageService.getGpsData(),
                 StorageService.getMedicalReports(),
-                StorageService.getWorkoutTemplates()
+                StorageService.getWorkoutTemplates(),
+                StorageService.getGpsProfiles(),
+                StorageService.getGpsCategories(),
             ]);
+
+            // Sync GPS profiles + categories from Supabase → localStorage so GpsConfigModal can read them
+            if (Array.isArray(loadedGpsProfiles) && loadedGpsProfiles.length > 0) {
+                try { localStorage.setItem('gps_team_profiles', JSON.stringify(loadedGpsProfiles)); } catch {}
+            }
+            if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
+                try { localStorage.setItem('gps_categories', JSON.stringify(loadedGpsCategories)); } catch {}
+            }
 
             // Merge Sessions (Database data takes precedence over legacy)
             const mergedSessions = [...dbSessions];
@@ -2810,6 +2820,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         athletes,
         // Calendar events
         calendarEvents,
+        setCalendarEvents,
         isAddEventModalOpen,
         setIsAddEventModalOpen,
         customEventTypes,

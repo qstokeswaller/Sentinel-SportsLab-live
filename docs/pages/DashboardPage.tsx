@@ -33,7 +33,7 @@ export const DashboardPage = () => {
         heatmapTeamFilter, setHeatmapTeamFilter,
         dashboardCalendarDate, setDashboardCalendarDate, dashboardCalendarDays,
         setIsAddEventModalOpen,
-        calendarEvents,
+        calendarEvents, setCalendarEvents,
         handleUpdateCalendarEvent,
         handleDeleteCalendarEvent,
         customEventTypes,
@@ -70,6 +70,25 @@ export const DashboardPage = () => {
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
     const [completingSession, setCompletingSession] = React.useState(null);
     const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
+
+    // ── Calendar resilience: auto-refetch if events are empty after initial load ─
+    const prevIsLoading = React.useRef(true);
+    React.useEffect(() => {
+        const wasLoading = prevIsLoading.current;
+        prevIsLoading.current = isLoading;
+        // Detect transition: loading just finished
+        if (wasLoading && !isLoading) {
+            if (!calendarEvents || calendarEvents.length === 0) {
+                // Events came back empty — retry once in the background
+                const t = setTimeout(() => {
+                    DatabaseService.fetchCalendarEvents()
+                        .then(events => { if (events && events.length > 0) setCalendarEvents(events); })
+                        .catch(() => {});
+                }, 800);
+                return () => clearTimeout(t);
+            }
+        }
+    }, [isLoading, calendarEvents]);
 
     const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
         try {
@@ -736,7 +755,7 @@ export const DashboardPage = () => {
 
                             <div className="p-4 relative">
                                 {/* Calendar loading skeleton */}
-                                {isLoading && (!calendarEvents || calendarEvents.length === 0) && (
+                                {isLoading && (
                                     <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
                                         <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
                                         <span className="text-xs font-medium text-slate-400">Loading calendar...</span>

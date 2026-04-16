@@ -169,7 +169,7 @@ const GpsColumnRenameModal: React.FC<{
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast } = useAppState();
+  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, isLoading } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -250,6 +250,12 @@ const SettingsPage: React.FC = () => {
   const [gpsPreviewProfile, setGpsPreviewProfile] = useState<GpsTeamProfile | null>(null);
   const [gpsProfilesVersion, setGpsProfilesVersion] = useState(0); // increment to force re-read
   const allGpsProfiles = useMemo(() => loadGpsProfiles(), [gpsProfilesVersion]);
+
+  // Re-read GPS profiles from localStorage once AppStateContext has finished
+  // writing Supabase data into localStorage (fixes race condition on first load)
+  useEffect(() => {
+    if (!isLoading) setGpsProfilesVersion(v => v + 1);
+  }, [isLoading]);
 
   // ── Global dirty check ─────────────────────────────────────────────
   const isDirty = acwrDirty || profileDirty;
