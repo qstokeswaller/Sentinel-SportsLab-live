@@ -126,7 +126,7 @@ const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSess
                         const playerNum = r.rawColumns?.['Player number'];
                         return (
                             <tr key={r.id} className="hover:bg-indigo-50/30 transition-colors group">
-                                <td className="sticky left-0 z-10 bg-white group-hover:bg-indigo-50/30 px-4 py-2.5 whitespace-nowrap">
+                                <td className="sticky left-0 z-10 bg-white group-hover:bg-indigo-50 px-4 py-2.5 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
                                         {playerNum && (
                                             <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-[9px] font-bold flex items-center justify-center shrink-0">

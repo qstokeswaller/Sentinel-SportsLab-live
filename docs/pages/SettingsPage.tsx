@@ -279,9 +279,25 @@ const SettingsPage: React.FC = () => {
     if (pendingTab) { setActiveTab(pendingTab); setPendingTab(null); }
   };
 
+  // ── Update GPS acwrColumn on a team profile ───────────────────────
+  const handleUpdateAcwrColumn = (teamId: string, column: string) => {
+    const all = loadGpsProfiles();
+    const idx = all.findIndex(p => p.teamId === teamId);
+    if (idx < 0) return;
+    all[idx] = { ...all[idx], acwrColumn: column };
+    saveGpsProfiles(all);
+    setGpsProfilesVersion(v => v + 1);
+    showToast?.('ACWR GPS column updated');
+  };
+
   // ── Shared ACWR option controls ────────────────────────────────────
-  const renderAcwrOptions = (key: string) => {
+  const renderAcwrOptions = (key: string, teamId?: string) => {
     const s = getSettings(key);
+    const gpsProfile = teamId ? allGpsProfiles.find(p => p.teamId === teamId) : null;
+    const gpsColumns = gpsProfile && Array.isArray(gpsProfile.columnMapping)
+      ? gpsProfile.columnMapping.filter(m => !GPS_META_NAMES.has(m.csvColumn))
+      : [];
+
     return (
       <div className="space-y-3 pt-2 border-t border-slate-200/60">
         <div>
@@ -322,6 +338,47 @@ const SettingsPage: React.FC = () => {
             <label className={labelCls}>Sprint Threshold (km/h)</label>
             <input type="number" min={15} max={35} step={0.5} value={s.sprintThreshold || 25}
               onChange={e => updateSettings(key, { sprintThreshold: Number(e.target.value) })} className={inputCls} />
+          </div>
+        )}
+
+        {/* GPS Load Column binding — only shown for team entries */}
+        {teamId && (
+          <div className="pt-2 border-t border-slate-200/40">
+            <label className={labelCls}>GPS Load Column</label>
+            {!gpsProfile ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                <LinkIcon size={12} className="text-slate-300 shrink-0" />
+                <span className="text-xs text-slate-400 italic">No GPS profile configured — set up GPS Import Profile below to bind a column</span>
+              </div>
+            ) : gpsColumns.length === 0 ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertTriangleIcon size={12} className="text-amber-400 shrink-0" />
+                <span className="text-xs text-amber-600">GPS profile exists but has no column mappings — click Reconfigure in GPS Import Profiles</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <select
+                  value={gpsProfile.acwrColumn || ''}
+                  onChange={e => handleUpdateAcwrColumn(teamId, e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">— Select column —</option>
+                  {gpsColumns.map(m => (
+                    <option key={m.csvColumn} value={m.csvColumn}>
+                      {m.displayName || m.csvColumn}
+                    </option>
+                  ))}
+                </select>
+                {gpsProfile.acwrColumn && (
+                  <span className="text-[10px] text-emerald-600 font-medium shrink-0 flex items-center gap-1">
+                    <CheckIcon size={10} /> Bound
+                  </span>
+                )}
+              </div>
+            )}
+            <p className="text-[10px] text-slate-400 mt-1.5">
+              When GPS CSVs are imported for this team, this column's value is used as the daily training load for ACWR.
+            </p>
           </div>
         )}
       </div>
@@ -422,7 +479,7 @@ const SettingsPage: React.FC = () => {
                               {s.enabled ? <><ToggleRightIcon size={14} /> On</> : <><ToggleLeftIcon size={14} /> Off</>}
                             </button>
                           </div>
-                          {s.enabled && renderAcwrOptions(key)}
+                          {s.enabled && renderAcwrOptions(key, team.id)}
                         </div>
                       );
                     })}
