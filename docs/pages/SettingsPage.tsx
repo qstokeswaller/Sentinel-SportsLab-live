@@ -1,4 +1,5 @@
 // @ts-nocheck
+// v7
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
