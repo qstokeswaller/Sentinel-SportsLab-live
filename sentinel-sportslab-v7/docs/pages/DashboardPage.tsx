@@ -71,6 +71,7 @@ export const DashboardPage = () => {
     const [completingSession, setCompletingSession] = React.useState(null);
     const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
 
+
     const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
         try {
             await DatabaseService.completeSession(sessionId, actualResults, actualRpe);
@@ -736,7 +737,7 @@ export const DashboardPage = () => {
 
                             <div className="p-4 relative">
                                 {/* Calendar loading skeleton */}
-                                {isLoading && (!calendarEvents || calendarEvents.length === 0) && (
+                                {isLoading && (
                                     <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
                                         <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
                                         <span className="text-xs font-medium text-slate-400">Loading calendar...</span>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { PLATFORM_FIELDS, fuzzyMatchHeader } from './GpsColumnMapper';
 import { useAppState } from '../../context/AppStateContext';
+import { SupabaseStorageService as StorageService } from '../../services/storageService';
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -43,6 +44,8 @@ export const loadGpsProfiles = (): GpsTeamProfile[] => {
 };
 export const saveGpsProfiles = (profiles: GpsTeamProfile[]) => {
     try { localStorage.setItem('gps_team_profiles', JSON.stringify(profiles)); } catch {}
+    // Also persist to Supabase so profiles survive across devices/sessions
+    StorageService.saveGpsProfiles(profiles).catch(e => console.warn('GPS profile Supabase save failed:', e));
 };
 export const getProfileForTeam = (teamId: string): GpsTeamProfile | null =>
     loadGpsProfiles().find(p => p.teamId === teamId) || null;
@@ -122,7 +125,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
 
     // Draft state — initialised from saved profile if one exists
     const [provider, setProvider]             = useState(existingProfile?.provider || '');
-    const [columnMappings, setColumnMappings] = useState<GpsColumnConfig[]>(existingProfile?.columnMapping || []);
+    const [columnMappings, setColumnMappings] = useState<GpsColumnConfig[]>(Array.isArray(existingProfile?.columnMapping) ? existingProfile.columnMapping : []);
     const [acwrColumn, setAcwrColumn]         = useState(existingProfile?.acwrColumn || '');
     const [fingerprint, setFingerprint]       = useState<string[]>(existingProfile?.headerFingerprint || []);
     const [hasHeaders, setHasHeaders]         = useState(columnMappings.length > 0);
