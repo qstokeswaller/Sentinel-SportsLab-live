@@ -2078,14 +2078,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             }
 
             // 5. Load unmigrated Legacy Data (Schedules, Questionnaires, GPS)
+            // Each item catches independently — a large GPS payload timing out won't kill the whole group
             const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsProfiles, loadedGpsCategories] = await Promise.all([
-                StorageService.getSessions(),
-                StorageService.getQuestionnaires(),
-                StorageService.getGpsData(),
-                StorageService.getMedicalReports(),
-                StorageService.getWorkoutTemplates(),
-                StorageService.getGpsProfiles(),
-                StorageService.getGpsCategories(),
+                StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
+                StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
+                StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); return []; }),
+                StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
+                StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
+                StorageService.getGpsProfiles().catch(e => { console.warn('GPS profiles load failed:', e.message); return []; }),
+                StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
             ]);
 
             // Sync GPS profiles + categories from Supabase → state + localStorage
