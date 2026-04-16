@@ -33,7 +33,7 @@ export const DashboardPage = () => {
         heatmapTeamFilter, setHeatmapTeamFilter,
         dashboardCalendarDate, setDashboardCalendarDate, dashboardCalendarDays,
         setIsAddEventModalOpen,
-        calendarEvents, setCalendarEvents,
+        calendarEvents,
         handleUpdateCalendarEvent,
         handleDeleteCalendarEvent,
         customEventTypes,
@@ -71,24 +71,6 @@ export const DashboardPage = () => {
     const [completingSession, setCompletingSession] = React.useState(null);
     const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
 
-    // ── Calendar resilience: auto-refetch if events are empty after initial load ─
-    const prevIsLoading = React.useRef(true);
-    React.useEffect(() => {
-        const wasLoading = prevIsLoading.current;
-        prevIsLoading.current = isLoading;
-        // Detect transition: loading just finished
-        if (wasLoading && !isLoading) {
-            if (!calendarEvents || calendarEvents.length === 0) {
-                // Events came back empty — retry once in the background
-                const t = setTimeout(() => {
-                    DatabaseService.fetchCalendarEvents()
-                        .then(events => { if (events && events.length > 0) setCalendarEvents(events); })
-                        .catch(() => {});
-                }, 800);
-                return () => clearTimeout(t);
-            }
-        }
-    }, [isLoading, calendarEvents]);
 
     const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
         try {

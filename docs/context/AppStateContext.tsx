@@ -1989,7 +1989,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 DatabaseService.fetchCalendarEvents().catch(e => { console.warn("Could not fetch calendar events:", e.message); return []; }),
                 StorageService.getCustomEventTypes().catch(e => { console.warn("Could not load custom event types:", e.message); return []; }),
             ]);
-            setCalendarEvents(calEventsResult || []);
+            // Retry once if empty — handles Supabase cold-start timeouts on first connection
+            let finalCalEvents = calEventsResult || [];
+            if (finalCalEvents.length === 0) {
+                try { finalCalEvents = await DatabaseService.fetchCalendarEvents(); } catch (e) { /* silent */ }
+            }
+            setCalendarEvents(finalCalEvents);
             if (storedCustomTypes && storedCustomTypes.length > 0) {
                 setCustomEventTypes(storedCustomTypes);
             }
