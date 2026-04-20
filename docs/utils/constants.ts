@@ -52,11 +52,13 @@ export const ACWR_UTILS = {
              * @param {String} valueField - Field to sum ('value', 'sRPE', etc.)
              * @returns {{ dates: string[], loads: number[], restDays: Set<string> }}
              */
-            buildDailyLoads: (records, valueField = 'value') => {
+            buildDailyLoads: (records, valueField = 'value', additionalRestDays = new Set()) => {
                 if (!records || records.length === 0) return { dates: [], loads: [], restDays: new Set() };
                 const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
                 const dailyMap = {};
                 const restDaySet = new Set();
+                // Merge in coach-marked rest days (from acwrExclusions.restDays)
+                additionalRestDays.forEach(d => restDaySet.add(d));
                 sorted.forEach(r => {
                     const d = (r.date || '').split('T')[0];
                     // Track explicit rest days (marked by sport scientist)
@@ -88,41 +90,86 @@ export const ACWR_UTILS = {
              * Supports both legacy sRPE records and new training_loads records
              */
             calculateAthleteACWR: (records, athleteId, options = {}) => {
-                const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false } = options;
+                const {
+                    metricType, acuteN = 7, chronicN = 28, freezeRestDays = false,
+                    recalcAnchorDate,   // string — ignore all records before this date
+                    additionalRestDays, // Set<string> — coach-marked rest/freeze days
+                    minDataDays = 7,    // minimum data days before ratio is reliable
+                } = options;
+
+                const EMPTY = (extra = {}) => ({
+                    acute: 0, chronic: 0, ratio: 0, dates: [], loads: [],
+                    acuteHistory: [], chronicHistory: [], ratioHistory: [], phases: [],
+                    restDays: new Set(), dataDays: 0, gatheringPhase: true,
+                    gapDays: 0, gapStatus: 'none', lastDataDate: null,
+                    ...extra,
+                });
 
                 // Filter records for this athlete
                 let athleteRecords = records.filter(r =>
                     (r.athleteId === athleteId || r.athlete_id === athleteId)
                 );
+                if (metricType) athleteRecords = athleteRecords.filter(r => r.metric_type === metricType);
+                // Recalc anchor: ignore data before chosen date
+                if (recalcAnchorDate) athleteRecords = athleteRecords.filter(r => (r.date || '').split('T')[0] >= recalcAnchorDate);
 
-                // If metricType specified, filter further
-                if (metricType) {
-                    athleteRecords = athleteRecords.filter(r => r.metric_type === metricType);
+                if (athleteRecords.length === 0) return EMPTY();
+
+                const valueField = metricType ? 'value' : 'sRPE';
+                const extraRestDays = additionalRestDays instanceof Set ? additionalRestDays : new Set(additionalRestDays || []);
+                const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(athleteRecords, valueField, extraRestDays);
+
+                if (loads.length === 0) return EMPTY();
+
+                // ── Gap detection ────────────────────────────────────────────────
+                const lastDataDate = dates[dates.length - 1] || null;
+                let gapDays = 0;
+                if (lastDataDate) {
+                    const [ly, lm, ld] = lastDataDate.split('-').map(Number);
+                    const today = new Date();
+                    const last = new Date(ly, lm - 1, ld);
+                    gapDays = Math.max(0, Math.floor((today - last) / 86400000));
+                }
+                let gapStatus = 'none';
+                if (gapDays >= 14) gapStatus = 'auto_reset';
+                else if (gapDays >= 7)  gapStatus = 'prompt';
+                else if (gapDays > 0)   gapStatus = 'freeze';
+
+                // Auto-reset: data is too stale — don't show ratio, wait for new input
+                if (gapStatus === 'auto_reset') {
+                    return EMPTY({ dates, loads, restDays, lastDataDate, gapDays, gapStatus, gatheringPhase: true });
                 }
 
-                if (athleteRecords.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays: new Set() };
+                // ── Count actual data days (records with non-zero value) ─────────
+                const recordDateSet = new Set(
+                    athleteRecords
+                        .filter(r => (Number(r[valueField]) || Number(r.sRPE) || 0) > 0)
+                        .map(r => (r.date || '').split('T')[0])
+                );
+                const dataDays = recordDateSet.size;
+                const gatheringPhase = dataDays < minDataDays;
 
-                // Build daily loads + explicit rest day tracking
-                const valueField = metricType ? 'value' : 'sRPE';
-                const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(athleteRecords, valueField);
-
-                if (loads.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays };
-
-                // Calculate full EWMA history for charting
+                // ── EWMA history + phase tagging ─────────────────────────────────
                 const lambda_a = 2 / (acuteN + 1);
                 const lambda_c = 2 / (chronicN + 1);
                 const acuteHistory = [];
                 const chronicHistory = [];
                 const ratioHistory = [];
+                const phases = []; // 'gathering' | 'reliable' per date index
                 let ewma_a = loads[0];
                 let ewma_c = loads[0];
+                let cumulativeDataDays = 0;
 
                 for (let i = 0; i < loads.length; i++) {
+                    const isDataDay = recordDateSet.has(dates[i]);
+                    if (isDataDay) cumulativeDataDays++;
+                    phases.push(cumulativeDataDays >= minDataDays ? 'reliable' : 'gathering');
+
                     if (i === 0) {
                         ewma_a = loads[0];
                         ewma_c = loads[0];
                     } else if (freezeRestDays && restDays.has(dates[i])) {
-                        // Freeze ONLY on explicitly marked rest days — zeros from training still count
+                        // Freeze on explicitly marked rest days (session_type=rest OR coach-marked)
                     } else {
                         ewma_a = (loads[i] * lambda_a) + (ewma_a * (1 - lambda_a));
                         ewma_c = (loads[i] * lambda_c) + (ewma_c * (1 - lambda_c));
@@ -134,36 +181,54 @@ export const ACWR_UTILS = {
 
                 const acute = acuteHistory[acuteHistory.length - 1] || 0;
                 const chronic = chronicHistory[chronicHistory.length - 1] || 0;
-                const ratio = ratioHistory[ratioHistory.length - 1] || 0;
+                // Suppress ratio display while still in gathering phase
+                const ratio = gatheringPhase ? 0 : (ratioHistory[ratioHistory.length - 1] || 0);
 
-                return { acute: Math.round(acute), chronic: Math.round(chronic), ratio, dates, loads, acuteHistory, chronicHistory, ratioHistory, restDays };
+                return {
+                    acute: Math.round(acute), chronic: Math.round(chronic), ratio,
+                    dates, loads, acuteHistory, chronicHistory, ratioHistory, phases, restDays,
+                    dataDays, gatheringPhase, gapDays, gapStatus, lastDataDate,
+                };
             },
 
             /**
              * Calculates team aggregate ACWR (mean of all athletes' daily loads)
              */
             calculateTeamACWR: (records, athleteIds, options = {}) => {
-                const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false } = options;
+                const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false, recalcAnchorDate, minDataDays = 7 } = options;
 
                 // Build per-athlete daily load maps + collect rest days
                 let filtered = metricType ? records.filter(r => r.metric_type === metricType) : records;
+                if (recalcAnchorDate) filtered = filtered.filter(r => (r.date || '').split('T')[0] >= recalcAnchorDate);
                 const allDates = new Set();
                 const athleteMaps = {};
                 const allRestDays = new Set();
+                // athleteContributions[date] = count of athletes who actually had data (non-zero)
+                const athleteContributions = {};
 
                 athleteIds.forEach(aid => {
                     const recs = filtered.filter(r => (r.athleteId === aid || r.athlete_id === aid));
                     const valueField = metricType ? 'value' : 'sRPE';
                     const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(recs, valueField);
                     const map = {};
-                    dates.forEach((d, i) => { map[d] = loads[i]; allDates.add(d); });
+                    dates.forEach((d, i) => {
+                        map[d] = loads[i];
+                        allDates.add(d);
+                        if (loads[i] > 0) {
+                            athleteContributions[d] = (athleteContributions[d] || 0) + 1;
+                        }
+                    });
                     athleteMaps[aid] = map;
-                    // A team rest day = all athletes have explicit rest on that date
                     restDays.forEach(d => allRestDays.add(d + '_' + aid));
                 });
 
                 const sortedDates = [...allDates].sort();
-                if (sortedDates.length === 0) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays: new Set() };
+                if (sortedDates.length === 0) return {
+                    acute: 0, chronic: 0, ratio: 0, dates: [], loads: [],
+                    acuteHistory: [], chronicHistory: [], ratioHistory: [], phases: [],
+                    restDays: new Set(), dataDays: 0, gatheringPhase: true,
+                    gapDays: 0, gapStatus: 'none', lastDataDate: null,
+                };
 
                 // Fill complete date range and average (timezone-safe)
                 const [sy, sm, sd] = sortedDates[0].split('-').map(Number);
@@ -177,7 +242,6 @@ export const ACWR_UTILS = {
                     const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     dates.push(ds);
                     let sum = 0, count = 0;
-                    // Check if ALL athletes have explicit rest on this day
                     let allResting = athleteIds.length > 0;
                     athleteIds.forEach(aid => {
                         const v = athleteMaps[aid]?.[ds];
@@ -185,6 +249,7 @@ export const ACWR_UTILS = {
                         if (!allRestDays.has(ds + '_' + aid)) allResting = false;
                     });
                     if (allResting) teamRestDays.add(ds);
+                    // Team gap day = zero athletes contributed real data (athleteContributions[ds] undefined/0)
                     loads.push(count > 0 ? parseFloat((sum / count).toFixed(1)) : 0);
                 }
 
@@ -196,7 +261,7 @@ export const ACWR_UTILS = {
                 }));
                 const result = ACWR_UTILS.calculateAthleteACWR(
                     teamRecords, '__team__',
-                    { metricType: metricType || 'srpe', acuteN, chronicN, freezeRestDays }
+                    { metricType: metricType || 'srpe', acuteN, chronicN, freezeRestDays, minDataDays }
                 );
                 return result;
             },

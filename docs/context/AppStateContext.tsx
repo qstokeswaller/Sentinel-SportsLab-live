@@ -598,9 +598,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // { [teamId_or_'ind_'+athleteId]: { enabled: bool, method: string, acuteWindow: 7, chronicWindow: 28, freezeRestDays: bool, sprintThreshold: 25 } }
     const [acwrSettings, setAcwrSettings] = useState<Record<string, any>>({});
 
-    // ACWR Exclusions — injured/excluded athletes
-    // { [athleteId]: { excluded: bool, excludedDate: string, returnDate?: string, frozenChronic?: number, frozenAcute?: number } }
+    // ACWR Exclusions — injured/excluded athletes + per-day rest freezes
+    // { [athleteId]: { excluded: bool, excludeType: 'injured'|'rest', excludedDate: string, returnDate?: string,
+    //                  frozenChronic?: number, frozenAcute?: number, restDays?: string[] } }
     const [acwrExclusions, setAcwrExclusions] = useState<Record<string, any>>({});
+
+    // ACWR Recalc Anchors — per team/individual: start date for EWMA recalculation
+    // { [teamId_or_'ind_'+athleteId]: string (ISO date) }
+    const [acwrRecalcAnchors, setAcwrRecalcAnchors] = useState<Record<string, string>>({});
 
     // Testing Hub visibility — which tests are hidden
     // { [testId]: false } means hidden; absent or true means visible
@@ -753,6 +758,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isLoading && dataLoadedRef.current)
             StorageService.saveAcwrExclusions(acwrExclusions);
     }, [acwrExclusions, isLoading]);
+
+    // Persist ACWR recalc anchors → Supabase user_data
+    useEffect(() => {
+        if (!isLoading && dataLoadedRef.current)
+            StorageService.saveAcwrRecalcAnchors(acwrRecalcAnchors);
+    }, [acwrRecalcAnchors, isLoading]);
 
     // Persist testing hub visibility → Supabase user_data
     useEffect(() => {
@@ -1141,14 +1152,20 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         // Find the athlete's team
         const playerTeam = teams.find(t => (t.players || []).some(p => p.id === athleteId));
         const teamId = playerTeam?.id;
-        const settings = (teamId === 't_private')
-            ? (acwrSettings[`ind_${athleteId}`] || {})
-            : (acwrSettings[teamId] || {});
+        const settingsKey = (teamId === 't_private') ? `ind_${athleteId}` : teamId;
+        const settings = acwrSettings[settingsKey] || {};
+        // Recalc anchor: use team anchor first, fall back to individual anchor
+        const recalcAnchorDate = acwrRecalcAnchors[settingsKey] || acwrRecalcAnchors[teamId] || undefined;
+        // Per-day rest freezes from exclusions
+        const exclusion = acwrExclusions[athleteId];
+        const additionalRestDays = exclusion?.restDays ? new Set(exclusion.restDays) : undefined;
         return {
             metricType: settings.method || 'srpe',
             acuteN: settings.acuteWindow || 7,
             chronicN: settings.chronicWindow || 28,
             freezeRestDays: settings.freezeRestDays !== false,
+            recalcAnchorDate,
+            additionalRestDays,
         };
     };
 
@@ -2283,6 +2300,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }
             } catch (e) { /* ignore */ }
             try {
+                const savedAnchors = await StorageService.getAcwrRecalcAnchors();
+                if (savedAnchors && Object.keys(savedAnchors).length > 0) setAcwrRecalcAnchors(savedAnchors);
+            } catch (e) { /* ignore */ }
+            try {
                 const savedVis = await StorageService.getTestVisibility();
                 if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
                 else {
@@ -2818,6 +2839,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setAcwrSettings,
         acwrExclusions,
         setAcwrExclusions,
+        acwrRecalcAnchors,
+        setAcwrRecalcAnchors,
         testVisibility,
         tourState, setTourState,
         polarIntegration, setPolarIntegration,

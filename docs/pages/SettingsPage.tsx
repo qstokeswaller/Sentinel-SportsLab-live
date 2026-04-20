@@ -169,7 +169,7 @@ const GpsColumnRenameModal: React.FC<{
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources } = useAppState();
+  const { teams, acwrSettings, setAcwrSettings, acwrRecalcAnchors, setAcwrRecalcAnchors, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -367,6 +367,35 @@ const SettingsPage: React.FC = () => {
               onChange={e => updateSettings(key, { sprintThreshold: Number(e.target.value) })} className={inputCls} />
           </div>
         )}
+
+        {/* Recalculation anchor — reset EWMA from a chosen date without deleting data */}
+        <div className="pt-2 border-t border-slate-100">
+          <label className={labelCls}>Recalculate From Date</label>
+          <p className="text-[10px] text-slate-400 mb-2">Historical data is kept. EWMA restarts from this date. Leave blank to use all data.</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={acwrRecalcAnchors[key] || ''}
+              onChange={e => setAcwrRecalcAnchors(prev => ({ ...prev, [key]: e.target.value }))}
+              className={inputCls + ' flex-1'}
+            />
+            {acwrRecalcAnchors[key] && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAcwrRecalcAnchors(prev => { const n = { ...prev }; delete n[key]; return n; });
+                  showToast?.('Recalculation anchor cleared — using all data');
+                }}
+                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors"
+              >Clear</button>
+            )}
+          </div>
+          {acwrRecalcAnchors[key] && (
+            <p className="text-[10px] text-indigo-500 mt-1">
+              EWMA calculates from {new Date(acwrRecalcAnchors[key] + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} onwards
+            </p>
+          )}
+        </div>
 
       </div>
     );

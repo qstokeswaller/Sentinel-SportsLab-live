@@ -128,13 +128,13 @@ const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSess
                             <tr key={r.id} className="hover:bg-indigo-50/30 transition-colors group">
                                 <td className="sticky left-0 z-10 bg-white group-hover:bg-indigo-50 px-4 py-2.5 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
-                                        {playerNum && (
-                                            <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-[9px] font-bold flex items-center justify-center shrink-0">
-                                                {playerNum}
-                                            </span>
-                                        )}
                                         <div>
-                                            <span className="text-sm font-semibold text-slate-900">{r.matchedName || r.playerName}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-sm font-semibold text-slate-900">{r.matchedName || r.playerName}</span>
+                                                {playerNum && (
+                                                    <span className="text-[10px] font-bold text-slate-400">#{playerNum}</span>
+                                                )}
+                                            </div>
                                             <span className={`block text-[9px] font-bold uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-emerald-500'}`}>
                                                 {r.athleteId === 'unknown' ? 'unlinked' : 'verified'}
                                             </span>
@@ -450,6 +450,7 @@ export const ReportingHubPage = () => {
         }
         return keys
             .filter(k => {
+                if (GPS_META_COLS.has(k)) return false;
                 const cfg = gpsMergedColConfig.find(c => c.key === k);
                 return cfg ? cfg.visible !== false : true;
             })

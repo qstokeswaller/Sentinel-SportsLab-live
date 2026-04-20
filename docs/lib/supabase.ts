@@ -13,5 +13,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // Bypass the Web Locks API — prevents "lock timed out" errors when multiple
+    // tabs are open or the browser lock isn't released cleanly.
+    lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
   },
 });
