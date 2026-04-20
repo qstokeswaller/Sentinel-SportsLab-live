@@ -28,6 +28,14 @@ export default function PolarCallbackPage() {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
         const error = params.get('error');
+        const stateParam = params.get('state');
+        let connectionType: 'team_pro' | 'individual' = 'team_pro';
+        try {
+            if (stateParam) {
+                const parsed = JSON.parse(decodeURIComponent(stateParam));
+                connectionType = parsed.type || 'team_pro';
+            }
+        } catch { /* default to team_pro */ }
 
         if (error || !code) {
             setStatus('error');
@@ -55,6 +63,7 @@ export default function PolarCallbackPage() {
                     accessToken: access_token,
                     polarUserId: polar_user_id,
                     connectedAt: new Date().toISOString(),
+                    type: connectionType,
                 });
 
                 setStatus('success');

@@ -301,21 +301,25 @@ const SettingsPage: React.FC = () => {
   };
 
   // ── Connect Polar OAuth ────────────────────────────────────────────
-  const handleConnectPolar = () => {
+  const handleConnectPolar = (type: 'team_pro' | 'individual') => {
     const clientId = import.meta.env.VITE_POLAR_CLIENT_ID;
     const redirectUri = `${window.location.origin}/polar/callback`;
-    const url = `https://flow.polar.com/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=accesslink.read_all`;
+    const scope = type === 'team_pro' ? 'team_read' : 'accesslink.read_all';
+    // Pass type via OAuth state param so callback knows which type was used
+    const state = encodeURIComponent(JSON.stringify({ type }));
+    const url = `https://flow.polar.com/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
     window.location.href = url;
   };
 
   const handleDisconnectPolar = async () => {
-    const updated = { connected: false, accessToken: '', polarUserId: '', connectedAt: '' };
+    const updated = { connected: false, accessToken: '', polarUserId: '', connectedAt: '', type: null };
     setPolarIntegration(updated);
     await StorageService.savePolarIntegration(updated);
     showToast?.('Polar disconnected');
   };
 
   const isPolarConnected = polarIntegration?.connected === true;
+  const polarType = polarIntegration?.type ?? null;
 
   // ── Shared ACWR option controls ────────────────────────────────────
   const renderAcwrOptions = (key: string) => {
@@ -574,13 +578,14 @@ const SettingsPage: React.FC = () => {
                     <p className="text-sm font-semibold text-slate-900">Polar AccessLink</p>
                     {isPolarConnected ? (
                       <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
-                        <CheckIcon size={10} /> Connected · ID {polarIntegration.polarUserId} · {polarIntegration.connectedAt ? new Date(polarIntegration.connectedAt).toLocaleDateString() : ''}
+                        <CheckIcon size={10} />
+                        {polarType === 'team_pro' ? 'Team Pro' : 'Individual Device'} · Connected {polarIntegration.connectedAt ? new Date(polarIntegration.connectedAt).toLocaleDateString() : ''}
                       </p>
                     ) : (
-                      <p className="text-[10px] text-slate-400 mt-0.5">Not connected — connect to enable Polar API sync for any team</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Not connected — choose <strong>Team Pro</strong> for GPS vests or <strong>Individual</strong> for personal devices</p>
                     )}
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-2">
                     {isPolarConnected ? (
                       <button
                         onClick={handleDisconnectPolar}
@@ -589,12 +594,20 @@ const SettingsPage: React.FC = () => {
                         Disconnect
                       </button>
                     ) : (
-                      <button
-                        onClick={handleConnectPolar}
-                        className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all"
-                      >
-                        Connect Polar
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleConnectPolar('team_pro')}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all whitespace-nowrap"
+                        >
+                          Team Pro
+                        </button>
+                        <button
+                          onClick={() => handleConnectPolar('individual')}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all whitespace-nowrap"
+                        >
+                          Individual
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

@@ -1674,40 +1674,40 @@ export const ReportingHubPage = () => {
                 const res = await fetch('/api/polar-sync', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ access_token: polarIntegration.accessToken }),
+                    body: JSON.stringify({
+                        access_token: polarIntegration.accessToken,
+                        type: polarIntegration.type || 'team_pro',
+                    }),
                 });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({ error: 'Unknown error' }));
                     throw new Error(err.error || `Sync failed (${res.status})`);
                 }
-                const { exercises } = await res.json();
-                const list = Array.isArray(exercises) ? exercises : [];
-                if (list.length === 0) {
+                const { sessions: list } = await res.json();
+                if (!list || list.length === 0) {
                     setPolarSyncStatus('success');
                     setPolarSyncMessage('No exercises found.');
                     setTimeout(() => setPolarSyncStatus('idle'), 5000);
                     return;
                 }
-                // Map Polar exercise data to GPS records format
-                const newRecords = list.map((ex: any) => ({
-                    id: `polar_${ex.id}`,
-                    source: 'polar',
-                    playerName: polarIntegration.polarUserId ? `Polar User ${polarIntegration.polarUserId}` : 'Polar Athlete',
-                    athleteId: 'unknown',
-                    date: ex.start_time ? ex.start_time.split('T')[0] : new Date().toISOString().split('T')[0],
-                    category: 'training',
-                    teamId: selectedTeam?.id || '',
-                    rawColumns: {
-                        'Duration': ex.duration ? `${Math.round(ex.duration / 60)} min` : '—',
-                        'Distance (m)': ex.distance ?? '—',
-                        'Calories': ex.calories ?? '—',
-                        'HR Avg': ex.heart_rate?.average ?? '—',
-                        'HR Max': ex.heart_rate?.maximum ?? '—',
-                        'Sport': ex.sport ?? '—',
-                        'Training Load Score': ex.training_load?.score ?? '—',
-                        'Cardio Load': ex.cardio_load?.strain_index ?? '—',
-                    },
-                }));
+                // Map Polar sessions to GPS records format (handles both team_pro and individual)
+                const newRecords = [];
+                for (const s of list) {
+                    const { session, players } = s;
+                    for (const p of players) {
+                        newRecords.push({
+                            id: `polar_${session.id}_${p.playerId || 'self'}`,
+                            source: s.source || 'polar',
+                            playerName: p.playerName || 'Polar Athlete',
+                            playerNumber: p.playerNumber || '',
+                            athleteId: 'unknown',
+                            date: session.date || new Date().toISOString().split('T')[0],
+                            category: 'training',
+                            teamId: selectedTeam?.id || '',
+                            rawColumns: p.rawColumns || {},
+                        });
+                    }
+                }
                 setGpsData(prev => {
                     const existingIds = new Set(prev.map((r: any) => r.id));
                     const fresh = newRecords.filter((r: any) => !existingIds.has(r.id));
