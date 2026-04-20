@@ -21,6 +21,9 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,    // Sentry captures replay on errors
   enableLogs: true,
 });
+
+// TEMP: remove after Sentry connection is confirmed
+Sentry.captureMessage('Sentry connection test — Sentinel SportsLab');
 import { AuthProvider } from './context/AuthContext';
 import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary';
