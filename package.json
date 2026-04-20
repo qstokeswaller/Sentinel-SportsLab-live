@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.35.0",
+    "@sentry/react": "^10.49.0",
     "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-query": "^5.90.21",
@@ -21,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "driver.js": "^1.4.0",
+    "logrocket": "^12.1.0",
     "lucide-react": "^0.562.0",
     "papaparse": "^5.5.3",
     "postcss": "^8.5.6",

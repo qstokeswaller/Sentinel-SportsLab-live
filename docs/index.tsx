@@ -2,7 +2,25 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import LogRocket from 'logrocket';
+import * as Sentry from '@sentry/react';
 import './styles.css';
+
+LogRocket.init('wpqus2/sentinel-sportslab');
+
+Sentry.init({
+  dsn: 'https://d1d86d480a3412765e032fb28641b95b@o4511249541431296.ingest.de.sentry.io/4511249566203984',
+  sendDefaultPii: true,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: ['localhost'],
+  replaysSessionSampleRate: 0,      // LogRocket handles normal session replay
+  replaysOnErrorSampleRate: 1.0,    // Sentry captures replay on errors
+  enableLogs: true,
+});
 import { AuthProvider } from './context/AuthContext';
 import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary';
