@@ -129,4 +129,8 @@ export const SupabaseStorageService = {
   saveTestVisibility: (d: any) => save('test_visibility', d),
   getTourState: () => get('tour_state'),
   saveTourState: (d: any) => save('tour_state', d),
+  getPolarIntegration: () => get('polar_integration'),
+  savePolarIntegration: (d: any) => save('polar_integration', d),
+  getGpsDataSources: () => get('gps_data_sources'),
+  saveGpsDataSources: (d: any) => save('gps_data_sources', d),
 };

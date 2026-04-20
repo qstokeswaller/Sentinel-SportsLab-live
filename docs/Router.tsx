@@ -11,6 +11,7 @@ import PublicInjuryForm from './pages/PublicInjuryForm';
 import PublicWorkoutView from './pages/PublicWorkoutView';
 import PublicProtocolView from './pages/PublicProtocolView';
 import LandingPage from './pages/LandingPage';
+import PolarCallbackPage from './pages/PolarCallbackPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -49,6 +50,9 @@ const AppRouter: React.FC = () => {
       <Route path="/injury-form/:teamId/:athleteId" element={<PublicInjuryForm />} />
       <Route path="/workout/:workoutType/:workoutId" element={<PublicWorkoutView />} />
       <Route path="/protocol/:protocolId" element={<PublicProtocolView />} />
+
+      {/* POLAR OAUTH CALLBACK — public route, handles redirect from Polar */}
+      <Route path="/polar/callback" element={<PolarCallbackPage />} />
 
       {/* AUTH ROUTES */}
       <Route

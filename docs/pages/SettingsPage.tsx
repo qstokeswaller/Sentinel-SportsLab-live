@@ -169,7 +169,7 @@ const GpsColumnRenameModal: React.FC<{
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles } = useAppState();
+  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -291,6 +291,31 @@ const SettingsPage: React.FC = () => {
     setGpsProfiles(all);    // React state — instant UI update
     showToast?.('ACWR GPS column updated');
   };
+
+  // ── GPS Data Source per team ──────────────────────────────────────
+  const handleSetGpsDataSource = async (teamId: string, source: 'csv' | 'polar') => {
+    const updated = { ...gpsDataSources, [teamId]: source };
+    setGpsDataSources(updated);
+    await StorageService.saveGpsDataSources(updated);
+    showToast?.(`Data source set to ${source === 'polar' ? 'Polar' : 'CSV'}`);
+  };
+
+  // ── Connect Polar OAuth ────────────────────────────────────────────
+  const handleConnectPolar = () => {
+    const clientId = import.meta.env.VITE_POLAR_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/polar/callback`;
+    const url = `https://flow.polar.com/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=accesslink.read_all`;
+    window.location.href = url;
+  };
+
+  const handleDisconnectPolar = async () => {
+    const updated = { connected: false, accessToken: '', polarUserId: '', connectedAt: '' };
+    setPolarIntegration(updated);
+    await StorageService.savePolarIntegration(updated);
+    showToast?.('Polar disconnected');
+  };
+
+  const isPolarConnected = polarIntegration?.connected === true;
 
   // ── Shared ACWR option controls ────────────────────────────────────
   const renderAcwrOptions = (key: string) => {
@@ -539,6 +564,41 @@ const SettingsPage: React.FC = () => {
               collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
             >
               <div className="space-y-4">
+
+                {/* ── Polar Connection Status ── */}
+                <div className={`rounded-xl border px-4 py-3.5 flex items-center gap-4 ${isPolarConnected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isPolarConnected ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                    <ActivityIcon size={16} className={isPolarConnected ? 'text-emerald-600' : 'text-slate-400'} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">Polar AccessLink</p>
+                    {isPolarConnected ? (
+                      <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                        <CheckIcon size={10} /> Connected · ID {polarIntegration.polarUserId} · {polarIntegration.connectedAt ? new Date(polarIntegration.connectedAt).toLocaleDateString() : ''}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">Not connected — connect to enable Polar API sync for any team</p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    {isPolarConnected ? (
+                      <button
+                        onClick={handleDisconnectPolar}
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all"
+                      >
+                        Disconnect
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectPolar}
+                        className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all"
+                      >
+                        Connect Polar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* ── Import Profiles ── */}
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-2">
@@ -602,6 +662,44 @@ const SettingsPage: React.FC = () => {
                                 {profile ? 'Reconfigure' : 'Configure'}
                               </button>
                             </div>
+                          </div>
+
+                          {/* Data Source selector */}
+                          <div className="px-4 pt-3 pb-3 border-t border-slate-200/60">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                              <ActivityIcon size={10} className="text-indigo-400" /> Data Source
+                            </label>
+                            <div className="flex gap-2">
+                              {[
+                                { value: 'csv', label: 'CSV Import', desc: 'Upload GPS files manually' },
+                                { value: 'polar', label: 'Polar Sync', desc: 'Pull from Polar AccessLink', disabled: !isPolarConnected },
+                              ].map(opt => {
+                                const selected = (gpsDataSources[team.id] || 'csv') === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    disabled={opt.disabled}
+                                    onClick={() => handleSetGpsDataSource(team.id, opt.value as 'csv' | 'polar')}
+                                    title={opt.disabled ? 'Connect Polar above to enable this option' : ''}
+                                    className={`flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all ${
+                                      opt.disabled
+                                        ? 'opacity-40 cursor-not-allowed border-slate-200 bg-slate-50'
+                                        : selected
+                                          ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                                    }`}
+                                  >
+                                    <span className="text-xs font-semibold">{opt.label}</span>
+                                    <span className="text-[10px] text-slate-400 mt-0.5">{opt.desc}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {(gpsDataSources[team.id] || 'csv') === 'polar' && isPolarConnected && (
+                              <p className="text-[10px] text-indigo-600 mt-1.5 flex items-center gap-1">
+                                <CheckIcon size={9} /> GPS Data Hub will show a Sync Polar button for this team. CSV import remains available as a fallback.
+                              </p>
+                            )}
                           </div>
 
                           {/* ACWR column binding — always visible when profile exists */}

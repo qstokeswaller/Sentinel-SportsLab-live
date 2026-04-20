@@ -260,6 +260,7 @@ export const ReportingHubPage = () => {
         showToast, wellnessDateRange, setWellnessDateRange, calculateACWR, calculateMonotony,
         acwrSettings,
         isLoading,
+        polarIntegration, gpsDataSources,
     } = useAppState();
 
     // --- Local state for GPS Data report ---
@@ -274,6 +275,8 @@ export const ReportingHubPage = () => {
     const [gpsImportMessage, setGpsImportMessage] = useState('');
     const [gpsImportTeamId, setGpsImportTeamId] = useState<string>('');
     const [collapsedPhases, setCollapsedPhases] = useState<Set<string>>(new Set());
+    const [polarSyncStatus, setPolarSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+    const [polarSyncMessage, setPolarSyncMessage] = useState('');
 
     // Smart GPS import dialog state
     const [gpsSmartDialog, setGpsSmartDialog] = useState<{
@@ -1657,6 +1660,75 @@ export const ReportingHubPage = () => {
         const saveColConfig = gpsSaveColConfig;
         const colLabel = gpsColLabel;
 
+        // ── Polar Sync ────────────────────────────────────────────────
+        const handlePolarSync = async () => {
+            if (!polarIntegration?.accessToken) {
+                setPolarSyncStatus('error');
+                setPolarSyncMessage('Polar not connected — go to Settings → GPS Configuration to connect.');
+                return;
+            }
+            setPolarSyncStatus('syncing');
+            setPolarSyncMessage('Fetching exercises from Polar...');
+            try {
+                // Call server-side proxy to avoid CORS issues with Polar's API
+                const res = await fetch('/api/polar-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: polarIntegration.accessToken }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(err.error || `Sync failed (${res.status})`);
+                }
+                const { exercises } = await res.json();
+                const list = Array.isArray(exercises) ? exercises : [];
+                if (list.length === 0) {
+                    setPolarSyncStatus('success');
+                    setPolarSyncMessage('No exercises found.');
+                    setTimeout(() => setPolarSyncStatus('idle'), 5000);
+                    return;
+                }
+                // Map Polar exercise data to GPS records format
+                const newRecords = list.map((ex: any) => ({
+                    id: `polar_${ex.id}`,
+                    source: 'polar',
+                    playerName: polarIntegration.polarUserId ? `Polar User ${polarIntegration.polarUserId}` : 'Polar Athlete',
+                    athleteId: 'unknown',
+                    date: ex.start_time ? ex.start_time.split('T')[0] : new Date().toISOString().split('T')[0],
+                    category: 'training',
+                    teamId: selectedTeam?.id || '',
+                    rawColumns: {
+                        'Duration': ex.duration ? `${Math.round(ex.duration / 60)} min` : '—',
+                        'Distance (m)': ex.distance ?? '—',
+                        'Calories': ex.calories ?? '—',
+                        'HR Avg': ex.heart_rate?.average ?? '—',
+                        'HR Max': ex.heart_rate?.maximum ?? '—',
+                        'Sport': ex.sport ?? '—',
+                        'Training Load Score': ex.training_load?.score ?? '—',
+                        'Cardio Load': ex.cardio_load?.strain_index ?? '—',
+                    },
+                }));
+                setGpsData(prev => {
+                    const existingIds = new Set(prev.map((r: any) => r.id));
+                    const fresh = newRecords.filter((r: any) => !existingIds.has(r.id));
+                    return [...prev, ...fresh];
+                });
+                setPolarSyncStatus('success');
+                setPolarSyncMessage(`Synced ${newRecords.length} exercise${newRecords.length !== 1 ? 's' : ''} from Polar`);
+                setTimeout(() => setPolarSyncStatus('idle'), 8000);
+            } catch (err: any) {
+                console.error('Polar sync error:', err);
+                setPolarSyncStatus('error');
+                setPolarSyncMessage(err.message || 'Polar sync failed');
+                setTimeout(() => setPolarSyncStatus('idle'), 8000);
+            }
+        };
+
+        // Derive whether the currently selected team uses Polar
+        const selectedTeam = teams.find(t => t.name === gpsFilterTarget);
+        const teamDataSource = selectedTeam ? (gpsDataSources?.[selectedTeam.id] || 'csv') : 'csv';
+        const isPolarSource = teamDataSource === 'polar' && polarIntegration?.connected === true;
+
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -2229,11 +2301,41 @@ export const ReportingHubPage = () => {
                                     </div>
                                 )}
 
-                                <label className="ml-auto bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-indigo-700 transition-all cursor-pointer whitespace-nowrap">
-                                    <UploadIcon size={13} /> Import CSV
-                                    <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                                </label>
+                                <div className="ml-auto flex items-center gap-2">
+                                    {/* Sync Polar — shown as primary when team data source is Polar */}
+                                    {isPolarSource && (
+                                        <button
+                                            onClick={handlePolarSync}
+                                            disabled={polarSyncStatus === 'syncing'}
+                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-all whitespace-nowrap"
+                                        >
+                                            {polarSyncStatus === 'syncing'
+                                                ? <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Syncing...</>
+                                                : <><ActivityIcon size={13} /> Sync Polar</>
+                                            }
+                                        </button>
+                                    )}
+                                    {/* Import CSV — always available as fallback */}
+                                    <label className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${isPolarSource ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                                        <UploadIcon size={13} /> Import CSV
+                                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                                    </label>
+                                </div>
                             </div>
+
+                            {/* Polar sync status */}
+                            {polarSyncStatus !== 'idle' && (
+                                <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold ${
+                                    polarSyncStatus === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' :
+                                    polarSyncStatus === 'error' ? 'bg-red-50 border border-red-200 text-red-700' :
+                                    'bg-indigo-50 border border-indigo-200 text-indigo-700'
+                                }`}>
+                                    {polarSyncStatus === 'syncing' && <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />}
+                                    {polarSyncStatus === 'success' && <CheckIcon size={13} />}
+                                    {polarSyncStatus === 'error' && <AlertCircleIcon size={13} />}
+                                    {polarSyncMessage}
+                                </div>
+                            )}
                         </div>
                         );
                     })()}

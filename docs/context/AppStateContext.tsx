@@ -607,6 +607,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [testVisibility, setTestVisibility] = useState<Record<string, boolean>>({});
     const [tourState, setTourState] = useState<Record<string, string>>({});
 
+    // --- POLAR INTEGRATION STATE ---
+    const [polarIntegration, setPolarIntegration] = useState<Record<string, any>>({});
+    // --- GPS DATA SOURCES — per team: { [teamId]: 'csv' | 'polar' } ---
+    const [gpsDataSources, setGpsDataSources] = useState<Record<string, string>>({});
+
     const [kpiRecords, setKpiRecords] = useState(MOCK_KPI_DATA);
 
     const [heatmapRecords, setHeatmapRecords] = useState(MOCK_HEATMAP_DATA);
@@ -2291,6 +2296,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
                 // If no tour state exists, it stays empty — PageTour will create defaults on first render
             } catch (e) { /* ignore */ }
+            // Load Polar integration + GPS data sources
+            try {
+                const savedPolar = await StorageService.getPolarIntegration();
+                if (savedPolar && Object.keys(savedPolar).length > 0) setPolarIntegration(savedPolar);
+            } catch (e) { /* ignore */ }
+            try {
+                const savedGdsSrc = await StorageService.getGpsDataSources();
+                if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
+            } catch (e) { /* ignore */ }
             // Pre-load wellness responses for the dashboard heatmap (last 30 days, all teams)
             try {
                 const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -2303,7 +2317,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (initSuccess) dataLoadedRef.current = true;
             setIsLoading(false);
         }
-    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles]);
+    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles, setPolarIntegration, setGpsDataSources]);
 
     const handleLoadWellnessResponses = useCallback(async (teamId: string, rangeOrStart?: any, endDate?: string) => {
         if (!teamId || teamId === 'all') return;
@@ -2806,6 +2820,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setAcwrExclusions,
         testVisibility,
         tourState, setTourState,
+        polarIntegration, setPolarIntegration,
+        gpsDataSources, setGpsDataSources,
         setTestVisibility,
         getAthleteAcwrOptions,
         calculateACWR,
