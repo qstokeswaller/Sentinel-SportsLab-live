@@ -10,9 +10,17 @@
  */
 import { supabase } from '../lib/supabase';
 
+// getUser() validates the JWT with the Supabase Auth server on every call (network round-trip).
+// getSession() reads the cached session from localStorage — instant, no network.
+// For a client-side app the session is already trusted after login, so getSession() is correct.
+const getSessionUser = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user ?? null;
+};
+
 const get = async (key: string): Promise<any[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
       const raw = localStorage.getItem(`traineros_${key}`);
@@ -44,7 +52,7 @@ const get = async (key: string): Promise<any[]> => {
 
 const save = async (key: string, value: any): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
       localStorage.setItem(`traineros_${key}`, JSON.stringify(value));
@@ -70,7 +78,7 @@ const save = async (key: string, value: any): Promise<void> => {
 
 export const SupabaseStorageService = {
   init: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
     console.log(`StorageService: ${user ? 'Connected to Supabase ✓' : 'No user — using localStorage fallback'}`);
   },
 
