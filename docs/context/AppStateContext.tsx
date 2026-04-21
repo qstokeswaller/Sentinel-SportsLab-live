@@ -1411,9 +1411,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }
                 showToast(`${newAthleteName} added to roster`, 'success');
             } else {
-                await DatabaseService.createTeam(newAthleteName, 'Football');
+                const createdTeam = await DatabaseService.createTeam(newAthleteName, 'Football');
                 showToast(`Team "${newAthleteName}" created`, 'success');
-                initData(); // team creation requires full reload to get team ID
+                if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
             }
             if (!keepOpen) setIsAddAthleteModalOpen(false);
             setNewAthleteName('');
@@ -1429,10 +1429,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleAddTeam = async () => {
         if (!newTeamName.trim()) return;
         try {
-            await DatabaseService.createTeam(newTeamName, 'Football');
+            const createdTeam = await DatabaseService.createTeam(newTeamName, 'Football');
+            if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
+            showToast(`Team "${newTeamName}" created`, 'success');
             setIsAddTeamModalOpen(false);
             setNewTeamName('');
-            await initData(); // refresh teams before switching mode
             setAddAthleteMode('athlete'); // auto-switch back so user can add athlete to new team
         } catch (err) {
             console.error("Error adding team:", err);
@@ -1463,7 +1464,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleDeleteTeam = async (teamId: string) => {
         try {
             await DatabaseService.deleteTeam(teamId);
-            initData();
+            setTeams(prev => prev.filter(t => t.id !== teamId));
         } catch (err) {
             console.error("Error deleting team:", err);
             alert("Failed to delete team. Make sure all athletes are removed first.");
@@ -1490,8 +1491,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 exercises: newSession.exercises // Assuming the DB table can handle this JSONB or similar
             };
 
-            await DatabaseService.createSession(sessionData);
-            await initData();
+            const savedSession = await DatabaseService.createSession(sessionData);
+            if (savedSession) {
+                setScheduledSessions(prev => [...prev, {
+                    ...savedSession,
+                    trainingPhase: savedSession.training_phase,
+                    targetType: savedSession.target_type,
+                    targetId: savedSession.target_id,
+                    plannedDuration: savedSession.planned_duration,
+                }]);
+            }
 
             setIsAddSessionModalOpen(false);
             setNewSession({
@@ -1518,8 +1527,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const scheduleWorkoutSession = async (sessionPayload) => {
         try {
             setIsLoading(true);
-            await DatabaseService.createSession(sessionPayload);
-            await initData();
+            const savedSession = await DatabaseService.createSession(sessionPayload);
+            if (savedSession) {
+                setScheduledSessions(prev => [...prev, {
+                    ...savedSession,
+                    trainingPhase: savedSession.training_phase,
+                    targetType: savedSession.target_type,
+                    targetId: savedSession.target_id,
+                    plannedDuration: savedSession.planned_duration,
+                }]);
+            }
             showToast("Workout scheduled successfully", "success");
         } catch (err) {
             console.error("Error scheduling workout:", err);
@@ -1561,7 +1578,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         try {
             setIsLoading(true);
             await DatabaseService.deleteSession(sessionId);
-            await initData();
+            setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
             showToast("Session deleted", "success");
         } catch (err) {
             console.error("Error deleting session:", err);
@@ -1603,8 +1620,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleUpdateCalendarEvent = async (id, updates) => {
         try {
             setIsLoading(true);
-            await DatabaseService.updateCalendarEvent(id, updates);
-            await initData();
+            const updatedEvent = await DatabaseService.updateCalendarEvent(id, updates);
+            setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...(updatedEvent || updates) } : e));
             showToast("Event updated", "success");
         } catch (err) {
             console.error("Error updating calendar event:", err);
@@ -1618,7 +1635,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         try {
             setIsLoading(true);
             await DatabaseService.deleteCalendarEvent(id);
-            await initData();
+            setCalendarEvents(prev => prev.filter(e => e.id !== id));
             showToast("Event deleted", "success");
         } catch (err) {
             console.error("Error deleting calendar event:", err);

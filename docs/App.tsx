@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppState } from './context/AppStateContext';
 import { DatabaseService } from './services/databaseService';
@@ -8,20 +8,21 @@ import PerformanceLab from './components/performance/PerformanceLab';
 import ImportResolverModal from './components/performance/ImportResolverModal';
 import WattbikeMapCalculator from './components/performance/WattbikeMapCalculator';
 import { Sidebar } from './components/layout/Sidebar';
-import { DashboardPage } from './pages/DashboardPage';
-import { RosterPage } from './pages/RosterPage';
-import { PeriodizationPage } from './pages/PeriodizationPage';
-import { ExerciseLibraryPage } from './pages/ExerciseLibraryPage';
-import { WorkoutsPage } from './pages/WorkoutsPage';
-import { AnalyticsHubPage } from './pages/AnalyticsHubPage';
-import { ReportingHubPage } from './pages/ReportingHubPage';
-import { ConditioningHubPage } from './pages/ConditioningHubPage';
-import { WellnessHubPage } from './pages/WellnessHubPage';
-import SettingsPage from './pages/SettingsPage';
-import { WorkoutPacketsPage } from './pages/WorkoutPacketsPage';
-import { WeightroomSheetsPage } from './pages/WeightroomSheetsPage';
-import { WorkoutHistoryPage } from './pages/WorkoutHistoryPage';
-import { TestingHubPage } from './pages/TestingHubPage';
+// Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
+const DashboardPage      = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const RosterPage         = lazy(() => import('./pages/RosterPage').then(m => ({ default: m.RosterPage })));
+const PeriodizationPage  = lazy(() => import('./pages/PeriodizationPage').then(m => ({ default: m.PeriodizationPage })));
+const ExerciseLibraryPage = lazy(() => import('./pages/ExerciseLibraryPage').then(m => ({ default: m.ExerciseLibraryPage })));
+const WorkoutsPage       = lazy(() => import('./pages/WorkoutsPage').then(m => ({ default: m.WorkoutsPage })));
+const AnalyticsHubPage   = lazy(() => import('./pages/AnalyticsHubPage').then(m => ({ default: m.AnalyticsHubPage })));
+const ReportingHubPage   = lazy(() => import('./pages/ReportingHubPage').then(m => ({ default: m.ReportingHubPage })));
+const ConditioningHubPage = lazy(() => import('./pages/ConditioningHubPage').then(m => ({ default: m.ConditioningHubPage })));
+const WellnessHubPage    = lazy(() => import('./pages/WellnessHubPage').then(m => ({ default: m.WellnessHubPage })));
+const SettingsPage       = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.default })));
+const WorkoutPacketsPage = lazy(() => import('./pages/WorkoutPacketsPage').then(m => ({ default: m.WorkoutPacketsPage })));
+const WeightroomSheetsPage = lazy(() => import('./pages/WeightroomSheetsPage').then(m => ({ default: m.WeightroomSheetsPage })));
+const WorkoutHistoryPage = lazy(() => import('./pages/WorkoutHistoryPage').then(m => ({ default: m.WorkoutHistoryPage })));
+const TestingHubPage     = lazy(() => import('./pages/TestingHubPage').then(m => ({ default: m.TestingHubPage })));
 import WorkoutPacketModal from './components/WorkoutPacketModal';
 import AddEventModal from './components/calendar/AddEventModal';
 import { WEIGHTROOM_1RM_EXERCISES } from './utils/constants';
@@ -396,11 +397,35 @@ const App = () => {
         isPerformanceLabOpen, setIsPerformanceLabOpen,
         tourState, setTourState,
     } = useAppState();
+
+    // Prefetch all page chunks in the background after the app mounts so
+    // navigation to any page is instant — no spinner on subsequent visits.
+    useEffect(() => {
+        const t = setTimeout(() => {
+            import('./pages/DashboardPage');
+            import('./pages/WellnessHubPage');
+            import('./pages/ReportingHubPage');
+            import('./pages/AnalyticsHubPage');
+            import('./pages/RosterPage');
+            import('./pages/WorkoutsPage');
+            import('./pages/WorkoutPacketsPage');
+            import('./pages/TestingHubPage');
+            import('./pages/SettingsPage');
+            import('./pages/ConditioningHubPage');
+            import('./pages/ExerciseLibraryPage');
+            import('./pages/PeriodizationPage');
+            import('./pages/WeightroomSheetsPage');
+            import('./pages/WorkoutHistoryPage');
+        }, 2000); // wait 2s so initial render + data load isn't competing with chunk fetches
+        return () => clearTimeout(t);
+    }, []);
+
     return (
         <div className="flex h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500/30 overflow-hidden relative">
             <Sidebar />
             <main className="flex-1 overflow-y-auto no-scrollbar relative min-h-screen pb-24 md:pb-0">
                 <div className="max-w-7xl mx-auto px-6 py-6">
+                    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
                     <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
@@ -426,6 +451,7 @@ const App = () => {
                             return <Navigate to="/dashboard" replace />;
                         })()} />
                     </Routes>
+                    </Suspense>
                 </div>
             </main>
             <AddAthleteModal />
@@ -1225,7 +1251,7 @@ const AthleteProfileModal = () => {
     if (acwrEnabled) {
         try {
             acwrValue = calculateACWR(p.id);
-            if (acwrValue < 0.8) { acwrZone = 'Undertrained'; acwrColor = 'text-sky-600 bg-sky-50 border-sky-200'; }
+            if (acwrValue < 0.8) { acwrZone = 'Underexposed'; acwrColor = 'text-sky-600 bg-sky-50 border-sky-200'; }
             else if (acwrValue <= 1.3) { acwrZone = 'Optimal'; acwrColor = 'text-emerald-600 bg-emerald-50 border-emerald-200'; }
             else if (acwrValue <= 1.5) { acwrZone = 'Caution'; acwrColor = 'text-amber-600 bg-amber-50 border-amber-200'; }
             else { acwrZone = 'Danger'; acwrColor = 'text-rose-600 bg-rose-50 border-rose-200'; }

@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 import { Upload, X, ChevronRight, CheckCircle2, AlertTriangle, FileSpreadsheet, Users } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
@@ -125,9 +124,10 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                 complete: (r) => handleData(r.data as Record<string, string>[]),
             });
         } else {
-            // xlsx / xls
+            // xlsx / xls — load the library only when the user actually picks a spreadsheet
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
+                const XLSX = await import('xlsx');
                 const wb = XLSX.read(e.target?.result, { type: 'binary' });
                 const ws = wb.Sheets[wb.SheetNames[0]];
                 const data = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });

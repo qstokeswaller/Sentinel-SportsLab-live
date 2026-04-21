@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import {
-    UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon,
+    UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon, PlusIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
     ArrowLeftIcon, LayoutListIcon, ClipboardListIcon,
     ChevronDownIcon, ChevronUpIcon, FileSpreadsheetIcon,
@@ -21,6 +21,7 @@ export const RosterPage = () => {
         teams,
         setIsAddAthleteModalOpen,
         setNewAthleteName,
+        setAddAthleteMode,
         setViewingPlayer,
         handleDeleteAthlete,
         handleDeleteTeam,
@@ -110,9 +111,12 @@ export const RosterPage = () => {
                     <Button variant="outline" onClick={() => setShowImport(true)}>
                         <FileSpreadsheetIcon size={14} /> Import CSV
                     </Button>
-                    <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
-                        <UserPlusIcon size={14} /> Add Athlete
-                    </Button>
+                    <button
+                        onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                    >
+                        <UserPlusIcon size={11} /> Add Athlete
+                    </button>
                 </div>
             </div>
 
@@ -200,10 +204,10 @@ export const RosterPage = () => {
                 <div className="px-4 py-3 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-xs text-slate-400">{allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}</span>
                     <button
-                        onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                        className="text-xs text-indigo-600 font-medium hover:text-indigo-700 transition-colors flex items-center gap-1"
+                        onClick={() => { setAddAthleteMode('team'); setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                     >
-                        <UserPlusIcon size={12} /> Add team
+                        <PlusIcon size={11} /> Add Team
                     </button>
                 </div>
             </div>
@@ -221,9 +225,12 @@ export const RosterPage = () => {
                 </div>
                 <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
-                    <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
-                        <UserPlusIcon size={14} /> Add Athlete
-                    </Button>
+                    <button
+                        onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                    >
+                        <UserPlusIcon size={11} /> Add Athlete
+                    </button>
                 </div>
             </div>
 
@@ -370,9 +377,12 @@ export const RosterPage = () => {
                         >
                             <Trash2Icon size={14} />
                         </button>
-                        <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
-                            <UserPlusIcon size={14} /> Add Athlete
-                        </Button>
+                        <button
+                            onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                        >
+                            <UserPlusIcon size={11} /> Add Athlete
+                        </button>
                     </div>
                 </div>
 
@@ -499,18 +509,24 @@ export const RosterPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <ViewToggle />
-                        <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}>
-                            <UserPlusIcon size={14} /> Add Athlete
-                        </Button>
+                        <button
+                            onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                        >
+                            <UserPlusIcon size={11} /> Add Athlete
+                        </button>
                     </div>
                 </div>
                 <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 p-16 text-center">
                     <UsersIcon size={32} className="text-slate-300 mx-auto mb-3" />
                     <p className="text-sm font-medium text-slate-500">No teams yet</p>
                     <p className="text-xs text-slate-400 mt-1 mb-4">Create a team and add your first athletes to get started.</p>
-                    <Button onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }} size="sm">
-                        <UserPlusIcon size={13} /> Add Athlete
-                    </Button>
+                    <button
+                        onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
+                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mx-auto"
+                    >
+                        <UserPlusIcon size={11} /> Add Athlete
+                    </button>
                 </div>
                 <ConfirmDeleteModal
                     isOpen={!!confirmDelete}

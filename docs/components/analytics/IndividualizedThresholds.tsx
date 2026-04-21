@@ -28,7 +28,7 @@ import {
 // ═══════════════════════════════════════════════════════════════════════
 
 interface ThresholdResult {
-    lowerThreshold: number;   // below this = undertrained
+    lowerThreshold: number;   // below this = underexposed
     upperThreshold: number;   // above this = elevated risk
     confidence: 'high' | 'moderate' | 'low';
     weeksOfData: number;
@@ -238,7 +238,7 @@ const IndividualizedThresholds: React.FC = () => {
     };
 
     const zoneLabel = (acwr: number, t: ThresholdResult) => {
-        if (acwr < t.lowerThreshold) return 'Undertrained';
+        if (acwr < t.lowerThreshold) return 'Underexposed';
         if (acwr <= t.upperThreshold) return 'Personal Sweet Spot';
         if (acwr <= t.upperThreshold + 0.2) return 'Approaching Limit';
         return 'Above Personal Threshold';
@@ -317,7 +317,7 @@ const IndividualizedThresholds: React.FC = () => {
                     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Personal ACWR Zones</div>
                         <div className="relative h-8 rounded-full overflow-hidden bg-slate-100 mb-2">
-                            {/* Undertrained zone */}
+                            {/* Underexposed zone */}
                             <div className="absolute h-full bg-sky-200" style={{ left: 0, width: `${(thresholds.lowerThreshold / 2.0) * 100}%` }} />
                             {/* Sweet spot */}
                             <div className="absolute h-full bg-emerald-200" style={{ left: `${(thresholds.lowerThreshold / 2.0) * 100}%`, width: `${((thresholds.upperThreshold - thresholds.lowerThreshold) / 2.0) * 100}%` }} />
@@ -392,7 +392,7 @@ const IndividualizedThresholds: React.FC = () => {
                             {thresholds.confidence === 'high' && ' High confidence — ≥16 weeks of data with ≥3 negative events provide reliable personalization.'}
                         </p>
                         <div className="flex flex-wrap gap-3 text-[10px] mt-3">
-                            <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> Undertrained</span>
+                            <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> Underexposed</span>
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> Personal Sweet Spot</span>
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> Approaching Limit</span>
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-400" /> Above Threshold</span>

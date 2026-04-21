@@ -260,7 +260,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 if (acwrResult.ratio > 1.5) { score += 50; flags.push('ACWR Critical'); }
                 else if (acwrResult.ratio > 1.3) { score += 30; flags.push('ACWR Elevated'); }
                 else if (acwrResult.ratio >= 0.8 && acwrResult.ratio <= 1.3 && acwrResult.ratio > 0) { flags.push('ACWR Normal'); }
-                else if (acwrResult.ratio < 0.8 && acwrResult.ratio > 0) { score += 10; flags.push('Undertrained'); }
+                else if (acwrResult.ratio < 0.8 && acwrResult.ratio > 0) { score += 10; flags.push('Underexposed'); }
 
                 const lastWellness = (wellnessData || []).filter(d => d.athleteId === player.id).slice(-1)[0];
                 if (lastWellness) {
@@ -1048,7 +1048,7 @@ const ACWRMonitoringHub: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Athlete Roster — ACWR Status</h4>
                                 <div className="flex items-center gap-3 text-[10px] text-slate-400">
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> &lt;0.8 Undertrained</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> &lt;0.8 Underexposed</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 0.8–1.3 Optimal</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 1.31–1.5 Caution</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> &gt;1.5 Danger</span>

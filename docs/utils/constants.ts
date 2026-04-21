@@ -271,7 +271,7 @@ export const ACWR_UTILS = {
              */
             getRatioStatus: (ratio) => {
                 if (ratio === 0) return { label: 'No Data', color: 'text-slate-400', bg: 'bg-slate-100', status: 'neutral' };
-                if (ratio < 0.8) return { label: 'Undertrained', color: 'text-sky-500', bg: 'bg-sky-50', status: 'warning' };
+                if (ratio < 0.8) return { label: 'Underexposed', color: 'text-sky-500', bg: 'bg-sky-50', status: 'warning' };
                 if (ratio >= 0.8 && ratio <= 1.3) return { label: 'Optimal', color: 'text-emerald-500', bg: 'bg-emerald-50', status: 'success' };
                 if (ratio > 1.3 && ratio <= 1.5) return { label: 'Caution', color: 'text-amber-500', bg: 'bg-amber-50', status: 'warning' };
                 return { label: 'Danger', color: 'text-rose-500', bg: 'bg-rose-50', status: 'danger' };
