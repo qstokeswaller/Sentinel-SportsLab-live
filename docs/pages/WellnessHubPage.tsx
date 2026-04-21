@@ -4,6 +4,7 @@ import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
     UploadIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ShieldIcon, TableIcon,
+    RotateCcwIcon, XCircleIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -34,7 +35,7 @@ const getInitials = (name: string) => name?.split(' ').map(n => n[0]).join('').s
 
 // ── ACWR Monitoring Hub ─────────────────────────────────────────────────
 const ACWRMonitoringHub: React.FC = () => {
-    const { teams, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, showToast, isLoading } = useAppState();
+    const { teams, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, acwrRecalcAnchors, setAcwrRecalcAnchors, showToast, isLoading } = useAppState();
     const [selectedTeamId, setSelectedTeamId] = useState<string>('');
     const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete' | 'history'>('roster');
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
@@ -145,26 +146,53 @@ const ACWRMonitoringHub: React.FC = () => {
     const isExcluded = (athleteId: string) => acwrExclusions[athleteId]?.excluded === true;
     const getExclusion = (athleteId: string) => acwrExclusions[athleteId] || null;
 
-    // handleExclude — two modes:
-    //   'injured': long-term exclusion, freezes EWMA until coach marks returned
-    //   'rest'   : per-day freeze for today — treated as explicit rest, not a zero load
-    //   'return' : clear an existing injured exclusion
-    const handleExclude = (athleteId: string, mode: 'injured' | 'rest' | 'return', athleteName: string) => {
+    // handleExclude — four modes:
+    //   'injured'    : long-term injury exclusion — freeze EWMA until Return from Injury
+    //   'non_injury' : long-term non-injury exclusion (travel, suspension) — freeze EWMA
+    //   'rest'       : per-day freeze for today — treated as explicit rest, not a zero load
+    //   'return'     : mark athlete as returning — resets ACWR anchor date to today (gathering phase restarts)
+    //   'remove'     : completely clear any exclusion flag
+    const handleExclude = (athleteId: string, mode: 'injured' | 'non_injury' | 'rest' | 'return' | 'remove', athleteName: string) => {
         setExcludeMenuOpenId(null);
         const current = acwrExclusions[athleteId] || {};
+        const today = new Date().toISOString().split('T')[0];
 
         if (mode === 'return') {
+            // Reset ACWR: set a per-athlete recalc anchor so EWMA starts fresh from today
+            setAcwrRecalcAnchors(prev => ({ ...prev, [`rfi_${athleteId}`]: today }));
             setAcwrExclusions(prev => ({
                 ...prev,
-                [athleteId]: { ...current, excluded: false, returnDate: new Date().toISOString().split('T')[0] },
+                [athleteId]: {
+                    ...current,
+                    excluded: false,
+                    returnDate: today,
+                    returnAnchorDate: today,
+                    frozenAcute: null,
+                    frozenChronic: null,
+                    frozenRatio: null,
+                },
             }));
-            showToast?.(`${athleteName} marked as returned — monitoring for 7 days`);
+            showToast?.(`${athleteName} — returning from injury, ACWR reset to gathering phase`);
+            return;
+        }
+
+        if (mode === 'remove') {
+            setAcwrExclusions(prev => {
+                const next = { ...prev };
+                delete next[athleteId];
+                return next;
+            });
+            // Also clear any return-from-injury anchor
+            setAcwrRecalcAnchors(prev => {
+                const next = { ...prev };
+                delete next[`rfi_${athleteId}`];
+                return next;
+            });
+            showToast?.(`${athleteName} — exclusion removed`);
             return;
         }
 
         if (mode === 'rest') {
-            // Add today to player's restDays array — EWMA freezes this day instead of using zero
-            const today = new Date().toISOString().split('T')[0];
             const existing = current.restDays || [];
             if (existing.includes(today)) {
                 showToast?.(`${athleteName} — today is already marked as rest`);
@@ -178,7 +206,7 @@ const ACWRMonitoringHub: React.FC = () => {
             return;
         }
 
-        // mode === 'injured' — freeze EWMA at current values
+        // mode === 'injured' or 'non_injury' — freeze EWMA at current values
         const playerTeam = teams.find(t => (t.players || []).some(p => p.id === athleteId));
         const teamId = playerTeam?.id;
         const settings = (teamId === 't_private')
@@ -195,42 +223,61 @@ const ACWRMonitoringHub: React.FC = () => {
             [athleteId]: {
                 ...current,
                 excluded: true,
-                excludeType: 'injured',
-                excludedDate: new Date().toISOString().split('T')[0],
+                excludeType: mode, // 'injured' | 'non_injury'
+                excludedDate: today,
                 returnDate: null,
+                returnAnchorDate: null,
                 frozenAcute: acwrResult.acute,
                 frozenChronic: acwrResult.chronic,
                 frozenRatio: acwrResult.ratio,
             },
         }));
-        showToast?.(`${athleteName} excluded (injured) — EWMA frozen`);
+        const label = mode === 'injured' ? 'excluded (injured)' : 'excluded (non-injury)';
+        showToast?.(`${athleteName} ${label} — EWMA frozen`);
     };
 
-    // Detect return-from-injury (returned within last 7 days)
+    // Detect return-from-injury: player has a returnAnchorDate (ACWR reset) and is not yet excluded
+    // They stay in "returning" state until their ACWR exits gathering phase (typically 21–28 days of data)
     const isReturningFromInjury = (athleteId: string) => {
         const ex = acwrExclusions[athleteId];
-        if (!ex || ex.excluded || !ex.returnDate) return false;
-        const returnDate = new Date(ex.returnDate + 'T00:00:00');
-        const daysSinceReturn = Math.floor((Date.now() - returnDate.getTime()) / 86400000);
-        return daysSinceReturn <= 7;
+        return !!(ex && !ex.excluded && ex.returnAnchorDate);
+    };
+
+    // Days since return (for progress display)
+    const daysSinceReturn = (athleteId: string): number => {
+        const ex = acwrExclusions[athleteId];
+        if (!ex?.returnAnchorDate) return 0;
+        const d = new Date(ex.returnAnchorDate + 'T00:00:00');
+        return Math.floor((Date.now() - d.getTime()) / 86400000);
     };
 
     // Calculate ACWR + risk for every player
     const rosterData = useMemo(() => {
+        const todayStr = new Date().toISOString().split('T')[0];
         return uniquePlayers.map(player => {
             const excluded = isExcluded(player.id);
             const returning = isReturningFromInjury(player.id);
             const exclusion = getExclusion(player.id);
 
+            // Days since excluded (for time indicator)
+            const daysSinceExcluded = excluded && exclusion?.excludedDate
+                ? Math.floor((Date.now() - new Date(exclusion.excludedDate + 'T00:00:00').getTime()) / 86400000)
+                : 0;
+
             // For private clients, use their individual settings; for team athletes, use team settings
             const settings = player.teamId === 't_private'
                 ? (acwrSettings[`ind_${player.id}`] || {})
                 : (acwrSettings[player.teamId] || {});
+
+            // Per-athlete return-from-injury anchor overrides team anchor
+            const rfAnchor = acwrRecalcAnchors[`rfi_${player.id}`] || exclusion?.returnAnchorDate || undefined;
+
             const options = {
                 metricType: teamMetricType,
                 acuteN: settings.acuteWindow || 7,
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
+                recalcAnchorDate: rfAnchor,
             };
 
             // If excluded, use frozen values instead of calculating
@@ -254,7 +301,7 @@ const ACWRMonitoringHub: React.FC = () => {
             let flags: string[] = [];
 
             if (excluded) {
-                flags.push('Injured / Excluded');
+                flags.push(exclusion?.excludeType === 'non_injury' ? 'Excluded' : 'Injured');
             } else {
                 if (returning) { flags.push('Return from Injury'); score += 35; }
                 if (acwrResult.ratio > 1.5) { score += 50; flags.push('ACWR Critical'); }
@@ -282,10 +329,17 @@ const ACWRMonitoringHub: React.FC = () => {
 
             const spark = acwrResult.ratioHistory?.slice(-14) || [];
 
-            const athleteRecords = (loadRecords || []).filter(r => (r.athleteId === player.id || r.athlete_id === player.id));
+            const athleteRecords = (loadRecords || []).filter(r =>
+                (r.athleteId === player.id || r.athlete_id === player.id) && r.metric_type === teamMetricType
+            );
             const lastSession = athleteRecords.length > 0
                 ? [...athleteRecords].sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date
                 : null;
+
+            // Days without load data (for non-excluded players only)
+            const noDataDays = (!excluded && lastSession)
+                ? Math.floor((new Date(todayStr + 'T00:00:00').getTime() - new Date(lastSession + 'T00:00:00').getTime()) / 86400000)
+                : 0;
 
             return {
                 ...player,
@@ -293,7 +347,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 status, reasons, riskLevel, riskScore: score, flags, spark, lastSession,
                 teamName: player.teamName || selectedTeam?.name || '',
                 settings: options,
-                excluded, returning, exclusion,
+                excluded, returning, exclusion, daysSinceExcluded, noDataDays,
             };
         }).sort((a, b) => {
             // Excluded athletes go to the bottom
@@ -301,7 +355,7 @@ const ACWRMonitoringHub: React.FC = () => {
             if (!a.excluded && b.excluded) return -1;
             return b.ratio - a.ratio;
         });
-    }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, selectedTeam, teamMetricType]);
+    }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, acwrRecalcAnchors, selectedTeam, teamMetricType]);
 
     // ACWR trendline — team average or individual client EWMA
     const teamTrendline = useMemo(() => {
@@ -447,11 +501,16 @@ const ACWRMonitoringHub: React.FC = () => {
         const lockedMethod = teamSettings?.method || 'srpe';
         const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
         let imported = 0;
+        let skippedExcluded = 0;
 
         for (const row of rows) {
             const athleteId = row._athleteId;
             const player = allPlayers.find(p => p.id === athleteId);
             if (!player) continue;
+
+            // Skip GPS data for excluded/injured players — sport scientist must manually clear exclusion first
+            if (acwrExclusions[athleteId]?.excluded === true) { skippedExcluded++; continue; }
+
             const getVal = (fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
 
             const date = getVal('date') || new Date().toISOString().split('T')[0];
@@ -480,7 +539,8 @@ const ACWRMonitoringHub: React.FC = () => {
                 } catch (err) {}
             }
         }
-        showToast?.(`Imported ${imported} training load records from CSV`);
+        const skipMsg = skippedExcluded > 0 ? ` · ${skippedExcluded} excluded player${skippedExcluded > 1 ? 's' : ''} skipped` : '';
+        showToast?.(`Imported ${imported} training load records${skipMsg}`);
     };
 
     // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
@@ -1047,7 +1107,7 @@ const ACWRMonitoringHub: React.FC = () => {
                         <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Athlete Roster — ACWR Status</h4>
-                                <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                                <div className="hidden sm:flex items-center gap-3 text-[10px] text-slate-400">
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> &lt;0.8 Underexposed</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 0.8–1.3 Optimal</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 1.31–1.5 Caution</span>
@@ -1097,7 +1157,9 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 {player.excluded ? (
                                                     <>
                                                         <div className="text-lg font-bold text-indigo-400">—</div>
-                                                        <div className="text-[9px] font-semibold text-indigo-500">Injured</div>
+                                                        <div className="text-[9px] font-semibold text-indigo-500">
+                                                            {player.exclusion?.excludeType === 'non_injury' ? 'Excluded' : 'Injured'}
+                                                        </div>
                                                     </>
                                                 ) : player.acwrResult?.gapStatus === 'auto_reset' ? (
                                                     <>
@@ -1145,49 +1207,86 @@ const ACWRMonitoringHub: React.FC = () => {
                                                     })}
                                                 </div>
                                             </div>
-                                            {/* Right side: date + buttons */}
+                                            {/* Right side: date/indicator + buttons */}
                                             <div className="flex items-center gap-2 shrink-0">
-                                                <div className="hidden xl:block text-right w-14">
-                                                    <div className="text-[10px] text-slate-400">
-                                                        {player.excluded && player.exclusion?.excludedDate
-                                                            ? new Date(player.exclusion.excludedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-                                                            : player.lastSession ? new Date(player.lastSession).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—'}
-                                                    </div>
-                                                </div>
-                                                {/* Exclude dropdown — two options or return */}
-                                                <div className="relative" onClick={e => e.stopPropagation()}>
+                                                {/* Date / status indicator */}
+                                                <div className="hidden xl:block text-right w-20">
                                                     {player.excluded ? (
-                                                        <button
-                                                            onClick={() => handleExclude(player.id, 'return', player.name)}
-                                                            className="px-2.5 py-1.5 text-[10px] font-medium rounded-full transition-colors border bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
-                                                        >Injured ✕</button>
+                                                        // Time since excluded — amber after 7 days
+                                                        <div className={`text-[10px] font-semibold ${player.daysSinceExcluded > 7 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                                            {player.exclusion?.excludeType === 'injured' ? 'Injured' : 'Excluded'}
+                                                            {' · '}{player.daysSinceExcluded}d
+                                                        </div>
+                                                    ) : player.returning ? (
+                                                        <div className="text-[10px] font-semibold text-violet-500">
+                                                            Return · Day {daysSinceReturn(player.id)}
+                                                        </div>
+                                                    ) : player.noDataDays >= 3 ? (
+                                                        // Passive "no data" nudge
+                                                        <div className={`text-[10px] font-semibold ${player.noDataDays >= 7 ? 'text-amber-400' : 'text-slate-300'}`}>
+                                                            No data {player.noDataDays}d
+                                                        </div>
                                                     ) : (
+                                                        <div className="text-[10px] text-slate-400">
+                                                            {player.lastSession
+                                                                ? new Date(player.lastSession + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+                                                                : '—'}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Exclude controls */}
+                                                <div className="relative flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                                    {player.excluded ? (
+                                                        // Excluded state: Return from Injury (injured only) + Remove
+                                                        <>
+                                                            {player.exclusion?.excludeType === 'injured' && (
+                                                                <button
+                                                                    onClick={() => handleExclude(player.id, 'return', player.name)}
+                                                                    className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-violet-600 text-white border-violet-600 hover:bg-violet-700 transition-colors"
+                                                                    title="Reset ACWR and start gathering phase"
+                                                                >
+                                                                    <RotateCcwIcon size={9} /> Return
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleExclude(player.id, 'remove', player.name)}
+                                                                className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-slate-100 text-slate-500 border-slate-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors"
+                                                                title="Remove exclusion entirely"
+                                                            >
+                                                                <XCircleIcon size={9} /> Remove
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        // Active state: Exclude dropdown (Injured / Non-Injury)
                                                         <>
                                                             <button
                                                                 onClick={() => setExcludeMenuOpenId(prev => prev === player.id ? null : player.id)}
                                                                 className="px-2.5 py-1.5 text-[10px] font-medium rounded-full transition-colors border bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100 hover:text-slate-600"
                                                             >Exclude ▾</button>
                                                             {excludeMenuOpenId === player.id && (
-                                                                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-44">
+                                                                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-52">
                                                                     <button
                                                                         onClick={() => handleExclude(player.id, 'injured', player.name)}
                                                                         className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-rose-700 flex flex-col gap-0.5"
                                                                     >
-                                                                        <span className="font-semibold">Injured / Excluded</span>
-                                                                        <span className="text-[10px] text-slate-400">Freeze EWMA until returned</span>
+                                                                        <span className="font-semibold">Injured</span>
+                                                                        <span className="text-[10px] text-slate-400">Freeze EWMA — use Return to reset ACWR on comeback</span>
                                                                     </button>
+                                                                    <div className="border-t border-slate-100 my-0.5" />
                                                                     <button
-                                                                        onClick={() => handleExclude(player.id, 'rest', player.name)}
+                                                                        onClick={() => handleExclude(player.id, 'non_injury', player.name)}
                                                                         className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 flex flex-col gap-0.5"
                                                                     >
-                                                                        <span className="font-semibold">Rest Day / Valid Reason</span>
-                                                                        <span className="text-[10px] text-slate-400">Freeze today only, not a zero</span>
+                                                                        <span className="font-semibold">Exclude (Non-Injury)</span>
+                                                                        <span className="text-[10px] text-slate-400">Travel, suspension, personal leave</span>
                                                                     </button>
                                                                 </div>
                                                             )}
                                                         </>
                                                     )}
                                                 </div>
+
                                                 {/* Intervene */}
                                                 {!player.excluded && player.riskLevel !== 'Clear' ? (
                                                     <button onClick={(e) => { e.stopPropagation(); setInterventionAthlete(player); setIsInterventionOpen(true); }}

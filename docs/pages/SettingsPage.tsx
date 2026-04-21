@@ -406,10 +406,27 @@ const SettingsPage: React.FC = () => {
   // ══════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="flex gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
-      {/* Sidebar */}
-      <div className="w-56 shrink-0">
-        <div className="sticky top-6 space-y-1">
+    <div className="flex flex-col md:flex-row gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
+      {/* Sidebar — vertical list on md+, horizontal pill tabs on mobile */}
+      <div className="md:w-56 md:shrink-0">
+        {/* Mobile: horizontal tab strip */}
+        <div className="flex md:hidden gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm mb-2">
+          {SETTINGS_TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  isActive ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <tab.icon size={14} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {/* Desktop: vertical list */}
+        <div className="hidden md:block sticky top-6 space-y-1">
           <div className="flex items-center gap-2 px-3 py-2 mb-3">
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
               <SettingsIcon size={14} className="text-white" />

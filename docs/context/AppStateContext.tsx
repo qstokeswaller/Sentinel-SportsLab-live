@@ -389,6 +389,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
     const [dashboardFilterTarget, setDashboardFilterTarget] = useState('All Athletes');
     const [calendarFilterCategory, setCalendarFilterCategory] = useState('all');
@@ -1154,10 +1155,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const teamId = playerTeam?.id;
         const settingsKey = (teamId === 't_private') ? `ind_${athleteId}` : teamId;
         const settings = acwrSettings[settingsKey] || {};
-        // Recalc anchor: use team anchor first, fall back to individual anchor
-        const recalcAnchorDate = acwrRecalcAnchors[settingsKey] || acwrRecalcAnchors[teamId] || undefined;
-        // Per-day rest freezes from exclusions
+        // Recalc anchor: per-athlete return-from-injury anchor takes priority, then team anchor
         const exclusion = acwrExclusions[athleteId];
+        const recalcAnchorDate = acwrRecalcAnchors[`rfi_${athleteId}`]
+            || exclusion?.returnAnchorDate
+            || acwrRecalcAnchors[settingsKey]
+            || acwrRecalcAnchors[teamId]
+            || undefined;
+        // Per-day rest freezes from exclusions
         const additionalRestDays = exclusion?.restDays ? new Set(exclusion.restDays) : undefined;
         return {
             metricType: settings.method || 'srpe',
@@ -2288,68 +2293,61 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             var initSuccess = false;
             // dataLoadedRef stays false — save effects won't overwrite with empty data
         } finally {
-            // Load GPS profiles in finally — guaranteed to run even if try block fails/times out
-            try {
-                const savedGpsProfiles = await StorageService.getGpsProfiles();
-                if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
-                    setGpsProfiles(savedGpsProfiles);
-                    try { localStorage.setItem('gps_team_profiles', JSON.stringify(savedGpsProfiles)); } catch {}
-                }
-            } catch (e) { /* ignore — settings load must not block */ }
-            // Load settings from Supabase user_data (with localStorage fallback)
-            try {
-                const savedAcwr = await StorageService.getAcwrSettings();
-                if (savedAcwr && Object.keys(savedAcwr).length > 0) {
-                    setAcwrSettings(savedAcwr);
-                    if (savedAcwr._heatmapDefault) setHeatmapTeamFilter(savedAcwr._heatmapDefault);
-                } else {
-                    // Fallback: migrate from old localStorage if exists
-                    const legacyAcwr = localStorage.getItem('acwr_feature_settings');
-                    if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
-                }
-            } catch (e) { /* ignore */ }
-            try {
-                const savedEx = await StorageService.getAcwrExclusions();
-                if (savedEx && Object.keys(savedEx).length > 0) setAcwrExclusions(savedEx);
-                else {
-                    const legacyEx = localStorage.getItem('acwr_exclusions');
-                    if (legacyEx) { const parsed = JSON.parse(legacyEx); setAcwrExclusions(parsed); localStorage.removeItem('acwr_exclusions'); }
-                }
-            } catch (e) { /* ignore */ }
-            try {
-                const savedAnchors = await StorageService.getAcwrRecalcAnchors();
-                if (savedAnchors && Object.keys(savedAnchors).length > 0) setAcwrRecalcAnchors(savedAnchors);
-            } catch (e) { /* ignore */ }
-            try {
-                const savedVis = await StorageService.getTestVisibility();
-                if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
-                else {
-                    const legacyVis = localStorage.getItem('test_visibility');
-                    if (legacyVis) { const parsed = JSON.parse(legacyVis); setTestVisibility(parsed); localStorage.removeItem('test_visibility'); }
-                }
-            } catch (e) { /* ignore */ }
-            // Load tour state
-            try {
-                const savedTour = await StorageService.getTourState();
-                if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
-                // If no tour state exists, it stays empty — PageTour will create defaults on first render
-            } catch (e) { /* ignore */ }
-            // Load Polar integration + GPS data sources
-            try {
-                const savedPolar = await StorageService.getPolarIntegration();
-                if (savedPolar && Object.keys(savedPolar).length > 0) setPolarIntegration(savedPolar);
-            } catch (e) { /* ignore */ }
-            try {
-                const savedGdsSrc = await StorageService.getGpsDataSources();
-                if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
-            } catch (e) { /* ignore */ }
-            // Pre-load wellness responses for the dashboard heatmap (last 30 days, all teams)
-            try {
-                const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
-                const wrRecords = await DatabaseService.fetchAllWellnessResponses(wrFrom, localDate());
-                setWellnessResponses(wrRecords || []);
-            } catch (e) { /* non-blocking — heatmap just shows grey if this fails */ }
+            // All settings + wellness responses fire in parallel — previously 8 sequential
+            // round-trips added 2-6s to load time; now they all resolve together.
+            const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
+
+            const [
+                savedGpsProfiles, savedAcwr, savedEx, savedAnchors,
+                savedVis, savedTour, savedPolar, savedGdsSrc, wrRecords,
+            ] = await Promise.all([
+                StorageService.getGpsProfiles().catch(() => null),
+                StorageService.getAcwrSettings().catch(() => null),
+                StorageService.getAcwrExclusions().catch(() => null),
+                StorageService.getAcwrRecalcAnchors().catch(() => null),
+                StorageService.getTestVisibility().catch(() => null),
+                StorageService.getTourState().catch(() => null),
+                StorageService.getPolarIntegration().catch(() => null),
+                StorageService.getGpsDataSources().catch(() => null),
+                DatabaseService.fetchAllWellnessResponses(wrFrom, localDate()).catch(() => []),
+            ]);
+
+            // GPS profiles
+            if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
+                setGpsProfiles(savedGpsProfiles);
+                try { localStorage.setItem('gps_team_profiles', JSON.stringify(savedGpsProfiles)); } catch {}
+            }
+            // ACWR settings (with localStorage migration fallback)
+            if (savedAcwr && Object.keys(savedAcwr).length > 0) {
+                setAcwrSettings(savedAcwr);
+                if (savedAcwr._heatmapDefault) setHeatmapTeamFilter(savedAcwr._heatmapDefault);
+            } else {
+                const legacyAcwr = localStorage.getItem('acwr_feature_settings');
+                if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
+            }
+            // ACWR exclusions
+            if (savedEx && Object.keys(savedEx).length > 0) setAcwrExclusions(savedEx);
+            else {
+                const legacyEx = localStorage.getItem('acwr_exclusions');
+                if (legacyEx) { const parsed = JSON.parse(legacyEx); setAcwrExclusions(parsed); localStorage.removeItem('acwr_exclusions'); }
+            }
+            // ACWR recalc anchors
+            if (savedAnchors && Object.keys(savedAnchors).length > 0) setAcwrRecalcAnchors(savedAnchors);
+            // Test visibility
+            if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
+            else {
+                const legacyVis = localStorage.getItem('test_visibility');
+                if (legacyVis) { const parsed = JSON.parse(legacyVis); setTestVisibility(parsed); localStorage.removeItem('test_visibility'); }
+            }
+            // Tour state
+            if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
+            // Polar + GPS data sources
+            if (savedPolar && Object.keys(savedPolar).length > 0) setPolarIntegration(savedPolar);
+            if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
+            // Wellness heatmap pre-load
+            setWellnessResponses(wrRecords || []);
+
             // Mark data as successfully loaded ONLY if try block completed
             // This MUST be the last thing set, after all data + settings are loaded
             if (initSuccess) dataLoadedRef.current = true;
@@ -2450,6 +2448,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleUndoDelete,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
+        isMobileDrawerOpen,
+        setIsMobileDrawerOpen,
         dashboardFilterTarget,
         setDashboardFilterTarget,
         calendarFilterCategory, setCalendarFilterCategory,

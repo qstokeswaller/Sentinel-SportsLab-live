@@ -8,6 +8,7 @@ import PerformanceLab from './components/performance/PerformanceLab';
 import ImportResolverModal from './components/performance/ImportResolverModal';
 import WattbikeMapCalculator from './components/performance/WattbikeMapCalculator';
 import { Sidebar } from './components/layout/Sidebar';
+import { TopBar } from './components/layout/TopBar';
 // Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
 const DashboardPage      = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const RosterPage         = lazy(() => import('./pages/RosterPage').then(m => ({ default: m.RosterPage })));
@@ -103,7 +104,7 @@ const WelcomeSplash = () => {
             {/* Logo mark */}
             <div className="flex flex-col items-center gap-6">
                 <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-                    <ShieldIcon size={30} className="text-white" />
+                    <ActivityIcon size={30} className="text-white" />
                 </div>
 
                 <div className="text-center space-y-1">
@@ -423,8 +424,10 @@ const App = () => {
     return (
         <div className="flex h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500/30 overflow-hidden relative">
             <Sidebar />
-            <main className="flex-1 overflow-y-auto no-scrollbar relative min-h-screen pb-24 md:pb-0">
-                <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+                <TopBar />
+                <main className="flex-1 overflow-y-auto no-scrollbar relative pb-6">
+                    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 lg:py-6">
                     <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
                     <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -452,8 +455,9 @@ const App = () => {
                         })()} />
                     </Routes>
                     </Suspense>
-                </div>
-            </main>
+                    </div>
+                </main>
+            </div>
             <AddAthleteModal />
             <AthleteProfileModal />
             <ACWRDetailModal />
@@ -592,8 +596,8 @@ table { width: 100%; border-collapse: collapse; }
     if (!isWeightroomSheetModalOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-none lg:rounded-xl w-full lg:max-w-6xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                     <div className="flex items-center gap-3">
@@ -1341,8 +1345,8 @@ const AthleteProfileModal = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col text-slate-900">
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-none lg:rounded-xl w-full lg:max-w-2xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col text-slate-900">
 
                 {/* ── Header ── */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -1495,8 +1499,8 @@ const ACWRDetailModal = () => {
     const status = { status: 'Optimal', color: 'text-emerald-600', bgColor: 'bg-emerald-100', risk: 'Sweet spot' };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[500] p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col text-slate-900">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[500] p-0 lg:p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-none lg:rounded-xl shadow-xl lg:max-w-5xl w-full h-full lg:h-auto lg:max-h-[90vh] overflow-hidden flex flex-col text-slate-900">
                 <div className="px-5 py-4 border-b border-slate-100">
                     <div className="flex justify-between items-start">
                         <div>

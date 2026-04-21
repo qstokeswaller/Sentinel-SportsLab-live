@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Indigo-600 rounded square background -->
+  <rect width="32" height="32" rx="7" fill="#4f46e5"/>
+  <!-- Lucide ActivityIcon path, scaled to fit with padding, white -->
+  <polyline
+    points="7,16 11,16 13,10 16,22 19,14 21,16 25,16"
+    fill="none"
+    stroke="white"
+    stroke-width="2.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
