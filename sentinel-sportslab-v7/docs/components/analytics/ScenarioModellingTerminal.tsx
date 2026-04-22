@@ -485,7 +485,7 @@ export const ScenarioModellingTerminal = ({
                                         : currentRatio > 1.3
                                             ? 'ACWR is elevated into the caution zone. Moderate the next few sessions — the suggested loads will gradually bring the ratio back to optimal range.'
                                             : currentRatio < 0.8
-                                                ? 'ACWR is below optimal — the athlete/team is undertrained. The model recommends progressively increasing load to build acute fitness without overshooting.'
+                                                ? 'ACWR is below optimal — the athlete/team is underexposed. The model recommends progressively increasing load to build acute fitness without overshooting.'
                                                 : 'ACWR is within the optimal sweet spot. The suggested loads maintain this balance while allowing for progressive training adaptation.'}
                                 </p>
                             </div>

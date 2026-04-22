@@ -25,7 +25,7 @@ const SESSION_TYPES = [
 ];
 
 const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelectedTeamId, onClose, onSaved }) => {
-    const { teams, acwrSettings, showToast, loadRecords } = useAppState();
+    const { teams, acwrSettings, acwrExclusions, showToast, loadRecords } = useAppState();
 
     const [selectedTeamId, setSelectedTeamId] = useState<string>(preSelectedTeamId || '');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -300,6 +300,36 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                 const computed = computeValue(row);
                                 const existing = existingDataForDate[player.id];
                                 const initials = player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+                                const exclusion = acwrExclusions?.[player.id];
+                                const isPlayerExcluded = exclusion?.excluded === true;
+                                const excludeLabel = exclusion?.excludeType === 'non_injury' ? 'Excluded' : 'Injured';
+
+                                // Excluded players: show greyed row, no inputs
+                                if (isPlayerExcluded) {
+                                    return (
+                                        <div
+                                            key={player.id}
+                                            className={`grid gap-2 items-center px-1 py-1.5 rounded-lg bg-slate-50 opacity-50 ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
+                                                    {initials}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <span className="text-sm font-medium text-slate-400 truncate block">{player.name}</span>
+                                                    <span className="text-[9px] text-indigo-400 font-medium">{excludeLabel} — remove from ACWR Hub to log</span>
+                                                </div>
+                                            </div>
+                                            {needsRpeDuration ? (
+                                                <><div className="text-center text-slate-200 text-xs">—</div><div className="text-center text-slate-200 text-xs">—</div></>
+                                            ) : (
+                                                <div className="text-center text-slate-200 text-xs">—</div>
+                                            )}
+                                            <div className="text-center text-slate-200 text-xs">—</div>
+                                            <div className="flex justify-center"><div className="w-7 h-7" /></div>
+                                        </div>
+                                    );
+                                }
 
                                 return (
                                     <div

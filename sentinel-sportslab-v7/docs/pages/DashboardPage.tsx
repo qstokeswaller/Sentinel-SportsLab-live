@@ -67,6 +67,10 @@ export const DashboardPage = () => {
 
     const [activePopover, setActivePopover] = React.useState(null);
     const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
+    const [isReportCollapsed, setIsReportCollapsed] = React.useState(() => localStorage.getItem('dash_report_collapsed') === '1');
+    const [isHeatmapCollapsed, setIsHeatmapCollapsed] = React.useState(() => localStorage.getItem('dash_heatmap_collapsed') === '1');
+    const toggleReportCollapsed = () => setIsReportCollapsed(v => { const next = !v; localStorage.setItem('dash_report_collapsed', next ? '1' : '0'); return next; });
+    const toggleHeatmapCollapsed = () => setIsHeatmapCollapsed(v => { const next = !v; localStorage.setItem('dash_heatmap_collapsed', next ? '1' : '0'); return next; });
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
     const [completingSession, setCompletingSession] = React.useState(null);
     const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
@@ -148,16 +152,16 @@ export const DashboardPage = () => {
 
     // Deterministic color palette for targets (athletes/teams)
     const TARGET_COLORS = [
-        { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', pillBg: 'bg-red-100' },
-        { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', pillBg: 'bg-blue-100' },
-        { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', pillBg: 'bg-emerald-100' },
-        { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pillBg: 'bg-orange-100' },
-        { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', pillBg: 'bg-violet-100' },
-        { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', pillBg: 'bg-pink-100' },
-        { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', pillBg: 'bg-cyan-100' },
-        { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', pillBg: 'bg-amber-100' },
-        { bg: 'bg-lime-50', border: 'border-lime-200', text: 'text-lime-700', pillBg: 'bg-lime-100' },
-        { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', pillBg: 'bg-rose-100' },
+        { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', pillBg: 'bg-red-100', dot: '#ef4444' },
+        { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', pillBg: 'bg-blue-100', dot: '#3b82f6' },
+        { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', pillBg: 'bg-emerald-100', dot: '#10b981' },
+        { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pillBg: 'bg-orange-100', dot: '#f97316' },
+        { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', pillBg: 'bg-violet-100', dot: '#8b5cf6' },
+        { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', pillBg: 'bg-pink-100', dot: '#ec4899' },
+        { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', pillBg: 'bg-cyan-100', dot: '#06b6d4' },
+        { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', pillBg: 'bg-amber-100', dot: '#f59e0b' },
+        { bg: 'bg-lime-50', border: 'border-lime-200', text: 'text-lime-700', pillBg: 'bg-lime-100', dot: '#84cc16' },
+        { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', pillBg: 'bg-rose-100', dot: '#f43f5e' },
     ];
 
     // Build stable targetId → color index mapping from all sessions
@@ -283,8 +287,11 @@ export const DashboardPage = () => {
         };
 
         return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                    onClick={toggleReportCollapsed}
+                    className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between w-full text-left hover:bg-rose-50/80 transition-colors"
+                >
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
                             <AlertTriangleIcon size={14} />
@@ -303,9 +310,12 @@ export const DashboardPage = () => {
                             </p>
                         </div>
                     </div>
-                    <span className="px-2 py-0.5 bg-white border border-rose-200 rounded-full text-[10px] font-medium text-rose-600 shrink-0">{atRiskAthletes.length}</span>
-                </div>
-                <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2 py-0.5 bg-white border border-rose-200 rounded-full text-[10px] font-medium text-rose-600">{atRiskAthletes.length}</span>
+                        <ChevronDownIcon size={14} className={`text-slate-400 transition-transform duration-200 ${isReportCollapsed ? '-rotate-90' : ''}`} />
+                    </div>
+                </button>
+                {!isReportCollapsed && <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
                     {!hasRecentData ? (
                         <div className="py-8 flex flex-col items-center justify-center gap-2">
                             <ClockIcon size={22} className="text-slate-400" />
@@ -338,7 +348,7 @@ export const DashboardPage = () => {
                             <p className="text-[11px] text-slate-400">All monitored athletes within safe range</p>
                         </div>
                     )}
-                </div>
+                </div>}
 
                 {/* Expanded popup showing all at-risk athletes */}
                 {isMorningReportExpanded && (
@@ -457,7 +467,7 @@ export const DashboardPage = () => {
 
                 return (<>
                     <div className="space-y-6 animate-in fade-in duration-700">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                             {/* Performance Report Column */}
                             <div data-tour="morning-report" className="lg:col-span-1 relative">
                                 {isLoading && (
@@ -490,13 +500,20 @@ export const DashboardPage = () => {
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
                                 {/* Readiness Heatmap */}
-                                <div data-tour="heatmap" className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full flex flex-col">
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-slate-900">Readiness Heatmap</h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            {dashboardFilterTarget === 'All Athletes' ? 'Daily wellness-based readiness by athlete' : `Deep-dive readiness — ${dashboardFilterTarget}`}
-                                        </p>
-                                    </div>
+                                <div data-tour="heatmap" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                                    <button
+                                        onClick={toggleHeatmapCollapsed}
+                                        className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 transition-colors shrink-0"
+                                    >
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-slate-900">Readiness Heatmap</h4>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                {dashboardFilterTarget === 'All Athletes' ? 'Daily wellness-based readiness by athlete' : `Deep-dive readiness — ${dashboardFilterTarget}`}
+                                            </p>
+                                        </div>
+                                        <ChevronDownIcon size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isHeatmapCollapsed ? '-rotate-90' : ''}`} />
+                                    </button>
+                                    {!isHeatmapCollapsed && <div className="px-5 pb-5 space-y-4 flex-1 flex flex-col">
 
                                     {/* Controls */}
                                     <div className="flex justify-between items-end border-t border-slate-100 pt-3">
@@ -623,6 +640,7 @@ export const DashboardPage = () => {
                                                 });
                                         })()}
                                     </div>
+                                </div>}
                                 </div>
                             </div>
                         </div>
@@ -631,7 +649,7 @@ export const DashboardPage = () => {
                         <div data-tour="calendar" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
                             {/* Calendar Header */}
                             <div className="px-5 py-4 border-b border-slate-100 flex flex-col gap-3 bg-white">
-                                <div className="flex flex-col xl:flex-row justify-between items-center gap-4">
+                                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0">
                                             <CalendarIcon size={16} />
@@ -743,9 +761,17 @@ export const DashboardPage = () => {
                                         <span className="text-xs font-medium text-slate-400">Loading calendar...</span>
                                     </div>
                                 )}
-                                <div className="grid grid-cols-7 gap-2">
-                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                        <div key={day} className="text-[11px] font-medium text-slate-400 text-center pb-3">{day}</div>
+                                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                                    {[
+                                        { full: 'Sun', short: 'S' }, { full: 'Mon', short: 'M' },
+                                        { full: 'Tue', short: 'T' }, { full: 'Wed', short: 'W' },
+                                        { full: 'Thu', short: 'T' }, { full: 'Fri', short: 'F' },
+                                        { full: 'Sat', short: 'S' }
+                                    ].map(day => (
+                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 text-center pb-3">
+                                            <span className="hidden sm:block">{day.full}</span>
+                                            <span className="sm:hidden">{day.short}</span>
+                                        </div>
                                     ))}
                                     {dashboardCalendarDays.map((dateObj, idx) => {
                                         const isToday = dateObj && dateObj.dateStr === new Date().toLocaleDateString('en-CA');
@@ -758,7 +784,7 @@ export const DashboardPage = () => {
                                                 onDragOver={dateObj ? (e) => handleDragOver(e, dateObj.dateStr) : undefined}
                                                 onDragLeave={dateObj ? handleDragLeave : undefined}
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
-                                                className={`relative min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-2.5 flex flex-col justify-between ${dateObj
+                                                className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
                                                     : 'bg-slate-50/30 border-transparent'} ${isDragOver
                                                         ? 'bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
@@ -768,11 +794,42 @@ export const DashboardPage = () => {
                                                 onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
                                                 {dateObj && (
                                                     <>
-                                                        <div className="flex justify-between items-start mb-1.5">
-                                                            <span className={`text-xs font-medium transition-colors ${isToday ? 'text-indigo-700' : 'text-slate-400 group-hover:text-slate-800'}`}>{dateObj.day}</span>
-                                                            {isToday && <span className="text-[9px] font-medium bg-indigo-600 text-white px-1.5 py-0.5 rounded-full">Today</span>}
+                                                        {/* Date number — circled on today (Google Calendar pattern, no overflow possible) */}
+                                                        <div className="mb-1 sm:mb-1.5">
+                                                            <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center transition-colors
+                                                                ${isToday
+                                                                    ? 'bg-indigo-600 text-white rounded-full w-[18px] h-[18px] sm:w-5 sm:h-5'
+                                                                    : 'text-slate-400 group-hover:text-slate-800'
+                                                                }`}>{dateObj.day}</span>
                                                         </div>
-                                                        <div className="space-y-1">
+                                                        <div>
+                                                            {/* xs: dots-only (< 640px) */}
+                                                            {(() => {
+                                                                const ds = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr);
+                                                                const de = filteredCalendarEventsForView.filter(e => e.start_date === dateObj.dateStr);
+                                                                const all = [
+                                                                    ...ds.map(s => ({ type: 'session' as const, item: s })),
+                                                                    ...de.map(e => ({ type: 'event' as const, item: e })),
+                                                                ];
+                                                                if (all.length === 0) return null;
+                                                                const shown = all.slice(0, 3);
+                                                                return (
+                                                                    <div
+                                                                        className="flex items-center gap-0.5 sm:hidden flex-wrap mt-0.5 cursor-pointer"
+                                                                        onClick={(e) => { e.stopPropagation(); setOverflowDay(overflowDay === dateObj.dateStr ? null : dateObj.dateStr); }}
+                                                                    >
+                                                                        {shown.map((entry, i) => {
+                                                                            const dotColor = entry.type === 'session'
+                                                                                ? getTargetColor((entry.item as any).targetId).dot
+                                                                                : (entry.item as any).color;
+                                                                            return <div key={i} className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />;
+                                                                        })}
+                                                                        {all.length > 3 && <span className="text-[8px] text-slate-400 font-medium">+{all.length - 3}</span>}
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                            {/* sm+: full event cards */}
+                                                            <div className="hidden sm:block space-y-0.5 sm:space-y-1">
                                                             {/* Merged sessions + events, sorted by time */}
                                                             {(() => {
                                                                 const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
@@ -800,15 +857,15 @@ export const DashboardPage = () => {
                                                                         setActiveSessionPopover(activeSessionPopover?.id === popKey ? null : { id: popKey, session });
                                                                         setActivePopover(null);
                                                                     }}
-                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab ${tc.bg} ${tc.border} ${tc.text}`}>
-                                                                    <div className={`flex justify-between items-center ${tc.pillBg} px-1 py-0.5 rounded`}>
-                                                                        <div className="flex items-center gap-1">
-                                                                            {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600" />}
-                                                                            {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500" />}
-                                                                            {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} />}
-                                                                            <span className="text-[8px] font-medium uppercase tracking-wide">{session.trainingPhase}</span>
+                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}>
+                                                                    <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`}>
+                                                                        <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
+                                                                            {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 shrink-0" />}
+                                                                            {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
+                                                                            {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} className="shrink-0" />}
+                                                                            <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
                                                                         </div>
-                                                                        <div className="flex items-center gap-1">
+                                                                        <div className="flex items-center gap-0.5 shrink-0">
                                                                             {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
                                                                             {session.load && (
                                                                                 <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
@@ -992,7 +1049,8 @@ export const DashboardPage = () => {
                                                                     }
                                                                 });
                                                             })()}
-                                                            {/* +X more count (sessions + events combined, sorted by time) */}
+                                                            </div>{/* end hidden sm:block */}
+                                                            {/* +X more button (sm+) + overflow panel (all sizes) */}
                                                             {(() => {
                                                                 const daySessions = filteredSessionsForCalendar.filter(s => s.date === dateObj.dateStr)
                                                                     .map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s }));
@@ -1002,20 +1060,22 @@ export const DashboardPage = () => {
                                                                 const allItems = [...daySessions, ...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
                                                                 const total = allItems.length;
                                                                 const hidden = total - 3;
-                                                                if (hidden <= 0) return null;
+                                                                if (hidden <= 0 && overflowDay !== dateObj.dateStr) return null;
 
                                                                 return (
                                                                     <div className="relative">
+                                                                        {hidden > 0 && (
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 setOverflowDay(overflowDay === dateObj.dateStr ? null : dateObj.dateStr);
                                                                                 setActivePopover(null);
                                                                             }}
-                                                                            className="w-full text-[9px] text-indigo-500 hover:text-indigo-700 font-semibold text-center pt-0.5 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 font-semibold text-center pt-0.5 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
                                                                         >
                                                                             +{hidden} more
                                                                         </button>
+                                                                        )}
                                                                         {overflowDay === dateObj.dateStr && (
                                                                             <div
                                                                                 ref={overflowRef}

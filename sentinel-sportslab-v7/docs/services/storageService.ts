@@ -10,9 +10,17 @@
  */
 import { supabase } from '../lib/supabase';
 
+// getUser() validates the JWT with the Supabase Auth server on every call (network round-trip).
+// getSession() reads the cached session from localStorage — instant, no network.
+// For a client-side app the session is already trusted after login, so getSession() is correct.
+const getSessionUser = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user ?? null;
+};
+
 const get = async (key: string): Promise<any[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
       const raw = localStorage.getItem(`traineros_${key}`);
@@ -44,7 +52,7 @@ const get = async (key: string): Promise<any[]> => {
 
 const save = async (key: string, value: any): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
 
     if (!user) {
       localStorage.setItem(`traineros_${key}`, JSON.stringify(value));
@@ -70,7 +78,7 @@ const save = async (key: string, value: any): Promise<void> => {
 
 export const SupabaseStorageService = {
   init: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser();
     console.log(`StorageService: ${user ? 'Connected to Supabase ✓' : 'No user — using localStorage fallback'}`);
   },
 
@@ -125,8 +133,14 @@ export const SupabaseStorageService = {
   saveAcwrSettings: (d: any) => save('acwr_feature_settings', d),
   getAcwrExclusions: () => get('acwr_exclusions'),
   saveAcwrExclusions: (d: any) => save('acwr_exclusions', d),
+  getAcwrRecalcAnchors: () => get('acwr_recalc_anchors'),
+  saveAcwrRecalcAnchors: (d: any) => save('acwr_recalc_anchors', d),
   getTestVisibility: () => get('test_visibility'),
   saveTestVisibility: (d: any) => save('test_visibility', d),
   getTourState: () => get('tour_state'),
   saveTourState: (d: any) => save('tour_state', d),
+  getPolarIntegration: () => get('polar_integration'),
+  savePolarIntegration: (d: any) => save('polar_integration', d),
+  getGpsDataSources: () => get('gps_data_sources'),
+  saveGpsDataSources: (d: any) => save('gps_data_sources', d),
 };

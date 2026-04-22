@@ -169,7 +169,7 @@ const GpsColumnRenameModal: React.FC<{
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { teams, acwrSettings, setAcwrSettings, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles } = useAppState();
+  const { teams, acwrSettings, setAcwrSettings, acwrRecalcAnchors, setAcwrRecalcAnchors, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources } = useAppState();
   const [activeTab, setActiveTab] = useState('account');
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -292,6 +292,35 @@ const SettingsPage: React.FC = () => {
     showToast?.('ACWR GPS column updated');
   };
 
+  // ── GPS Data Source per team ──────────────────────────────────────
+  const handleSetGpsDataSource = async (teamId: string, source: 'csv' | 'polar') => {
+    const updated = { ...gpsDataSources, [teamId]: source };
+    setGpsDataSources(updated);
+    await StorageService.saveGpsDataSources(updated);
+    showToast?.(`Data source set to ${source === 'polar' ? 'Polar' : 'CSV'}`);
+  };
+
+  // ── Connect Polar OAuth ────────────────────────────────────────────
+  const handleConnectPolar = (type: 'team_pro' | 'individual') => {
+    const clientId = import.meta.env.VITE_POLAR_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/polar/callback`;
+    const scope = type === 'team_pro' ? 'team_read' : 'accesslink.read_all';
+    // Pass type via OAuth state param so callback knows which type was used
+    const state = encodeURIComponent(JSON.stringify({ type }));
+    const url = `https://flow.polar.com/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+    window.location.href = url;
+  };
+
+  const handleDisconnectPolar = async () => {
+    const updated = { connected: false, accessToken: '', polarUserId: '', connectedAt: '', type: null };
+    setPolarIntegration(updated);
+    await StorageService.savePolarIntegration(updated);
+    showToast?.('Polar disconnected');
+  };
+
+  const isPolarConnected = polarIntegration?.connected === true;
+  const polarType = polarIntegration?.type ?? null;
+
   // ── Shared ACWR option controls ────────────────────────────────────
   const renderAcwrOptions = (key: string) => {
     const s = getSettings(key);
@@ -339,6 +368,35 @@ const SettingsPage: React.FC = () => {
           </div>
         )}
 
+        {/* Recalculation anchor — reset EWMA from a chosen date without deleting data */}
+        <div className="pt-2 border-t border-slate-100">
+          <label className={labelCls}>Recalculate From Date</label>
+          <p className="text-[10px] text-slate-400 mb-2">Historical data is kept. EWMA restarts from this date. Leave blank to use all data.</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={acwrRecalcAnchors[key] || ''}
+              onChange={e => setAcwrRecalcAnchors(prev => ({ ...prev, [key]: e.target.value }))}
+              className={inputCls + ' flex-1'}
+            />
+            {acwrRecalcAnchors[key] && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAcwrRecalcAnchors(prev => { const n = { ...prev }; delete n[key]; return n; });
+                  showToast?.('Recalculation anchor cleared — using all data');
+                }}
+                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors"
+              >Clear</button>
+            )}
+          </div>
+          {acwrRecalcAnchors[key] && (
+            <p className="text-[10px] text-indigo-500 mt-1">
+              EWMA calculates from {new Date(acwrRecalcAnchors[key] + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} onwards
+            </p>
+          )}
+        </div>
+
       </div>
     );
   };
@@ -348,10 +406,27 @@ const SettingsPage: React.FC = () => {
   // ══════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="flex gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
-      {/* Sidebar */}
-      <div className="w-56 shrink-0">
-        <div className="sticky top-6 space-y-1">
+    <div className="flex flex-col md:flex-row gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
+      {/* Sidebar — vertical list on md+, horizontal pill tabs on mobile */}
+      <div className="md:w-56 md:shrink-0">
+        {/* Mobile: horizontal tab strip */}
+        <div className="flex md:hidden gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm mb-2">
+          {SETTINGS_TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  isActive ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <tab.icon size={14} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {/* Desktop: vertical list */}
+        <div className="hidden md:block sticky top-6 space-y-1">
           <div className="flex items-center gap-2 px-3 py-2 mb-3">
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
               <SettingsIcon size={14} className="text-white" />
@@ -404,7 +479,7 @@ const SettingsPage: React.FC = () => {
                   sRPE = RPE x Duration (Foster et al. 1998). Rest days freeze EWMA (Menaspa 2017). Sprint threshold 25 km/h for elite football (Bowen et al. 2017).
                 </p>
                 <div className="flex flex-wrap gap-3 text-[10px]">
-                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> &lt;0.8 Undertrained</span>
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> &lt;0.8 Underexposed</span>
                   <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> 0.8-1.3 Optimal</span>
                   <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> 1.31-1.5 Caution</span>
                   <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-400" /> &gt;1.5 Danger (2-4x injury risk)</span>
@@ -539,6 +614,50 @@ const SettingsPage: React.FC = () => {
               collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
             >
               <div className="space-y-4">
+
+                {/* ── Polar Connection Status ── */}
+                <div className={`rounded-xl border px-4 py-3.5 flex items-center gap-4 ${isPolarConnected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isPolarConnected ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                    <ActivityIcon size={16} className={isPolarConnected ? 'text-emerald-600' : 'text-slate-400'} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">Polar AccessLink</p>
+                    {isPolarConnected ? (
+                      <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                        <CheckIcon size={10} />
+                        {polarType === 'team_pro' ? 'Team Pro' : 'Individual Device'} · Connected {polarIntegration.connectedAt ? new Date(polarIntegration.connectedAt).toLocaleDateString() : ''}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">Not connected — choose <strong>Team Pro</strong> for GPS vests or <strong>Individual</strong> for personal devices</p>
+                    )}
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2">
+                    {isPolarConnected ? (
+                      <button
+                        onClick={handleDisconnectPolar}
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all"
+                      >
+                        Disconnect
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleConnectPolar('team_pro')}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all whitespace-nowrap"
+                        >
+                          Team Pro
+                        </button>
+                        <button
+                          onClick={() => handleConnectPolar('individual')}
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all whitespace-nowrap"
+                        >
+                          Individual
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* ── Import Profiles ── */}
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-2">
@@ -602,6 +721,44 @@ const SettingsPage: React.FC = () => {
                                 {profile ? 'Reconfigure' : 'Configure'}
                               </button>
                             </div>
+                          </div>
+
+                          {/* Data Source selector */}
+                          <div className="px-4 pt-3 pb-3 border-t border-slate-200/60">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                              <ActivityIcon size={10} className="text-indigo-400" /> Data Source
+                            </label>
+                            <div className="flex gap-2">
+                              {[
+                                { value: 'csv', label: 'CSV Import', desc: 'Upload GPS files manually' },
+                                { value: 'polar', label: 'Polar Sync', desc: 'Pull from Polar AccessLink', disabled: !isPolarConnected },
+                              ].map(opt => {
+                                const selected = (gpsDataSources[team.id] || 'csv') === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    disabled={opt.disabled}
+                                    onClick={() => handleSetGpsDataSource(team.id, opt.value as 'csv' | 'polar')}
+                                    title={opt.disabled ? 'Connect Polar above to enable this option' : ''}
+                                    className={`flex-1 flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all ${
+                                      opt.disabled
+                                        ? 'opacity-40 cursor-not-allowed border-slate-200 bg-slate-50'
+                                        : selected
+                                          ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                                    }`}
+                                  >
+                                    <span className="text-xs font-semibold">{opt.label}</span>
+                                    <span className="text-[10px] text-slate-400 mt-0.5">{opt.desc}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {(gpsDataSources[team.id] || 'csv') === 'polar' && isPolarConnected && (
+                              <p className="text-[10px] text-indigo-600 mt-1.5 flex items-center gap-1">
+                                <CheckIcon size={9} /> GPS Data Hub will show a Sync Polar button for this team. CSV import remains available as a fallback.
+                              </p>
+                            )}
                           </div>
 
                           {/* ACWR column binding — always visible when profile exists */}

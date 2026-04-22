@@ -68,6 +68,7 @@ const AddEventModal = () => {
     // Assignment
     const [assignType, setAssignType] = useState<'none' | 'team' | 'individual'>('none');
     const [assignId, setAssignId] = useState('');
+    const [assignTeamFilter, setAssignTeamFilter] = useState(''); // team filter when picking individual
 
     // Custom type inline form
     const [showCustomTypeForm, setShowCustomTypeForm] = useState(false);
@@ -94,6 +95,7 @@ const AddEventModal = () => {
         setDateToAdd(new Date().toISOString().split('T')[0]);
         setAssignType('none');
         setAssignId('');
+        setAssignTeamFilter('');
         setShowCustomTypeForm(false);
         setNewTypeLabel('');
         setCreating(false);
@@ -145,6 +147,7 @@ const AddEventModal = () => {
         const errors: Record<string, string> = {};
         if (!title.trim()) errors.title = 'Please enter an event title';
         if (scheduleMode === 'dates' && selectedDates.length === 0) errors.dates = 'Please select at least one date';
+        if (assignType === 'individual' && !assignId) errors.assignId = 'Please select an athlete';
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
             const firstRef = errors.title ? titleRef : datesRef;
@@ -359,7 +362,7 @@ const AddEventModal = () => {
                             {(['none', 'team', 'individual'] as const).map(opt => (
                                 <button
                                     key={opt}
-                                    onClick={() => { setAssignType(opt); setAssignId(''); }}
+                                    onClick={() => { setAssignType(opt); setAssignId(''); setAssignTeamFilter(''); }}
                                     className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
                                 >
                                     {opt === 'team' && <UsersIcon size={12} />}
@@ -368,6 +371,7 @@ const AddEventModal = () => {
                                 </button>
                             ))}
                         </div>
+
                         {assignType === 'team' && (
                             <select
                                 value={assignId}
@@ -375,25 +379,60 @@ const AddEventModal = () => {
                                 className={INPUT + ' appearance-none'}
                             >
                                 <option value="">Select a team...</option>
-                                {(teams || []).map((t: any) => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
-                                ))}
+                                {(teams || [])
+                                    .filter((t: any) => t.id !== 't_private')
+                                    .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                                    .map((t: any) => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
                             </select>
                         )}
-                        {assignType === 'individual' && (
-                            <select
-                                value={assignId}
-                                onChange={e => setAssignId(e.target.value)}
-                                className={INPUT + ' appearance-none'}
-                            >
-                                <option value="">Select an athlete...</option>
-                                {(teams || []).flatMap((t: any) =>
-                                    (t.players || []).map((p: any) => (
-                                        <option key={p.id} value={p.id}>{p.name}{t.name ? ` — ${t.name}` : ''}</option>
-                                    ))
-                                )}
-                            </select>
-                        )}
+
+                        {assignType === 'individual' && (() => {
+                            // All groups with at least one player, sorted A-Z. Private Clients shown last.
+                            const allGroups = (teams || [])
+                                .filter((t: any) => (t.players || []).length > 0)
+                                .sort((a: any, b: any) => {
+                                    if (a.id === 't_private') return 1;
+                                    if (b.id === 't_private') return -1;
+                                    return a.name.localeCompare(b.name);
+                                });
+                            const filteredPlayers = (assignTeamFilter
+                                ? (teams || []).filter((t: any) => t.id === assignTeamFilter)
+                                : allGroups
+                            ).flatMap((t: any) =>
+                                (t.players || []).map((p: any) => ({ ...p, teamName: t.name }))
+                            ).sort((a: any, b: any) => a.name.localeCompare(b.name));
+                            return (
+                                <div className="flex flex-col gap-2">
+                                    <select
+                                        value={assignTeamFilter}
+                                        onChange={e => { setAssignTeamFilter(e.target.value); setAssignId(''); }}
+                                        className={INPUT + ' appearance-none'}
+                                    >
+                                        <option value="">All teams</option>
+                                        {allGroups.map((t: any) => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={assignId}
+                                        onChange={e => setAssignId(e.target.value)}
+                                        className={INPUT + ' appearance-none' + (validationErrors.assignId ? ' border-rose-400 ring-1 ring-rose-300' : '')}
+                                    >
+                                        <option value="">Select an athlete...</option>
+                                        {filteredPlayers.map((p: any) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name}{!assignTeamFilter && p.teamName ? ` — ${p.teamName}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {validationErrors.assignId && (
+                                        <p className="text-xs text-rose-500">{validationErrors.assignId}</p>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* All Day Toggle */}

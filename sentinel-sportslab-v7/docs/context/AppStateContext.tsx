@@ -389,6 +389,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
     const [dashboardFilterTarget, setDashboardFilterTarget] = useState('All Athletes');
     const [calendarFilterCategory, setCalendarFilterCategory] = useState('all');
@@ -598,14 +599,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // { [teamId_or_'ind_'+athleteId]: { enabled: bool, method: string, acuteWindow: 7, chronicWindow: 28, freezeRestDays: bool, sprintThreshold: 25 } }
     const [acwrSettings, setAcwrSettings] = useState<Record<string, any>>({});
 
-    // ACWR Exclusions — injured/excluded athletes
-    // { [athleteId]: { excluded: bool, excludedDate: string, returnDate?: string, frozenChronic?: number, frozenAcute?: number } }
+    // ACWR Exclusions — injured/excluded athletes + per-day rest freezes
+    // { [athleteId]: { excluded: bool, excludeType: 'injured'|'rest', excludedDate: string, returnDate?: string,
+    //                  frozenChronic?: number, frozenAcute?: number, restDays?: string[] } }
     const [acwrExclusions, setAcwrExclusions] = useState<Record<string, any>>({});
+
+    // ACWR Recalc Anchors — per team/individual: start date for EWMA recalculation
+    // { [teamId_or_'ind_'+athleteId]: string (ISO date) }
+    const [acwrRecalcAnchors, setAcwrRecalcAnchors] = useState<Record<string, string>>({});
 
     // Testing Hub visibility — which tests are hidden
     // { [testId]: false } means hidden; absent or true means visible
     const [testVisibility, setTestVisibility] = useState<Record<string, boolean>>({});
     const [tourState, setTourState] = useState<Record<string, string>>({});
+
+    // --- POLAR INTEGRATION STATE ---
+    const [polarIntegration, setPolarIntegration] = useState<Record<string, any>>({});
+    // --- GPS DATA SOURCES — per team: { [teamId]: 'csv' | 'polar' } ---
+    const [gpsDataSources, setGpsDataSources] = useState<Record<string, string>>({});
 
     const [kpiRecords, setKpiRecords] = useState(MOCK_KPI_DATA);
 
@@ -748,6 +759,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isLoading && dataLoadedRef.current)
             StorageService.saveAcwrExclusions(acwrExclusions);
     }, [acwrExclusions, isLoading]);
+
+    // Persist ACWR recalc anchors → Supabase user_data
+    useEffect(() => {
+        if (!isLoading && dataLoadedRef.current)
+            StorageService.saveAcwrRecalcAnchors(acwrRecalcAnchors);
+    }, [acwrRecalcAnchors, isLoading]);
 
     // Persist testing hub visibility → Supabase user_data
     useEffect(() => {
@@ -1136,14 +1153,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         // Find the athlete's team
         const playerTeam = teams.find(t => (t.players || []).some(p => p.id === athleteId));
         const teamId = playerTeam?.id;
-        const settings = (teamId === 't_private')
-            ? (acwrSettings[`ind_${athleteId}`] || {})
-            : (acwrSettings[teamId] || {});
+        const settingsKey = (teamId === 't_private') ? `ind_${athleteId}` : teamId;
+        const settings = acwrSettings[settingsKey] || {};
+        // Recalc anchor: per-athlete return-from-injury anchor takes priority, then team anchor
+        const exclusion = acwrExclusions[athleteId];
+        const recalcAnchorDate = acwrRecalcAnchors[`rfi_${athleteId}`]
+            || exclusion?.returnAnchorDate
+            || acwrRecalcAnchors[settingsKey]
+            || acwrRecalcAnchors[teamId]
+            || undefined;
+        // Per-day rest freezes from exclusions
+        const additionalRestDays = exclusion?.restDays ? new Set(exclusion.restDays) : undefined;
         return {
             metricType: settings.method || 'srpe',
             acuteN: settings.acuteWindow || 7,
             chronicN: settings.chronicWindow || 28,
             freezeRestDays: settings.freezeRestDays !== false,
+            recalcAnchorDate,
+            additionalRestDays,
         };
     };
 
@@ -1389,9 +1416,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }
                 showToast(`${newAthleteName} added to roster`, 'success');
             } else {
-                await DatabaseService.createTeam(newAthleteName, 'Football');
+                const createdTeam = await DatabaseService.createTeam(newAthleteName, 'Football');
                 showToast(`Team "${newAthleteName}" created`, 'success');
-                initData(); // team creation requires full reload to get team ID
+                if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
             }
             if (!keepOpen) setIsAddAthleteModalOpen(false);
             setNewAthleteName('');
@@ -1407,10 +1434,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleAddTeam = async () => {
         if (!newTeamName.trim()) return;
         try {
-            await DatabaseService.createTeam(newTeamName, 'Football');
+            const createdTeam = await DatabaseService.createTeam(newTeamName, 'Football');
+            if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
+            showToast(`Team "${newTeamName}" created`, 'success');
             setIsAddTeamModalOpen(false);
             setNewTeamName('');
-            await initData(); // refresh teams before switching mode
             setAddAthleteMode('athlete'); // auto-switch back so user can add athlete to new team
         } catch (err) {
             console.error("Error adding team:", err);
@@ -1441,7 +1469,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleDeleteTeam = async (teamId: string) => {
         try {
             await DatabaseService.deleteTeam(teamId);
-            initData();
+            setTeams(prev => prev.filter(t => t.id !== teamId));
         } catch (err) {
             console.error("Error deleting team:", err);
             alert("Failed to delete team. Make sure all athletes are removed first.");
@@ -1468,8 +1496,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 exercises: newSession.exercises // Assuming the DB table can handle this JSONB or similar
             };
 
-            await DatabaseService.createSession(sessionData);
-            await initData();
+            const savedSession = await DatabaseService.createSession(sessionData);
+            if (savedSession) {
+                setScheduledSessions(prev => [...prev, {
+                    ...savedSession,
+                    trainingPhase: savedSession.training_phase,
+                    targetType: savedSession.target_type,
+                    targetId: savedSession.target_id,
+                    plannedDuration: savedSession.planned_duration,
+                }]);
+            }
 
             setIsAddSessionModalOpen(false);
             setNewSession({
@@ -1496,8 +1532,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const scheduleWorkoutSession = async (sessionPayload) => {
         try {
             setIsLoading(true);
-            await DatabaseService.createSession(sessionPayload);
-            await initData();
+            const savedSession = await DatabaseService.createSession(sessionPayload);
+            if (savedSession) {
+                setScheduledSessions(prev => [...prev, {
+                    ...savedSession,
+                    trainingPhase: savedSession.training_phase,
+                    targetType: savedSession.target_type,
+                    targetId: savedSession.target_id,
+                    plannedDuration: savedSession.planned_duration,
+                }]);
+            }
             showToast("Workout scheduled successfully", "success");
         } catch (err) {
             console.error("Error scheduling workout:", err);
@@ -1539,7 +1583,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         try {
             setIsLoading(true);
             await DatabaseService.deleteSession(sessionId);
-            await initData();
+            setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
             showToast("Session deleted", "success");
         } catch (err) {
             console.error("Error deleting session:", err);
@@ -1581,8 +1625,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleUpdateCalendarEvent = async (id, updates) => {
         try {
             setIsLoading(true);
-            await DatabaseService.updateCalendarEvent(id, updates);
-            await initData();
+            const updatedEvent = await DatabaseService.updateCalendarEvent(id, updates);
+            setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...(updatedEvent || updates) } : e));
             showToast("Event updated", "success");
         } catch (err) {
             console.error("Error updating calendar event:", err);
@@ -1596,7 +1640,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         try {
             setIsLoading(true);
             await DatabaseService.deleteCalendarEvent(id);
-            await initData();
+            setCalendarEvents(prev => prev.filter(e => e.id !== id));
             showToast("Event deleted", "success");
         } catch (err) {
             console.error("Error deleting calendar event:", err);
@@ -1926,46 +1970,97 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
         setIsLoading(true);
         try {
-            // Keep the JSON wrapper alive for legacy items we haven't migrated yet
+            // Initialise storage wrapper (synchronous after first call)
             await StorageService.init();
 
-            // 1. Fetch live PostgreSQL data using the Sport Scientist API wrapper
+            // ── Single parallel fetch: ALL independent data sources fire at once ──
+            // None of these calls use results from each other as inputs — only the
+            // processing/mapping below needs the data. Merging 5 sequential rounds
+            // into one batch means we wait for the slowest call once, not 5 times.
+            const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
+
+            const [
+                // Core DB
+                teamsResult, athletesResult, sessionsResult, assessmentsResult, exercisesResult,
+                // Calendar
+                calEventsResult, storedCustomTypes,
+                // Legacy storage
+                loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsCategories,
+                // Secondary DB + storage
+                dbTemplatesResult, loadedPersonalExercises, dbInjuryResult, dbWellnessTemplates,
+                loadedWattbike, loadedConditioning,
+                loadedLoad, loadedWellness, loadedBiometrics, loadedWorkoutLog,
+                dbTrainingLoadsResult,
+                // Tertiary
+                loadedPlans, dbEvaluations, dbMaxHistory,
+                // Settings + wellness heatmap (was sequential finally block)
+                savedGpsProfiles, savedAcwr, savedEx, savedAnchors,
+                savedVis, savedTour, savedPolar, savedGdsSrc, wrRecords,
+            ] = await Promise.all([
+                // Core DB
+                DatabaseService.fetchTeams().catch(e => { console.warn("fetchTeams failed:", e.message); return null; }),
+                DatabaseService.fetchAthletes().catch(e => { console.warn("fetchAthletes failed:", e.message); return null; }),
+                DatabaseService.fetchSessions().catch(e => { console.warn("fetchSessions failed:", e.message); return null; }),
+                DatabaseService.fetchAssessments().catch(e => { console.warn("fetchAssessments failed:", e.message); return null; }),
+                exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises().catch(() => null),
+                // Calendar
+                DatabaseService.fetchCalendarEvents().catch(e => { console.warn("fetchCalendarEvents failed:", e.message); return []; }),
+                StorageService.getCustomEventTypes().catch(() => []),
+                // Legacy storage
+                StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
+                StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
+                StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); return []; }),
+                StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
+                StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
+                StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
+                // Secondary DB + storage
+                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("fetchWorkoutTemplates failed:", e.message); return null; }),
+                StorageService.getPersonalExercises().catch(() => []),
+                DatabaseService.fetchInjuryReports().catch(e => { console.warn("fetchInjuryReports failed:", e.message); return null; }),
+                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("fetchQuestionnaireTemplates failed:", e); return null; }),
+                StorageService.getWattbikeSessions().catch(() => []),
+                StorageService.getConditioningSessions().catch(() => []),
+                StorageService.getLoadRecords().catch(() => []),
+                StorageService.getWellnessData().catch(() => []),
+                StorageService.getBiometrics().catch(() => []),
+                StorageService.getWorkoutLog().catch(() => []),
+                DatabaseService.fetchTrainingLoads().catch(e => { console.error("[ACWR] fetchTrainingLoads failed:", e); return null; }),
+                // Tertiary
+                StorageService.getPeriodizationPlans().catch(e => { console.warn("getPeriodizationPlans failed:", e.message); return []; }),
+                DatabaseService.fetchAssessments('evaluation').catch(() => null),
+                DatabaseService.fetchRmAssessments().catch(() => null),
+                // Settings
+                StorageService.getGpsProfiles().catch(() => null),
+                StorageService.getAcwrSettings().catch(() => null),
+                StorageService.getAcwrExclusions().catch(() => null),
+                StorageService.getAcwrRecalcAnchors().catch(() => null),
+                StorageService.getTestVisibility().catch(() => null),
+                StorageService.getTourState().catch(() => null),
+                StorageService.getPolarIntegration().catch(() => null),
+                StorageService.getGpsDataSources().catch(() => null),
+                DatabaseService.fetchAllWellnessResponses(wrFrom, localDate()).catch(() => []),
+            ]);
+
+            // ── Process core DB results ──
             let dbTeams = [];
             let dbAthletes = [];
             let dbExercises = [];
             let dbSessions = [];
-            let dbAssessments = [];
-            let allAssessments = []; // All assessments (all types), for attaching to player objects
+            let allAssessments = [];
 
-            try {
-                // Parallelize all independent DB calls — avoids sequential waterfall
-                const [teamsResult, athletesResult, sessionsResult, assessmentsResult, exercisesResult] = await Promise.all([
-                    DatabaseService.fetchTeams(),
-                    DatabaseService.fetchAthletes(),
-                    DatabaseService.fetchSessions(),
-                    DatabaseService.fetchAssessments(),
-                    // Only fetch 3,242 exercises on first load — skip on subsequent refreshes
-                    exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises(),
-                ]);
-
-                // Map snake_case to camelCase
+            if (teamsResult !== null && athletesResult !== null) {
                 dbTeams = teamsResult || [];
-                dbAthletes = (athletesResult || []).map(a => ({
-                    ...a,
-                    teamId: a.team_id // Add camelCase version for frontend compat
-                }));
-                dbExercises = exercisesResult || []; // null means skip (already loaded)
+                dbAthletes = (athletesResult || []).map(a => ({ ...a, teamId: a.team_id }));
                 dbSessions = (sessionsResult || []).map(s => ({
                     ...s,
                     trainingPhase: s.training_phase,
                     targetType: s.target_type,
                     targetId: s.target_id,
-                    plannedDuration: s.planned_duration
+                    plannedDuration: s.planned_duration,
                 }));
-                // Keep ALL assessments accessible for attaching to player objects
                 allAssessments = assessmentsResult || [];
-                // Map KPI assessments into the kpiRecords shape the MAP Calculator expects
-                dbAssessments = allAssessments
+                const dbAssessments = allAssessments
                     .filter(a => a.test_type === 'kpi')
                     .map(a => ({
                         athleteId: a.athlete_id,
@@ -1974,32 +2069,25 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         value: a.metrics?.value,
                         unit: a.metrics?.unit,
                         date: a.date,
-                        bikeModel: a.metrics?.bikeModel
+                        bikeModel: a.metrics?.bikeModel,
                     }));
                 setKpiRecords(dbAssessments);
-            } catch (e) {
-                console.warn("Could not fetch DB tables. User might strictly not be authenticated:", e.message);
-                // Fallback to mocks only if DB fails
+                dbExercises = exercisesResult || [];
+            } else {
+                console.warn("Core DB fetch failed — falling back to mocks");
                 dbTeams = MOCK_TEAMS;
                 dbExercises = MOCK_EXERCISES;
             }
 
-            // 1b. Fetch calendar events + custom event types (parallel)
-            const [calEventsResult, storedCustomTypes] = await Promise.all([
-                DatabaseService.fetchCalendarEvents().catch(e => { console.warn("Could not fetch calendar events:", e.message); return []; }),
-                StorageService.getCustomEventTypes().catch(e => { console.warn("Could not load custom event types:", e.message); return []; }),
-            ]);
-            // Retry once if empty — handles Supabase cold-start timeouts on first connection
+            // ── Calendar events (retry once on cold-start empty response) ──
             let finalCalEvents = calEventsResult || [];
             if (finalCalEvents.length === 0) {
                 try { finalCalEvents = await DatabaseService.fetchCalendarEvents(); } catch (e) { /* silent */ }
             }
             setCalendarEvents(finalCalEvents);
-            if (storedCustomTypes && storedCustomTypes.length > 0) {
-                setCustomEventTypes(storedCustomTypes);
-            }
+            if (storedCustomTypes && storedCustomTypes.length > 0) setCustomEventTypes(storedCustomTypes);
 
-            // 2. Map strict relational data back into the frontend state shape
+            // ── Map teams + players ──
             const mappedTeams = dbTeams.map(t => {
                 const teamAthletes = dbAthletes.filter(a => a.team_id === t.id || a.teamId === t.id);
                 return {
@@ -2013,12 +2101,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         status: 'Active',
                         trend: 'stable',
                         teamId: a.team_id || a.teamId,
-                        ...a
-                    }))
+                        ...a,
+                    })),
                 };
             });
 
-            // 3. Catch independent Private Clients (Athletes with no Team)
             const independentAthletes = dbAthletes.filter(a => !a.team_id && !a.teamId);
             if (independentAthletes.length > 0) {
                 mappedTeams.push({
@@ -2033,77 +2120,46 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         readiness: 100,
                         status: 'Active',
                         trend: 'stable',
-                        ...a
-                    }))
+                        ...a,
+                    })),
                 });
             }
 
-            // Attach performance assessments (hamstring, 1rm, dsi, rsi) to each player as
-            // performanceMetrics so Reporting Hub and Analytics Hub can read them without
-            // additional DB calls. KPI records are excluded (they live in kpiRecords state).
             const perfAssessments = allAssessments.filter(a => a.test_type !== 'kpi');
             mappedTeams.forEach(team => {
                 team.players.forEach(player => {
                     player.performanceMetrics = perfAssessments
                         .filter(a => a.athlete_id === player.id)
-                        .map(a => ({
-                            ...a.metrics,
-                            id: a.id,
-                            date: a.date,
-                            type: a.test_type, // 'hamstring' | '1rm' | 'dsi' | 'rsi'
-                        }))
+                        .map(a => ({ ...a.metrics, id: a.id, date: a.date, type: a.test_type }))
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 });
             });
-
             setTeams(mappedTeams);
 
-            // 4. Map Exercises — only on first load
+            // ── Exercises (first load only) ──
             if (!exercisesLoadedRef.current) {
                 let finalExercises = dbExercises;
                 if (finalExercises.length === 0) {
                     try {
                         const response = await fetch('./exercises_data.json');
-                        if (response.ok) {
-                            finalExercises = await response.json();
-                        } else {
-                            finalExercises = MOCK_EXERCISES;
-                        }
-                    } catch (error) {
-                        finalExercises = MOCK_EXERCISES;
-                    }
+                        finalExercises = response.ok ? await response.json() : MOCK_EXERCISES;
+                    } catch { finalExercises = MOCK_EXERCISES; }
                 }
                 setExercises(finalExercises.sort((a, b) => a.name.localeCompare(b.name)));
                 exercisesLoadedRef.current = true;
             }
 
-            // 5. Load unmigrated Legacy Data (Schedules, Questionnaires, GPS)
-            // Each item catches independently — a large GPS payload timing out won't kill the whole group
-            const [loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsCategories] = await Promise.all([
-                StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
-                StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
-                StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); return []; }),
-                StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
-                StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
-                StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
-            ]);
-
-            // Sync GPS categories from Supabase → localStorage
+            // ── GPS categories ──
             if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
                 try { localStorage.setItem('gps_categories', JSON.stringify(loadedGpsCategories)); } catch {}
             }
 
-            // Merge Sessions (Database data takes precedence over legacy)
+            // ── Merge sessions (DB takes precedence over legacy) ──
             const mergedSessions = [...dbSessions];
             if (loadedSessions && loadedSessions.length > 0) {
                 const dbIds = new Set(dbSessions.map(s => s.id));
-                loadedSessions.forEach(ls => {
-                    if (!dbIds.has(ls.id)) {
-                        mergedSessions.push(ls);
-                    }
-                });
+                loadedSessions.forEach(ls => { if (!dbIds.has(ls.id)) mergedSessions.push(ls); });
             }
-
             setScheduledSessions(mergedSessions);
             setQuestionnaires(loadedQuestionnaires || []);
             setGpsData(loadedGps || []);
@@ -2111,110 +2167,66 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setHrData(Array.isArray(rawHr) ? rawHr : []);
             setMedicalReports(loadedMedical || []);
 
-            // ── Parallel batch: all independent DB + Storage calls ──
-            const [
-                dbTemplatesResult, loadedPersonalExercises, dbInjuryResult, dbWellnessTemplates,
-                loadedWattbike, loadedConditioning,
-                loadedLoad, loadedWellness, loadedBiometrics, loadedWorkoutLog,
-                dbTrainingLoadsResult
-            ] = await Promise.all([
-                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("Could not fetch workout templates:", e.message); return null; }),
-                StorageService.getPersonalExercises().catch(() => []),
-                DatabaseService.fetchInjuryReports().catch(e => { console.warn("Could not fetch injury reports:", e.message); return null; }),
-                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("Error loading wellness templates:", e); return null; }),
-                StorageService.getWattbikeSessions().catch(() => []),
-                StorageService.getConditioningSessions().catch(() => []),
-                StorageService.getLoadRecords().catch(() => []),
-                StorageService.getWellnessData().catch(() => []),
-                StorageService.getBiometrics().catch(() => []),
-                StorageService.getWorkoutLog().catch(() => []),
-                DatabaseService.fetchTrainingLoads().catch(e => { console.error("[ACWR] FAILED to fetch training_loads:", e); return null; }),
-            ]);
-
-            // Workout Templates — prefer Supabase DB, fallback to StorageService
+            // ── Workout templates ──
             if (dbTemplatesResult && dbTemplatesResult.length > 0) {
-                const mapped = dbTemplatesResult.map(t => ({
-                    id: t.id,
-                    name: t.name,
-                    trainingPhase: t.training_phase,
-                    load: t.load,
-                    sections: t.sections || { warmup: [], workout: [], cooldown: [] },
+                setWorkoutTemplates(dbTemplatesResult.map(t => ({
+                    id: t.id, name: t.name, trainingPhase: t.training_phase,
+                    load: t.load, sections: t.sections || { warmup: [], workout: [], cooldown: [] },
                     createdAt: t.created_at,
-                }));
-                setWorkoutTemplates(mapped);
+                })));
             } else if (dbTemplatesResult !== null && loadedTemplates && loadedTemplates.length > 0) {
-                // Only migrate if DB query succeeded but returned empty (not if it failed/null)
                 setWorkoutTemplates(loadedTemplates);
             } else {
                 setWorkoutTemplates(loadedTemplates || []);
             }
 
-            // Personal Exercise Library
             setPersonalExerciseIds(loadedPersonalExercises || []);
-            // personalExerciseIds loaded — dataLoadedRef guards the save effect
 
-            // Injury Reports
+            // ── Injury reports ──
             if (dbInjuryResult && dbInjuryResult.length > 0) {
-                const mapped = dbInjuryResult.map(r => ({
-                    id: r.id,
-                    athleteId: r.athlete_id,
-                    athleteName: r.athlete_name,
-                    teamId: r.team_id,
-                    dateOfInjury: r.date_of_injury,
-                    ...(r.report_data || {}),
-                    createdAt: r.created_at,
-                    updatedAt: r.updated_at,
-                }));
-                setInjuryReports(mapped);
+                setInjuryReports(dbInjuryResult.map(r => ({
+                    id: r.id, athleteId: r.athlete_id, athleteName: r.athlete_name,
+                    teamId: r.team_id, dateOfInjury: r.date_of_injury,
+                    ...(r.report_data || {}), createdAt: r.created_at, updatedAt: r.updated_at,
+                })));
             } else {
                 const loadedInjuryReports = await StorageService.getInjuryReports();
                 setInjuryReports(loadedInjuryReports?.length ? loadedInjuryReports : MOCK_INJURY_REPORTS);
             }
 
-            // Wellness Templates
             setWellnessTemplates(dbWellnessTemplates || []);
 
-            // Wattbike & Conditioning
+            // ── Wattbike & Conditioning ──
             setWattbikeSessions(prev => {
                 if (!loadedWattbike || loadedWattbike.length === 0) return prev;
                 const existingIds = new Set(loadedWattbike.map(s => s.id));
-                const missingDefaults = prev.filter(s => !existingIds.has(s.id));
-                return [...loadedWattbike, ...missingDefaults];
+                return [...loadedWattbike, ...prev.filter(s => !existingIds.has(s.id))];
             });
             if (loadedConditioning && loadedConditioning.length > 0) setConditioningSessions(loadedConditioning);
 
-            // Merge local storage load records with Supabase training_loads (deduplicated)
+            // ── Training loads (merge DB + local, deduplicated) ──
             let mergedLoadRecords = loadedLoad || [];
-            const dbTrainingLoads = dbTrainingLoadsResult;
-            if (dbTrainingLoads && dbTrainingLoads.length > 0) {
-                const mapped = dbTrainingLoads.map(r => ({
-                    athleteId: r.athlete_id,
-                    athlete_id: r.athlete_id,
-                    date: r.date,
+            if (dbTrainingLoadsResult && dbTrainingLoadsResult.length > 0) {
+                const mapped = dbTrainingLoadsResult.map(r => ({
+                    athleteId: r.athlete_id, athlete_id: r.athlete_id, date: r.date,
                     sRPE: r.metric_type === 'srpe' ? Number(r.value) : 0,
-                    value: Number(r.value),
-                    metric_type: r.metric_type,
-                    session_type: r.session_type,
+                    value: Number(r.value), metric_type: r.metric_type, session_type: r.session_type,
                 }));
-                // Deduplicate: DB records take priority over local
                 const dbKeys = new Set(mapped.map(r => `${r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type}`));
-                const localOnly = mergedLoadRecords.filter(r => {
-                    const key = `${r.athleteId || r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type || 'srpe'}`;
-                    return !dbKeys.has(key);
-                });
-                mergedLoadRecords = [...localOnly, ...mapped];
+                mergedLoadRecords = [
+                    ...mergedLoadRecords.filter(r => {
+                        const key = `${r.athleteId || r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type || 'srpe'}`;
+                        return !dbKeys.has(key);
+                    }),
+                    ...mapped,
+                ];
             }
             setLoadRecords(mergedLoadRecords);
             setWellnessData(loadedWellness || []);
             setBiometricsRecords(loadedBiometrics || []);
             setWorkoutLog(loadedWorkoutLog || []);
 
-            // 6b + 7. Load plans + evaluations + RM history (parallel)
-            const [loadedPlans, dbEvaluations, dbMaxHistory] = await Promise.all([
-                StorageService.getPeriodizationPlans().catch(e => { console.warn("Could not load periodization plans:", e.message); return []; }),
-                DatabaseService.fetchAssessments('evaluation').catch(() => null),
-                DatabaseService.fetchRmAssessments().catch(() => null),
-            ]);
+            // ── Periodization plans + evaluations + RM history ──
             setPeriodizationPlans(loadedPlans || []);
 
             if (dbEvaluations) {
@@ -2242,68 +2254,43 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }));
             }
 
+            // ── Settings (results from the main Promise.all above) ──
+            if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
+                setGpsProfiles(savedGpsProfiles);
+                try { localStorage.setItem('gps_team_profiles', JSON.stringify(savedGpsProfiles)); } catch {}
+            }
+            if (savedAcwr && Object.keys(savedAcwr).length > 0) {
+                setAcwrSettings(savedAcwr);
+                if (savedAcwr._heatmapDefault) setHeatmapTeamFilter(savedAcwr._heatmapDefault);
+            } else {
+                const legacyAcwr = localStorage.getItem('acwr_feature_settings');
+                if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
+            }
+            if (savedEx && Object.keys(savedEx).length > 0) setAcwrExclusions(savedEx);
+            else {
+                const legacyEx = localStorage.getItem('acwr_exclusions');
+                if (legacyEx) { const parsed = JSON.parse(legacyEx); setAcwrExclusions(parsed); localStorage.removeItem('acwr_exclusions'); }
+            }
+            if (savedAnchors && Object.keys(savedAnchors).length > 0) setAcwrRecalcAnchors(savedAnchors);
+            if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
+            else {
+                const legacyVis = localStorage.getItem('test_visibility');
+                if (legacyVis) { const parsed = JSON.parse(legacyVis); setTestVisibility(parsed); localStorage.removeItem('test_visibility'); }
+            }
+            if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
+            if (savedPolar && Object.keys(savedPolar).length > 0) setPolarIntegration(savedPolar);
+            if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
+            setWellnessResponses(wrRecords || []);
+
             // If we got here, the try block succeeded
-            var initSuccess = true;
+            dataLoadedRef.current = true;
         } catch (error) {
             console.error("Critical error in initData:", error);
-            var initSuccess = false;
             // dataLoadedRef stays false — save effects won't overwrite with empty data
         } finally {
-            // Load GPS profiles in finally — guaranteed to run even if try block fails/times out
-            try {
-                const savedGpsProfiles = await StorageService.getGpsProfiles();
-                if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
-                    setGpsProfiles(savedGpsProfiles);
-                    try { localStorage.setItem('gps_team_profiles', JSON.stringify(savedGpsProfiles)); } catch {}
-                }
-            } catch (e) { /* ignore — settings load must not block */ }
-            // Load settings from Supabase user_data (with localStorage fallback)
-            try {
-                const savedAcwr = await StorageService.getAcwrSettings();
-                if (savedAcwr && Object.keys(savedAcwr).length > 0) {
-                    setAcwrSettings(savedAcwr);
-                    if (savedAcwr._heatmapDefault) setHeatmapTeamFilter(savedAcwr._heatmapDefault);
-                } else {
-                    // Fallback: migrate from old localStorage if exists
-                    const legacyAcwr = localStorage.getItem('acwr_feature_settings');
-                    if (legacyAcwr) { const parsed = JSON.parse(legacyAcwr); setAcwrSettings(parsed); localStorage.removeItem('acwr_feature_settings'); }
-                }
-            } catch (e) { /* ignore */ }
-            try {
-                const savedEx = await StorageService.getAcwrExclusions();
-                if (savedEx && Object.keys(savedEx).length > 0) setAcwrExclusions(savedEx);
-                else {
-                    const legacyEx = localStorage.getItem('acwr_exclusions');
-                    if (legacyEx) { const parsed = JSON.parse(legacyEx); setAcwrExclusions(parsed); localStorage.removeItem('acwr_exclusions'); }
-                }
-            } catch (e) { /* ignore */ }
-            try {
-                const savedVis = await StorageService.getTestVisibility();
-                if (savedVis && Object.keys(savedVis).length > 0) setTestVisibility(savedVis);
-                else {
-                    const legacyVis = localStorage.getItem('test_visibility');
-                    if (legacyVis) { const parsed = JSON.parse(legacyVis); setTestVisibility(parsed); localStorage.removeItem('test_visibility'); }
-                }
-            } catch (e) { /* ignore */ }
-            // Load tour state
-            try {
-                const savedTour = await StorageService.getTourState();
-                if (savedTour && Object.keys(savedTour).length > 0) setTourState(savedTour);
-                // If no tour state exists, it stays empty — PageTour will create defaults on first render
-            } catch (e) { /* ignore */ }
-            // Pre-load wellness responses for the dashboard heatmap (last 30 days, all teams)
-            try {
-                const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
-                const wrRecords = await DatabaseService.fetchAllWellnessResponses(wrFrom, localDate());
-                setWellnessResponses(wrRecords || []);
-            } catch (e) { /* non-blocking — heatmap just shows grey if this fails */ }
-            // Mark data as successfully loaded ONLY if try block completed
-            // This MUST be the last thing set, after all data + settings are loaded
-            if (initSuccess) dataLoadedRef.current = true;
             setIsLoading(false);
         }
-    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles]);
+    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles, setPolarIntegration, setGpsDataSources]);
 
     const handleLoadWellnessResponses = useCallback(async (teamId: string, rangeOrStart?: any, endDate?: string) => {
         if (!teamId || teamId === 'all') return;
@@ -2398,6 +2385,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleUndoDelete,
         isSidebarCollapsed,
         setIsSidebarCollapsed,
+        isMobileDrawerOpen,
+        setIsMobileDrawerOpen,
         dashboardFilterTarget,
         setDashboardFilterTarget,
         calendarFilterCategory, setCalendarFilterCategory,
@@ -2804,8 +2793,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setAcwrSettings,
         acwrExclusions,
         setAcwrExclusions,
+        acwrRecalcAnchors,
+        setAcwrRecalcAnchors,
         testVisibility,
         tourState, setTourState,
+        polarIntegration, setPolarIntegration,
+        gpsDataSources, setGpsDataSources,
         setTestVisibility,
         getAthleteAcwrOptions,
         calculateACWR,
