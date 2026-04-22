@@ -1,6 +1,0 @@
-INSERT INTO exercises (id, name, description, categories, body_parts, video_url, options) VALUES
-('ex_1770810675233_16','Stability Ball Dead Bug','No description provided.',ARRAY['Core','Postural'],ARRAY['Abdominals'],'','{"posture": "Supine", "grip": "Neutral", "alternating": true, "movementPattern": "Anti-Extension", "mechanics": "Compound", "longVideoUrl": ""}'::jsonb),
-('ex_1770810675233_17','Bodyweight Glute Bridge','No description provided.',ARRAY['Lower Body','Bodybuilding'],ARRAY['Glutes'],'','{"posture": "Bridge", "grip": "No Grip", "alternating": false, "movementPattern": "Hip Extension", "mechanics": "Compound", "longVideoUrl": ""}'::jsonb),
-('ex_1770810675233_18','Bodyweight Bird Dog','No description provided.',ARRAY['Core','Postural'],ARRAY['Abdominals'],'','{"posture": "Quadruped", "grip": "Flat Palm", "alternating": true, "movementPattern": "Anti-Rotational", "mechanics": "Compound", "longVideoUrl": ""}'::jsonb),
-('ex_1770810675233_19','Stability Ball Russian Twist','No description provided.',ARRAY['Core','Unsorted'],ARRAY['Abdominals'],'','{"posture": "Seated Floor", "grip": "Neutral", "alternating": false, "movementPattern": "Rotational", "mechanics": "Compound", "longVideoUrl": ""}'::jsonb)
-ON CONFLICT (id) DO NOTHING;
