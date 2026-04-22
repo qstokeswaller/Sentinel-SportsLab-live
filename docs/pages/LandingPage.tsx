@@ -250,17 +250,17 @@ const LandingPage: React.FC = () => {
             visual: (dark: boolean, txs: string) => (
                 <div className="mt-3">
                     {[
-                        { csv: 'total_distance', maps: 'Total Distance' },
-                        { csv: 'player_load', maps: 'Player Load' },
-                        { csv: 'hsr_distance', maps: 'High Speed Running' },
+                        { label: 'Heart Rate Metrics', color: dark ? 'text-rose-400' : 'text-rose-500' },
+                        { label: 'Distance Metrics', color: dark ? 'text-indigo-400' : 'text-indigo-500' },
+                        { label: 'Speed Metrics', color: dark ? 'text-cyan-400' : 'text-cyan-600' },
+                        { label: 'Acceleration Metrics', color: dark ? 'text-amber-400' : 'text-amber-500' },
                     ].map(r => (
-                        <div key={r.csv} className={`flex items-center justify-between px-2 py-1.5 border-b ${dark ? 'border-white/[0.05]' : 'border-slate-200'} last:border-0`}>
-                            <span className={`text-[8px] font-mono ${dark ? 'text-violet-400' : 'text-violet-600'}`}>{r.csv}</span>
-                            <span className={`text-[8px] ${dark ? 'text-slate-300' : 'text-slate-600'}`}>{r.maps}</span>
-                            <span className="text-[7px] font-bold text-emerald-400">✓</span>
+                        <div key={r.label} className={`flex items-center justify-between px-2 py-1.5 border-b ${dark ? 'border-white/[0.05]' : 'border-slate-200'} last:border-0`}>
+                            <span className={`text-[8px] font-semibold ${r.color}`}>{r.label}</span>
+                            <span className="text-[7px] font-bold text-emerald-400">✓ mapped</span>
                         </div>
                     ))}
-                    <div className={`text-[8px] text-center mt-1.5 ${txs}`}>42 athletes mapped · Polar Team Pro profile</div>
+                    <div className={`text-[8px] text-center mt-1.5 ${txs}`}>Polar compatible · any GPS CSV export</div>
                 </div>
             ),
         },
@@ -324,7 +324,7 @@ const LandingPage: React.FC = () => {
                         </span>
                     </h1>
                     <p className={`mt-8 text-lg md:text-xl ${txm} max-w-2xl mx-auto leading-relaxed`}>
-                        ACWR load monitoring, research-grade wellness surveillance, 80+ testing protocols, and GPS intelligence.
+                        ACWR load monitoring, research-grade wellness surveillance, 80+ protocols, and GPS intelligence.
                         Built on published research. Accessible from day one.
                     </p>
                     <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
