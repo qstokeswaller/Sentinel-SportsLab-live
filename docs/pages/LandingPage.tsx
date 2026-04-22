@@ -397,7 +397,7 @@ const LandingPage: React.FC = () => {
             <section className={`py-12 sm:py-20 border-y ${dark ? 'border-white/[0.05]' : 'border-slate-100'}`}>
                 <div ref={rStats.ref} style={rStats.style} className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 sm:gap-8 text-center">
                     {[
-                        { end: 80, s: '+', l: 'Testing Protocol Documents' },
+                        { end: 80, s: '+', l: 'Protocol Documents' },
                         { end: 3700, s: '+', l: 'Exercise Library' },
                         { end: 6, s: '', l: 'Intelligence Hubs' },
                     ].map((s, i) => (
