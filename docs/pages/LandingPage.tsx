@@ -260,7 +260,7 @@ const LandingPage: React.FC = () => {
                             <span className="text-[7px] font-bold text-emerald-400">✓ mapped</span>
                         </div>
                     ))}
-                    <div className={`text-[8px] text-center mt-1.5 ${txs}`}>Polar compatible · any GPS CSV export</div>
+                    <div className={`text-[8px] text-center mt-1.5 ${txs}`}>Catapult · Polar · STATSports · and more</div>
                 </div>
             ),
         },
