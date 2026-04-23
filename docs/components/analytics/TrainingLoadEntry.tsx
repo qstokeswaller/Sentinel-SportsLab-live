@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
@@ -76,6 +76,29 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
         });
         return map;
     }, [loadRecords, date]);
+
+    // Pre-fill inputs from existing records whenever date or team changes
+    useEffect(() => {
+        const newRowData: Record<string, any> = {};
+        players.forEach(p => {
+            const ex = existingDataForDate[p.id];
+            if (!ex) return;
+            if (ex.session_type === 'rest') {
+                newRowData[p.id] = { rpe: '', duration: '', value: '', skip: true };
+            } else if (needsRpeDuration) {
+                newRowData[p.id] = {
+                    rpe: ex.rpe != null ? String(ex.rpe) : '',
+                    duration: ex.duration_minutes != null ? String(ex.duration_minutes) : '',
+                    value: '', skip: false,
+                };
+            } else {
+                newRowData[p.id] = { rpe: '', duration: '', value: ex.value != null ? String(ex.value) : '', skip: false };
+            }
+        });
+        setRowData(newRowData);
+        const firstNonRest = Object.values(existingDataForDate).find((r: any) => r.session_type !== 'rest');
+        if ((firstNonRest as any)?.session_type) setSessionType((firstNonRest as any).session_type);
+    }, [date, selectedTeamId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const getRow = (id: string) => rowData[id] || { rpe: '', duration: '', value: '', skip: false };
 
@@ -345,7 +368,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                             </div>
                                             <div className="min-w-0">
                                                 <span className="text-sm font-medium text-slate-900 truncate block">{player.name}</span>
-                                                {existing && <span className="text-[9px] text-emerald-500">Logged: {existing.value || existing.sRPE}</span>}
+                                                {existing && <span className="text-[9px] text-emerald-600 font-medium">Editing existing</span>}
                                             </div>
                                         </div>
 

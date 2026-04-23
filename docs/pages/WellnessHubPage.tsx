@@ -4,7 +4,7 @@ import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
     UploadIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ShieldIcon, TableIcon,
-    RotateCcwIcon, XCircleIcon,
+    RotateCcwIcon, XCircleIcon, Trash2Icon, PencilIcon, CheckIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -35,7 +35,7 @@ const getInitials = (name: string) => name?.split(' ').map(n => n[0]).join('').s
 
 // ── ACWR Monitoring Hub ─────────────────────────────────────────────────
 const ACWRMonitoringHub: React.FC = () => {
-    const { teams, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, acwrRecalcAnchors, setAcwrRecalcAnchors, showToast, isLoading } = useAppState();
+    const { teams, loadRecords, setLoadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, acwrRecalcAnchors, setAcwrRecalcAnchors, showToast, isLoading } = useAppState();
     const [selectedTeamId, setSelectedTeamId] = useState<string>('');
     const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete' | 'history'>('roster');
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
@@ -69,6 +69,21 @@ const ACWRMonitoringHub: React.FC = () => {
     const [isCsvMapperOpen, setIsCsvMapperOpen] = useState(false);
     const [csvMapperHeaders, setCsvMapperHeaders] = useState<string[]>([]);
     const [csvMapperRows, setCsvMapperRows] = useState<Record<string, string>[]>([]);
+
+    // Edit / delete mode for load tables
+    const [editMode, setEditMode] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    const handleDeleteRecord = async (id: string) => {
+        try {
+            await DatabaseService.deleteTrainingLoad(id);
+            setLoadRecords((prev: any[]) => prev.filter(r => r.id !== id));
+            setDeleteConfirmId(null);
+            showToast?.('Load record deleted');
+        } catch {
+            showToast?.('Failed to delete record');
+        }
+    };
 
     // Unmatched athlete resolver state
     const [showAcwrResolver, setShowAcwrResolver] = useState(false);
@@ -573,13 +588,18 @@ const ACWRMonitoringHub: React.FC = () => {
         for (let i = 0; i < dates.length; i++) {
             if (dates[i] < drilldownFrom || dates[i] > drilldownTo) continue;
             const isRestDay = restDaySet.has(dates[i]);
+            const rec = (loadRecords || []).find((r: any) =>
+                (r.athlete_id === selectedAthleteId || r.athleteId === selectedAthleteId) &&
+                r.date === dates[i] && r.metric_type === teamMetricType
+            );
             days.push({
                 date: dates[i], load: loads[i], ratio: ratioHist[i] || 0, isRestDay,
                 status: ACWR_UTILS.getRatioStatus(ratioHist[i] || 0),
+                recordId: rec?.id || null,
             });
         }
         return days.reverse();
-    }, [drilldownPlayerData, drilldownFrom, drilldownTo]);
+    }, [drilldownPlayerData, drilldownFrom, drilldownTo, loadRecords, selectedAthleteId, teamMetricType]);
 
     // ── Log Training Load sub-view ──────────────────────────────────────
     if (acwrView === 'log') {
@@ -721,28 +741,55 @@ const ACWRMonitoringHub: React.FC = () => {
                 })()}
 
                 {/* Daily breakdown table */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className={`bg-white rounded-xl border shadow-sm overflow-hidden ${editMode ? 'border-amber-300' : 'border-slate-200'}`}>
                     {/* Column headers */}
-                    <div className="grid grid-cols-4 gap-4 px-5 py-2.5 bg-slate-50 border-b border-slate-100">
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Date</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Load</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">ACWR</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Status</span>
+                    <div className={`flex items-center gap-4 px-5 py-2.5 border-b ${editMode ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide flex-1">Date</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-24">Load</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-16">ACWR</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-20">Status</span>
+                        <button
+                            onClick={() => { setEditMode(m => !m); setDeleteConfirmId(null); }}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'}`}
+                        >
+                            {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
+                        </button>
                     </div>
+                    {editMode && (
+                        <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 text-[10px] text-amber-700 font-medium">
+                            Edit mode — click 🗑 to delete a day's record. Two-step confirmation required.
+                        </div>
+                    )}
                     {dailyData.length === 0 ? (
                         <div className="px-5 py-8 text-center text-sm text-slate-400">No data in selected range.</div>
                     ) : (
                         <div className="divide-y divide-slate-50">
                             {dailyData.map((day, i) => (
-                                <div key={i} className={`grid grid-cols-4 gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 text-slate-400' : 'hover:bg-slate-50/60'}`}>
-                                    <span className="font-medium text-slate-700">
+                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 text-slate-400' : 'hover:bg-slate-50/60'}`}>
+                                    <span className="font-medium text-slate-700 flex-1">
                                         {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}
                                     </span>
-                                    <span className={day.isRestDay ? 'italic text-xs' : 'font-medium text-slate-900'}>
+                                    <span className={`w-24 ${day.isRestDay ? 'italic text-xs' : 'font-medium text-slate-900'}`}>
                                         {day.isRestDay ? 'Rest' : `${day.load} ${ACWR_METRIC_TYPES[playerSettings.metricType]?.unit || 'AU'}`}
                                     </span>
-                                    <span className={`font-bold ${day.status.color}`}>{day.ratio > 0 ? day.ratio.toFixed(2) : '—'}</span>
-                                    <span className={`text-xs font-medium ${day.status.color}`}>{day.ratio > 0 ? day.status.label : '—'}</span>
+                                    <span className={`w-16 font-bold ${day.status.color}`}>{day.ratio > 0 ? day.ratio.toFixed(2) : '—'}</span>
+                                    <span className={`w-20 text-xs font-medium ${day.status.color}`}>{day.ratio > 0 ? day.status.label : '—'}</span>
+                                    {editMode && (
+                                        <div className="w-24 flex justify-end">
+                                            {!day.isRestDay && day.recordId ? (
+                                                deleteConfirmId === day.recordId ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <button onClick={() => setDeleteConfirmId(null)} className="px-2 py-0.5 text-[10px] rounded bg-slate-100 text-slate-500 hover:bg-slate-200">Cancel</button>
+                                                        <button onClick={() => handleDeleteRecord(day.recordId)} className="px-2 py-0.5 text-[10px] rounded bg-rose-600 text-white hover:bg-rose-700 font-semibold">Confirm</button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => setDeleteConfirmId(day.recordId)} className="p-1 rounded hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-colors" title="Delete this day's record">
+                                                        <Trash2Icon size={13} />
+                                                    </button>
+                                                )
+                                            ) : <span className="w-6" />}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -855,14 +902,26 @@ const ACWRMonitoringHub: React.FC = () => {
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-300" /> Medium</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-300" /> High</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-rose-300" /> Peak</span>
+                            <button
+                                onClick={() => { setEditMode(m => !m); setDeleteConfirmId(null); }}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
+                            >
+                                {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
+                            </button>
                         </div>
                     </div>
 
+                    {/* Edit mode banner */}
+                    {editMode && (
+                        <div className="px-5 py-2 bg-amber-50 border-b border-amber-200 text-[10px] text-amber-700 font-medium">
+                            Edit mode — click 🗑 on any cell to delete that day's record. Two-step confirmation required.
+                        </div>
+                    )}
                     {/* Column headers */}
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[720px] text-xs">
+                        <table className={`w-full text-xs ${editMode ? 'min-w-[800px]' : 'min-w-[720px]'}`}>
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
+                                <tr className={`border-b ${editMode ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
                                     <th className="text-left px-4 py-2.5 font-semibold text-slate-500 w-36">Athlete</th>
                                     {weekDays.map(d => (
                                         <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 w-20">
@@ -884,14 +943,14 @@ const ACWRMonitoringHub: React.FC = () => {
                                     const acwrResult = playerRoster?.acwrResult;
 
                                     const dayLoads = weekDays.map(day => {
-                                        const rec = (loadRecords || []).find(r =>
+                                        const rec = (loadRecords || []).find((r: any) =>
                                             (r.athlete_id === player.id || r.athleteId === player.id) &&
                                             r.date === day && r.metric_type === teamMetricType
                                         );
-                                        return rec != null ? Number(rec.value) : null;
+                                        return rec != null ? { value: Number(rec.value), id: rec.id, isRest: rec.session_type === 'rest' } : null;
                                     });
 
-                                    const weekTotal = dayLoads.reduce((sum: number, v) => sum + (v || 0), 0);
+                                    const weekTotal = dayLoads.reduce((sum: number, v) => sum + (v?.value || 0), 0);
 
                                     // ACWR as of last day of the week that has ratio data
                                     let weekAcwr = 0;
@@ -925,20 +984,37 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 </div>
                                             </td>
                                             {dayLoads.map((load, i) => {
-                                                const intensity = (load || 0) / weekMaxLoad;
-                                                const bg = load === null ? '' :
-                                                    load === 0 ? 'bg-slate-100 text-slate-400' :
+                                                const v = load?.value ?? null;
+                                                const intensity = (v || 0) / weekMaxLoad;
+                                                const bg = v === null ? '' :
+                                                    load?.isRest ? 'bg-slate-100 text-slate-400' :
                                                     intensity > 0.8 ? 'bg-rose-200 text-rose-800' :
                                                     intensity > 0.6 ? 'bg-amber-200 text-amber-800' :
                                                     intensity > 0.3 ? 'bg-emerald-200 text-emerald-800' :
                                                     'bg-emerald-100 text-emerald-700';
                                                 return (
                                                     <td key={i} className="px-1 py-2 text-center">
-                                                        {load === null ? (
+                                                        {v === null ? (
                                                             <span className="text-slate-200">—</span>
+                                                        ) : editMode && load?.id && !load?.isRest ? (
+                                                            deleteConfirmId === load.id ? (
+                                                                <div className="flex flex-col gap-0.5 items-center">
+                                                                    <button onClick={() => setDeleteConfirmId(null)} className="w-full px-1 py-0.5 text-[9px] rounded bg-slate-100 text-slate-500 hover:bg-slate-200">Cancel</button>
+                                                                    <button onClick={() => handleDeleteRecord(load.id)} className="w-full px-1 py-0.5 text-[9px] rounded bg-rose-600 text-white hover:bg-rose-700 font-bold">Delete</button>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => setDeleteConfirmId(load.id)}
+                                                                    className={`inline-flex items-center gap-0.5 w-full justify-center rounded px-1 py-0.5 font-medium text-[11px] ${bg} hover:ring-1 hover:ring-rose-400 group transition-all`}
+                                                                    title="Click to delete this record"
+                                                                >
+                                                                    <span>{load?.isRest ? 'Rest' : v}</span>
+                                                                    <Trash2Icon size={9} className="opacity-0 group-hover:opacity-100 text-rose-500 transition-opacity" />
+                                                                </button>
+                                                            )
                                                         ) : (
                                                             <span className={`inline-block w-full rounded px-1 py-0.5 font-medium text-[11px] ${bg}`}>
-                                                                {load === 0 ? 'Rest' : load}
+                                                                {load?.isRest ? 'Rest' : v}
                                                             </span>
                                                         )}
                                                     </td>
