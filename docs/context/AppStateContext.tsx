@@ -2208,9 +2208,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             let mergedLoadRecords = loadedLoad || [];
             if (dbTrainingLoadsResult && dbTrainingLoadsResult.length > 0) {
                 const mapped = dbTrainingLoadsResult.map(r => ({
-                    athleteId: r.athlete_id, athlete_id: r.athlete_id, date: r.date,
+                    id: r.id, athleteId: r.athlete_id, athlete_id: r.athlete_id, date: r.date,
                     sRPE: r.metric_type === 'srpe' ? Number(r.value) : 0,
                     value: Number(r.value), metric_type: r.metric_type, session_type: r.session_type,
+                    rpe: r.rpe, duration_minutes: r.duration_minutes,
                 }));
                 const dbKeys = new Set(mapped.map(r => `${r.athlete_id}_${(r.date||'').split('T')[0]}_${r.metric_type}`));
                 mergedLoadRecords = [
