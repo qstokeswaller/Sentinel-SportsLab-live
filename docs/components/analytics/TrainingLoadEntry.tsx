@@ -368,7 +368,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                             </div>
                                             <div className="min-w-0">
                                                 <span className="text-sm font-medium text-slate-900 truncate block">{player.name}</span>
-                                                {existing && <span className="text-[9px] text-emerald-600 font-medium">Editing existing</span>}
+                                                {existing && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-semibold">✓ Logged</span>}
                                             </div>
                                         </div>
 
