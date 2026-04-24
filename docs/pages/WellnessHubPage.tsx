@@ -365,9 +365,15 @@ const ACWRMonitoringHub: React.FC = () => {
                 excluded, returning, exclusion, daysSinceExcluded, noDataDays,
             };
         }).sort((a, b) => {
-            // Excluded athletes go to the bottom
             if (a.excluded && !b.excluded) return 1;
             if (!a.excluded && b.excluded) return -1;
+            const tierRank = { danger: 3, warning: 2, success: 0, neutral: 0 };
+            const tA = tierRank[a.status?.status] ?? 0;
+            const tB = tierRank[b.status?.status] ?? 0;
+            if (tB !== tA) return tB - tA;
+            const dA = a.lastSession || '';
+            const dB = b.lastSession || '';
+            if (dB !== dA) return dB.localeCompare(dA);
             return b.ratio - a.ratio;
         });
     }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, acwrRecalcAnchors, selectedTeam, teamMetricType]);

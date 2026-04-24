@@ -245,8 +245,16 @@ export const DashboardPage = () => {
                 else if (acwr > 1.3) riskLevel = 'Warning';
                 else if (acwr < 0.8 && acwr > 0) riskLevel = 'Warning';
                 else if (isReturning) riskLevel = 'Warning';
-                return { ...player, riskLevel, acwr, isReturning, isInjured: false };
-            }).filter(p => p.riskLevel !== 'Stable').sort((a, b) => b.acwr - a.acwr);
+                const lastDate = athleteLastLoadDate.get(player.id) || '';
+                return { ...player, riskLevel, acwr, isReturning, isInjured: false, lastDate };
+            }).filter(p => p.riskLevel !== 'Stable').sort((a, b) => {
+                const tierRank = { Critical: 2, Warning: 1 };
+                const tA = tierRank[a.riskLevel] ?? 0;
+                const tB = tierRank[b.riskLevel] ?? 0;
+                if (tB !== tA) return tB - tA;
+                if (b.lastDate !== a.lastDate) return b.lastDate.localeCompare(a.lastDate);
+                return b.acwr - a.acwr;
+            });
 
         // Injured/excluded athletes (at the bottom)
         const injuredAthletes = teams.flatMap(t => t.players)
@@ -280,7 +288,18 @@ export const DashboardPage = () => {
                     {isInjured ? (
                         <span className="text-[10px] font-semibold text-slate-400 italic shrink-0">Injured</span>
                     ) : (
-                        <div className={`text-sm font-bold ${acwrColor} shrink-0`}>{player.acwr.toFixed(2)}</div>
+                        <div className="flex flex-col items-end shrink-0">
+                            <div className={`text-sm font-bold ${acwrColor}`}>{player.acwr.toFixed(2)}</div>
+                            {player.lastDate && (
+                                <div className="text-[9px] text-slate-400">
+                                    {player.lastDate === new Date().toISOString().split('T')[0]
+                                        ? 'today'
+                                        : player.lastDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                                        ? 'yesterday'
+                                        : new Date(player.lastDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             );
