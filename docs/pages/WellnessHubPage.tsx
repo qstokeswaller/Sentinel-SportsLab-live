@@ -367,9 +367,9 @@ const ACWRMonitoringHub: React.FC = () => {
         }).sort((a, b) => {
             if (a.excluded && !b.excluded) return 1;
             if (!a.excluded && b.excluded) return -1;
-            const tierRank = { danger: 3, warning: 2, success: 0, neutral: 0 };
-            const tA = tierRank[a.status?.status] ?? 0;
-            const tB = tierRank[b.status?.status] ?? 0;
+            const toTier = (r: number) => r > 1.5 ? 3 : r > 1.3 ? 2 : r < 0.8 && r > 0 ? 1 : 0;
+            const tA = toTier(a.ratio);
+            const tB = toTier(b.ratio);
             if (tB !== tA) return tB - tA;
             const dA = a.lastSession || '';
             const dB = b.lastSession || '';
