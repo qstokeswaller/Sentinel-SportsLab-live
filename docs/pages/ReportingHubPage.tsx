@@ -17,7 +17,7 @@ import type { GpsProfile, ProfileMatchResult } from '../components/performance/G
 import { loadGpsProfiles, loadGpsCategories, saveGpsCategories, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import type { GpsTeamProfile, GpsCategory } from '../components/performance/GpsConfigModal';
 import SmartCsvMapper from '../components/ui/SmartCsvMapper';
-import { HR_SCHEMA } from '../utils/csvSchemas';
+import { HR_SCHEMA, normaliseDate } from '../utils/csvSchemas';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
     CalendarIcon, HeartPulseIcon, DumbbellIcon, FlameIcon, BatteryIcon, ShieldAlertIcon,
@@ -293,6 +293,7 @@ export const ReportingHubPage = () => {
     const [gpsDialogAthleteCol, setGpsDialogAthleteCol] = useState('');
     const [gpsDialogDateCol, setGpsDialogDateCol] = useState('');
     const [gpsDialogPhaseCol, setGpsDialogPhaseCol] = useState('');
+    const [gpsImportDateOverride, setGpsImportDateOverride] = useState('');
 
     // GPS column visibility config (persisted to localStorage)
     const [gpsColumnConfig, setGpsColumnConfig] = useState<{key: string; visible: boolean; retired?: boolean}[]>(() => {
@@ -2560,21 +2561,12 @@ export const ReportingHubPage = () => {
             if (!gpsSmartDialog) return;
             const { rows, headers } = gpsSmartDialog;
             const allPlayers = teams.flatMap(t => t.players);
-            const normaliseDate = (s: string): string => {
-                if (!s) return new Date().toISOString().split('T')[0];
-                if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-                const dmY = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-                if (dmY) return `${dmY[3]}-${dmY[2].padStart(2,'0')}-${dmY[1].padStart(2,'0')}`;
-                const mdY = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-                if (mdY) return `${mdY[3]}-${mdY[1].padStart(2,'0')}-${mdY[2].padStart(2,'0')}`;
-                const d = new Date(s); return isNaN(d.getTime()) ? new Date().toISOString().split('T')[0] : d.toISOString().split('T')[0];
-            };
             // Resolve ACWR column from matched profile
             const acwrCol = gpsMatchedProfile?.acwrColumn || '';
 
             const newRecords = rows.map(row => {
                 const athleteName = row[athleteCol] || 'Unknown';
-                const date = normaliseDate(row[dateCol] || '');
+                const date = gpsImportDateOverride || normaliseDate(row[dateCol] || '');
                 const phase = phaseCol ? (row[phaseCol] || '') : '';
                 const rawColumns: Record<string, string> = {};
                 for (const h of headers) {
@@ -2605,6 +2597,7 @@ export const ReportingHubPage = () => {
             // Auto-sync new GPS records to training_loads for ACWR
             syncGpsToLoadRecords(newRecords);
             setGpsSmartDialog(null);
+            setGpsImportDateOverride('');
             // Detect names that didn't match roster
             const unlinked = [...new Set(newRecords.filter(r => r.athleteId === 'unknown').map(r => r.playerName))];
             if (unlinked.length > 0) {
@@ -2655,7 +2648,7 @@ export const ReportingHubPage = () => {
                 {/* ── Smart CSV Import Dialog ──────────────────────────────── */}
                 {gpsSmartDialog && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setGpsSmartDialog(null)} />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setGpsSmartDialog(null); setGpsImportDateOverride(''); }} />
                         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
                             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 rounded-t-2xl flex items-center gap-3">
                                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
@@ -2829,16 +2822,30 @@ export const ReportingHubPage = () => {
                                         </table>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                    <p className="text-xs text-slate-400">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setGpsSmartDialog(null)} className="px-4 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">Cancel</button>
-                                        <button
-                                            disabled={!gpsDialogAthleteCol || !gpsDialogDateCol}
-                                            onClick={() => handleSmartImport(gpsDialogAthleteCol, gpsDialogDateCol, gpsDialogPhaseCol)}
-                                            className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                                            Import {gpsSmartDialog.rows.length} Rows
-                                        </button>
+                                <div className="flex flex-col gap-3 pt-2 border-t border-slate-100">
+                                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5">
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Override Import Date</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to read dates from the selected date column. Set a date to apply it to all rows.</p>
+                                        </div>
+                                        <input
+                                            type="date"
+                                            value={gpsImportDateOverride}
+                                            onChange={e => setGpsImportDateOverride(e.target.value)}
+                                            className="text-xs text-slate-700 border border-slate-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs text-slate-400">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
+                                        <div className="flex items-center gap-3">
+                                            <button onClick={() => { setGpsSmartDialog(null); setGpsImportDateOverride(''); }} className="px-4 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">Cancel</button>
+                                            <button
+                                                disabled={!gpsDialogAthleteCol || (!gpsDialogDateCol && !gpsImportDateOverride)}
+                                                onClick={() => handleSmartImport(gpsDialogAthleteCol, gpsDialogDateCol, gpsDialogPhaseCol)}
+                                                className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                                                Import {gpsSmartDialog.rows.length} Rows
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -23,6 +23,62 @@ export interface CsvImportSchema {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Shared date normaliser — handles all common CSV date formats
+// ═══════════════════════════════════════════════════════════════════════
+
+export function normaliseDate(s: string): string {
+    const today = new Date().toISOString().split('T')[0];
+    if (!s) return today;
+    const raw = s.trim();
+    if (!raw) return today;
+
+    // Excel serial number: 5-digit int in plausible range (~1982–2065)
+    if (/^\d{5}$/.test(raw)) {
+        const serial = parseInt(raw, 10);
+        if (serial > 30000 && serial < 60000) {
+            const d = new Date((serial - 25569) * 86400000);
+            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+        }
+    }
+
+    // ISO / YYYY-MM-DD (with optional time component)
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+
+    // Numeric with separator: DD/MM/YYYY, MM/DD/YYYY, DD-MM-YYYY, DD.MM.YYYY, 2-digit years
+    const numDate = raw.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if (numDate) {
+        const [, p1, p2, yr] = numDate;
+        const n1 = parseInt(p1, 10), n2 = parseInt(p2, 10);
+        // Disambiguate: first > 12 → must be DD/MM; second > 12 → must be MM/DD; otherwise assume DD/MM
+        let day: string, month: string;
+        if (n1 > 12)      { day = p1; month = p2; }
+        else if (n2 > 12) { day = p2; month = p1; }
+        else              { day = p1; month = p2; }
+        const fullYear = yr.length === 2 ? (parseInt(yr, 10) < 50 ? `20${yr}` : `19${yr}`) : yr;
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    // Month-name formats: "29 Apr 2026", "29-Apr-2026", "Apr 29, 2026", "April 29 2026"
+    const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const dayFirst = raw.match(/^(\d{1,2})[\s\-]+([a-zA-Z]{3,9})[\s\-,]+(\d{4})/);
+    if (dayFirst) {
+        const mi = MONTHS.findIndex(m => dayFirst[2].toLowerCase().startsWith(m));
+        if (mi >= 0) return `${dayFirst[3]}-${String(mi + 1).padStart(2, '0')}-${dayFirst[1].padStart(2, '0')}`;
+    }
+    const monFirst = raw.match(/^([a-zA-Z]{3,9})[\s\-,]+(\d{1,2})[\s\-,]+(\d{4})/);
+    if (monFirst) {
+        const mi = MONTHS.findIndex(m => monFirst[1].toLowerCase().startsWith(m));
+        if (mi >= 0) return `${monFirst[3]}-${String(mi + 1).padStart(2, '0')}-${monFirst[2].padStart(2, '0')}`;
+    }
+
+    // Fallback: JS Date parser
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+
+    return today;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // Fuzzy matching engine
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -133,16 +189,24 @@ export function autoMapHeaders(
 
 const IDENTITY_FIELDS: CsvField[] = [
     {
-        id: 'athlete', label: 'Athlete / Player Name', required: true, group: 'Identity', type: 'string',
-        aliases: ['athlete', 'player', 'name', 'athlete_name', 'player_name', 'full name', 'surname', 'first name', 'full_name', 'player name', 'athlete name'],
+        id: 'athlete', label: 'Player / Athlete Name', required: true, group: 'Identity', type: 'string',
+        aliases: [
+            'player', 'athlete', 'name', 'player name', 'athlete name', 'full name',
+            'athlete_name', 'player_name', 'full_name', 'surname', 'first name',
+            'staff', 'member', 'participant',
+        ],
     },
     {
         id: 'date', label: 'Date', required: false, group: 'Identity', type: 'date',
-        aliases: ['date', 'session_date', 'training_date', 'day', 'match_date', 'session date', 'training date'],
+        aliases: [
+            'date', 'day', 'session date', 'training date', 'match date',
+            'session_date', 'training_date', 'match_date', 'workout_date',
+            'workout date', 'activity date', 'event date',
+        ],
     },
     {
         id: 'session_type', label: 'Session Type', required: false, group: 'Session', type: 'string',
-        aliases: ['type', 'session_type', 'activity_type', 'session type', 'activity'],
+        aliases: ['type', 'session type', 'session_type', 'activity type', 'activity_type', 'activity', 'category'],
     },
 ];
 
@@ -159,9 +223,13 @@ const ACWR_METHOD_CONFIGS: Record<string, { name: string; fields: CsvField[] }> 
                 aliases: ['duration', 'duration_min', 'minutes', 'session_duration', 'time', 'total_time', 'session duration', 'duration (min)', 'training time'],
             },
             {
-                id: 'srpe', label: 'sRPE Value (direct)', required: false, group: 'Load Data', type: 'number',
+                id: 'srpe', label: 'sRPE / Load Value (direct)', required: false, group: 'Load Data', type: 'number',
                 description: 'Pre-computed sRPE. If present, overrides RPE × Duration.',
-                aliases: ['srpe', 'session_load', 'training_load', 'load', 'srpe_value', 'session load', 'training load', 's-rpe', 'session rpe load'],
+                aliases: [
+                    'load', 'srpe', 'session load', 'training load', 'session_load', 'training_load',
+                    'srpe_value', 's-rpe', 'session rpe load', 'daily load', 'total load',
+                    'au', 'arbitrary units', 'load (au)', 'load au',
+                ],
             },
         ],
     },

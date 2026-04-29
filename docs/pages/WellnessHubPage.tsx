@@ -17,7 +17,7 @@ import { DatabaseService } from '../services/databaseService';
 import ACWRLineChart from '../components/analytics/ACWRLineChart';
 import IndividualizedThresholds from '../components/analytics/IndividualizedThresholds';
 import SmartCsvMapper from '../components/ui/SmartCsvMapper';
-import { getAcwrSchema } from '../utils/csvSchemas';
+import { getAcwrSchema, normaliseDate } from '../utils/csvSchemas';
 import { processAthleteMatching } from '../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../components/ui/UnmatchedAthleteResolver';
 import type { ResolvedEntry } from '../components/ui/UnmatchedAthleteResolver';
@@ -91,6 +91,7 @@ const ACWRMonitoringHub: React.FC = () => {
     const [acwrPendingMatched, setAcwrPendingMatched] = useState<any[]>([]);
     const [acwrPendingUnmatched, setAcwrPendingUnmatched] = useState<any[]>([]);
     const [acwrPendingMapping, setAcwrPendingMapping] = useState<Record<string, string>>({});
+    const [acwrImportDateOverride, setAcwrImportDateOverride] = useState<string>('');
 
     // Teams with ACWR enabled (excluding t_private which is handled per-athlete)
     const enabledTeams = teams.filter(t => t.id !== 't_private' && acwrSettings[t.id]?.enabled);
@@ -534,7 +535,7 @@ const ACWRMonitoringHub: React.FC = () => {
 
             const getVal = (fieldId: string) => mapping[fieldId] ? row[mapping[fieldId]] : '';
 
-            const date = getVal('date') || new Date().toISOString().split('T')[0];
+            const date = acwrImportDateOverride || normaliseDate(getVal('date'));
             const sessionType = (getVal('session_type') || 'training').toLowerCase();
             let value = 0;
 
@@ -1118,6 +1119,16 @@ const ACWRMonitoringHub: React.FC = () => {
                         <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <PlusIcon size={14} /> Log Training Load
                         </button>
+                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-1.5">
+                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Import Date</label>
+                            <input
+                                type="date"
+                                value={acwrImportDateOverride}
+                                onChange={e => setAcwrImportDateOverride(e.target.value)}
+                                className="text-xs text-slate-700 border-none outline-none bg-transparent cursor-pointer"
+                                title="Override date for all imported rows (leave blank to use dates from CSV)"
+                            />
+                        </div>
                         <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <UploadIcon size={14} /> Import CSV
                         </button>

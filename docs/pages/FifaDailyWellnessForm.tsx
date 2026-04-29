@@ -276,9 +276,7 @@ const FifaDailyWellnessForm: React.FC = () => {
             // "Submit for Another Athlete" screen being replaced by deep check prompt.
             const isRedFlag =
                 availability === 'unavailable' ||
-                (responses.health_complaint && responses.health_complaint !== 'no') ||
-                responses.fatigue >= 8 ||
-                (responses.sleep_hours != null && responses.sleep_hours <= 5);
+                (responses.health_complaint && responses.health_complaint !== 'no');
 
             if (isRedFlag) {
                 try {
@@ -298,8 +296,6 @@ const FifaDailyWellnessForm: React.FC = () => {
                             selectedAthleteId, localDate(3)
                         );
                         const todayHealthFlag = responses.health_complaint && responses.health_complaint !== 'no';
-                        const todayFatigueFlag = responses.fatigue >= 8;
-                        const todaySleepFlag  = responses.sleep_hours != null && responses.sleep_hours <= 5;
                         const todayAvailFlag  = availability === 'unavailable';
 
                         const prevMatch = recentDaily.find(r => {
@@ -307,8 +303,6 @@ const FifaDailyWellnessForm: React.FC = () => {
                             if (r.tier === 'weekly') return false;
                             const rr = r.responses || {};
                             return (todayHealthFlag && rr.health_complaint && rr.health_complaint !== 'no') ||
-                                   (todayFatigueFlag && rr.fatigue >= 8) ||
-                                   (todaySleepFlag  && rr.sleep_hours != null && rr.sleep_hours <= 5) ||
                                    (todayAvailFlag  && r.availability === 'unavailable');
                         });
 
