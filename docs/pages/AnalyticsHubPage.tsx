@@ -20,7 +20,8 @@ export const AnalyticsHubPage = () => {
         isKpiWatchlistModalOpen, setIsKpiWatchlistModalOpen,
         kpiDefinitions, kpiRecords, scheduledSessions, loadRecords, habitRecords,
         setAthleteAssessments,
-        acwrSettings, isLoading
+        acwrSettings, isLoading,
+        periodizationPlans,
     } = useAppState();
 
     useEffect(() => {
@@ -233,6 +234,7 @@ export const AnalyticsHubPage = () => {
                         selectedSubject={selectedSubject}
                         acwrSettings={acwrSettings}
                         teams={teams}
+                        periodizationPlans={periodizationPlans}
                     />
                 </div>
             )}

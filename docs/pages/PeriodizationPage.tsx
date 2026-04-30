@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import {
     CalendarDays, Plus, ChevronRight, ArrowLeft, Trash2,
-    Users, User, GanttChart, LayoutGrid, Clock, Filter, X
+    Users, User, GanttChart, LayoutGrid, Clock, Filter, X, Layers
 } from 'lucide-react';
 import { CreatePlanModal } from '../components/periodization/CreatePlanModal';
 import { TimelineView } from '../components/periodization/TimelineView';
@@ -11,7 +11,7 @@ import { CardView } from '../components/periodization/CardView';
 import { AddPhaseModal } from '../components/periodization/AddPhaseModal';
 import { AddBlockModal } from '../components/periodization/AddBlockModal';
 import { AddPlanEventModal } from '../components/periodization/AddPlanEventModal';
-import { formatDateShort } from '../utils/periodizationUtils';
+import { formatDateShort, DEFAULT_MODALITY_PRESETS } from '../utils/periodizationUtils';
 
 export const PeriodizationPage = () => {
     const {
@@ -26,6 +26,24 @@ export const PeriodizationPage = () => {
     // Filter state for plan list
     const [filterType, setFilterType] = useState('all'); // 'all' | 'team' | 'individual'
     const [filterTargetId, setFilterTargetId] = useState('');
+
+    // Modality editor state
+    const [isEditModalitiesOpen, setIsEditModalitiesOpen] = useState(false);
+    const [newModality, setNewModality] = useState('');
+
+    const addModality = (name?: string) => {
+        const m = (name || newModality).trim();
+        if (!m) return;
+        const current = activePlan?.modalities || [];
+        if (current.includes(m)) return;
+        handleUpdatePlan(activePlan.id, { modalities: [...current, m] });
+        if (!name) setNewModality('');
+    };
+
+    const removeModality = (mod: string) => {
+        const current = activePlan?.modalities || [];
+        handleUpdatePlan(activePlan.id, { modalities: current.filter(m => m !== mod) });
+    };
 
     const allAthletes = useMemo(() =>
         teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamName: t.name }))),
@@ -315,6 +333,70 @@ export const PeriodizationPage = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Modality editor button */}
+                    {isEditModalitiesOpen && (
+                        <div className="fixed inset-0 z-40" onClick={() => setIsEditModalitiesOpen(false)} />
+                    )}
+                    <div className="relative">
+                        <button
+                            onClick={() => { setIsEditModalitiesOpen(v => !v); setNewModality(''); }}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${isEditModalitiesOpen ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                            title="Edit training modalities for this plan"
+                        >
+                            <Layers size={11} />
+                            Modalities
+                        </button>
+
+                        {isEditModalitiesOpen && (
+                            <div className="absolute right-0 top-full mt-1.5 z-50 w-72 bg-white rounded-xl border border-slate-200 shadow-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Training Modalities</span>
+                                    <button onClick={() => setIsEditModalitiesOpen(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><X size={12} /></button>
+                                </div>
+
+                                {/* Current modalities */}
+                                <div className="flex flex-wrap gap-1.5 mb-2 min-h-[24px]">
+                                    {(activePlan.modalities || []).length === 0 && (
+                                        <span className="text-[10px] text-slate-400 italic">No modalities — add one below</span>
+                                    )}
+                                    {(activePlan.modalities || []).map(mod => (
+                                        <span key={mod} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-700 border border-slate-200">
+                                            {mod}
+                                            <button onClick={() => removeModality(mod)} className="hover:text-red-500 transition-colors leading-none"><X size={9} /></button>
+                                        </span>
+                                    ))}
+                                </div>
+
+                                {/* Add custom */}
+                                <div className="flex gap-1.5 mb-2">
+                                    <input
+                                        className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                                        placeholder="Custom modality..."
+                                        value={newModality}
+                                        onChange={e => setNewModality(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addModality()}
+                                    />
+                                    <button onClick={() => addModality()} className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-medium">Add</button>
+                                </div>
+
+                                {/* Preset quick-add */}
+                                {DEFAULT_MODALITY_PRESETS.filter(p => !(activePlan.modalities || []).includes(p)).length > 0 && (
+                                    <div>
+                                        <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Quick add</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {DEFAULT_MODALITY_PRESETS.filter(p => !(activePlan.modalities || []).includes(p)).map(preset => (
+                                                <button key={preset} onClick={() => addModality(preset)}
+                                                    className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors">
+                                                    + {preset}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex bg-slate-100 p-0.5 rounded-lg">
                         {[{ mode: 'timeline', icon: GanttChart, label: 'Timeline' }, { mode: 'cards', icon: LayoutGrid, label: 'Cards' }].map(({ mode, icon: Icon, label }) => (
                             <button key={mode} onClick={() => handleUpdatePlan(activePlan.id, { viewMode: mode })}
