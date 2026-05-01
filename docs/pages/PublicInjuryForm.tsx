@@ -241,6 +241,12 @@ const PublicInjuryForm = () => {
                     <div className="flex-1">
                         <h2 className="text-2xl font-black text-slate-900 mb-2">Select Athlete</h2>
                         <p className="text-slate-500 mb-8 font-medium">Choose the athlete this injury report is for.</p>
+                        {athletes.length === 0 && (
+                            <div className="py-10 text-center text-slate-400">
+                                <p className="text-sm font-medium">No athletes found for this team.</p>
+                                <p className="text-xs mt-1">Ask your coach to add athletes to the team roster first.</p>
+                            </div>
+                        )}
                         <div className="space-y-3">
                             {athletes.map(a => (
                                 <button key={a.id} onClick={() => setSelectedAthleteId(a.id)}

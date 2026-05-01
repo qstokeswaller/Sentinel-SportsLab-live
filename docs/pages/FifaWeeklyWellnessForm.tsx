@@ -476,6 +476,12 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                     {/* Athlete selection (team-wide mode) */}
                     {stepId === 'athlete_select' && (
                         <div className="space-y-2.5">
+                            {athletes.length === 0 && (
+                                <div className="py-10 text-center text-slate-400">
+                                    <p className="text-sm font-medium">No athletes found for this team.</p>
+                                    <p className="text-xs mt-1">Ask your coach to add athletes to the team roster.</p>
+                                </div>
+                            )}
                             {athletes.map(a => (
                                 <button key={a.id} onClick={() => handleSelectAthlete(a.id)}
                                     className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${

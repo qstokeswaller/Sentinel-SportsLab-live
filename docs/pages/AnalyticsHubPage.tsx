@@ -90,8 +90,14 @@ export const AnalyticsHubPage = () => {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangleIcon size={18} className="text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                        <h3 className="text-sm font-semibold text-amber-900">Athlete selection required</h3>
-                        <p className="text-xs text-amber-700 mt-1">Please select an athlete from the dropdown above to unlock diagnostic terminals and view performance data.</p>
+                        <h3 className="text-sm font-semibold text-amber-900">
+                            {teams.length === 0 ? 'No teams found' : 'Athlete selection required'}
+                        </h3>
+                        <p className="text-xs text-amber-700 mt-1">
+                            {teams.length === 0
+                                ? 'Add a team and athletes from the Roster page first, then return here to view analytics.'
+                                : 'Please select an athlete from the dropdown above to unlock diagnostic terminals and view performance data.'}
+                        </p>
                     </div>
                 </div>
             )}

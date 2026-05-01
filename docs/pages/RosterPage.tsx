@@ -129,7 +129,15 @@ export const RosterPage = () => {
                     <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</span>
                 </div>
 
-                {teams.map((team, teamIdx) => {
+                {teams.length === 0 ? (
+                    <div className="py-16 text-center">
+                        <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+                            <UserPlusIcon size={24} className="text-indigo-300" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-500">No teams yet</p>
+                        <p className="text-xs text-slate-400 mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
+                    </div>
+                ) : teams.map((team, teamIdx) => {
                     const isCollapsed = collapsedTeams.has(team.id);
                     const toggleCollapse = () => setCollapsedTeams(prev => {
                         const next = new Set(prev);
@@ -235,6 +243,15 @@ export const RosterPage = () => {
             </div>
 
             {/* Team cards grid */}
+            {teams.length === 0 ? (
+                <div className="py-20 text-center">
+                    <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+                        <UserPlusIcon size={24} className="text-indigo-300" />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-500">No teams yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
+                </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {teams.map(team => {
                     const players   = [...(team.players || [])].sort((a, b) => a.name.localeCompare(b.name));
@@ -316,6 +333,7 @@ export const RosterPage = () => {
                     );
                 })}
             </div>
+            )}
 
             <div className="text-xs text-slate-400">
                 {allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}
