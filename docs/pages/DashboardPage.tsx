@@ -632,14 +632,15 @@ export const DashboardPage = () => {
                                                 </select>
                                                 <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                             </div>
-                                            {heatmapTeamFilter !== 'prompt' && (
-                                                <Link
-                                                    to="/wellness?section=Questionnaire+Data"
-                                                    className="text-xs font-medium text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
-                                                >
-                                                    Open Questionnaire Data <ExternalLinkIcon size={11} />
-                                                </Link>
-                                            )}
+                                            {heatmapTeamFilter !== 'prompt' && (() => {
+                                                const tid = heatmapTeamFilter !== 'All Teams' ? (teams.find(t => t.name === heatmapTeamFilter)?.id || '') : '';
+                                                const href = `/wellness?section=Questionnaire+Data${tid ? `&teamId=${tid}` : ''}`;
+                                                return (
+                                                    <Link to={href} className="text-xs font-medium text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                                        Open Questionnaire Data <ExternalLinkIcon size={11} />
+                                                    </Link>
+                                                );
+                                            })()}
                                         </div>
 
                                         {heatmapTeamFilter === 'prompt' ? (
@@ -662,6 +663,10 @@ export const DashboardPage = () => {
                                             const formattedDate = mostRecentDate
                                                 ? new Date(mostRecentDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                                                 : '';
+                                            const selectedTeamId = heatmapTeamFilter !== 'All Teams'
+                                                ? (teams.find(t => t.name === heatmapTeamFilter)?.id || '')
+                                                : '';
+                                            const wellnessLink = `/wellness?section=Questionnaire+Data${selectedTeamId ? `&teamId=${selectedTeamId}` : ''}`;
 
                                             return (
                                                 <>
@@ -784,7 +789,7 @@ export const DashboardPage = () => {
                                                                             })}
                                                                             {hiddenCount > 0 && (
                                                                                 <Link
-                                                                                    to="/wellness?section=Questionnaire+Data"
+                                                                                    to={wellnessLink}
                                                                                     className="flex items-center justify-center py-1 border border-dashed border-rose-200 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 hover:border-rose-300 transition-colors"
                                                                                 >
                                                                                     + {hiddenCount} more flagged athlete{hiddenCount > 1 ? 's' : ''}

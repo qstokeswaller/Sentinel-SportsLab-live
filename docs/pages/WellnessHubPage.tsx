@@ -1457,6 +1457,8 @@ export const WellnessHubPage: React.FC = () => {
     const { isLoading } = useAppState();
     const [searchParams] = useSearchParams();
 
+    const urlTeamId = searchParams.get('teamId') || undefined;
+
     useEffect(() => {
         const section = searchParams.get('section');
         if (section) setActiveSection(section);
@@ -1483,7 +1485,7 @@ export const WellnessHubPage: React.FC = () => {
                             <span className="text-xs font-medium text-slate-400">Loading {activeSection.toLowerCase()}...</span>
                         </div>
                     )}
-                    {activeSection === 'Questionnaire Data' && <WellnessHub />}
+                    {activeSection === 'Questionnaire Data' && <WellnessHub initialTeamId={urlTeamId} />}
                     {activeSection === 'Medical Reports' && <MedicalReports />}
                     {activeSection === 'Injury Report' && <InjuryReport />}
                     {activeSection === 'ACWR Monitoring' && <ACWRMonitoringHub />}

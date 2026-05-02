@@ -85,7 +85,7 @@ interface VizBlock {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const WellnessHub: React.FC = () => {
+const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) => {
     const {
         teams,
         athletes,
@@ -100,7 +100,14 @@ const WellnessHub: React.FC = () => {
     const [viewMode, setViewMode] = useState<'selection' | 'dashboard' | 'athlete' | 'templates' | 'share'>('selection');
     const [previewTemplate, setPreviewTemplate] = useState<'daily' | 'weekly' | null>(null);
     const [expandedPreviewQ, setExpandedPreviewQ] = useState<string | null>(null);
-    const [selectedTeamId, setSelectedTeamId]     = useState<string | null>(null);
+    const [selectedTeamId, setSelectedTeamId]     = useState<string | null>(initialTeamId || null);
+
+    React.useEffect(() => {
+        if (initialTeamId) {
+            setSelectedTeamId(initialTeamId);
+            setViewMode('dashboard');
+        }
+    }, [initialTeamId]);
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
     const [dashboardTab, setDashboardTab]           = useState<'overview' | 'insights'>('overview');
 
