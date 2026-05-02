@@ -1,11 +1,13 @@
 // @ts-nocheck
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import {
     AlertTriangleIcon, CalendarIcon, FilterIcon,
     ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, UsersIcon, PlusIcon, CheckCircle2Icon,
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
     Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
+    ExternalLinkIcon,
 } from 'lucide-react';
 import InterventionModal from '../components/analytics/InterventionModal';
 import { DatabaseService } from '../services/databaseService';
@@ -64,6 +66,85 @@ export const DashboardPage = () => {
         });
         return ids;
     }, [acwrSettings, teams]);
+
+    // ── Wellness Summary data ─────────────────────────────────────────────
+    const wellnessSummary = React.useMemo(() => {
+        const resolveAvail = (r) => {
+            const top = r.availability;
+            if (top === 'available' || top === 'modified' || top === 'unavailable') return top;
+            const raw = (typeof top === 'string' && top) || r.responses?.availability;
+            if (!raw) return undefined;
+            const s = String(raw).toLowerCase();
+            if (s.includes('fully available') || s === 'available') return 'available';
+            if (s.includes('modified')) return 'modified';
+            if (s.includes('unavailable')) return 'unavailable';
+        };
+
+        const dailyResponses = (wellnessResponses || []).filter(r => !r.tier || r.tier === 'daily');
+        const teamPlayers = heatmapTeamFilter === 'prompt' ? []
+            : heatmapTeamFilter === 'All Teams'
+                ? teams.flatMap(t => t.players || [])
+                : (teams.find(t => t.name === heatmapTeamFilter)?.players || []);
+        const playerIds = new Set(teamPlayers.map(p => p.id));
+
+        const latestByAthlete = new Map();
+        for (const r of [...dailyResponses].sort((a, b) =>
+            (a.session_date || a.date || '').localeCompare(b.session_date || b.date || ''))) {
+            const aid = r.athlete_id || r.athleteId;
+            if (aid && (playerIds.size === 0 || playerIds.has(aid))) latestByAthlete.set(aid, r);
+        }
+        const latest = [...latestByAthlete.values()];
+
+        const mostRecentDate = latest.reduce((max, r) => {
+            const d = (r.session_date || r.date || '').split('T')[0];
+            return d > max ? d : max;
+        }, '');
+        const daysSince = mostRecentDate
+            ? Math.floor((Date.now() - new Date(mostRecentDate).getTime()) / 86400000)
+            : null;
+
+        const METRICS = [
+            { key: 'fatigue',       label: 'Fatigue',       max: 10, color: '#f59e0b' },
+            { key: 'soreness',      label: 'Soreness',      max: 10, color: '#ef4444' },
+            { key: 'sleep_quality', label: 'Sleep Quality', max: 10, color: '#06b6d4' },
+            { key: 'stress',        label: 'Stress',        max: 10, color: '#ec4899' },
+            { key: 'mood',          label: 'Mood',          max: 10, color: '#8b5cf6' },
+            { key: 'sleep_hours',   label: 'Sleep (hrs)',   max: 12, color: '#0ea5e9' },
+        ];
+        const metricAvgs = METRICS.map(m => {
+            const vals = latest.map(r => r.responses?.[m.key]).filter(v => typeof v === 'number');
+            const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+            return { ...m, avg };
+        });
+
+        const flagged = latest.filter(r => {
+            const resp = r.responses || {};
+            return (r.injury_report?.areas?.length > 0)
+                || resolveAvail(r) === 'unavailable'
+                || resp.fatigue >= 8 || resp.soreness >= 8 || resp.stress >= 8
+                || (resp.sleep_hours != null && resp.sleep_hours <= 5);
+        }).map(r => {
+            const aid = r.athlete_id || r.athleteId;
+            const player = teamPlayers.find(p => p.id === aid);
+            const resp = r.responses || {};
+            const isCritical = (r.injury_report?.areas?.length > 0) || resolveAvail(r) === 'unavailable';
+            let reason = r.injury_report?.areas?.length > 0 ? 'INJURY REPORTED'
+                : resolveAvail(r) === 'unavailable' ? 'UNAVAILABLE'
+                : resp.fatigue >= 8 ? `FATIGUE ${resp.fatigue}/10`
+                : resp.soreness >= 8 ? `SORENESS ${resp.soreness}/10`
+                : resp.stress >= 8 ? `STRESS ${resp.stress}/10`
+                : `SLEEP ${resp.sleep_hours}H`;
+            return { r, player, reason, isCritical, aid };
+        }).sort((a, b) => (b.isCritical ? 1 : 0) - (a.isCritical ? 1 : 0));
+
+        const total = teamPlayers.length;
+        const responseCount = latest.length;
+        const availableCount = latest.filter(r => resolveAvail(r) === 'available').length;
+        const modifiedCount  = latest.filter(r => resolveAvail(r) === 'modified').length;
+        const unavailableCount = latest.filter(r => resolveAvail(r) === 'unavailable').length;
+
+        return { latest, mostRecentDate, daysSince, metricAvgs, flagged, total, responseCount, availableCount, modifiedCount, unavailableCount };
+    }, [wellnessResponses, teams, heatmapTeamFilter]);
 
     const [activePopover, setActivePopover] = React.useState(null);
     const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
@@ -518,148 +599,208 @@ export const DashboardPage = () => {
 
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
-                                {/* Readiness Heatmap */}
+                                {/* Wellness Summary */}
                                 <div data-tour="heatmap" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
                                     <button
                                         onClick={toggleHeatmapCollapsed}
                                         className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 transition-colors shrink-0"
                                     >
                                         <div>
-                                            <h4 className="text-sm font-semibold text-slate-900">Readiness Heatmap</h4>
+                                            <h4 className="text-sm font-semibold text-slate-900">Wellness Summary</h4>
                                             <p className="text-xs text-slate-500 mt-0.5">
-                                                {dashboardFilterTarget === 'All Athletes' ? 'Daily wellness-based readiness by athlete' : `Deep-dive readiness — ${dashboardFilterTarget}`}
+                                                {heatmapTeamFilter === 'prompt' ? 'Select a team to view latest questionnaire responses'
+                                                    : heatmapTeamFilter === 'All Teams' ? 'Most recent daily check-in responses — all teams'
+                                                    : `Most recent daily check-in responses — ${heatmapTeamFilter}`}
                                             </p>
                                         </div>
                                         <ChevronDownIcon size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isHeatmapCollapsed ? '-rotate-90' : ''}`} />
                                     </button>
-                                    {!isHeatmapCollapsed && <div className="px-5 pb-5 space-y-4 flex-1 flex flex-col">
 
-                                    {/* Controls */}
-                                    <div className="flex justify-between items-end border-t border-slate-100 pt-3">
-                                        <div className="flex-1">
-                                            {dashboardFilterTarget === 'All Athletes' && (
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-medium text-slate-500">Team filter</label>
-                                                    <div className="relative group/filter max-w-[180px]">
-                                                        <select value={heatmapTeamFilter} onChange={(e) => setHeatmapTeamFilter(e.target.value)}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none appearance-none pr-8 hover:border-slate-300 transition-all cursor-pointer"
-                                                        >
-                                                            <option>All Teams</option>
-                                                            {teams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-                                                        </select>
-                                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                                            <ChevronDownIcon size={12} />
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                    {!isHeatmapCollapsed && (
+                                    <div className="px-5 pb-4 space-y-2">
+                                        {/* Team selector + link row */}
+                                        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                                            <div className="relative">
+                                                <select
+                                                    value={heatmapTeamFilter}
+                                                    onChange={(e) => setHeatmapTeamFilter(e.target.value)}
+                                                    className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none appearance-none pr-7 cursor-pointer hover:border-slate-300 transition-all"
+                                                >
+                                                    <option value="prompt">— select team —</option>
+                                                    <option value="All Teams">All Teams</option>
+                                                    {teams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                                                </select>
+                                                <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                            </div>
+                                            {heatmapTeamFilter !== 'prompt' && (
+                                                <Link
+                                                    to="/wellness?section=Questionnaire+Data"
+                                                    className="text-xs font-medium text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                                                >
+                                                    Open Questionnaire Data <ExternalLinkIcon size={11} />
+                                                </Link>
                                             )}
                                         </div>
-                                        <div className="flex flex-col items-end gap-1 text-right">
-                                            <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
-                                                {[
-                                                    { color: '#10b981', label: 'Optimal' },
-                                                    { color: '#34d399', label: 'Good' },
-                                                    { color: '#a3e635', label: 'Fair' },
-                                                    { color: '#fde047', label: 'Caution' },
-                                                    { color: '#fb923c', label: 'Fatigue' },
-                                                    { color: '#f97316', label: 'Overreaching' },
-                                                    { color: '#f43f5e', label: 'High Risk' },
-                                                    { color: '#e2e8f0', label: 'No data' },
-                                                ].map(({ color, label }) => (
-                                                    <div key={label} className="flex items-center gap-1.5">
-                                                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }}></div>
-                                                        <span className="text-[10px] text-slate-400">{label}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {heatmapTeamFilter === 'prompt' ? (
-                                        <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 text-center">
-                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
-                                                <UsersIcon size={18} className="text-slate-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-600">Select a team to display</p>
-                                                <p className="text-xs text-slate-400 mt-0.5">Use the Team filter above to load the heatmap</p>
-                                            </div>
-                                        </div>
-                                    ) : null}
-                                    <div className={`grid grid-cols-6 sm:grid-cols-10 gap-2 relative ${heatmapTeamFilter === 'prompt' ? 'hidden' : ''}`}>
-                                        {isLoading && (
-                                            <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 rounded-lg col-span-full">
-                                                <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                                <span className="text-[10px] font-medium text-slate-400">Loading readiness heatmap...</span>
-                                            </div>
-                                        )}
-                                        {(() => {
-                                            // Build per-athlete baselines from wellnessResponses (daily tier only)
-                                            const dailyResponses = (wellnessResponses || []).filter(r => !r.tier || r.tier === 'daily');
-                                            const baselineMap = new Map();
-                                            const groupedByAthlete = new Map();
-                                            for (const r of dailyResponses) {
-                                                const aid = r.athlete_id || r.athleteId;
-                                                if (!aid || !r.responses) continue;
-                                                if (!groupedByAthlete.has(aid)) groupedByAthlete.set(aid, []);
-                                                groupedByAthlete.get(aid).push(r.responses);
-                                            }
-                                            for (const [aid, respObjects] of groupedByAthlete.entries()) {
-                                                baselineMap.set(aid, computeAthleteBaseline(respObjects));
-                                            }
 
-                                            // Get most recent daily response per athlete
-                                            const latestByAthlete = new Map();
-                                            for (const r of [...dailyResponses].sort((a, b) =>
-                                                (a.session_date || a.date || '').localeCompare(b.session_date || b.date || ''))) {
-                                                const aid = r.athlete_id || r.athleteId;
-                                                if (aid) latestByAthlete.set(aid, r);
-                                            }
+                                        {heatmapTeamFilter === 'prompt' ? (
+                                            <div className="py-10 text-center">
+                                                <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-2.5">
+                                                    <UsersIcon size={16} className="text-slate-400" />
+                                                </div>
+                                                <p className="text-sm font-medium text-slate-500">Select a team to display</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">Use the dropdown above to load wellness data</p>
+                                            </div>
+                                        ) : (() => {
+                                            const { mostRecentDate, daysSince, metricAvgs, flagged, total, responseCount, availableCount, modifiedCount, unavailableCount } = wellnessSummary;
+                                            const pctAvail   = total ? (availableCount   / total) * 100 : 0;
+                                            const pctMod     = total ? (modifiedCount    / total) * 100 : 0;
+                                            const pctUnavail = total ? (unavailableCount / total) * 100 : 0;
+                                            const PREVIEW = 5;
+                                            const visible = flagged.slice(0, PREVIEW);
+                                            const hiddenCount = flagged.length - PREVIEW;
+                                            const isStale = daysSince !== null && daysSince > 3;
+                                            const formattedDate = mostRecentDate
+                                                ? new Date(mostRecentDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                : '';
 
-                                            return teams.flatMap(team => team.players.map(p => ({ ...p, teamName: team.name })))
-                                                .filter(p => heatmapTeamFilter === 'All Teams' || p.teamName === heatmapTeamFilter)
-                                                .sort((a, b) => {
-                                                    const rA = latestByAthlete.get(a.id);
-                                                    const rB = latestByAthlete.get(b.id);
-                                                    const sA = rA ? (computeComposite(rA.responses || {}, baselineMap.get(a.id)) ?? 5) : 5;
-                                                    const sB = rB ? (computeComposite(rB.responses || {}, baselineMap.get(b.id)) ?? 5) : 5;
-                                                    return sA - sB; // ascending: worst first (most attention needed)
-                                                })
-                                                .map(p => {
-                                                    const isSelected = dashboardFilterTarget === 'All Athletes' || p.name === dashboardFilterTarget;
-                                                    const isStrictFocus = p.name === dashboardFilterTarget;
-                                                    const lastR = latestByAthlete.get(p.id);
-                                                    const score = lastR
-                                                        ? (computeComposite(lastR.responses || {}, baselineMap.get(p.id)) ?? null)
-                                                        : null;
-                                                    const dotColor = scoreToHex(score);
-                                                    const initials = p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                                                    const scoreLabel = score !== null ? `${score.toFixed(1)}/10` : 'No data';
-                                                    const dateLabel = lastR ? (lastR.session_date || lastR.date || '').split('T')[0] : '—';
+                                            return (
+                                                <>
+                                                    {/* Stale data warning */}
+                                                    {isStale && (
+                                                        <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                            <AlertTriangleIcon size={12} className="text-amber-500 shrink-0" />
+                                                            <p className="text-xs text-amber-700">
+                                                                Last data collected on <strong>{formattedDate}</strong> — may be outdated
+                                                            </p>
+                                                        </div>
+                                                    )}
 
-                                                    return (
-                                                        <div key={p.id} className={`group relative transition-all duration-300 ${isSelected ? 'opacity-100 scale-100' : 'opacity-20 scale-90 grayscale'}`}>
-                                                            <div onClick={() => setDashboardFilterTarget(isStrictFocus ? 'All Athletes' : p.name)}
-                                                                style={{ backgroundColor: dotColor }}
-                                                                className={`aspect-square rounded-xl shadow-sm border-2 transition-all hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center ${isStrictFocus ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-white'}`}
-                                                            >
-                                                                <span className="text-[10px] font-semibold text-white mix-blend-overlay opacity-80">{initials}</span>
+                                                    {responseCount === 0 ? (
+                                                        <div className="py-8 text-center text-slate-400">
+                                                            <p className="text-sm font-medium">No wellness responses yet</p>
+                                                            <p className="text-xs mt-1">Responses will appear once athletes complete their check-ins.</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            {/* Compact stat strip: date + counts in one row */}
+                                                            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex-wrap">
+                                                                {formattedDate && (
+                                                                    <>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                                                                            <span className="text-[10px] font-semibold text-slate-500">
+                                                                                {formattedDate}
+                                                                                {!isStale && daysSince === 0 && <span className="text-emerald-600 ml-1">· Today</span>}
+                                                                                {!isStale && daysSince === 1 && <span className="text-slate-400 ml-1">· Yesterday</span>}
+                                                                                {!isStale && daysSince > 1 && <span className="text-slate-400 ml-1">· {daysSince}d ago</span>}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="w-px h-3 bg-slate-200 shrink-0" />
+                                                                    </>
+                                                                )}
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="text-xs font-bold text-slate-700">{responseCount}</span>
+                                                                    <span className="text-[10px] text-slate-400">responses</span>
+                                                                </div>
+                                                                <div className="w-px h-3 bg-slate-200 shrink-0" />
+                                                                {[
+                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'available',   color: 'text-emerald-600' },
+                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'modified',    color: 'text-amber-600' },
+                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavailable', color: 'text-rose-600' },
+                                                                ].map(({ dot, val, label, color }) => (
+                                                                    <div key={label} className="flex items-center gap-1">
+                                                                        <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                                                                        <span className={`text-xs font-bold ${color}`}>{val}</span>
+                                                                        <span className="text-[10px] text-slate-400">{label}</span>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                            <div className={`absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-medium px-2.5 py-2 rounded-lg whitespace-nowrap transition-all z-10 shadow-xl flex flex-col items-center gap-1 border border-slate-700 ${isStrictFocus ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-                                                                <div className="text-slate-400 leading-none mb-0.5 text-[9px]">{p.teamName}</div>
-                                                                <div>{p.name}</div>
-                                                                <div className="flex gap-2 text-slate-400">
-                                                                    <span>Readiness: {scoreLabel}</span>
-                                                                    <span className="w-px h-2 bg-slate-700"></span>
-                                                                    <span>{dateLabel}</span>
+
+                                                            {/* Availability bar */}
+                                                            <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-100">
+                                                                <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${pctAvail}%` }} />
+                                                                <div className="bg-amber-400 transition-all duration-700" style={{ width: `${pctMod}%` }} />
+                                                                <div className="bg-rose-500 transition-all duration-700" style={{ width: `${pctUnavail}%` }} />
+                                                            </div>
+
+                                                            {/* Two-column body: Team Averages | Priority Alerts */}
+                                                            <div className="grid grid-cols-2 gap-3 pt-1">
+                                                                {/* Left: Team Averages */}
+                                                                <div>
+                                                                    <div className="flex items-center gap-1.5 mb-2">
+                                                                        <ActivityIcon size={11} className="text-amber-500" />
+                                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Team Averages</span>
+                                                                    </div>
+                                                                    <div className="space-y-1.5">
+                                                                        {metricAvgs.map(m => (
+                                                                            <div key={m.key} className="flex items-center gap-2">
+                                                                                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide w-16 shrink-0">{m.label}</span>
+                                                                                <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                                                    {m.avg !== null && (
+                                                                                        <div className="h-full rounded-full transition-all duration-700"
+                                                                                            style={{ width: `${(m.avg / m.max) * 100}%`, backgroundColor: m.color }} />
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="text-[9px] font-bold text-slate-600 w-7 text-right shrink-0">
+                                                                                    {m.avg !== null ? (m.key === 'sleep_hours' ? `${m.avg.toFixed(1)}h` : m.avg.toFixed(1)) : '—'}
+                                                                                </span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Right: Priority Alerts */}
+                                                                <div>
+                                                                    <div className="flex items-center gap-1.5 mb-2">
+                                                                        <AlertTriangleIcon size={11} className="text-rose-500" />
+                                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Priority Alerts</span>
+                                                                        {flagged.length > 0 && (
+                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600">{flagged.length} flagged</span>
+                                                                        )}
+                                                                    </div>
+                                                                    {flagged.length === 0 ? (
+                                                                        <div className="flex flex-col items-center justify-center py-4 text-center">
+                                                                            <CheckCircle2Icon size={18} className="text-emerald-400 mb-1" />
+                                                                            <p className="text-xs font-medium text-slate-500">All clear</p>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="space-y-1">
+                                                                            {visible.map(({ r, player, reason, isCritical, aid }) => {
+                                                                                const initials = player
+                                                                                    ? player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                                                                                    : '??';
+                                                                                return (
+                                                                                    <div key={aid} className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2 py-1.5 border border-slate-100">
+                                                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
+                                                                                        <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[7px] font-bold shrink-0">
+                                                                                            {initials}
+                                                                                        </div>
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <p className="text-[10px] font-semibold text-slate-800 truncate leading-tight">{player?.name || 'Unknown'}</p>
+                                                                                            <p className="text-[8px] font-bold text-rose-500 uppercase tracking-wide leading-tight">{reason}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                            {hiddenCount > 0 && (
+                                                                                <Link
+                                                                                    to="/wellness?section=Questionnaire+Data"
+                                                                                    className="flex items-center justify-center py-1 border border-dashed border-rose-200 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 hover:border-rose-300 transition-colors"
+                                                                                >
+                                                                                    + {hiddenCount} more flagged athlete{hiddenCount > 1 ? 's' : ''}
+                                                                                </Link>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            {isStrictFocus && <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[8px] font-medium text-indigo-600">Focus</div>}
-                                                        </div>
-                                                    );
-                                                });
+                                                        </>
+                                                    )}
+                                                </>
+                                            );
                                         })()}
                                     </div>
-                                </div>}
+                                    )}
                                 </div>
                             </div>
                         </div>

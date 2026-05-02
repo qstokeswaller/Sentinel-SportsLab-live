@@ -1,5 +1,6 @@
 // @ts-nocheck
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
@@ -1454,6 +1455,12 @@ const ACWRMonitoringHub: React.FC = () => {
 export const WellnessHubPage: React.FC = () => {
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const { isLoading } = useAppState();
+    const [searchParams] = useSearchParams();
+
+    useEffect(() => {
+        const section = searchParams.get('section');
+        if (section) setActiveSection(section);
+    }, []);
 
     if (activeSection) {
         return (
