@@ -72,6 +72,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [recentDeletions, setRecentDeletions] = useState([]); // Track deletions for Undo
 
+    // ── Dark Mode ─────────────────────────────────────────────────────────────
+    const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+        try { return localStorage.getItem('sentinel_dark_mode') === 'true'; } catch { return false; }
+    });
+    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+    useEffect(() => {
+        const root = document.documentElement;
+        if (isDarkMode) root.classList.add('dark');
+        else root.classList.remove('dark');
+        try { localStorage.setItem('sentinel_dark_mode', String(isDarkMode)); } catch {}
+    }, [isDarkMode]);
 
     // --- WATTBIKE HUB STATE ---
     const [wattbikeSessions, setWattbikeSessions] = useState(DEFAULT_WATTBIKE_SESSIONS);
@@ -202,7 +213,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 riskColor = 'text-rose-500';
             } else if (rs >= 3.37 && rs < 4.47) {
                 riskText = 'Moderate Risk';
-                riskColor = 'text-orange-500';
+                riskColor = 'text-amber-500';
             }
 
             return {
@@ -1016,12 +1027,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             'GPP': 'bg-emerald-50 border-emerald-200 text-emerald-700',
             'Technical': 'bg-slate-100 border-slate-200 text-slate-700',
             'Tactical': 'bg-slate-800 border-slate-900 text-slate-100',
-            'Recovery': 'bg-blue-50 border-blue-100 text-blue-600',
-            'Rehab': 'bg-orange-50 border-orange-200 text-orange-700',
-            'Competition': 'bg-red-600 border-red-700 text-white',
-            'Match Prep': 'bg-red-50 border-red-200 text-red-700',
-            'Maintenance': 'bg-gray-50 border-gray-200 text-gray-700',
-            'Tempo': 'bg-lime-50 border-lime-200 text-lime-700'
+            'Recovery': 'bg-sky-50 border-sky-100 text-sky-600',
+            'Rehab': 'bg-amber-50 border-amber-200 text-amber-700',
+            'Competition': 'bg-rose-600 border-rose-700 text-white',
+            'Match Prep': 'bg-rose-50 border-rose-200 text-rose-700',
+            'Maintenance': 'bg-slate-100 border-slate-200 text-slate-600',
+            'Tempo': 'bg-sky-50 border-sky-200 text-sky-700'
         };
         return map[phase] || 'bg-slate-50 border-slate-100 text-slate-500';
     };
@@ -1243,9 +1254,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 title: 'ALERT: Training Monotony High',
                 message: `Load variance is too low (${monotony}). The athlete is being exposed to high constant strain.`,
                 action: 'Introduce a low-intensity active recovery day or change movement patterns.',
-                color: 'text-orange-600',
-                bg: 'bg-orange-50',
-                border: 'border-orange-100'
+                color: 'text-amber-600',
+                bg: 'bg-amber-50',
+                border: 'border-amber-100'
             };
         }
         if (wellness.energy < 4 || wellness.sleep < 5) {
@@ -1336,8 +1347,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const getLoadColor = (load) => {
         switch (load) {
-            case 'Maximal': return 'bg-red-500 text-white';
-            case 'High': return 'bg-orange-400 text-white';
+            case 'Maximal': return 'bg-rose-600 text-white';
+            case 'High': return 'bg-rose-500 text-white';
             case 'Medium': return 'bg-amber-400 text-white';
             case 'Low': return 'bg-emerald-400 text-white';
             default: return 'bg-slate-400 text-white';
@@ -2877,6 +2888,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleAddPlanEvent,
         handleUpdatePlanEvent,
         handleDeletePlanEvent,
+        isDarkMode,
+        toggleDarkMode,
     };
 
     return (

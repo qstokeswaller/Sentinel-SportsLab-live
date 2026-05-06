@@ -110,10 +110,10 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
         if (auto && auto.csvColumn === current) {
             if (auto.confidence >= 0.95) return <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" title={`Auto-matched (${Math.round(auto.confidence * 100)}%)`} />;
             if (auto.confidence >= 0.7) return <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title={`Fuzzy match (${Math.round(auto.confidence * 100)}%)`} />;
-            return <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shrink-0" title={`Low match (${Math.round(auto.confidence * 100)}%)`} />;
+            return <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title={`Low match (${Math.round(auto.confidence * 100)}%)`} />;
         }
         // Manually set
-        return <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" title="Manually mapped" />;
+        return <span className="w-2.5 h-2.5 rounded-full bg-sky-400 shrink-0" title="Manually mapped" />;
     };
 
     return (
@@ -183,7 +183,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                                 mapping[field.id]
                                                     ? autoMapping[field.id]?.csvColumn === mapping[field.id]
                                                         ? 'bg-emerald-50/40'
-                                                        : 'bg-blue-50/40'
+                                                        : 'bg-sky-50/40'
                                                     : field.required
                                                         ? 'bg-rose-50/40'
                                                         : ''

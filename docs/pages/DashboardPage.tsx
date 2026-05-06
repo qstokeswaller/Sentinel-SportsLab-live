@@ -93,12 +93,16 @@ export const DashboardPage = () => {
             const aid = r.athlete_id || r.athleteId;
             if (aid && (playerIds.size === 0 || playerIds.has(aid))) latestByAthlete.set(aid, r);
         }
-        const latest = [...latestByAthlete.values()];
+        const allLatest = [...latestByAthlete.values()];
 
-        const mostRecentDate = latest.reduce((max, r) => {
+        // Find the team's most recent response date, then restrict to that date only
+        const mostRecentDate = allLatest.reduce((max, r) => {
             const d = (r.session_date || r.date || '').split('T')[0];
             return d > max ? d : max;
         }, '');
+        const latest = mostRecentDate
+            ? allLatest.filter(r => (r.session_date || r.date || '').split('T')[0] === mostRecentDate)
+            : allLatest;
         const daysSince = mostRecentDate
             ? Math.floor((Date.now() - new Date(mostRecentDate).getTime()) / 86400000)
             : null;
@@ -146,10 +150,42 @@ export const DashboardPage = () => {
         return { latest, mostRecentDate, daysSince, metricAvgs, flagged, total, responseCount, availableCount, modifiedCount, unavailableCount };
     }, [wellnessResponses, teams, heatmapTeamFilter]);
 
+    // Dashboard stat cards — computed at component level so they're available for the header row
+    const dashboardStats = React.useMemo(() => {
+        const sevenDaysAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+        const athleteLastLoadDate = new Map<string, string>();
+        for (const r of (loadRecords || [])) {
+            const aid = r.athlete_id || r.athleteId;
+            const d = r.date || '';
+            if (aid && d && (!athleteLastLoadDate.has(aid) || d > athleteLastLoadDate.get(aid)!)) athleteLastLoadDate.set(aid, d);
+        }
+        const acwrHighRisk = teams.flatMap(t => t.players)
+            .filter(p => acwrEnabledAthleteIds.has(p.id) && !acwrExclusions?.[p.id]?.excluded)
+            .filter(p => { const l = athleteLastLoadDate.get(p.id); return l && l >= sevenDaysAgoStr; })
+            .filter(p => parseFloat(calculateACWR(p.id)) > 1.5).length;
+        const sleepRiskCount = wellnessSummary.latest.filter(r => {
+            const h = r.responses?.sleep_hours;
+            return h != null && h < 6;
+        }).length;
+        const { flagged, responseCount } = wellnessSummary;
+        let readinessGrade = 'N/A';
+        let readinessColor: 'slate' | 'rose' | 'amber' | 'emerald' = 'slate';
+        if (responseCount > 0) {
+            const pctFlagged = flagged.length / responseCount;
+            const hasCritical = flagged.some(f => f.isCritical);
+            if (hasCritical || pctFlagged >= 0.4) { readinessGrade = 'D'; readinessColor = 'rose'; }
+            else if (pctFlagged >= 0.25) { readinessGrade = 'C'; readinessColor = 'amber'; }
+            else if (pctFlagged >= 0.1) { readinessGrade = 'B'; readinessColor = 'amber'; }
+            else { readinessGrade = 'A'; readinessColor = 'emerald'; }
+        }
+        return { acwrHighRisk, sleepRiskCount, readinessGrade, readinessColor };
+    }, [loadRecords, teams, acwrEnabledAthleteIds, acwrExclusions, calculateACWR, wellnessSummary]);
+
     const [activePopover, setActivePopover] = React.useState(null);
     const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
     const [isReportCollapsed, setIsReportCollapsed] = React.useState(() => localStorage.getItem('dash_report_collapsed') === '1');
     const [isHeatmapCollapsed, setIsHeatmapCollapsed] = React.useState(() => localStorage.getItem('dash_heatmap_collapsed') === '1');
+    const [calendarViewMode, setCalendarViewMode] = React.useState<'month' | 'week'>('month');
     const toggleReportCollapsed = () => setIsReportCollapsed(v => { const next = !v; localStorage.setItem('dash_report_collapsed', next ? '1' : '0'); return next; });
     const toggleHeatmapCollapsed = () => setIsHeatmapCollapsed(v => { const next = !v; localStorage.setItem('dash_heatmap_collapsed', next ? '1' : '0'); return next; });
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
@@ -277,13 +313,13 @@ export const DashboardPage = () => {
     const renderMorningReport = () => {
         // Show empty state when ACWR is not enabled
         if (!hasAnyAcwrEnabled) return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col h-full">
                 <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2.5">
                     <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
                         <AlertTriangleIcon size={14} />
                     </div>
                     <div>
-                        <h3 className="text-[13px] font-semibold text-slate-900">Performance Report</h3>
+                        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-[#E2E8F0]">Performance Report</h3>
                         <p className="text-[10px] text-slate-500">ACWR readiness</p>
                     </div>
                 </div>
@@ -357,14 +393,14 @@ export const DashboardPage = () => {
             const borderColor = isInjured ? 'border-l-slate-400' : player.acwr > 1.5 ? 'border-l-rose-500' : player.acwr > 1.3 ? 'border-l-amber-400' : 'border-l-sky-400';
             return (
                 <div key={player.id}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 opacity-70' : 'bg-slate-50/50'} hover:bg-white hover:shadow-sm transition-all cursor-pointer`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1F2937]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#1F2937]/30'} hover:bg-white dark:hover:bg-[#1F2937] hover:shadow-sm transition-all cursor-pointer`}
                     onClick={onClick}
                 >
                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${bgColor}`}>
                         {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h4 className="text-[12px] font-medium text-slate-900 truncate">{player.name}</h4>
+                        <h4 className="text-[12px] font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{player.name}</h4>
                     </div>
                     {isInjured ? (
                         <span className="text-[10px] font-semibold text-slate-400 italic shrink-0">Injured</span>
@@ -387,17 +423,17 @@ export const DashboardPage = () => {
         };
 
         return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col">
                 <button
                     onClick={toggleReportCollapsed}
-                    className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between w-full text-left hover:bg-rose-50/80 transition-colors"
+                    className="px-4 py-3 border-b border-slate-100 dark:border-[#263044] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between w-full text-left hover:bg-rose-50/80 dark:hover:bg-rose-900/20 transition-colors"
                 >
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
                             <AlertTriangleIcon size={14} />
                         </div>
                         <div>
-                            <h3 className="text-[13px] font-semibold text-slate-900">Performance Report</h3>
+                            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-[#E2E8F0]">Performance Report</h3>
                             <p className="text-[10px] text-slate-500">
                                 {mostRecentLoadDate ? (() => {
                                     const today = new Date().toISOString().split('T')[0];
@@ -454,10 +490,10 @@ export const DashboardPage = () => {
                 {isMorningReportExpanded && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMorningReportExpanded(false)} />
-                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-rose-50/60 flex items-center justify-between">
+                        <div className="relative bg-white dark:bg-[#1F2937] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#263044] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-sm font-semibold text-slate-900">All At-Risk Athletes</h3>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">All At-Risk Athletes</h3>
                                     <p className="text-[10px] text-slate-500">Click an athlete to see their risk analysis</p>
                                 </div>
                                 <button onClick={() => setIsMorningReportExpanded(false)} className="p-1.5 hover:bg-white/60 rounded-lg">
@@ -565,13 +601,116 @@ export const DashboardPage = () => {
         return 'All';
     }, [calendarFilterCategory, calendarFilterTeamId, calendarFilterAthleteId, teams]);
 
+    // Week view — 7 days of the week containing dashboardCalendarDate
+    const weekDays = React.useMemo(() => {
+        const d = new Date(dashboardCalendarDate);
+        const start = new Date(d);
+        start.setDate(d.getDate() - d.getDay()); // Sunday
+        return Array.from({ length: 7 }, (_, i) => {
+            const day = new Date(start);
+            day.setDate(start.getDate() + i);
+            return {
+                dateStr: day.toLocaleDateString('en-CA'),
+                day: day.getDate(),
+                month: day.getMonth(),
+                dayName: day.toLocaleString('default', { weekday: 'short' }),
+            };
+        });
+    }, [dashboardCalendarDate]);
+
                 return (<>
                     <div className="space-y-6 animate-in fade-in duration-700">
+
+                        {/* ── Dashboard Stat Cards ── */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                            {/* Players Flagged */}
+                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Flagged</span>
+                                    <div className="w-7 h-7 bg-rose-50 dark:bg-rose-900/20 rounded-lg flex items-center justify-center">
+                                        <AlertTriangleIcon size={13} className="text-rose-500" />
+                                    </div>
+                                </div>
+                                <div className="flex items-end gap-1.5">
+                                    <span className={`text-2xl font-bold leading-none ${wellnessSummary.flagged.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                        {wellnessSummary.flagged.length}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">athletes</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">From latest wellness check-in</p>
+                            </div>
+
+                            {/* High Risk ACWR */}
+                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">ACWR Risk</span>
+                                    <div className="w-7 h-7 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
+                                        <ActivityIcon size={13} className="text-amber-500" />
+                                    </div>
+                                </div>
+                                <div className="flex items-end gap-1.5">
+                                    <span className={`text-2xl font-bold leading-none ${dashboardStats.acwrHighRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                        {dashboardStats.acwrHighRisk}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">{'>'} 1.5</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">High ACWR in last 7 days</p>
+                            </div>
+
+                            {/* Sleep Risk */}
+                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Sleep Risk</span>
+                                    <div className="w-7 h-7 bg-sky-50 dark:bg-sky-900/20 rounded-lg flex items-center justify-center">
+                                        <ClockIcon size={13} className="text-sky-500" />
+                                    </div>
+                                </div>
+                                <div className="flex items-end gap-1.5">
+                                    <span className={`text-2xl font-bold leading-none ${dashboardStats.sleepRiskCount > 0 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                        {dashboardStats.sleepRiskCount}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">{'<'} 6 hrs</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">Poor sleep from last check-in</p>
+                            </div>
+
+                            {/* Team Readiness */}
+                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Readiness</span>
+                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                        dashboardStats.readinessColor === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
+                                        dashboardStats.readinessColor === 'amber'   ? 'bg-amber-50 dark:bg-amber-900/20' :
+                                        dashboardStats.readinessColor === 'rose'    ? 'bg-rose-50 dark:bg-rose-900/20' :
+                                        'bg-slate-50 dark:bg-[#1F2937]'
+                                    }`}>
+                                        <CheckCircle2Icon size={13} className={
+                                            dashboardStats.readinessColor === 'emerald' ? 'text-emerald-500' :
+                                            dashboardStats.readinessColor === 'amber'   ? 'text-amber-500' :
+                                            dashboardStats.readinessColor === 'rose'    ? 'text-rose-500' :
+                                            'text-slate-400'
+                                        } />
+                                    </div>
+                                </div>
+                                <div className="flex items-end gap-1.5">
+                                    <span className={`text-2xl font-bold leading-none ${
+                                        dashboardStats.readinessColor === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                                        dashboardStats.readinessColor === 'amber'   ? 'text-amber-600 dark:text-amber-400' :
+                                        dashboardStats.readinessColor === 'rose'    ? 'text-rose-600 dark:text-rose-400' :
+                                        'text-slate-400 dark:text-[#64748B]'
+                                    }`}>{dashboardStats.readinessGrade}</span>
+                                </div>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">
+                                    {dashboardStats.readinessGrade === 'N/A' ? 'No wellness data yet' : 'Team wellness grade'}
+                                </p>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                             {/* Performance Report Column */}
                             <div data-tour="morning-report" className="lg:col-span-1 relative">
                                 {isLoading && (
-                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+                                    <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col h-full">
                                         <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center gap-2.5">
                                             <div className="w-8 h-8 bg-rose-200 rounded-lg animate-pulse" />
                                             <div className="space-y-1">
@@ -600,14 +739,14 @@ export const DashboardPage = () => {
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
                                 {/* Wellness Summary */}
-                                <div data-tour="heatmap" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                                <div data-tour="heatmap" className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm flex flex-col overflow-hidden">
                                     <button
                                         onClick={toggleHeatmapCollapsed}
-                                        className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 transition-colors shrink-0"
+                                        className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 dark:hover:bg-[#1F2937]/60 transition-colors shrink-0"
                                     >
                                         <div>
-                                            <h4 className="text-sm font-semibold text-slate-900">Wellness Summary</h4>
-                                            <p className="text-xs text-slate-500 mt-0.5">
+                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness Summary</h4>
+                                            <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5">
                                                 {heatmapTeamFilter === 'prompt' ? 'Select a team to view latest questionnaire responses'
                                                     : heatmapTeamFilter === 'All Teams' ? 'Most recent daily check-in responses — all teams'
                                                     : `Most recent daily check-in responses — ${heatmapTeamFilter}`}
@@ -619,12 +758,12 @@ export const DashboardPage = () => {
                                     {!isHeatmapCollapsed && (
                                     <div className="px-5 pb-4 space-y-2">
                                         {/* Team selector + link row */}
-                                        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                                        <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#263044] pt-3">
                                             <div className="relative">
                                                 <select
                                                     value={heatmapTeamFilter}
                                                     onChange={(e) => setHeatmapTeamFilter(e.target.value)}
-                                                    className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none appearance-none pr-7 cursor-pointer hover:border-slate-300 transition-all"
+                                                    className="bg-slate-50 dark:bg-[#1F2937] border border-slate-200 dark:border-[#263044] text-slate-700 dark:text-[#E2E8F0] rounded-lg px-3 py-1.5 text-xs outline-none appearance-none pr-7 cursor-pointer hover:border-slate-300 dark:hover:border-[#374151] transition-all"
                                                 >
                                                     <option value="prompt">— select team —</option>
                                                     <option value="All Teams">All Teams</option>
@@ -687,36 +826,32 @@ export const DashboardPage = () => {
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            {/* Compact stat strip: date + counts in one row */}
-                                                            <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 flex-wrap">
+                                                            {/* Stat chips row: date + response counts */}
+                                                            <div className="flex flex-wrap gap-1.5">
                                                                 {formattedDate && (
-                                                                    <>
-                                                                        <div className="flex items-center gap-1.5">
-                                                                            <div className={`w-1.5 h-1.5 rounded-full ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-                                                                            <span className="text-[10px] font-semibold text-slate-500">
-                                                                                {formattedDate}
-                                                                                {!isStale && daysSince === 0 && <span className="text-emerald-600 ml-1">· Today</span>}
-                                                                                {!isStale && daysSince === 1 && <span className="text-slate-400 ml-1">· Yesterday</span>}
-                                                                                {!isStale && daysSince > 1 && <span className="text-slate-400 ml-1">· {daysSince}d ago</span>}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="w-px h-3 bg-slate-200 shrink-0" />
-                                                                    </>
+                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                                                                        <span className={`text-[10px] font-semibold ${isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                                                            {formattedDate}
+                                                                            {!isStale && daysSince === 0 && <span className="ml-1 opacity-70">· Today</span>}
+                                                                            {!isStale && daysSince === 1 && <span className="ml-1 opacity-70">· Yesterday</span>}
+                                                                            {!isStale && daysSince > 1 && <span className="ml-1 opacity-70">· {daysSince}d ago</span>}
+                                                                        </span>
+                                                                    </div>
                                                                 )}
-                                                                <div className="flex items-center gap-1">
+                                                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
                                                                     <span className="text-xs font-bold text-slate-700">{responseCount}</span>
                                                                     <span className="text-[10px] text-slate-400">responses</span>
                                                                 </div>
-                                                                <div className="w-px h-3 bg-slate-200 shrink-0" />
                                                                 {[
-                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'available',   color: 'text-emerald-600' },
-                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'modified',    color: 'text-amber-600' },
-                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavailable', color: 'text-rose-600' },
-                                                                ].map(({ dot, val, label, color }) => (
-                                                                    <div key={label} className="flex items-center gap-1">
-                                                                        <div className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100' },
+                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600',    bg: 'bg-rose-50 border-rose-100' },
+                                                                ].map(({ dot, val, label, color, bg }) => (
+                                                                    <div key={label} className={`flex items-center gap-1 border rounded-lg px-2.5 py-1.5 ${bg}`}>
+                                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
                                                                         <span className={`text-xs font-bold ${color}`}>{val}</span>
-                                                                        <span className="text-[10px] text-slate-400">{label}</span>
+                                                                        <span className="text-[10px] text-slate-500">{label}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -729,24 +864,24 @@ export const DashboardPage = () => {
                                                             </div>
 
                                                             {/* Two-column body: Team Averages | Priority Alerts */}
-                                                            <div className="grid grid-cols-2 gap-3 pt-1">
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                                                 {/* Left: Team Averages */}
-                                                                <div>
-                                                                    <div className="flex items-center gap-1.5 mb-2">
+                                                                <div className="bg-slate-50 dark:bg-[#1F2937] rounded-xl border border-slate-100 dark:border-[#263044] p-3">
+                                                                    <div className="flex items-center gap-1.5 mb-2.5">
                                                                         <ActivityIcon size={11} className="text-amber-500" />
-                                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Team Averages</span>
+                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">Team Averages</span>
                                                                     </div>
-                                                                    <div className="space-y-1.5">
+                                                                    <div className="space-y-2">
                                                                         {metricAvgs.map(m => (
                                                                             <div key={m.key} className="flex items-center gap-2">
-                                                                                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide w-16 shrink-0">{m.label}</span>
-                                                                                <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
+                                                                                <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#263044] rounded-full overflow-hidden">
                                                                                     {m.avg !== null && (
                                                                                         <div className="h-full rounded-full transition-all duration-700"
                                                                                             style={{ width: `${(m.avg / m.max) * 100}%`, backgroundColor: m.color }} />
                                                                                     )}
                                                                                 </div>
-                                                                                <span className="text-[9px] font-bold text-slate-600 w-7 text-right shrink-0">
+                                                                                <span className="text-[11px] font-bold text-slate-700 w-9 text-right shrink-0 tabular-nums">
                                                                                     {m.avg !== null ? (m.key === 'sleep_hours' ? `${m.avg.toFixed(1)}h` : m.avg.toFixed(1)) : '—'}
                                                                                 </span>
                                                                             </div>
@@ -755,34 +890,34 @@ export const DashboardPage = () => {
                                                                 </div>
 
                                                                 {/* Right: Priority Alerts */}
-                                                                <div>
-                                                                    <div className="flex items-center gap-1.5 mb-2">
+                                                                <div className="bg-slate-50 dark:bg-[#1F2937] rounded-xl border border-slate-100 dark:border-[#263044] p-3">
+                                                                    <div className="flex items-center gap-1.5 mb-2.5">
                                                                         <AlertTriangleIcon size={11} className="text-rose-500" />
-                                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Priority Alerts</span>
+                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">Priority Alerts</span>
                                                                         {flagged.length > 0 && (
-                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600">{flagged.length} flagged</span>
+                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded px-1 py-0.5">{flagged.length} flagged</span>
                                                                         )}
                                                                     </div>
                                                                     {flagged.length === 0 ? (
-                                                                        <div className="flex flex-col items-center justify-center py-4 text-center">
+                                                                        <div className="flex flex-col items-center justify-center py-3 text-center">
                                                                             <CheckCircle2Icon size={18} className="text-emerald-400 mb-1" />
                                                                             <p className="text-xs font-medium text-slate-500">All clear</p>
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="space-y-1">
+                                                                        <div className="space-y-1.5">
                                                                             {visible.map(({ r, player, reason, isCritical, aid }) => {
                                                                                 const initials = player
                                                                                     ? player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
                                                                                     : '??';
                                                                                 return (
-                                                                                    <div key={aid} className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2 py-1.5 border border-slate-100">
+                                                                                    <div key={aid} className="flex items-center gap-2 bg-white dark:bg-[#111827] rounded-lg px-2 py-1.5 border border-slate-100 dark:border-[#263044]">
                                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                                                        <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[7px] font-bold shrink-0">
+                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[8px] font-bold shrink-0">
                                                                                             {initials}
                                                                                         </div>
                                                                                         <div className="flex-1 min-w-0">
                                                                                             <p className="text-[10px] font-semibold text-slate-800 truncate leading-tight">{player?.name || 'Unknown'}</p>
-                                                                                            <p className="text-[8px] font-bold text-rose-500 uppercase tracking-wide leading-tight">{reason}</p>
+                                                                                            <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wide leading-tight">{reason}</p>
                                                                                         </div>
                                                                                     </div>
                                                                                 );
@@ -790,7 +925,7 @@ export const DashboardPage = () => {
                                                                             {hiddenCount > 0 && (
                                                                                 <Link
                                                                                     to={wellnessLink}
-                                                                                    className="flex items-center justify-center py-1 border border-dashed border-rose-200 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 hover:border-rose-300 transition-colors"
+                                                                                    className="flex items-center justify-center py-1.5 border border-dashed border-rose-200 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 hover:border-rose-300 transition-colors"
                                                                                 >
                                                                                     + {hiddenCount} more flagged athlete{hiddenCount > 1 ? 's' : ''}
                                                                                 </Link>
@@ -811,49 +946,70 @@ export const DashboardPage = () => {
                         </div>
 
                         {/* Full Size Calendar */}
-                        <div data-tour="calendar" className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div data-tour="calendar" className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm flex flex-col">
                             {/* Calendar Header */}
-                            <div className="px-5 py-4 border-b border-slate-100 flex flex-col gap-3 bg-white">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#263044] flex flex-col gap-3 bg-white dark:bg-[#111827]">
                                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0">
+                                        <div className="w-9 h-9 bg-slate-900 dark:bg-[#1F2937] rounded-lg flex items-center justify-center text-white shrink-0">
                                             <CalendarIcon size={16} />
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <h3 className="text-base font-semibold text-slate-900">
-                                                {dashboardCalendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">
+                                                {calendarViewMode === 'week'
+                                                    ? (() => {
+                                                        const s = weekDays[0]; const e = weekDays[6];
+                                                        const sd = new Date(s.dateStr + 'T00:00'); const ed = new Date(e.dateStr + 'T00:00');
+                                                        return sd.getMonth() === ed.getMonth()
+                                                            ? `${sd.toLocaleString('default', { month: 'long' })} ${sd.getDate()}–${ed.getDate()}, ${sd.getFullYear()}`
+                                                            : `${sd.toLocaleString('default', { month: 'short' })} ${sd.getDate()} – ${ed.toLocaleString('default', { month: 'short' })} ${ed.getDate()}, ${ed.getFullYear()}`;
+                                                    })()
+                                                    : dashboardCalendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                             </h3>
-                                            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
+                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1F2937] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#263044]">
                                                 <button onClick={() => {
                                                     const newDate = new Date(dashboardCalendarDate);
-                                                    newDate.setMonth(newDate.getMonth() - 1);
+                                                    if (calendarViewMode === 'week') newDate.setDate(newDate.getDate() - 7);
+                                                    else newDate.setMonth(newDate.getMonth() - 1);
                                                     setDashboardCalendarDate(newDate);
-                                                }} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all">
-                                                    <ChevronLeftIcon size={14} className="text-slate-600" />
+                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#263044] hover:shadow-sm rounded-md transition-all">
+                                                    <ChevronLeftIcon size={14} className="text-slate-600 dark:text-[#94A3B8]" />
                                                 </button>
                                                 <button onClick={() => {
                                                     const newDate = new Date(dashboardCalendarDate);
-                                                    newDate.setMonth(newDate.getMonth() + 1);
+                                                    if (calendarViewMode === 'week') newDate.setDate(newDate.getDate() + 7);
+                                                    else newDate.setMonth(newDate.getMonth() + 1);
                                                     setDashboardCalendarDate(newDate);
-                                                }} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all">
-                                                    <ChevronRightIcon size={14} className="text-slate-600" />
+                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#263044] hover:shadow-sm rounded-md transition-all">
+                                                    <ChevronRightIcon size={14} className="text-slate-600 dark:text-[#94A3B8]" />
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-slate-500">{calendarFilterLabel}</p>
+                                            {/* Week / Month toggle */}
+                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1F2937] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#263044]">
+                                                <button
+                                                    onClick={() => setCalendarViewMode('month')}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'month' ? 'bg-white dark:bg-[#263044] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                >Month</button>
+                                                <button
+                                                    onClick={() => setCalendarViewMode('week')}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'week' ? 'bg-white dark:bg-[#263044] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                >Week</button>
+                                            </div>
+                                            <p className="text-xs text-slate-500 dark:text-[#64748B]">{calendarFilterLabel}</p>
                                         </div>
                                     </div>
 
                                     {/* Cascading Filter Dropdowns + Add Event */}
                                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                         {/* Category Filter */}
-                                        <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
-                                            <FilterIcon size={13} className="text-slate-400" />
+                                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#1F2937] rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-[#263044] relative">
+                                            <FilterIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
                                             <select value={calendarFilterCategory} onChange={(e) => {
                                                 setCalendarFilterCategory(e.target.value);
                                                 setCalendarFilterTeamId(null);
                                                 setCalendarFilterAthleteId(null);
                                             }}
-                                                className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer font-medium"
+                                                className="bg-transparent text-xs text-slate-600 dark:text-[#E2E8F0] outline-none appearance-none pr-4 cursor-pointer font-medium"
                                             >
                                                 <option value="all">All</option>
                                                 <option value="teams">Teams</option>
@@ -921,11 +1077,92 @@ export const DashboardPage = () => {
                             <div className="p-4 relative">
                                 {/* Calendar loading skeleton */}
                                 {isLoading && (
-                                    <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
+                                    <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
                                         <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                        <span className="text-xs font-medium text-slate-400">Loading calendar...</span>
+                                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading calendar...</span>
                                     </div>
                                 )}
+
+                                {/* ── Week View ── */}
+                                {calendarViewMode === 'week' && (
+                                    <div>
+                                        <div className="grid grid-cols-7 gap-2">
+                                            {weekDays.map(wd => {
+                                                const isToday = wd.dateStr === new Date().toLocaleDateString('en-CA');
+                                                const daySessions = filteredSessionsForCalendar.filter(s => s.date === wd.dateStr);
+                                                const dayEvents = filteredCalendarEventsForView.filter(e => e.start_date === wd.dateStr);
+                                                const allItems = [
+                                                    ...daySessions.map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s })),
+                                                    ...dayEvents.map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e })),
+                                                ].sort((a, b) => a.time.localeCompare(b.time));
+                                                return (
+                                                    <div
+                                                        key={wd.dateStr}
+                                                        onClick={() => setViewingDate(wd.dateStr)}
+                                                        onDragOver={(e) => handleDragOver(e, wd.dateStr)}
+                                                        onDragLeave={handleDragLeave}
+                                                        onDrop={(e) => handleDrop(e, wd.dateStr)}
+                                                        className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all hover:shadow-md ${
+                                                            dragOverDate === wd.dateStr
+                                                                ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
+                                                                : isToday
+                                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                                                : 'bg-white dark:bg-[#111827] border-slate-100 dark:border-[#263044] hover:border-slate-300 dark:hover:border-[#374151]'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-[#263044]/60">
+                                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase">{wd.dayName}</span>
+                                                            <span className={`text-sm font-bold leading-none inline-flex items-center justify-center ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{wd.day}</span>
+                                                        </div>
+                                                        <div className="flex-1 space-y-1 overflow-hidden">
+                                                            {allItems.length === 0 ? (
+                                                                <p className="text-[9px] text-slate-300 dark:text-[#374151] text-center pt-3">—</p>
+                                                            ) : allItems.map(entry => {
+                                                                if (entry.type === 'session') {
+                                                                    const session = entry.item;
+                                                                    const tc = getTargetColor(session.targetId);
+                                                                    return (
+                                                                        <div
+                                                                            key={session.id}
+                                                                            draggable
+                                                                            onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, wd.dateStr); }}
+                                                                            onDragEnd={handleDragEnd}
+                                                                            onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
+                                                                            className={`flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                        >
+                                                                            <div className="text-[9px] font-semibold uppercase tracking-wide truncate">{session.trainingPhase}</div>
+                                                                            <div className="text-[9px] font-medium truncate leading-tight">{session.title}</div>
+                                                                            {session.time && <div className="text-[8px] opacity-70">{session.time}</div>}
+                                                                        </div>
+                                                                    );
+                                                                } else {
+                                                                    const event = entry.item;
+                                                                    return (
+                                                                        <div
+                                                                            key={event.id}
+                                                                            draggable
+                                                                            onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, wd.dateStr); }}
+                                                                            onDragEnd={handleDragEnd}
+                                                                            onClick={(e) => { e.stopPropagation(); const popKey = `${event.id}_${wd.dateStr}`; setActivePopover({ id: popKey, event }); }}
+                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
+                                                                            style={{ backgroundColor: `${event.color}12`, borderColor: `${event.color}30` }}
+                                                                        >
+                                                                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
+                                                                            <span className="text-[9px] font-medium leading-tight truncate" style={{ color: event.color }}>{event.title}</span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Month View ── */}
+                                {calendarViewMode === 'month' && (
                                 <div className="grid grid-cols-7 gap-1 sm:gap-2">
                                     {[
                                         { full: 'Sun', short: 'S' }, { full: 'Mon', short: 'M' },
@@ -933,7 +1170,7 @@ export const DashboardPage = () => {
                                         { full: 'Thu', short: 'T' }, { full: 'Fri', short: 'F' },
                                         { full: 'Sat', short: 'S' }
                                     ].map(day => (
-                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 text-center pb-3">
+                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 dark:text-[#64748B] text-center pb-3">
                                             <span className="hidden sm:block">{day.full}</span>
                                             <span className="sm:hidden">{day.short}</span>
                                         </div>
@@ -951,11 +1188,11 @@ export const DashboardPage = () => {
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
                                                 className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
-                                                    : 'bg-slate-50/30 border-transparent'} ${isDragOver
-                                                        ? 'bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
+                                                    : 'bg-slate-50/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
+                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
                                                         : isToday
-                                                        ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-1 ring-indigo-200'
-                                                        : 'bg-white border-slate-100 hover:border-slate-300'}`}
+                                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                                        : 'bg-white dark:bg-[#111827] border-slate-100 dark:border-[#263044] hover:border-slate-300 dark:hover:border-[#374151]'}`}
                                                 onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
                                                 {dateObj && (
                                                     <>
@@ -964,7 +1201,7 @@ export const DashboardPage = () => {
                                                             <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center transition-colors
                                                                 ${isToday
                                                                     ? 'bg-indigo-600 text-white rounded-full w-[18px] h-[18px] sm:w-5 sm:h-5'
-                                                                    : 'text-slate-400 group-hover:text-slate-800'
+                                                                    : 'text-slate-400 dark:text-[#64748B] group-hover:text-slate-800 dark:group-hover:text-[#E2E8F0]'
                                                                 }`}>{dateObj.day}</span>
                                                         </div>
                                                         <div>
@@ -1054,13 +1291,13 @@ export const DashboardPage = () => {
                                                                 {activeSessionPopover?.id === session.id && (
                                                                     <div
                                                                         ref={sessionPopoverRef}
-                                                                        className={`absolute z-50 left-0 w-56 bg-white rounded-lg shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                        className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                         onClick={(e) => e.stopPropagation()}
                                                                     >
                                                                         <div className={`h-1 rounded-t-lg ${tc.bg === 'bg-red-50' ? 'bg-red-400' : tc.bg === 'bg-blue-50' ? 'bg-blue-400' : tc.bg === 'bg-emerald-50' ? 'bg-emerald-400' : tc.bg === 'bg-orange-50' ? 'bg-orange-400' : tc.bg === 'bg-violet-50' ? 'bg-violet-400' : 'bg-indigo-400'}`} />
                                                                         <div className="p-3 space-y-2">
                                                                             <div className="flex items-start justify-between">
-                                                                                <h4 className="text-sm font-semibold text-slate-900 leading-tight">{session.title}</h4>
+                                                                                <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
                                                                                 <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 transition-colors">
                                                                                     <XIcon size={12} />
                                                                                 </button>
@@ -1085,7 +1322,7 @@ export const DashboardPage = () => {
                                                                                 </div>
                                                                                 <div>{resolveTargetName(session.targetId, session.targetType)}</div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#263044]">
                                                                                 <button
                                                                                     onClick={() => { setViewingSession(session); setActiveSessionPopover(null); }}
                                                                                     className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
@@ -1154,7 +1391,7 @@ export const DashboardPage = () => {
                                                                         {activePopover?.id === `${event.id}_${dateObj.dateStr}` && (
                                                                             <div
                                                                                 ref={popoverRef}
-                                                                                className={`absolute z-50 left-0 w-56 bg-white rounded-lg shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                                className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
                                                                                 {/* Color accent bar */}
@@ -1189,7 +1426,7 @@ export const DashboardPage = () => {
                                                                                             <p className="text-slate-400 leading-relaxed">{event.description}</p>
                                                                                         )}
                                                                                     </div>
-                                                                                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                                                                                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#263044]">
                                                                                         <button
                                                                                             onClick={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
                                                                                             className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
@@ -1244,10 +1481,10 @@ export const DashboardPage = () => {
                                                                         {overflowDay === dateObj.dateStr && (
                                                                             <div
                                                                                 ref={overflowRef}
-                                                                                className={`absolute z-50 left-0 w-60 bg-white rounded-lg shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                                className={`absolute z-50 left-0 w-60 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
-                                                                                <div className="px-3 py-2 border-b border-slate-100 bg-slate-50 rounded-t-lg">
+                                                                                <div className="px-3 py-2 border-b border-slate-100 dark:border-[#263044] bg-slate-50 dark:bg-[#263044] rounded-t-lg">
                                                                                     <div className="flex items-center justify-between">
                                                                                         <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                                                                                             {new Date(dateObj.dateStr + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -1328,6 +1565,7 @@ export const DashboardPage = () => {
                                         );
                                     })}
                                 </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1335,13 +1573,13 @@ export const DashboardPage = () => {
                     {/* ── Edit Event Modal ── */}
                     {editingEvent && (() => {
                         const allEventTypes = [...DEFAULT_EVENT_TYPES, ...(customEventTypes || [])];
-                        const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
-                        const LABEL = 'text-xs font-medium text-slate-600 block mb-1.5';
+                        const INPUT = 'w-full bg-slate-50 dark:bg-[#1F2937] border border-slate-200 dark:border-[#263044] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
+                        const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#94A3B8] block mb-1.5';
                         return (
                             <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingEvent(null)}>
-                                <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                <div className="bg-white dark:bg-[#1F2937] rounded-xl shadow-xl border border-slate-200 dark:border-[#263044] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                     {/* Header */}
-                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#263044]">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: editingEvent.color || '#6366f1' }}>
                                                 <PencilIcon size={16} />

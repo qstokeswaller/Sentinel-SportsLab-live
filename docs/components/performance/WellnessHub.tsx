@@ -61,9 +61,9 @@ const getAthleteStatus = (res: any): 'green' | 'amber' | 'red' | null => {
 /** Returns gradient badge classes for an RPE value (1-10) */
 const getRpeBadge = (rpe: number): string => {
     if (rpe >= 9) return 'bg-rose-50 text-rose-600 border-rose-100';
-    if (rpe >= 7) return 'bg-orange-50 text-orange-600 border-orange-100';
-    if (rpe >= 5) return 'bg-amber-50 text-amber-600 border-amber-100';
-    if (rpe >= 3) return 'bg-green-50 text-green-600 border-green-100';
+    if (rpe >= 7) return 'bg-amber-50 text-amber-600 border-amber-100';
+    if (rpe >= 5) return 'bg-sky-50 text-sky-600 border-sky-100';
+    if (rpe >= 3) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
     return 'bg-emerald-50 text-emerald-600 border-emerald-100';
 };
 
@@ -132,6 +132,9 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
     const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
     const [rundownFrom, setRundownFrom] = useState<string>(() => localDateStr());
     const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
+    const [selectedResponseIds, setSelectedResponseIds] = useState<Set<string>>(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [showBulkConfirm, setShowBulkConfirm] = useState(false);
     const [heatmapDays, setHeatmapDays] = useState<number>(7);
     const [heatmapAnchor, setHeatmapAnchor] = useState<string>(() => localDateStr());
 
@@ -162,9 +165,24 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
         try {
             await DatabaseService.deleteWellnessResponse(id);
             setConfirmDeleteId(null);
+            setSelectedResponseIds(prev => { const n = new Set(prev); n.delete(id); return n; });
             if (selectedTeamId) handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
         } catch {
             alert('Failed to delete response.');
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        setIsBulkDeleting(true);
+        try {
+            await Promise.all([...selectedResponseIds].map(id => DatabaseService.deleteWellnessResponse(id)));
+            setSelectedResponseIds(new Set());
+            setShowBulkConfirm(false);
+            if (selectedTeamId) handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
+        } catch {
+            alert('Failed to delete some responses.');
+        } finally {
+            setIsBulkDeleting(false);
         }
     };
 
@@ -510,7 +528,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
         const insightSource = activeDef.form === 'weekly' ? weeklyResponses : dailyResponses;
 
         // Available dates derived from the active source (weekly metrics use weekly dates)
-        const availDates = Array.from(new Set(insightSource.map(r => r.session_date))).sort((a, b) => b.localeCompare(a));
+        const availDates = Array.from(new Set(insightSource.map(r => r.session_date))).sort((a, b) => String(b).localeCompare(String(a)));
 
         // Responses for selected date OR full period
         const dateResponses = insightSource.filter(r => r.session_date === insightDate);
@@ -1173,7 +1191,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         avgSev: illnessChecks.length ? +(illnessChecks.reduce((s, dc) => s + (dc.responses?.[k] || 0), 0) / illnessChecks.length).toFixed(1) : 0,
                     })).filter(s => s.count > 0).sort((a,b) => b.count - a.count);
 
-                    const PATH_STYLES: Record<string,string> = { injury:'bg-rose-50 text-rose-700 border-rose-100', illness:'bg-blue-50 text-blue-700 border-blue-100', both:'bg-purple-50 text-purple-700 border-purple-100', trends:'bg-slate-50 text-slate-600 border-slate-200' };
+                    const PATH_STYLES: Record<string,string> = { injury:'bg-rose-50 text-rose-700 border-rose-100', illness:'bg-sky-50 text-sky-700 border-sky-100', both:'bg-indigo-50 text-indigo-700 border-indigo-100', trends:'bg-slate-50 text-slate-600 border-slate-200' };
                     const PATH_LABELS: Record<string,string> = { injury:'Injury', illness:'Illness', both:'Injury + Illness', trends:'Health Trends' };
 
                     return (
@@ -1237,7 +1255,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             {symptomFreq.map(s => (
                                                 <div key={s.label} className="flex items-center gap-2">
                                                     <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                                        <div className="bg-blue-400 h-full rounded-full" style={{ width: `${(s.count / illnessChecks.length) * 100}%` }} />
+                                                        <div className="bg-sky-400 h-full rounded-full" style={{ width: `${(s.count / illnessChecks.length) * 100}%` }} />
                                                     </div>
                                                     <span className="text-[9px] font-semibold text-slate-500 w-20 truncate">{s.label}</span>
                                                     <span className="text-[9px] font-bold text-slate-700 w-6 text-right">{s.count}</span>
@@ -1435,7 +1453,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                         <div className="bg-white p-8 rounded-xl border-2 border-slate-100 shadow-sm space-y-6">
                             <h3 className="text-sm font-semibold uppercase text-slate-900 flex items-center gap-2">
-                                <Zap size={16} className="text-yellow-500" /> Team Averages
+                                <Zap size={16} className="text-amber-500" /> Team Averages
                             </h3>
                             <div className="space-y-5">
                                 {[
@@ -1737,10 +1755,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         </div>
                     </div>
                 )}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto relative">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 text-[9px] text-slate-400 uppercase tracking-[0.15em] font-semibold">
                             <tr>
+                                <th className="pl-4 pr-1 py-4 w-9">
+                                    {/* select-all rendered inline once visible is computed below */}
+                                </th>
                                 <th className="px-4 py-4 w-8" />
                                 <th className="px-6 py-4">Athlete</th>
                                 <th className="px-4 py-4">Availability</th>
@@ -1763,8 +1784,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     return playerMap[res.athlete_id]?.name.toLowerCase().includes(searchQuery.toLowerCase());
                                 });
 
+                                const allVisibleIds = visible.map(r => r.id);
+                                const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedResponseIds.has(id));
+                                const someSelected = allVisibleIds.some(id => selectedResponseIds.has(id));
+
                                 if (visible.length === 0) return (
-                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-slate-300 text-xs">
+                                    <tr><td colSpan={9} className="px-6 py-12 text-center text-slate-300 text-xs">
                                         No responses in this date range
                                     </td></tr>
                                 );
@@ -1786,11 +1811,51 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     return { label, badge };
                                 };
 
-                                return groups.flatMap(({ date, items }) => {
+                                // Prepend a real select-all header row (rendered before date groups)
+                                const headerSelectRow = (
+                                    <tr key="__header_select__" className="bg-slate-50 border-b border-slate-100">
+                                        <td className="pl-4 pr-1 py-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={allSelected}
+                                                ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                                                onChange={e => {
+                                                    if (e.target.checked) setSelectedResponseIds(new Set(allVisibleIds));
+                                                    else setSelectedResponseIds(new Set());
+                                                }}
+                                                className="rounded border-slate-300 accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                                            />
+                                        </td>
+                                        <td colSpan={8} className="pr-4 py-3">
+                                            <span className="text-[9px] font-semibold text-slate-400">
+                                                {allSelected ? `All ${allVisibleIds.length} selected` : someSelected ? `${selectedResponseIds.size} selected` : 'Select all'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+
+                                return [headerSelectRow, ...groups.flatMap(({ date, items }) => {
                                     const { label, badge } = fmtDate(date);
+                                    const dateIds = items.map(r => r.id);
+                                    const allDateSelected = dateIds.every(id => selectedResponseIds.has(id));
                                     const rows: React.ReactNode[] = [
                                         <tr key={`date-${date}`} className="border-t-2 border-slate-100 bg-slate-50/60">
-                                            <td colSpan={8} className="px-5 py-2">
+                                            <td className="pl-4 pr-1 py-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={allDateSelected}
+                                                    onChange={e => {
+                                                        setSelectedResponseIds(prev => {
+                                                            const next = new Set(prev);
+                                                            if (e.target.checked) dateIds.forEach(id => next.add(id));
+                                                            else dateIds.forEach(id => next.delete(id));
+                                                            return next;
+                                                        });
+                                                    }}
+                                                    className="rounded border-slate-300 accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                                                />
+                                            </td>
+                                            <td colSpan={8} className="px-2 py-2">
                                                 <div className="flex items-center gap-2.5">
                                                     <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</span>
                                                     {badge && <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">{badge}</span>}
@@ -1807,8 +1872,24 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         const resp = res?.responses || {};
                                         const sleepH = resp.sleep_hours;
                                         const soreness = resp.soreness;
+                                        const isChecked = selectedResponseIds.has(res.id);
                                         rows.push(
-                                            <tr key={res.id} className="group hover:bg-slate-50/50 transition-colors border-t border-slate-50">
+                                            <tr key={res.id} className={`group transition-colors border-t border-slate-50 ${isChecked ? 'bg-indigo-50/40' : 'hover:bg-slate-50/50'}`}>
+                                                <td className="pl-4 pr-1 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setSelectedResponseIds(prev => {
+                                                                const next = new Set(prev);
+                                                                if (next.has(res.id)) next.delete(res.id);
+                                                                else next.add(res.id);
+                                                                return next;
+                                                            });
+                                                        }}
+                                                        className="rounded border-slate-300 accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                                                    />
+                                                </td>
                                                 <td className="pl-5 pr-1 py-4">
                                                     {status ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} /> : <span className="w-3 h-3 rounded-full block bg-slate-200" />}
                                                 </td>
@@ -1864,7 +1945,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         return (
                                                             <div className="flex flex-col gap-1">
                                                                 {hasInjury && <div className="flex items-center gap-1 text-rose-500"><AlertTriangle size={12} /><span className="text-[10px] font-semibold">Injury{injuryCount > 0 ? ` (${injuryCount})` : ''}</span></div>}
-                                                                {hasIllness && <div className="flex items-center gap-1 text-blue-500"><Thermometer size={12} /><span className="text-[10px] font-semibold">Illness</span></div>}
+                                                                {hasIllness && <div className="flex items-center gap-1 text-sky-500"><Thermometer size={12} /><span className="text-[10px] font-semibold">Illness</span></div>}
                                                             </div>
                                                         );
                                                     })()}
@@ -1891,7 +1972,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         );
                                     });
                                     return rows;
-                                });
+                                })];
                             })()}
                         </tbody>
                     </table>
@@ -2112,7 +2193,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             const dt = new Date(y, m - 1, d);
                                             const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
-                                            const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 text-rose-700 border-rose-100', Illness:'bg-blue-50 text-blue-700 border-blue-100', Both:'bg-purple-50 text-purple-700 border-purple-100', 'Health Trends':'bg-slate-50 text-slate-500 border-slate-200' };
+                                            const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 text-rose-700 border-rose-100', Illness:'bg-sky-50 text-sky-700 border-sky-100', Both:'bg-indigo-50 text-indigo-700 border-indigo-100', 'Health Trends':'bg-slate-50 text-slate-500 border-slate-200' };
 
                                             return (
                                                 <tr key={dc.id} className="group hover:bg-slate-50/50 transition-colors border-t border-slate-50">
@@ -2141,12 +2222,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         {activeSymptoms.length > 0 ? (
                                                             <div className="flex flex-wrap gap-1">
                                                                 {activeSymptoms.slice(0, 3).map(s => (
-                                                                    <span key={s} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[8px] font-semibold">{s}</span>
+                                                                    <span key={s} className="px-1.5 py-0.5 bg-sky-50 text-sky-700 border border-sky-100 rounded text-[8px] font-semibold">{s}</span>
                                                                 ))}
                                                                 {activeSymptoms.length > 3 && <span className="text-[8px] text-slate-400 font-semibold">+{activeSymptoms.length - 3} more</span>}
                                                             </div>
                                                         ) : illnessSev ? (
-                                                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold border capitalize ${illnessSev === 'severe' ? 'bg-rose-50 text-rose-700 border-rose-100' : illnessSev === 'moderate' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{illnessSev}</span>
+                                                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold border capitalize ${illnessSev === 'severe' ? 'bg-rose-50 text-rose-700 border-rose-100' : illnessSev === 'moderate' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-sky-50 text-sky-700 border-sky-100'}`}>{illnessSev}</span>
                                                         ) : complaint === 'injury' || complaint === 'both' ? (
                                                             <span className="text-[9px] text-slate-400 italic">See detail →</span>
                                                         ) : <span className="text-slate-300 text-[10px]">—</span>}
@@ -2247,7 +2328,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             {/* Day-width toggle + colour legend */}
                             <div className="flex items-center gap-2">
                                 <div className="flex gap-0.5" title="Low → High wellness">
-                                    {['bg-rose-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-300', 'bg-lime-300', 'bg-emerald-300', 'bg-emerald-400'].map((c, i) => (
+                                    {['bg-rose-500', 'bg-rose-400', 'bg-amber-500', 'bg-amber-400', 'bg-sky-400', 'bg-emerald-400', 'bg-emerald-500'].map((c, i) => (
                                         <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
                                     ))}
                                 </div>
@@ -2349,7 +2430,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             const hasIllness = complaint === 'illness' || complaint === 'both' || weeklyHasIllness;
 
                             // Helper: numeric chip
-                            const NumChip = ({ id, val, max, label }: { id: string; val: number; max: number | null; label: string }) => {
+                            const NumChip = ({ id, val, max, label }: { id: string; val: number; max: number | null; label: string; key?: string }) => {
                                 const qLow = id.toLowerCase();
                                 const isHighBad = ['rpe', 'stress', 'fatigue', 'soreness'].some(k => qLow.includes(k));
                                 const isHighGood = ['energy', 'motivation', 'sleep', 'hydration', 'nutrition', 'mood'].some(k => qLow.includes(k));
@@ -2388,7 +2469,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             };
                             const SEVERITY_COLORS: Record<string, string> = {
                                 mild: 'bg-amber-50 text-amber-700 border-amber-100',
-                                moderate: 'bg-orange-50 text-orange-700 border-orange-100',
+                                moderate: 'bg-rose-50 text-rose-600 border-rose-100',
                                 severe: 'bg-rose-50 text-rose-700 border-rose-100',
                             };
                             const TREND_COLORS: Record<string, string> = {
@@ -2421,7 +2502,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 )}
                                                 {(['fatigue','soreness','sleep_quality','stress','mood'] as const).map(k =>
                                                     typeof dailyResp[k] === 'number' ? (
-                                                        <NumChip key={k} id={k} val={dailyResp[k]} max={10} label={k.replace(/_/g,' ')} />
+                                                        <NumChip key={k} id={k} val={dailyResp[k] as number} max={10} label={k.replace(/_/g,' ')} />
                                                     ) : null
                                                 )}
                                                 {typeof dailyResp.sleep_hours === 'number' && (
@@ -2449,10 +2530,10 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     <StrPill label="Onset" val={weeklyResp.onset} colorMap={{ sudden: 'bg-rose-50 text-rose-700 border-rose-100', gradual: 'bg-amber-50 text-amber-700 border-amber-100' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.status && (
-                                                    <StrPill label="Status" val={weeklyResp.status} colorMap={{ new: 'bg-rose-50 text-rose-700 border-rose-100', recurrence: 'bg-orange-50 text-orange-700 border-orange-100', exacerbation: 'bg-amber-50 text-amber-700 border-amber-100' }} />
+                                                    <StrPill label="Status" val={weeklyResp.status} colorMap={{ new: 'bg-rose-50 text-rose-700 border-rose-100', recurrence: 'bg-amber-50 text-amber-700 border-amber-100', exacerbation: 'bg-rose-50 text-rose-700 border-rose-100' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.impact && weeklyResp.impact !== 'none' && (
-                                                    <StrPill label="Impact" val={weeklyResp.impact} colorMap={{ minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-orange-50 text-orange-700 border-orange-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
+                                                    <StrPill label="Impact" val={weeklyResp.impact} colorMap={{ minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-rose-50 text-rose-600 border-rose-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.time_loss && weeklyResp.time_loss !== '0' && (
                                                     <StrPill label="Time loss" val={weeklyResp.time_loss} colorMap={{}} />
@@ -2464,7 +2545,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     {/* Illness section */}
                                     {hasIllness && (
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-3 flex items-center gap-1.5">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-sky-400 mb-3 flex items-center gap-1.5">
                                                 <Thermometer size={10} /> Illness
                                             </p>
                                             <div className="flex flex-wrap gap-2">
@@ -2473,13 +2554,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 )}
                                                 {/* URTI symptoms from weekly if present */}
                                                 {urtiFields.map(k => (
-                                                    <div key={k} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-blue-50 text-blue-700 border-blue-100">
+                                                    <div key={k} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-sky-50 text-sky-700 border-sky-100">
                                                         <span className="opacity-50">{URTI_LABELS[k]}</span>
                                                         <span>{URTI_SEVERITY[weeklyResp[k]] || weeklyResp[k]}</span>
                                                     </div>
                                                 ))}
                                                 {weeklyResp.illness_impact && weeklyResp.illness_impact !== 'none' && (
-                                                    <StrPill label="Impact" val={weeklyResp.illness_impact} colorMap={{ no_impact: 'bg-emerald-50 text-emerald-700 border-emerald-100', minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-orange-50 text-orange-700 border-orange-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
+                                                    <StrPill label="Impact" val={weeklyResp.illness_impact} colorMap={{ no_impact: 'bg-emerald-50 text-emerald-700 border-emerald-100', minor: 'bg-amber-50 text-amber-700 border-amber-100', moderate: 'bg-rose-50 text-rose-600 border-rose-100', severe: 'bg-rose-50 text-rose-700 border-rose-100' }} />
                                                 )}
                                                 {weeklyResp.illness_time_loss && weeklyResp.illness_time_loss !== '0' && (
                                                     <StrPill label="Time loss" val={weeklyResp.illness_time_loss} colorMap={{}} />
@@ -2543,8 +2624,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 {res?.injury_report?.areas?.map((area: BodyMapArea, idx: number) => (
                                     <div key={idx} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 text-white font-semibold text-xs shadow-lg animate-in zoom-in-50 ${
                                         area.severity === 3 ? 'bg-rose-600 border-rose-400' :
-                                        area.severity === 2 ? 'bg-orange-500 border-orange-300' :
-                                                              'bg-yellow-400 border-yellow-200 text-slate-900'
+                                        area.severity === 2 ? 'bg-rose-400 border-rose-300' :
+                                                              'bg-amber-400 border-amber-300'
                                     }`}>
                                         {area.area}
                                         <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-ping" />
@@ -2583,7 +2664,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             <div key={area.area} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                                                        area.severity === 3 ? 'bg-rose-500' : area.severity === 2 ? 'bg-orange-500' : 'bg-yellow-400'
+                                                        area.severity === 3 ? 'bg-rose-500' : area.severity === 2 ? 'bg-rose-400' : 'bg-amber-400'
                                                     }`} />
                                                     <span className="text-[10px] font-black uppercase tracking-wide text-slate-700">
                                                         {area.area.replace(/_/g, ' ')}
@@ -2982,19 +3063,19 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             { id: 'w5', label: 'Which Side?', type: 'Buttons', instruction: 'Which side is affected?', options: ['Left', 'Right', 'Bilateral (both)', 'Central'], colors: ['bg-slate-800', 'bg-slate-800', 'bg-slate-800', 'bg-slate-800'], note: 'Injury path only' },
                                             { id: 'w6', label: 'Mechanism', type: 'List', instruction: 'What activity caused or triggered it?', options: ['Running', 'Change of direction', 'Kicking', 'Landing', 'Tackle', 'Collision', 'Jumping', 'Other'], note: 'Injury path · sudden onset only' },
                                             { id: 'w7', label: 'Contact Type', type: 'List', instruction: 'Did this involve contact with a person or object?', options: ['Non-contact', 'Indirect contact', 'Direct — Opponent', 'Direct — Teammate', 'Direct — Ball', 'Direct — Goal post', 'Direct — Other'], note: 'Injury path · sudden onset only' },
-                                            { id: 'w8', label: 'Performance Impact', type: 'Buttons', instruction: 'How much is this injury affecting your ability to train?', options: ['No Impact', 'Minor — can fully train', 'Moderate — reduced performance', 'Severe — cannot complete session'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Injury path only' },
-                                            { id: 'w9', label: 'Expected Time-Loss', type: 'Buttons', instruction: 'How long do you expect this injury to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-orange-500', 'bg-rose-500'], note: 'Injury path only' },
+                                            { id: 'w8', label: 'Performance Impact', type: 'Buttons', instruction: 'How much is this injury affecting your ability to train?', options: ['No Impact', 'Minor — can fully train', 'Moderate — reduced performance', 'Severe — cannot complete session'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Injury path only' },
+                                            { id: 'w9', label: 'Expected Time-Loss', type: 'Buttons', instruction: 'How long do you expect this injury to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-400', 'bg-amber-600', 'bg-rose-500'], note: 'Injury path only' },
                                             // ── ILLNESS PATH (shown only if Illness or Both) ──
-                                            { id: 'w_ill1', label: 'Hoarseness', type: 'Severity', instruction: 'Rate any voice roughness or hoarseness you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill2', label: 'Blocked / Plugged Nose', type: 'Severity', instruction: 'Rate how blocked or plugged your nose feels.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill3', label: 'Runny Nose', type: 'Severity', instruction: 'Rate any runny nose you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill4', label: 'Sinus Pressure', type: 'Severity', instruction: 'Rate any facial pressure or sinus pain.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill5', label: 'Sneezing', type: 'Severity', instruction: 'Rate how frequently you\'re sneezing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill6', label: 'Dry Cough', type: 'Severity', instruction: 'Rate any dry, unproductive cough.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill7', label: 'Wet Cough', type: 'Severity', instruction: 'Rate any cough that produces mucus or sputum.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill8', label: 'Headache', type: 'Severity', instruction: 'Rate any headache you\'re currently experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill9', label: 'Illness Impact', type: 'Buttons', instruction: 'How much is this illness affecting your ability to train?', options: ['No Impact', 'Minor', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
-                                            { id: 'w_ill10', label: 'Illness Time-Loss', type: 'Buttons', instruction: 'How long do you expect this illness to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-lime-500', 'bg-amber-500', 'bg-orange-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill1', label: 'Hoarseness', type: 'Severity', instruction: 'Rate any voice roughness or hoarseness you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill2', label: 'Blocked / Plugged Nose', type: 'Severity', instruction: 'Rate how blocked or plugged your nose feels.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill3', label: 'Runny Nose', type: 'Severity', instruction: 'Rate any runny nose you\'re experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill4', label: 'Sinus Pressure', type: 'Severity', instruction: 'Rate any facial pressure or sinus pain.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill5', label: 'Sneezing', type: 'Severity', instruction: 'Rate how frequently you\'re sneezing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill6', label: 'Dry Cough', type: 'Severity', instruction: 'Rate any dry, unproductive cough.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill7', label: 'Wet Cough', type: 'Severity', instruction: 'Rate any cough that produces mucus or sputum.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill8', label: 'Headache', type: 'Severity', instruction: 'Rate any headache you\'re currently experiencing.', options: ['No Symptoms', 'Mild', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill9', label: 'Illness Impact', type: 'Buttons', instruction: 'How much is this illness affecting your ability to train?', options: ['No Impact', 'Minor', 'Moderate', 'Severe'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-500', 'bg-rose-500'], note: 'Illness path only' },
+                                            { id: 'w_ill10', label: 'Illness Time-Loss', type: 'Buttons', instruction: 'How long do you expect this illness to affect your availability?', options: ['0 days', '1–3 days', '4–7 days', '8–28 days', '29+ days'], colors: ['bg-emerald-500', 'bg-sky-400', 'bg-amber-400', 'bg-amber-600', 'bg-rose-500'], note: 'Illness path only' },
                                             // ── SHARED CLOSING (always shown) ──
                                             { id: 'w10', label: 'Fatigue Trend', type: 'Buttons', instruction: 'Over the past week, how has your fatigue been trending?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
                                             { id: 'w11', label: 'Sleep Trend', type: 'Buttons', instruction: 'Over the past week, how has your sleep quality been trending?', options: ['Improving', 'Stable', 'Worsening'], colors: ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'] },
@@ -3003,8 +3084,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             { id: 'w14', label: 'Stress Sources', type: 'Multi-select', instruction: 'What are your main stress sources right now? Select all that apply.', options: ['Football / Sport', 'Work / School', 'Personal', 'None'] },
                                         ];
 
-                                        const negColors = ['bg-emerald-400', 'bg-emerald-400', 'bg-lime-400', 'bg-lime-400', 'bg-yellow-400', 'bg-yellow-400', 'bg-amber-400', 'bg-orange-400', 'bg-red-400', 'bg-red-500'];
-                                        const posColors = ['bg-red-500', 'bg-red-400', 'bg-orange-400', 'bg-amber-400', 'bg-yellow-400', 'bg-yellow-400', 'bg-lime-400', 'bg-lime-400', 'bg-emerald-400', 'bg-emerald-400'];
+                                        const negColors = ['bg-emerald-500', 'bg-emerald-400', 'bg-emerald-400', 'bg-sky-400', 'bg-sky-500', 'bg-amber-400', 'bg-amber-500', 'bg-rose-400', 'bg-rose-500', 'bg-rose-600'];
+                                        const posColors = ['bg-rose-600', 'bg-rose-500', 'bg-rose-400', 'bg-amber-500', 'bg-amber-400', 'bg-sky-500', 'bg-sky-400', 'bg-emerald-400', 'bg-emerald-400', 'bg-emerald-500'];
 
                                         return questions.map((q, i) => {
                                             const isExpanded = expandedPreviewQ === q.id;
@@ -3165,6 +3246,60 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         wellnessTemplates={wellnessTemplates}
                         setWellnessTemplates={setWellnessTemplates}
                     />
+                </div>
+            )}
+
+            {/* ── Bulk Action Floating Bar ── */}
+            {selectedResponseIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[9px] font-bold">{selectedResponseIds.size}</div>
+                        <span className="text-sm font-semibold">{selectedResponseIds.size === 1 ? '1 response selected' : `${selectedResponseIds.size} responses selected`}</span>
+                    </div>
+                    <div className="w-px h-5 bg-slate-600" />
+                    <button
+                        onClick={() => setShowBulkConfirm(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg transition-colors"
+                    >
+                        <Trash2 size={12} />
+                        Delete
+                    </button>
+                    <button
+                        onClick={() => setSelectedResponseIds(new Set())}
+                        className="p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
+                        title="Clear selection"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {/* ── Bulk Delete Confirm Modal ── */}
+            {showBulkConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-full max-w-sm mx-4">
+                        <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center mb-4">
+                            <Trash2 size={20} className="text-rose-500" />
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Delete {selectedResponseIds.size} response{selectedResponseIds.size !== 1 ? 's' : ''}?</h3>
+                        <p className="text-sm text-slate-500 mb-5">This will permanently remove the selected wellness responses. This cannot be undone.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowBulkConfirm(false)}
+                                disabled={isBulkDeleting}
+                                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                                className="flex-1 px-4 py-2.5 bg-rose-500 hover:bg-rose-600 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                            >
+                                {isBulkDeleting ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Deleting…</> : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

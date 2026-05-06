@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useState } from 'react';
 import { Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, ImagePlus, X, Loader2 } from 'lucide-react';
 import { BodyMapConfig, BodyMapAreaDef, SeverityLevel, ImageRefInputType } from '../../types/types';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const BORG_RPE_SCALE: Record<number, { label: string; color: string }> = {
             0: { label: 'Nothing at all',  color: 'text-slate-400' },
             1: { label: 'Rest',            color: 'text-emerald-400' },

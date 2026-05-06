@@ -99,7 +99,7 @@ const WelcomeSplash = () => {
 
     return (
         <div
-            className={`fixed inset-0 z-[2000] flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-[2000] flex flex-col items-center justify-center bg-[#0D1829] transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}
         >
             {/* Logo mark */}
             <div className="flex flex-col items-center gap-6">
@@ -422,7 +422,7 @@ const App = () => {
     }, []);
 
     return (
-        <div className="flex h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500/30 overflow-hidden relative">
+        <div className="flex h-screen bg-slate-50 dark:bg-[#0D1829] text-slate-900 dark:text-[#E2E8F0] font-sans selection:bg-indigo-500/30 overflow-hidden relative transition-colors duration-200">
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                 <TopBar />
@@ -741,7 +741,7 @@ table { width: 100%; border-collapse: collapse; }
                                         <div key={col.id} className="border border-slate-100 rounded-lg p-3 space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Column {i + 1}</span>
-                                                <button onClick={() => removeColumn(col.id)} className="text-slate-300 hover:text-red-400 transition-colors"><Trash2Icon size={13} /></button>
+                                                <button onClick={() => removeColumn(col.id)} className="text-slate-300 hover:text-rose-400 transition-colors"><Trash2Icon size={13} /></button>
                                             </div>
                                             {wsMode !== 'empty-header' && (
                                                 <input
@@ -913,7 +913,7 @@ const AddSessionModal = () => {
                                             key={l}
                                             onClick={() => setNewSession({ ...newSession, load: l })}
                                             className={`py-2.5 rounded-lg border-2 text-xs font-medium transition-all ${newSession.load === l
-                                                ? (l === 'High' ? 'bg-red-50 border-red-400 text-red-600' : l === 'Medium' ? 'bg-amber-50 border-amber-400 text-amber-600' : 'bg-emerald-50 border-emerald-400 text-emerald-600')
+                                                ? (l === 'High' ? 'bg-rose-50 border-rose-400 text-rose-600' : l === 'Medium' ? 'bg-amber-50 border-amber-400 text-amber-600' : 'bg-emerald-50 border-emerald-400 text-emerald-600')
                                                 : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
                                                 }`}
                                         >
@@ -1015,7 +1015,7 @@ const AddSessionModal = () => {
                                                             <button onClick={() => {
                                                                 const updated = newSession.exercises.filter(item => item.id !== ex.id);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-red-50 text-red-500 border border-red-100 rounded-md py-1.5 text-[9px] font-medium hover:bg-red-100">Remove</button>
+                                                            }} className="w-full bg-rose-50 text-rose-500 border border-rose-100 rounded-md py-1.5 text-[9px] font-medium hover:bg-rose-100">Remove</button>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1053,7 +1053,7 @@ const SessionModal = () => {
     if (!viewingSession) return null;
 
     const targetName = resolveTargetName(viewingSession.targetId, viewingSession.targetType);
-    const loadColor = viewingSession.load === 'High' ? 'text-red-600 bg-red-50 border-red-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-green-600 bg-green-50 border-green-100';
+    const loadColor = viewingSession.load === 'High' ? 'text-rose-600 bg-rose-50 border-rose-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100';
     const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const sessionType = viewingSession.session_type || 'workout';
@@ -1061,7 +1061,7 @@ const SessionModal = () => {
     const isConditioning = sessionType === 'conditioning';
     const linkedSessions = viewingSession.linked_sessions || [];
     const headerIcon = isWattbike ? <ActivityIcon size={16} /> : isConditioning ? <TimerIcon size={16} /> : <DumbbellIcon size={16} />;
-    const headerBg = isWattbike ? 'bg-emerald-600' : isConditioning ? 'bg-orange-500' : 'bg-slate-800';
+    const headerBg = isWattbike ? 'bg-emerald-600' : isConditioning ? 'bg-amber-500' : 'bg-slate-800';
     const typeLabel = isWattbike ? 'Wattbike Session' : isConditioning ? 'Conditioning Session' : (viewingSession.targetType === 'Team' ? 'Team Session' : 'Individual Session');
 
     const handleDeleteAndClose = async () => {
@@ -1167,9 +1167,9 @@ const SessionModal = () => {
                         </div>
                     )}
                     {isConditioning && viewingSession.exercises?.meta && (
-                        <div className="bg-orange-50 rounded-lg border border-orange-100 p-3 space-y-1">
-                            <span className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide">Conditioning Protocol</span>
-                            <div className="flex items-center gap-3 text-xs text-orange-700">
+                        <div className="bg-amber-50 rounded-lg border border-amber-100 p-3 space-y-1">
+                            <span className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide">Conditioning Protocol</span>
+                            <div className="flex items-center gap-3 text-xs text-amber-700">
                                 {viewingSession.exercises.meta.modality && <span className="font-medium">{viewingSession.exercises.meta.modality}</span>}
                                 {viewingSession.exercises.meta.energySystem && <span>· {viewingSession.exercises.meta.energySystem}</span>}
                                 {viewingSession.exercises.meta.totalDuration && <span>· {viewingSession.exercises.meta.totalDuration}</span>}
@@ -1184,7 +1184,7 @@ const SessionModal = () => {
                             <div className="flex flex-wrap gap-2">
                                 {linkedSessions.map(l => {
                                     const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 text-emerald-700'
-                                        : l.source === 'conditioning' ? 'bg-orange-100 text-orange-700'
+                                        : l.source === 'conditioning' ? 'bg-amber-100 text-amber-700'
                                         : l.source === 'workout-template' ? 'bg-indigo-100 text-indigo-700'
                                         : 'bg-slate-100 text-slate-600';
                                     const srcIcon = l.source === 'wattbike' ? <ActivityIcon size={10} />
@@ -1207,7 +1207,7 @@ const SessionModal = () => {
                 <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Close</button>
-                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 hover:bg-rose-50 rounded-lg text-sm font-medium transition-colors">
                             <Trash2Icon size={14} /> Delete
                         </button>
                     </div>
@@ -1222,7 +1222,7 @@ const SessionModal = () => {
                         </button>
                     )}
                     {isConditioning && (
-                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
+                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">
                             <TimerIcon size={14} /> View in Conditioning Hub
                         </button>
                     )}
