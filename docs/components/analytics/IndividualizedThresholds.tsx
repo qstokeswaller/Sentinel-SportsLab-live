@@ -18,6 +18,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../../utils/constants';
+import { CustomSelect } from '../ui/CustomSelect';
 import {
     ShieldIcon, GaugeIcon, AlertTriangleIcon, InfoIcon,
     TrendingUpIcon, ActivityIcon, UserIcon,
@@ -231,10 +232,10 @@ const IndividualizedThresholds: React.FC = () => {
     };
 
     const zoneBg = (acwr: number, t: ThresholdResult) => {
-        if (acwr < t.lowerThreshold) return 'bg-sky-50 border-sky-200';
-        if (acwr <= t.upperThreshold) return 'bg-emerald-50 border-emerald-200';
-        if (acwr <= t.upperThreshold + 0.2) return 'bg-amber-50 border-amber-200';
-        return 'bg-rose-50 border-rose-200';
+        if (acwr < t.lowerThreshold) return 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50';
+        if (acwr <= t.upperThreshold) return 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50';
+        if (acwr <= t.upperThreshold + 0.2) return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50';
+        return 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50';
     };
 
     const zoneLabel = (acwr: number, t: ThresholdResult) => {
@@ -258,10 +259,11 @@ const IndividualizedThresholds: React.FC = () => {
                     </div>
                 </div>
 
-                <select
+                <CustomSelect
+                    variant="form"
                     value={selectedAthleteId}
                     onChange={e => setSelectedAthleteId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-300"
+                    placeholder="Select an athlete..."
                 >
                     <option value="">Select an athlete...</option>
                     {teams.filter(t => t.players?.length).map(t => (
@@ -269,7 +271,7 @@ const IndividualizedThresholds: React.FC = () => {
                             {(t.players || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </optgroup>
                     ))}
-                </select>
+                </CustomSelect>
             </div>
 
             {/* No athlete selected */}
@@ -282,9 +284,9 @@ const IndividualizedThresholds: React.FC = () => {
 
             {/* ACWR not enabled */}
             {selectedAthleteId && !acwrEnabled && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-5 text-center">
                     <AlertTriangleIcon size={20} className="mx-auto text-amber-500 mb-2" />
-                    <p className="text-sm text-amber-700">ACWR monitoring is not enabled for this athlete's team. Enable it in Settings → Feature Settings.</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-400">ACWR monitoring is not enabled for this athlete's team. Enable it in Settings → Feature Settings.</p>
                 </div>
             )}
 
@@ -361,7 +363,7 @@ const IndividualizedThresholds: React.FC = () => {
                                 <div className="text-[9px] text-slate-400 mb-1">Population Upper</div>
                                 <div className="text-lg font-bold text-slate-600">{POP_UPPER}</div>
                             </div>
-                            <div className="bg-violet-50 rounded-lg p-3 text-center border border-violet-200">
+                            <div className="bg-violet-50 rounded-lg p-3 text-center border border-violet-200 dark:border-violet-800/50">
                                 <div className="text-[9px] text-violet-500 mb-1">Personal Upper</div>
                                 <div className="text-lg font-bold text-violet-700">{thresholds.upperThreshold.toFixed(2)}</div>
                             </div>
@@ -373,7 +375,7 @@ const IndividualizedThresholds: React.FC = () => {
                             </div>
                         </div>
                         {thresholds.upperThreshold > POP_UPPER && (
-                            <p className="text-xs text-emerald-600 mt-3">This athlete tolerates higher loads than the population average — indicative of a well-conditioned training base (Blanch & Gabbett, 2016).</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3">This athlete tolerates higher loads than the population average — indicative of a well-conditioned training base (Blanch & Gabbett, 2016).</p>
                         )}
                         {thresholds.upperThreshold < POP_UPPER && thresholds.isPersonalized && (
                             <p className="text-xs text-amber-600 mt-3">This athlete's threshold is below the population average — they may be more susceptible to load spikes. Consider conservative load progression.</p>

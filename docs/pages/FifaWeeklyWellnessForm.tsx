@@ -296,10 +296,10 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     const OptionButton = ({ value, label, desc, isSelected, onClick, color = 'slate' }) => {
         const colorMap = {
-            emerald: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 border-emerald-200' },
+            emerald: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50' },
             lime: { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]', un: 'bg-lime-50 border-lime-200' },
-            amber: { sel: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]', un: 'bg-amber-50 border-amber-200' },
-            rose: { sel: 'bg-rose-500 border-rose-500 text-white shadow-lg scale-[1.02]', un: 'bg-rose-50 border-rose-200' },
+            amber: { sel: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]', un: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' },
+            rose: { sel: 'bg-rose-500 border-rose-500 text-white shadow-lg scale-[1.02]', un: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50' },
             slate: { sel: 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]', un: 'bg-white border-slate-100' },
         };
         const c = colorMap[color] || colorMap.slate;
@@ -313,16 +313,16 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     };
 
     const SCALE_COLORS_POSITIVE = {
-        1:  { sel: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 text-red-700' },
-        2:  { sel: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 text-red-700' },
+        1:  { sel: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
+        2:  { sel: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.02]',         un: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
         3:  { sel: 'bg-orange-500 border-orange-500 text-white shadow-lg scale-[1.02]',   un: 'bg-orange-50 border-orange-200 text-orange-700' },
-        4:  { sel: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]',     un: 'bg-amber-50 border-amber-200 text-amber-700' },
+        4:  { sel: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]',     un: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700' },
         5:  { sel: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.02]',   un: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
         6:  { sel: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.02]',   un: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
         7:  { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]',       un: 'bg-lime-50 border-lime-200 text-lime-700' },
         8:  { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]',       un: 'bg-lime-50 border-lime-200 text-lime-700' },
-        9:  { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-        10: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        9:  { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
+        10: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
     };
 
     const renderScale110 = (id: string) => {
@@ -361,7 +361,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     if (submitted) return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 animate-bounce">
                 <CheckCircle2 size={40} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Deep Check Complete</h1>
@@ -452,7 +452,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                             <Activity size={13} className="text-white" />
                         </div>
                         <span className="font-bold text-sm text-slate-900 tracking-tight">
-                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
                     </div>
                     <span className="text-[9px] text-slate-400 tracking-wide uppercase">Deep Health Check</span>
@@ -486,7 +486,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                 <button key={a.id} onClick={() => handleSelectAthlete(a.id)}
                                     className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
                                         selectedAthleteId === a.id
-                                            ? 'bg-amber-50 border-amber-500 shadow-md ring-4 ring-amber-50/50 scale-[1.02]'
+                                            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 shadow-md ring-4 ring-amber-50/50 scale-[1.02]'
                                             : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
                                     }`}>
                                     <div className="flex items-center justify-between">
@@ -499,12 +499,12 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                     )}
 
                     {stepId === 'intro' && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5 space-y-3">
                             <div className="flex items-center gap-2">
                                 <ShieldAlert size={18} className="text-amber-600" />
                                 <span className="font-semibold text-amber-800">Why am I seeing this?</span>
                             </div>
-                            <p className="text-sm text-amber-700 leading-relaxed">
+                            <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
                                 {complaintLabel
                                     ? `Your daily check-in flagged a ${complaintLabel === 'injury and illness' ? 'health concern (injury and illness)' : complaintLabel}. Your coaching staff want to understand it better so they can adjust your training and recovery plan accordingly.`
                                     : 'Your coaching staff have shared this form to get a better picture of your current health and wellbeing. It covers injury, illness, and how you\'ve been feeling overall.'
@@ -535,12 +535,12 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                             {URTI_OPTIONS.map((opt, idx) => {
                                                 const isSelected = current === idx;
                                                 const colorCls = idx === 0
-                                                    ? isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                                    ? isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700'
                                                     : idx === 1
                                                     ? isSelected ? 'bg-lime-500 border-lime-500 text-white' : 'bg-lime-50 border-lime-200 text-lime-700'
                                                     : idx === 2
-                                                    ? isSelected ? 'bg-amber-500 border-amber-500 text-white' : 'bg-amber-50 border-amber-200 text-amber-700'
-                                                    : isSelected ? 'bg-rose-500 border-rose-500 text-white' : 'bg-rose-50 border-rose-200 text-rose-700';
+                                                    ? isSelected ? 'bg-amber-500 border-amber-500 text-white' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700'
+                                                    : isSelected ? 'bg-rose-500 border-rose-500 text-white' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700';
                                                 return (
                                                     <button
                                                         key={opt}

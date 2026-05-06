@@ -79,7 +79,7 @@ const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0F1C30] flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
 
         {/* Logo */}
@@ -87,14 +87,14 @@ const OnboardingPage: React.FC = () => {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
             <ActivityIcon className="text-white w-4 h-4" />
           </div>
-          <span className="font-bold text-slate-900">
-            Sentinel <span className="text-indigo-600">SportsLab</span>
+          <span className="font-bold text-slate-900 dark:text-[#E2E8F0]">
+            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
           </span>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-7 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">How are you using Sentinel SportsLab?</h2>
-          <p className="text-sm text-slate-500 mb-6">This determines how your data is organised.</p>
+        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-7 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1">How are you using Sentinel SportsLab?</h2>
+          <p className="text-sm text-slate-500 dark:text-[#94A3B8] mb-6">This determines how your data is organised.</p>
 
           <div className="grid grid-cols-2 gap-3 mb-5">
             {/* Individual */}
@@ -103,12 +103,12 @@ const OnboardingPage: React.FC = () => {
               className={`p-5 rounded-xl border-2 text-left transition-all ${
                 selected === 'individual'
                   ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                  : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] hover:border-slate-300'
               }`}
             >
               <div className="text-xl mb-2.5">🏃</div>
-              <p className="text-slate-900 font-semibold text-sm mb-1">Individual Coach</p>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-slate-900 dark:text-[#E2E8F0] font-semibold text-sm mb-1">Individual Coach</p>
+              <p className="text-slate-500 dark:text-[#94A3B8] text-xs leading-relaxed">
                 Personal coaching practice. Manage your own athletes directly.
               </p>
             </button>
@@ -119,12 +119,12 @@ const OnboardingPage: React.FC = () => {
               className={`p-5 rounded-xl border-2 text-left transition-all ${
                 selected === 'club'
                   ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                  : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] hover:border-slate-300'
               }`}
             >
               <div className="text-xl mb-2.5">🏟️</div>
-              <p className="text-slate-900 font-semibold text-sm mb-1">Club / Organisation</p>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-slate-900 dark:text-[#E2E8F0] font-semibold text-sm mb-1">Club / Organisation</p>
+              <p className="text-slate-500 dark:text-[#94A3B8] text-xs leading-relaxed">
                 Multi-coach setup. Invite staff and manage multiple squads.
               </p>
             </button>
@@ -133,17 +133,17 @@ const OnboardingPage: React.FC = () => {
           {/* Club name input */}
           {selected === 'club' && (
             <div className="mb-5">
-              <label className="text-xs font-medium text-slate-600 block mb-1.5">
+              <label className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5">
                 Club / Organisation name
               </label>
               <input
                 type="text"
                 value={clubName}
                 onChange={e => { setClubName(e.target.value); setClubNameError(false); setError(null); }}
-                className={`w-full bg-slate-50 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                className={`w-full bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 transition-colors ${
                   clubNameError
                     ? 'border-2 border-red-400 focus:ring-red-500/20 focus:border-red-400'
-                    : 'border border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
+                    : 'border border-slate-200 dark:border-[#243A58] focus:ring-indigo-500/20 focus:border-indigo-400'
                 }`}
                 placeholder="e.g. Northside FC"
                 autoFocus
@@ -153,7 +153,7 @@ const OnboardingPage: React.FC = () => {
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
+            <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5 mb-4">
               <p className="text-red-600 text-xs font-medium">{error}</p>
             </div>
           )}

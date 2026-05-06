@@ -8,6 +8,7 @@ import {
     UsersIcon, CheckCircleIcon, SaveIcon, CalendarIcon, ChevronDownIcon,
     FilterIcon, AlertCircleIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface Props {
   test: TestDefinition;
@@ -139,32 +140,23 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                         <label className="block text-xs font-medium text-slate-600 mb-1">
                             <UsersIcon size={12} className="inline mr-1" />Team
                         </label>
-                        <select
-                            value={selectedTeamId}
-                            onChange={e => { setSelectedTeamId(e.target.value); setAthleteFilter(''); setRowData({}); setSavedRows(new Set()); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all bg-white"
-                        >
+                        <CustomSelect value={selectedTeamId} onChange={e => { setSelectedTeamId(e.target.value); setAthleteFilter(''); setRowData({}); setSavedRows(new Set()); }} variant="form" placeholder="— Select Team —">
                             <option value="">— Select Team —</option>
                             {teams.map(t => (
                                 <option key={t.id} value={t.id}>{t.name} ({t.players.length})</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">
                             <FilterIcon size={12} className="inline mr-1" />Filter Athlete
                         </label>
-                        <select
-                            value={athleteFilter}
-                            onChange={e => setAthleteFilter(e.target.value)}
-                            disabled={!selectedTeamId}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all bg-white"
-                        >
+                        <CustomSelect value={athleteFilter} onChange={e => setAthleteFilter(e.target.value)} disabled={!selectedTeamId} variant="form" placeholder="All Athletes">
                             <option value="">All Athletes</option>
                             {selectedTeam?.players.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">
@@ -193,7 +185,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                         </button>
                         <button
                             onClick={() => { setBatchTab('vbt'); setRowData({}); setSavedRows(new Set()); }}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${batchTab === 'vbt' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${batchTab === 'vbt' ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                             VBT Tracking
@@ -266,15 +258,17 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                             {tableFields.map(f => (
                                                 <td key={f.key} className="px-3 py-1.5">
                                                     {f.type === 'select' ? (
-                                                        <select
+                                                        <CustomSelect
                                                             value={(rowData[player.id] || {})[f.key] ?? ''}
                                                             onChange={e => setFieldValue(player.id, f.key, e.target.value || null)}
                                                             disabled={isSaved}
-                                                            className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm bg-white disabled:bg-slate-50 disabled:text-slate-400"
+                                                            variant="form"
+                                                            size="xs"
+                                                            placeholder="—"
                                                         >
                                                             <option value="">—</option>
                                                             {f.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                        </select>
+                                                        </CustomSelect>
                                                     ) : f.type === 'score_pills' ? (
                                                         <div className="flex gap-1">
                                                             {(f.pillValues || []).map(pv => (
@@ -307,14 +301,14 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                                 </td>
                                             ))}
                                             {test.calculations?.slice(0, 2).map(c => (
-                                                <td key={c.key} className="px-3 py-2 text-sm font-semibold text-indigo-600 tabular-nums">
+                                                <td key={c.key} className="px-3 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 tabular-nums">
                                                     {calculated[c.key] != null ? calculated[c.key] : '—'}
                                                     {c.unit && calculated[c.key] != null && <span className="text-indigo-400 text-xs ml-0.5">{c.unit}</span>}
                                                 </td>
                                             ))}
                                             <td className="px-3 py-1.5 text-right">
                                                 {isSaved ? (
-                                                    <span className="text-xs text-emerald-600 font-semibold">Saved</span>
+                                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Saved</span>
                                                 ) : (
                                                     <button
                                                         onClick={() => saveRow(player.id)}

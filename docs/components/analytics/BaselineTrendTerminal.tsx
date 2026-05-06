@@ -62,10 +62,10 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
     const wellnessVolatility = isVolatile(athleteHabits, 'readiness');
 
     const getStatusColor = (trend, volatile, inverse = false) => {
-        if (volatile) return 'text-purple-500 bg-purple-50 border-purple-100';
-        if (trend === 'Stable') return 'text-emerald-500 bg-emerald-50 border-emerald-100';
-        if (!inverse) return trend === 'Increasing' ? 'text-rose-500 bg-rose-50 border-rose-100' : 'text-amber-500 bg-amber-50 border-amber-100';
-        return trend === 'Increasing' ? 'text-emerald-500 bg-emerald-50 border-emerald-100' : 'text-rose-500 bg-rose-50 border-rose-100';
+        if (volatile) return 'text-purple-500 bg-purple-50 border-purple-100 dark:border-purple-800/40';
+        if (trend === 'Stable') return 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40';
+        if (!inverse) return trend === 'Increasing' ? 'text-rose-500 bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40' : 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40';
+        return trend === 'Increasing' ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40' : 'text-rose-500 bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40';
     };
 
     // ACWR Logic - Professional V4 Alignment
@@ -85,7 +85,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-4">
                     <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Daily Load Baseline</div>
                     <div className="flex items-baseline justify-between">
                         <div className="text-4xl font-semibold text-indigo-900">{loadBaseline.toFixed(0)}</div>
@@ -98,7 +98,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-4">
                     <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Wellness Baseline</div>
                     <div className="flex items-baseline justify-between">
                         <div className="text-4xl font-semibold text-indigo-900">{wellnessBaseline.toFixed(1)}</div>
@@ -111,10 +111,10 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                     </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-4">
                     <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-400">Current ACWR</div>
                     <div className="text-4xl font-semibold text-indigo-900">{currentACWR.toFixed(2)}</div>
-                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-semibold uppercase text-center ${currentACWR > 1.5 ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                    <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-semibold uppercase text-center ${currentACWR > 1.5 ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40'}`}>
                         Status: {currentACWR > 1.5 ? 'CRITICAL' : 'OPTIMAL'}
                     </div>
                 </div>
@@ -126,7 +126,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                 </div>
             </div>
 
-            <div className="bg-white p-10 rounded-xl border border-indigo-100 shadow-sm space-y-8">
+            <div className="bg-white p-10 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-8">
                 <div className="flex justify-between items-center">
                     <h4 className="text-xl font-semibold uppercase tracking-tighter text-indigo-900">Baseline vs. Current Volatility</h4>
                     <div className="flex gap-4">

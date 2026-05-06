@@ -4,6 +4,7 @@ import { XIcon, SaveIcon } from 'lucide-react';
 import { useCreateExercise, useUpdateExercise } from '../../hooks/useExercises';
 import { MUSCLE_GROUPS, BODY_REGIONS, CLASSIFICATIONS, POSTURES, GRIPS, MECHANICS, EQUIPMENT_LIST } from '../../utils/mocks';
 import { Button } from '@/components/ui/button';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface EditExerciseModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <h2 className="text-lg font-semibold text-slate-900">{isEditing ? 'Edit Exercise' : 'New Exercise'}</h2>
-          <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
             <XIcon size={16} />
           </button>
         </div>
@@ -98,45 +99,45 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Target Muscle</label>
-              <select value={form.targetMuscle} onChange={e => set('targetMuscle', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.targetMuscle} onChange={e => set('targetMuscle', e.target.value)} variant="form" size="sm">
                 {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Body Region</label>
-              <select value={form.bodyRegion} onChange={e => set('bodyRegion', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.bodyRegion} onChange={e => set('bodyRegion', e.target.value)} variant="form" size="sm">
                 {BODY_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Classification</label>
-              <select value={form.classification} onChange={e => set('classification', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.classification} onChange={e => set('classification', e.target.value)} variant="form" size="sm">
                 {CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Equipment</label>
-              <select value={form.primaryEquipment} onChange={e => set('primaryEquipment', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.primaryEquipment} onChange={e => set('primaryEquipment', e.target.value)} variant="form" size="sm">
                 {EQUIPMENT_LIST.map(eq => <option key={eq} value={eq}>{eq}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Posture</label>
-              <select value={form.posture} onChange={e => set('posture', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.posture} onChange={e => set('posture', e.target.value)} variant="form" size="sm">
                 {POSTURES.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Grip</label>
-              <select value={form.grip} onChange={e => set('grip', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.grip} onChange={e => set('grip', e.target.value)} variant="form" size="sm">
                 {GRIPS.map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
+              </CustomSelect>
             </div>
             <div>
               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 block">Mechanics</label>
-              <select value={form.mechanics} onChange={e => set('mechanics', e.target.value)} className={selectClass}>
+              <CustomSelect value={form.mechanics} onChange={e => set('mechanics', e.target.value)} variant="form" size="sm">
                 {MECHANICS.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+              </CustomSelect>
             </div>
           </div>
 

@@ -50,7 +50,7 @@ export const KpiTerminal = ({ kpiData, selectedAthlete }) => {
                 return (
                     <div key={kpi.id} className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md group">
                         <div className="flex justify-between items-start mb-6">
-                            <div className={`p-3 rounded-xl ${isStable ? 'bg-slate-50 text-slate-400' : isPositiveTrend ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
+                            <div className={`p-3 rounded-xl ${isStable ? 'bg-slate-50 text-slate-400' : isPositiveTrend ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-500' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-500'}`}>
                                 {isStable ? <MinusIcon size={20} /> : isPositiveTrend ? <TrendingUpIcon size={20} /> : <TrendingDownIcon size={20} />}
                             </div>
                             <PulseGraph values={kpi.history} color={isStable ? 'bg-slate-400' : isPositiveTrend ? 'bg-emerald-500' : 'bg-rose-500'} />

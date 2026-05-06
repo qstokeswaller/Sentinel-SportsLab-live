@@ -6,6 +6,7 @@ import {
     ArrowRightIcon, InfoIcon, LockIcon, UnlockIcon, ZapIcon, BarChart2Icon,
     BookmarkIcon, Trash2Icon, TrophyIcon, FlaskConicalIcon, GitCompareIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ─── Anchor projection helper ─────────────────────────────────────────────────
 // Iterates day-by-day: pinned days use their fixed load; others are algebraically
@@ -296,7 +297,7 @@ export const ScenarioModellingTerminal = ({
         <div className="space-y-6 animate-in fade-in duration-500">
 
             {/* ── Header + Current State ────────────────────────────────────── */}
-            <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-6">
+            <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-6">
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                         <h4 className="text-2xl font-semibold uppercase tracking-tighter text-indigo-900">Scenario Modelling</h4>
@@ -305,7 +306,7 @@ export const ScenarioModellingTerminal = ({
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-lg">
+                        <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/25 px-3 py-2 rounded-lg">
                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
                             <span className="text-[10px] font-semibold uppercase text-indigo-900">{metricInfo.label}</span>
                             <span className="text-[9px] text-indigo-400">({metricInfo.unit})</span>
@@ -353,7 +354,7 @@ export const ScenarioModellingTerminal = ({
                                     </div>
                                     <div className="text-center">
                                         <div className="text-[9px] text-slate-400">Avg</div>
-                                        <div className="text-sm font-bold text-emerald-600">{historicalBand.avg}</div>
+                                        <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{historicalBand.avg}</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="text-[9px] text-slate-400">P75</div>
@@ -384,28 +385,26 @@ export const ScenarioModellingTerminal = ({
                         <div className="flex items-center gap-2">
                             <TargetIcon size={14} className="text-indigo-500" />
                             <label className="text-[9px] font-bold text-slate-500 uppercase">Target ACWR:</label>
-                            <select value={targetRatio} onChange={e => setTargetRatio(parseFloat(e.target.value))}
-                                className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-300">
-                                <option value={0.85}>0.85 — Conservative</option>
-                                <option value={0.9}>0.90 — Low-end Optimal</option>
-                                <option value={0.95}>0.95 — Mid Optimal</option>
-                                <option value={1.0}>1.00 — Sweet Spot</option>
-                                <option value={1.05}>1.05 — Progressive</option>
-                                <option value={1.1}>1.10 — Overreaching (planned)</option>
-                                <option value={1.2}>1.20 — High Progressive</option>
-                            </select>
+                            <CustomSelect value={String(targetRatio)} onChange={e => setTargetRatio(parseFloat(e.target.value))} variant="filter" size="xs">
+                                <option value="0.85">0.85 — Conservative</option>
+                                <option value="0.9">0.90 — Low-end Optimal</option>
+                                <option value="0.95">0.95 — Mid Optimal</option>
+                                <option value="1">1.00 — Sweet Spot</option>
+                                <option value="1.05">1.05 — Progressive</option>
+                                <option value="1.1">1.10 — Overreaching (planned)</option>
+                                <option value="1.2">1.20 — High Progressive</option>
+                            </CustomSelect>
                         </div>
                         <div className="flex items-center gap-2">
                             <CalendarIcon size={14} className="text-indigo-500" />
                             <label className="text-[9px] font-bold text-slate-500 uppercase">Days:</label>
-                            <select value={projectionDays} onChange={e => { setProjectionDays(parseInt(e.target.value)); setManualOverrides({}); resetAnchors(); }}
-                                className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-300">
-                                <option value={3}>3 Days</option>
-                                <option value={5}>5 Days</option>
-                                <option value={7}>7 Days</option>
-                                <option value={10}>10 Days</option>
-                                <option value={14}>14 Days</option>
-                            </select>
+                            <CustomSelect value={String(projectionDays)} onChange={e => { setProjectionDays(parseInt(e.target.value)); setManualOverrides({}); resetAnchors(); }} variant="filter" size="xs">
+                                <option value="3">3 Days</option>
+                                <option value="5">5 Days</option>
+                                <option value="7">7 Days</option>
+                                <option value="10">10 Days</option>
+                                <option value="14">14 Days</option>
+                            </CustomSelect>
                         </div>
 
                         {/* Mode toggle — 3 options */}
@@ -416,7 +415,7 @@ export const ScenarioModellingTerminal = ({
                                 { id: 'whatif',  label: 'What-If' },
                             ].map(m => (
                                 <button key={m.id} onClick={() => setViewMode(m.id)}
-                                    className={`text-[10px] font-semibold px-3 py-1.5 rounded-md transition-all ${viewMode === m.id ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                    className={`text-[10px] font-semibold px-3 py-1.5 rounded-md transition-all ${viewMode === m.id ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                                     {m.label}
                                 </button>
                             ))}
@@ -424,7 +423,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Safe range toggle */}
                         <button onClick={() => setShowSafeRange(v => !v)}
-                            className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${showSafeRange ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${showSafeRange ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}>
                             <BarChart2Icon size={11} />
                             Safe Range
                         </button>
@@ -433,7 +432,7 @@ export const ScenarioModellingTerminal = ({
                         {viewMode === 'anchor' && (
                             <div className="flex items-center gap-2">
                                 {pinnedCount > 0 && (
-                                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800/50">
                                         {pinnedCount} day{pinnedCount > 1 ? 's' : ''} anchored
                                     </span>
                                 )}
@@ -470,7 +469,7 @@ export const ScenarioModellingTerminal = ({
                                     <button onClick={() => setShowSaveInput(true)}
                                         disabled={savedScenarios.length >= 3}
                                         title={savedScenarios.length >= 3 ? 'Max 3 scenarios saved — delete one to save more' : 'Save this projection as a named scenario'}
-                                        className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-indigo-600 hover:border-indigo-200 disabled:opacity-40 transition-all">
+                                        className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200 dark:border-indigo-800/50 disabled:opacity-40 transition-all">
                                         <BookmarkIcon size={11} />
                                         Save Scenario {savedScenarios.length > 0 && `(${savedScenarios.length}/3)`}
                                     </button>
@@ -478,7 +477,7 @@ export const ScenarioModellingTerminal = ({
 
                                 {savedScenarios.length >= 2 && (
                                     <button onClick={() => setCompareMode(v => !v)}
-                                        className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200'}`}>
+                                        className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}>
                                         <GitCompareIcon size={11} />
                                         Compare
                                     </button>
@@ -491,7 +490,7 @@ export const ScenarioModellingTerminal = ({
 
             {/* ── Historical Load Mini-Chart ────────────────────────────────── */}
             {hasData && historicalBand && historicalBand.chartBars.length > 0 && (
-                <div className="bg-white rounded-xl border border-indigo-100 shadow-sm px-8 py-5">
+                <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm px-8 py-5">
                     <div className="flex items-center justify-between mb-3">
                         <div>
                             <h4 className="text-sm font-semibold uppercase tracking-tighter text-indigo-900">Recent Load History</h4>
@@ -546,10 +545,10 @@ export const ScenarioModellingTerminal = ({
                 <>
                     {/* ── Upcoming Plan Events (from Periodization Planner) ─── */}
                     {upcomingPlanEvents.length > 0 && (
-                        <div className="bg-white rounded-xl border border-amber-100 shadow-sm px-6 py-4">
+                        <div className="bg-white rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm px-6 py-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <CalendarIcon size={13} className="text-amber-500" />
-                                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">Upcoming Plan Events in Projection Window</span>
+                                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Upcoming Plan Events in Projection Window</span>
                                 <span className="text-[9px] text-slate-400 ml-1">— from Periodization Planner · click to auto-anchor</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -559,7 +558,7 @@ export const ScenarioModellingTerminal = ({
                                     const colorClass = evt.type === 'competition'
                                         ? 'bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100'
                                         : evt.type === 'testing'
-                                            ? 'bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100'
+                                            ? 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-800 hover:bg-indigo-100'
                                             : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
                                     return (
                                         <button key={i} onClick={() => anchorPlanEvent(evt.dayOffset)}
@@ -612,7 +611,7 @@ export const ScenarioModellingTerminal = ({
                     )}
 
                     {/* ── Projected Load Table ──────────────────────────────── */}
-                    <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm overflow-hidden">
                         <div className="px-8 py-5 border-b border-slate-100">
                             <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">
                                 {viewMode === 'optimal' ? 'Recommended Daily Loads'
@@ -630,7 +629,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Anchor mode explanation banner */}
                         {viewMode === 'anchor' && (
-                            <div className="px-8 py-3 bg-amber-50/60 border-b border-amber-100 flex items-start gap-2">
+                            <div className="px-8 py-3 bg-amber-50/60 border-b border-amber-100 dark:border-amber-800/40 flex items-start gap-2">
                                 <ZapIcon size={13} className="text-amber-500 mt-0.5 shrink-0" />
                                 <p className="text-[10px] text-amber-800 leading-relaxed">
                                     <strong>How to use:</strong> Type a load into any day you want to fix (e.g. a match, heavy gym session, or GPS-heavy training day).
@@ -656,7 +655,7 @@ export const ScenarioModellingTerminal = ({
                                                 : 'Suggested Load'}
                                         </th>
                                         {showSafeRange && (
-                                            <th className="text-right text-[9px] font-bold text-emerald-600 uppercase px-4 py-3">Safe Range</th>
+                                            <th className="text-right text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase px-4 py-3">Safe Range</th>
                                         )}
                                         <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-4 py-3">Acute</th>
                                         <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-4 py-3">Chronic</th>
@@ -671,7 +670,7 @@ export const ScenarioModellingTerminal = ({
 
                                         return (
                                             <tr key={point.day}
-                                                className={`border-t border-slate-50 transition-colors ${isPinned ? 'bg-amber-50/40' : 'hover:bg-slate-50/50'}`}>
+                                                className={`border-t border-slate-50 transition-colors ${isPinned ? 'bg-amber-50/40' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                                                 <td className="px-6 py-3">
                                                     <div className="flex items-center gap-1.5">
                                                         {isPinned && <LockIcon size={10} className="text-amber-500" />}
@@ -699,7 +698,7 @@ export const ScenarioModellingTerminal = ({
                                                         <input type="number" min="0"
                                                             value={manualOverrides[point.day] !== undefined ? manualOverrides[point.day] : point.load}
                                                             onChange={e => setManualOverrides(prev => ({ ...prev, [point.day]: e.target.value }))}
-                                                            className="w-20 text-right text-xs font-bold bg-indigo-50 border border-indigo-200 rounded px-2 py-1 outline-none focus:border-indigo-400"
+                                                            className="w-20 text-right text-xs font-bold bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded px-2 py-1 outline-none focus:border-indigo-400"
                                                         />
                                                     ) : viewMode === 'anchor' ? (
                                                         <input type="number" min="0"
@@ -707,7 +706,7 @@ export const ScenarioModellingTerminal = ({
                                                             placeholder={String(point.load)}
                                                             onChange={e => setAnchorLoad(point.day, e.target.value)}
                                                             className={`w-24 text-right text-xs font-bold rounded px-2 py-1 outline-none transition-all ${pinnedDays.has(point.day)
-                                                                ? 'bg-amber-50 border-2 border-amber-400 text-amber-900 focus:border-amber-500'
+                                                                ? 'bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 text-amber-900 focus:border-amber-500'
                                                                 : 'bg-slate-50 border border-slate-200 text-slate-400 placeholder-slate-400 focus:border-indigo-300 focus:text-slate-700'}`}
                                                         />
                                                     ) : (
@@ -721,7 +720,7 @@ export const ScenarioModellingTerminal = ({
                                                 {showSafeRange && (
                                                     <td className="px-4 py-3 text-right">
                                                         {sr ? (
-                                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${outOfRange ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${outOfRange ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-500' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'}`}>
                                                                 {sr.minLoad}–{sr.maxLoad}
                                                             </span>
                                                         ) : '—'}
@@ -748,7 +747,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Safe range legend */}
                         {showSafeRange && (
-                            <div className="px-8 py-3 border-t border-slate-50 bg-slate-50/30 flex items-center gap-2">
+                            <div className="px-8 py-3 border-t border-slate-50 bg-slate-50/30 dark:bg-[#0F1C30]/30 flex items-center gap-2">
                                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
                                 <span className="text-[9px] text-slate-500">
                                     Safe Range = load that keeps ACWR between 0.8 and 1.3 for that day. Values outside the range shown in <span className="text-rose-500 font-semibold">red</span>.
@@ -763,7 +762,7 @@ export const ScenarioModellingTerminal = ({
                     </div>
 
                     {/* ── ACWR Trajectory Chart ─────────────────────────────── */}
-                    <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-6">
+                    <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-6">
                         <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">ACWR Trajectory</h4>
                         <div className="h-56 flex items-end justify-between gap-1 px-4 border-b border-l border-indigo-50 relative pt-10">
                             {/* Green safe zone shading */}
@@ -772,21 +771,21 @@ export const ScenarioModellingTerminal = ({
 
                             {/* Zone labels */}
                             <div className="absolute top-2 left-0 right-0 flex justify-between px-4">
-                                <span className="text-[8px] font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">Sweet Spot 0.8–1.3</span>
-                                <span className="text-[8px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded">Danger &gt;1.5</span>
+                                <span className="text-[8px] font-semibold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/25 px-2 py-0.5 rounded">Sweet Spot 0.8–1.3</span>
+                                <span className="text-[8px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded">Danger &gt;1.5</span>
                             </div>
 
                             {/* Reference lines */}
                             <div className="absolute left-0 right-0 border-t border-dashed border-emerald-300" style={{ bottom: `${(1.3 / 2.0) * 100}%` }}>
                                 <span className="text-[7px] text-emerald-500 absolute -top-2 left-1">1.3</span>
                             </div>
-                            <div className="absolute left-0 right-0 border-t border-dashed border-emerald-200" style={{ bottom: `${(1.0 / 2.0) * 100}%` }}>
+                            <div className="absolute left-0 right-0 border-t border-dashed border-emerald-200 dark:border-emerald-800/50" style={{ bottom: `${(1.0 / 2.0) * 100}%` }}>
                                 <span className="text-[7px] text-emerald-400 absolute -top-2 left-1">1.0</span>
                             </div>
-                            <div className="absolute left-0 right-0 border-t border-dashed border-sky-200" style={{ bottom: `${(0.8 / 2.0) * 100}%` }}>
+                            <div className="absolute left-0 right-0 border-t border-dashed border-sky-200 dark:border-sky-900/50" style={{ bottom: `${(0.8 / 2.0) * 100}%` }}>
                                 <span className="text-[7px] text-sky-400 absolute -top-2 left-1">0.8</span>
                             </div>
-                            <div className="absolute left-0 right-0 border-t border-dashed border-rose-200" style={{ bottom: `${(1.5 / 2.0) * 100}%` }}>
+                            <div className="absolute left-0 right-0 border-t border-dashed border-rose-200 dark:border-rose-900/50" style={{ bottom: `${(1.5 / 2.0) * 100}%` }}>
                                 <span className="text-[7px] text-rose-400 absolute -top-2 left-1">1.5</span>
                             </div>
 
@@ -808,7 +807,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Chart legend */}
                         <div className="flex items-center gap-4 flex-wrap text-[9px]">
-                            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-emerald-50 border border-emerald-200" /> Green zone (0.8–1.3 ACWR)</span>
+                            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50" /> Green zone (0.8–1.3 ACWR)</span>
                             <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-indigo-500" /> Optimal</span>
                             <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-sky-400" /> Underexposed</span>
                             <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-amber-400" /> {viewMode === 'anchor' ? 'Anchored / Caution' : 'Caution'}</span>
@@ -818,7 +817,7 @@ export const ScenarioModellingTerminal = ({
 
                     {/* ── Per-Player Drill-Down ─────────────────────────────── */}
                     {isTeam && playerBreakdowns.length > 0 && (
-                        <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
+                        <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm overflow-hidden">
                             <div className="px-8 py-5 border-b border-slate-100">
                                 <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">Individual Athlete Loads</h4>
                                 <p className="text-[10px] text-indigo-400 font-semibold uppercase mt-0.5">
@@ -835,10 +834,10 @@ export const ScenarioModellingTerminal = ({
                                     return (
                                         <div key={player.id}>
                                             <button onClick={() => setExpandedPlayer(isExpanded ? null : player.id)}
-                                                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                        <span className="text-[10px] font-bold text-indigo-700">
+                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
                                                             {(player.name || '??').split(' ').map(n => n[0]).join('').toUpperCase()}
                                                         </span>
                                                     </div>
@@ -899,9 +898,9 @@ export const ScenarioModellingTerminal = ({
                                                     </div>
 
                                                     {player.projection[0] && teamProjection[0] && (
-                                                        <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-indigo-50/50 border border-indigo-100">
+                                                        <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-indigo-50/50 border border-indigo-100 dark:border-indigo-800/40">
                                                             <ArrowRightIcon size={12} className="text-indigo-500 mt-0.5 shrink-0" />
-                                                            <p className="text-[10px] text-indigo-700 leading-relaxed">
+                                                            <p className="text-[10px] text-indigo-700 dark:text-indigo-400 leading-relaxed">
                                                                 {(() => {
                                                                     const diff = player.projection[0].load - teamProjection[0].load;
                                                                     const pct  = teamProjection[0].load > 0 ? Math.round((diff / teamProjection[0].load) * 100) : 0;
@@ -923,7 +922,7 @@ export const ScenarioModellingTerminal = ({
 
                     {/* ── Scenario Comparison Chart ─────────────────────────── */}
                     {compareMode && savedScenarios.length >= 2 && (
-                        <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm space-y-5">
+                        <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-5">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">Scenario Comparison</h4>
@@ -951,11 +950,11 @@ export const ScenarioModellingTerminal = ({
                                         style={{ bottom: `${(1.3 / 2.0) * 100}%` }}>
                                         <span className="text-[7px] text-emerald-500 absolute -top-2 left-1">1.3</span>
                                     </div>
-                                    <div className="absolute left-0 right-0 border-t border-dashed border-emerald-200 pointer-events-none"
+                                    <div className="absolute left-0 right-0 border-t border-dashed border-emerald-200 dark:border-emerald-800/50 pointer-events-none"
                                         style={{ bottom: `${(1.0 / 2.0) * 100}%` }}>
                                         <span className="text-[7px] text-emerald-400 absolute -top-2 left-1">1.0</span>
                                     </div>
-                                    <div className="absolute left-0 right-0 border-t border-dashed border-sky-200 pointer-events-none"
+                                    <div className="absolute left-0 right-0 border-t border-dashed border-sky-200 dark:border-sky-900/50 pointer-events-none"
                                         style={{ bottom: `${(0.8 / 2.0) * 100}%` }}>
                                         <span className="text-[7px] text-sky-400 absolute -top-2 left-1">0.8</span>
                                     </div>
@@ -1020,7 +1019,7 @@ export const ScenarioModellingTerminal = ({
                                                     </td>
                                                     <td className="py-2 px-3 text-center font-semibold text-slate-700">{sc.targetRatio.toFixed(2)}</td>
                                                     <td className="py-2 px-3 text-center text-slate-500">{sc.projectionDays}d</td>
-                                                    <td className="py-2 px-3 text-center font-semibold text-indigo-700">
+                                                    <td className="py-2 px-3 text-center font-semibold text-indigo-700 dark:text-indigo-400">
                                                         {sc.projection[0]?.load ?? '—'} <span className="text-[9px] text-slate-400 font-normal">{metricInfo.unit}</span>
                                                     </td>
                                                     <td className="py-2 pl-3 text-right">
@@ -1036,10 +1035,10 @@ export const ScenarioModellingTerminal = ({
                     )}
 
                     {/* ── Insight Summary ───────────────────────────────────── */}
-                    <div className="bg-white p-8 rounded-xl border border-indigo-100 shadow-sm">
+                    <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm">
                         <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900 mb-4">Insight Summary</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className={`p-5 rounded-xl border ${getRatioBg(currentRatio)} ${currentRatio > 1.3 ? 'border-amber-200' : currentRatio < 0.8 ? 'border-sky-200' : 'border-emerald-200'}`}>
+                            <div className={`p-5 rounded-xl border ${getRatioBg(currentRatio)} ${currentRatio > 1.3 ? 'border-amber-200 dark:border-amber-800/50' : currentRatio < 0.8 ? 'border-sky-200 dark:border-sky-900/50' : 'border-emerald-200 dark:border-emerald-800/50'}`}>
                                 <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Current State</div>
                                 <p className="text-[11px] leading-relaxed text-slate-700">
                                     {currentRatio > 1.5
@@ -1063,7 +1062,7 @@ export const ScenarioModellingTerminal = ({
                                     {isTeam ? 'Average per athlete' : 'Individual target'} to {targetRatio >= 1.1 ? 'progressively overload' : 'maintain'} at {targetRatio.toFixed(2)} ACWR
                                 </p>
                                 {showSafeRange && safeRange[0] && (
-                                    <p className="text-[9px] text-emerald-600 mt-1.5 font-semibold">
+                                    <p className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-1.5 font-semibold">
                                         Green zone: {safeRange[0].minLoad}–{safeRange[0].maxLoad} {metricInfo.unit}
                                     </p>
                                 )}

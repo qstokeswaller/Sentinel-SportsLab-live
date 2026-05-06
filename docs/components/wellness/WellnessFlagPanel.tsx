@@ -85,15 +85,15 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
     if (flags.length === 0) return null;
 
     return (
-        <div className="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-amber-200 dark:border-amber-800/50 rounded-xl shadow-sm overflow-hidden">
             <button
                 onClick={() => setExpanded(!expanded)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-amber-50/50 hover:bg-amber-50 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-amber-50/50 hover:bg-amber-50 dark:hover:bg-amber-900/25 dark:bg-amber-900/20 transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <AlertTriangleIcon size={16} className="text-amber-600" />
                     <span className="text-sm font-semibold text-slate-800">Wellness Flags</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:text-amber-400">
                         {pendingCount} pending
                     </span>
                 </div>
@@ -124,10 +124,10 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
                                     const name = athleteMap.get(f.athlete_id) || 'Unknown';
                                     const isRed = f.flag_type === 'red';
                                     return (
-                                        <div key={`${f.athlete_id}-${f.trigger_field}-${i}`} className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50/50 transition-colors">
+                                        <div key={`${f.athlete_id}-${f.trigger_field}-${i}`} className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                             <span className={`w-2 h-2 rounded-full shrink-0 ${isRed ? 'bg-rose-500' : 'bg-amber-400'}`} />
                                             <span className="text-xs font-semibold text-slate-800 min-w-[120px] truncate">{name}</span>
-                                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${isRed ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
+                                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${isRed ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border border-rose-200 dark:border-rose-900/50' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border border-amber-200 dark:border-amber-800/50'}`}>
                                                 {FLAG_LABELS[f.trigger_field] || f.trigger_field}: {f.trigger_value}
                                             </span>
                                             <span className="ml-auto flex items-center gap-2 shrink-0">
@@ -140,13 +140,13 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
                                                             href={`/weekly-wellness/${teamId}/${f.athlete_id}`}
                                                             target="_blank"
                                                             rel="noopener"
-                                                            className="flex items-center gap-1 text-[9px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                                                            className="flex items-center gap-1 text-[9px] font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-colors"
                                                         >
                                                             <ExternalLinkIcon size={9} /> Deep Check
                                                         </a>
                                                     </>
                                                 ) : (
-                                                    <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600">
+                                                    <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
                                                         <CheckCircleIcon size={10} /> Done
                                                     </span>
                                                 )}

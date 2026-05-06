@@ -20,7 +20,7 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
     return (
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg text-indigo-600 dark:text-indigo-300">
                     <ActivityIcon size={18} />
                 </div>
                 <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color.replace('text-', 'bg-').replace('600', '100')} ${status.color}`}>

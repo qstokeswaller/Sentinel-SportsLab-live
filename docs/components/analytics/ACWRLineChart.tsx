@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useMemo } from 'react';
+import { useAppState } from '../../context/AppStateContext';
 
 interface ACWRLineChartProps {
     dates: string[];
@@ -15,10 +16,10 @@ interface ACWRLineChartProps {
 
 /* ── colour helpers ─────────────────────────────────────── */
 const ZONE = {
-    green:  { lo: 0.8, hi: 1.3, fill: '#ecfdf5', opacity: 0.55 },
-    amber:  { lo: 1.3, hi: 1.5, fill: '#fffbeb', opacity: 0.45 },
-    red:    { lo: 1.5, hi: 2.5, fill: '#fef2f2', opacity: 0.40 },
-    blue:   { lo: 0.0, hi: 0.8, fill: '#f0f9ff', opacity: 0.40 },
+    green:  { lo: 0.8, hi: 1.3, fill: '#ecfdf5', darkFill: '#10b981', opacity: 0.55, darkOpacity: 0.07 },
+    amber:  { lo: 1.3, hi: 1.5, fill: '#fffbeb', darkFill: '#f59e0b', opacity: 0.45, darkOpacity: 0.08 },
+    red:    { lo: 1.5, hi: 2.5, fill: '#fef2f2', darkFill: '#ef4444', opacity: 0.40, darkOpacity: 0.07 },
+    blue:   { lo: 0.0, hi: 0.8, fill: '#f0f9ff', darkFill: '#0ea5e9', opacity: 0.40, darkOpacity: 0.07 },
 };
 
 const REF_LINES = [
@@ -97,11 +98,16 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
     dates, ratioHistory, acuteHistory, chronicHistory, phases,
     restDays, height = 260, showAcuteChronic = false, title,
 }) => {
+    const { isDarkMode } = useAppState();
+    const gridColor  = isDarkMode ? '#1A2D48' : '#e2e8f0';
+    const axisColor  = isDarkMode ? '#243A58' : '#cbd5e1';
+    const labelColor = isDarkMode ? '#64748B' : '#94a3b8';
+
     /* guard */
     if (!ratioHistory || ratioHistory.length < 2) {
         return (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 text-center">
-                <p className="text-xs text-slate-400">Gathering data — not enough yet for accuracy (need 7+ training days)</p>
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 text-center">
+                <p className="text-xs text-slate-400 dark:text-[#64748B]">Gathering data — not enough yet for accuracy (need 7+ training days)</p>
             </div>
         );
     }
@@ -213,10 +219,10 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
             .map(z => ({
                 y: yScale(z.clampHi),
                 h: yScale(z.clampLo) - yScale(z.clampHi),
-                fill: z.fill,
-                opacity: z.opacity,
+                fill: isDarkMode ? z.darkFill : z.fill,
+                opacity: isDarkMode ? z.darkOpacity : z.opacity,
             }));
-    }, [yMin, yMax]);
+    }, [yMin, yMax, isDarkMode]);
 
     /* ── current value badge ────────────────────────────── */
     const currentRatio = ratioHistory[n - 1];
@@ -234,16 +240,16 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
     );
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
             {/* Header */}
             {title && (
                 <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">{title}</h4>
+                    <h4 className="text-[11px] font-semibold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">{title}</h4>
                 </div>
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mb-3 text-[10px] text-slate-500 flex-wrap">
+            <div className="flex items-center gap-4 mb-3 text-[10px] text-slate-500 dark:text-[#64748B] flex-wrap">
                 <span className="flex items-center gap-1.5">
                     <svg width="16" height="3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke="#334155" strokeWidth="2" strokeLinecap="round" /></svg>
                     ACWR Ratio
@@ -292,8 +298,8 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                         <rect x={PAD.left} y={PAD.top} width={cW} height={cH} />
                     </clipPath>
                     <linearGradient id="acwr-area-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#334155" stopOpacity="0.08" />
-                        <stop offset="100%" stopColor="#334155" stopOpacity="0.01" />
+                        <stop offset="0%" stopColor={isDarkMode ? '#CBD5E1' : '#334155'} stopOpacity="0.08" />
+                        <stop offset="100%" stopColor={isDarkMode ? '#CBD5E1' : '#334155'} stopOpacity="0.01" />
                     </linearGradient>
                 </defs>
 
@@ -310,7 +316,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                     <line key={`grid-${v}`}
                         x1={PAD.left} x2={PAD.left + cW}
                         y1={yScale(v)} y2={yScale(v)}
-                        stroke="#e2e8f0" strokeWidth="0.5"
+                        stroke={gridColor} strokeWidth="0.5"
                     />
                 ))}
 
@@ -378,7 +384,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
 
                     {/* Smooth overlay line for visual continuity */}
                     <path d={linePath}
-                        fill="none" stroke="#334155" strokeWidth="2"
+                        fill="none" stroke={isDarkMode ? '#CBD5E1' : '#334155'} strokeWidth="2"
                         strokeLinecap="round" strokeLinejoin="round"
                         opacity="0.12"
                     />
@@ -391,7 +397,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                                 cx={xScale(i)} cy={yScale(val)}
                                 r={n > 60 ? 1.5 : n > 28 ? 2 : 2.5}
                                 fill={isGathering ? '#cbd5e1' : getZoneColor(val)}
-                                stroke="white" strokeWidth="1.2"
+                                stroke={isDarkMode ? '#132338' : 'white'} strokeWidth="1.2"
                                 opacity={isGathering ? 0.6 : 1}
                             />
                         );
@@ -402,7 +408,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                 {yTicks.map(v => (
                     <text key={`yl-${v}`}
                         x={PAD.left - 6} y={yScale(v) + 3.5}
-                        textAnchor="end" fontSize="9" fill="#94a3b8"
+                        textAnchor="end" fontSize="9" fill={labelColor}
                         fontFamily="system-ui, -apple-system, sans-serif"
                         fontWeight={v === 0.8 || v === 1.3 || v === 1.5 ? '600' : '400'}
                     >
@@ -416,7 +422,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                     <line key={`xt-${i}`}
                         x1={xScale(i)} x2={xScale(i)}
                         y1={PAD.top + cH} y2={PAD.top + cH + 4}
-                        stroke="#cbd5e1" strokeWidth="1"
+                        stroke={axisColor} strokeWidth="1"
                     />
                 ))}
 
@@ -427,14 +433,14 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                     return labelRotate ? (
                         <text key={`xl-${i}`}
                             x={x} y={y}
-                            textAnchor="end" fontSize="8" fill="#94a3b8"
+                            textAnchor="end" fontSize="8" fill={labelColor}
                             fontFamily="system-ui, -apple-system, sans-serif"
                             transform={`rotate(-40, ${x}, ${y})`}
                         >{label}</text>
                     ) : (
                         <text key={`xl-${i}`}
                             x={x} y={y}
-                            textAnchor="middle" fontSize="8" fill="#94a3b8"
+                            textAnchor="middle" fontSize="8" fill={labelColor}
                             fontFamily="system-ui, -apple-system, sans-serif"
                         >{label}</text>
                     );
@@ -443,11 +449,11 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
                 {/* ── Axis lines ── */}
                 <line x1={PAD.left} x2={PAD.left}
                     y1={PAD.top} y2={PAD.top + cH}
-                    stroke="#cbd5e1" strokeWidth="1"
+                    stroke={axisColor} strokeWidth="1"
                 />
                 <line x1={PAD.left} x2={PAD.left + cW}
                     y1={PAD.top + cH} y2={PAD.top + cH}
-                    stroke="#cbd5e1" strokeWidth="1"
+                    stroke={axisColor} strokeWidth="1"
                 />
 
                 {/* ── Current value badge ── */}

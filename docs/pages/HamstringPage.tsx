@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { Button } from '@/components/ui/button';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 export const HamstringPage = () => {
     const {
@@ -117,14 +118,15 @@ export const HamstringPage = () => {
 
             {/* Save row */}
             <div className="pt-4 border-t border-slate-100 space-y-3">
-                <select
+                <CustomSelect
+                    variant="form"
                     value={hamAthleteId}
                     onChange={(e) => setHamAthleteId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-orange-300"
+                    placeholder="Select athlete to save score..."
                 >
                     <option value="">Select athlete to save score...</option>
                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                </CustomSelect>
                 <button
                     onClick={() => handleSaveMetricWithType('hamstring')}
                     className="w-full py-2.5 bg-orange-600 text-white rounded-full text-sm font-medium shadow-sm hover:bg-orange-700 transition-colors"

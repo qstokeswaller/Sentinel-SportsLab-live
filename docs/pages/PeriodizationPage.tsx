@@ -12,6 +12,7 @@ import { AddPhaseModal } from '../components/periodization/AddPhaseModal';
 import { AddBlockModal } from '../components/periodization/AddBlockModal';
 import { AddPlanEventModal } from '../components/periodization/AddPlanEventModal';
 import { formatDateShort, DEFAULT_MODALITY_PRESETS } from '../utils/periodizationUtils';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 export const PeriodizationPage = () => {
     const {
@@ -116,13 +117,13 @@ export const PeriodizationPage = () => {
         return (
             <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Header */}
-                <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <div>
                         <div className="flex items-center gap-2">
                             <CalendarDays size={20} className="text-indigo-500" />
-                            <h2 className="text-xl font-bold text-slate-900">The Planner</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0]">The Planner</h2>
                         </div>
-                        <p className="text-sm text-slate-500 mt-0.5 ml-7">Periodization Plans</p>
+                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5 ml-7">Periodization Plans</p>
                     </div>
                     <button onClick={() => setIsCreatePlanModalOpen(true)}
                         className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-black transition-all">
@@ -132,15 +133,15 @@ export const PeriodizationPage = () => {
 
                 {/* Filter Bar */}
                 {periodizationPlans.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3">
                         <div className="flex items-center gap-3 flex-wrap">
-                            <div className="flex items-center gap-1.5 text-slate-400">
+                            <div className="flex items-center gap-1.5 text-slate-400 dark:text-[#64748B]">
                                 <Filter size={13} />
                                 <span className="text-[10px] font-semibold uppercase tracking-wide">Filter</span>
                             </div>
 
                             {/* Type toggle */}
-                            <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
                                 {[
                                     { key: 'all', label: 'All', icon: null },
                                     { key: 'team', label: 'Teams', icon: Users },
@@ -148,7 +149,7 @@ export const PeriodizationPage = () => {
                                 ].map(({ key, label, icon: Icon }) => (
                                     <button key={key}
                                         onClick={() => { setFilterType(key); setFilterTargetId(''); }}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${filterType === key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${filterType === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
                                         {Icon && <Icon size={10} />}
                                         {label}
                                     </button>
@@ -157,10 +158,13 @@ export const PeriodizationPage = () => {
 
                             {/* Target dropdown */}
                             {targetOptions.length > 0 && (
-                                <select
-                                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                <CustomSelect
                                     value={filterTargetId}
-                                    onChange={e => setFilterTargetId(e.target.value)}>
+                                    onChange={e => setFilterTargetId(e.target.value)}
+                                    variant="filter"
+                                    size="xs"
+                                    placeholder={filterType === 'team' ? 'All Teams' : filterType === 'individual' ? 'All Athletes' : 'All Targets'}
+                                >
                                     <option value="">
                                         {filterType === 'team' ? 'All Teams' : filterType === 'individual' ? 'All Athletes' : 'All Targets'}
                                     </option>
@@ -169,19 +173,19 @@ export const PeriodizationPage = () => {
                                             {t.type === 'Team' ? '👥' : '👤'} {t.name}
                                         </option>
                                     ))}
-                                </select>
+                                </CustomSelect>
                             )}
 
                             {/* Clear filters */}
                             {hasFilters && (
                                 <button onClick={() => { setFilterType('all'); setFilterTargetId(''); }}
-                                    className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors ml-1">
+                                    className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-[#64748B] hover:text-red-500 transition-colors ml-1">
                                     <X size={10} /> Clear
                                 </button>
                             )}
 
                             {/* Count */}
-                            <span className="text-[10px] text-slate-400 ml-auto">
+                            <span className="text-[10px] text-slate-400 dark:text-[#64748B] ml-auto">
                                 {filteredPlans.length} of {periodizationPlans.length} plan{periodizationPlans.length !== 1 ? 's' : ''}
                             </span>
                         </div>
@@ -192,41 +196,41 @@ export const PeriodizationPage = () => {
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+                            <div key={i} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 bg-slate-100 rounded-lg animate-pulse" />
-                                    <div className="h-4 w-36 bg-slate-100 rounded animate-pulse" />
+                                    <div className="w-6 h-6 bg-slate-100 dark:bg-[#1A2D48] rounded-lg animate-pulse" />
+                                    <div className="h-4 w-36 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
                                 </div>
-                                <div className="h-3 w-28 bg-slate-50 rounded animate-pulse" />
-                                <div className="h-3 w-40 bg-slate-50 rounded animate-pulse" />
+                                <div className="h-3 w-28 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
+                                <div className="h-3 w-40 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                 <div className="flex gap-2 mt-2">
-                                    <div className="h-5 w-16 bg-slate-50 rounded-full animate-pulse" />
-                                    <div className="h-5 w-14 bg-slate-50 rounded-full animate-pulse" />
+                                    <div className="h-5 w-16 bg-slate-50 dark:bg-[#0F1C30] rounded-full animate-pulse" />
+                                    <div className="h-5 w-14 bg-slate-50 dark:bg-[#0F1C30] rounded-full animate-pulse" />
                                 </div>
                             </div>
                         ))}
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 flex flex-col items-center justify-center col-span-full">
-                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
-                            <span className="text-xs font-medium text-slate-400">Loading periodization plans...</span>
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-8 flex flex-col items-center justify-center col-span-full">
+                            <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-3" />
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading periodization plans...</span>
                         </div>
                     </div>
                 ) : periodizationPlans.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-                        <CalendarDays size={40} className="text-slate-300 mx-auto mb-3" />
-                        <h3 className="text-sm font-bold text-slate-600 mb-1">No Periodization Plans</h3>
-                        <p className="text-xs text-slate-400 mb-4">Create your first plan to start designing training periodization for a team or athlete.</p>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
+                        <CalendarDays size={40} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
+                        <h3 className="text-sm font-bold text-slate-600 dark:text-[#CBD5E1] mb-1">No Periodization Plans</h3>
+                        <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">Create your first plan to start designing training periodization for a team or athlete.</p>
                         <button onClick={() => setIsCreatePlanModalOpen(true)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all">
                             <Plus size={13} /> Create Plan
                         </button>
                     </div>
                 ) : filteredPlans.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center">
-                        <Filter size={28} className="text-slate-300 mx-auto mb-2" />
-                        <h3 className="text-sm font-bold text-slate-600 mb-1">No plans match your filter</h3>
-                        <p className="text-xs text-slate-400 mb-3">Try changing the filter or create a new plan.</p>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-8 text-center">
+                        <Filter size={28} className="text-slate-300 dark:text-[#475569] mx-auto mb-2" />
+                        <h3 className="text-sm font-bold text-slate-600 dark:text-[#CBD5E1] mb-1">No plans match your filter</h3>
+                        <p className="text-xs text-slate-400 dark:text-[#64748B] mb-3">Try changing the filter or create a new plan.</p>
                         <button onClick={() => { setFilterType('all'); setFilterTargetId(''); }}
-                            className="text-xs text-indigo-600 font-semibold hover:underline">
+                            className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold hover:underline">
                             Clear filters
                         </button>
                     </div>
@@ -235,30 +239,30 @@ export const PeriodizationPage = () => {
                         {filteredPlans.map(plan => (
                             <div key={plan.id}
                                 onClick={() => { setActivePlanId(plan.id); setPlanDrillPath([]); }}
-                                className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
+                                className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         {plan.viewMode === 'timeline'
                                             ? <GanttChart size={16} className="text-indigo-500" />
                                             : <LayoutGrid size={16} className="text-violet-500" />
                                         }
-                                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{plan.name}</h3>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{plan.name}</h3>
                                     </div>
                                     <button onClick={(e) => { e.stopPropagation(); handleDeletePlan(plan.id); }}
-                                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 text-slate-300 transition-all">
+                                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 text-slate-300 dark:text-[#475569] transition-all">
                                         <Trash2 size={12} />
                                     </button>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#94A3B8]">
                                         {plan.targetType === 'Team' ? <Users size={11} /> : <User size={11} />}
                                         <span className="font-medium">{getTargetName(plan)}</span>
                                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${plan.targetType === 'Team' ? 'bg-blue-50 text-blue-500' : 'bg-violet-50 text-violet-500'}`}>
                                             {plan.targetType}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-[#64748B]">
                                         <Clock size={11} />
                                         <span>
                                             {formatDateShort(plan.startDate)}
@@ -266,13 +270,13 @@ export const PeriodizationPage = () => {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${plan.viewMode === 'timeline' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-violet-50 text-violet-600 border-violet-100'}`}>
+                                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${plan.viewMode === 'timeline' ? 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800/40' : 'bg-violet-50 text-violet-600 border-violet-100 dark:border-violet-800/40'}`}>
                                             {plan.viewMode === 'timeline' ? 'Timeline' : 'Cards'}
                                         </span>
-                                        <span className="text-[10px] text-slate-400">
+                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                             {plan.phases.length} phase{plan.phases.length !== 1 ? 's' : ''}
                                         </span>
-                                        <span className="text-[10px] text-slate-400">
+                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                             {plan.phases.reduce((sum, ph) => sum + ph.blocks.length, 0)} block{plan.phases.reduce((sum, ph) => sum + ph.blocks.length, 0) !== 1 ? 's' : ''}
                                         </span>
                                     </div>
@@ -282,9 +286,9 @@ export const PeriodizationPage = () => {
 
                         {/* Add Plan Card */}
                         <div onClick={() => setIsCreatePlanModalOpen(true)}
-                            className="bg-white rounded-xl border-2 border-dashed border-slate-200 p-5 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all flex flex-col items-center justify-center min-h-[140px]">
-                            <Plus size={20} className="text-slate-300 mb-2" />
-                            <span className="text-xs font-semibold text-slate-400">New Plan</span>
+                            className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] p-5 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all flex flex-col items-center justify-center min-h-[140px]">
+                            <Plus size={20} className="text-slate-300 dark:text-[#475569] mb-2" />
+                            <span className="text-xs font-semibold text-slate-400 dark:text-[#64748B]">New Plan</span>
                         </div>
                     </div>
                 )}
@@ -300,33 +304,33 @@ export const PeriodizationPage = () => {
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
             {/* Header */}
-            <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-3 min-w-0">
                     <button onClick={() => { setActivePlanId(null); setPlanDrillPath([]); }}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors shrink-0">
-                        <ArrowLeft size={16} className="text-slate-500" />
+                        className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0">
+                        <ArrowLeft size={16} className="text-slate-500 dark:text-[#94A3B8]" />
                     </button>
                     <div className="min-w-0">
                         {/* Breadcrumb */}
                         <div className="flex items-center gap-1 flex-wrap">
                             {breadcrumbs.map((crumb, i) => (
                                 <React.Fragment key={i}>
-                                    {i > 0 && <ChevronRight size={10} className="text-slate-300 shrink-0" />}
+                                    {i > 0 && <ChevronRight size={10} className="text-slate-300 dark:text-[#475569] shrink-0" />}
                                     <button
                                         onClick={() => setPlanDrillPath(crumb.path)}
-                                        className={`text-xs font-medium transition-colors truncate max-w-[150px] ${i === breadcrumbs.length - 1 ? 'text-slate-900 font-bold' : 'text-slate-400 hover:text-indigo-600'}`}>
+                                        className={`text-xs font-medium transition-colors truncate max-w-[150px] ${i === breadcrumbs.length - 1 ? 'text-slate-900 dark:text-[#E2E8F0] font-bold' : 'text-slate-400 dark:text-[#64748B] hover:text-indigo-600'}`}>
                                         {crumb.label}
                                     </button>
                                 </React.Fragment>
                             ))}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                 {activePlan.targetType === 'Team' ? <Users size={9} className="inline mr-1" /> : <User size={9} className="inline mr-1" />}
                                 {getTargetName(activePlan)}
                             </span>
-                            <span className="text-[10px] text-slate-300">|</span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-slate-300 dark:text-[#475569]">|</span>
+                            <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                 {formatDateShort(activePlan.startDate)}{activePlan.endDate ? ` — ${formatDateShort(activePlan.endDate)}` : ' — Open'}
                             </span>
                         </div>
@@ -340,7 +344,7 @@ export const PeriodizationPage = () => {
                     <div className="relative">
                         <button
                             onClick={() => { setIsEditModalitiesOpen(v => !v); setNewModality(''); }}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${isEditModalitiesOpen ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${isEditModalitiesOpen ? 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-700' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 hover:border-slate-300'}`}
                             title="Edit training modalities for this plan"
                         >
                             <Layers size={11} />
@@ -348,19 +352,19 @@ export const PeriodizationPage = () => {
                         </button>
 
                         {isEditModalitiesOpen && (
-                            <div className="absolute right-0 top-full mt-1.5 z-50 w-72 bg-white rounded-xl border border-slate-200 shadow-lg p-3">
+                            <div className="absolute right-0 top-full mt-1.5 z-50 w-72 bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-lg p-3">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Training Modalities</span>
-                                    <button onClick={() => setIsEditModalitiesOpen(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><X size={12} /></button>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Training Modalities</span>
+                                    <button onClick={() => setIsEditModalitiesOpen(false)} className="text-slate-300 dark:text-[#475569] hover:text-slate-500 transition-colors"><X size={12} /></button>
                                 </div>
 
                                 {/* Current modalities */}
                                 <div className="flex flex-wrap gap-1.5 mb-2 min-h-[24px]">
                                     {(activePlan.modalities || []).length === 0 && (
-                                        <span className="text-[10px] text-slate-400 italic">No modalities — add one below</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B] italic">No modalities — add one below</span>
                                     )}
                                     {(activePlan.modalities || []).map(mod => (
-                                        <span key={mod} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-medium text-slate-700 border border-slate-200">
+                                        <span key={mod} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58]">
                                             {mod}
                                             <button onClick={() => removeModality(mod)} className="hover:text-red-500 transition-colors leading-none"><X size={9} /></button>
                                         </span>
@@ -370,7 +374,7 @@ export const PeriodizationPage = () => {
                                 {/* Add custom */}
                                 <div className="flex gap-1.5 mb-2">
                                     <input
-                                        className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
+                                        className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 focus:border-indigo-300"
                                         placeholder="Custom modality..."
                                         value={newModality}
                                         onChange={e => setNewModality(e.target.value)}
@@ -382,11 +386,11 @@ export const PeriodizationPage = () => {
                                 {/* Preset quick-add */}
                                 {DEFAULT_MODALITY_PRESETS.filter(p => !(activePlan.modalities || []).includes(p)).length > 0 && (
                                     <div>
-                                        <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Quick add</p>
+                                        <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1">Quick add</p>
                                         <div className="flex flex-wrap gap-1">
                                             {DEFAULT_MODALITY_PRESETS.filter(p => !(activePlan.modalities || []).includes(p)).map(preset => (
                                                 <button key={preset} onClick={() => addModality(preset)}
-                                                    className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors">
+                                                    className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:border-indigo-300 hover:text-indigo-500 transition-colors">
                                                     + {preset}
                                                 </button>
                                             ))}
@@ -397,10 +401,10 @@ export const PeriodizationPage = () => {
                         )}
                     </div>
 
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                    <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
                         {[{ mode: 'timeline', icon: GanttChart, label: 'Timeline' }, { mode: 'cards', icon: LayoutGrid, label: 'Cards' }].map(({ mode, icon: Icon, label }) => (
                             <button key={mode} onClick={() => handleUpdatePlan(activePlan.id, { viewMode: mode })}
-                                className={`px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${activePlan.viewMode === mode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                className={`px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${activePlan.viewMode === mode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
                                 <Icon size={11} />
                                 {label}
                             </button>
@@ -411,10 +415,10 @@ export const PeriodizationPage = () => {
 
             {/* View Router */}
             {isLoading ? (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 flex flex-col items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
-                    <span className="text-sm font-medium text-slate-500">Loading {getTargetName(activePlan)} periodization planner...</span>
-                    <span className="text-xs text-slate-400 mt-1">{activePlan.name}</span>
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-16 flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-4" />
+                    <span className="text-sm font-medium text-slate-500 dark:text-[#94A3B8]">Loading {getTargetName(activePlan)} periodization planner...</span>
+                    <span className="text-xs text-slate-400 dark:text-[#64748B] mt-1">{activePlan.name}</span>
                 </div>
             ) : activePlan.viewMode === 'timeline'
                 ? <TimelineView plan={activePlan} />

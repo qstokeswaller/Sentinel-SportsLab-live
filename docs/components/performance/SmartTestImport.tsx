@@ -16,6 +16,7 @@ import {
     AlertTriangleIcon, UploadIcon,
 } from 'lucide-react';
 import { ALL_TESTS, TEST_CATEGORIES, getTestById } from '../../utils/testRegistry';
+import { CustomSelect } from '../ui/CustomSelect';
 import type { TestDefinition } from '../../utils/testRegistry';
 import { processAthleteMatching } from '../../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../ui/UnmatchedAthleteResolver';
@@ -341,10 +342,10 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
     if (step === 'upload') {
         return (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-                <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-center hover:bg-slate-100 hover:border-indigo-300 transition-all cursor-pointer relative">
+                <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-center hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-indigo-300 transition-all cursor-pointer relative">
                     <input type="file" accept=".csv" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                     <div className="flex flex-col items-center gap-3 text-slate-400">
-                        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/25 flex items-center justify-center text-indigo-500">
                             <SparklesIcon size={24} />
                         </div>
                         <div>
@@ -399,18 +400,18 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                                     onClick={() => handleSelectTest(result)}
                                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                                         isSelected
-                                            ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-200'
+                                            ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 ring-1 ring-indigo-200'
                                             : 'border-slate-200 bg-white hover:border-slate-300'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                {isSelected && <CheckCircleIcon size={14} className="text-indigo-600 shrink-0" />}
+                                                {isSelected && <CheckCircleIcon size={14} className="text-indigo-600 dark:text-indigo-300 shrink-0" />}
                                                 <span className={`text-sm font-semibold ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>
                                                     {result.test.name}
                                                 </span>
-                                                {i === 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">BEST MATCH</span>}
+                                                {i === 0 && <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 px-1.5 py-0.5 rounded-md">BEST MATCH</span>}
                                             </div>
                                             <span className="text-[10px] text-slate-400">{categoryName(result.test.category)}</span>
                                         </div>
@@ -440,19 +441,29 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-[10px] font-medium text-slate-500 block mb-1">Athlete Name Column *</label>
-                                <select value={athleteColumn} onChange={e => setAthleteColumn(e.target.value)}
-                                    className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={athleteColumn}
+                                    onChange={e => setAthleteColumn(e.target.value)}
+                                    placeholder="— Select —"
+                                >
                                     <option value="">— Select —</option>
                                     {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
+                                </CustomSelect>
                             </div>
                             <div>
                                 <label className="text-[10px] font-medium text-slate-500 block mb-1">Date Column</label>
-                                <select value={dateColumn} onChange={e => setDateColumn(e.target.value)}
-                                    className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={dateColumn}
+                                    onChange={e => setDateColumn(e.target.value)}
+                                    placeholder="— Today's date —"
+                                >
                                     <option value="">— Today's date —</option>
                                     {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
+                                </CustomSelect>
                             </div>
                         </div>
                     </div>
@@ -472,14 +483,16 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                                         {field.unit && <span className="text-slate-300 ml-1">({field.unit})</span>}
                                     </span>
                                     <ArrowRightIcon size={10} className="text-slate-300 shrink-0" />
-                                    <select
+                                    <CustomSelect
+                                        variant="form"
+                                        size="xs"
                                         value={mapped || ''}
                                         onChange={e => setMapping(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                        className={`w-36 text-xs border rounded-lg px-2 py-1 ${mapped ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-400'}`}
+                                        minWidth={144}
                                     >
                                         <option value="">— Skip —</option>
                                         {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                             );
                         })}
@@ -542,15 +555,15 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
     if (step === 'done') {
         return (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-                <div className="p-8 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
-                    <CheckCircleIcon size={32} className="mx-auto text-emerald-600" />
+                <div className="p-8 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-center space-y-3">
+                    <CheckCircleIcon size={32} className="mx-auto text-emerald-600 dark:text-emerald-400" />
                     <p className="text-sm font-semibold text-emerald-800">{importResult}</p>
-                    <p className="text-xs text-emerald-600">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
                         Data saved to {selectedTest?.test.name} in the Testing Hub.
                     </p>
                 </div>
                 <button onClick={reset}
-                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all">
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 rounded-xl text-sm font-medium transition-all">
                     Import Another File
                 </button>
             </div>

@@ -10,6 +10,7 @@ import BodyMapSelector from '../wellness/BodyMapSelector';
 import BodyMapAreaEditor from '../wellness/BodyMapAreaEditor';
 import ImageAttachment from '../wellness/ImageAttachment';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ─── Question type metadata ───────────────────────────────────────────────────
 const QUESTION_TYPES = [
@@ -289,8 +290,8 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
     if (q.type === 'yes_no') {
         return (
             <div className="mt-4 flex items-center gap-3">
-                <span className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg text-xs font-semibold text-emerald-600">Yes</span>
-                <span className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-lg text-xs font-semibold text-rose-500">No</span>
+                <span className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400">Yes</span>
+                <span className="px-4 py-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/40 rounded-lg text-xs font-semibold text-rose-500">No</span>
                 <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wide">Auto-generated</span>
             </div>
         );
@@ -312,7 +313,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-4">
                 {/* Live preview */}
-                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
                     <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
                     {subType === 'buttons' ? (
                         <BodyMapSelector
@@ -357,7 +358,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-4">
                 {/* Live preview */}
-                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
                     <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
                     <BodyMapSelector
                         value={[]}
@@ -467,7 +468,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             </div>
 
             {wellnessTemplates.length === 0 ? (
-                <div className="p-16 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
+                <div className="p-16 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
                     <ClipboardCheck size={40} className="mx-auto text-slate-200 mb-4" />
                     <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide mb-2">No templates yet</p>
                     <p className="text-slate-300 text-xs font-bold mb-6">Create your first questionnaire or load the default daily wellness template.</p>
@@ -521,7 +522,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                     setNewQuestQuestions(t.questions || []);
                                                     setViewMode('create');
                                                 }}
-                                                className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
+                                                className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <Pencil size={12} /> Edit
                                             </button>
@@ -559,7 +560,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                 <button
                     type="button"
                     onClick={() => { setViewMode('list'); setSelectedTemplate(null); }}
-                    className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-semibold uppercase hover:bg-slate-200 transition-all"
+                    className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-semibold uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                 >
                     Cancel
                 </button>
@@ -586,13 +587,13 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             <div className="space-y-4" ref={questionsRef}>
                 <h4 className="text-[10px] font-semibold uppercase text-slate-400">Questions <span className="text-red-500">*</span></h4>
                 {validationErrors.questions && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2">
                         <p className="text-red-600 text-xs font-medium">{validationErrors.questions}</p>
                     </div>
                 )}
 
                 {newQuestQuestions.length === 0 ? (
-                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
+                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
                         <p className="text-slate-400 text-sm font-bold mb-4">No questions added yet.</p>
                         <button
                             type="button"
@@ -632,12 +633,13 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Input Type</label>
-                                                <select
+                                                <CustomSelect
+                                                    variant="form"
+                                                    size="xs"
                                                     value={q.type}
                                                     onChange={e => {
                                                         const type = e.target.value;
                                                         const updated = [...newQuestQuestions];
-                                                        // Rebuild question with new type defaults
                                                         updated[i] = {
                                                             ...newQuestion(type),
                                                             id: q.id,
@@ -647,29 +649,29 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                         };
                                                         setNewQuestQuestions(updated);
                                                     }}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-xs font-bold text-slate-600 outline-none"
                                                 >
                                                     {QUESTION_TYPES.map(qt => (
                                                         <option key={qt.value} value={qt.value}>{qt.label}</option>
                                                     ))}
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                             <div>
                                                 <label className="text-[9px] font-semibold uppercase text-slate-400 mb-1 block">Category</label>
-                                                <select
+                                                <CustomSelect
+                                                    variant="form"
+                                                    size="xs"
                                                     value={q.category || 'wellness'}
                                                     onChange={e => {
                                                         const updated = [...newQuestQuestions];
                                                         updated[i] = { ...updated[i], category: e.target.value };
                                                         setNewQuestQuestions(updated);
                                                     }}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-xs font-bold text-slate-600 outline-none"
                                                 >
                                                     <option value="readiness">Readiness</option>
                                                     <option value="wellness">Wellness</option>
                                                     <option value="health">Health</option>
                                                     <option value="injury">Injury</option>
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                         </div>
 
@@ -718,7 +720,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                     <button
                                         type="button"
                                         onClick={() => removeQuestion(i)}
-                                        className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all shrink-0"
+                                        className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all shrink-0"
                                     >
                                         <Trash2 size={16} />
                                     </button>

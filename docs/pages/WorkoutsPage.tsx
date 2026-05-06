@@ -40,17 +40,17 @@ function formatDate(iso: string) {
 // ── Program Card ──────────────────────────────────────────────────────────
 
 const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col hover:shadow-md hover:border-slate-300 transition-all duration-200 relative overflow-hidden group">
+    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5 flex flex-col hover:shadow-md hover:border-slate-300 transition-all duration-200 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-start justify-between mb-3">
             <div className="flex-1 min-w-0 pr-2">
-                <h3 className="text-sm font-semibold text-slate-900 leading-tight group-hover:text-indigo-700 transition-colors truncate">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight group-hover:text-indigo-700 dark:text-indigo-400 transition-colors truncate">
                     {program.name}
                 </h3>
                 {(program.tags ?? []).length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                         {(program.tags ?? []).map((t: string) => (
-                            <span key={t} className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-xs font-medium">
+                            <span key={t} className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] rounded-md text-xs font-medium">
                                 {t}
                             </span>
                         ))}
@@ -60,7 +60,7 @@ const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
             <div className="flex items-center gap-0.5 shrink-0">
                 <button
                     onClick={(e) => { e.stopPropagation(); onShare(); }}
-                    className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all opacity-0 group-hover:opacity-100"
                     title="Share"
                 >
                     <Share2Icon size={13} />
@@ -70,14 +70,14 @@ const ProgramCard = ({ program, onView, onEdit, onDelete, onShare }) => (
         </div>
 
         {program.overview && (
-            <p className="text-xs text-slate-400 leading-relaxed mb-3">{program.overview}</p>
+            <p className="text-xs text-slate-400 dark:text-[#64748B] leading-relaxed mb-3">{program.overview}</p>
         )}
 
         <div className="mt-auto" />
 
         <button
             onClick={onView}
-            className="mt-3 w-full py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-600 hover:text-indigo-700 rounded-lg text-xs font-medium transition-all"
+            className="mt-3 w-full py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 border border-slate-200 dark:border-[#243A58] hover:border-indigo-200 dark:border-indigo-800/50 text-slate-600 dark:text-[#CBD5E1] hover:text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-medium transition-all"
         >
             View Program
         </button>
@@ -92,15 +92,15 @@ const ProgramMenu = ({ onEdit, onDelete }) => {
         <div className="relative shrink-0">
             <button
                 onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
-                className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
             >
                 <MoreVerticalIcon size={15} />
             </button>
             {open && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 w-32 py-1 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-20 w-32 py-1 animate-in fade-in zoom-in-95 duration-100">
                     <button
                         onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
                     >
                         <PencilIcon size={13} /> Edit
                     </button>
@@ -119,17 +119,17 @@ const ProgramMenu = ({ onEdit, onDelete }) => {
 // ── View Toggle ──────────────────────────────────────────────────────────
 
 const ViewToggle = ({ view, setView }) => (
-    <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+    <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
         <button
             onClick={(e) => { e.stopPropagation(); setView('list'); }}
-            className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
             title="List view"
         >
             <ListIcon size={13} />
         </button>
         <button
             onClick={(e) => { e.stopPropagation(); setView('grid'); }}
-            className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
             title="Grid view"
         >
             <GridIcon size={13} />
@@ -140,32 +140,33 @@ const ViewToggle = ({ view, setView }) => (
 // ── Collapsible Section Header (with inline controls) ────────────────────
 
 const SectionHeader = ({ title, subtitle, count, collapsed, onToggle, icon: Icon, accentColor, controls, children }) => (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
         <div
-            className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors"
+            onClick={onToggle}
+            className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/50 transition-colors cursor-pointer"
         >
-            <button onClick={onToggle} className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 ${accentColor}`}>
                     <Icon size={15} />
                 </div>
                 <div className="text-left">
                     <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{title}</h3>
                         {count > 0 && (
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-semibold">{count}</span>
+                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-full text-[10px] font-semibold">{count}</span>
                         )}
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{subtitle}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">{subtitle}</p>
                 </div>
-            </button>
-            <div className="flex items-center gap-2 shrink-0">
+            </div>
+            <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                 {!collapsed && controls}
-                <button onClick={onToggle} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+                <button onClick={onToggle} className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                     {collapsed ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
                 </button>
             </div>
         </div>
-        {!collapsed && <div className="border-t border-slate-100">{children}</div>}
+        {!collapsed && <div className="border-t border-slate-100 dark:border-[#1A2D48]">{children}</div>}
     </div>
 );
 
@@ -258,26 +259,26 @@ export const WorkoutsPage = () => {
         <>
             <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Header with centered search */}
-                <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-4 shrink-0">
                             <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
                                 <DumbbellIcon size={18} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Workouts</h2>
-                                <p className="text-xs text-slate-400 mt-0.5">Create and manage workout programs & one-off sessions</p>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Workouts</h2>
+                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Create and manage workout programs & one-off sessions</p>
                             </div>
                         </div>
                         <div className="flex-1 flex justify-center px-4">
                             <div className="relative w-full max-w-md">
-                                <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748B]" />
                                 <input
                                     type="text"
                                     placeholder="Search programs & packets..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+                                    className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
                                 />
                             </div>
                         </div>
@@ -305,8 +306,8 @@ export const WorkoutsPage = () => {
                         </div>
                     </button>
 
-                    <button onClick={() => navigate('/workouts/weightroom-sheets')} className="bg-slate-800 p-5 rounded-xl shadow-sm space-y-3 hover:bg-slate-900 transition-colors text-left">
-                        <div className="flex justify-between items-center text-slate-400">
+                    <button onClick={() => navigate('/workouts/weightroom-sheets')} className="bg-slate-700 dark:bg-[#243A58] p-5 rounded-xl shadow-sm space-y-3 hover:bg-slate-600 dark:hover:bg-[#1A2D48] transition-colors text-left">
+                        <div className="flex justify-between items-center text-slate-300 dark:text-[#94A3B8]">
                             <h3 className="text-xs font-medium">Weightroom Sheets</h3>
                             <PrinterIcon size={14} />
                         </div>
@@ -357,23 +358,23 @@ export const WorkoutsPage = () => {
                 >
                     <div className="p-4 space-y-4">
                         {programSearch.hasFuzzyResults && filteredPrograms.length > 0 && (
-                            <div className="text-xs text-slate-400 italic">Showing closest matches for "{search}"</div>
+                            <div className="text-xs text-slate-400 dark:text-[#64748B] italic">Showing closest matches for "{search}"</div>
                         )}
                         {/* Content */}
                         {programsLoading ? (
                             <div className="py-10 flex flex-col items-center justify-center gap-3">
-                                <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                <span className="text-xs font-medium text-slate-400">Loading workout programs...</span>
+                                <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
+                                <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout programs...</span>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full mt-2">
                                     {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
-                                            <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
-                                            <div className="h-3 w-full bg-slate-50 rounded animate-pulse" />
+                                        <div key={i} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5 space-y-3">
+                                            <div className="h-4 w-32 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
+                                            <div className="h-3 w-full bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                             <div className="flex gap-2">
-                                                <div className="h-5 w-14 bg-slate-50 rounded-full animate-pulse" />
-                                                <div className="h-5 w-14 bg-slate-50 rounded-full animate-pulse" />
+                                                <div className="h-5 w-14 bg-slate-50 dark:bg-[#0F1C30] rounded-full animate-pulse" />
+                                                <div className="h-5 w-14 bg-slate-50 dark:bg-[#0F1C30] rounded-full animate-pulse" />
                                             </div>
-                                            <div className="h-8 w-full bg-slate-50 rounded-lg animate-pulse mt-2" />
+                                            <div className="h-8 w-full bg-slate-50 dark:bg-[#0F1C30] rounded-lg animate-pulse mt-2" />
                                         </div>
                                     ))}
                                 </div>
@@ -381,9 +382,9 @@ export const WorkoutsPage = () => {
                         ) : filteredPrograms.length === 0 ? (
                             <div className="py-12 text-center">
                                 <LayersIcon size={28} className="text-slate-200 mx-auto mb-3" />
-                                <p className="text-sm text-slate-400">{search ? `No programs matching "${search}"` : 'No programs yet'}</p>
+                                <p className="text-sm text-slate-400 dark:text-[#64748B]">{search ? `No programs matching "${search}"` : 'No programs yet'}</p>
                                 {!search && (
-                                    <button onClick={() => { setEditingProgram(null); setIsProgramBuilderOpen(true); }} className="mt-3 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-all">
+                                    <button onClick={() => { setEditingProgram(null); setIsProgramBuilderOpen(true); }} className="mt-3 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/25 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-semibold transition-all">
                                         <PlusIcon size={12} className="inline mr-1" /> Create Program
                                     </button>
                                 )}
@@ -402,40 +403,40 @@ export const WorkoutsPage = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b border-slate-200 bg-slate-50">
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Program Name</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Created</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Tags</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Last edit</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">Actions</th>
+                                        <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Program Name</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Created</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Tags</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Last edit</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                                         {filteredPrograms.map((p) => (
-                                            <tr key={p.id} className="group hover:bg-slate-50 transition-colors">
+                                            <tr key={p.id} className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                                 <td className="px-5 py-3.5">
-                                                    <div className="font-medium text-slate-800 text-sm group-hover:text-indigo-700">{p.name}</div>
-                                                    {p.overview && <div className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{p.overview}</div>}
+                                                    <div className="font-medium text-slate-800 dark:text-[#E2E8F0] text-sm group-hover:text-indigo-700 dark:text-indigo-400">{p.name}</div>
+                                                    {p.overview && <div className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5 truncate max-w-xs">{p.overview}</div>}
                                                 </td>
-                                                <td className="px-5 py-3.5 text-xs text-slate-500">{formatDate(p.created_at)}</td>
+                                                <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{formatDate(p.created_at)}</td>
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex flex-wrap gap-1">
                                                         {(p.tags ?? []).map((t: string) => (
-                                                            <span key={t} className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-xs font-medium">{t}</span>
+                                                            <span key={t} className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] rounded-md text-xs font-medium">{t}</span>
                                                         ))}
-                                                        {(p.tags ?? []).length === 0 && <span className="text-slate-300 text-xs">—</span>}
+                                                        {(p.tags ?? []).length === 0 && <span className="text-slate-300 dark:text-[#475569] text-xs">—</span>}
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-3.5 text-xs text-slate-500">{timeAgo(p.updated_at)}</td>
+                                                <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{timeAgo(p.updated_at)}</td>
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center justify-end gap-1.5">
-                                                        <button onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Share"><Share2Icon size={13} /></button>
-                                                        <button onClick={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Edit"><PencilIcon size={13} /></button>
-                                                        <button onClick={() => setConfirmDeleteId(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete"><Trash2Icon size={13} /></button>
-                                                        <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all" title="View"><EyeIcon size={13} /></button>
+                                                        <button onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all" title="Share"><Share2Icon size={13} /></button>
+                                                        <button onClick={() => { setEditingProgram(null); setEditingProgramBasic(p); setEditingProgramId(p.id); setIsProgramBuilderOpen(true); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all" title="Edit"><PencilIcon size={13} /></button>
+                                                        <button onClick={() => setConfirmDeleteId(p.id)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 transition-all" title="Delete"><Trash2Icon size={13} /></button>
+                                                        <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all" title="View"><EyeIcon size={13} /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -472,22 +473,22 @@ export const WorkoutsPage = () => {
                 >
                     <div className="p-4 space-y-4">
                         {templateSearch.hasFuzzyResults && filteredTemplates.length > 0 && (
-                            <div className="text-xs text-slate-400 italic">Showing closest matches for "{search}"</div>
+                            <div className="text-xs text-slate-400 dark:text-[#64748B] italic">Showing closest matches for "{search}"</div>
                         )}
                         {/* Content */}
                         {isLoading && filteredTemplates.length === 0 ? (
                             <div className="py-10 flex flex-col items-center justify-center gap-3">
-                                <div className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-                                <span className="text-xs font-medium text-slate-400">Loading workout packets...</span>
+                                <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-800/50 border-t-emerald-600 rounded-full animate-spin" />
+                                <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout packets...</span>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full mt-2">
                                     {[1, 2, 3].map(i => (
-                                        <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-                                            <div className="h-4 w-28 bg-slate-100 rounded animate-pulse" />
+                                        <div key={i} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 space-y-3">
+                                            <div className="h-4 w-28 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
                                             <div className="flex gap-2">
-                                                <div className="h-4 w-16 bg-slate-50 rounded animate-pulse" />
-                                                <div className="h-4 w-12 bg-slate-50 rounded animate-pulse" />
+                                                <div className="h-4 w-16 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
+                                                <div className="h-4 w-12 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                             </div>
-                                            <div className="h-8 w-full bg-slate-50 rounded-lg animate-pulse" />
+                                            <div className="h-8 w-full bg-slate-50 dark:bg-[#0F1C30] rounded-lg animate-pulse" />
                                         </div>
                                     ))}
                                 </div>
@@ -495,10 +496,10 @@ export const WorkoutsPage = () => {
                         ) : filteredTemplates.length === 0 ? (
                             <div className="py-12 text-center">
                                 <PackageIcon size={28} className="text-slate-200 mx-auto mb-3" />
-                                <p className="text-sm text-slate-400">{search ? `No packets matching "${search}"` : 'No workout packets saved yet'}</p>
-                                {!search && <p className="text-xs text-slate-300 mt-1">Build a workout and save it as a template to see it here</p>}
+                                <p className="text-sm text-slate-400 dark:text-[#64748B]">{search ? `No packets matching "${search}"` : 'No workout packets saved yet'}</p>
+                                {!search && <p className="text-xs text-slate-300 dark:text-[#475569] mt-1">Build a workout and save it as a template to see it here</p>}
                                 {!search && (
-                                    <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition-all">
+                                    <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
                                         <PlusIcon size={12} className="inline mr-1" /> Create Workout
                                     </button>
                                 )}
@@ -508,35 +509,35 @@ export const WorkoutsPage = () => {
                                 {filteredTemplates.map(tpl => {
                                     const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                     return (
-                                        <div key={tpl.id} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-emerald-200 transition-all group relative overflow-hidden cursor-pointer"
+                                        <div key={tpl.id} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 hover:shadow-md hover:border-emerald-200 dark:border-emerald-800/50 transition-all group relative overflow-hidden cursor-pointer"
                                             onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
                                             <div className="absolute top-0 left-0 w-full h-0.5 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             <div className="flex items-start justify-between mb-2">
-                                                <h4 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors truncate flex-1 pr-2">{tpl.name}</h4>
+                                                <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:text-emerald-400 transition-colors truncate flex-1 pr-2">{tpl.name}</h4>
                                                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Share">
+                                                    <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded-lg transition-all" title="Share">
                                                         <Share2Icon size={12} />
                                                     </button>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Edit">
+                                                    <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded-lg transition-all" title="Edit">
                                                         <PencilIcon size={12} />
                                                     </button>
-                                                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all" title="Delete">
                                                         <Trash2Icon size={12} />
                                                     </button>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 mb-3">
-                                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
-                                                <span className="text-[9px] text-slate-400">{exCount} exercises</span>
-                                                <span className="text-[9px] text-slate-300">·</span>
-                                                <span className="text-[9px] text-slate-400">{tpl.load}</span>
+                                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
+                                                <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{exCount} exercises</span>
+                                                <span className="text-[9px] text-slate-300 dark:text-[#475569]">·</span>
+                                                <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{tpl.load}</span>
                                             </div>
-                                            <div className="text-[10px] text-slate-300 mb-3">
+                                            <div className="text-[10px] text-slate-300 dark:text-[#475569] mb-3">
                                                 Created {new Date(tpl.createdAt).toLocaleDateString()}
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }}
-                                                className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1.5"
+                                                className="w-full py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <CalendarPlusIcon size={11} /> Assign & Schedule
                                             </button>
@@ -546,44 +547,44 @@ export const WorkoutsPage = () => {
                             </div>
                         ) : (
                             /* List view */
-                            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b border-slate-200 bg-slate-50">
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workout Name</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Phase</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Load</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Exercises</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Created</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">Actions</th>
+                                        <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Workout Name</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Phase</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Load</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Exercises</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Created</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                                         {filteredTemplates.map(tpl => {
                                             const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                             return (
-                                                <tr key={tpl.id} className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
+                                                <tr key={tpl.id} className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors cursor-pointer" onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
                                                     <td className="px-5 py-3.5">
-                                                        <div className="font-medium text-slate-800 text-sm group-hover:text-emerald-700">{tpl.name}</div>
+                                                        <div className="font-medium text-slate-800 dark:text-[#E2E8F0] text-sm group-hover:text-emerald-700 dark:text-emerald-400">{tpl.name}</div>
                                                     </td>
                                                     <td className="px-5 py-3.5">
-                                                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
+                                                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
                                                     </td>
-                                                    <td className="px-5 py-3.5 text-xs text-slate-500">{tpl.load}</td>
-                                                    <td className="px-5 py-3.5 text-xs text-slate-500">{exCount}</td>
-                                                    <td className="px-5 py-3.5 text-xs text-slate-500">{new Date(tpl.createdAt).toLocaleDateString()}</td>
+                                                    <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{tpl.load}</td>
+                                                    <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{exCount}</td>
+                                                    <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{new Date(tpl.createdAt).toLocaleDateString()}</td>
                                                     <td className="px-5 py-3.5">
                                                         <div className="flex items-center justify-end gap-1.5">
-                                                            <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Share">
+                                                            <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Share">
                                                                 <Share2Icon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Edit">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Edit">
                                                                 <PencilIcon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Assign">
+                                                            <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Assign">
                                                                 <CalendarPlusIcon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
+                                                            <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
                                                                 <Trash2Icon size={13} />
                                                             </button>
                                                         </div>

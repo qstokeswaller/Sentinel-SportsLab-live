@@ -58,7 +58,7 @@ export const AddPlanEventModal = () => {
             <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <h3 className="text-sm font-bold text-slate-900">{isEditing ? 'Edit Event' : 'Add Event'}</h3>
-                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100"><X size={14} className="text-slate-400" /></button>
+                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><X size={14} className="text-slate-400" /></button>
                 </div>
 
                 <div className="p-5 space-y-4">
@@ -89,7 +89,7 @@ export const AddPlanEventModal = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
                     {isEditing ? (
                         <button onClick={() => handleDeletePlanEvent(editingPlanEvent.id)}
                             className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors">

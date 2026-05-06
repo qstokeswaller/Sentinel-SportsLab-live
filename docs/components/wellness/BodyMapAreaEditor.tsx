@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useRef, useState } from 'react';
 import { Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, ImagePlus, X, Loader2 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 import { BodyMapConfig, BodyMapAreaDef, SeverityLevel, ImageRefInputType } from '../../types/types';
 import { DEFAULT_BODY_MAP_CONFIG, DEFAULT_SEVERITY_LEVELS } from '../../utils/mocks';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
@@ -119,14 +120,15 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 className="flex-1 text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
                 placeholder="Area label"
             />
-            <select
+            <CustomSelect
+                variant="form"
+                size="xs"
                 value={area.view}
                 onChange={e => updateArea(idx, { view: e.target.value as 'front' | 'back' })}
-                className="text-[10px] px-1.5 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-cyan-400"
             >
                 <option value="front">Front</option>
                 <option value="back">Back</option>
-            </select>
+            </CustomSelect>
             <button
                 type="button"
                 onClick={() => removeArea(idx)}
@@ -156,15 +158,16 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
             {/* Sub-input type selector — hidden in buttonsOnly mode */}
             {!buttonsOnly && (<div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Input Below Image</p>
-                <select
+                <CustomSelect
+                    variant="form"
+                    size="xs"
                     value={config.subInputType || 'buttons'}
                     onChange={e => onChange({ ...config, subInputType: e.target.value as ImageRefInputType })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-xs font-bold text-slate-600 outline-none focus:border-cyan-400"
                 >
                     {SUB_INPUT_OPTIONS.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
-                </select>
+                </CustomSelect>
                 <p className="text-[9px] text-slate-400 mt-1">
                     {SUB_INPUT_OPTIONS.find(o => o.value === (config.subInputType || 'buttons'))?.desc}
                 </p>
@@ -389,7 +392,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 <button
                     type="button"
                     onClick={() => setSeverityOpen(!severityOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                 >
                     Severity Levels ({config.severityLevels.length})
                     {severityOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}

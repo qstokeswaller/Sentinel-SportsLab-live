@@ -8,6 +8,7 @@ import {
     Zap as ZapIcon,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { calculateFanFromRPM, calculateRpmForFan } from '../../utils/performanceUtils';
 
 const WattbikeMapCalculator = ({ inline = false }) => {
@@ -125,7 +126,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                     {!inline && (
                         <button
                             onClick={() => setIsWattbikeMapCalculatorOpen(false)}
-                            className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-all"
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-all"
                         >
                             <XIcon size={18} />
                         </button>
@@ -164,15 +165,17 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                             {/* SELECTION TYPE */}
                             <div className="space-y-1.5">
                                 <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">Selection Type</label>
-                                <select
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
                                     value={wbMapTargetType}
                                     onChange={(e) => { setWbMapTargetType(e.target.value); setWbMapTargetId(''); setPrescriptionReady(false); }}
-                                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none appearance-none min-w-[130px]"
+                                    minWidth={130}
                                 >
                                     <option value="Team">Team</option>
                                     <option value="Individual">Individual</option>
                                     <option value="Standalone">Standalone</option>
-                                </select>
+                                </CustomSelect>
                             </div>
 
                             {/* SELECT TEAM / ATHLETE (not for Standalone) */}
@@ -181,17 +184,19 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                     <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">
                                         {wbMapTargetType === 'Team' ? 'Select Team' : 'Select Athlete'}
                                     </label>
-                                    <select
+                                    <CustomSelect
+                                        variant="form"
+                                        size="xs"
                                         value={wbMapTargetId}
                                         onChange={(e) => setWbMapTargetId(e.target.value)}
-                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none appearance-none"
+                                        placeholder={`Choose ${wbMapTargetType === 'Team' ? 'team' : 'athlete'}...`}
                                     >
                                         <option value="">Choose {wbMapTargetType === 'Team' ? 'team' : 'athlete'}...</option>
                                         {wbMapTargetType === 'Team'
                                             ? teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
                                             : allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
                                         }
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                             )}
 
@@ -304,12 +309,12 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                                     ? calculateFanFromRPM(refRPM, targetWatts, wbMapBikeModel)
                                                     : '–';
                                                 return (
-                                                    <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                    <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                                         <td className="px-5 py-3.5 text-xs font-semibold text-slate-800">{p.name}</td>
                                                         <td className="px-5 py-3.5 text-xs font-bold text-slate-500">
                                                             {baseMap > 0 ? `${baseMap}W` : <span className="text-slate-300">—</span>}
                                                         </td>
-                                                        <td className="px-5 py-3.5 text-xs font-semibold text-indigo-600">
+                                                        <td className="px-5 py-3.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                                                             {baseMap > 0 ? `${Math.round(targetWatts)}W` : <span className="text-slate-300">—</span>}
                                                         </td>
                                                         <td className="px-5 py-3.5 text-xs font-bold text-slate-600">
@@ -317,7 +322,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                                         </td>
                                                         <td className="px-5 py-3.5">
                                                             {baseMap > 0 ? (
-                                                                <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-semibold border border-indigo-100">
+                                                                <span className="bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-lg text-xs font-semibold border border-indigo-100 dark:border-indigo-800/40">
                                                                     {fanSetting}
                                                                 </span>
                                                             ) : <span className="text-slate-300">—</span>}
@@ -363,17 +368,19 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                 <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">
                                     {dataEntryType === 'Team' ? 'Select Team' : 'Select Athlete'}
                                 </label>
-                                <select
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
                                     value={dataEntryTargetId}
                                     onChange={(e) => setDataEntryTargetId(e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none appearance-none"
+                                    placeholder="Choose team..."
                                 >
                                     <option value="">Choose team...</option>
                                     {dataEntryType === 'Team'
                                         ? teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)
                                         : allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
                                     }
-                                </select>
+                                </CustomSelect>
                             </div>
 
                             {/* ASSESSMENT DATE */}
@@ -402,7 +409,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                         </thead>
                                         <tbody className="divide-y divide-slate-50">
                                             {entryAthletes.map(p => (
-                                                <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <tr key={p.id} className="hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                                     <td className="px-5 py-3 text-xs font-semibold text-slate-800">{p.name}</td>
                                                     <td className="px-5 py-3">
                                                         <input
@@ -417,17 +424,18 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                                         />
                                                     </td>
                                                     <td className="px-5 py-3">
-                                                        <select
+                                                        <CustomSelect
+                                                            variant="form"
+                                                            size="xs"
                                                             value={wbMapAthleteData[p.id]?.model || 'Pro'}
                                                             onChange={(e) => setWbMapAthleteData({
                                                                 ...wbMapAthleteData,
                                                                 [p.id]: { ...wbMapAthleteData[p.id], model: e.target.value }
                                                             })}
-                                                            className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold outline-none focus:border-indigo-400 focus:bg-white transition-all"
                                                         >
                                                             <option value="Pro">Pro</option>
                                                             <option value="Trainer">Trainer</option>
-                                                        </select>
+                                                        </CustomSelect>
                                                     </td>
                                                 </tr>
                                             ))}

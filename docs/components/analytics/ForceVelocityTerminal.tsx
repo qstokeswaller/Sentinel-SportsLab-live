@@ -26,6 +26,7 @@ import { useAppState } from '../../context/AppStateContext';
 import {
     ZapIcon, UserIcon, TrendingUpIcon, AlertTriangleIcon, InfoIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const G = 9.81;
 const DEFAULT_HPO = 0.40; // default push-off distance (m) — Samozino et al.
@@ -197,24 +198,23 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
     }, [athlete]);
 
     const classColors = {
-        force_deficit: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', label: 'Force Deficit' },
-        velocity_deficit: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700', label: 'Velocity Deficit' },
-        well_balanced: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Well Balanced' },
+        force_deficit: { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', label: 'Force Deficit' },
+        velocity_deficit: { bg: 'bg-sky-50', border: 'border-sky-200 dark:border-sky-900/50', text: 'text-sky-700', label: 'Velocity Deficit' },
+        well_balanced: { bg: 'bg-emerald-50', border: 'border-emerald-200 dark:border-emerald-800/50', text: 'text-emerald-700', label: 'Well Balanced' },
     };
 
     return (
         <div className="space-y-5">
             {/* Athlete selector */}
             <div className="flex items-center gap-3">
-                <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-300">
+                <CustomSelect value={selectedId} onChange={e => setSelectedId(e.target.value)} variant="form" placeholder="Select an athlete...">
                     <option value="">Select an athlete...</option>
                     {teams.filter(t => t.players?.length).map(t => (
                         <optgroup key={t.id} label={t.name}>
                             {(t.players || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </optgroup>
                     ))}
-                </select>
+                </CustomSelect>
             </div>
 
             {!selectedId && (
@@ -226,9 +226,9 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
             )}
 
             {selectedId && !profile && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-6 text-center">
                     <AlertTriangleIcon size={20} className="mx-auto text-amber-500 mb-2" />
-                    <p className="text-sm text-amber-700">Insufficient test data to build an F-V profile.</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-400">Insufficient test data to build an F-V profile.</p>
                     <p className="text-xs text-amber-500 mt-1">Need at least 2 of: CMJ height, Squat Jump height, IMTP peak force, or sprint split times (10m + 30m).</p>
                 </div>
             )}
@@ -263,7 +263,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                             </div>
                             <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
                                 <div className="text-[9px] font-semibold text-slate-400 uppercase">Pmax (Peak Power)</div>
-                                <div className="text-xl font-bold text-indigo-600">{profile.Pmax}<span className="text-xs text-slate-400 ml-1">W</span></div>
+                                <div className="text-xl font-bold text-indigo-600 dark:text-indigo-300">{profile.Pmax}<span className="text-xs text-slate-400 ml-1">W</span></div>
                             </div>
                             <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
                                 <div className="text-[9px] font-semibold text-slate-400 uppercase">SFV Slope</div>

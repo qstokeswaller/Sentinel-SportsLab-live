@@ -7,6 +7,7 @@ import {
     SaveIcon, Loader2Icon, XIcon, ChevronLeftIcon, ChevronRightIcon,
     CalendarIcon, ActivityIcon, PauseIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const labelCls = "text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1";
@@ -218,7 +219,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                     </div>
                 </div>
                 {onClose && (
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                         <XIcon size={16} className="text-slate-400" />
                     </button>
                 )}
@@ -229,10 +230,11 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                 <div className="grid grid-cols-3 gap-3">
                     <div>
                         <label className={labelCls}>Team / Group</label>
-                        <select
+                        <CustomSelect
                             value={selectedTeamId}
                             onChange={e => { setSelectedTeamId(e.target.value); setRowData({}); }}
-                            className={inputCls}
+                            variant="form"
+                            placeholder="Select team..."
                         >
                             <option value="">Select team...</option>
                             {enabledTeams.length > 0 && (
@@ -249,32 +251,32 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                     ))}
                                 </optgroup>
                             )}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div>
                         <label className={labelCls}>Date</label>
                         <div className="flex items-center gap-1">
-                            <button onClick={() => shiftDate(-1)} className="p-2 hover:bg-slate-100 rounded-lg shrink-0">
+                            <button onClick={() => shiftDate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg shrink-0">
                                 <ChevronLeftIcon size={14} className="text-slate-400" />
                             </button>
                             <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls + ' text-center'} />
-                            <button onClick={() => shiftDate(1)} className="p-2 hover:bg-slate-100 rounded-lg shrink-0">
+                            <button onClick={() => shiftDate(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg shrink-0">
                                 <ChevronRightIcon size={14} className="text-slate-400" />
                             </button>
                         </div>
                     </div>
                     <div>
                         <label className={labelCls}>Session Type</label>
-                        <select value={sessionType} onChange={e => setSessionType(e.target.value)} className={inputCls}>
+                        <CustomSelect value={sessionType} onChange={e => setSessionType(e.target.value)} variant="form">
                             {SESSION_TYPES.map(st => <option key={st.id} value={st.id}>{st.label}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                 </div>
 
                 {/* Method indicator (locked from settings) */}
                 {selectedTeamId && teamSettings && (
-                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
-                        <span className="text-xs font-medium text-indigo-600">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                        <span className="text-xs font-medium text-indigo-600 dark:text-indigo-300">
                             Method: <span className="font-bold">{metricInfo?.label}</span> — {metricInfo?.desc}
                         </span>
                         <span className="text-[9px] text-indigo-400 uppercase">Locked via Settings</span>
@@ -292,8 +294,8 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
 
                 {/* No ACWR settings for this team */}
                 {selectedTeamId && !teamSettings?.enabled && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                        <p className="text-sm text-amber-700 font-medium">ACWR is not enabled for this team.</p>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-6 text-center">
+                        <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">ACWR is not enabled for this team.</p>
                         <p className="text-[10px] text-amber-500 mt-1">Go to Settings → ACWR Monitoring to enable it.</p>
                     </div>
                 )}
@@ -368,7 +370,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                             </div>
                                             <div className="min-w-0">
                                                 <span className="text-sm font-medium text-slate-900 truncate block">{player.name}</span>
-                                                {existing && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-semibold">✓ Logged</span>}
+                                                {existing && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 text-[9px] font-semibold">✓ Logged</span>}
                                             </div>
                                         </div>
 

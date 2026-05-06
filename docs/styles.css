@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* Class-based dark mode — must come before @theme / utility use */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Sentinel SportsLab - Design Tokens */
 :root {
   --brand: 99 102 241;        /* indigo-500 */

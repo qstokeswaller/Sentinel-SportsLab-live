@@ -6,6 +6,7 @@ import {
     SearchIcon, ChevronRightIcon, ChevronDownIcon, FileIcon, XIcon, Trash2Icon, DownloadIcon,
     PencilIcon
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const MedicalReports: React.FC = () => {
     const {
@@ -177,7 +178,7 @@ const MedicalReports: React.FC = () => {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={resetModal}>
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden" onClick={e => e.stopPropagation()}>
                     {/* Header */}
-                    <div className={`px-6 py-4 flex items-center justify-between ${isUpload ? 'bg-indigo-50 border-b border-indigo-100' : 'bg-emerald-50 border-b border-emerald-100'}`}>
+                    <div className={`px-6 py-4 flex items-center justify-between ${isUpload ? 'bg-indigo-50 dark:bg-indigo-900/25 border-b border-indigo-100 dark:border-indigo-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 border-b border-emerald-100 dark:border-emerald-800/40'}`}>
                         <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white ${isUpload ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
                                 {isEditing ? <PencilIcon size={16} /> : isUpload ? <UploadCloudIcon size={16} /> : <FileTextIcon size={16} />}
@@ -199,22 +200,20 @@ const MedicalReports: React.FC = () => {
                         {/* Target */}
                         <div>
                             <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Assign To</label>
-                            <div className="relative">
-                                <select
-                                    value={medicalForm.targetId}
-                                    onChange={e => handleTargetChange(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none appearance-none pr-10 hover:border-slate-300 focus:border-indigo-400 transition-all"
-                                >
-                                    <option value="">Select player or team...</option>
-                                    <optgroup label="Teams">
-                                        {teams.map(t => <option key={t.id} value={`team_${t.id}`}>{t.name}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Athletes">
-                                        {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                    </optgroup>
-                                </select>
-                                <ChevronDownIcon size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            </div>
+                            <CustomSelect
+                                variant="form"
+                                value={medicalForm.targetId}
+                                onChange={e => handleTargetChange(e.target.value)}
+                                placeholder="Select player or team..."
+                            >
+                                <option value="">Select player or team...</option>
+                                <optgroup label="Teams">
+                                    {teams.map(t => <option key={t.id} value={`team_${t.id}`}>{t.name}</option>)}
+                                </optgroup>
+                                <optgroup label="Athletes">
+                                    {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </optgroup>
+                            </CustomSelect>
                         </div>
 
                         {/* Date + Title row */}
@@ -246,13 +245,13 @@ const MedicalReports: React.FC = () => {
                                 <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Document</label>
                                 <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.csv" onChange={handleFileChange} />
                                 {fileData ? (
-                                    <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                                    <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
                                         <FileIcon size={18} className="text-indigo-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-900 truncate">{fileData.name}</p>
                                             <p className="text-[10px] text-slate-500">{fileData.size ? `${(fileData.size / 1024).toFixed(1)} KB` : medicalForm.fileSize}</p>
                                         </div>
-                                        <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 rounded-lg transition-colors">
+                                        <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 rounded-lg transition-colors">
                                             <XIcon size={14} className="text-indigo-400" />
                                         </button>
                                     </div>
@@ -342,14 +341,14 @@ const MedicalReports: React.FC = () => {
                         {isUpload && record.fileName && (
                             <div>
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Attached File</label>
-                                <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                                <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
                                     <FileIcon size={18} className="text-indigo-500 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-slate-900 truncate">{record.fileName}</p>
                                         {record.fileSize && <p className="text-[10px] text-slate-500">{record.fileSize}</p>}
                                     </div>
                                     {record.fileData && (
-                                        <a href={record.fileData} download={record.fileName} className="p-2 hover:bg-indigo-100 rounded-lg transition-colors">
+                                        <a href={record.fileData} download={record.fileName} className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 rounded-lg transition-colors">
                                             <DownloadIcon size={14} className="text-indigo-500" />
                                         </a>
                                     )}
@@ -367,13 +366,13 @@ const MedicalReports: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleDeleteReport(record.id)}
-                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-colors"
                             >
                                 <Trash2Icon size={12} /> Delete
                             </button>
                             <button
                                 onClick={() => handleEditReport(record)}
-                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded-lg transition-colors"
                             >
                                 <PencilIcon size={12} /> Edit
                             </button>
@@ -407,17 +406,15 @@ const MedicalReports: React.FC = () => {
                     {/* Target athlete */}
                     <div>
                         <label className="text-xs font-black uppercase text-indigo-400 tracking-widest pl-2 mb-2 block">Athlete</label>
-                        <div className="relative">
-                            <select
-                                value={optOutForm.targetId || ''}
-                                onChange={e => setOptOutForm({ ...optOutForm, targetId: e.target.value })}
-                                className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 appearance-none pr-10"
-                            >
-                                <option value="">Select athlete...</option>
-                                {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                            <ChevronDownIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                        </div>
+                        <CustomSelect
+                            variant="form"
+                            value={optOutForm.targetId || ''}
+                            onChange={e => setOptOutForm({ ...optOutForm, targetId: e.target.value })}
+                            placeholder="Select athlete..."
+                        >
+                            <option value="">Select athlete...</option>
+                            {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </CustomSelect>
                     </div>
 
                     <div>
@@ -427,7 +424,7 @@ const MedicalReports: React.FC = () => {
                                 <button
                                     key={status}
                                     onClick={() => setOptOutForm({ ...optOutForm, status })}
-                                    className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 text-indigo-300 hover:bg-indigo-100/50'}`}
+                                    className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-300 hover:bg-indigo-100/50'}`}
                                 >
                                     {status}
                                 </button>
@@ -517,13 +514,13 @@ const MedicalReports: React.FC = () => {
                         <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                             <button
                                 onClick={() => { setMedicalModalMode('upload'); setIsMedicalModalOpen(true); }}
-                                className="px-4 py-2.5 bg-white text-indigo-600 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2 border border-slate-200"
+                                className="px-4 py-2.5 bg-white text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all flex items-center gap-2 border border-slate-200"
                             >
                                 <UploadCloudIcon size={14} /> Upload Doc
                             </button>
                             <button
                                 onClick={() => { setMedicalModalMode('text'); setIsMedicalModalOpen(true); }}
-                                className="px-4 py-2.5 text-slate-500 hover:text-indigo-600 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
+                                className="px-4 py-2.5 text-slate-500 hover:text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
                             >
                                 <FileTextIcon size={14} /> Quick Log
                             </button>
@@ -533,10 +530,12 @@ const MedicalReports: React.FC = () => {
 
                         <div className="relative group">
                             <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wide absolute -top-5 left-2">Filter View</label>
-                            <select
+                            <CustomSelect
+                                variant="filter"
+                                size="xs"
                                 value={medicalFilterAthleteId}
                                 onChange={(e) => setMedicalFilterAthleteId(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-[10px] font-medium text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-10 shadow-sm min-w-[180px]"
+                                minWidth={180}
                             >
                                 <option value="All">All Athletes</option>
                                 <optgroup label="Squads">
@@ -545,8 +544,7 @@ const MedicalReports: React.FC = () => {
                                 <optgroup label="Athletes">
                                     {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </optgroup>
-                            </select>
-                            <ChevronDownIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            </CustomSelect>
                         </div>
                     </div>
                 </div>
@@ -577,13 +575,13 @@ const MedicalReports: React.FC = () => {
                                 <div
                                     onClick={() => entry.timelineType === 'medical' && setInspectingMedicalRecord(entry)}
                                     className={`p-5 rounded-xl border transition-all ${entry.timelineType === 'medical'
-                                        ? 'bg-slate-50/50 border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
+                                        ? 'bg-slate-50/50 dark:bg-[#132338]/40 border-slate-100 hover:border-indigo-200 dark:border-indigo-800/50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
                                         : 'bg-white border-indigo-50 shadow-sm'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
-                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest ${entry.timelineType === 'medical' ? 'bg-indigo-100 text-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-100 text-emerald-600' : entry.status === 'Modified' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')
+                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest ${entry.timelineType === 'medical' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : entry.status === 'Modified' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')
                                                 }`}>
                                                 {entry.timelineType === 'medical' ? (entry.type === 'upload' ? 'DOCUMENT' : 'LOG') : entry.status}
                                             </span>
@@ -601,7 +599,7 @@ const MedicalReports: React.FC = () => {
                                                     e.stopPropagation();
                                                     entry.timelineType === 'medical' ? handleEditReport(entry) : handleEditOptOut(entry);
                                                 }}
-                                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
                                                 title="Edit"
                                             >
                                                 <PencilIcon size={13} />
@@ -611,7 +609,7 @@ const MedicalReports: React.FC = () => {
                                                     e.stopPropagation();
                                                     entry.timelineType === 'medical' ? handleDeleteReport(entry.id) : handleDeleteOptOut(entry);
                                                 }}
-                                                className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all"
                                                 title="Delete"
                                             >
                                                 <Trash2Icon size={13} />

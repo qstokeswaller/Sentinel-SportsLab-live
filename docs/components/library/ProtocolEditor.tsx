@@ -10,6 +10,7 @@ import {
 import type { Protocol, ProtocolBlock, ProtocolAttachment, BlockType, TextLine, LineType, ProtocolExercise } from './ProtocolLibrary';
 import { uploadPdf, deletePdf } from '../../utils/pdfUpload';
 import { PROTOCOL_CATEGORIES } from './ProtocolLibrary';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -264,8 +265,8 @@ const TextBlockCard: React.FC<{
                             onClick={() => changeLineType(type)}
                             className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
                                 focusedLine?.type === type
-                                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
-                                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                                    ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700 dark:text-indigo-400 shadow-sm'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700'
                             }`}
                             title={label}
                         >
@@ -276,10 +277,10 @@ const TextBlockCard: React.FC<{
                 </div>
                 <div className="flex-1" />
                 <div className="flex items-center gap-0.5">
-                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 transition-all" title="Move up">
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move up">
                         <ChevronUpIcon size={14} />
                     </button>
-                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 transition-all" title="Move down">
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move down">
                         <ChevronDownIcon size={14} />
                     </button>
                     <button onClick={onDelete} className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete block">
@@ -341,17 +342,17 @@ const ExerciseBlockCard: React.FC<{
     };
 
     return (
-        <div className="rounded-xl border border-indigo-200 overflow-hidden shadow-sm">
+        <div className="rounded-xl border border-indigo-200 dark:border-indigo-800/50 overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border-b border-indigo-200">
+            <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/25 border-b border-indigo-200 dark:border-indigo-800/50">
                 <DumbbellIcon size={14} className="text-indigo-500 shrink-0" />
-                <span className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wide">Exercise Block</span>
+                <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide">Exercise Block</span>
                 <div className="flex-1" />
                 <div className="flex items-center gap-0.5">
-                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 disabled:opacity-30 transition-all" title="Move up">
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-indigo-400 hover:text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 disabled:opacity-30 transition-all" title="Move up">
                         <ChevronUpIcon size={14} />
                     </button>
-                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 disabled:opacity-30 transition-all" title="Move down">
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-indigo-400 hover:text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 disabled:opacity-30 transition-all" title="Move down">
                         <ChevronDownIcon size={14} />
                     </button>
                     <button onClick={onDelete} className="p-1 rounded text-indigo-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete block">
@@ -367,7 +368,7 @@ const ExerciseBlockCard: React.FC<{
                     value={block.sectionName || ''}
                     onChange={e => onChange({ ...block, sectionName: e.target.value })}
                     placeholder="Section name (e.g., ROM, Isometrics, Plyometrics)"
-                    className="w-full px-3 py-2 rounded-lg border border-indigo-200 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 placeholder:font-normal"
+                    className="w-full px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800/50 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 placeholder:font-normal"
                 />
 
                 {exercises.length > 0 && (
@@ -409,7 +410,7 @@ const ExerciseBlockCard: React.FC<{
 
                 <button
                     onClick={addExercise}
-                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 transition-colors"
                 >
                     <PlusCircleIcon size={13} /> Add Exercise
                 </button>
@@ -460,15 +461,15 @@ const PdfBlockCard: React.FC<{
     };
 
     return (
-        <div className="rounded-xl border border-rose-200 overflow-hidden shadow-sm">
+        <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-rose-50 border-b border-rose-200">
+            <div className="flex items-center gap-2 px-3 py-2 bg-rose-50 dark:bg-rose-900/20 border-b border-rose-200 dark:border-rose-900/50">
                 <FileIcon size={14} className="text-rose-500 shrink-0" />
                 <span className="text-[11px] font-semibold text-rose-600 uppercase tracking-wide">PDF Block</span>
                 <div className="flex-1" />
                 <div className="flex items-center gap-0.5">
-                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
-                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
                     <button onClick={onDelete} className="p-1 rounded text-rose-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2Icon size={14} /></button>
                 </div>
             </div>
@@ -480,7 +481,7 @@ const PdfBlockCard: React.FC<{
                     value={block.pdfTitle || ''}
                     onChange={e => onChange({ ...block, pdfTitle: e.target.value })}
                     placeholder="PDF title (e.g., Clinical Guidelines)"
-                    className="w-full px-3 py-2 rounded-lg border border-rose-200 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 placeholder:text-slate-400 placeholder:font-normal"
+                    className="w-full px-3 py-2 rounded-lg border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 placeholder:text-slate-400 placeholder:font-normal"
                 />
 
                 {block.pdfUrl ? (
@@ -491,7 +492,7 @@ const PdfBlockCard: React.FC<{
                                 <p className="text-sm font-medium text-slate-800 truncate">{block.pdfFileName}</p>
                                 <p className="text-xs text-slate-400">{formatFileSize(block.pdfFileSize || 0)}</p>
                             </div>
-                            <button onClick={() => window.open(block.pdfUrl, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Open PDF">
+                            <button onClick={() => window.open(block.pdfUrl, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all" title="Open PDF">
                                 <ExternalLinkIcon size={14} />
                             </button>
                             <button onClick={handleRemoveFile} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Remove PDF">
@@ -511,7 +512,7 @@ const PdfBlockCard: React.FC<{
                         <button
                             onClick={() => fileRef.current?.click()}
                             disabled={uploading}
-                            className="flex items-center gap-2 px-4 py-3 w-full border-2 border-dashed border-rose-200 rounded-lg text-sm text-rose-500 hover:border-rose-400 hover:bg-rose-50 transition-all disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-3 w-full border-2 border-dashed border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg text-sm text-rose-500 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all disabled:opacity-50"
                         >
                             {uploading ? <Loader2Icon size={14} className="animate-spin" /> : <UploadIcon size={14} />}
                             {uploading ? 'Uploading...' : 'Upload PDF'}
@@ -610,7 +611,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
             {/* Header bar */}
             <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                    <button onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">
+                    <button onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <ArrowLeftIcon size={16} />
                     </button>
                     <h3 className="text-sm font-semibold text-slate-700">
@@ -634,15 +635,17 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                         placeholder="Protocol title"
                         className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400"
                     />
-                    <select
+                    <CustomSelect
+                        variant="form"
+                        size="sm"
                         value={category}
                         onChange={e => setCategory(e.target.value)}
-                        className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 bg-white min-w-[160px]"
+                        minWidth={160}
                     >
                         {PROTOCOL_CATEGORIES.map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                         ))}
-                    </select>
+                    </CustomSelect>
                 </div>
             </div>
 
@@ -683,7 +686,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 ))}
 
                 {blocks.length === 0 && (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                    <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 dark:bg-[#132338]/40">
                         <FileTextIcon size={28} className="mx-auto text-slate-300 mb-3" />
                         <p className="text-sm text-slate-500 font-medium mb-1">Start building your protocol</p>
                         <p className="text-xs text-slate-400">Add a text or exercise block below to get started</p>
@@ -694,21 +697,21 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 <div className="grid grid-cols-3 gap-3 pt-1">
                     <button
                         onClick={() => addBlock('text')}
-                        className="flex items-center justify-center gap-2 px-4 py-4 bg-white border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                        className="flex items-center justify-center gap-2 px-4 py-4 bg-white border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-indigo-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50/50 transition-all"
                     >
                         <PlusIcon size={16} />
                         <span className="text-sm font-medium">Text Block</span>
                     </button>
                     <button
                         onClick={() => addBlock('exercise')}
-                        className="flex items-center justify-center gap-2 px-4 py-4 bg-indigo-50/50 border-2 border-dashed border-indigo-300 rounded-xl text-indigo-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                        className="flex items-center justify-center gap-2 px-4 py-4 bg-indigo-50/50 border-2 border-dashed border-indigo-300 rounded-xl text-indigo-500 hover:border-indigo-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
                     >
                         <DumbbellIcon size={16} />
                         <span className="text-sm font-medium">Exercise Block</span>
                     </button>
                     <button
                         onClick={() => addBlock('pdf')}
-                        className="flex items-center justify-center gap-2 px-4 py-4 bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-xl text-rose-500 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                        className="flex items-center justify-center gap-2 px-4 py-4 bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-xl text-rose-500 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all"
                     >
                         <FileIcon size={16} />
                         <span className="text-sm font-medium">PDF Block</span>
@@ -733,7 +736,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                                     <p className="text-sm font-medium text-slate-800 truncate">{att.title || att.fileName}</p>
                                     <p className="text-xs text-slate-400">{att.fileName} — {formatFileSize(att.fileSize)}</p>
                                 </div>
-                                <button onClick={() => window.open(att.url, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Open">
+                                <button onClick={() => window.open(att.url, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all" title="Open">
                                     <ExternalLinkIcon size={14} />
                                 </button>
                                 <button onClick={() => removeAttachment(att)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Remove">
@@ -749,7 +752,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                     <button
                         onClick={() => attachFileRef.current?.click()}
                         disabled={attachUploading}
-                        className="flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 transition-colors disabled:opacity-50"
                     >
                         {attachUploading ? <Loader2Icon size={13} className="animate-spin" /> : <PlusCircleIcon size={13} />}
                         {attachUploading ? 'Uploading...' : 'Attach PDF'}

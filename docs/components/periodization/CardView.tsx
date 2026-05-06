@@ -7,6 +7,7 @@ import {
     PencilIcon, Check, Trash2, X,
 } from 'lucide-react';
 import { formatDateShort, dateToWeekIndex } from '../../utils/periodizationUtils';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // Intensity badge colors
 const LOAD_BADGE = {
@@ -45,7 +46,7 @@ const weekCount = (startDate, endDate) => {
 // Small inline edit pencil button
 const EditBtn = ({ onClick }) => (
     <button onClick={(e) => { e.stopPropagation(); onClick(); }}
-        className="p-1 rounded-md hover:bg-slate-100 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0">
+        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0">
         <PencilIcon size={11} className="text-slate-400" />
     </button>
 );
@@ -126,8 +127,8 @@ export const CardView = ({ plan }) => {
                                         onKeyDown={e => { if (e.key === 'Enter') saveWeekEdit(); if (e.key === 'Escape') setEditingWeekId(null); }}
                                         className="text-base font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 outline-none focus:border-indigo-400 flex-1"
                                         placeholder="e.g. Loading, Deload, Peak..." />
-                                    <button onClick={saveWeekEdit} className="p-1 rounded-md hover:bg-indigo-50 text-indigo-600"><Check size={14} /></button>
-                                    <button onClick={() => setEditingWeekId(null)} className="p-1 rounded-md hover:bg-slate-100 text-slate-400"><X size={14} /></button>
+                                    <button onClick={saveWeekEdit} className="p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300"><Check size={14} /></button>
+                                    <button onClick={() => setEditingWeekId(null)} className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400"><X size={14} /></button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 group/edit">
@@ -170,18 +171,17 @@ export const CardView = ({ plan }) => {
                                                 onKeyDown={e => { if (e.key === 'Enter') saveSessionEdit(session.id); if (e.key === 'Escape') setEditingSessionId(null); }}
                                                 autoFocus className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-indigo-400"
                                                 placeholder="Session name" />
-                                            <select value={editSessionData.load} onChange={e => setEditSessionData(d => ({ ...d, load: e.target.value }))}
-                                                className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none">
+                                            <CustomSelect value={editSessionData.load} onChange={e => setEditSessionData(d => ({ ...d, load: e.target.value }))} variant="form" size="xs" placeholder="No intensity">
                                                 <option value="">No intensity</option>
                                                 {LOAD_OPTIONS.map(l => <option key={l} value={l}>{LOAD_BADGE[l].label}</option>)}
-                                            </select>
+                                            </CustomSelect>
                                             <input type="number" value={editSessionData.duration} onChange={e => setEditSessionData(d => ({ ...d, duration: e.target.value }))}
                                                 className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none" placeholder="Duration (min)" />
                                             <div className="flex gap-1">
                                                 <button onClick={() => saveSessionEdit(session.id)}
                                                     className="flex-1 text-[10px] font-semibold bg-indigo-600 text-white rounded py-1 hover:bg-indigo-700">Save</button>
                                                 <button onClick={() => setEditingSessionId(null)}
-                                                    className="text-[10px] text-slate-400 px-2 py-1 hover:bg-slate-100 rounded">Cancel</button>
+                                                    className="text-[10px] text-slate-400 px-2 py-1 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded">Cancel</button>
                                             </div>
                                             <button onClick={() => { handleDeletePlanSession(phase.id, block.id, week.id, session.id); setEditingSessionId(null); }}
                                                 className="flex items-center gap-1 text-[9px] text-red-400 hover:text-red-600 mt-1">
@@ -195,18 +195,17 @@ export const CardView = ({ plan }) => {
                                                 onKeyDown={e => { if (e.key === 'Enter') createSession(dateStr); if (e.key === 'Escape') setAddingSessionDate(null); }}
                                                 autoFocus className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-indigo-400"
                                                 placeholder="Session name" />
-                                            <select value={newSessionData.load} onChange={e => setNewSessionData(d => ({ ...d, load: e.target.value }))}
-                                                className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none">
+                                            <CustomSelect value={newSessionData.load} onChange={e => setNewSessionData(d => ({ ...d, load: e.target.value }))} variant="form" size="xs" placeholder="No intensity">
                                                 <option value="">No intensity</option>
                                                 {LOAD_OPTIONS.map(l => <option key={l} value={l}>{LOAD_BADGE[l].label}</option>)}
-                                            </select>
+                                            </CustomSelect>
                                             <input type="number" value={newSessionData.duration} onChange={e => setNewSessionData(d => ({ ...d, duration: e.target.value }))}
                                                 className="w-full text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none" placeholder="Duration (min)" />
                                             <div className="flex gap-1">
                                                 <button onClick={() => createSession(dateStr)} disabled={!newSessionData.name.trim()}
                                                     className="flex-1 text-[10px] font-semibold bg-indigo-600 text-white rounded py-1 hover:bg-indigo-700 disabled:opacity-40">Create</button>
                                                 <button onClick={() => setAddingSessionDate(null)}
-                                                    className="text-[10px] text-slate-400 px-2 py-1 hover:bg-slate-100 rounded">Cancel</button>
+                                                    className="text-[10px] text-slate-400 px-2 py-1 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded">Cancel</button>
                                             </div>
                                         </div>
                                     ) : session ? (
@@ -235,7 +234,7 @@ export const CardView = ({ plan }) => {
                                             </div>
                                             {session.workoutTemplateId ? (
                                                 <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets'); }}
-                                                    className="mt-auto flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium transition-colors">
+                                                    className="mt-auto flex items-center gap-1 text-[10px] text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 font-medium transition-colors">
                                                     <LinkIcon size={9} /> View Workout
                                                 </button>
                                             ) : (
@@ -306,7 +305,7 @@ export const CardView = ({ plan }) => {
 
                         return (
                             <div key={week.id}
-                                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all group/edit">
+                                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group/edit">
                                 {/* Week title — editable */}
                                 <div className="p-4 pb-2">
                                     {isEditingThisWeek ? (
@@ -322,7 +321,7 @@ export const CardView = ({ plan }) => {
                                                 className="text-sm font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-indigo-400 flex-1 min-w-0"
                                                 placeholder="Intent..." />
                                             <button onClick={(e) => { e.stopPropagation(); handleUpdatePlanWeek(phase.id, block.id, week.id, { intent: editWeekIntent }); setEditingWeekId(null); }}
-                                                className="p-0.5 rounded hover:bg-indigo-50 text-indigo-600"><Check size={12} /></button>
+                                                className="p-0.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300"><Check size={12} /></button>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-1.5 mb-1">
@@ -357,7 +356,7 @@ export const CardView = ({ plan }) => {
                                 </div>
 
                                 {/* Footer — drill in */}
-                                <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+                                <div className="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
                                     onClick={() => setPlanDrillPath([...planDrillPath, week.weekNumber])}>
                                     <span className="text-[10px] text-slate-400">
                                         {week.sessions.length} session{week.sessions.length !== 1 ? 's' : ''}
@@ -412,7 +411,7 @@ export const CardView = ({ plan }) => {
 
                         return (
                             <div key={block.id}
-                                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all group/edit">
+                                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group/edit">
                                 {/* Block content */}
                                 <div className="p-5 flex items-start gap-3">
                                     <div className="w-1.5 self-stretch rounded-full shrink-0" style={{ backgroundColor: block.color }} />
@@ -436,7 +435,7 @@ export const CardView = ({ plan }) => {
                                     </div>
                                 </div>
                                 {/* Footer */}
-                                <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-end cursor-pointer hover:bg-slate-50 transition-colors"
+                                <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-end cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
                                     onClick={() => setPlanDrillPath([...planDrillPath, block.id])}>
                                     <span className="text-[10px] font-semibold text-slate-500 mr-1">Open</span>
                                     <ChevronRight size={12} className="text-slate-400" />
@@ -472,7 +471,7 @@ export const CardView = ({ plan }) => {
 
                     return (
                         <div key={phase.id}
-                            className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 transition-all group/edit">
+                            className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group/edit">
                             {/* Phase header */}
                             <div className="p-5 pb-3">
                                 <div className="flex items-center gap-2 mb-1">
@@ -509,7 +508,7 @@ export const CardView = ({ plan }) => {
                             {plan.events.filter(e => e.date >= phase.startDate && (!phase.endDate || e.date <= phase.endDate)).length > 0 && (
                                 <div className="px-5 pb-3 flex flex-wrap gap-1">
                                     {plan.events.filter(e => e.date >= phase.startDate && (!phase.endDate || e.date <= phase.endDate)).map(event => (
-                                        <span key={event.id} className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium ${event.type === 'competition' ? 'bg-yellow-50 text-yellow-700' : event.type === 'testing' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                                        <span key={event.id} className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium ${event.type === 'competition' ? 'bg-yellow-50 text-yellow-700' : event.type === 'testing' ? 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700'}`}>
                                             {event.type === 'competition' ? '🏆' : event.type === 'testing' ? '🧪' : '⭐'} {event.label}
                                         </span>
                                     ))}
@@ -517,7 +516,7 @@ export const CardView = ({ plan }) => {
                             )}
 
                             {/* View details footer */}
-                            <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-end cursor-pointer hover:bg-slate-50 transition-colors"
+                            <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-end cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
                                 onClick={() => setPlanDrillPath([phase.id])}>
                                 <span className="text-[10px] font-semibold text-slate-500 mr-1">View details</span>
                                 <ChevronRight size={12} className="text-slate-400 group-hover/edit:text-indigo-400 transition-colors" />

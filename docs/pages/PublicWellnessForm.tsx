@@ -174,7 +174,7 @@ const PublicWellnessForm: React.FC = () => {
 
     if (submitted) return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 animate-bounce">
                 <CheckCircle2 size={40} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Check-in Complete!</h1>
@@ -206,10 +206,10 @@ const PublicWellnessForm: React.FC = () => {
 
     // ── Severity color map for URTI illness symptom options ────────────────────
     const SEVERITY_OPTION_COLORS: Record<string, { selected: string; unselected: string }> = {
-        'No Symptoms': { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:border-emerald-300' },
-        'Mild':        { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+        'No Symptoms': { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-xl scale-[1.02]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 hover:border-emerald-300' },
+        'Mild':        { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400 hover:border-amber-300' },
         'Moderate':    { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',  unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
-        'Severe':      { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-rose-50 border-rose-200 text-rose-700 hover:border-rose-300' },
+        'Severe':      { selected: 'bg-rose-500 border-rose-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 hover:border-rose-300' },
     };
 
     // ── Determine if Continue button should be disabled ───────────────────────
@@ -236,7 +236,7 @@ const PublicWellnessForm: React.FC = () => {
                             <Activity size={13} className="text-white" />
                         </div>
                         <span className="font-bold text-sm text-slate-900 tracking-tight">
-                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
                     </div>
                     <span className="text-[9px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
@@ -337,16 +337,16 @@ const PublicWellnessForm: React.FC = () => {
 
                                             // RPE gradient colors matching standard RPE chart (blue → green → yellow → orange → red)
                                             const rpeColors: Record<number, { selected: string; unselected: string }> = {
-                                                1:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 border-sky-200 text-sky-700 hover:border-sky-300' },
-                                                2:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 border-sky-200 text-sky-700 hover:border-sky-300' },
+                                                1:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50 text-sky-700 dark:text-sky-400 hover:border-sky-300' },
+                                                2:  { selected: 'bg-sky-400 border-sky-400 text-white shadow-xl scale-[1.02]',        unselected: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50 text-sky-700 dark:text-sky-400 hover:border-sky-300' },
                                                 3:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-lime-50 border-lime-200 text-lime-700 hover:border-lime-300' },
                                                 4:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-xl scale-[1.02]',      unselected: 'bg-lime-50 border-lime-200 text-lime-700 hover:border-lime-300' },
                                                 5:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-xl scale-[1.02]',  unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:border-yellow-300' },
                                                 6:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-xl scale-[1.02]',  unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:border-yellow-300' },
-                                                7:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 border-amber-200 text-amber-700 hover:border-amber-300' },
+                                                7:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-xl scale-[1.02]',    unselected: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400 hover:border-amber-300' },
                                                 8:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-xl scale-[1.02]',  unselected: 'bg-orange-50 border-orange-200 text-orange-700 hover:border-orange-300' },
-                                                9:  { selected: 'bg-red-500 border-red-500 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 text-red-700 hover:border-red-300' },
-                                                10: { selected: 'bg-red-600 border-red-600 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 text-red-700 hover:border-red-300' },
+                                                9:  { selected: 'bg-red-500 border-red-500 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700 hover:border-red-300' },
+                                                10: { selected: 'bg-red-600 border-red-600 text-white shadow-xl scale-[1.02]',        unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700 hover:border-red-300' },
                                             };
 
                                             // RPE: compact vertical list with number + label + color

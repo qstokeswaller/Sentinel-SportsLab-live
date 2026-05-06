@@ -18,11 +18,12 @@ import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
 import { PAGE_TOURS, WORKFLOW_TOURS, getDefaultTourState } from '../utils/tourSteps';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, saveGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
+import { CustomSelect } from '../components/ui/CustomSelect';
 import type { GpsTeamProfile } from '../components/performance/GpsConfigModal';
 
-const inputCls = "w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-[#263044] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
-const inputErrorCls = "w-full bg-slate-50 dark:bg-[#0F172A] border-2 border-red-400 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-colors";
-const labelCls = "text-xs font-medium text-slate-600 dark:text-[#94A3B8] block mb-1.5";
+const inputCls = "w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+const inputErrorCls = "w-full bg-slate-50 dark:bg-[#0F1C30] border-2 border-red-400 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-colors";
+const labelCls = "text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5";
 
 const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [string, any]) => ({
   id, label: info.label, desc: info.desc,
@@ -46,18 +47,18 @@ const CollapsibleSection = ({ id, icon: Icon, title, subtitle, defaultOpen = tru
     return next;
   });
   return (
-    <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#263044] rounded-xl shadow-sm overflow-hidden">
-      <button onClick={toggle} className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50/50 dark:hover:bg-[#1F2937]/50 transition-colors">
+    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+      <button onClick={toggle} className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50/50 dark:bg-[#132338]/40 dark:hover:bg-[#1A2D48]/50 transition-colors">
         {Icon && <Icon size={15} className="text-indigo-500 dark:text-indigo-400 shrink-0" />}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{title}</h3>
-          {subtitle && <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">{subtitle}</p>}
         </div>
-        <div className={`text-slate-400 dark:text-[#64748B] transition-transform ${isOpen ? '' : '-rotate-90'}`}>
+        <div className={`text-slate-400 dark:text-[#94A3B8] transition-transform ${isOpen ? '' : '-rotate-90'}`}>
           <ChevronDownIcon size={16} />
         </div>
       </button>
-      {isOpen && <div className="px-5 pb-5 border-t border-slate-100 dark:border-[#263044] pt-4">{children}</div>}
+      {isOpen && <div className="px-5 pb-5 border-t border-slate-100 dark:border-[#243A58] pt-4">{children}</div>}
     </div>
   );
 };
@@ -79,7 +80,7 @@ const UnsavedChangesModal = ({ isOpen, onSave, onDiscard, onCancel }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">Discard</button>
+          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">Discard</button>
           <button onClick={onSave} className="flex-1 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Save & Continue</button>
         </div>
       </div>
@@ -124,7 +125,7 @@ const GpsColumnRenameModal: React.FC<{
             <h2 className="text-sm font-bold text-slate-900">Column Display Names — {profile.teamName}</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">{visible.length} columns · CSV import name (left) → how it appears in GPS Hub (right)</p>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 transition-colors">
             <XIcon size={14} />
           </button>
         </div>
@@ -151,7 +152,7 @@ const GpsColumnRenameModal: React.FC<{
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#132338]/40">
           <p className="text-[10px] text-slate-400">Changes apply immediately in GPS Hub after saving.</p>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
@@ -162,6 +163,100 @@ const GpsColumnRenameModal: React.FC<{
     </div>
   );
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// Appearance Tab (isolated so it can hold local pending state)
+// ══════════════════════════════════════════════════════════════════════
+
+function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; toggleDarkMode: () => void }) {
+  const [pending, setPending] = React.useState<boolean>(isDarkMode);
+  const isDirty = pending !== isDarkMode;
+
+  function save() {
+    if (isDirty) toggleDarkMode();
+  }
+
+  return (
+    <>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Appearance</h2>
+        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">Customise how Sentinel SportsLab looks on your device.</p>
+      </div>
+
+      <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#1A2D48] flex items-center justify-center shrink-0">
+              {isDarkMode ? <MoonIcon size={16} className="text-indigo-400" /> : <SunIcon size={16} className="text-amber-500" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Theme</h3>
+              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Switch between light and dark mode. Preference is saved per device.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {/* Light card */}
+            <button
+              onClick={() => setPending(false)}
+              className={`relative rounded-xl border-2 p-4 text-left transition-all ${!pending ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48] bg-white dark:bg-[#1A2D48]'}`}
+            >
+              <div className="w-full aspect-video rounded-lg bg-slate-100 border border-slate-200 mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
+                <div className="flex gap-1">
+                  <div className="w-6 h-6 rounded bg-white border border-slate-200" />
+                  <div className="flex-1 h-6 rounded bg-white border border-slate-200" />
+                </div>
+                <div className="flex-1 rounded bg-white border border-slate-200" />
+              </div>
+              <div className="flex items-center gap-2">
+                <SunIcon size={13} className="text-amber-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Light</span>
+                {!pending && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Clean, high-contrast for indoor use</p>
+            </button>
+
+            {/* Dark card */}
+            <button
+              onClick={() => setPending(true)}
+              className={`relative rounded-xl border-2 p-4 text-left transition-all ${pending ? 'border-indigo-500 bg-indigo-900/20' : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48] bg-white dark:bg-[#1A2D48]'}`}
+            >
+              <div className="w-full aspect-video rounded-lg bg-[#0D1829] border border-[#243A58] mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
+                <div className="flex gap-1">
+                  <div className="w-6 h-6 rounded bg-[#132338] border border-[#243A58]" />
+                  <div className="flex-1 h-6 rounded bg-[#132338] border border-[#243A58]" />
+                </div>
+                <div className="flex-1 rounded bg-[#132338] border border-[#243A58]" />
+              </div>
+              <div className="flex items-center gap-2">
+                <MoonIcon size={13} className="text-indigo-400 shrink-0" />
+                <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Dark</span>
+                {pending && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Navy dark — better in bright conditions</p>
+            </button>
+          </div>
+
+          {/* Save row */}
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-[#243A58]">
+            <p className="text-xs text-slate-400 dark:text-[#94A3B8]">
+              {isDirty ? 'Unsaved changes' : 'Saved to this device'}
+            </p>
+            <button
+              onClick={save}
+              disabled={!isDirty}
+              className="px-5 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // Main Settings Page
@@ -330,9 +425,9 @@ const SettingsPage: React.FC = () => {
       <div className="space-y-3 pt-2 border-t border-slate-200/60">
         <div>
           <label className={labelCls}>Load Method</label>
-          <select value={s.method} onChange={e => updateSettings(key, { method: e.target.value })} className={inputCls}>
+          <CustomSelect value={s.method} onChange={e => updateSettings(key, { method: e.target.value })} variant="form">
             {METHOD_OPTIONS.map(m => <option key={m.id} value={m.id}>{m.label} — {m.desc}</option>)}
-          </select>
+          </CustomSelect>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -342,7 +437,7 @@ const SettingsPage: React.FC = () => {
                 <button key={val} type="button"
                   onClick={() => updateSettings(key, { acuteWindow: val === '7_28' ? 7 : 3, chronicWindow: val === '7_28' ? 28 : 21 })}
                   className={`flex-1 text-xs font-medium py-2 rounded-lg border transition-all ${
-                    s.acuteWindow === (val === '7_28' ? 7 : 3) ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
+                    s.acuteWindow === (val === '7_28' ? 7 : 3) ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
                   }`}>{lbl}</button>
               ))}
             </div>
@@ -355,7 +450,7 @@ const SettingsPage: React.FC = () => {
                   onClick={() => updateSettings(key, { freezeRestDays: val === 'freeze' })}
                   className={`flex-1 text-xs font-medium py-2 rounded-lg border transition-all ${
                     (s.freezeRestDays && val === 'freeze') || (!s.freezeRestDays && val === 'decay')
-                      ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
+                      ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
                   }`}>{lbl}</button>
               ))}
             </div>
@@ -387,7 +482,7 @@ const SettingsPage: React.FC = () => {
                   setAcwrRecalcAnchors(prev => { const n = { ...prev }; delete n[key]; return n; });
                   showToast?.('Recalculation anchor cleared — using all data');
                 }}
-                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors"
+                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/25 transition-colors"
               >Clear</button>
             )}
           </div>
@@ -411,13 +506,13 @@ const SettingsPage: React.FC = () => {
       {/* Sidebar — vertical list on md+, horizontal pill tabs on mobile */}
       <div className="md:w-56 md:shrink-0">
         {/* Mobile: horizontal tab strip */}
-        <div className="flex md:hidden gap-1 bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#263044] rounded-xl p-1 shadow-sm mb-2">
+        <div className="flex md:hidden gap-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-1 shadow-sm mb-2">
           {SETTINGS_TABS.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  isActive ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1F2937]'
+                  isActive ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                 }`}
               >
                 <tab.icon size={14} />
@@ -441,14 +536,14 @@ const SettingsPage: React.FC = () => {
               <button key={tab.id} data-tour={`settings-${tab.id}`} onClick={() => handleTabSwitch(tab.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50 text-indigo-700'
-                    : 'hover:bg-slate-50 dark:hover:bg-[#1F2937] text-slate-600 dark:text-[#94A3B8] border border-transparent'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/50 dark:border-indigo-700/50 text-indigo-700'
+                    : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border border-transparent'
                 }`}
               >
-                <tab.icon size={16} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-[#64748B]'} />
+                <tab.icon size={16} className={isActive ? 'text-indigo-600 dark:text-indigo-300 dark:text-indigo-400' : 'text-slate-400 dark:text-[#94A3B8]'} />
                 <div className="flex-1 min-w-0">
-                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{tab.label}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-[#64748B] block truncate">{tab.desc}</span>
+                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700 dark:text-indigo-400 dark:text-indigo-300' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{tab.label}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] block truncate">{tab.desc}</span>
                 </div>
                 {isActive && <ChevronRightIcon size={12} className="text-indigo-400 shrink-0" />}
               </button>
@@ -462,87 +557,7 @@ const SettingsPage: React.FC = () => {
 
         {/* ── APPEARANCE TAB ────────────────────────────────────────── */}
         {activeTab === 'appearance' && (
-          <>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Appearance</h2>
-              <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5">Customise how Sentinel SportsLab looks on your device.</p>
-            </div>
-
-            <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#263044] rounded-xl shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-[#263044]">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#1F2937] flex items-center justify-center shrink-0">
-                    {isDarkMode ? <MoonIcon size={16} className="text-indigo-400" /> : <SunIcon size={16} className="text-amber-500" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Theme</h3>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Switch between light and dark mode. Preference is saved per device.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-5 py-4">
-                {/* Theme selector */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Light */}
-                  <button
-                    onClick={() => isDarkMode && toggleDarkMode()}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${!isDarkMode ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 dark:border-[#263044] hover:border-slate-300 dark:hover:border-[#374151] bg-white dark:bg-[#1F2937]'}`}
-                  >
-                    <div className="w-full aspect-video rounded-lg bg-slate-100 border border-slate-200 mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
-                      <div className="flex gap-1">
-                        <div className="w-6 h-6 rounded bg-white border border-slate-200" />
-                        <div className="flex-1 h-6 rounded bg-white border border-slate-200" />
-                      </div>
-                      <div className="flex-1 rounded bg-white border border-slate-200" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <SunIcon size={13} className="text-amber-500 shrink-0" />
-                      <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Light</span>
-                      {!isDarkMode && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
-                    </div>
-                    <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Clean, high-contrast for indoor use</p>
-                  </button>
-
-                  {/* Dark */}
-                  <button
-                    onClick={() => !isDarkMode && toggleDarkMode()}
-                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${isDarkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-slate-200 hover:border-slate-300 bg-white'}`}
-                  >
-                    <div className="w-full aspect-video rounded-lg bg-[#0D1829] border border-[#263044] mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
-                      <div className="flex gap-1">
-                        <div className="w-6 h-6 rounded bg-[#111827] border border-[#263044]" />
-                        <div className="flex-1 h-6 rounded bg-[#111827] border border-[#263044]" />
-                      </div>
-                      <div className="flex-1 rounded bg-[#111827] border border-[#263044]" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MoonIcon size={13} className="text-indigo-400 shrink-0" />
-                      <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Dark</span>
-                      {isDarkMode && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
-                    </div>
-                    <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Navy dark — better in bright conditions</p>
-                  </button>
-                </div>
-
-                {/* Quick toggle row */}
-                <div className="mt-4 flex items-center justify-between py-3 border-t border-slate-100 dark:border-[#263044]">
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-[#E2E8F0]">Dark mode</p>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B]">Saved to this device</p>
-                  </div>
-                  <button
-                    onClick={toggleDarkMode}
-                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${isDarkMode ? 'bg-indigo-600' : 'bg-slate-200'}`}
-                    role="switch"
-                    aria-checked={isDarkMode}
-                  >
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
+          <AppearanceTab isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
         )}
 
         {/* ── FEATURE SETTINGS TAB ──────────────────────────────────── */}
@@ -550,7 +565,7 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Feature Settings</h2>
-              <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Configure platform features for your teams and athletes.</p>
+              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Configure platform features for your teams and athletes.</p>
             </div>
 
             {/* ACWR Section */}
@@ -582,10 +597,10 @@ const SettingsPage: React.FC = () => {
                       const key = team.id;
                       const s = getSettings(key);
                       return (
-                        <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold">
+                              <div className="w-7 h-7 bg-indigo-100 dark:bg-indigo-900/35 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold">
                                 {team.name?.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
@@ -620,7 +635,7 @@ const SettingsPage: React.FC = () => {
                         const key = `ind_${athlete.id}`;
                         const s = getSettings(key);
                         return (
-                          <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                          <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 text-[10px] font-bold">
@@ -663,17 +678,17 @@ const SettingsPage: React.FC = () => {
                 <p className="text-xs text-slate-500">Choose which team is displayed by default when you open the dashboard, or prompt to select each time.</p>
                 <div>
                   <label className={labelCls}>Default team</label>
-                  <select
+                  <CustomSelect
                     value={draftAcwrSettings._heatmapDefault || 'All Teams'}
                     onChange={e => { setDraftAcwrSettings(prev => ({ ...prev, _heatmapDefault: e.target.value })); setAcwrDirty(true); }}
-                    className={inputCls}
+                    variant="form"
                   >
                     <option value="All Teams">All Teams</option>
                     <option value="prompt">Prompt on open</option>
                     {teams.filter(t => t.id !== 't_private').map(t => (
                       <option key={t.id} value={t.name}>{t.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
                 <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
@@ -702,14 +717,14 @@ const SettingsPage: React.FC = () => {
               <div className="space-y-4">
 
                 {/* ── Polar Connection Status ── */}
-                <div className={`rounded-xl border px-4 py-3.5 flex items-center gap-4 ${isPolarConnected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
+                <div className={`rounded-xl border px-4 py-3.5 flex items-center gap-4 ${isPolarConnected ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isPolarConnected ? 'bg-emerald-100' : 'bg-slate-100'}`}>
                     <ActivityIcon size={16} className={isPolarConnected ? 'text-emerald-600' : 'text-slate-400'} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-900">Polar AccessLink</p>
                     {isPolarConnected ? (
-                      <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                      <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                         <CheckIcon size={10} />
                         {polarType === 'team_pro' ? 'Team Pro' : 'Individual Device'} · Connected {polarIntegration.connectedAt ? new Date(polarIntegration.connectedAt).toLocaleDateString() : ''}
                       </p>
@@ -721,7 +736,7 @@ const SettingsPage: React.FC = () => {
                     {isPolarConnected ? (
                       <button
                         onClick={handleDisconnectPolar}
-                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all"
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 dark:hover:bg-rose-900/25 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:border-rose-800/50 transition-all"
                       >
                         Disconnect
                       </button>
@@ -735,7 +750,7 @@ const SettingsPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleConnectPolar('individual')}
-                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all whitespace-nowrap"
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 border border-slate-200 transition-all whitespace-nowrap"
                         >
                           Individual
                         </button>
@@ -765,19 +780,19 @@ const SettingsPage: React.FC = () => {
                         ? profile.columnMapping.filter(m => !GPS_META_NAMES.has(m.csvColumn))
                         : [];
                       return (
-                        <div key={team.id} className={`rounded-xl border transition-all ${profile ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <div key={team.id} className={`rounded-xl border transition-all ${profile ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/20' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                           {/* Header row */}
                           <div
                             onClick={() => profile && setGpsPreviewProfile(profile)}
                             className={`flex items-center gap-4 px-4 py-3.5 ${profile ? 'hover:bg-emerald-50/40 cursor-pointer' : ''} rounded-t-xl transition-all`}
                           >
-                            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">
+                            <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/35 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold shrink-0">
                               {team.name?.slice(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-slate-900">{team.name}</p>
                               {profile ? (
-                                <p className="text-[10px] text-emerald-700 font-medium flex items-center gap-1 mt-0.5">
+                                <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                                   <CheckIcon size={10} />
                                   {profile.provider ? `${profile.provider} — ` : ''}
                                   {Array.isArray(profile.columnMapping) ? profile.columnMapping.filter(m => m.platformField).length : 0} columns mapped
@@ -791,7 +806,7 @@ const SettingsPage: React.FC = () => {
                               {profile && (
                                 <button
                                   onClick={() => setGpsPreviewProfile(profile)}
-                                  className="px-3 py-2 rounded-lg text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all"
+                                  className="px-3 py-2 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 transition-all"
                                 >
                                   Rename Cols
                                 </button>
@@ -800,7 +815,7 @@ const SettingsPage: React.FC = () => {
                                 onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
                                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                                   profile
-                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                    ? 'bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700'
                                     : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                 }`}
                               >
@@ -830,7 +845,7 @@ const SettingsPage: React.FC = () => {
                                       opt.disabled
                                         ? 'opacity-40 cursor-not-allowed border-slate-200 bg-slate-50'
                                         : selected
-                                          ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                                          ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700'
                                           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
                                     }`}
                                   >
@@ -841,7 +856,7 @@ const SettingsPage: React.FC = () => {
                               })}
                             </div>
                             {(gpsDataSources[team.id] || 'csv') === 'polar' && isPolarConnected && (
-                              <p className="text-[10px] text-indigo-600 mt-1.5 flex items-center gap-1">
+                              <p className="text-[10px] text-indigo-600 dark:text-indigo-300 mt-1.5 flex items-center gap-1">
                                 <CheckIcon size={9} /> GPS Data Hub will show a Sync Polar button for this team. CSV import remains available as a fallback.
                               </p>
                             )}
@@ -857,16 +872,17 @@ const SettingsPage: React.FC = () => {
                                 <span className="text-xs text-slate-400 italic">Configure profile first to bind an ACWR column</span>
                               </div>
                             ) : gpsColumns.length === 0 ? (
-                              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg">
                                 <AlertTriangleIcon size={12} className="text-amber-400 shrink-0" />
                                 <span className="text-xs text-amber-600">Profile has no column mappings — click Reconfigure above</span>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <select
+                                <CustomSelect
                                   value={profile.acwrColumn || ''}
                                   onChange={e => handleUpdateAcwrColumn(team.id, e.target.value)}
-                                  className={inputCls}
+                                  variant="form"
+                                  placeholder="— Select load column —"
                                 >
                                   <option value="">— Select load column —</option>
                                   {gpsColumns.map(m => (
@@ -874,9 +890,9 @@ const SettingsPage: React.FC = () => {
                                       {m.displayName || m.csvColumn}
                                     </option>
                                   ))}
-                                </select>
+                                </CustomSelect>
                                 {profile.acwrColumn && (
-                                  <span className="text-[10px] text-emerald-600 font-medium shrink-0 flex items-center gap-1 whitespace-nowrap">
+                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium shrink-0 flex items-center gap-1 whitespace-nowrap">
                                     <CheckIcon size={10} /> Bound
                                   </span>
                                 )}
@@ -910,7 +926,7 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Account</h2>
-              <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Your profile, organisation and session management.</p>
+              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Your profile, organisation and session management.</p>
             </div>
 
             {/* Profile Section */}
@@ -943,7 +959,7 @@ const SettingsPage: React.FC = () => {
                   <input type="email" value={user?.email || ''} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
                   <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed here.</p>
                 </div>
-                {profileError && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
+                {profileError && <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
                 <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
                     profileDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
@@ -955,18 +971,18 @@ const SettingsPage: React.FC = () => {
             </CollapsibleSection>
 
             {/* Security — always visible, not collapsible */}
-            <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#263044] rounded-xl shadow-sm p-5">
+            <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold">
+                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-300 dark:text-indigo-400 text-sm font-bold">
                   {(user?.user_metadata?.full_name || user?.email || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0]">{user?.user_metadata?.full_name || 'User'}</p>
-                  <p className="text-xs text-slate-400 dark:text-[#64748B]">{user?.email}</p>
+                  <p className="text-xs text-slate-400 dark:text-[#94A3B8]">{user?.email}</p>
                 </div>
               </div>
               <button onClick={signOut}
-                className="w-full flex items-center justify-center gap-2 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200 dark:border-rose-800/50">
+                className="w-full flex items-center justify-center gap-2 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 dark:border-rose-800/50">
                 <LogOutIcon size={14} /> Sign out
               </button>
             </div>
@@ -978,12 +994,12 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Walkthrough</h2>
-              <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Page-by-page guided tours of the platform. Start, resume, or reset tours for each section.</p>
+              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Page-by-page guided tours of the platform. Start, resume, or reset tours for each section.</p>
             </div>
 
             {/* Page Tours */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide px-1">Page Tours</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide px-1">Page Tours</h3>
               {PAGE_TOURS.map(tour => {
                 const status = tourState?.[tour.pageId] || 'pending';
                 const isCompleted = status === 'completed';
@@ -992,16 +1008,16 @@ const SettingsPage: React.FC = () => {
 
                 return (
                   <div key={tour.pageId} className="space-y-1">
-                    <div className={`border rounded-xl p-4 flex items-center justify-between transition-all ${isCompleted ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-[#263044] bg-white dark:bg-[#111827]'}`}>
+                    <div className={`border rounded-xl p-4 flex items-center justify-between transition-all ${isCompleted ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]'}`}>
                       <div className="flex items-center gap-3">
                         {isCompleted ? (
                           <CheckCircleIcon size={18} className="text-emerald-500 shrink-0" />
                         ) : (
-                          <CircleIcon size={18} className="text-slate-300 dark:text-[#374151] shrink-0" />
+                          <CircleIcon size={18} className="text-slate-300 dark:text-[#1A2D48] shrink-0" />
                         )}
                         <div>
-                          <span className={`text-sm font-medium ${isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{tour.pageName}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-[#64748B] ml-2">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}</span>
+                          <span className={`text-sm font-medium ${isCompleted ? 'text-emerald-700 dark:text-emerald-400 dark:text-emerald-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{tour.pageName}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] ml-2">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}</span>
                           {isSkipped && <span className="text-[10px] text-amber-500 font-medium ml-2">Skipped</span>}
                         </div>
                       </div>
@@ -1014,7 +1030,7 @@ const SettingsPage: React.FC = () => {
                               StorageService.saveTourState(updated);
                               showToast?.(`${tour.pageName} tour reset`);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1F2937] hover:bg-slate-200 dark:hover:bg-[#263044] text-slate-600 dark:text-[#94A3B8] rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors"
                           >
                             <RotateCcwIcon size={12} /> Reset
                           </button>
@@ -1039,7 +1055,7 @@ const SettingsPage: React.FC = () => {
                       const wfCompleted = wfStatus === 'completed';
                       const wfSkipped = wfStatus === 'skipped';
                       return (
-                        <div key={wf.id} className={`ml-8 border rounded-lg px-3 py-2.5 flex items-center justify-between transition-all ${wfCompleted ? 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/20 dark:bg-emerald-900/10' : 'border-slate-100 dark:border-[#263044] bg-white dark:bg-[#111827]'}`}>
+                        <div key={wf.id} className={`ml-8 border rounded-lg px-3 py-2.5 flex items-center justify-between transition-all ${wfCompleted ? 'border-emerald-200 dark:border-emerald-800/50 dark:border-emerald-800/40 bg-emerald-50/20 dark:bg-emerald-900/10' : 'border-slate-100 dark:border-[#243A58] bg-white dark:bg-[#132338]'}`}>
                           <div className="flex items-center gap-2.5">
                             {wfCompleted ? (
                               <CheckCircleIcon size={14} className="text-emerald-400 shrink-0" />
@@ -1060,7 +1076,7 @@ const SettingsPage: React.FC = () => {
                               showToast?.(`${wf.name} reset`);
                               navigate(PAGE_TOURS.find(p => p.pageId === wf.parentPageId)?.route || '/');
                             }}
-                            className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded-md text-[10px] font-medium transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-500 hover:text-indigo-600 dark:text-indigo-300 rounded-md text-[10px] font-medium transition-colors"
                           >
                             <RotateCcwIcon size={10} /> Reset
                           </button>
@@ -1168,7 +1184,7 @@ const TestingHubSettings: React.FC<{
         const isExpanded = expandedCategories.has(cat.id);
 
         return (
-          <div key={cat.id} className={`rounded-xl border transition-all ${noneVisible ? 'border-slate-200 bg-slate-50/50 opacity-60' : 'border-slate-200 bg-white'}`}>
+          <div key={cat.id} className={`rounded-xl border transition-all ${noneVisible ? 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40 opacity-60' : 'border-slate-200 bg-white'}`}>
             <div className="flex items-center gap-3 px-4 py-3">
               <button onClick={() => toggleCategory(cat.id)}
                 className={`w-9 h-5 rounded-full transition-all relative shrink-0 ${!noneVisible ? 'bg-indigo-600' : 'bg-slate-200'}`}>
@@ -1178,13 +1194,13 @@ const TestingHubSettings: React.FC<{
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-medium ${noneVisible ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{cat.name}</span>
                   <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
-                    allVisible ? 'bg-emerald-50 text-emerald-600' : noneVisible ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-600'
+                    allVisible ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600' : noneVisible ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
                   }`}>{visibleCount}/{tests.length}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">{cat.description}</p>
               </div>
               <button onClick={() => toggleExpand(cat.id)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 shrink-0">
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg transition-colors text-slate-400 shrink-0">
                 {isExpanded ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
               </button>
             </div>

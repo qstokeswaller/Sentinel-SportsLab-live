@@ -21,7 +21,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-150">
             <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-7 w-full max-w-sm animate-in zoom-in-95 duration-200">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center shrink-0">
                         <AlertTriangleIcon size={18} className="text-rose-500" />
                     </div>
                     <div>
@@ -38,7 +38,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
                     <button
                         onClick={onCancel}
                         disabled={loading}
-                        className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60 transition-all"
+                        className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-60 transition-all"
                     >
                         Cancel
                     </button>

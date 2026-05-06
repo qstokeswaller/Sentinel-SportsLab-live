@@ -1019,20 +1019,20 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const getSessionTypeColor = (phase) => {
         const map = {
-            'Strength': 'bg-indigo-50 border-indigo-200 text-indigo-700',
-            'Hypertrophy': 'bg-purple-50 border-purple-200 text-purple-700',
-            'Power': 'bg-rose-50 border-rose-200 text-rose-700',
-            'Speed': 'bg-amber-50 border-amber-200 text-amber-700',
+            'Strength': 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-700',
+            'Hypertrophy': 'bg-purple-50 border-purple-200 dark:border-purple-800/50 text-purple-700',
+            'Power': 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700',
+            'Speed': 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700',
             'Conditioning': 'bg-cyan-50 border-cyan-200 text-cyan-700',
-            'GPP': 'bg-emerald-50 border-emerald-200 text-emerald-700',
+            'GPP': 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700',
             'Technical': 'bg-slate-100 border-slate-200 text-slate-700',
             'Tactical': 'bg-slate-800 border-slate-900 text-slate-100',
-            'Recovery': 'bg-sky-50 border-sky-100 text-sky-600',
-            'Rehab': 'bg-amber-50 border-amber-200 text-amber-700',
+            'Recovery': 'bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-900/40 text-sky-600',
+            'Rehab': 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700',
             'Competition': 'bg-rose-600 border-rose-700 text-white',
-            'Match Prep': 'bg-rose-50 border-rose-200 text-rose-700',
+            'Match Prep': 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700',
             'Maintenance': 'bg-slate-100 border-slate-200 text-slate-600',
-            'Tempo': 'bg-sky-50 border-sky-200 text-sky-700'
+            'Tempo': 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50 text-sky-700'
         };
         return map[phase] || 'bg-slate-50 border-slate-100 text-slate-500';
     };
@@ -1236,7 +1236,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 action: 'Recommend total rest or 50% intensity reduction for the next 48 hours.',
                 color: 'text-rose-600',
                 bg: 'bg-rose-50',
-                border: 'border-rose-100'
+                border: 'border-rose-100 dark:border-rose-900/40'
             };
         }
         if (acwr > 1.3) {
@@ -1246,7 +1246,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 action: 'Reduce volume in upcoming sessions. Focus on recovery and mobility.',
                 color: 'text-amber-600',
                 bg: 'bg-amber-50',
-                border: 'border-amber-100'
+                border: 'border-amber-100 dark:border-amber-800/40'
             };
         }
         if (monotony > 2.0 && acwr > 1.1) {
@@ -1256,7 +1256,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 action: 'Introduce a low-intensity active recovery day or change movement patterns.',
                 color: 'text-amber-600',
                 bg: 'bg-amber-50',
-                border: 'border-amber-100'
+                border: 'border-amber-100 dark:border-amber-800/40'
             };
         }
         if (wellness.energy < 4 || wellness.sleep < 5) {
@@ -1276,7 +1276,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 action: 'Gradually increase total weekly tonnage to return to the 0.8-1.3 safe zone.',
                 color: 'text-indigo-600',
                 bg: 'bg-indigo-50',
-                border: 'border-indigo-100'
+                border: 'border-indigo-100 dark:border-indigo-800/40'
             };
         }
         return {
@@ -1285,7 +1285,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             action: 'Maintain current periodization. No modifications required.',
             color: 'text-emerald-600',
             bg: 'bg-emerald-50',
-            border: 'border-emerald-100'
+            border: 'border-emerald-100 dark:border-emerald-800/40'
         };
     };
 

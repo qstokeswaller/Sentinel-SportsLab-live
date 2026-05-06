@@ -10,6 +10,7 @@ import { useSmartSearch } from '../../hooks/useSmartSearch';
 
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { LinkedSessionsPicker, LinkedSession } from '../conditioning/LinkedSessionsPicker';
 import {
   useCreateProgram, useUpdateProgram, useSaveProgramFull,
@@ -58,8 +59,8 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 const VOLUME_COLORS: Record<string, string> = {
-  'Upper Body': 'bg-indigo-100 text-indigo-700',
-  'Lower Body': 'bg-emerald-100 text-emerald-700',
+  'Upper Body': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
+  'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
   'Core': 'bg-amber-100 text-amber-700',
   'Full Body': 'bg-purple-100 text-purple-700',
   'Plyometric': 'bg-orange-100 text-orange-700',
@@ -76,13 +77,13 @@ const BODY_PART_COLORS: Record<string, string> = {
   'Shoulders': 'bg-amber-100 text-amber-700',
   'Biceps': 'bg-cyan-100 text-cyan-700',
   'Triceps': 'bg-violet-100 text-violet-700',
-  'Quadriceps': 'bg-emerald-100 text-emerald-700',
+  'Quadriceps': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
   'Hamstrings': 'bg-lime-100 text-lime-700',
   'Glutes': 'bg-pink-100 text-pink-700',
   'Calves': 'bg-teal-100 text-teal-700',
   'Abdominals': 'bg-orange-100 text-orange-700',
   'Forearms': 'bg-stone-100 text-stone-600',
-  'Trapezius': 'bg-indigo-100 text-indigo-700',
+  'Trapezius': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
   'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
   'Adductors': 'bg-blue-100 text-blue-700',
   'Abductors': 'bg-purple-100 text-purple-700',
@@ -529,7 +530,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={handleSaveAsNew}
                 disabled={saving}
-                className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+                className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
               >
                 <CopyIcon size={14} />
                 Save as New
@@ -598,7 +599,7 @@ export const ProgramBuilderModal = ({
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold px-4 py-3 rounded-xl">
+              <div className="bg-red-50 border border-red-200 dark:border-red-900/50 text-red-700 text-xs font-bold px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
@@ -619,7 +620,7 @@ export const ProgramBuilderModal = ({
                       · {weekDays.length} of {DAYS_PER_WEEK} days
                     </span>
                     {weekDays.length === DAYS_PER_WEEK && (
-                      <span className="ml-auto text-[8px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                      <span className="ml-auto text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 px-2 py-0.5 rounded-full">
                         Full
                       </span>
                     )}
@@ -637,7 +638,7 @@ export const ProgramBuilderModal = ({
                             activeDayIdx === globalIdx
                               ? d.isRestDay
                                 ? 'border-slate-400 text-slate-500 bg-white'
-                                : 'border-indigo-600 text-indigo-600 bg-white'
+                                : 'border-indigo-600 text-indigo-600 dark:text-indigo-300 bg-white'
                               : 'border-transparent text-slate-400 hover:text-slate-700'
                           }`}
                         >
@@ -652,7 +653,7 @@ export const ProgramBuilderModal = ({
                     {isLastWeek && weekDays.length < DAYS_PER_WEEK && (
                       <button
                         onClick={addDay}
-                        className="px-3 py-2.5 text-slate-400 hover:text-indigo-600 transition-colors shrink-0"
+                        className="px-3 py-2.5 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 transition-colors shrink-0"
                         title="Add day to this week"
                       >
                         <PlusIcon size={16} />
@@ -708,7 +709,7 @@ export const ProgramBuilderModal = ({
                           <button
                             type="button"
                             onClick={() => toggleRestDay(activeDayIdx)}
-                            className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-700 underline underline-offset-2 transition-colors"
+                            className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 underline underline-offset-2 transition-colors"
                           >
                             Convert to training day
                           </button>
@@ -824,7 +825,7 @@ export const ProgramBuilderModal = ({
             {/* Add Week button — always visible */}
             <button
               onClick={addWeek}
-              className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all flex items-center justify-center gap-2"
             >
               <PlusIcon size={14} />
               Add Week {weeks.length + 1}
@@ -843,7 +844,7 @@ export const ProgramBuilderModal = ({
 
           {/* All / Mine toggle */}
           <div className="flex bg-slate-100 rounded-lg p-0.5">
-            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
+            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
             <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
               Mine
@@ -863,7 +864,7 @@ export const ProgramBuilderModal = ({
 
           {/* Did you mean? */}
           {exSuggestions.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg px-3 py-2 text-xs text-amber-800">
               Did you mean:{' '}
               {exSuggestions.map((s, i) => (
                 <React.Fragment key={s.name}>
@@ -875,18 +876,16 @@ export const ProgramBuilderModal = ({
           )}
 
           {/* Category filter */}
-          <div className="relative">
-            <select
-              value={exCategory}
-              onChange={(e) => setExCategory(e.target.value)}
-              className="w-full appearance-none border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50 pr-7"
-            >
-              {EXERCISE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <ChevronDownIcon size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          </div>
+          <CustomSelect
+            variant="form"
+            size="xs"
+            value={exCategory}
+            onChange={(e) => setExCategory(e.target.value)}
+          >
+            {EXERCISE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </CustomSelect>
 
           {/* A–Z letter browser */}
           <div>
@@ -895,7 +894,7 @@ export const ProgramBuilderModal = ({
               {exLetter && (
                 <button
                   onClick={() => setExLetter('')}
-                  className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 uppercase tracking-wide"
+                  className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 uppercase tracking-wide"
                 >
                   Clear
                 </button>
@@ -905,7 +904,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => { setExLetter(''); setExSearch(''); }}
                 className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
-                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 hover:text-indigo-700'
+                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'
                 }`}
               >
                 ✕
@@ -920,7 +919,7 @@ export const ProgramBuilderModal = ({
                   className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
                     exLetter === l
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 hover:text-indigo-700'
+                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'
                   }`}
                 >
                   {l}
@@ -930,9 +929,9 @@ export const ProgramBuilderModal = ({
           </div>
 
           {/* Adding to indicator */}
-          <div className="bg-indigo-50 rounded-xl px-3 py-2">
+          <div className="bg-indigo-50 dark:bg-indigo-900/25 rounded-xl px-3 py-2">
             <span className="text-[9px] font-semibold uppercase text-indigo-400 tracking-wide">Adding to: </span>
-            <span className="text-[9px] font-semibold uppercase text-indigo-700 tracking-wide">{SECTION_LABELS[activeSection]}</span>
+            <span className="text-[9px] font-semibold uppercase text-indigo-700 dark:text-indigo-400 tracking-wide">{SECTION_LABELS[activeSection]}</span>
             <span className="text-[9px] text-indigo-400 ml-1">
               — {activeDay?.name ?? ''}
             </span>
@@ -953,7 +952,7 @@ export const ProgramBuilderModal = ({
                 <button
                   key={ex.id}
                   onClick={() => addExercise(ex)}
-                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 transition-colors group flex items-start gap-3"
+                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-colors group flex items-start gap-3"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-800 leading-tight truncate">
@@ -979,7 +978,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.max(1, p - 1))}
                 disabled={exPage === 1 || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 dark:hover:bg-[#1A2D48] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeftIcon size={11} /> Prev
               </button>
@@ -990,7 +989,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => setExPage((p) => Math.min(totalPages, p + 1))}
                 disabled={exPage === totalPages || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 hover:bg-slate-200 dark:hover:bg-[#1A2D48] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next <ChevronRightIcon size={11} />
               </button>

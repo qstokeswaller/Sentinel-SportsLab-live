@@ -10,6 +10,7 @@ import {
     ExternalLinkIcon,
 } from 'lucide-react';
 import InterventionModal from '../components/analytics/InterventionModal';
+import { CustomSelect } from '../components/ui/CustomSelect';
 import { DatabaseService } from '../services/databaseService';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { computeComposite, computeAthleteBaseline, scoreToHex } from '../utils/wellnessScoring';
@@ -269,16 +270,16 @@ export const DashboardPage = () => {
 
     // Deterministic color palette for targets (athletes/teams)
     const TARGET_COLORS = [
-        { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', pillBg: 'bg-red-100', dot: '#ef4444' },
-        { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', pillBg: 'bg-blue-100', dot: '#3b82f6' },
-        { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', pillBg: 'bg-emerald-100', dot: '#10b981' },
+        { bg: 'bg-red-50', border: 'border-red-200 dark:border-red-900/50', text: 'text-red-700', pillBg: 'bg-red-100', dot: '#ef4444' },
+        { bg: 'bg-blue-50', border: 'border-blue-200 dark:border-blue-800/50', text: 'text-blue-700', pillBg: 'bg-blue-100', dot: '#3b82f6' },
+        { bg: 'bg-emerald-50', border: 'border-emerald-200 dark:border-emerald-800/50', text: 'text-emerald-700', pillBg: 'bg-emerald-100', dot: '#10b981' },
         { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pillBg: 'bg-orange-100', dot: '#f97316' },
-        { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', pillBg: 'bg-violet-100', dot: '#8b5cf6' },
+        { bg: 'bg-violet-50', border: 'border-violet-200 dark:border-violet-800/50', text: 'text-violet-700', pillBg: 'bg-violet-100', dot: '#8b5cf6' },
         { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', pillBg: 'bg-pink-100', dot: '#ec4899' },
         { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', pillBg: 'bg-cyan-100', dot: '#06b6d4' },
-        { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', pillBg: 'bg-amber-100', dot: '#f59e0b' },
+        { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', pillBg: 'bg-amber-100', dot: '#f59e0b' },
         { bg: 'bg-lime-50', border: 'border-lime-200', text: 'text-lime-700', pillBg: 'bg-lime-100', dot: '#84cc16' },
-        { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', pillBg: 'bg-rose-100', dot: '#f43f5e' },
+        { bg: 'bg-rose-50', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700', pillBg: 'bg-rose-100', dot: '#f43f5e' },
     ];
 
     // Build stable targetId → color index mapping from all sessions
@@ -313,8 +314,8 @@ export const DashboardPage = () => {
     const renderMorningReport = () => {
         // Show empty state when ACWR is not enabled
         if (!hasAnyAcwrEnabled) return (
-            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2.5">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col h-full">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60 dark:bg-[#132338]/40 flex items-center gap-2.5">
                     <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
                         <AlertTriangleIcon size={14} />
                     </div>
@@ -393,7 +394,7 @@ export const DashboardPage = () => {
             const borderColor = isInjured ? 'border-l-slate-400' : player.acwr > 1.5 ? 'border-l-rose-500' : player.acwr > 1.3 ? 'border-l-amber-400' : 'border-l-sky-400';
             return (
                 <div key={player.id}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1F2937]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#1F2937]/30'} hover:bg-white dark:hover:bg-[#1F2937] hover:shadow-sm transition-all cursor-pointer`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1A2D48]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#132338]/40 dark:bg-[#1A2D48]/30'} hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-sm transition-all cursor-pointer`}
                     onClick={onClick}
                 >
                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${bgColor}`}>
@@ -423,10 +424,10 @@ export const DashboardPage = () => {
         };
 
         return (
-            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col">
                 <button
                     onClick={toggleReportCollapsed}
-                    className="px-4 py-3 border-b border-slate-100 dark:border-[#263044] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between w-full text-left hover:bg-rose-50/80 dark:hover:bg-rose-900/20 transition-colors"
+                    className="px-4 py-3 border-b border-slate-100 dark:border-[#243A58] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between w-full text-left hover:bg-rose-50/80 dark:hover:bg-rose-900/20 transition-colors"
                 >
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
@@ -447,7 +448,7 @@ export const DashboardPage = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-2 py-0.5 bg-white border border-rose-200 rounded-full text-[10px] font-medium text-rose-600">{atRiskAthletes.length}</span>
+                        <span className="px-2 py-0.5 bg-white border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-full text-[10px] font-medium text-rose-600">{atRiskAthletes.length}</span>
                         <ChevronDownIcon size={14} className={`text-slate-400 transition-transform duration-200 ${isReportCollapsed ? '-rotate-90' : ''}`} />
                     </div>
                 </button>
@@ -472,7 +473,7 @@ export const DashboardPage = () => {
                             {remaining > 0 && (
                                 <button
                                     onClick={() => setIsMorningReportExpanded(true)}
-                                    className="w-full py-2 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                                    className="w-full py-2 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded-lg transition-colors"
                                 >
                                     +{remaining} more athlete{remaining > 1 ? 's' : ''}
                                 </button>
@@ -490,8 +491,8 @@ export const DashboardPage = () => {
                 {isMorningReportExpanded && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMorningReportExpanded(false)} />
-                        <div className="relative bg-white dark:bg-[#1F2937] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#263044] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between">
+                        <div className="relative bg-white dark:bg-[#1A2D48] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">All At-Risk Athletes</h3>
                                     <p className="text-[10px] text-slate-500">Click an athlete to see their risk analysis</p>
@@ -624,9 +625,9 @@ export const DashboardPage = () => {
                         {/* ── Dashboard Stat Cards ── */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                             {/* Players Flagged */}
-                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Flagged</span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Flagged</span>
                                     <div className="w-7 h-7 bg-rose-50 dark:bg-rose-900/20 rounded-lg flex items-center justify-center">
                                         <AlertTriangleIcon size={13} className="text-rose-500" />
                                     </div>
@@ -635,15 +636,15 @@ export const DashboardPage = () => {
                                     <span className={`text-2xl font-bold leading-none ${wellnessSummary.flagged.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
                                         {wellnessSummary.flagged.length}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">athletes</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">athletes</span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">From latest wellness check-in</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">From latest wellness check-in</p>
                             </div>
 
                             {/* High Risk ACWR */}
-                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">ACWR Risk</span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">ACWR Risk</span>
                                     <div className="w-7 h-7 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
                                         <ActivityIcon size={13} className="text-amber-500" />
                                     </div>
@@ -652,15 +653,15 @@ export const DashboardPage = () => {
                                     <span className={`text-2xl font-bold leading-none ${dashboardStats.acwrHighRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
                                         {dashboardStats.acwrHighRisk}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">{'>'} 1.5</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">{'>'} 1.5</span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">High ACWR in last 7 days</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">High ACWR in last 7 days</p>
                             </div>
 
                             {/* Sleep Risk */}
-                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Sleep Risk</span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Sleep Risk</span>
                                     <div className="w-7 h-7 bg-sky-50 dark:bg-sky-900/20 rounded-lg flex items-center justify-center">
                                         <ClockIcon size={13} className="text-sky-500" />
                                     </div>
@@ -669,20 +670,20 @@ export const DashboardPage = () => {
                                     <span className={`text-2xl font-bold leading-none ${dashboardStats.sleepRiskCount > 0 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
                                         {dashboardStats.sleepRiskCount}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B] mb-0.5">{'<'} 6 hrs</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">{'<'} 6 hrs</span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">Poor sleep from last check-in</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">Poor sleep from last check-in</p>
                             </div>
 
                             {/* Team Readiness */}
-                            <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wider">Readiness</span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Readiness</span>
                                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                                        dashboardStats.readinessColor === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
+                                        dashboardStats.readinessColor === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/25 dark:bg-emerald-900/20' :
                                         dashboardStats.readinessColor === 'amber'   ? 'bg-amber-50 dark:bg-amber-900/20' :
                                         dashboardStats.readinessColor === 'rose'    ? 'bg-rose-50 dark:bg-rose-900/20' :
-                                        'bg-slate-50 dark:bg-[#1F2937]'
+                                        'bg-slate-50 dark:bg-[#1A2D48]'
                                     }`}>
                                         <CheckCircle2Icon size={13} className={
                                             dashboardStats.readinessColor === 'emerald' ? 'text-emerald-500' :
@@ -694,13 +695,13 @@ export const DashboardPage = () => {
                                 </div>
                                 <div className="flex items-end gap-1.5">
                                     <span className={`text-2xl font-bold leading-none ${
-                                        dashboardStats.readinessColor === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                                        dashboardStats.readinessColor === 'emerald' ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' :
                                         dashboardStats.readinessColor === 'amber'   ? 'text-amber-600 dark:text-amber-400' :
                                         dashboardStats.readinessColor === 'rose'    ? 'text-rose-600 dark:text-rose-400' :
-                                        'text-slate-400 dark:text-[#64748B]'
+                                        'text-slate-400 dark:text-[#94A3B8]'
                                     }`}>{dashboardStats.readinessGrade}</span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-tight">
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">
                                     {dashboardStats.readinessGrade === 'N/A' ? 'No wellness data yet' : 'Team wellness grade'}
                                 </p>
                             </div>
@@ -710,7 +711,7 @@ export const DashboardPage = () => {
                             {/* Performance Report Column */}
                             <div data-tour="morning-report" className="lg:col-span-1 relative">
                                 {isLoading && (
-                                    <div className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm overflow-hidden flex flex-col h-full">
+                                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col h-full">
                                         <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center gap-2.5">
                                             <div className="w-8 h-8 bg-rose-200 rounded-lg animate-pulse" />
                                             <div className="space-y-1">
@@ -720,7 +721,7 @@ export const DashboardPage = () => {
                                         </div>
                                         <div className="p-2.5 space-y-1.5 flex-1">
                                             {[1, 2, 3].map(i => (
-                                                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50">
+                                                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50 dark:bg-[#132338]/40">
                                                     <div className="w-7 h-7 rounded-md bg-slate-100 animate-pulse" />
                                                     <div className="flex-1 h-3 bg-slate-100 rounded animate-pulse" />
                                                     <div className="w-8 h-4 bg-slate-100 rounded animate-pulse" />
@@ -728,7 +729,7 @@ export const DashboardPage = () => {
                                             ))}
                                         </div>
                                         <div className="flex flex-col items-center py-4">
-                                            <div className="w-5 h-5 border-2 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-1.5" />
+                                            <div className="w-5 h-5 border-2 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 border-t-rose-500 rounded-full animate-spin mb-1.5" />
                                             <span className="text-[10px] font-medium text-slate-400">Loading performance report...</span>
                                         </div>
                                     </div>
@@ -739,14 +740,14 @@ export const DashboardPage = () => {
                             {/* Main Dashboard Actions Column */}
                             <div className="lg:col-span-2">
                                 {/* Wellness Summary */}
-                                <div data-tour="heatmap" className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm flex flex-col overflow-hidden">
+                                <div data-tour="heatmap" className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col overflow-hidden">
                                     <button
                                         onClick={toggleHeatmapCollapsed}
-                                        className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 dark:hover:bg-[#1F2937]/60 transition-colors shrink-0"
+                                        className="px-5 py-4 flex items-center justify-between w-full text-left hover:bg-slate-50/60 dark:bg-[#132338]/40 dark:hover:bg-[#1A2D48]/60 transition-colors shrink-0"
                                     >
                                         <div>
                                             <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness Summary</h4>
-                                            <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5">
+                                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">
                                                 {heatmapTeamFilter === 'prompt' ? 'Select a team to view latest questionnaire responses'
                                                     : heatmapTeamFilter === 'All Teams' ? 'Most recent daily check-in responses — all teams'
                                                     : `Most recent daily check-in responses — ${heatmapTeamFilter}`}
@@ -758,24 +759,23 @@ export const DashboardPage = () => {
                                     {!isHeatmapCollapsed && (
                                     <div className="px-5 pb-4 space-y-2">
                                         {/* Team selector + link row */}
-                                        <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#263044] pt-3">
-                                            <div className="relative">
-                                                <select
-                                                    value={heatmapTeamFilter}
-                                                    onChange={(e) => setHeatmapTeamFilter(e.target.value)}
-                                                    className="bg-slate-50 dark:bg-[#1F2937] border border-slate-200 dark:border-[#263044] text-slate-700 dark:text-[#E2E8F0] rounded-lg px-3 py-1.5 text-xs outline-none appearance-none pr-7 cursor-pointer hover:border-slate-300 dark:hover:border-[#374151] transition-all"
-                                                >
-                                                    <option value="prompt">— select team —</option>
-                                                    <option value="All Teams">All Teams</option>
-                                                    {teams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-                                                </select>
-                                                <ChevronDownIcon size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                            </div>
+                                        <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#243A58] pt-3">
+                                            <CustomSelect
+                                                value={heatmapTeamFilter}
+                                                onChange={(e) => setHeatmapTeamFilter(e.target.value)}
+                                                variant="filter"
+                                                size="xs"
+                                                placeholder="— select team —"
+                                            >
+                                                <option value="prompt">— select team —</option>
+                                                <option value="All Teams">All Teams</option>
+                                                {teams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                                            </CustomSelect>
                                             {heatmapTeamFilter !== 'prompt' && (() => {
                                                 const tid = heatmapTeamFilter !== 'All Teams' ? (teams.find(t => t.name === heatmapTeamFilter)?.id || '') : '';
                                                 const href = `/wellness?section=Questionnaire+Data${tid ? `&teamId=${tid}` : ''}`;
                                                 return (
-                                                    <Link to={href} className="text-xs font-medium text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                                    <Link to={href} className="text-xs font-medium text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 transition-colors">
                                                         Open Questionnaire Data <ExternalLinkIcon size={11} />
                                                     </Link>
                                                 );
@@ -811,9 +811,9 @@ export const DashboardPage = () => {
                                                 <>
                                                     {/* Stale data warning */}
                                                     {isStale && (
-                                                        <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                        <div className="bg-amber-50 border border-amber-100 dark:border-amber-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2">
                                                             <AlertTriangleIcon size={12} className="text-amber-500 shrink-0" />
-                                                            <p className="text-xs text-amber-700">
+                                                            <p className="text-xs text-amber-700 dark:text-amber-400">
                                                                 Last data collected on <strong>{formattedDate}</strong> — may be outdated
                                                             </p>
                                                         </div>
@@ -829,7 +829,7 @@ export const DashboardPage = () => {
                                                             {/* Stat chips row: date + response counts */}
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {formattedDate && (
-                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40'}`}>
                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                                                                         <span className={`text-[10px] font-semibold ${isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
                                                                             {formattedDate}
@@ -844,9 +844,9 @@ export const DashboardPage = () => {
                                                                     <span className="text-[10px] text-slate-400">responses</span>
                                                                 </div>
                                                                 {[
-                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
-                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100' },
-                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600',    bg: 'bg-rose-50 border-rose-100' },
+                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40' },
+                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100 dark:border-amber-800/40' },
+                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600',    bg: 'bg-rose-50 border-rose-100 dark:border-rose-900/40' },
                                                                 ].map(({ dot, val, label, color, bg }) => (
                                                                     <div key={label} className={`flex items-center gap-1 border rounded-lg px-2.5 py-1.5 ${bg}`}>
                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
@@ -866,16 +866,16 @@ export const DashboardPage = () => {
                                                             {/* Two-column body: Team Averages | Priority Alerts */}
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                                                 {/* Left: Team Averages */}
-                                                                <div className="bg-slate-50 dark:bg-[#1F2937] rounded-xl border border-slate-100 dark:border-[#263044] p-3">
+                                                                <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl border border-slate-100 dark:border-[#243A58] p-3">
                                                                     <div className="flex items-center gap-1.5 mb-2.5">
                                                                         <ActivityIcon size={11} className="text-amber-500" />
-                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">Team Averages</span>
+                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">Team Averages</span>
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         {metricAvgs.map(m => (
                                                                             <div key={m.key} className="flex items-center gap-2">
-                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
-                                                                                <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#263044] rounded-full overflow-hidden">
+                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
+                                                                                <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#243A58] rounded-full overflow-hidden">
                                                                                     {m.avg !== null && (
                                                                                         <div className="h-full rounded-full transition-all duration-700"
                                                                                             style={{ width: `${(m.avg / m.max) * 100}%`, backgroundColor: m.color }} />
@@ -890,12 +890,12 @@ export const DashboardPage = () => {
                                                                 </div>
 
                                                                 {/* Right: Priority Alerts */}
-                                                                <div className="bg-slate-50 dark:bg-[#1F2937] rounded-xl border border-slate-100 dark:border-[#263044] p-3">
+                                                                <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl border border-slate-100 dark:border-[#243A58] p-3">
                                                                     <div className="flex items-center gap-1.5 mb-2.5">
                                                                         <AlertTriangleIcon size={11} className="text-rose-500" />
-                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">Priority Alerts</span>
+                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">Priority Alerts</span>
                                                                         {flagged.length > 0 && (
-                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded px-1 py-0.5">{flagged.length} flagged</span>
+                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 dark:border-rose-900/40 rounded px-1 py-0.5">{flagged.length} flagged</span>
                                                                         )}
                                                                     </div>
                                                                     {flagged.length === 0 ? (
@@ -910,9 +910,9 @@ export const DashboardPage = () => {
                                                                                     ? player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
                                                                                     : '??';
                                                                                 return (
-                                                                                    <div key={aid} className="flex items-center gap-2 bg-white dark:bg-[#111827] rounded-lg px-2 py-1.5 border border-slate-100 dark:border-[#263044]">
+                                                                                    <div key={aid} className="flex items-center gap-2 bg-white dark:bg-[#132338] rounded-lg px-2 py-1.5 border border-slate-100 dark:border-[#243A58]">
                                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[8px] font-bold shrink-0">
+                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[8px] font-bold shrink-0">
                                                                                             {initials}
                                                                                         </div>
                                                                                         <div className="flex-1 min-w-0">
@@ -925,7 +925,7 @@ export const DashboardPage = () => {
                                                                             {hiddenCount > 0 && (
                                                                                 <Link
                                                                                     to={wellnessLink}
-                                                                                    className="flex items-center justify-center py-1.5 border border-dashed border-rose-200 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 hover:border-rose-300 transition-colors"
+                                                                                    className="flex items-center justify-center py-1.5 border border-dashed border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:border-rose-300 transition-colors"
                                                                                 >
                                                                                     + {hiddenCount} more flagged athlete{hiddenCount > 1 ? 's' : ''}
                                                                                 </Link>
@@ -946,12 +946,12 @@ export const DashboardPage = () => {
                         </div>
 
                         {/* Full Size Calendar */}
-                        <div data-tour="calendar" className="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#263044] shadow-sm flex flex-col">
+                        <div data-tour="calendar" className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col">
                             {/* Calendar Header */}
-                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#263044] flex flex-col gap-3 bg-white dark:bg-[#111827]">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex flex-col gap-3 bg-white dark:bg-[#132338]">
                                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 bg-slate-900 dark:bg-[#1F2937] rounded-lg flex items-center justify-center text-white shrink-0">
+                                        <div className="w-9 h-9 bg-slate-900 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center text-white shrink-0">
                                             <CalendarIcon size={16} />
                                         </div>
                                         <div className="flex items-center gap-3 flex-wrap">
@@ -966,102 +966,103 @@ export const DashboardPage = () => {
                                                     })()
                                                     : dashboardCalendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                             </h3>
-                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1F2937] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#263044]">
+                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#243A58]">
                                                 <button onClick={() => {
                                                     const newDate = new Date(dashboardCalendarDate);
                                                     if (calendarViewMode === 'week') newDate.setDate(newDate.getDate() - 7);
                                                     else newDate.setMonth(newDate.getMonth() - 1);
                                                     setDashboardCalendarDate(newDate);
-                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#263044] hover:shadow-sm rounded-md transition-all">
-                                                    <ChevronLeftIcon size={14} className="text-slate-600 dark:text-[#94A3B8]" />
+                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#243A58] hover:shadow-sm rounded-md transition-all">
+                                                    <ChevronLeftIcon size={14} className="text-slate-600 dark:text-[#CBD5E1]" />
                                                 </button>
                                                 <button onClick={() => {
                                                     const newDate = new Date(dashboardCalendarDate);
                                                     if (calendarViewMode === 'week') newDate.setDate(newDate.getDate() + 7);
                                                     else newDate.setMonth(newDate.getMonth() + 1);
                                                     setDashboardCalendarDate(newDate);
-                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#263044] hover:shadow-sm rounded-md transition-all">
-                                                    <ChevronRightIcon size={14} className="text-slate-600 dark:text-[#94A3B8]" />
+                                                }} className="p-1.5 hover:bg-white dark:hover:bg-[#243A58] hover:shadow-sm rounded-md transition-all">
+                                                    <ChevronRightIcon size={14} className="text-slate-600 dark:text-[#CBD5E1]" />
                                                 </button>
                                             </div>
                                             {/* Week / Month toggle */}
-                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1F2937] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#263044]">
+                                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#243A58]">
                                                 <button
                                                     onClick={() => setCalendarViewMode('month')}
-                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'month' ? 'bg-white dark:bg-[#263044] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'month' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
                                                 >Month</button>
                                                 <button
                                                     onClick={() => setCalendarViewMode('week')}
-                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'week' ? 'bg-white dark:bg-[#263044] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'week' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
                                                 >Week</button>
                                             </div>
-                                            <p className="text-xs text-slate-500 dark:text-[#64748B]">{calendarFilterLabel}</p>
+                                            <p className="text-xs text-slate-500 dark:text-[#94A3B8]">{calendarFilterLabel}</p>
                                         </div>
                                     </div>
 
                                     {/* Cascading Filter Dropdowns + Add Event */}
                                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                         {/* Category Filter */}
-                                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#1F2937] rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-[#263044] relative">
-                                            <FilterIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
-                                            <select value={calendarFilterCategory} onChange={(e) => {
+                                        <CustomSelect
+                                            value={calendarFilterCategory}
+                                            onChange={(e) => {
                                                 setCalendarFilterCategory(e.target.value);
                                                 setCalendarFilterTeamId(null);
                                                 setCalendarFilterAthleteId(null);
                                             }}
-                                                className="bg-transparent text-xs text-slate-600 dark:text-[#E2E8F0] outline-none appearance-none pr-4 cursor-pointer font-medium"
-                                            >
-                                                <option value="all">All</option>
-                                                <option value="teams">Teams</option>
-                                                <option value="athletes">Athletes</option>
-                                                <option value="trainer">Trainer Events</option>
-                                            </select>
-                                            <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                        </div>
+                                            variant="filter"
+                                            size="xs"
+                                            prefixIcon={<FilterIcon size={13} />}
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="teams">Teams</option>
+                                            <option value="athletes">Athletes</option>
+                                            <option value="trainer">Trainer Events</option>
+                                        </CustomSelect>
 
                                         {/* Team Filter — shown for 'teams' category */}
                                         {calendarFilterCategory === 'teams' && (
-                                            <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
-                                                <select value={calendarFilterTeamId || ''} onChange={(e) => {
-                                                    setCalendarFilterTeamId(e.target.value || null);
-                                                }}
-                                                    className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
-                                                >
-                                                    <option value="">All Teams</option>
-                                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                                </select>
-                                                <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                            </div>
+                                            <CustomSelect
+                                                value={calendarFilterTeamId || ''}
+                                                onChange={(e) => setCalendarFilterTeamId(e.target.value || null)}
+                                                variant="filter"
+                                                size="xs"
+                                                placeholder="All Teams"
+                                            >
+                                                <option value="">All Teams</option>
+                                                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                            </CustomSelect>
                                         )}
 
                                         {/* Athletes: Team picker then athlete picker */}
                                         {calendarFilterCategory === 'athletes' && (
                                             <>
-                                                <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
-                                                    <select value={calendarFilterTeamId || ''} onChange={(e) => {
+                                                <CustomSelect
+                                                    value={calendarFilterTeamId || ''}
+                                                    onChange={(e) => {
                                                         setCalendarFilterTeamId(e.target.value || null);
                                                         setCalendarFilterAthleteId(null);
                                                     }}
-                                                        className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
-                                                    >
-                                                        <option value="">All Teams</option>
-                                                        {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                                    </select>
-                                                    <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                                </div>
-                                                <div className="flex items-center gap-1.5 bg-slate-50 rounded-lg px-2.5 py-1.5 border border-slate-200 relative">
-                                                    <UserIcon size={12} className="text-slate-400" />
-                                                    <select value={calendarFilterAthleteId || ''} onChange={(e) => setCalendarFilterAthleteId(e.target.value || null)}
-                                                        className="bg-transparent text-xs text-slate-600 outline-none appearance-none pr-4 cursor-pointer"
-                                                    >
-                                                        <option value="">All Athletes</option>
-                                                        {(calendarFilterTeamId
-                                                            ? (teams.find(t => t.id === calendarFilterTeamId)?.players || [])
-                                                            : teams.flatMap(t => t.players)
-                                                        ).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                                    </select>
-                                                    <ChevronDownIcon size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                                </div>
+                                                    variant="filter"
+                                                    size="xs"
+                                                    placeholder="All Teams"
+                                                >
+                                                    <option value="">All Teams</option>
+                                                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                </CustomSelect>
+                                                <CustomSelect
+                                                    value={calendarFilterAthleteId || ''}
+                                                    onChange={(e) => setCalendarFilterAthleteId(e.target.value || null)}
+                                                    variant="filter"
+                                                    size="xs"
+                                                    prefixIcon={<UserIcon size={12} />}
+                                                    placeholder="All Athletes"
+                                                >
+                                                    <option value="">All Athletes</option>
+                                                    {(calendarFilterTeamId
+                                                        ? (teams.find(t => t.id === calendarFilterTeamId)?.players || [])
+                                                        : teams.flatMap(t => t.players)
+                                                    ).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                </CustomSelect>
                                             </>
                                         )}
 
@@ -1077,9 +1078,9 @@ export const DashboardPage = () => {
                             <div className="p-4 relative">
                                 {/* Calendar loading skeleton */}
                                 {isLoading && (
-                                    <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
-                                        <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading calendar...</span>
+                                    <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
+                                        <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
+                                        <span className="text-xs font-medium text-slate-400 dark:text-[#94A3B8]">Loading calendar...</span>
                                     </div>
                                 )}
 
@@ -1104,19 +1105,19 @@ export const DashboardPage = () => {
                                                         onDrop={(e) => handleDrop(e, wd.dateStr)}
                                                         className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all hover:shadow-md ${
                                                             dragOverDate === wd.dateStr
-                                                                ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
+                                                                ? 'bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
                                                                 : isToday
-                                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                                                : 'bg-white dark:bg-[#111827] border-slate-100 dark:border-[#263044] hover:border-slate-300 dark:hover:border-[#374151]'
+                                                                ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                                                : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48]'
                                                         }`}
                                                     >
-                                                        <div className="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-[#263044]/60">
-                                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase">{wd.dayName}</span>
+                                                        <div className="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-[#243A58]/60">
+                                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase">{wd.dayName}</span>
                                                             <span className={`text-sm font-bold leading-none inline-flex items-center justify-center ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{wd.day}</span>
                                                         </div>
                                                         <div className="flex-1 space-y-1 overflow-hidden">
                                                             {allItems.length === 0 ? (
-                                                                <p className="text-[9px] text-slate-300 dark:text-[#374151] text-center pt-3">—</p>
+                                                                <p className="text-[9px] text-slate-300 dark:text-[#1A2D48] text-center pt-3">—</p>
                                                             ) : allItems.map(entry => {
                                                                 if (entry.type === 'session') {
                                                                     const session = entry.item;
@@ -1170,7 +1171,7 @@ export const DashboardPage = () => {
                                         { full: 'Thu', short: 'T' }, { full: 'Fri', short: 'F' },
                                         { full: 'Sat', short: 'S' }
                                     ].map(day => (
-                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 dark:text-[#64748B] text-center pb-3">
+                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 dark:text-[#94A3B8] text-center pb-3">
                                             <span className="hidden sm:block">{day.full}</span>
                                             <span className="sm:hidden">{day.short}</span>
                                         </div>
@@ -1188,11 +1189,11 @@ export const DashboardPage = () => {
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
                                                 className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
-                                                    : 'bg-slate-50/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
-                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
+                                                    : 'bg-slate-50/30 dark:bg-[#0F1C30]/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
+                                                        ? 'bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
                                                         : isToday
-                                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                                        : 'bg-white dark:bg-[#111827] border-slate-100 dark:border-[#263044] hover:border-slate-300 dark:hover:border-[#374151]'}`}
+                                                        ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                                        : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48]'}`}
                                                 onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
                                                 {dateObj && (
                                                     <>
@@ -1201,7 +1202,7 @@ export const DashboardPage = () => {
                                                             <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center transition-colors
                                                                 ${isToday
                                                                     ? 'bg-indigo-600 text-white rounded-full w-[18px] h-[18px] sm:w-5 sm:h-5'
-                                                                    : 'text-slate-400 dark:text-[#64748B] group-hover:text-slate-800 dark:group-hover:text-[#E2E8F0]'
+                                                                    : 'text-slate-400 dark:text-[#94A3B8] group-hover:text-slate-800 dark:group-hover:text-[#E2E8F0]'
                                                                 }`}>{dateObj.day}</span>
                                                         </div>
                                                         <div>
@@ -1262,7 +1263,7 @@ export const DashboardPage = () => {
                                                                     className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}>
                                                                     <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`}>
                                                                         <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
-                                                                            {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 shrink-0" />}
+                                                                            {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
                                                                             {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
                                                                             {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} className="shrink-0" />}
                                                                             <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
@@ -1291,7 +1292,7 @@ export const DashboardPage = () => {
                                                                 {activeSessionPopover?.id === session.id && (
                                                                     <div
                                                                         ref={sessionPopoverRef}
-                                                                        className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                        className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                         onClick={(e) => e.stopPropagation()}
                                                                     >
                                                                         <div className={`h-1 rounded-t-lg ${tc.bg === 'bg-red-50' ? 'bg-red-400' : tc.bg === 'bg-blue-50' ? 'bg-blue-400' : tc.bg === 'bg-emerald-50' ? 'bg-emerald-400' : tc.bg === 'bg-orange-50' ? 'bg-orange-400' : tc.bg === 'bg-violet-50' ? 'bg-violet-400' : 'bg-indigo-400'}`} />
@@ -1303,12 +1304,12 @@ export const DashboardPage = () => {
                                                                                 </button>
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 text-indigo-600">{session.trainingPhase}</span>
+                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300">{session.trainingPhase}</span>
                                                                                 {session.load && (
                                                                                     <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
                                                                                         session.load === 'High' ? 'bg-red-50 text-red-600' :
                                                                                         session.load === 'Medium' ? 'bg-amber-50 text-amber-600' :
-                                                                                        'bg-emerald-50 text-emerald-600'
+                                                                                        'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'
                                                                                     }`}>{session.load} Load</span>
                                                                                 )}
                                                                                 {session.status && session.status !== 'Scheduled' && (
@@ -1322,24 +1323,24 @@ export const DashboardPage = () => {
                                                                                 </div>
                                                                                 <div>{resolveTargetName(session.targetId, session.targetType)}</div>
                                                                             </div>
-                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#263044]">
+                                                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
                                                                                 <button
                                                                                     onClick={() => { setViewingSession(session); setActiveSessionPopover(null); }}
-                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
                                                                                 >
                                                                                     <EyeIcon size={10} /> View
                                                                                 </button>
                                                                                 {session.status !== 'Completed' && (
                                                                                     <button
                                                                                         onClick={() => { setCompletingSession(session); setActiveSessionPopover(null); }}
-                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded transition-colors"
                                                                                     >
                                                                                         <CheckCircle2Icon size={10} /> Complete
                                                                                     </button>
                                                                                 )}
                                                                                 <button
                                                                                     onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
-                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
                                                                                 >
                                                                                     <PencilIcon size={10} /> Edit
                                                                                 </button>
@@ -1391,7 +1392,7 @@ export const DashboardPage = () => {
                                                                         {activePopover?.id === `${event.id}_${dateObj.dateStr}` && (
                                                                             <div
                                                                                 ref={popoverRef}
-                                                                                className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                                className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
                                                                                 {/* Color accent bar */}
@@ -1426,10 +1427,10 @@ export const DashboardPage = () => {
                                                                                             <p className="text-slate-400 leading-relaxed">{event.description}</p>
                                                                                         )}
                                                                                     </div>
-                                                                                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#263044]">
+                                                                                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
                                                                                         <button
                                                                                             onClick={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
-                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
                                                                                         >
                                                                                             <PencilIcon size={10} /> Edit
                                                                                         </button>
@@ -1473,7 +1474,7 @@ export const DashboardPage = () => {
                                                                                 setOverflowDay(overflowDay === dateObj.dateStr ? null : dateObj.dateStr);
                                                                                 setActivePopover(null);
                                                                             }}
-                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 font-semibold text-center pt-0.5 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 font-semibold text-center pt-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors cursor-pointer"
                                                                         >
                                                                             +{hidden} more
                                                                         </button>
@@ -1481,10 +1482,10 @@ export const DashboardPage = () => {
                                                                         {overflowDay === dateObj.dateStr && (
                                                                             <div
                                                                                 ref={overflowRef}
-                                                                                className={`absolute z-50 left-0 w-60 bg-white dark:bg-[#1F2937] rounded-lg shadow-xl border border-slate-200 dark:border-[#263044] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+                                                                                className={`absolute z-50 left-0 w-60 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
-                                                                                <div className="px-3 py-2 border-b border-slate-100 dark:border-[#263044] bg-slate-50 dark:bg-[#263044] rounded-t-lg">
+                                                                                <div className="px-3 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#243A58] rounded-t-lg">
                                                                                     <div className="flex items-center justify-between">
                                                                                         <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                                                                                             {new Date(dateObj.dateStr + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -1573,13 +1574,13 @@ export const DashboardPage = () => {
                     {/* ── Edit Event Modal ── */}
                     {editingEvent && (() => {
                         const allEventTypes = [...DEFAULT_EVENT_TYPES, ...(customEventTypes || [])];
-                        const INPUT = 'w-full bg-slate-50 dark:bg-[#1F2937] border border-slate-200 dark:border-[#263044] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
-                        const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#94A3B8] block mb-1.5';
+                        const INPUT = 'w-full bg-slate-50 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
+                        const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
                         return (
                             <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingEvent(null)}>
-                                <div className="bg-white dark:bg-[#1F2937] rounded-xl shadow-xl border border-slate-200 dark:border-[#263044] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                                <div className="bg-white dark:bg-[#1A2D48] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                     {/* Header */}
-                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#263044]">
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#243A58]">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: editingEvent.color || '#6366f1' }}>
                                                 <PencilIcon size={16} />
@@ -1589,7 +1590,7 @@ export const DashboardPage = () => {
                                                 <p className="text-[10px] text-slate-400 mt-0.5">Update event details</p>
                                             </div>
                                         </div>
-                                        <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                                        <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                                             <XIcon size={18} />
                                         </button>
                                     </div>
@@ -1605,17 +1606,17 @@ export const DashboardPage = () => {
                                         {/* Event Type */}
                                         <div>
                                             <label className={LABEL}>Event Type</label>
-                                            <select
+                                            <CustomSelect
                                                 value={editingEvent.event_type || 'Appointment'}
                                                 onChange={e => {
                                                     const val = e.target.value;
                                                     const match = allEventTypes.find(t => t.label === val);
                                                     setEditingEvent({ ...editingEvent, event_type: val, ...(match ? { color: match.color } : {}) });
                                                 }}
-                                                className={INPUT + ' appearance-none'}
+                                                variant="form"
                                             >
                                                 {allEventTypes.map(t => <option key={t.label} value={t.label}>{t.label}</option>)}
-                                            </select>
+                                            </CustomSelect>
                                         </div>
 
                                         {/* Color */}
@@ -1665,22 +1666,24 @@ export const DashboardPage = () => {
                                                 ))}
                                             </div>
                                             {editingEvent.assigned_to_type === 'team' && (
-                                                <select
+                                                <CustomSelect
                                                     value={editingEvent.assigned_to_id || ''}
                                                     onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
-                                                    className={INPUT + ' appearance-none'}
+                                                    variant="form"
+                                                    placeholder="Select a team..."
                                                 >
                                                     <option value="">Select a team...</option>
                                                     {(teams || []).map((t: any) => (
                                                         <option key={t.id} value={t.id}>{t.name}</option>
                                                     ))}
-                                                </select>
+                                                </CustomSelect>
                                             )}
                                             {editingEvent.assigned_to_type === 'individual' && (
-                                                <select
+                                                <CustomSelect
                                                     value={editingEvent.assigned_to_id || ''}
                                                     onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
-                                                    className={INPUT + ' appearance-none'}
+                                                    variant="form"
+                                                    placeholder="Select an athlete..."
                                                 >
                                                     <option value="">Select an athlete...</option>
                                                     {(teams || []).flatMap((t: any) =>
@@ -1688,7 +1691,7 @@ export const DashboardPage = () => {
                                                             <option key={p.id} value={p.id}>{p.name}{t.name ? ` — ${t.name}` : ''}</option>
                                                         ))
                                                     )}
-                                                </select>
+                                                </CustomSelect>
                                             )}
                                         </div>
 
@@ -1731,7 +1734,7 @@ export const DashboardPage = () => {
 
                                     {/* Footer */}
                                     <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
-                                        <button onClick={() => setEditingEvent(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
+                                        <button onClick={() => setEditingEvent(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                                             Cancel
                                         </button>
                                         <button
@@ -1780,7 +1783,7 @@ export const DashboardPage = () => {
                                             </div>
                                             <h3 className="text-lg font-bold text-slate-900">Edit Session</h3>
                                         </div>
-                                        <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                                        <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                                             <XIcon size={16} />
                                         </button>
                                     </div>
@@ -1805,30 +1808,30 @@ export const DashboardPage = () => {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className={LABEL}>Training Phase</label>
-                                                <select value={editingSession.trainingPhase || ''} onChange={e => setEditingSession(p => ({ ...p, trainingPhase: e.target.value }))} className={INPUT}>
+                                                <CustomSelect value={editingSession.trainingPhase || ''} onChange={e => setEditingSession(p => ({ ...p, trainingPhase: e.target.value }))} variant="form">
                                                     {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                             <div>
                                                 <label className={LABEL}>Load</label>
-                                                <select value={editingSession.load || 'Medium'} onChange={e => setEditingSession(p => ({ ...p, load: e.target.value }))} className={INPUT}>
+                                                <CustomSelect value={editingSession.load || 'Medium'} onChange={e => setEditingSession(p => ({ ...p, load: e.target.value }))} variant="form">
                                                     {LOADS.map(l => <option key={l} value={l}>{l}</option>)}
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                         </div>
                                         {/* Status */}
                                         <div>
                                             <label className={LABEL}>Status</label>
-                                            <select value={editingSession.status || 'Scheduled'} onChange={e => setEditingSession(p => ({ ...p, status: e.target.value }))} className={INPUT}>
+                                            <CustomSelect value={editingSession.status || 'Scheduled'} onChange={e => setEditingSession(p => ({ ...p, status: e.target.value }))} variant="form">
                                                 <option value="Scheduled">Scheduled</option>
                                                 <option value="Completed">Completed</option>
                                                 <option value="Cancelled">Cancelled</option>
-                                            </select>
+                                            </CustomSelect>
                                         </div>
                                     </div>
                                     {/* Footer */}
                                     <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
-                                        <button onClick={() => setEditingSession(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
+                                        <button onClick={() => setEditingSession(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                                             Cancel
                                         </button>
                                         <button
@@ -1887,7 +1890,7 @@ export const DashboardPage = () => {
                                     <p className="text-xs text-slate-500">Mark this session as completed?</p>
                                     <div className="flex gap-2">
                                         <button onClick={() => setCompletingSession(null)}
-                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-colors">
+                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-xl text-xs font-semibold transition-colors">
                                             Cancel
                                         </button>
                                         <button

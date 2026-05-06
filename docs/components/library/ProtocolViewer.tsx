@@ -10,11 +10,11 @@ import type { Protocol, ProtocolBlock, TextLine } from './ProtocolLibrary';
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Return to Play': 'bg-red-50 text-red-600 border-red-100',
-    'Screening': 'bg-blue-50 text-blue-600 border-blue-100',
-    'Monitoring': 'bg-amber-50 text-amber-600 border-amber-100',
-    'Performance': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100',
+    'Return to Play': 'bg-red-50 text-red-600 border-red-100 dark:border-red-900/40',
+    'Screening': 'bg-blue-50 text-blue-600 border-blue-100 dark:border-blue-800/40',
+    'Monitoring': 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40',
+    'Performance': 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
+    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100 dark:border-purple-800/40',
     'Custom': 'bg-slate-50 text-slate-600 border-slate-200',
 };
 
@@ -121,11 +121,11 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
     if (block.type === 'exercise_block') {
         const exercises = block.exercises || [];
         return (
-            <div className="bg-indigo-50/50 border border-indigo-200 rounded-xl p-4 my-3">
+            <div className="bg-indigo-50/50 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 my-3">
                 {block.sectionName && (
                     <div className="flex items-center gap-2 mb-3">
                         <DumbbellIcon size={14} className="text-indigo-500" />
-                        <h4 className="text-sm font-semibold text-indigo-700">{block.sectionName}</h4>
+                        <h4 className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">{block.sectionName}</h4>
                         <span className="text-[10px] text-indigo-400 font-medium">
                             {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}
                         </span>
@@ -156,8 +156,8 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
 
     if (block.type === 'pdf_block' && block.pdfUrl) {
         return (
-            <div className="border border-rose-200 rounded-xl overflow-hidden my-3">
-                <div className="flex items-center gap-3 px-4 py-3 bg-rose-50">
+            <div className="border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-xl overflow-hidden my-3">
+                <div className="flex items-center gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-900/20">
                     <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center shrink-0">
                         <FileIcon size={14} className="text-rose-500" />
                     </div>
@@ -175,7 +175,7 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
                 <iframe
                     src={block.pdfUrl}
                     title={block.pdfTitle || block.pdfFileName}
-                    className="w-full border-t border-rose-200"
+                    className="w-full border-t border-rose-200 dark:border-rose-900/50"
                     style={{ height: '500px' }}
                 />
             </div>
@@ -209,7 +209,7 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                 <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
                     >
                         <ArrowLeftIcon size={16} />
                     </button>
@@ -236,19 +236,19 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                     <div className="flex items-center gap-1.5 shrink-0">
                         <button
                             onClick={onShare}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <Link2Icon size={12} /> Share Link
                         </button>
                         <button
                             onClick={handleSaveAsPdf}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <PrinterIcon size={12} /> Save as PDF
                         </button>
                         <button
                             onClick={onEdit}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <PencilIcon size={12} /> Edit
                         </button>
@@ -291,7 +291,7 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                                 </div>
                                 <button
                                     onClick={() => window.open(att.url, '_blank')}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                                 >
                                     <ExternalLinkIcon size={12} /> Open
                                 </button>

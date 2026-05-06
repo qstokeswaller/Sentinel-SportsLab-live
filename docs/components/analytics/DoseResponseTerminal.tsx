@@ -158,8 +158,8 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
             {/* Summary cards */}
             {athletesWithResponses.length > 0 && (
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                        <div className="text-2xl font-bold text-emerald-600">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-4 text-center">
+                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                             {athletesWithResponses.filter(a => a.responses.some(r => r.improved)).length}
                         </div>
                         <div className="text-[10px] font-semibold text-emerald-500 uppercase">Responders</div>
@@ -170,7 +170,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                         </div>
                         <div className="text-[10px] font-semibold text-slate-400 uppercase">Stable</div>
                     </div>
-                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-center">
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-xl p-4 text-center">
                         <div className="text-2xl font-bold text-rose-600">
                             {athletesWithResponses.filter(a => a.responses.some(r => r.declined) && !a.responses.some(r => r.improved)).length}
                         </div>
@@ -184,7 +184,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                 <div key={a.athlete.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold">
                                 {a.athlete.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </div>
                             <div>

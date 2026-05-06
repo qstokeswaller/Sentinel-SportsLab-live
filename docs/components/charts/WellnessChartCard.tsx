@@ -174,7 +174,7 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
     const renderChart = () => {
         if (isEmpty) {
             return (
-                <div className="h-44 flex flex-col items-center justify-center gap-2 bg-slate-50/30">
+                <div className="h-44 flex flex-col items-center justify-center gap-2 bg-slate-50/30 dark:bg-[#0F1C30]/30">
                     <BarChart3 size={28} className="text-slate-200" />
                     <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-wide">
                         No data for this period

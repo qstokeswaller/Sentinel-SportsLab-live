@@ -12,7 +12,7 @@ const BrandingBanner = () => (
                     <ActivityIcon className="text-white w-3.5 h-3.5" />
                 </div>
                 <span className="font-bold text-base text-slate-900 tracking-tight">
-                    Sentinel <span className="text-indigo-600">SportsLab</span>
+                    Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                 </span>
             </div>
             <span className="text-[10px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
@@ -43,11 +43,11 @@ interface Protocol {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Return to Play': 'bg-red-50 text-red-600 border-red-100',
-    'Screening': 'bg-blue-50 text-blue-600 border-blue-100',
-    'Monitoring': 'bg-amber-50 text-amber-600 border-amber-100',
-    'Performance': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100',
+    'Return to Play': 'bg-red-50 text-red-600 border-red-100 dark:border-red-900/40',
+    'Screening': 'bg-blue-50 text-blue-600 border-blue-100 dark:border-blue-800/40',
+    'Monitoring': 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40',
+    'Performance': 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
+    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100 dark:border-purple-800/40',
     'Custom': 'bg-slate-50 text-slate-600 border-slate-200',
 };
 
@@ -154,11 +154,11 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
     if (block.type === 'exercise_block') {
         const exercises = block.exercises || [];
         return (
-            <div className="bg-indigo-50/50 border border-indigo-200 rounded-xl p-4 my-3" style={{ breakInside: 'avoid' }}>
+            <div className="bg-indigo-50/50 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 my-3" style={{ breakInside: 'avoid' }}>
                 {block.sectionName && (
                     <div className="flex items-center gap-2 mb-3">
                         <DumbbellIcon size={14} className="text-indigo-500" />
-                        <h4 className="text-sm font-semibold text-indigo-700">{block.sectionName}</h4>
+                        <h4 className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">{block.sectionName}</h4>
                         <span className="text-[10px] text-indigo-400 font-medium">
                             {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}
                         </span>
@@ -266,7 +266,7 @@ const PublicProtocolView: React.FC = () => {
             {/* Header bar */}
             <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
                         <FileText size={16} className="text-indigo-500" />
                     </div>
                     <div>

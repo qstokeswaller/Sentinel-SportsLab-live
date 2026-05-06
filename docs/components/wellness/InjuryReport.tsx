@@ -8,6 +8,7 @@ import {
     Trash2Icon, PencilIcon, Loader2Icon, ImageIcon,
     Link2Icon, CopyIcon, Share2Icon, CheckCircle2Icon
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
 import {
     INJURY_CLASSIFICATIONS, SEVERITY_GRADES, LATERALITY_OPTIONS,
@@ -64,7 +65,7 @@ const PillRow = ({ options, value, onChange, colorMap }) => (
                     key={val}
                     type="button"
                     onClick={() => onChange(isActive ? undefined : val)}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600'}`}
                 >
                     {label}
                 </button>
@@ -82,7 +83,7 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
                     key={opt}
                     type="button"
                     onClick={() => onChange(toggleMulti(value, opt))}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600'}`}
                 >
                     {opt}
                 </button>
@@ -253,10 +254,12 @@ const InjuryReportComponent = () => {
                     {/* Filter */}
                     <div className="relative">
                         <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wide absolute -top-5 left-2">Filter</label>
-                        <select
+                        <CustomSelect
+                            variant="filter"
+                            size="xs"
                             value={injuryFilterAthleteId}
                             onChange={e => setInjuryFilterAthleteId(e.target.value)}
-                            className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-[10px] font-medium text-slate-700 outline-none appearance-none hover:border-indigo-300 transition-all cursor-pointer pr-10 shadow-sm min-w-[180px]"
+                            minWidth={180}
                         >
                             <option value="All">All Athletes</option>
                             <optgroup label="Squads">
@@ -267,8 +270,7 @@ const InjuryReportComponent = () => {
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </optgroup>
-                        </select>
-                        <ChevronDownIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        </CustomSelect>
                     </div>
                 </div>
             </div>
@@ -284,10 +286,11 @@ const InjuryReportComponent = () => {
                         <SectionCard title="Athlete Selection">
                             <div>
                                 <Label>Player <span className="text-red-400">*</span></Label>
-                                <select
+                                <CustomSelect
+                                    variant="form"
                                     value={form.athleteId}
                                     onChange={e => { handleAthleteSelect(e.target.value); clearError('athlete'); }}
-                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.athlete ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
+                                    placeholder="Select athlete..."
                                 >
                                     <option value="">Select athlete...</option>
                                     {teams.map(t => (
@@ -297,7 +300,7 @@ const InjuryReportComponent = () => {
                                             ))}
                                         </optgroup>
                                     ))}
-                                </select>
+                                </CustomSelect>
                                 {validationErrors.athlete && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.athlete}</p>}
                             </div>
                         </SectionCard>
@@ -307,8 +310,8 @@ const InjuryReportComponent = () => {
                         {form.athleteId && form.teamId && (
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center">
-                                        <Link2Icon size={16} className="text-emerald-600" />
+                                    <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-lg flex items-center justify-center">
+                                        <Link2Icon size={16} className="text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <div>
                                         <h5 className="text-sm font-semibold text-slate-700">Share with Physio</h5>
@@ -329,7 +332,7 @@ const InjuryReportComponent = () => {
                                             <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center gap-2">
                                                 <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{shareLink}</p>
                                                 <button onClick={() => handleCopy(shareLink)}
-                                                    className={`p-1.5 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200'}`}
+                                                    className={`p-1.5 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}
                                                 >
                                                     {copied ? <CheckCircle2Icon size={13} /> : <CopyIcon size={13} />}
                                                 </button>
@@ -358,14 +361,15 @@ const InjuryReportComponent = () => {
                         <SectionCard title="Classification & Context">
                             <div>
                                 <Label>Injury Classification <span className="text-red-400">*</span></Label>
-                                <select
+                                <CustomSelect
+                                    variant="form"
                                     value={form.classification || ''}
                                     onChange={e => { patch({ classification: e.target.value || undefined }); clearError('classification'); }}
-                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.classification ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
+                                    placeholder="Select type..."
                                 >
                                     <option value="">Select type...</option>
                                     {INJURY_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
+                                </CustomSelect>
                                 {validationErrors.classification && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.classification}</p>}
                             </div>
 
@@ -545,7 +549,7 @@ const InjuryReportComponent = () => {
                                                 type="button"
                                                 onClick={() => patch({ returnToPlayPhase: isActive ? undefined : phase })}
                                                 className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'rounded-l-xl' : ''} ${i === RTP_PHASES.length - 1 ? 'rounded-r-xl' : ''}
-                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 text-indigo-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                                             >
                                                 {phase.split(' - ')[1] || phase}
                                             </button>
@@ -601,7 +605,7 @@ const InjuryReportComponent = () => {
 
                         {/* Save */}
                         {Object.keys(validationErrors).length > 0 && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2">
+                            <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-3 flex items-center gap-2">
                                 <ShieldAlertIcon size={14} className="text-red-500 shrink-0" />
                                 <p className="text-red-600 text-[10px] font-semibold">Please fill in the required fields highlighted in red above</p>
                             </div>
@@ -662,7 +666,7 @@ const InjuryReportComponent = () => {
                             </thead>
                             <tbody>
                                 {filteredReports.map(report => (
-                                    <tr key={report.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                    <tr key={report.id} className="border-b border-slate-100 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                         <td className="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap">
                                             {new Date(report.dateOfInjury).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </td>
@@ -680,7 +684,7 @@ const InjuryReportComponent = () => {
                                         </td>
                                         <td className="px-4 py-3.5">
                                             {report.currentStatus ? (
-                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.currentStatus === 'Full Training' ? 'bg-emerald-100 text-emerald-600' : report.currentStatus === 'Modified Training' ? 'bg-amber-100 text-amber-600' : report.currentStatus === 'Rehab Only' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
+                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.currentStatus === 'Full Training' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : report.currentStatus === 'Modified Training' ? 'bg-amber-100 text-amber-600' : report.currentStatus === 'Rehab Only' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
                                                     {report.currentStatus}
                                                 </span>
                                             ) : '—'}
@@ -688,7 +692,7 @@ const InjuryReportComponent = () => {
                                         <td className="px-4 py-3.5 text-slate-500 text-[10px] whitespace-nowrap">{report.returnToPlayPhase || '—'}</td>
                                         <td className="px-4 py-3.5">
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 text-indigo-500 hover:bg-indigo-50 hover:text-indigo-700 transition-all" title="Edit">
+                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 hover:text-indigo-700 dark:text-indigo-400 transition-all" title="Edit">
                                                     <PencilIcon size={13} />
                                                 </button>
                                                 <button onClick={() => handleDelete(report.id)} className="p-1.5 rounded-lg bg-slate-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all" title="Delete">

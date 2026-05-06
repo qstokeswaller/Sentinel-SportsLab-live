@@ -17,9 +17,9 @@ interface InterventionModalProps {
 }
 
 const SEVERITY_STYLES = {
-    critical: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: ShieldAlertIcon, badge: 'bg-rose-100 text-rose-600' },
-    warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: AlertTriangleIcon, badge: 'bg-amber-100 text-amber-600' },
-    info: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700', icon: ZapIcon, badge: 'bg-sky-100 text-sky-600' },
+    critical: { bg: 'bg-rose-50', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700', icon: ShieldAlertIcon, badge: 'bg-rose-100 text-rose-600' },
+    warning: { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', icon: AlertTriangleIcon, badge: 'bg-amber-100 text-amber-600' },
+    info: { bg: 'bg-sky-50', border: 'border-sky-200 dark:border-sky-900/50', text: 'text-sky-700', icon: ZapIcon, badge: 'bg-sky-100 text-sky-600' },
 };
 
 const CATEGORY_ICONS = {
@@ -64,7 +64,7 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className={`px-6 py-5 border-b ${ratioStatus.status === 'danger' ? 'bg-rose-50 border-rose-100' : ratioStatus.status === 'warning' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`px-6 py-5 border-b ${ratioStatus.status === 'danger' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40' : ratioStatus.status === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-11 h-11 bg-slate-200 rounded-xl flex items-center justify-center text-sm font-bold text-slate-600">
@@ -150,10 +150,10 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
                     <button
                         onClick={onClose}
-                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-xl transition-colors"
+                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 text-sm font-medium rounded-xl transition-colors"
                     >
                         Close
                     </button>

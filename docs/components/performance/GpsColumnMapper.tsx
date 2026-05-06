@@ -4,6 +4,7 @@ import {
     XIcon, CheckIcon, SaveIcon, UploadIcon, AlertTriangleIcon,
     SettingsIcon, SparklesIcon, UsersIcon, PlusIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 /**
  * GPS Column Mapper — Smart CSV Import
@@ -461,7 +462,7 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                                 </p>
                             </div>
                         </div>
-                        <button onClick={onCancel} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+                        <button onClick={onCancel} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                             <XIcon size={18} className="text-slate-400" />
                         </button>
                     </div>
@@ -470,14 +471,17 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                     <div className="mt-3 flex items-center gap-2 flex-wrap">
                         <div className="flex items-center gap-1.5">
                             <UsersIcon size={12} className="text-slate-400" />
-                            <select
+                            <CustomSelect
+                                variant="filter"
+                                size="xs"
                                 value={selectedTeamId}
                                 onChange={e => setSelectedTeamId(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-600 min-w-[140px]"
+                                placeholder="Select team/group..."
+                                minWidth={140}
                             >
                                 <option value="">Select team/group...</option>
                                 {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <input
                             type="text"
@@ -503,7 +507,7 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                                 <div key={p.name} className="flex items-center gap-1">
                                     <button
                                         onClick={() => applyProfile(p)}
-                                        className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                                        className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all"
                                     >
                                         {p.name} <span className="text-slate-300">· {p.teamName}</span>
                                     </button>
@@ -568,16 +572,16 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                                                         </div>
                                                     </div>
 
-                                                    <select
+                                                    <CustomSelect
+                                                        variant="form"
+                                                        size="xs"
                                                         value={currentCsv}
                                                         onChange={e => updateMapping(field.id, e.target.value)}
-                                                        className={`bg-white border rounded-lg px-2.5 py-1.5 text-xs min-w-[180px] outline-none transition-all ${
-                                                            isMapped ? 'border-emerald-300 text-slate-900' : 'border-slate-200 text-slate-400'
-                                                        }`}
+                                                        minWidth={180}
                                                     >
                                                         <option value="">— Skip —</option>
                                                         {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                                                    </select>
+                                                    </CustomSelect>
                                                 </div>
                                             );
                                         })}
@@ -632,15 +636,15 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
-                    <button onClick={onCancel} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-500 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between gap-3">
+                    <button onClick={onCancel} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-500 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                         Cancel
                     </button>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleConfirm}
                             disabled={requiredMissing.length > 0}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-600 text-sm font-medium rounded-xl transition-colors"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] disabled:opacity-40 text-slate-600 text-sm font-medium rounded-xl transition-colors"
                         >
                             <UploadIcon size={14} />
                             Import Only

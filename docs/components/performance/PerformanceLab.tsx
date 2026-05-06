@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import SmartTestImport from './SmartTestImport';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const ONE_RM_EXERCISES = {
     'Lower Body': [
@@ -301,10 +302,10 @@ const PerformanceLab = ({ isOpen, onClose }) => {
             <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 border-t border-t-indigo-600">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                     <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 flex items-center gap-2">
-                        <FlaskConicalIcon size={24} className="text-indigo-600" />
+                        <FlaskConicalIcon size={24} className="text-indigo-600 dark:text-indigo-300" />
                         Performance Lab
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"><XIcon size={20} /></button>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors"><XIcon size={20} /></button>
                 </div>
 
                 <div className="flex border-b border-slate-100 px-6 gap-6 overflow-x-auto no-scrollbar shrink-0">
@@ -340,18 +341,30 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                 <div className="text-5xl font-semibold tracking-tighter">{oneRepMax}</div>
                             </div>
                             <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-100">
-                                <select value={oneRmAthleteId} onChange={(e) => setOneRmAthleteId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={oneRmAthleteId}
+                                    onChange={(e) => setOneRmAthleteId(e.target.value)}
+                                    placeholder="Select Athlete..."
+                                >
                                     <option value="">Select Athlete...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                                <select value={oneRmExerciseId} onChange={(e) => setOneRmExerciseId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none">
+                                </CustomSelect>
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={oneRmExerciseId}
+                                    onChange={(e) => setOneRmExerciseId(e.target.value)}
+                                    placeholder="Select Exercise..."
+                                >
                                     <option value="">Select Exercise...</option>
                                     {Object.entries(ONE_RM_EXERCISES).map(([group, items]) => (
                                         <optgroup key={group} label={group}>
                                             {items.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
                                         </optgroup>
                                     ))}
-                                </select>
+                                </CustomSelect>
                                 <button onClick={() => handleSave('1rm')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 transition-colors">Save 1RM</button>
                             </div>
                         </div>
@@ -359,12 +372,18 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
                     {activeTab === 'dsi' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-900 leading-relaxed">
-                                <strong className="block uppercase tracking-wide mb-1 text-indigo-600">Dynamic Strength Index</strong>
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 rounded-xl text-xs text-indigo-900 leading-relaxed">
+                                <strong className="block uppercase tracking-wide mb-1 text-indigo-600 dark:text-indigo-300">Dynamic Strength Index</strong>
                                 <p className="mb-3">Measures the difference between an athlete's ballistic peak force (e.g. CMJ) and isometric peak force (e.g. IMTP).</p>
                                 <div className="flex gap-2 items-center">
                                     <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-400 shrink-0">Presets:</span>
-                                    <select value={selectedDsiPreset} onChange={(e) => applyDsiPreset(e.target.value)} className="bg-white border border-indigo-200 text-indigo-900 text-[10px] font-bold uppercase tracking-wider rounded-lg px-2 py-1 outline-none w-full cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <CustomSelect
+                                        variant="filter"
+                                        size="xs"
+                                        value={selectedDsiPreset}
+                                        onChange={(e) => applyDsiPreset(e.target.value)}
+                                        placeholder="Custom Entry..."
+                                    >
                                         <option value="">Custom Entry...</option>
                                         <optgroup label="Lower Body">
                                             {dsiCombinations.lower.map(x => <option key={x.label} value={x.label}>{x.label}</option>)}
@@ -372,7 +391,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                         <optgroup label="Upper Body">
                                             {dsiCombinations.upper.map(x => <option key={x.label} value={x.label}>{x.label}</option>)}
                                         </optgroup>
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-6">
@@ -403,10 +422,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                 </div>
                             )}
                             <div className="pt-4 border-t border-slate-100 space-y-3">
-                                <select value={dsiAthleteId} onChange={(e) => setDsiAthleteId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={dsiAthleteId}
+                                    onChange={(e) => setDsiAthleteId(e.target.value)}
+                                    placeholder="Select Athlete to Save Score..."
+                                >
                                     <option value="">Select Athlete to Save Score...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
+                                </CustomSelect>
                                 <button onClick={() => handleSave('dsi')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 transition-colors">Save DSI Profile</button>
                             </div>
                         </div>
@@ -414,8 +439,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
                     {activeTab === 'rsi' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-900 leading-relaxed">
-                                <strong className="block uppercase tracking-wide mb-1 text-emerald-600">Reactive Strength Index</strong>
+                            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-xl text-xs text-emerald-900 leading-relaxed">
+                                <strong className="block uppercase tracking-wide mb-1 text-emerald-600 dark:text-emerald-400">Reactive Strength Index</strong>
                                 <p>Commonly measured via a 10-to-5 jump or drop jump. Calculation: Jump Height (m) / Contact Time (s).</p>
                             </div>
                             <div className="grid grid-cols-2 gap-6">
@@ -435,10 +460,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                 </div>
                             )}
                             <div className="pt-4 border-t border-slate-100 space-y-3">
-                                <select value={rsiAthleteId} onChange={(e) => setRsiAthleteId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={rsiAthleteId}
+                                    onChange={(e) => setRsiAthleteId(e.target.value)}
+                                    placeholder="Select Athlete to Save Score..."
+                                >
                                     <option value="">Select Athlete to Save Score...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
+                                </CustomSelect>
                                 <button onClick={() => handleSave('rsi')} className="w-full py-3 bg-emerald-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-emerald-600 transition-colors">Save RSI Profile</button>
                             </div>
                         </div>
@@ -450,8 +481,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         const targetWatts = watts * (pct / 100);
                         return (
                             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 pb-2">
-                                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
-                                    <p className="text-[10px] font-semibold uppercase text-indigo-600 tracking-wide">Wattbike MAP Calculator</p>
+                                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 rounded-xl">
+                                    <p className="text-[10px] font-semibold uppercase text-indigo-600 dark:text-indigo-300 tracking-wide">Wattbike MAP Calculator</p>
                                     <p className="text-[10px] font-medium text-indigo-400 mt-0.5">Convert your MAP into RPM targets for specific Fan settings.</p>
                                 </div>
 
@@ -484,7 +515,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                         <button
                                             key={m}
                                             onClick={() => setBikeModel(m)}
-                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                         >
                                             {m}
                                         </button>
@@ -573,10 +604,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                 </div>
                             )}
                             <div className="pt-4 border-t border-slate-100 space-y-3">
-                                <select value={hamAthleteId} onChange={(e) => setHamAthleteId(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none">
+                                <CustomSelect
+                                    variant="form"
+                                    size="xs"
+                                    value={hamAthleteId}
+                                    onChange={(e) => setHamAthleteId(e.target.value)}
+                                    placeholder="Select Athlete to Save Score..."
+                                >
                                     <option value="">Select Athlete to Save Score...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
+                                </CustomSelect>
                                 <button onClick={() => handleSave('hamstring')} className="w-full py-3 bg-orange-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-orange-700 transition-colors">Save Assessment</button>
                             </div>
                         </div>

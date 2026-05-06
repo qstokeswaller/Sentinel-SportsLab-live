@@ -73,7 +73,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</h4>
                 <button
                     onClick={() => setOpen(!open)}
-                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-all"
+                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-all"
                 >
                     <PlusIcon size={13} /> Attach Session
                 </button>
@@ -102,7 +102,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
             {linked.length === 0 && !open && (
                 <div
                     onClick={() => setOpen(true)}
-                    className="py-6 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1.5 text-slate-400 cursor-pointer hover:bg-slate-50 transition-all"
+                    className="py-6 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1.5 text-slate-400 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all"
                 >
                     <PlusIcon size={16} />
                     <p className="text-[10px] font-medium">Attach sessions from other modules to create mixed workouts</p>
@@ -118,7 +118,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                             <button
                                 key={s.key}
                                 onClick={() => { setActiveSource(s.key); setSearch(''); }}
-                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 text-indigo-600 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 text-indigo-600 dark:text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600'}`}
                             >
                                 {s.icon}
                                 {s.label}
@@ -149,7 +149,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                             <button
                                 key={item.id}
                                 onClick={() => addSession(activeSrc!, item)}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-all text-left border-b border-slate-50 last:border-0"
+                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all text-left border-b border-slate-50 last:border-0"
                             >
                                 <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${activeSrc?.color} ${activeSrc?.textColor}`}>
                                     {activeSrc?.icon}

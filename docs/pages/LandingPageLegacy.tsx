@@ -51,7 +51,7 @@ const LandingPage: React.FC = () => {
                             <ActivityIcon size={16} className="text-white" />
                         </div>
                         <span className="font-bold text-base tracking-tight">
-                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
                     </div>
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
@@ -82,7 +82,7 @@ const LandingPage: React.FC = () => {
                 <div className="relative max-w-6xl mx-auto px-6 w-full">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100/80 backdrop-blur-sm border border-indigo-200/50 rounded-full text-xs font-semibold text-indigo-600 mb-6">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100/80 backdrop-blur-sm border border-indigo-200 dark:border-indigo-800/50 rounded-full text-xs font-semibold text-indigo-600 dark:text-indigo-300 mb-6">
                                 <SparklesIcon size={12} /> Sports Science Intelligence Platform
                             </div>
                             <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.08]">
@@ -125,7 +125,7 @@ const LandingPage: React.FC = () => {
                                     {/* Mock dashboard content */}
                                     <div className="space-y-3">
                                         <div className="grid grid-cols-4 gap-2">
-                                            {[{ label: 'Athletes', val: '42', color: 'bg-indigo-50 text-indigo-600' }, { label: 'Available', val: '38', color: 'bg-emerald-50 text-emerald-600' }, { label: 'Modified', val: '3', color: 'bg-amber-50 text-amber-600' }, { label: 'Flagged', val: '2', color: 'bg-rose-50 text-rose-600' }].map((c, i) => (
+                                            {[{ label: 'Athletes', val: '42', color: 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600' }, { label: 'Available', val: '38', color: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600' }, { label: 'Modified', val: '3', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' }, { label: 'Flagged', val: '2', color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600' }].map((c, i) => (
                                                 <div key={i} className={`${c.color} rounded-lg px-3 py-2 text-center`}>
                                                     <div className="text-lg font-bold">{c.val}</div>
                                                     <div className="text-[8px] font-semibold uppercase tracking-wide opacity-60">{c.label}</div>
@@ -142,13 +142,13 @@ const LandingPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <div className="flex-1 bg-indigo-50 rounded-lg p-2.5">
+                                            <div className="flex-1 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg p-2.5">
                                                 <div className="text-[8px] font-semibold text-indigo-400 uppercase">Readiness</div>
-                                                <div className="text-xl font-bold text-indigo-600">82<span className="text-xs">/100</span></div>
+                                                <div className="text-xl font-bold text-indigo-600 dark:text-indigo-300">82<span className="text-xs">/100</span></div>
                                             </div>
-                                            <div className="flex-1 bg-emerald-50 rounded-lg p-2.5">
+                                            <div className="flex-1 bg-emerald-50 dark:bg-emerald-900/25 rounded-lg p-2.5">
                                                 <div className="text-[8px] font-semibold text-emerald-400 uppercase">Compliance</div>
-                                                <div className="text-xl font-bold text-emerald-600">91<span className="text-xs">%</span></div>
+                                                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">91<span className="text-xs">%</span></div>
                                             </div>
                                         </div>
                                     </div>
@@ -166,15 +166,15 @@ const LandingPage: React.FC = () => {
                 <div className="max-w-6xl mx-auto px-6 py-12">
                     <div className="grid grid-cols-3 gap-8 text-center" ref={stat1.ref}>
                         <div>
-                            <div className="text-4xl md:text-5xl font-bold text-indigo-600">{stat1.count}+</div>
+                            <div className="text-4xl md:text-5xl font-bold text-indigo-600 dark:text-indigo-300">{stat1.count}+</div>
                             <div className="text-sm text-slate-500 mt-1 font-medium">Testing Protocols</div>
                         </div>
                         <div ref={stat2.ref}>
-                            <div className="text-4xl md:text-5xl font-bold text-indigo-600">{stat2.count.toLocaleString()}+</div>
+                            <div className="text-4xl md:text-5xl font-bold text-indigo-600 dark:text-indigo-300">{stat2.count.toLocaleString()}+</div>
                             <div className="text-sm text-slate-500 mt-1 font-medium">Exercise Library</div>
                         </div>
                         <div ref={stat3.ref}>
-                            <div className="text-4xl md:text-5xl font-bold text-indigo-600">{stat3.count}+</div>
+                            <div className="text-4xl md:text-5xl font-bold text-indigo-600 dark:text-indigo-300">{stat3.count}+</div>
                             <div className="text-sm text-slate-500 mt-1 font-medium">GPS Data Fields Supported</div>
                         </div>
                     </div>
@@ -273,7 +273,7 @@ const LandingPage: React.FC = () => {
                                     <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-500 mt-0.5 shrink-0" />{f}</li>
                                 ))}
                             </ul>
-                            <button onClick={() => navigate('/login')} className="w-full py-2.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:text-indigo-600 transition-all text-sm">Start Free Trial</button>
+                            <button onClick={() => navigate('/login')} className="w-full py-2.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all text-sm">Start Free Trial</button>
                         </div>
 
                         {/* Pro */}
@@ -287,7 +287,7 @@ const LandingPage: React.FC = () => {
                                     <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-300 mt-0.5 shrink-0" />{f}</li>
                                 ))}
                             </ul>
-                            <button onClick={() => navigate('/login')} className="w-full py-2.5 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-all text-sm">Start Free Trial</button>
+                            <button onClick={() => navigate('/login')} className="w-full py-2.5 bg-white text-indigo-600 dark:text-indigo-300 font-semibold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all text-sm">Start Free Trial</button>
                         </div>
 
                         {/* Elite */}
@@ -300,7 +300,7 @@ const LandingPage: React.FC = () => {
                                     <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-500 mt-0.5 shrink-0" />{f}</li>
                                 ))}
                             </ul>
-                            <button onClick={() => navigate('/login')} className="w-full py-2.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:text-indigo-600 transition-all text-sm">Start Free Trial</button>
+                            <button onClick={() => navigate('/login')} className="w-full py-2.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all text-sm">Start Free Trial</button>
                         </div>
 
                         {/* Custom */}
@@ -315,7 +315,7 @@ const LandingPage: React.FC = () => {
                                         <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-400 mt-0.5 shrink-0" />{f}</li>
                                     ))}
                                 </ul>
-                                <button onClick={() => window.location.href = 'mailto:hello@sentinelsportslab.com'} className="w-full py-2.5 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 transition-all text-sm flex items-center justify-center gap-2"><MessageCircleIcon size={14} /> Contact Us</button>
+                                <button onClick={() => window.location.href = 'mailto:hello@sentinelsportslab.com'} className="w-full py-2.5 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all text-sm flex items-center justify-center gap-2"><MessageCircleIcon size={14} /> Contact Us</button>
                             </div>
                         </div>
                     </div>
@@ -332,7 +332,7 @@ const LandingPage: React.FC = () => {
                         Join sport scientists and S&C coaches using research-backed tools to monitor, test, and optimise athlete performance.
                     </p>
                     <button onClick={() => navigate('/login')}
-                        className="mt-8 px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-xl hover:shadow-2xl hover:bg-indigo-50 transition-all active:scale-[0.98] text-base">
+                        className="mt-8 px-8 py-4 bg-white text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-xl hover:shadow-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all active:scale-[0.98] text-base">
                         Start Your Free Trial
                     </button>
                 </div>

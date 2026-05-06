@@ -18,6 +18,7 @@ import {
     ChevronDownIcon, ChevronUpIcon, ArrowRightIcon, UploadIcon,
     CheckCircleIcon, Edit3Icon,
 } from 'lucide-react';
+import { CustomSelect } from './CustomSelect';
 import type { CsvImportSchema } from '../../utils/csvSchemas';
 import { autoMapHeaders } from '../../utils/csvSchemas';
 
@@ -41,10 +42,10 @@ interface SmartCsvMapperProps {
 
 // Accent color presets (Tailwind classes)
 const ACCENT = {
-    indigo: { bg: 'bg-indigo-600', bgLight: 'bg-indigo-50', bgHover: 'hover:bg-indigo-700', text: 'text-indigo-600', border: 'border-indigo-200', ring: 'ring-indigo-500' },
-    rose:   { bg: 'bg-rose-600',   bgLight: 'bg-rose-50',   bgHover: 'hover:bg-rose-700',   text: 'text-rose-600',   border: 'border-rose-200',   ring: 'ring-rose-500' },
+    indigo: { bg: 'bg-indigo-600', bgLight: 'bg-indigo-50', bgHover: 'hover:bg-indigo-700', text: 'text-indigo-600', border: 'border-indigo-200 dark:border-indigo-800/50', ring: 'ring-indigo-500' },
+    rose:   { bg: 'bg-rose-600',   bgLight: 'bg-rose-50',   bgHover: 'hover:bg-rose-700',   text: 'text-rose-600',   border: 'border-rose-200 dark:border-rose-900/50',   ring: 'ring-rose-500' },
     orange: { bg: 'bg-orange-500', bgLight: 'bg-orange-50', bgHover: 'hover:bg-orange-600', text: 'text-orange-600', border: 'border-orange-200', ring: 'ring-orange-500' },
-    emerald:{ bg: 'bg-emerald-600',bgLight: 'bg-emerald-50',bgHover: 'hover:bg-emerald-700',text: 'text-emerald-600',border: 'border-emerald-200',ring: 'ring-emerald-500' },
+    emerald:{ bg: 'bg-emerald-600',bgLight: 'bg-emerald-50',bgHover: 'hover:bg-emerald-700',text: 'text-emerald-600',border: 'border-emerald-200 dark:border-emerald-800/50',ring: 'ring-emerald-500' },
 };
 
 const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
@@ -134,7 +135,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                 <p className="text-xs text-slate-500 mt-0.5">{schema.name}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+                        <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                             <XIcon size={18} className="text-slate-400" />
                         </button>
                     </div>
@@ -204,14 +205,12 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                                 <ArrowRightIcon size={12} className="text-slate-300 shrink-0" />
 
                                                 {/* CSV Column dropdown */}
-                                                <select
+                                                <CustomSelect
+                                                    variant="form"
+                                                    size="xs"
                                                     value={mapping[field.id] || ''}
                                                     onChange={e => updateMapping(field.id, e.target.value)}
-                                                    className={`w-44 shrink-0 text-xs px-2 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                                                        mapping[field.id]
-                                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-800 font-medium'
-                                                            : 'border-slate-200 bg-white text-slate-500'
-                                                    }`}
+                                                    minWidth={176}
                                                 >
                                                     <option value="">— Skip —</option>
                                                     {csvHeaders.map(h => (
@@ -219,7 +218,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                                             {h}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                         ))}
                                     </div>
@@ -270,7 +269,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                         </thead>
                                         <tbody>
                                             {previewRows.map((row, i) => (
-                                                <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50">
+                                                <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
                                                     {schema.fields.filter(f => mapping[f.id]).map(f => (
                                                         <td key={f.id} className="px-3 py-1.5 text-slate-700 whitespace-nowrap">
                                                             {row[mapping[f.id]] || <span className="text-slate-300">—</span>}
@@ -287,7 +286,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                 </div>
 
                 {/* ── Footer ── */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
                     <div className="text-[11px] text-slate-500">
                         {csvRows.length} row{csvRows.length !== 1 ? 's' : ''} detected
                     </div>

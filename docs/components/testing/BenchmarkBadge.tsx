@@ -63,7 +63,7 @@ export const BenchmarkBadge: React.FC<BenchmarkBadgeProps> = ({ testType, value,
 
     if (percentile < 0) return null; // not enough data
 
-    const color = percentile >= 75 ? 'text-emerald-600 bg-emerald-50'
+    const color = percentile >= 75 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50'
         : percentile >= 50 ? 'text-sky-600 bg-sky-50'
         : percentile >= 25 ? 'text-amber-600 bg-amber-50'
         : 'text-rose-600 bg-rose-50';
@@ -116,7 +116,7 @@ export const BenchmarkSummary: React.FC<{ testType: string; athleteId: string; l
                     const rank = i + 1;
                     return (
                         <div key={entry.id} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs ${
-                            isCurrent ? 'bg-indigo-50 border border-indigo-200 font-semibold' : i % 2 === 0 ? 'bg-slate-50' : ''
+                            isCurrent ? 'bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 font-semibold' : i % 2 === 0 ? 'bg-slate-50' : ''
                         }`}>
                             <div className="flex items-center gap-2">
                                 <span className={`w-5 text-center text-[10px] font-bold ${rank <= 3 ? 'text-amber-500' : 'text-slate-400'}`}>{rank}</span>

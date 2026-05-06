@@ -21,6 +21,7 @@ import SmartCsvMapper from '../components/ui/SmartCsvMapper';
 import { getAcwrSchema, normaliseDate } from '../utils/csvSchemas';
 import { processAthleteMatching } from '../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../components/ui/UnmatchedAthleteResolver';
+import { CustomSelect } from '../components/ui/CustomSelect';
 import type { ResolvedEntry } from '../components/ui/UnmatchedAthleteResolver';
 
 const SECTIONS = [
@@ -310,7 +311,7 @@ const ACWRMonitoringHub: React.FC = () => {
             }
 
             const status = excluded
-                ? { label: 'Excluded', color: 'text-slate-400', bg: 'bg-slate-100', status: 'excluded' }
+                ? { label: 'Excluded', color: 'text-slate-400 dark:text-[#64748B]', bg: 'bg-slate-100 dark:bg-[#1A2D48]', status: 'excluded' }
                 : ACWR_UTILS.getRatioStatus(acwrResult.ratio);
             const reasons = excluded ? [] : ACWR_UTILS.getAthleteRiskReasoning(acwrResult, wellnessData, loadRecords, player.id);
 
@@ -568,13 +569,13 @@ const ACWRMonitoringHub: React.FC = () => {
 
     // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
     const MiniSparkline = ({ data, heightPx = 24 }: { data: number[]; heightPx?: number }) => {
-        if (data.length < 2) return <span className="text-[10px] text-slate-300 italic">No trend</span>;
+        if (data.length < 2) return <span className="text-[10px] text-slate-300 dark:text-[#475569] italic">No trend</span>;
         const max = Math.max(...data, 1.5);
         return (
             <div className="flex items-end gap-[1px]" style={{ height: `${heightPx}px` }}>
                 {data.map((val, i) => {
                     const h = Math.max((val / max) * heightPx, 2);
-                    const color = val > 1.5 ? 'bg-rose-400' : val > 1.3 ? 'bg-amber-400' : val >= 0.8 ? 'bg-emerald-400' : val > 0 ? 'bg-sky-400' : 'bg-slate-200';
+                    const color = val > 1.5 ? 'bg-rose-400' : val > 1.3 ? 'bg-amber-400' : val >= 0.8 ? 'bg-emerald-400' : val > 0 ? 'bg-sky-400' : 'bg-slate-200 dark:bg-[#243A58]';
                     return <div key={i} className={`flex-1 rounded-sm ${color}`} style={{ height: `${h}px` }} />;
                 })}
             </div>
@@ -612,18 +613,18 @@ const ACWRMonitoringHub: React.FC = () => {
     // ── Delete confirmation popup (shared across athlete + history views) ──
     const deleteModal = deleteConfirm ? (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
-            <div className="bg-white rounded-xl shadow-2xl p-6 w-80 max-w-[90vw]" onClick={e => e.stopPropagation()}>
-                <h3 className="text-sm font-semibold text-slate-900 mb-1">Delete load record?</h3>
-                <p className="text-xs text-slate-500 mb-3">
-                    <span className="font-medium text-slate-700">{deleteConfirm.playerName}</span>
+            <div className="bg-white dark:bg-[#132338] rounded-xl shadow-2xl p-6 w-80 max-w-[90vw]" onClick={e => e.stopPropagation()}>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1">Delete load record?</h3>
+                <p className="text-xs text-slate-500 dark:text-[#94A3B8] mb-3">
+                    <span className="font-medium text-slate-700 dark:text-[#E2E8F0]">{deleteConfirm.playerName}</span>
                     {' · '}
                     {new Date(deleteConfirm.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg px-3 py-2 mb-4">
                     This will permanently remove this day's load. The day will be left blank with no recorded load.
                 </p>
                 <div className="flex gap-2">
-                    <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                    <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] font-medium transition-colors">
                         Cancel
                     </button>
                     <button onClick={() => handleDeleteRecord(deleteConfirm.id)} className="flex-1 px-3 py-2 text-sm rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-colors">
@@ -638,7 +639,7 @@ const ACWRMonitoringHub: React.FC = () => {
     if (acwrView === 'log') {
         return (
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
                 <TrainingLoadEntry teamId={selectedTeamId} onSaved={() => { setAcwrView('roster'); }} />
@@ -665,19 +666,19 @@ const ACWRMonitoringHub: React.FC = () => {
         return (
             <>
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => { setAcwrView('roster'); setSelectedAthleteId(null); }} className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <button onClick={() => { setAcwrView('roster'); setSelectedAthleteId(null); }} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
 
                 {/* Athlete header */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-lg font-bold text-slate-600">
+                        <div className="w-12 h-12 bg-slate-200 dark:bg-[#243A58] rounded-xl flex items-center justify-center text-lg font-bold text-slate-600 dark:text-[#CBD5E1]">
                             {getInitials(playerData.name)}
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-bold text-slate-900">{playerData.name}</h3>
-                            <p className="text-xs text-slate-500">{playerData.position || 'Athlete'} · {playerData.teamName} · {methodLabel}</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{playerData.name}</h3>
+                            <p className="text-xs text-slate-500 dark:text-[#94A3B8]">{playerData.position || 'Athlete'} · {playerData.teamName} · {methodLabel}</p>
                         </div>
                         <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>
                             {status.label} — {acwrResult.ratio.toFixed(2)}
@@ -687,17 +688,17 @@ const ACWRMonitoringHub: React.FC = () => {
 
                 {/* ACWR Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">ACWR Ratio</div>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">ACWR Ratio</div>
                         <div className={`text-3xl font-bold ${status.color}`}>{acwrResult.ratio.toFixed(2)}</div>
                     </div>
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Acute ({playerSettings.acuteN}d)</div>
-                        <div className="text-3xl font-bold text-slate-900">{acwrResult.acute}</div>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Acute ({playerSettings.acuteN}d)</div>
+                        <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrResult.acute}</div>
                     </div>
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Chronic ({playerSettings.chronicN}d)</div>
-                        <div className="text-3xl font-bold text-slate-900">{acwrResult.chronic}</div>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Chronic ({playerSettings.chronicN}d)</div>
+                        <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrResult.chronic}</div>
                     </div>
                     <div className="bg-slate-900 rounded-xl shadow-sm p-4 space-y-1">
                         <div className="text-[10px] font-semibold text-indigo-300 uppercase tracking-wide">Sessions</div>
@@ -706,7 +707,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 </div>
 
                 {/* Date range controls */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
                     {/* Quick buttons */}
                     <div className="flex items-center gap-1.5">
                         {([['7d', '7 days'], ['28d', '28 days'], ['90d', '90 days'], ['all', 'All time']] as const).map(([key, label]) => (
@@ -722,25 +723,25 @@ const ACWRMonitoringHub: React.FC = () => {
                                 setDrilldownFrom(from);
                                 setDrilldownTo(to);
                             }} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] hover:bg-slate-200'
                             }`}>{label}</button>
                         ))}
                     </div>
-                    <div className="w-px h-5 bg-slate-200" />
+                    <div className="w-px h-5 bg-slate-200 dark:bg-[#243A58]" />
                     {/* Custom date pickers */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span className="text-slate-400">From</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#94A3B8]">
+                        <span className="text-slate-400 dark:text-[#64748B]">From</span>
                         <input type="date" value={drilldownFrom}
                             onChange={e => { setDrilldownFrom(e.target.value); setDrilldownFilter('custom'); }}
-                            className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                            className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
                         />
-                        <span className="text-slate-400">to</span>
+                        <span className="text-slate-400 dark:text-[#64748B]">to</span>
                         <input type="date" value={drilldownTo}
                             onChange={e => { setDrilldownTo(e.target.value); setDrilldownFilter('custom'); }}
-                            className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                            className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
                         />
                     </div>
-                    <div className="ml-auto text-[10px] text-slate-400">
+                    <div className="ml-auto text-[10px] text-slate-400 dark:text-[#64748B]">
                         {dailyData.length} day{dailyData.length !== 1 ? 's' : ''}
                     </div>
                 </div>
@@ -753,7 +754,7 @@ const ACWRMonitoringHub: React.FC = () => {
                     const allChronic = acwrResult.chronicHistory || [];
                     const indices = allDates.map((d, i) => i).filter(i => allDates[i] >= drilldownFrom && allDates[i] <= drilldownTo);
                     if (indices.length < 2) return (
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center text-xs text-slate-400">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 text-center text-xs text-slate-400 dark:text-[#64748B]">
                             Not enough data in selected range for a chart.
                         </div>
                     );
@@ -775,35 +776,35 @@ const ACWRMonitoringHub: React.FC = () => {
                 })()}
 
                 {/* Daily breakdown table */}
-                <div className={`bg-white rounded-xl border shadow-sm overflow-hidden ${editMode ? 'border-amber-300' : 'border-slate-200'}`}>
+                <div className={`bg-white dark:bg-[#132338] rounded-xl border shadow-sm overflow-hidden ${editMode ? 'border-amber-300' : 'border-slate-200 dark:border-[#243A58]'}`}>
                     {/* Column headers */}
-                    <div className={`flex items-center gap-4 px-5 py-2.5 border-b ${editMode ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide flex-1">Date</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-24">Load</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-16">ACWR</span>
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide w-20">Status</span>
+                    <div className={`flex items-center gap-4 px-5 py-2.5 border-b ${editMode ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide flex-1">Date</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-24">Load</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-16">ACWR</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-20">Status</span>
                         <button
                             onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'}`}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
                         >
                             {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                         </button>
                     </div>
                     {editMode && (
-                        <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 text-[10px] text-amber-700 font-medium">
+                        <div className="px-5 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-amber-800/40 text-[10px] text-amber-700 dark:text-amber-400 font-medium">
                             Edit mode — click 🗑 to delete a day's record. Two-step confirmation required.
                         </div>
                     )}
                     {dailyData.length === 0 ? (
-                        <div className="px-5 py-8 text-center text-sm text-slate-400">No data in selected range.</div>
+                        <div className="px-5 py-8 text-center text-sm text-slate-400 dark:text-[#64748B]">No data in selected range.</div>
                     ) : (
                         <div className="divide-y divide-slate-50">
                             {dailyData.map((day, i) => (
-                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 text-slate-400' : 'hover:bg-slate-50/60'}`}>
-                                    <span className="font-medium text-slate-700 flex-1">
+                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 dark:bg-[#0F1C30]/40 text-slate-400 dark:text-[#64748B]' : 'hover:bg-slate-50/60 dark:bg-[#132338]/40'}`}>
+                                    <span className="font-medium text-slate-700 dark:text-[#E2E8F0] flex-1">
                                         {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}
                                     </span>
-                                    <span className={`w-24 ${day.isRestDay ? 'italic text-xs' : 'font-medium text-slate-900'}`}>
+                                    <span className={`w-24 ${day.isRestDay ? 'italic text-xs' : 'font-medium text-slate-900 dark:text-[#E2E8F0]'}`}>
                                         {day.isRestDay ? 'Rest' : `${day.load} ${ACWR_METRIC_TYPES[playerSettings.metricType]?.unit || 'AU'}`}
                                     </span>
                                     <span className={`w-16 font-bold ${day.status.color}`}>{day.ratio > 0 ? day.ratio.toFixed(2) : '—'}</span>
@@ -813,7 +814,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                             {!day.isRestDay && day.recordId ? (
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setDeleteConfirm({ id: day.recordId, playerName: uniquePlayers.find(p => p.id === selectedAthleteId)?.name || 'Athlete', date: day.date }); }}
-                                                    className="p-1 rounded hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-colors"
+                                                    className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors"
                                                     title="Delete this day's record"
                                                 >
                                                     <Trash2Icon size={13} />
@@ -829,12 +830,12 @@ const ACWRMonitoringHub: React.FC = () => {
 
                 {/* Risk Analysis */}
                 {reasons.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Risk Analysis</h4>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-3">
+                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Risk Analysis</h4>
                         {reasons.map((reason, idx) => {
-                            const sev = reason.severity === 'critical' ? { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', badge: 'bg-rose-100 text-rose-600' }
-                                      : reason.severity === 'warning' ? { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-600' }
-                                      : { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700', badge: 'bg-sky-100 text-sky-600' };
+                            const sev = reason.severity === 'critical' ? { bg: 'bg-rose-50', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700', badge: 'bg-rose-100 text-rose-600' }
+                                      : reason.severity === 'warning' ? { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-600' }
+                                      : { bg: 'bg-sky-50', border: 'border-sky-200 dark:border-sky-900/50', text: 'text-sky-700', badge: 'bg-sky-100 text-sky-600' };
                             return (
                                 <div key={idx} className={`${sev.bg} ${sev.border} border rounded-xl p-3.5`}>
                                     <div className="flex items-center gap-2 mb-1">
@@ -861,26 +862,26 @@ const ACWRMonitoringHub: React.FC = () => {
         return (
             <>
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
 
                 {/* Team ACWR chart with date range picker */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Team ACWR — Custom Range</h4>
-                        <div className="flex items-center gap-2 text-xs text-slate-600">
-                            <span className="text-slate-400">From</span>
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] flex flex-wrap items-center gap-3 justify-between">
+                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Team ACWR — Custom Range</h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-[#CBD5E1]">
+                            <span className="text-slate-400 dark:text-[#64748B]">From</span>
                             <input
                                 type="date" value={historyChartFrom}
                                 onChange={e => setHistoryChartFrom(e.target.value)}
-                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
                             />
-                            <span className="text-slate-400">to</span>
+                            <span className="text-slate-400 dark:text-[#64748B]">to</span>
                             <input
                                 type="date" value={historyChartTo}
                                 onChange={e => setHistoryChartTo(e.target.value)}
-                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
                             />
                         </div>
                     </div>
@@ -897,26 +898,26 @@ const ACWRMonitoringHub: React.FC = () => {
                             title={`${selectedTeam?.name || 'Team'} — ACWR ${historyChartFrom} → ${historyChartTo}`}
                         />
                     ) : (
-                        <div className="p-10 text-center text-sm text-slate-400">No team ACWR data in selected range.</div>
+                        <div className="p-10 text-center text-sm text-slate-400 dark:text-[#64748B]">No team ACWR data in selected range.</div>
                     )}
                 </div>
 
                 {/* Weekly load table */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     {/* Week nav header */}
-                    <div className="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3 justify-between">
+                    <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] flex flex-wrap items-center gap-3 justify-between">
                         <div className="flex items-center gap-2">
-                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors">
+                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] transition-colors">
                                 <ChevronLeftIcon size={14} />
                             </button>
-                            <span className="text-xs font-semibold text-slate-700 min-w-[160px] text-center">
+                            <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[160px] text-center">
                                 {fmtShort(weekDays[0])} — {fmtShort(weekDays[6])}
                             </span>
-                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors">
+                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] transition-colors">
                                 <ChevronRightIcon size={14} />
                             </button>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#94A3B8]">
                             <span>Jump to week:</span>
                             <input
                                 type="date"
@@ -928,17 +929,17 @@ const ACWRMonitoringHub: React.FC = () => {
                                     d.setDate(diff);
                                     setHistoryWeekStart(new Date(d));
                                 }}
-                                className="border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-700 outline-none focus:border-indigo-400"
+                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
                             />
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-400 ml-auto">
-                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-100" /> Low</span>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#64748B] ml-auto">
+                            <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/35" /> Low</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-300" /> Medium</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-300" /> High</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-rose-300" /> Peak</span>
                             <button
                                 onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
                             >
                                 {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                             </button>
@@ -947,7 +948,7 @@ const ACWRMonitoringHub: React.FC = () => {
 
                     {/* Edit mode banner */}
                     {editMode && (
-                        <div className="px-5 py-2 bg-amber-50 border-b border-amber-200 text-[10px] text-amber-700 font-medium">
+                        <div className="px-5 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 text-[10px] text-amber-700 dark:text-amber-400 font-medium">
                             Edit mode — click 🗑 on any cell to delete that day's record. Two-step confirmation required.
                         </div>
                     )}
@@ -955,22 +956,22 @@ const ACWRMonitoringHub: React.FC = () => {
                     <div className="overflow-x-auto">
                         <table className={`w-full text-xs ${editMode ? 'min-w-[800px]' : 'min-w-[720px]'}`}>
                             <thead>
-                                <tr className={`border-b ${editMode ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
-                                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500 w-36">Athlete</th>
+                                <tr className={`border-b ${editMode ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
+                                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-36">Athlete</th>
                                     {weekDays.map(d => (
-                                        <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 w-20">
+                                        <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 dark:text-[#64748B] w-20">
                                             <div>{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}</div>
-                                            <div className="text-[10px] text-slate-300">{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                                            <div className="text-[10px] text-slate-300 dark:text-[#475569]">{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                                         </th>
                                     ))}
-                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 w-16">Total</th>
-                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 w-16">ACWR</th>
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-16">Total</th>
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-16">ACWR</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {uniquePlayers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={10} className="px-4 py-8 text-center text-slate-400 text-sm">No athletes in this team.</td>
+                                        <td colSpan={10} className="px-4 py-8 text-center text-slate-400 dark:text-[#64748B] text-sm">No athletes in this team.</td>
                                     </tr>
                                 ) : uniquePlayers.map(player => {
                                     const playerRoster = rosterData.find(r => r.id === player.id);
@@ -1002,30 +1003,30 @@ const ACWRMonitoringHub: React.FC = () => {
 
                                     return (
                                         <tr key={player.id}
-                                            className="hover:bg-slate-50 cursor-pointer transition-colors"
+                                            className="hover:bg-slate-50 dark:hover:bg-[#1A2D48] cursor-pointer transition-colors"
                                             onClick={() => { setSelectedAthleteId(player.id); setAcwrView('athlete'); }}
                                         >
                                             <td className="px-4 py-2">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                                        playerRoster?.excluded ? 'bg-indigo-100 text-indigo-600'
+                                                        playerRoster?.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600'
                                                         : weekAcwr > 1.5 ? 'bg-rose-100 text-rose-700'
                                                         : weekAcwr > 1.3 ? 'bg-amber-100 text-amber-700'
-                                                        : weekAcwr > 0 ? 'bg-emerald-100 text-emerald-700'
-                                                        : 'bg-slate-100 text-slate-500'
+                                                        : weekAcwr > 0 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
+                                                        : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'
                                                     }`}>{getInitials(player.name)}</div>
-                                                    <span className="font-medium text-slate-800 text-xs truncate max-w-[90px]">{player.name}</span>
+                                                    <span className="font-medium text-slate-800 dark:text-[#E2E8F0] text-xs truncate max-w-[90px]">{player.name}</span>
                                                 </div>
                                             </td>
                                             {dayLoads.map((load, i) => {
                                                 const v = load?.value ?? null;
                                                 const intensity = (v || 0) / weekMaxLoad;
                                                 const bg = v === null ? '' :
-                                                    load?.isRest ? 'bg-slate-100 text-slate-400' :
+                                                    load?.isRest ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' :
                                                     intensity > 0.8 ? 'bg-rose-200 text-rose-800' :
                                                     intensity > 0.6 ? 'bg-amber-200 text-amber-800' :
                                                     intensity > 0.3 ? 'bg-emerald-200 text-emerald-800' :
-                                                    'bg-emerald-100 text-emerald-700';
+                                                    'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
                                                 return (
                                                     <td key={i} className="px-1 py-2 text-center">
                                                         {v === null ? (
@@ -1048,8 +1049,8 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 );
                                             })}
                                             <td className="px-2 py-2 text-center">
-                                                <span className="font-bold text-slate-700 text-xs">{weekTotal > 0 ? weekTotal : '—'}</span>
-                                                {weekTotal > 0 && <div className="text-[9px] text-slate-400">{metricUnit}</div>}
+                                                <span className="font-bold text-slate-700 dark:text-[#E2E8F0] text-xs">{weekTotal > 0 ? weekTotal : '—'}</span>
+                                                {weekTotal > 0 && <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{metricUnit}</div>}
                                             </td>
                                             <td className="px-2 py-2 text-center">
                                                 {acwrStatus ? (
@@ -1058,7 +1059,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                                         <div className={`text-[9px] ${acwrStatus.color}`}>{acwrStatus.label}</div>
                                                     </>
                                                 ) : (
-                                                    <span className="text-slate-300 text-xs">—</span>
+                                                    <span className="text-slate-300 dark:text-[#475569] text-xs">—</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -1079,17 +1080,17 @@ const ACWRMonitoringHub: React.FC = () => {
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* Loading state */}
             {isLoading && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-                    <ActivityIcon size={28} className="mx-auto text-slate-300 animate-pulse mb-2" />
-                    <p className="text-sm text-slate-500">Loading ACWR data...</p>
+                <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-8 text-center">
+                    <ActivityIcon size={28} className="mx-auto text-slate-300 dark:text-[#475569] animate-pulse mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-[#94A3B8]">Loading ACWR data...</p>
                 </div>
             )}
 
             {/* No ACWR enabled anywhere (only show after loading completes) */}
             {!isLoading && enabledTeams.length === 0 && enabledPrivateClients.length === 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center space-y-2">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-6 text-center space-y-2">
                     <ActivityIcon size={28} className="mx-auto text-amber-400" />
-                    <p className="text-sm font-medium text-amber-700">No teams or athletes have ACWR monitoring enabled.</p>
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">No teams or athletes have ACWR monitoring enabled.</p>
                     <p className="text-xs text-amber-500">Go to Settings → ACWR Monitoring to enable it for your teams.</p>
                 </div>
             )}
@@ -1098,9 +1099,14 @@ const ACWRMonitoringHub: React.FC = () => {
             {(enabledTeams.length > 0 || enabledPrivateClients.length > 0) && (
                 <>
                     <div data-tour="acwr-controls" className="flex flex-wrap items-center gap-3">
-                        <div data-tour="acwr-team-selector" className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-                            <UsersIcon size={14} className="text-slate-400" />
-                            <select value={selectedTeamId} onChange={e => setSelectedTeamId(e.target.value)} className="bg-transparent text-sm text-slate-700 outline-none">
+                        <div data-tour="acwr-team-selector">
+                            <CustomSelect
+                                value={selectedTeamId}
+                                onChange={e => setSelectedTeamId(e.target.value)}
+                                variant="filter"
+                                size="sm"
+                                prefixIcon={<UsersIcon size={14} />}
+                            >
                                 {enabledTeams.length > 0 && (
                                     <optgroup label="Teams">
                                         {enabledTeams.map(t => <option key={t.id} value={t.id}>{t.name} ({(t.players || []).length})</option>)}
@@ -1111,26 +1117,26 @@ const ACWRMonitoringHub: React.FC = () => {
                                         {enabledPrivateClients.map(p => <option key={`ind_${p.id}`} value={`ind_${p.id}`}>{p.name}</option>)}
                                     </optgroup>
                                 )}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div className="flex-1" />
-                        <button onClick={() => setAcwrView('history')} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button onClick={() => setAcwrView('history')} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 text-slate-700 dark:text-[#E2E8F0] text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <TableIcon size={14} /> Load History
                         </button>
                         <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <PlusIcon size={14} /> Log Training Load
                         </button>
-                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-1.5">
-                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Import Date</label>
+                        <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm px-3 py-1.5">
+                            <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide whitespace-nowrap">Import Date</label>
                             <input
                                 type="date"
                                 value={acwrImportDateOverride}
                                 onChange={e => setAcwrImportDateOverride(e.target.value)}
-                                className="text-xs text-slate-700 border-none outline-none bg-transparent cursor-pointer"
+                                className="text-xs text-slate-700 dark:text-[#E2E8F0] border-none outline-none bg-transparent cursor-pointer"
                                 title="Override date for all imported rows (leave blank to use dates from CSV)"
                             />
                         </div>
-                        <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 text-slate-700 dark:text-[#E2E8F0] text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <UploadIcon size={14} /> Import CSV
                         </button>
                         <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFileSelect} />
@@ -1142,7 +1148,7 @@ const ACWRMonitoringHub: React.FC = () => {
                             {/* Prominent ACWR value badge top-right */}
                             <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
                                 <div className="text-right">
-                                    <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wide">Current ACWR</div>
+                                    <div className="text-[9px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Current ACWR</div>
                                     <div className={`text-2xl font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>
                                         {teamTrendline.ratio.toFixed(2)}
                                     </div>
@@ -1169,7 +1175,7 @@ const ACWRMonitoringHub: React.FC = () => {
 
                     {/* Gap warning banner */}
                     {teamTrendline?.gapStatus === 'prompt' && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-4 py-3 flex items-start gap-3">
                             <AlertTriangleIcon size={16} className="text-amber-500 mt-0.5 shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-amber-800">No team data for {teamTrendline.gapDays} days — ACWR frozen at last known values.</p>
@@ -1178,51 +1184,51 @@ const ACWRMonitoringHub: React.FC = () => {
                         </div>
                     )}
                     {teamTrendline?.gapStatus === 'auto_reset' && (
-                        <div className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 flex items-start gap-3">
-                            <AlertTriangleIcon size={16} className="text-slate-500 mt-0.5 shrink-0" />
+                        <div className="bg-slate-100 dark:bg-[#1A2D48] border border-slate-300 dark:border-[#243A58] rounded-xl px-4 py-3 flex items-start gap-3">
+                            <AlertTriangleIcon size={16} className="text-slate-500 dark:text-[#94A3B8] mt-0.5 shrink-0" />
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-slate-700">ACWR reset — no data for {teamTrendline.gapDays} days.</p>
-                                <p className="text-[11px] text-slate-500 mt-0.5">Formula restarted automatically. Log new training data to begin building ACWR again.</p>
+                                <p className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">ACWR reset — no data for {teamTrendline.gapDays} days.</p>
+                                <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] mt-0.5">Formula restarted automatically. Log new training data to begin building ACWR again.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Summary strip */}
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
-                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Total</div>
-                            <div className="text-2xl font-bold text-slate-900">{summary.total}</div>
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3">
+                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Total</div>
+                            <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{summary.total}</div>
                         </div>
-                        <div className="bg-rose-50 rounded-xl border border-rose-200 px-4 py-3">
+                        <div className="bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 px-4 py-3">
                             <div className="text-[10px] font-semibold text-rose-400 uppercase tracking-wide">Critical</div>
                             <div className="text-2xl font-bold text-rose-600">{summary.critical}</div>
                         </div>
-                        <div className="bg-amber-50 rounded-xl border border-amber-200 px-4 py-3">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/50 px-4 py-3">
                             <div className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Warning</div>
                             <div className="text-2xl font-bold text-amber-600">{summary.warning}</div>
                         </div>
-                        <div className="bg-emerald-50 rounded-xl border border-emerald-200 px-4 py-3">
+                        <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
                             <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide">Clear</div>
-                            <div className="text-2xl font-bold text-emerald-600">{summary.clear}</div>
+                            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{summary.clear}</div>
                         </div>
-                        <div className="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3">
-                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">No Data</div>
-                            <div className="text-2xl font-bold text-slate-400">{summary.noData}</div>
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58] px-4 py-3">
+                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">No Data</div>
+                            <div className="text-2xl font-bold text-slate-400 dark:text-[#64748B]">{summary.noData}</div>
                         </div>
                         {summary.excluded > 0 && (
-                            <div className="bg-slate-100 rounded-xl border border-slate-300 px-4 py-3">
-                                <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Injured</div>
-                                <div className="text-2xl font-bold text-slate-500">{summary.excluded}</div>
+                            <div className="bg-slate-100 dark:bg-[#1A2D48] rounded-xl border border-slate-300 dark:border-[#243A58] px-4 py-3">
+                                <div className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Injured</div>
+                                <div className="text-2xl font-bold text-slate-500 dark:text-[#94A3B8]">{summary.excluded}</div>
                             </div>
                         )}
                     </div>
 
                     {/* Athlete roster table */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Athlete Roster — ACWR Status</h4>
-                                <div className="hidden sm:flex items-center gap-3 text-[10px] text-slate-400">
+                                <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Athlete Roster — ACWR Status</h4>
+                                <div className="hidden sm:flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#64748B]">
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> &lt;0.8 Underexposed</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 0.8–1.3 Optimal</span>
                                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 1.31–1.5 Caution</span>
@@ -1231,27 +1237,27 @@ const ACWRMonitoringHub: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                             {rosterData.length === 0 ? (
                                 <div className="p-8 text-center">
-                                    <UsersIcon size={28} className="mx-auto text-slate-300 mb-2" />
-                                    <p className="text-sm text-slate-500">No athletes with ACWR monitoring enabled.</p>
+                                    <UsersIcon size={28} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
+                                    <p className="text-sm text-slate-500 dark:text-[#94A3B8]">No athletes with ACWR monitoring enabled.</p>
                                 </div>
                             ) : (
                                 rosterData.map(player => {
-                                    const riskBorder = player.excluded ? 'border-l-4 border-l-indigo-400 bg-indigo-50/30'
-                                                     : player.ratio > 1.5 ? 'border-l-4 border-l-rose-500 bg-rose-50/30'
-                                                     : player.ratio > 1.3 ? 'border-l-4 border-l-amber-400 bg-amber-50/30'
-                                                     : player.ratio > 0 && player.ratio < 0.8 ? 'border-l-4 border-l-sky-400 bg-sky-50/30'
+                                    const riskBorder = player.excluded ? 'border-l-4 border-l-indigo-400 bg-indigo-50/30 dark:bg-indigo-900/15'
+                                                     : player.ratio > 1.5 ? 'border-l-4 border-l-rose-500 bg-rose-50/30 dark:bg-rose-900/15'
+                                                     : player.ratio > 1.3 ? 'border-l-4 border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/15'
+                                                     : player.ratio > 0 && player.ratio < 0.8 ? 'border-l-4 border-l-sky-400 bg-sky-50/30 dark:bg-sky-900/15'
                                                      : 'border-l-4 border-l-transparent';
-                                    const initialsStyle = player.excluded ? 'bg-indigo-100 text-indigo-600'
+                                    const initialsStyle = player.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600'
                                                         : player.ratio > 1.5 ? 'bg-rose-100 text-rose-700'
                                                         : player.ratio > 1.3 ? 'bg-amber-100 text-amber-700'
                                                         : player.ratio > 0 && player.ratio < 0.8 ? 'bg-sky-100 text-sky-700'
-                                                        : 'bg-slate-200 text-slate-600';
+                                                        : 'bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1]';
                                     return (
                                         <div key={player.id}
-                                            className={`flex items-center gap-4 px-5 py-3 hover:bg-slate-50/80 transition-colors cursor-pointer group ${riskBorder}`}
+                                            className={`flex items-center gap-4 px-5 py-3 hover:bg-slate-50/80 dark:hover:bg-[#1A2D48]/60 transition-colors cursor-pointer group ${riskBorder}`}
                                             onClick={() => { setSelectedAthleteId(player.id); setAcwrView('athlete'); }}
                                         >
                                             {/* Initials */}
@@ -1265,7 +1271,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                             </div>
                                             {/* Name */}
                                             <div className="min-w-[130px]">
-                                                <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">{player.name}</h4>
+                                                <h4 className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</h4>
                                             </div>
                                             {/* ACWR */}
                                             <div className="w-16 text-center shrink-0">
@@ -1278,13 +1284,13 @@ const ACWRMonitoringHub: React.FC = () => {
                                                     </>
                                                 ) : player.acwrResult?.gapStatus === 'auto_reset' ? (
                                                     <>
-                                                        <div className="text-lg font-bold text-slate-300">—</div>
-                                                        <div className="text-[9px] font-semibold text-slate-400">Stale</div>
+                                                        <div className="text-lg font-bold text-slate-300 dark:text-[#475569]">—</div>
+                                                        <div className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Stale</div>
                                                     </>
                                                 ) : player.acwrResult?.gatheringPhase ? (
                                                     <>
-                                                        <div className="text-lg font-bold text-slate-400">...</div>
-                                                        <div className="text-[9px] font-semibold text-slate-400">Gathering</div>
+                                                        <div className="text-lg font-bold text-slate-400 dark:text-[#64748B]">...</div>
+                                                        <div className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Gathering</div>
                                                     </>
                                                 ) : (
                                                     <>
@@ -1296,12 +1302,12 @@ const ACWRMonitoringHub: React.FC = () => {
                                             {/* Acute / Chronic */}
                                             <div className="hidden lg:flex items-center gap-3 text-center shrink-0">
                                                 <div className="w-12">
-                                                    <div className="text-xs font-bold text-slate-900">{player.acute || '—'}</div>
-                                                    <div className="text-[9px] text-slate-400">Acute</div>
+                                                    <div className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0]">{player.acute || '—'}</div>
+                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Acute</div>
                                                 </div>
                                                 <div className="w-12">
-                                                    <div className="text-xs font-bold text-slate-900">{player.chronic || '—'}</div>
-                                                    <div className="text-[9px] text-slate-400">Chronic</div>
+                                                    <div className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0]">{player.chronic || '—'}</div>
+                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Chronic</div>
                                                 </div>
                                             </div>
                                             {/* Centre zone: sparkline + flags (fills the middle) */}
@@ -1311,13 +1317,13 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
                                                     {player.flags.map((flag, idx) => {
-                                                        const fc = flag === 'ACWR Normal' ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                                                                 : flag.includes('Critical') || flag.includes('Pain') ? 'bg-rose-50 text-rose-600 border-rose-200'
-                                                                 : flag.includes('Injured') || flag.includes('Excluded') ? 'bg-indigo-50 text-indigo-500 border-indigo-200'
-                                                                 : flag.includes('Return from Injury') ? 'bg-violet-50 text-violet-600 border-violet-200'
-                                                                 : flag.includes('Elevated') || flag.includes('Stress') || flag.includes('Sleep') ? 'bg-amber-50 text-amber-600 border-amber-200'
+                                                        const fc = flag === 'ACWR Normal' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
+                                                                 : flag.includes('Critical') || flag.includes('Pain') ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-200 dark:border-rose-900/50'
+                                                                 : flag.includes('Injured') || flag.includes('Excluded') ? 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 border-indigo-200 dark:border-indigo-800/50'
+                                                                 : flag.includes('Return from Injury') ? 'bg-violet-50 text-violet-600 border-violet-200 dark:border-violet-800/50'
+                                                                 : flag.includes('Elevated') || flag.includes('Stress') || flag.includes('Sleep') ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 dark:border-amber-800/50'
                                                                  : flag.includes('Fatigue') || flag.includes('Energy') ? 'bg-orange-50 text-orange-600 border-orange-200'
-                                                                 : 'bg-sky-50 text-sky-600 border-sky-200';
+                                                                 : 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 border-sky-200 dark:border-sky-900/50';
                                                         return <span key={idx} className={`px-1.5 py-0.5 rounded border text-[9px] font-medium ${fc}`}>{flag}</span>;
                                                     })}
                                                 </div>
@@ -1328,7 +1334,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 <div className="hidden xl:block text-right w-20">
                                                     {player.excluded ? (
                                                         // Time since excluded — amber after 7 days
-                                                        <div className={`text-[10px] font-semibold ${player.daysSinceExcluded > 7 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                                        <div className={`text-[10px] font-semibold ${player.daysSinceExcluded > 7 ? 'text-amber-500' : 'text-slate-400 dark:text-[#64748B]'}`}>
                                                             {player.exclusion?.excludeType === 'injured' ? 'Injured' : 'Excluded'}
                                                             {' · '}{player.daysSinceExcluded}d
                                                         </div>
@@ -1338,11 +1344,11 @@ const ACWRMonitoringHub: React.FC = () => {
                                                         </div>
                                                     ) : player.noDataDays >= 3 ? (
                                                         // Passive "no data" nudge
-                                                        <div className={`text-[10px] font-semibold ${player.noDataDays >= 7 ? 'text-amber-400' : 'text-slate-300'}`}>
+                                                        <div className={`text-[10px] font-semibold ${player.noDataDays >= 7 ? 'text-amber-400' : 'text-slate-300 dark:text-[#475569]'}`}>
                                                             No data {player.noDataDays}d
                                                         </div>
                                                     ) : (
-                                                        <div className="text-[10px] text-slate-400">
+                                                        <div className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                                             {player.lastSession
                                                                 ? new Date(player.lastSession + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
                                                                 : '—'}
@@ -1366,7 +1372,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                                             )}
                                                             <button
                                                                 onClick={() => handleExclude(player.id, 'remove', player.name)}
-                                                                className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-slate-100 text-slate-500 border-slate-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors"
+                                                                className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 hover:text-rose-500 hover:border-rose-200 dark:border-rose-800/50 transition-colors"
                                                                 title="Remove exclusion entirely"
                                                             >
                                                                 <XCircleIcon size={9} /> Remove
@@ -1377,24 +1383,24 @@ const ACWRMonitoringHub: React.FC = () => {
                                                         <>
                                                             <button
                                                                 onClick={() => setExcludeMenuOpenId(prev => prev === player.id ? null : player.id)}
-                                                                className="px-2.5 py-1.5 text-[10px] font-medium rounded-full transition-colors border bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100 hover:text-slate-600"
+                                                                className="px-2.5 py-1.5 text-[10px] font-medium rounded-full transition-colors border bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#64748B] border-slate-200 dark:border-[#243A58] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-600"
                                                             >Exclude ▾</button>
                                                             {excludeMenuOpenId === player.id && (
-                                                                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-52">
+                                                                <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg py-1 w-52">
                                                                     <button
                                                                         onClick={() => handleExclude(player.id, 'injured', player.name)}
-                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-rose-700 flex flex-col gap-0.5"
+                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-[#E2E8F0] hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 hover:text-rose-700 dark:text-rose-400 flex flex-col gap-0.5"
                                                                     >
                                                                         <span className="font-semibold">Injured</span>
-                                                                        <span className="text-[10px] text-slate-400">Freeze EWMA — use Return to reset ACWR on comeback</span>
+                                                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">Freeze EWMA — use Return to reset ACWR on comeback</span>
                                                                     </button>
-                                                                    <div className="border-t border-slate-100 my-0.5" />
+                                                                    <div className="border-t border-slate-100 dark:border-[#1A2D48] my-0.5" />
                                                                     <button
                                                                         onClick={() => handleExclude(player.id, 'non_injury', player.name)}
-                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 flex flex-col gap-0.5"
+                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-[#E2E8F0] hover:bg-sky-50 dark:bg-sky-900/20 hover:text-sky-700 dark:text-sky-400 flex flex-col gap-0.5"
                                                                     >
                                                                         <span className="font-semibold">Exclude (Non-Injury)</span>
-                                                                        <span className="text-[10px] text-slate-400">Travel, suspension, personal leave</span>
+                                                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">Travel, suspension, personal leave</span>
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -1408,7 +1414,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                                         className={`px-3 py-1.5 text-white text-[10px] font-medium rounded-full transition-colors ${player.riskLevel === 'Critical' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-500 hover:bg-amber-600'}`}
                                                     >Intervene</button>
                                                 ) : !player.excluded ? (
-                                                    <ChevronRightIcon size={14} className="text-slate-300" />
+                                                    <ChevronRightIcon size={14} className="text-slate-300 dark:text-[#475569]" />
                                                 ) : null}
                                             </div>
                                         </div>
@@ -1467,22 +1473,22 @@ export const WellnessHubPage: React.FC = () => {
     if (activeSection) {
         return (
             <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between bg-white px-5 py-3.5 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all">
+                        <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all">
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Wellness Hub</div>
-                            <h2 className="text-base font-semibold text-slate-900">{activeSection}</h2>
+                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Wellness Hub</div>
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeSection}</h2>
                         </div>
                     </div>
                 </div>
                 <div className="min-h-[600px] relative">
                     {isLoading && (
-                        <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
-                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400">Loading {activeSection.toLowerCase()}...</span>
+                        <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
+                            <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {activeSection.toLowerCase()}...</span>
                         </div>
                     )}
                     {activeSection === 'Questionnaire Data' && <WellnessHub initialTeamId={urlTeamId} />}
@@ -1497,42 +1503,42 @@ export const WellnessHubPage: React.FC = () => {
 
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
-            <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900">Wellness Hub</h2>
-                <p className="text-sm text-slate-500 mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
+            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness Hub</h2>
+                <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
             </div>
             {isLoading ? (
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-[150px] flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-slate-100 animate-pulse shrink-0" />
+                            <div key={i} className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm h-[150px] flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-[#1A2D48] animate-pulse shrink-0" />
                                 <div className="flex-1 space-y-2 py-1">
-                                    <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
-                                    <div className="h-3 w-full bg-slate-50 rounded animate-pulse" />
-                                    <div className="h-3 w-2/3 bg-slate-50 rounded animate-pulse" />
+                                    <div className="h-4 w-32 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
+                                    <div className="h-3 w-full bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
+                                    <div className="h-3 w-2/3 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="flex flex-col items-center py-3">
-                        <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                        <span className="text-xs font-medium text-slate-400">Loading wellness data...</span>
+                        <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading wellness data...</span>
                     </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {SECTIONS.map((section, i) => (
                         <button key={i} onClick={() => setActiveSection(section.title)}
-                            className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group flex flex-col text-left h-[150px]"
+                            className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                         >
                             <div className="flex items-start gap-4 h-full">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                     <section.icon size={20} />
                                 </div>
                                 <div className="flex flex-col justify-center h-full">
-                                    <h3 className="text-base font-semibold text-slate-900 mb-1 leading-tight">{section.title}</h3>
-                                    <p className="text-xs text-slate-500 leading-relaxed">{section.desc}</p>
+                                    <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1 leading-tight">{section.title}</h3>
+                                    <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{section.desc}</p>
                                 </div>
                             </div>
                         </button>

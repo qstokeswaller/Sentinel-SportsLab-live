@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
+import { CustomSelect } from '../ui/CustomSelect';
 import { getTestById, ALL_TESTS } from '../../utils/testRegistry';
 import {
     DownloadIcon, PrinterIcon, CalendarIcon, UsersIcon, FilterIcon,
@@ -149,14 +150,14 @@ export const TestSessionExport: React.FC = () => {
                         <label className="block text-xs font-medium text-slate-600 mb-1">
                             <UsersIcon size={12} className="inline mr-1" />Team
                         </label>
-                        <select
+                        <CustomSelect
+                            variant="form"
                             value={selectedTeamId}
                             onChange={e => { setSelectedTeamId(e.target.value); setLoaded(false); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none bg-white"
                         >
                             <option value="">All Teams</option>
                             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div className="flex items-end">
                         <button
@@ -185,21 +186,21 @@ export const TestSessionExport: React.FC = () => {
                             <button
                                 onClick={exportCSV}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <DownloadIcon size={12} />CSV (Flat)
                             </button>
                             <button
                                 onClick={exportDetailedCSV}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <DownloadIcon size={12} />CSV (Detailed)
                             </button>
                             <button
                                 onClick={() => window.print()}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <PrinterIcon size={12} />Print
                             </button>
@@ -256,7 +257,7 @@ export const TestSessionExport: React.FC = () => {
                                                                     </td>
                                                                 ))}
                                                                 {calcs.map(c => (
-                                                                    <td key={c.key} className="px-2 py-1.5 tabular-nums font-semibold text-indigo-600">
+                                                                    <td key={c.key} className="px-2 py-1.5 tabular-nums font-semibold text-indigo-600 dark:text-indigo-300">
                                                                         {calculated[c.key] ?? <span className="text-slate-300">—</span>}
                                                                     </td>
                                                                 ))}

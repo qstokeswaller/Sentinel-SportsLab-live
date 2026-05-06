@@ -20,7 +20,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-all"
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all"
                     >
                         <XIcon size={18} />
                     </button>
@@ -30,7 +30,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                     {watchlistItems.map((item, i) => (
                         <div key={i} className="group bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                             <div className="flex justify-between items-start mb-4">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${item.severity === 'Critical' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${item.severity === 'Critical' ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-500' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-500'}`}>
                                     <ActivityIcon size={18} />
                                 </div>
                                 <div className="text-right">
@@ -55,7 +55,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                                 </div>
                             </div>
 
-                            <div className={`flex items-center gap-2 p-3 rounded-lg border ${item.trend === 'up' ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100'}`}>
+                            <div className={`flex items-center gap-2 p-3 rounded-lg border ${item.trend === 'up' ? 'bg-emerald-50/50 border-emerald-100 dark:border-emerald-800/40' : 'bg-rose-50/50 border-rose-100 dark:border-rose-900/40'}`}>
                                 {item.trend === 'up' ? <ArrowUpRightIcon className="text-emerald-500" size={16} /> : <ArrowDownRightIcon className="text-rose-500" size={16} />}
                                 <span className={`text-xs font-medium ${item.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {item.change} {item.trend === 'up' ? 'Increase' : 'Regression'}

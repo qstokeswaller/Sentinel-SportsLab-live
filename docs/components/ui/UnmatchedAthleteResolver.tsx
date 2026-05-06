@@ -14,6 +14,7 @@ import {
     XIcon, UserPlusIcon, UserCheckIcon, SearchIcon,
     ChevronDownIcon, SkipForwardIcon, CheckCircleIcon, AlertTriangleIcon,
 } from 'lucide-react';
+import { CustomSelect } from './CustomSelect';
 
 export interface UnmatchedEntry {
     csvName: string;
@@ -131,7 +132,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                 </p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+                        <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                             <XIcon size={16} className="text-slate-400" />
                         </button>
                     </div>
@@ -147,8 +148,8 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                         return (
                             <div key={entry.csvName} className={`rounded-xl border p-4 transition-all ${
                                 isResolved
-                                    ? r.action === 'skip' ? 'border-slate-200 bg-slate-50/50 opacity-60' : 'border-emerald-200 bg-emerald-50/30'
-                                    : 'border-amber-200 bg-amber-50/20'
+                                    ? r.action === 'skip' ? 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40 opacity-60' : 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30'
+                                    : 'border-amber-200 dark:border-amber-800/50 bg-amber-50/20'
                             }`}>
                                 {/* Name + row count */}
                                 <div className="flex items-center justify-between mb-3">
@@ -158,8 +159,8 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                     </div>
                                     {isResolved && (
                                         <span className={`text-[9px] font-semibold uppercase px-2 py-0.5 rounded-full ${
-                                            r.action === 'assign' ? 'bg-emerald-100 text-emerald-600'
-                                            : r.action === 'add' ? 'bg-indigo-100 text-indigo-600'
+                                            r.action === 'assign' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600'
+                                            : r.action === 'add' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600'
                                             : 'bg-slate-100 text-slate-400'
                                         }`}>
                                             {r.action === 'assign' ? 'Assigned' : r.action === 'add' ? 'Will Add' : 'Skipped'}
@@ -178,7 +179,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                                     onClick={() => updateResolution(entry.csvName, { action: 'assign', athleteId: s.id })}
                                                     className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
                                                         r?.action === 'assign' && r.athleteId === s.id
-                                                            ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
+                                                            ? 'border-emerald-300 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
                                                             : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300'
                                                     }`}
                                                 >
@@ -193,13 +194,15 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                 {/* Action buttons */}
                                 <div className="flex items-center gap-2">
                                     {/* Assign to existing (dropdown) */}
-                                    <div className="flex-1 relative">
-                                        <select
+                                    <div className="flex-1">
+                                        <CustomSelect
+                                            variant="filter"
+                                            size="xs"
                                             value={r?.action === 'assign' ? r.athleteId || '' : ''}
                                             onChange={e => {
                                                 if (e.target.value) updateResolution(entry.csvName, { action: 'assign', athleteId: e.target.value });
                                             }}
-                                            className="w-full text-[10px] border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-600 appearance-none pr-6"
+                                            placeholder="Assign to athlete..."
                                         >
                                             <option value="">Assign to athlete...</option>
                                             {teams.filter(t => t.players?.length).map(t => (
@@ -209,23 +212,24 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                                     ))}
                                                 </optgroup>
                                             ))}
-                                        </select>
-                                        <ChevronDownIcon size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                        </CustomSelect>
                                     </div>
 
                                     {/* Add as new */}
-                                    <div className="relative">
-                                        <select
+                                    <div>
+                                        <CustomSelect
+                                            variant="filter"
+                                            size="xs"
                                             value={r?.action === 'add' ? r.teamId || '' : ''}
                                             onChange={e => {
                                                 if (e.target.value) updateResolution(entry.csvName, { action: 'add', teamId: e.target.value });
                                             }}
-                                            className="text-[10px] border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-indigo-600 font-medium appearance-none pr-6 min-w-[100px]"
+                                            placeholder="Add to team..."
+                                            minWidth={100}
                                         >
                                             <option value="">Add to team...</option>
                                             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                        </select>
-                                        <UserPlusIcon size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none" />
+                                        </CustomSelect>
                                     </div>
 
                                     {/* Skip */}
@@ -247,7 +251,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
                     <button onClick={handleSkipAll} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
                         Skip all unmatched
                     </button>

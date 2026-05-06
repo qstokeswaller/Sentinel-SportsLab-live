@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import {
   XIcon, CheckCircle2Icon, ChevronDownIcon, LockIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -185,17 +186,17 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
         {isTeam && (
           <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-3">
             <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Athlete</span>
-            <div className="relative flex-1 max-w-xs">
-              <select
+            <div className="flex-1 max-w-xs">
+              <CustomSelect
+                variant="form"
+                size="xs"
                 value={selectedAthleteId}
                 onChange={(e) => setSelectedAthleteId(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium outline-none appearance-none pr-8 focus:border-indigo-400"
               >
                 {athletes.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
-              </select>
-              <ChevronDownIcon size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </CustomSelect>
             </div>
           </div>
         )}
@@ -238,7 +239,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
                       <td className="py-2.5">
                         {row.fromSheet ? (
                           <div className="relative" title="Weight from 1RM sheet — edit the sheet to change">
-                            <input className={`${inputCls} bg-indigo-50 border-indigo-200 text-indigo-700 pr-7`} value={row.weight || ''} readOnly />
+                            <input className={`${inputCls} bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 pr-7`} value={row.weight || ''} readOnly />
                             <LockIcon size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400" />
                           </div>
                         ) : (
@@ -284,7 +285,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition-all"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-xl text-xs font-semibold transition-all"
               >
                 Cancel
               </button>

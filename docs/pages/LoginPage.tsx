@@ -80,7 +80,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
             <ActivityIcon className="text-white w-4 h-4" />
           </div>
           <span className="font-bold text-slate-900">
-            Sentinel <span className="text-indigo-600">SportsLab</span>
+            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
           </span>
         </div>
 
@@ -186,13 +186,13 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+              <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5">
                 <p className="text-red-600 text-xs font-medium">{error}</p>
               </div>
             )}
             {message && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
-                <p className="text-emerald-700 text-xs font-medium">{message}</p>
+              <div className="bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 rounded-lg px-3 py-2.5">
+                <p className="text-emerald-700 dark:text-emerald-400 text-xs font-medium">{message}</p>
               </div>
             )}
 
@@ -209,7 +209,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
           <div className="mt-5 pt-5 border-t border-slate-100 space-y-2.5 text-center">
             {mode === 'signin' && (
               <>
-                <button onClick={() => switchMode('signup')} className="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors block w-full">
+                <button onClick={() => switchMode('signup')} className="text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 text-sm font-medium transition-colors block w-full">
                   Create a new account
                 </button>
                 <button onClick={() => switchMode('reset')} className="text-slate-500 hover:text-slate-700 text-sm transition-colors block w-full">
@@ -218,7 +218,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
               </>
             )}
             {(mode === 'signup' || mode === 'reset') && (
-              <button onClick={() => switchMode('signin')} className="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors">
+              <button onClick={() => switchMode('signin')} className="text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 text-sm font-medium transition-colors">
                 Back to sign in
               </button>
             )}

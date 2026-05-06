@@ -7,6 +7,7 @@ import {
 import { DatabaseService } from '../../services/databaseService';
 import type { TestDefinition } from '../../utils/testRegistry';
 import { TrendingUpIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface Props {
     test: TestDefinition;
@@ -111,7 +112,7 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                     <h3 className="text-sm font-semibold text-slate-700">Trend</h3>
                     {trend && (
                         <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                            trend.direction === 'up' ? 'bg-emerald-50 text-emerald-600'
+                            trend.direction === 'up' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'
                             : trend.direction === 'down' ? 'bg-red-50 text-red-600'
                             : 'bg-slate-50 text-slate-500'
                         }`}>
@@ -128,17 +129,18 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                     {plottableMetrics.length > 1 && (
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-400">Metric:</span>
-                            <select
+                            <CustomSelect
+                                variant="filter"
+                                size="xs"
                                 value={selectedMetric}
                                 onChange={e => setSelectedMetric(e.target.value)}
-                                className="px-2 py-1 rounded border border-slate-200 text-xs bg-white focus:ring-1 focus:ring-indigo-200 outline-none"
                             >
                                 {plottableMetrics.map(m => (
                                     <option key={m.key} value={m.key}>
                                         {m.label}{m.unit ? ` (${m.unit})` : ''}
                                     </option>
                                 ))}
-                            </select>
+                            </CustomSelect>
                         </div>
                     )}
 

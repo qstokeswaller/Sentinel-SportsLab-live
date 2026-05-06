@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { X, Trash2 } from 'lucide-react';
 import { PHASE_COLOR_PRESETS } from '../../utils/periodizationUtils';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
 const LABEL = 'block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1';
@@ -67,7 +68,7 @@ export const AddPhaseModal = () => {
             <div className="bg-white rounded-xl w-full max-w-md shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <h3 className="text-sm font-bold text-slate-900">{isEditing ? 'Edit Phase' : 'Add Phase'}</h3>
-                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100"><X size={14} className="text-slate-400" /></button>
+                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><X size={14} className="text-slate-400" /></button>
                 </div>
 
                 <div className="p-5 space-y-4">
@@ -78,9 +79,9 @@ export const AddPhaseModal = () => {
 
                     <div>
                         <label className={LABEL}>Training Phase</label>
-                        <select className={INPUT} value={trainingPhase} onChange={e => setTrainingPhase(e.target.value)}>
+                        <CustomSelect value={trainingPhase} onChange={e => setTrainingPhase(e.target.value)} variant="form">
                             {TRAINING_PHASES.map(tp => <option key={tp} value={tp}>{tp}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -106,7 +107,7 @@ export const AddPhaseModal = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
                     {isEditing ? (
                         <button onClick={() => handleDeletePlanPhase(editingPlanPhase.id)}
                             className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors">

@@ -4,6 +4,7 @@ import { SaveIcon, CalculatorIcon, InfoIcon, PaperclipIcon, FileTextIcon, XIcon 
 import type { TestDefinition, TestField } from '../../utils/testRegistry';
 import { NormativeBar } from './NormativeBar';
 import { supabase } from '../../lib/supabase';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface Props {
   test: TestDefinition;
@@ -106,7 +107,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
           </button>
           <button
             onClick={() => setActiveTab('vbt')}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'vbt' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'vbt' ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             VBT Tracking
@@ -131,8 +132,8 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
       {/* VBT form fields */}
       {activeTab === 'vbt' && hasVbt && (
         <div className="space-y-4">
-          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
-            <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide mb-1">Velocity-Based Training</div>
+          <div className="bg-indigo-50/50 border border-indigo-100 dark:border-indigo-800/40 rounded-xl p-4">
+            <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide mb-1">Velocity-Based Training</div>
             <p className="text-xs text-indigo-500/70">Enter the bar velocity from your encoder or sensor. The system will estimate intensity and 1RM from the load-velocity relationship.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -150,8 +151,8 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
 
       {/* VBT calculated metrics */}
       {activeTab === 'vbt' && test.vbtCalculations && test.vbtCalculations.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">
+        <div className="bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide mb-2">
             <CalculatorIcon size={14} />
             VBT Metrics
           </div>
@@ -167,7 +168,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
                 val === 'Near 1RM' ? 'text-rose-600' : 'text-slate-900'
               ) : 'text-slate-900';
               return (
-                <div key={calc.key} className="bg-white rounded-lg border border-indigo-100 p-3">
+                <div key={calc.key} className="bg-white rounded-lg border border-indigo-100 dark:border-indigo-800/40 p-3">
                   <div className="text-[10px] text-indigo-400 uppercase tracking-wide">{calc.label}</div>
                   <div className={`text-lg font-bold ${zoneColor}`}>
                     {val != null ? val : '—'}
@@ -222,16 +223,16 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
       {/* Attachment upload (PDF / document) */}
       <div className="flex items-center gap-3">
         {attachedFile ? (
-          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-lg">
             <FileTextIcon size={14} className="text-indigo-500 shrink-0" />
-            <span className="text-xs font-medium text-indigo-700 truncate max-w-[200px]">{attachedFile.name}</span>
+            <span className="text-xs font-medium text-indigo-700 dark:text-indigo-400 truncate max-w-[200px]">{attachedFile.name}</span>
             <span className="text-[10px] text-indigo-400">{(attachedFile.size / 1024).toFixed(0)}KB</span>
             <button onClick={() => setAttachedFile(null)} className="p-0.5 text-indigo-300 hover:text-rose-500 transition-colors">
               <XIcon size={12} />
             </button>
           </div>
         ) : (
-          <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 hover:border-indigo-300 hover:text-indigo-600 transition-all cursor-pointer">
+          <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all cursor-pointer">
             <PaperclipIcon size={13} />
             Attach Report (PDF)
             <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) setAttachedFile(e.target.files[0]); e.target.value = ''; }} className="hidden" />
@@ -305,16 +306,12 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
       return (
         <div>
           {label}
-          <select
-            value={value ?? ''}
-            onChange={e => onChange(e.target.value || null)}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all bg-white"
-          >
+          <CustomSelect value={value ?? ''} onChange={e => onChange(e.target.value || null)} variant="form" placeholder="— Select —">
             <option value="">— Select —</option>
             {field.options?.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
-          </select>
+          </CustomSelect>
         </div>
       );
 

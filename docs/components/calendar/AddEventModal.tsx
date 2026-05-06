@@ -15,6 +15,7 @@ import {
     Users as UsersIcon,
     User as UserIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ── Constants ────────────────────────────────────────────────────────────
 
@@ -242,7 +243,7 @@ const AddEventModal = () => {
                             <p className="text-[10px] text-slate-400 mt-0.5">Schedule an appointment, meeting, or note</p>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -266,16 +267,16 @@ const AddEventModal = () => {
                     {/* Event Type */}
                     <div>
                         <label className={LABEL}>Event Type <span className="text-red-400">*</span></label>
-                        <select
+                        <CustomSelect
                             value={showCustomTypeForm ? '__add_custom__' : eventType}
                             onChange={e => handleTypeChange(e.target.value)}
-                            className={INPUT + ' appearance-none'}
+                            variant="form"
                         >
                             {allEventTypes.map(t => (
                                 <option key={t.label} value={t.label}>{t.label}</option>
                             ))}
                             <option value="__add_custom__">+ Add custom type...</option>
-                        </select>
+                        </CustomSelect>
 
                         {/* Inline custom type form */}
                         {showCustomTypeForm && (
@@ -303,7 +304,7 @@ const AddEventModal = () => {
                                     <button onClick={handleAddCustomType} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
                                         Save Type
                                     </button>
-                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">
+                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">
                                         Cancel
                                     </button>
                                 </div>
@@ -373,10 +374,11 @@ const AddEventModal = () => {
                         </div>
 
                         {assignType === 'team' && (
-                            <select
+                            <CustomSelect
                                 value={assignId}
                                 onChange={e => setAssignId(e.target.value)}
-                                className={INPUT + ' appearance-none'}
+                                variant="form"
+                                placeholder="Select a team..."
                             >
                                 <option value="">Select a team...</option>
                                 {(teams || [])
@@ -385,7 +387,7 @@ const AddEventModal = () => {
                                     .map((t: any) => (
                                         <option key={t.id} value={t.id}>{t.name}</option>
                                     ))}
-                            </select>
+                            </CustomSelect>
                         )}
 
                         {assignType === 'individual' && (() => {
@@ -405,20 +407,22 @@ const AddEventModal = () => {
                             ).sort((a: any, b: any) => a.name.localeCompare(b.name));
                             return (
                                 <div className="flex flex-col gap-2">
-                                    <select
+                                    <CustomSelect
                                         value={assignTeamFilter}
                                         onChange={e => { setAssignTeamFilter(e.target.value); setAssignId(''); }}
-                                        className={INPUT + ' appearance-none'}
+                                        variant="form"
+                                        placeholder="All teams"
                                     >
                                         <option value="">All teams</option>
                                         {allGroups.map((t: any) => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
-                                    </select>
-                                    <select
+                                    </CustomSelect>
+                                    <CustomSelect
                                         value={assignId}
                                         onChange={e => setAssignId(e.target.value)}
-                                        className={INPUT + ' appearance-none' + (validationErrors.assignId ? ' border-rose-400 ring-1 ring-rose-300' : '')}
+                                        variant="form"
+                                        placeholder="Select an athlete..."
                                     >
                                         <option value="">Select an athlete...</option>
                                         {filteredPlayers.map((p: any) => (
@@ -426,7 +430,7 @@ const AddEventModal = () => {
                                                 {p.name}{!assignTeamFilter && p.teamName ? ` — ${p.teamName}` : ''}
                                             </option>
                                         ))}
-                                    </select>
+                                    </CustomSelect>
                                     {validationErrors.assignId && (
                                         <p className="text-xs text-rose-500">{validationErrors.assignId}</p>
                                     )}
@@ -515,7 +519,7 @@ const AddEventModal = () => {
                             {selectedDates.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {selectedDates.map(d => (
-                                        <span key={d} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700">
+                                        <span key={d} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-xs font-medium text-indigo-700 dark:text-indigo-400">
                                             {formatDateChip(d)}
                                             <button onClick={() => removeSelectedDate(d)} className="text-indigo-400 hover:text-red-500 transition-colors">
                                                 <XIcon size={12} />
@@ -567,7 +571,7 @@ const AddEventModal = () => {
                 <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
                     <button
                         onClick={handleClose}
-                        className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+                        className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                     >
                         Cancel
                     </button>

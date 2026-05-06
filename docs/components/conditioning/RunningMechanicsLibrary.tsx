@@ -130,7 +130,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
                             ref={fileRef}
                             type="file"
                             accept="application/pdf"
-                            className="w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                            className="w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:bg-indigo-900/25 file:text-indigo-600 dark:text-indigo-300 hover:file:bg-indigo-100 dark:bg-indigo-900/35"
                         />
                     </div>
                     <div className="flex gap-2 pt-1">
@@ -164,7 +164,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
                     {docs.map(doc => (
                         <div
                             key={doc.id}
-                            className="bg-white border border-slate-200 rounded-xl px-4 py-3.5 flex items-center justify-between hover:shadow-sm hover:border-indigo-200 transition-all group"
+                            className="bg-white border border-slate-200 rounded-xl px-4 py-3.5 flex items-center justify-between hover:shadow-sm hover:border-indigo-200 dark:border-indigo-800/50 transition-all group"
                         >
                             <div
                                 className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
@@ -174,7 +174,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
                                     <FileTextIcon size={16} className="text-red-500" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                                    <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">
                                         {doc.title}
                                     </h4>
                                     <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-0.5">

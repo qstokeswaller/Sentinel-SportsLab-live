@@ -96,7 +96,7 @@ export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName
                     {hasMore && (
                         <button
                             onClick={() => setLimit(prev => prev + 10)}
-                            className="w-full text-xs text-indigo-500 hover:text-indigo-700 py-2 font-medium transition-colors"
+                            className="w-full text-xs text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 py-2 font-medium transition-colors"
                         >
                             Show more ({results.length - limit} remaining)
                         </button>

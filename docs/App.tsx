@@ -9,6 +9,7 @@ import ImportResolverModal from './components/performance/ImportResolverModal';
 import WattbikeMapCalculator from './components/performance/WattbikeMapCalculator';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
+import { CustomSelect } from './components/ui/CustomSelect';
 // Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
 const DashboardPage      = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const RosterPage         = lazy(() => import('./pages/RosterPage').then(m => ({ default: m.RosterPage })));
@@ -243,18 +244,18 @@ const AddAthleteModal = () => {
                             </span>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Mode toggle */}
                 <div className="px-5 pt-4">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg">
                         <button onClick={() => { setAddAthleteMode('athlete'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                             Athlete
                         </button>
                         <button onClick={() => { setAddAthleteMode('team'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                             Team
                         </button>
                     </div>
@@ -282,10 +283,10 @@ const AddAthleteModal = () => {
                             </div>
                             <div className="space-y-1.5">
                                 <label className={LABEL}>Assign to Team</label>
-                                <select value={newAthleteTeam} onChange={e => setNewAthleteTeam(e.target.value)} className={INPUT}>
+                                <CustomSelect value={newAthleteTeam} onChange={e => setNewAthleteTeam(e.target.value)}>
                                     <option value="">Individual (Private Client)</option>
                                     {teams.filter(t => t.id !== 't_private').map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                </select>
+                                </CustomSelect>
                             </div>
                         </div>
                     )}
@@ -302,12 +303,12 @@ const AddAthleteModal = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className={LABEL}>Gender</label>
-                                    <select value={newAthleteProfile.gender} onChange={e => setProfile('gender', e.target.value)} className={INPUT}>
+                                    <CustomSelect value={newAthleteProfile.gender} onChange={e => setProfile('gender', e.target.value)}>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
                                         <option value="">Prefer not to say</option>
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className={LABEL}>Height (cm)</label>
@@ -352,12 +353,12 @@ const AddAthleteModal = () => {
 
                 {/* Footer */}
                 <div className="px-5 py-4 border-t border-slate-100 bg-white flex justify-between items-center gap-3 shrink-0">
-                    <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 transition-colors">
+                    <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         Cancel
                     </button>
                     <div className="flex gap-2">
                         {addAthleteMode === 'athlete' && step === 2 && (
-                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
@@ -373,7 +374,7 @@ const AddAthleteModal = () => {
                                     <button
                                         onClick={handleAddAndNext}
                                         disabled={addingNext}
-                                        className="px-5 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                        className="px-5 py-2 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-full text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 transition-colors flex items-center gap-2 disabled:opacity-50"
                                     >
                                         <UserPlusIcon size={14} /> Add &amp; Next
                                     </button>
@@ -604,21 +605,21 @@ table { width: 100%; border-collapse: collapse; }
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0"><PrinterIcon size={16} /></div>
                         <h3 className="text-base font-semibold text-slate-900">Weightroom Sheets</h3>
                     </div>
-                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/30">
+                <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/30 dark:bg-[#0F1C30]/30">
                     {/* Top Controls */}
                     <div className="p-5 border-b border-slate-100 bg-white">
                         <div className="flex items-start gap-5 flex-wrap">
                             {/* Target Squad */}
                             <div className="space-y-1.5 min-w-[180px]">
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Target Squad</label>
-                                <select value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-slate-400 transition-colors">
+                                <CustomSelect value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)}>
                                     <option value="All">All Athletes</option>
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                </select>
+                                </CustomSelect>
                             </div>
 
                             {/* Sheet Mode */}
@@ -689,7 +690,7 @@ table { width: 100%; border-collapse: collapse; }
                                             {athletes.length === 0 ? (
                                                 <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes in selected squad</td></tr>
                                             ) : athletes.map(a => (
-                                                <tr key={a.id} className="hover:bg-slate-50">
+                                                <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
                                                     <td className="px-3 py-2 font-semibold text-slate-800 uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
                                                     {wsColumns.map(col => (
                                                         <td key={col.id} className="px-3 py-2 text-slate-600 border border-slate-200 text-center min-w-[80px]">
@@ -727,7 +728,7 @@ table { width: 100%; border-collapse: collapse; }
                                 </div>
                                 <button
                                     onClick={handlePrint}
-                                    className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                                    className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
                                 >
                                     <PrinterIcon size={14} /> Print Sheet
                                 </button>
@@ -754,16 +755,17 @@ table { width: 100%; border-collapse: collapse; }
                                             )}
                                             {wsMode === 'advanced' && (
                                                 <>
-                                                    <select
+                                                    <CustomSelect
                                                         value={col.exerciseId}
                                                         onChange={(e) => updateColumn(col.id, 'exerciseId', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
+                                                        size="xs"
+                                                        placeholder="Select Exercise"
                                                     >
                                                         <option value="">Select Exercise</option>
                                                         {trackableExercises.map(ex => (
                                                             <option key={ex.id} value={ex.id}>{ex.name}</option>
                                                         ))}
-                                                    </select>
+                                                    </CustomSelect>
                                                     <div className="flex items-center gap-1.5">
                                                         <input
                                                             type="number"
@@ -816,7 +818,7 @@ const AddSessionModal = () => {
                             <p className="text-xs text-slate-500">Quick schedule</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsAddSessionModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsAddSessionModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* TAB SWITCHER */}
@@ -861,15 +863,14 @@ const AddSessionModal = () => {
                                 </div>
                                 <div>
                                     <label className={LABEL}>Phase</label>
-                                    <select
+                                    <CustomSelect
                                         value={newSession.trainingPhase}
                                         onChange={(e) => setNewSession({ ...newSession, trainingPhase: e.target.value })}
-                                        className={INPUT + " appearance-none"}
                                     >
                                         {['Strength', 'Power', 'Hypertrophy', 'Speed', 'Conditioning', 'Recovery', 'Technical', 'GPP'].map(p => (
                                             <option key={p} value={p}>{p}</option>
                                         ))}
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                             </div>
 
@@ -890,10 +891,10 @@ const AddSessionModal = () => {
                                 </div>
                                 <div>
                                     <label className={LABEL}>Target</label>
-                                    <select
+                                    <CustomSelect
                                         value={newSession.targetId}
                                         onChange={(e) => setNewSession({ ...newSession, targetId: e.target.value })}
-                                        className={INPUT + " appearance-none"}
+                                        placeholder={`Select ${newSession.targetType}`}
                                     >
                                         <option value="" disabled>Select {newSession.targetType}</option>
                                         {newSession.targetType === 'Team' ? (
@@ -901,7 +902,7 @@ const AddSessionModal = () => {
                                         ) : (
                                             teams.flatMap(t => t.players).map(p => <option key={p.id} value={p.id}>{p.name}</option>)
                                         )}
-                                    </select>
+                                    </CustomSelect>
                                 </div>
                             </div>
 
@@ -913,7 +914,7 @@ const AddSessionModal = () => {
                                             key={l}
                                             onClick={() => setNewSession({ ...newSession, load: l })}
                                             className={`py-2.5 rounded-lg border-2 text-xs font-medium transition-all ${newSession.load === l
-                                                ? (l === 'High' ? 'bg-rose-50 border-rose-400 text-rose-600' : l === 'Medium' ? 'bg-amber-50 border-amber-400 text-amber-600' : 'bg-emerald-50 border-emerald-400 text-emerald-600')
+                                                ? (l === 'High' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-400 text-rose-600' : l === 'Medium' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 text-amber-600' : 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-400 text-emerald-600')
                                                 : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
                                                 }`}
                                         >
@@ -937,17 +938,17 @@ const AddSessionModal = () => {
                                         onChange={(e) => setAddSessionSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="relative w-28">
-                                    <FilterIcon size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    <select
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-2 py-2.5 text-xs outline-none appearance-none"
-                                        value={addSessionCategory}
-                                        onChange={(e) => setAddSessionCategory(e.target.value)}
-                                    >
-                                        <option>All</option>
-                                        {exerciseCategories.map(c => <option key={c}>{c}</option>)}
-                                    </select>
-                                </div>
+                                <CustomSelect
+                                    value={addSessionCategory}
+                                    onChange={(e) => setAddSessionCategory(e.target.value)}
+                                    variant="filter"
+                                    size="sm"
+                                    prefixIcon={<FilterIcon size={13} />}
+                                    minWidth="112px"
+                                >
+                                    <option>All</option>
+                                    {exerciseCategories.map(c => <option key={c}>{c}</option>)}
+                                </CustomSelect>
                             </div>
 
                             {/* EXERCISE LIST */}
@@ -962,7 +963,7 @@ const AddSessionModal = () => {
                                         const selectedEx = newSession.exercises.find(e => e.id === ex.id);
                                         const isSelected = !!selectedEx;
                                         return (
-                                            <div key={ex.id} className={`p-3.5 rounded-lg border transition-all ${isSelected ? 'bg-slate-50 border-indigo-200 ring-1 ring-indigo-500/10' : 'bg-white border-slate-200'}`}>
+                                            <div key={ex.id} className={`p-3.5 rounded-lg border transition-all ${isSelected ? 'bg-slate-50 border-indigo-200 dark:border-indigo-800/50 ring-1 ring-indigo-500/10' : 'bg-white border-slate-200'}`}>
                                                 <div className="flex items-center justify-between mb-2.5">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
@@ -980,7 +981,7 @@ const AddSessionModal = () => {
                                                                 : [...newSession.exercises, { id: ex.id, name: ex.name, sets: 3, reps: '10', weight: '-', rpe: 8, notes: '' }];
                                                             setNewSession({ ...newSession, exercises: newExList });
                                                         }}
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                                     >
                                                         {isSelected ? 'Selected' : 'Add'}
                                                     </button>
@@ -1015,7 +1016,7 @@ const AddSessionModal = () => {
                                                             <button onClick={() => {
                                                                 const updated = newSession.exercises.filter(item => item.id !== ex.id);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-rose-50 text-rose-500 border border-rose-100 rounded-md py-1.5 text-[9px] font-medium hover:bg-rose-100">Remove</button>
+                                                            }} className="w-full bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-900/40 rounded-md py-1.5 text-[9px] font-medium hover:bg-rose-100">Remove</button>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1027,7 +1028,7 @@ const AddSessionModal = () => {
                     )}
                 </div>
                 <div className="px-5 py-4 border-t border-slate-100 bg-white flex gap-3">
-                    <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Cancel</button>
+                    <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
                     <button
                         onClick={handleAddSession}
                         className="flex-1 py-2.5 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors"
@@ -1053,7 +1054,7 @@ const SessionModal = () => {
     if (!viewingSession) return null;
 
     const targetName = resolveTargetName(viewingSession.targetId, viewingSession.targetType);
-    const loadColor = viewingSession.load === 'High' ? 'text-rose-600 bg-rose-50 border-rose-100' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100';
+    const loadColor = viewingSession.load === 'High' ? 'text-rose-600 bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40' : viewingSession.load === 'Medium' ? 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40' : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40';
     const dateStr = new Date(viewingSession.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const sessionType = viewingSession.session_type || 'workout';
@@ -1097,7 +1098,7 @@ const SessionModal = () => {
                             <p className="text-xs text-slate-400 mt-0.5">{typeLabel}</p>
                         </div>
                     </div>
-                    <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Details */}
@@ -1109,10 +1110,10 @@ const SessionModal = () => {
                         )}
                         <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${loadColor}`}>{viewingSession.load} Load</span>
                         {viewingSession.trainingPhase && (
-                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
+                            <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
                         )}
                         {viewingSession.status === 'Completed' && (
-                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-md text-xs font-semibold">Completed</span>
+                            <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-semibold">Completed</span>
                         )}
                     </div>
 
@@ -1158,18 +1159,18 @@ const SessionModal = () => {
 
                     {/* Session-type specific details */}
                     {isWattbike && viewingSession.exercises?.meta && (
-                        <div className="bg-emerald-50 rounded-lg border border-emerald-100 p-3 space-y-1">
-                            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">Wattbike Protocol</span>
-                            <div className="flex items-center gap-3 text-xs text-emerald-700">
+                        <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-lg border border-emerald-100 dark:border-emerald-800/40 p-3 space-y-1">
+                            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Wattbike Protocol</span>
+                            <div className="flex items-center gap-3 text-xs text-emerald-700 dark:text-emerald-400">
                                 {viewingSession.exercises.meta.type && <span className="font-medium">{viewingSession.exercises.meta.type}</span>}
                                 {viewingSession.exercises.meta.duration && <span>· {viewingSession.exercises.meta.duration}</span>}
                             </div>
                         </div>
                     )}
                     {isConditioning && viewingSession.exercises?.meta && (
-                        <div className="bg-amber-50 rounded-lg border border-amber-100 p-3 space-y-1">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800/40 p-3 space-y-1">
                             <span className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide">Conditioning Protocol</span>
-                            <div className="flex items-center gap-3 text-xs text-amber-700">
+                            <div className="flex items-center gap-3 text-xs text-amber-700 dark:text-amber-400">
                                 {viewingSession.exercises.meta.modality && <span className="font-medium">{viewingSession.exercises.meta.modality}</span>}
                                 {viewingSession.exercises.meta.energySystem && <span>· {viewingSession.exercises.meta.energySystem}</span>}
                                 {viewingSession.exercises.meta.totalDuration && <span>· {viewingSession.exercises.meta.totalDuration}</span>}
@@ -1183,9 +1184,9 @@ const SessionModal = () => {
                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Linked Sessions</span>
                             <div className="flex flex-wrap gap-2">
                                 {linkedSessions.map(l => {
-                                    const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 text-emerald-700'
+                                    const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
                                         : l.source === 'conditioning' ? 'bg-amber-100 text-amber-700'
-                                        : l.source === 'workout-template' ? 'bg-indigo-100 text-indigo-700'
+                                        : l.source === 'workout-template' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700'
                                         : 'bg-slate-100 text-slate-600';
                                     const srcIcon = l.source === 'wattbike' ? <ActivityIcon size={10} />
                                         : l.source === 'conditioning' ? <TimerIcon size={10} />
@@ -1206,8 +1207,8 @@ const SessionModal = () => {
                 {/* Footer */}
                 <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">Close</button>
-                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 hover:bg-rose-50 rounded-lg text-sm font-medium transition-colors">
+                        <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">Close</button>
+                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg text-sm font-medium transition-colors">
                             <Trash2Icon size={14} /> Delete
                         </button>
                     </div>
@@ -1255,10 +1256,10 @@ const AthleteProfileModal = () => {
     if (acwrEnabled) {
         try {
             acwrValue = calculateACWR(p.id);
-            if (acwrValue < 0.8) { acwrZone = 'Underexposed'; acwrColor = 'text-sky-600 bg-sky-50 border-sky-200'; }
-            else if (acwrValue <= 1.3) { acwrZone = 'Optimal'; acwrColor = 'text-emerald-600 bg-emerald-50 border-emerald-200'; }
-            else if (acwrValue <= 1.5) { acwrZone = 'Caution'; acwrColor = 'text-amber-600 bg-amber-50 border-amber-200'; }
-            else { acwrZone = 'Danger'; acwrColor = 'text-rose-600 bg-rose-50 border-rose-200'; }
+            if (acwrValue < 0.8) { acwrZone = 'Underexposed'; acwrColor = 'text-sky-600 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50'; }
+            else if (acwrValue <= 1.3) { acwrZone = 'Optimal'; acwrColor = 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50'; }
+            else if (acwrValue <= 1.5) { acwrZone = 'Caution'; acwrColor = 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'; }
+            else { acwrZone = 'Danger'; acwrColor = 'text-rose-600 bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50'; }
         } catch { acwrValue = null; }
     }
 
@@ -1359,25 +1360,25 @@ const AthleteProfileModal = () => {
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 {playerTeam && <span className="text-[10px] text-slate-400">{playerTeam.name}</span>}
                                 {p.sport && <span className="text-[10px] text-slate-400">· {p.sport}</span>}
-                                {p.position && <span className="text-[10px] bg-indigo-50 text-indigo-600 font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
+                                {p.position && <span className="text-[10px] bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-100 transition-colors">
+                    <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>
 
                 {/* ── Status bar (only shows if data exists) ── */}
                 {(acwrValue != null || currentInjuries.length > 0 || latestWellness) && (
-                    <div className="px-5 py-2.5 border-b border-slate-100 flex items-center gap-2 flex-wrap bg-slate-50/50">
+                    <div className="px-5 py-2.5 border-b border-slate-100 flex items-center gap-2 flex-wrap bg-slate-50/50 dark:bg-[#132338]/40">
                         {acwrValue != null && (
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${acwrColor}`}>
                                 ACWR {acwrValue} · {acwrZone}
                             </span>
                         )}
                         {currentInjuries.length > 0 && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-900/20 text-rose-600">
                                 {currentInjuries.length} Active Injur{currentInjuries.length > 1 ? 'ies' : 'y'}
                             </span>
                         )}
@@ -1437,9 +1438,9 @@ const AthleteProfileModal = () => {
                         {currentInjuries.length > 0 ? (
                             <div className="space-y-1.5">
                                 {currentInjuries.slice(0, 3).map((inj, i) => (
-                                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-rose-50 border border-rose-100 rounded-lg">
+                                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/40 rounded-lg">
                                         <div>
-                                            <span className="text-xs font-medium text-rose-700">{inj.body_area || inj.area || 'Injury'}</span>
+                                            <span className="text-xs font-medium text-rose-700 dark:text-rose-400">{inj.body_area || inj.area || 'Injury'}</span>
                                             {inj.severity && <span className="text-[10px] text-rose-400 ml-2">Severity: {inj.severity}</span>}
                                         </div>
                                         {inj.date && <span className="text-[10px] text-rose-400">{inj.date}</span>}
@@ -1471,7 +1472,7 @@ const AthleteProfileModal = () => {
                         {(p.goals || p.notes) ? (
                             <>
                                 {p.goals && (
-                                    <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 mb-2">
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/25 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800/40 mb-2">
                                         <div className="text-[10px] font-medium text-indigo-500 mb-1">Training Goals</div>
                                         <p className="text-xs text-slate-700 leading-relaxed">{p.goals}</p>
                                     </div>
@@ -1511,7 +1512,7 @@ const ACWRDetailModal = () => {
                             <div className={`px-3 py-1.5 rounded-lg ${status.bgColor} border ${status.color.replace('text-', 'border-')}`}>
                                 <span className={`text-sm font-semibold ${status.color}`}>{status.status}</span>
                             </div>
-                            <button onClick={() => setAcwrDetailAthlete(null)} className="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center transition-colors">
+                            <button onClick={() => setAcwrDetailAthlete(null)} className="w-9 h-9 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg flex items-center justify-center transition-colors">
                                 <XIcon size={16} />
                             </button>
                         </div>

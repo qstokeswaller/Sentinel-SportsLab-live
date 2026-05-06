@@ -2,6 +2,7 @@
 import React from 'react';
 import { XIcon, CheckCircle2Icon, AlertTriangleIcon } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const ImportResolverModal = () => {
     const {
@@ -22,7 +23,7 @@ const ImportResolverModal = () => {
             <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                     <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900">Import Resolution</h3>
-                    <button onClick={() => setIsImportResolverOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                    <button onClick={() => setIsImportResolverOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors">
                         <XIcon size={20} />
                     </button>
                 </div>
@@ -46,24 +47,27 @@ const ImportResolverModal = () => {
                                         {item.data.exerciseLabel && <span className="text-[10px] text-slate-400 ml-2">({item.data.exerciseLabel})</span>}
                                     </td>
                                     <td className="p-4">
-                                        {item.status === 'matched' && <span className="text-emerald-600 font-bold flex items-center gap-1"><CheckCircle2Icon size={14} /> Matched</span>}
+                                        {item.status === 'matched' && <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1"><CheckCircle2Icon size={14} /> Matched</span>}
                                         {item.status === 'conflict' && <span className="text-orange-600 font-bold flex items-center gap-1"><AlertTriangleIcon size={14} /> Unmatched</span>}
                                     </td>
                                     <td className="p-4">
-                                        <select
-                                            className={`bg-white border rounded-lg px-3 py-2 outline-none font-bold w-full max-w-[200px] ${item.status === 'conflict' ? 'border-orange-200 ring-2 ring-orange-100' : 'border-slate-200'}`}
+                                        <CustomSelect
+                                            variant="form"
+                                            size="sm"
                                             value={item.matchedId}
                                             onChange={(e) => {
                                                 const newStaging = [...importStaging];
                                                 newStaging[idx].matchedId = e.target.value;
                                                 setImportStaging(newStaging);
                                             }}
+                                            placeholder="-- Select Action --"
+                                            minWidth={200}
                                         >
                                             <option value="">-- Select Action --</option>
                                             <optgroup label="Map to Existing">
                                                 {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                             </optgroup>
-                                        </select>
+                                        </CustomSelect>
                                     </td>
                                 </tr>
                             ))}
@@ -78,7 +82,7 @@ const ImportResolverModal = () => {
                     </table>
                 </div>
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                    <button onClick={() => setIsImportResolverOpen(false)} className="px-6 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-200 uppercase tracking-wider text-xs transition-colors">Cancel</button>
+                    <button onClick={() => setIsImportResolverOpen(false)} className="px-6 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] uppercase tracking-wider text-xs transition-colors">Cancel</button>
                     <button onClick={handleCommitImport} disabled={importStaging.length === 0} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold uppercase tracking-wide text-xs shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Commit Import</button>
                 </div>
             </div>

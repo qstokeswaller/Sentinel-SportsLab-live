@@ -32,18 +32,18 @@ export const ExerciseInfoModal = ({ exercise, isOpen, onClose }: ExerciseInfoMod
             <h2 className="text-lg font-semibold text-slate-900 leading-tight">{exercise.name}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               {exercise.body_parts?.[0] && (
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-semibold border border-emerald-100">
+                <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 rounded text-[10px] font-semibold border border-emerald-100 dark:border-emerald-800/40">
                   {exercise.body_parts[0]}
                 </span>
               )}
               {(exercise.categories || []).map((cat: string) => (
-                <span key={cat} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-semibold border border-indigo-100">
+                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40">
                   {cat}
                 </span>
               ))}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors shrink-0">
+          <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0">
             <XIcon size={16} />
           </button>
         </div>
@@ -94,13 +94,13 @@ export const ExerciseInfoModal = ({ exercise, isOpen, onClose }: ExerciseInfoMod
             <div className="flex gap-2">
               {exercise.video_url && (
                 <a href={exercise.video_url} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition-colors border border-red-100">
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition-colors border border-red-100 dark:border-red-900/40">
                   <PlayCircleIcon size={14} /> Watch Demo
                 </a>
               )}
               {opts.longVideoUrl && (
                 <a href={opts.longVideoUrl} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition-colors border border-slate-200">
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-600 rounded-lg text-xs font-semibold transition-colors border border-slate-200">
                   <PlayCircleIcon size={14} /> Extended Video
                 </a>
               )}

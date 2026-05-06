@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
 import { buildMaxLookup, getSheetCellValue, roundTo2_5 } from '../utils/weightroomUtils';
+import { CustomSelect } from '../components/ui/CustomSelect';
 import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
@@ -120,38 +121,38 @@ table { width: 100%; border-collapse: collapse; }
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
             {/* Header */}
-            <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-all" title="Back to Workouts">
+                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] transition-all" title="Back to Workouts">
                             <ArrowLeftIcon size={18} />
                         </button>
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0">
                             <PrinterIcon size={16} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-900">Weightroom Sheets</h2>
-                            <p className="text-[10px] text-slate-400 mt-0.5">Generate daily prescribed load sheets for your squads</p>
+                            <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h2>
+                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Generate daily prescribed load sheets for your squads</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Top Controls */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                 <div className="flex items-start gap-5 flex-wrap">
                     {/* Target Squad */}
                     <div className="space-y-1.5 min-w-[180px]">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Target Squad</label>
-                        <select value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-slate-400 transition-colors">
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Target Squad</label>
+                        <CustomSelect value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)} variant="form">
                             <option value="All">All Athletes</option>
                             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
 
                     {/* Sheet Mode */}
                     <div className="space-y-1.5 flex-1">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Sheet Mode</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Sheet Mode</label>
                         <div className="grid grid-cols-4 gap-1.5">
                             {WS_MODES.map(m => (
                                 <button
@@ -160,7 +161,7 @@ table { width: 100%; border-collapse: collapse; }
                                     className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
                                         wsMode === m.id
                                             ? 'bg-slate-900 text-white border-slate-900'
-                                            : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600'
+                                            : 'bg-white dark:bg-[#132338] text-slate-400 dark:text-[#64748B] border-slate-200 dark:border-[#243A58] hover:border-slate-300 hover:text-slate-600'
                                     }`}
                                 >
                                     {m.label}
@@ -186,18 +187,18 @@ table { width: 100%; border-collapse: collapse; }
             <div className="flex gap-4 items-start">
                 {/* Left: Live Preview */}
                 <div className="flex-1 min-w-0">
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                        <div className="border border-dashed border-slate-200 rounded-xl bg-white p-5">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
+                        <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-5">
                             <div className="flex items-center justify-between mb-4">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">
                                     Live Print Preview ({wsOrientation})
                                 </p>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                                <p className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-widest">
                                     {athletes.length} Athletes Listed
                                 </p>
                             </div>
 
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest text-center mb-1">
+                            <h2 className="text-sm font-black text-slate-900 dark:text-[#E2E8F0] uppercase tracking-widest text-center mb-1">
                                 Weight Training - Record Sheet
                             </h2>
                             <div className="w-40 h-0.5 bg-slate-900 mx-auto mb-4" />
@@ -219,28 +220,28 @@ table { width: 100%; border-collapse: collapse; }
                                             <>
                                                 {[1, 2, 3, 4, 5].map(i => (
                                                     <tr key={i}>
-                                                        <td className="px-3 py-2 border border-slate-200"><div className="h-4 w-24 bg-slate-100 rounded animate-pulse" /></td>
+                                                        <td className="px-3 py-2 border border-slate-200 dark:border-[#243A58]"><div className="h-4 w-24 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" /></td>
                                                         {wsColumns.map(col => (
-                                                            <td key={col.id} className="px-3 py-2 border border-slate-200 text-center"><div className="h-4 w-12 bg-slate-50 rounded animate-pulse mx-auto" /></td>
+                                                            <td key={col.id} className="px-3 py-2 border border-slate-200 dark:border-[#243A58] text-center"><div className="h-4 w-12 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse mx-auto" /></td>
                                                         ))}
                                                     </tr>
                                                 ))}
                                                 <tr>
                                                     <td colSpan={wsColumns.length + 1} className="py-4 text-center">
                                                         <div className="flex items-center justify-center gap-2">
-                                                            <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                                                            <span className="text-xs font-medium text-slate-400">Loading athlete data...</span>
+                                                            <div className="w-5 h-5 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
+                                                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading athlete data...</span>
                                                         </div>
                                                     </td>
                                                 </tr>
                                             </>
                                         ) : athletes.length === 0 ? (
-                                            <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes in selected squad</td></tr>
+                                            <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 dark:text-[#475569] text-xs">No athletes in selected squad</td></tr>
                                         ) : athletes.map(a => (
-                                            <tr key={a.id} className="hover:bg-slate-50">
-                                                <td className="px-3 py-2 font-semibold text-slate-800 uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                            <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 dark:border-[#243A58] whitespace-nowrap">{a.name}</td>
                                                 {wsColumns.map(col => (
-                                                    <td key={col.id} className="px-3 py-2 text-slate-600 border border-slate-200 text-center min-w-[80px]">
+                                                    <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] text-center min-w-[80px]">
                                                         {getCellValue(col, a) || <span className="text-slate-200">&nbsp;</span>}
                                                     </td>
                                                 ))}
@@ -276,21 +277,21 @@ table { width: 100%; border-collapse: collapse; }
                         </div>
                         <button
                             onClick={handlePrint}
-                            className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                            className="w-full py-3 bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
                         >
                             <PrinterIcon size={14} /> Print Sheet
                         </button>
                     </div>
 
                     {/* Active Columns */}
-                    <div className="border border-slate-200 rounded-xl bg-white p-4 space-y-3 shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
+                    <div className="border border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-4 space-y-3 shadow-sm">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
                         <div className="space-y-2.5 max-h-[400px] overflow-y-auto no-scrollbar">
                             {wsColumns.map((col, i) => (
-                                <div key={col.id} className="border border-slate-100 rounded-lg p-3 space-y-2">
+                                <div key={col.id} className="border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Column {i + 1}</span>
-                                        <button onClick={() => removeColumn(col.id)} className="text-slate-300 hover:text-red-400 transition-colors"><Trash2Icon size={13} /></button>
+                                        <button onClick={() => removeColumn(col.id)} className="text-slate-300 dark:text-[#475569] hover:text-red-400 transition-colors"><Trash2Icon size={13} /></button>
                                     </div>
                                     {wsMode !== 'empty-header' && (
                                         <input
@@ -298,30 +299,32 @@ table { width: 100%; border-collapse: collapse; }
                                             value={col.label}
                                             onChange={(e) => updateColumn(col.id, 'label', e.target.value)}
                                             placeholder={`Exercise ${i + 1}`}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
+                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
                                         />
                                     )}
                                     {wsMode === 'advanced' && (
                                         <>
-                                            <select
+                                            <CustomSelect
                                                 value={col.exerciseId}
                                                 onChange={(e) => updateColumn(col.id, 'exerciseId', e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
+                                                variant="form"
+                                                size="xs"
+                                                placeholder="Select Exercise"
                                             >
                                                 <option value="">Select Exercise</option>
                                                 {trackableExercises.map(ex => (
                                                     <option key={ex.id} value={ex.id}>{ex.name}</option>
                                                 ))}
-                                            </select>
+                                            </CustomSelect>
                                             <div className="flex items-center gap-1.5">
                                                 <input
                                                     type="number"
                                                     value={col.percentage}
                                                     onChange={(e) => updateColumn(col.id, 'percentage', Number(e.target.value) || 100)}
                                                     min={1} max={200}
-                                                    className="w-16 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-xs outline-none text-center focus:border-slate-400"
+                                                    className="w-16 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center focus:border-slate-400"
                                                 />
-                                                <span className="text-[10px] text-slate-400 font-medium">% of 1RM</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] font-medium">% of 1RM</span>
                                             </div>
                                         </>
                                     )}

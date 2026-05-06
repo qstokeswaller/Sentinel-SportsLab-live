@@ -102,7 +102,7 @@ const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 1
                     {athletes.map((athlete, idx) => {
                         const athleteData = heatData.get(athlete.id);
                         return (
-                            <tr key={athlete.id} className={idx % 2 === 0 ? '' : 'bg-slate-50/30'}>
+                            <tr key={athlete.id} className={idx % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}>
                                 <td className="sticky left-0 bg-white z-10 px-3 py-1.5 font-medium text-slate-700 truncate max-w-[128px]">
                                     {athlete.name}
                                 </td>

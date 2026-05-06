@@ -69,11 +69,11 @@ export const PROTOCOL_CATEGORIES = [
 ] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Return to Play': 'bg-red-50 text-red-600 border-red-100',
-    'Screening': 'bg-blue-50 text-blue-600 border-blue-100',
-    'Monitoring': 'bg-amber-50 text-amber-600 border-amber-100',
-    'Performance': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100',
+    'Return to Play': 'bg-red-50 text-red-600 border-red-100 dark:border-red-900/40',
+    'Screening': 'bg-blue-50 text-blue-600 border-blue-100 dark:border-blue-800/40',
+    'Monitoring': 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40',
+    'Performance': 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
+    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100 dark:border-purple-800/40',
     'Custom': 'bg-slate-50 text-slate-600 border-slate-200',
 };
 
@@ -255,7 +255,7 @@ export const ProtocolLibrary: React.FC = () => {
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
                                 categoryFilter === cat
                                     ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 dark:border-indigo-800/50 hover:text-indigo-600'
                             }`}
                         >
                             {cat}
@@ -319,21 +319,21 @@ export const ProtocolLibrary: React.FC = () => {
                             <div
                                 key={protocol.id}
                                 onClick={() => { setActiveProtocol(protocol); setPageView('view'); }}
-                                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group relative"
+                                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all cursor-pointer group relative"
                             >
                                 <button
                                     onClick={(e) => handleShare(e, protocol)}
-                                    className="absolute bottom-3 right-3 p-1.5 rounded-lg border opacity-0 group-hover:opacity-100 transition-all bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200"
+                                    className="absolute bottom-3 right-3 p-1.5 rounded-lg border opacity-0 group-hover:opacity-100 transition-all bg-white border-slate-200 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200 dark:border-indigo-800/50"
                                     title="Share protocol"
                                 >
                                     <Link2Icon size={12} />
                                 </button>
                                 <div className="flex items-start gap-3 mb-3">
-                                    <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
+                                    <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
                                         <FileTextIcon size={16} className="text-indigo-500" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                                        <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">
                                             {protocol.name}
                                         </h4>
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border mt-1 ${CATEGORY_COLORS[protocol.category] || CATEGORY_COLORS['Custom']}`}>
@@ -379,14 +379,14 @@ export const ProtocolLibrary: React.FC = () => {
                                     <tr
                                         key={protocol.id}
                                         onClick={() => { setActiveProtocol(protocol); setPageView('view'); }}
-                                        className="group hover:bg-slate-50 transition-colors cursor-pointer"
+                                        className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors cursor-pointer"
                                     >
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-2.5">
-                                                <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
+                                                <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
                                                     <FileTextIcon size={14} className="text-indigo-500" />
                                                 </div>
-                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-indigo-300 transition-colors truncate">
                                                     {protocol.name}
                                                 </span>
                                             </div>
@@ -402,14 +402,14 @@ export const ProtocolLibrary: React.FC = () => {
                                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setActiveProtocol(protocol); setPageView('view'); }}
-                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
                                                     title="View"
                                                 >
                                                     <EyeIcon size={14} />
                                                 </button>
                                                 <button
                                                     onClick={e => handleShare(e, protocol)}
-                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
                                                     title="Share protocol"
                                                 >
                                                     <Link2Icon size={14} />

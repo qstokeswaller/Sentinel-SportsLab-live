@@ -133,7 +133,7 @@ export const PerformanceIntelligenceTerminal = ({
         if (s === 'warning') return <AlertTriangleIcon size={16} className="text-amber-500" />;
         return <InfoIcon size={16} className="text-sky-500" />;
     };
-    const severityBg = (s) => s === 'critical' ? 'border-rose-200 bg-rose-50' : s === 'warning' ? 'border-amber-200 bg-amber-50' : 'border-sky-200 bg-sky-50';
+    const severityBg = (s) => s === 'critical' ? 'border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-rose-50' : s === 'warning' ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50' : 'border-sky-200 dark:border-sky-900/50 bg-sky-50';
     const severityBadge = (s) => s === 'critical' ? 'bg-rose-100 text-rose-700' : s === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700';
     const categoryIcon = (c) => {
         if (c === 'Risk') return <ShieldAlertIcon size={14} />;
@@ -142,7 +142,7 @@ export const PerformanceIntelligenceTerminal = ({
         return <TargetIcon size={14} />;
     };
     const statusColor = (s) => s === 'green' ? 'text-emerald-600' : s === 'amber' ? 'text-amber-600' : 'text-rose-600';
-    const statusBg = (s) => s === 'green' ? 'bg-emerald-50 border-emerald-200' : s === 'amber' ? 'bg-amber-50 border-amber-200' : 'bg-rose-50 border-rose-200';
+    const statusBg = (s) => s === 'green' ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50' : s === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50';
     const statusRing = (s) => s === 'green' ? 'ring-emerald-400' : s === 'amber' ? 'ring-amber-400' : 'ring-rose-400';
 
     // ── Shared UI blocks ──
@@ -188,7 +188,7 @@ export const PerformanceIntelligenceTerminal = ({
                             <div key={ins.id}>
                                 <button
                                     onClick={() => setExpandedInsight(isExpanded ? null : ins.id)}
-                                    className="w-full px-6 py-4 flex items-start gap-4 text-left hover:bg-slate-50/50 transition-colors"
+                                    className="w-full px-6 py-4 flex items-start gap-4 text-left hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
                                 >
                                     <div className="mt-0.5 shrink-0">{severityIcon(ins.severity)}</div>
                                     <div className="flex-1 min-w-0">
@@ -237,7 +237,7 @@ export const PerformanceIntelligenceTerminal = ({
                         const stale = data.daysSinceLatest > 60;
                         const label = m.exerciseLabel || type.replace(/^rm_/, '').replace(/_/g, ' ');
                         return (
-                            <div key={type} className={`p-4 rounded-xl border ${stale ? 'border-dashed border-slate-200 bg-slate-50/50' : 'border-slate-200 bg-white'}`}>
+                            <div key={type} className={`p-4 rounded-xl border ${stale ? 'border-dashed border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40' : 'border-slate-200 bg-white'}`}>
                                 <div className="text-[9px] font-bold text-indigo-500 uppercase">{label}</div>
                                 <div className="flex items-baseline gap-1 mt-1">
                                     <span className="text-2xl font-bold text-slate-900">{val !== null ? val.toFixed(val < 10 ? 2 : 0) : '--'}</span>
@@ -278,7 +278,7 @@ export const PerformanceIntelligenceTerminal = ({
                         <>
                             <button
                                 onClick={() => { setFocusedPlayerId(null); setExpandedInsight(null); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition-all"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-lg text-xs font-medium transition-all"
                             >
                                 <ChevronRightIcon size={12} className="rotate-180" /> Squad
                             </button>
@@ -332,17 +332,17 @@ export const PerformanceIntelligenceTerminal = ({
                         <div className="text-[9px] font-bold text-slate-400 uppercase">Squad Size</div>
                         <div className="text-2xl font-bold text-slate-900">{teamProfiles.length}</div>
                     </div>
-                    <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4">
-                        <div className="text-[9px] font-bold text-emerald-600 uppercase">Green (80+)</div>
-                        <div className="text-2xl font-bold text-emerald-700">{teamReadiness.greenCount}</div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-xl border border-emerald-200 dark:border-emerald-800/50 p-4">
+                        <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Green (80+)</div>
+                        <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{teamReadiness.greenCount}</div>
                     </div>
-                    <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/50 p-4">
                         <div className="text-[9px] font-bold text-amber-600 uppercase">Amber (50-79)</div>
-                        <div className="text-2xl font-bold text-amber-700">{teamReadiness.amberCount}</div>
+                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{teamReadiness.amberCount}</div>
                     </div>
-                    <div className="bg-rose-50 rounded-xl border border-rose-200 p-4">
+                    <div className="bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 p-4">
                         <div className="text-[9px] font-bold text-rose-600 uppercase">Red (&lt;50)</div>
-                        <div className="text-2xl font-bold text-rose-700">{teamReadiness.redCount}</div>
+                        <div className="text-2xl font-bold text-rose-700 dark:text-rose-400">{teamReadiness.redCount}</div>
                     </div>
                 </div>
             )}
@@ -397,7 +397,7 @@ export const PerformanceIntelligenceTerminal = ({
                                         <div className="flex items-center">
                                             <button
                                                 onClick={() => setExpandedPlayer(isExp ? null : player.id)}
-                                                className="flex-1 px-6 py-3 flex items-center gap-4 hover:bg-slate-50/50 transition-colors"
+                                                className="flex-1 px-6 py-3 flex items-center gap-4 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
                                             >
                                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold border-2 ${statusBg(r.status)}`}>
                                                     <span className={statusColor(r.status)}>{r.overall}</span>
@@ -407,16 +407,16 @@ export const PerformanceIntelligenceTerminal = ({
                                                     <div className="text-[9px] text-slate-400">{r.confidence} confidence — {r.domainsUsed} domains</div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    {critCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">{critCount} critical</span>}
-                                                    {warnCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">{warnCount} warning</span>}
-                                                    {critCount === 0 && warnCount === 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">clear</span>}
+                                                    {critCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:text-rose-400">{critCount} critical</span>}
+                                                    {warnCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:text-amber-400">{warnCount} warning</span>}
+                                                    {critCount === 0 && warnCount === 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400">clear</span>}
                                                     {isExp ? <ChevronDownIcon size={14} className="text-slate-400" /> : <ChevronRightIcon size={14} className="text-slate-400" />}
                                                 </div>
                                             </button>
                                             {/* Drill-in button */}
                                             <button
                                                 onClick={() => { setFocusedPlayerId(player.id); setExpandedInsight(null); }}
-                                                className="px-3 py-3 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all border-l border-slate-100"
+                                                className="px-3 py-3 text-slate-300 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all border-l border-slate-100"
                                                 title={`View ${player.name}'s full profile`}
                                             >
                                                 <ArrowRightIcon size={14} />
@@ -462,7 +462,7 @@ export const PerformanceIntelligenceTerminal = ({
                             <div className="divide-y divide-slate-50">
                                 {retestSchedule.map((entry) => (
                                     <div key={entry.id} className="px-6 py-3 flex items-center gap-4">
-                                        <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
                                             <CalendarIcon size={12} className="text-amber-500" />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -471,7 +471,7 @@ export const PerformanceIntelligenceTerminal = ({
                                         </div>
                                         <button
                                             onClick={() => { setFocusedPlayerId(entry.playerId); setExpandedInsight(null); }}
-                                            className="text-[10px] text-indigo-600 font-semibold hover:underline shrink-0"
+                                            className="text-[10px] text-indigo-600 dark:text-indigo-300 font-semibold hover:underline shrink-0"
                                         >
                                             View Profile
                                         </button>

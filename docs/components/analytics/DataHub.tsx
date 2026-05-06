@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { DownloadIcon, ColumnsIcon, SearchIcon, ChevronDown, ChevronUp, X, Shield, ShieldAlert } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ─── Column definitions ───────────────────────────────────────────────────────
 // key: the property name on the row object
@@ -46,11 +47,11 @@ const renderCell = (key: string, val: any) => {
         case 'injuryStatus':
             return val === 'Injured'
                 ? <span className="flex items-center gap-1.5 text-rose-600 font-semibold text-[11px]"><ShieldAlert size={13} /> Injured</span>
-                : <span className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[11px]"><Shield size={13} /> Clear</span>;
+                : <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]"><Shield size={13} /> Clear</span>;
 
         case 'availability':
             const avMap: Record<string, string> = {
-                available:   'bg-emerald-100 text-emerald-700',
+                available:   'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
                 modified:    'bg-amber-100 text-amber-700',
                 unavailable: 'bg-rose-100 text-rose-700',
             };
@@ -61,8 +62,8 @@ const renderCell = (key: string, val: any) => {
             if (isNaN(n) || n === 0) return DASH;
             const cls = n > 1.5 ? 'bg-rose-600 text-white'
                 : n > 1.3 ? 'bg-rose-100 text-rose-700'
-                : n < 0.8 ? 'bg-indigo-100 text-indigo-700'
-                : 'bg-emerald-100 text-emerald-700';
+                : n < 0.8 ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700'
+                : 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
             const label = n > 1.5 ? `${n.toFixed(2)} ⚠` : n.toFixed(2);
             return <Chip label={label} cls={cls} />;
         }
@@ -70,7 +71,7 @@ const renderCell = (key: string, val: any) => {
         case 'lastRPE': {
             const cls = val >= 9 ? 'bg-rose-100 text-rose-700'
                 : val >= 7 ? 'bg-amber-100 text-amber-700'
-                : 'bg-emerald-100 text-emerald-700';
+                : 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
             return <Chip label={`RPE ${val}`} cls={cls} />;
         }
 
@@ -82,7 +83,7 @@ const renderCell = (key: string, val: any) => {
 
         case 'dsi': {
             const cls = parseFloat(val) > 1.0 ? 'bg-rose-100 text-rose-700'
-                : parseFloat(val) >= 0.8 ? 'bg-emerald-100 text-emerald-700'
+                : parseFloat(val) >= 0.8 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
                 : 'bg-amber-100 text-amber-700';
             return <Chip label={val} cls={cls} />;
         }
@@ -249,19 +250,20 @@ export const DataHub = () => {
                     </div>
 
                     {/* Team filter */}
-                    <select
+                    <CustomSelect
+                        variant="filter"
+                        size="xs"
                         value={teamFilter}
                         onChange={e => setTeamFilter(e.target.value)}
-                        className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold text-slate-600 outline-none focus:border-slate-300"
                     >
                         {teamOptions.map(t => <option key={t}>{t}</option>)}
-                    </select>
+                    </CustomSelect>
 
                     {/* Columns toggle */}
                     <div className="relative">
                         <button
                             onClick={() => setShowColPanel(p => !p)}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 uppercase hover:bg-slate-200 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors"
                         >
                             <ColumnsIcon size={13} /> Columns
                         </button>
@@ -339,8 +341,8 @@ export const DataHub = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {filtered.length > 0 ? filtered.map((row, i) => (
-                                <tr key={row.id || i} className="hover:bg-slate-50 transition-colors group">
-                                    <td className="p-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r border-slate-100">
+                                <tr key={row.id || i} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group">
+                                    <td className="p-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors z-10 border-r border-slate-100">
                                         <span className="text-sm font-semibold text-slate-900">{row.name}</span>
                                     </td>
                                     {visibleCols.map(col => (
@@ -369,8 +371,8 @@ export const DataHub = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
                 <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-wide w-full">ACWR Legend</p>
                 {[
-                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 text-indigo-700' },
-                    { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 text-emerald-700' },
+                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700' },
+                    { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' },
                     { label: '1.3–1.5 — Caution',   cls: 'bg-rose-100 text-rose-700' },
                     { label: '> 1.5 — Danger',       cls: 'bg-rose-600 text-white' },
                 ].map(l => (

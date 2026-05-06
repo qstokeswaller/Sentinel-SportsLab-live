@@ -14,6 +14,7 @@ import { HAMSTRING_SCHEMA } from '../../utils/csvSchemas';
 import { processAthleteMatching } from '../../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../ui/UnmatchedAthleteResolver';
 import type { ResolvedEntry } from '../ui/UnmatchedAthleteResolver';
+import { CustomSelect } from '../ui/CustomSelect';
 
 export const HamstringReport: React.FC = () => {
     const {
@@ -139,29 +140,23 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                             <button onClick={() => { setHamDateFilterStart(''); setHamDateFilterEnd(''); }} className="ml-1 text-slate-300 hover:text-rose-500 transition-colors"><XIcon size={12} /></button>
                         )}
                     </div>
-                    <div className="relative">
-                        <select value={hamAnalysisTeamFilter} onChange={(e) => { setHamAnalysisTeamFilter(e.target.value); setHamstringReportSelectedAthlete('All'); }} className={`${selectCls} pr-8 min-w-[140px]`}>
-                            <option value="">All Teams</option>
-                            {teams.filter(t => t.players?.length > 0).map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
-                        </select>
-                        <ChevronDownIcon size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
-                    <div className="relative">
-                        <select value={hamstringReportSelectedAthlete} onChange={(e) => setHamstringReportSelectedAthlete(e.target.value)} className={`${selectCls} pr-8 min-w-[160px]`}>
-                            <option value="All">{hamAnalysisTeamFilter ? `All in ${teams.find(t => t.id === hamAnalysisTeamFilter)?.name || 'Team'}` : 'All Athletes'}</option>
-                            {hamAnalysisTeamFilter
-                                ? teamFilteredPlayers.sort((a, b) => a.name.localeCompare(b.name)).map(p => (<option key={p.id} value={p.id}>{p.name}</option>))
-                                : teams.filter(t => t.players?.length > 0).map(t => (
-                                    <optgroup key={t.id} label={t.name}>
-                                        {t.players.sort((a, b) => a.name.localeCompare(b.name)).map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                                    </optgroup>
-                                ))
-                            }
-                        </select>
-                        <ChevronDownIcon size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
+                    <CustomSelect value={hamAnalysisTeamFilter} onChange={(e) => { setHamAnalysisTeamFilter(e.target.value); setHamstringReportSelectedAthlete('All'); }} variant="filter" size="xs" placeholder="All Teams">
+                        <option value="">All Teams</option>
+                        {teams.filter(t => t.players?.length > 0).map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                    </CustomSelect>
+                    <CustomSelect value={hamstringReportSelectedAthlete} onChange={(e) => setHamstringReportSelectedAthlete(e.target.value)} variant="filter" size="xs">
+                        <option value="All">{hamAnalysisTeamFilter ? `All in ${teams.find(t => t.id === hamAnalysisTeamFilter)?.name || 'Team'}` : 'All Athletes'}</option>
+                        {hamAnalysisTeamFilter
+                            ? teamFilteredPlayers.sort((a, b) => a.name.localeCompare(b.name)).map(p => (<option key={p.id} value={p.id}>{p.name}</option>))
+                            : teams.filter(t => t.players?.length > 0).map(t => (
+                                <optgroup key={t.id} label={t.name}>
+                                    {t.players.sort((a, b) => a.name.localeCompare(b.name)).map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
+                                </optgroup>
+                            ))
+                        }
+                    </CustomSelect>
                     {hasAnyFilter && (
-                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-400 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all">
+                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 rounded-xl transition-all">
                             <XIcon size={12} /> Clear filters
                         </button>
                     )}
@@ -184,7 +179,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                     <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Total Reports</span>
                     <div className="text-2xl font-bold text-slate-800">{filteredEntries.length}</div>
                 </div>
-                <div className="bg-white px-5 py-5 rounded-xl border border-rose-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                <div className="bg-white px-5 py-5 rounded-xl border border-rose-100 dark:border-rose-900/40 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                     <span className="text-[9px] font-semibold uppercase text-rose-400 tracking-wide">High Risk</span>
                     <div className="text-2xl font-bold text-rose-500">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
                 </div>
@@ -197,7 +192,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse hamstring-analysis-table">
                         <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100 italic">
+                            <tr className="bg-slate-50/50 dark:bg-[#132338]/40 border-b border-slate-100 italic">
                                 <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Date</th>
                                 <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Athlete</th>
                                 <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Avg Force (N)</th>
@@ -219,7 +214,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                 else if (rs >= 3.37 && rs < 4.47) { riskColor = 'bg-orange-500'; riskLabel = 'Moderate'; riskText = 'text-orange-500'; riskBg = 'bg-orange-50'; }
                                 return (
                                     <tr key={entry.id || idx} onClick={() => !isHamstringEditMode && setInspectHamEntry(entry)}
-                                        className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30' : 'hover:bg-slate-50/50 cursor-pointer'}`}>
+                                        className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30 dark:bg-[#0F1C30]/30' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40 cursor-pointer'}`}>
                                         <td className="px-4 py-3"><div className="text-xs font-semibold text-slate-900">{entry.date.slice(0, 10)}</div></td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
@@ -243,7 +238,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                         {isHamstringEditMode && (
                                             <td className="px-4 py-4 text-center print:hidden">
                                                 <button onClick={(e) => { e.stopPropagation(); if (confirm(`Delete record for ${entry.athleteName} on ${entry.date}?`)) { handleDeleteMetric(entry.athleteId, entry.id); } }}
-                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"><Trash2Icon size={16} /></button>
+                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all"><Trash2Icon size={16} /></button>
                                             </td>
                                         )}
                                     </tr>
@@ -336,14 +331,14 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
             const asym = Math.max(l, r) > 0 ? Math.abs(l - r) / Math.max(l, r) * 100 : 0;
             const rel = bw > 0 ? avg / bw : 0;
             const risk = rel > 0 ? (rel < 3.37 ? 'High' : rel < 4.47 ? 'Mod' : 'Low') : null;
-            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-300';
+            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : 'text-slate-300';
             return { avg, asym: asym.toFixed(1), rel: rel.toFixed(2), risk, riskColor, ready: l > 0 && r > 0 };
         } else {
             if (!agg) return null;
             // agg is already the average force — use directly for relative strength
             const rel = bw > 0 ? agg / bw : 0;
             const risk = rel > 0 ? (rel < 3.37 ? 'High' : rel < 4.47 ? 'Mod' : 'Low') : null;
-            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-300';
+            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : 'text-slate-300';
             return { avg: agg, asym: null, rel: rel.toFixed(2), risk, riskColor, ready: agg > 0 };
         }
     };
@@ -377,38 +372,38 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
     return (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             {/* Mode toggle + dropdowns */}
-            <div className="bg-slate-50/50 px-6 py-5 border-b border-slate-100 space-y-4">
+            <div className="bg-slate-50/50 dark:bg-[#132338]/40 px-6 py-5 border-b border-slate-100 space-y-4">
                 <div className="flex bg-white border border-slate-200 p-1 rounded-xl w-fit shadow-sm">
                     <button onClick={() => setHamEntryMode('individual')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'individual' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Individual</button>
                     <button onClick={() => setHamEntryMode('team')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'team' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Team Batch</button>
                 </div>
                 {hamEntryMode === 'individual' && (
-                    <div className="relative">
+                    <div>
                         <label className="text-[9px] font-semibold uppercase text-slate-500 tracking-wide block mb-1.5">Select Athlete</label>
-                        <select value={hamAthleteId} onChange={(e) => setHamAthleteId(e.target.value)} className={dropdownCls}>
+                        <CustomSelect value={hamAthleteId} onChange={(e) => setHamAthleteId(e.target.value)} variant="form" size="xs" placeholder="— Choose athlete —">
                             <option value="">— Choose athlete —</option>
                             {teams.filter(t => (t.players || []).length > 0).map(t => (
                                 <optgroup key={t.id} label={t.name}>{t.players.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}</optgroup>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                 )}
                 {hamEntryMode === 'team' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="relative">
+                        <div>
                             <label className="text-[9px] font-semibold uppercase text-slate-500 tracking-wide block mb-1.5">Select Team</label>
-                            <select value={hamSelectedTeamId} onChange={(e) => { setHamSelectedTeamId(e.target.value); setHamTeamAthleteFilter(''); setSavedRows(new Set()); setTeamRowData({}); }} className={dropdownCls}>
+                            <CustomSelect value={hamSelectedTeamId} onChange={(e) => { setHamSelectedTeamId(e.target.value); setHamTeamAthleteFilter(''); setSavedRows(new Set()); setTeamRowData({}); }} variant="form" size="xs" placeholder="— Choose team —">
                                 <option value="">— Choose team —</option>
                                 {teams.filter(t => (t.players || []).length > 0).map(t => (<option key={t.id} value={t.id}>{t.name} ({t.players.length})</option>))}
-                            </select>
+                            </CustomSelect>
                         </div>
                         {selectedTeam && (
-                            <div className="relative">
+                            <div>
                                 <label className="text-[9px] font-semibold uppercase text-slate-500 tracking-wide block mb-1.5">Athlete Filter <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
-                                <select value={hamTeamAthleteFilter} onChange={(e) => setHamTeamAthleteFilter(e.target.value)} className={dropdownCls}>
+                                <CustomSelect value={hamTeamAthleteFilter} onChange={(e) => setHamTeamAthleteFilter(e.target.value)} variant="form" size="xs" placeholder="All athletes">
                                     <option value="">All athletes ({allTeamPlayers.length})</option>
                                     {allTeamPlayers.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                                </select>
+                                </CustomSelect>
                             </div>
                         )}
                     </div>
@@ -507,7 +502,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                                         const row = teamRowData[player.id] || {};
                                         const res = calcRow(row, teamBatchMode);
                                         const isSaved = savedRows.has(player.id);
-                                        const rowBg = isSaved ? 'bg-emerald-50/50' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40';
+                                        const rowBg = isSaved ? 'bg-emerald-50/50' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40 dark:bg-[#0F1C30]/40';
                                         return (
                                             <tr key={player.id} className={`border-b border-slate-50 transition-colors hover:bg-rose-50/20 ${rowBg}`}>
                                                 <td className={`px-4 py-2.5 sticky left-0 ${rowBg}`}>

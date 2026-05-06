@@ -21,6 +21,7 @@ import {
 import { DatabaseService } from '../services/databaseService';
 import { buildMaxLookup, getSheetCellValue, printSheet } from '../utils/weightroomUtils';
 import { CompleteSessionModal } from '../components/workouts/CompleteSessionModal';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,8 @@ export const WorkoutHistoryPage = () => {
         scheduledSessions, setScheduledSessions, teams, resolveTargetName, showToast, maxHistory, isLoading,
     } = useAppState();
 
-    const [historyFilter, setHistoryFilter] = useState('All');
+    const [teamFilter, setTeamFilter]       = useState('');
+    const [athleteFilter, setAthleteFilter] = useState('');
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [viewingSheetSession, setViewingSheetSession] = useState(null);
@@ -46,15 +48,27 @@ export const WorkoutHistoryPage = () => {
 
     const allPlayers = useMemo(() => teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)), [teams]);
 
+    // Athletes shown in the athlete dropdown — scoped to selected team when one is picked
+    const filteredPlayerOptions = useMemo(() => {
+        if (teamFilter) {
+            const team = teams.find(t => t.id === teamFilter);
+            return [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return allPlayers;
+    }, [teamFilter, teams, allPlayers]);
+
     const historySessions = useMemo(() => {
         const sorted = [...(scheduledSessions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (historyFilter === 'All') return sorted;
-        if (historyFilter.startsWith('team_')) {
-            const teamId = historyFilter.replace('team_', '');
-            return sorted.filter(s => s.targetId === teamId || s.target_id === teamId);
-        }
-        return sorted.filter(s => s.targetId === historyFilter || s.target_id === historyFilter);
-    }, [scheduledSessions, historyFilter]);
+        return sorted.filter(s => {
+            const sid = s.targetId || s.target_id;
+            const stype = s.targetType || s.target_type;
+            // Athlete filter takes priority when set
+            if (athleteFilter) return sid === athleteFilter;
+            // Team filter
+            if (teamFilter) return sid === teamFilter && stype === 'Team';
+            return true;
+        });
+    }, [scheduledSessions, teamFilter, athleteFilter]);
 
     const handleEdit = (session) => {
         navigate('/workouts/packets', {
@@ -119,42 +133,68 @@ export const WorkoutHistoryPage = () => {
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
             {/* Header */}
-            <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-all" title="Back to Workouts">
+                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] transition-all" title="Back to Workouts">
                             <ArrowLeftIcon size={18} />
                         </button>
                         <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0">
                             <HistoryIcon size={16} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-900">Workout History</h2>
-                            <p className="text-[10px] text-slate-400 mt-0.5">All assigned workouts across athletes & teams</p>
+                            <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Workout History</h2>
+                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">All assigned workouts across athletes & teams</p>
                         </div>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">{historySessions.length} sessions</span>
+                    <span className="text-xs text-slate-400 dark:text-[#64748B] font-medium">{historySessions.length} sessions</span>
                 </div>
             </div>
 
-            {/* Filter */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 block">Filter by Athlete or Team</label>
-                <div className="relative max-w-md">
-                    <select
-                        value={historyFilter}
-                        onChange={e => setHistoryFilter(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-700 outline-none appearance-none pr-10 hover:border-slate-300 focus:border-emerald-400 transition-all"
-                    >
-                        <option value="All">All Athletes & Teams</option>
-                        <optgroup label="Teams">
-                            {teams.map(t => <option key={t.id} value={`team_${t.id}`}>{t.name}</option>)}
-                        </optgroup>
-                        <optgroup label="Athletes">
-                            {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </optgroup>
-                    </select>
-                    <ChevronDownIcon size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            {/* Filters */}
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Filter Sessions</span>
+                    {(teamFilter || athleteFilter) && (
+                        <button
+                            onClick={() => { setTeamFilter(''); setAthleteFilter(''); }}
+                            className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 dark:text-[#64748B] hover:text-slate-600 dark:hover:text-[#CBD5E1] transition-colors"
+                        >
+                            <XIcon size={11} /> Clear filters
+                        </button>
+                    )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Team/Squad filter */}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] flex items-center gap-1">
+                            <UsersIcon size={10} /> Team / Squad
+                        </label>
+                        <CustomSelect
+                            variant="form"
+                            value={teamFilter}
+                            onChange={e => { setTeamFilter(e.target.value); setAthleteFilter(''); }}
+                            placeholder="All Teams"
+                        >
+                            <option value="">All Teams</option>
+                            {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </CustomSelect>
+                    </div>
+                    {/* Athlete filter */}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] flex items-center gap-1">
+                            <UserIcon size={10} /> Athlete
+                        </label>
+                        <CustomSelect
+                            variant="form"
+                            value={athleteFilter}
+                            onChange={e => setAthleteFilter(e.target.value)}
+                            placeholder={teamFilter ? `All in ${teams.find(t => t.id === teamFilter)?.name ?? 'Team'}` : 'All Athletes'}
+                        >
+                            <option value="">{teamFilter ? `All in ${teams.find(t => t.id === teamFilter)?.name ?? 'Team'}` : 'All Athletes'}</option>
+                            {filteredPlayerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </CustomSelect>
+                    </div>
                 </div>
             </div>
 
@@ -163,31 +203,31 @@ export const WorkoutHistoryPage = () => {
                 {isLoading ? (
                     <div className="space-y-2">
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div key={i} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 shadow-sm">
                                 <div className="flex items-start justify-between">
                                     <div className="space-y-2 flex-1">
                                         <div className="flex gap-2">
-                                            <div className="h-5 w-16 bg-slate-100 rounded animate-pulse" />
-                                            <div className="h-5 w-14 bg-slate-50 rounded animate-pulse" />
+                                            <div className="h-5 w-16 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
+                                            <div className="h-5 w-14 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                         </div>
-                                        <div className="h-4 w-48 bg-slate-100 rounded animate-pulse" />
-                                        <div className="h-3 w-32 bg-slate-50 rounded animate-pulse" />
+                                        <div className="h-4 w-48 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
+                                        <div className="h-3 w-32 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
                                     </div>
-                                    <div className="h-8 w-20 bg-slate-50 rounded-lg animate-pulse" />
+                                    <div className="h-8 w-20 bg-slate-50 dark:bg-[#0F1C30] rounded-lg animate-pulse" />
                                 </div>
                             </div>
                         ))}
                         <div className="flex flex-col items-center py-4">
-                            <div className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-2" />
-                            <span className="text-xs font-medium text-slate-400">Loading workout history...</span>
+                            <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-800/50 border-t-emerald-600 rounded-full animate-spin mb-2" />
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout history...</span>
                         </div>
                     </div>
                 ) : historySessions.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm py-16 flex flex-col items-center text-slate-300 gap-2">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm py-16 flex flex-col items-center text-slate-300 dark:text-[#475569] gap-2">
                         <ClockIcon size={32} className="opacity-40" />
-                        <p className="text-xs text-slate-400">No workout sessions found</p>
-                        <p className="text-[10px] text-slate-300">Schedule workouts from Workout Packets to see them here</p>
-                        <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition-all">
+                        <p className="text-xs text-slate-400 dark:text-[#64748B]">No workout sessions found</p>
+                        <p className="text-[10px] text-slate-300 dark:text-[#475569]">Schedule workouts from Workout Packets to see them here</p>
+                        <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
                             Go to Workout Packets
                         </button>
                     </div>
@@ -200,19 +240,19 @@ export const WorkoutHistoryPage = () => {
                             ? (Array.isArray(exRaw) ? exRaw.length : (exRaw.warmup?.length || 0) + (exRaw.workout?.length || 0) + (exRaw.cooldown?.length || 0))
                             : (session.exercise_ids || []).length;
                         const isTeam = (session.targetType || session.target_type) === 'Team';
-                        const statusColor = session.status === 'Completed' ? 'bg-emerald-100 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-600';
+                        const statusColor = session.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' : 'bg-blue-100 text-blue-600';
 
                         return (
-                            <div key={session.id} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all group shadow-sm">
+                            <div key={session.id} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all group shadow-sm">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor}`}>{session.status || 'Scheduled'}</span>
-                                            {phase && <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{phase}</span>}
-                                            {session.load && <span className="text-[9px] text-slate-400">{session.load} Load</span>}
+                                            {phase && <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{phase}</span>}
+                                            {session.load && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{session.load} Load</span>}
                                         </div>
-                                        <h4 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors truncate">{session.title || 'Untitled Session'}</h4>
-                                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400">
+                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:text-emerald-400 transition-colors truncate">{session.title || 'Untitled Session'}</h4>
+                                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-[#64748B]">
                                             <span className="flex items-center gap-1">
                                                 <ClockIcon size={10} />
                                                 {formatDate(session.date)}{session.time ? ` at ${session.time}` : ''}
@@ -240,7 +280,7 @@ export const WorkoutHistoryPage = () => {
                                             <>
                                                 <button
                                                     onClick={() => setViewingSheetSession(session)}
-                                                    className="px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                    className="px-3 py-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 text-teal-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                                 >
                                                     <ClipboardListIcon size={11} /> View Sheet
                                                 </button>
@@ -260,7 +300,7 @@ export const WorkoutHistoryPage = () => {
                                                         }
                                                         printSheet(exRaw.weightroomSheet, athletes, maxLookup, session.title);
                                                     }}
-                                                    className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                    className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                                 >
                                                     <PrinterIcon size={11} /> Print Sheet
                                                 </button>
@@ -269,21 +309,21 @@ export const WorkoutHistoryPage = () => {
                                         {session.status !== 'Completed' && (
                                             <button
                                                 onClick={() => setCompletingSession(session)}
-                                                className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                className="px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                             >
                                                 <CheckCircle2Icon size={11} /> Complete
                                             </button>
                                         )}
                                         <button
                                             onClick={() => handleEdit(session)}
-                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                            className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                             title="Edit workout"
                                         >
                                             <PencilIcon size={11} /> Edit
                                         </button>
                                         <button
                                             onClick={() => handleReassign(session)}
-                                            className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                            className="px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                         >
                                             <RepeatIcon size={11} /> Reassign
                                         </button>
@@ -299,7 +339,7 @@ export const WorkoutHistoryPage = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmDeleteId(null)}
-                                                    className="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-semibold transition-all hover:bg-slate-200"
+                                                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all hover:bg-slate-200"
                                                 >
                                                     No
                                                 </button>
@@ -307,7 +347,7 @@ export const WorkoutHistoryPage = () => {
                                         ) : (
                                             <button
                                                 onClick={() => setConfirmDeleteId(session.id)}
-                                                className="px-3 py-2 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-red-50 text-slate-400 dark:text-[#64748B] hover:text-red-500 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                                 title="Remove from history"
                                             >
                                                 <Trash2Icon size={11} />
@@ -350,7 +390,7 @@ export const WorkoutHistoryPage = () => {
 
                 return (
                     <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                        <div className="bg-white rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 overflow-hidden max-h-[80vh] flex flex-col">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden max-h-[80vh] flex flex-col">
                             <div className="px-5 py-3 bg-teal-700 flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-2.5 text-white">
                                     <ClipboardListIcon size={16} />
@@ -384,12 +424,12 @@ export const WorkoutHistoryPage = () => {
                                         </thead>
                                         <tbody>
                                             {sheetAthletes.length === 0 ? (
-                                                <tr><td colSpan={sheetConfig.columns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes found</td></tr>
+                                                <tr><td colSpan={sheetConfig.columns.length + 1} className="px-3 py-6 text-center text-slate-300 dark:text-[#475569] text-xs">No athletes found</td></tr>
                                             ) : sheetAthletes.map(a => (
-                                                <tr key={a.id} className="hover:bg-slate-50">
-                                                    <td className="px-3 py-2 font-semibold text-slate-800 uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                                <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                    <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 dark:border-[#243A58] whitespace-nowrap">{a.name}</td>
                                                     {sheetConfig.columns.map(col => (
-                                                        <td key={col.id} className="px-3 py-2 text-slate-600 border border-slate-200 text-center min-w-[80px]">
+                                                        <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] text-center min-w-[80px]">
                                                             {getSheetCellValue(col, a.id, maxLookup) || '\u2014'}
                                                         </td>
                                                     ))}

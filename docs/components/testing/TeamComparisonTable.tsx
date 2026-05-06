@@ -9,6 +9,7 @@ import {
     UsersIcon, ArrowUpIcon, ArrowDownIcon, MinusIcon, DownloadIcon,
     PrinterIcon, FilterIcon, SearchIcon,
 } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface Props {
     initialTestId?: string;
@@ -153,7 +154,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
     }, [selectedTest, rows, displayFields]);
 
     const NORM_COLORS: Record<string, string> = {
-        emerald: 'bg-emerald-100 text-emerald-700',
+        emerald: 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
         sky: 'bg-sky-100 text-sky-700',
         teal: 'bg-teal-100 text-teal-700',
         amber: 'bg-amber-100 text-amber-700',
@@ -168,37 +169,24 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Team</label>
-                        <select
-                            value={selectedTeamId}
-                            onChange={e => { setSelectedTeamId(e.target.value); setResults([]); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none bg-white"
-                        >
+                        <CustomSelect value={selectedTeamId} onChange={e => { setSelectedTeamId(e.target.value); setResults([]); }} variant="form" placeholder="— Select Team —">
                             <option value="">— Select Team —</option>
                             {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.players.length})</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
-                        <select
-                            value={selectedCategory}
-                            onChange={e => { setSelectedCategory(e.target.value as TestCategory); setSelectedTestId(''); setResults([]); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none bg-white"
-                        >
+                        <CustomSelect value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value as TestCategory); setSelectedTestId(''); setResults([]); }} variant="form" placeholder="— Select Category —">
                             <option value="">— Select Category —</option>
                             {TEST_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Test</label>
-                        <select
-                            value={selectedTestId}
-                            onChange={e => { setSelectedTestId(e.target.value); setResults([]); }}
-                            disabled={!selectedCategory}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none bg-white disabled:bg-slate-50"
-                        >
+                        <CustomSelect value={selectedTestId} onChange={e => { setSelectedTestId(e.target.value); setResults([]); }} disabled={!selectedCategory} variant="form" placeholder="— Select Test —">
                             <option value="">— Select Test —</option>
                             {categoryTests.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
+                        </CustomSelect>
                     </div>
                 </div>
             </div>
@@ -216,13 +204,13 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={exportCSV}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                             >
                                 <DownloadIcon size={12} />CSV
                             </button>
                             <button
                                 onClick={() => window.print()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                             >
                                 <PrinterIcon size={12} />Print
                             </button>
@@ -262,7 +250,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                 </thead>
                                 <tbody>
                                     {rows.map(row => (
-                                        <tr key={row.player.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <tr key={row.player.id} className="border-b border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
                                             <td className="px-4 py-2.5 font-medium text-slate-800 sticky left-0 bg-white z-10 whitespace-nowrap">
                                                 {row.player.name}
                                             </td>
@@ -307,7 +295,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
 
                     {/* Summary row */}
                     {rows.filter(r => r.hasData).length > 0 && (
-                        <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                        <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
                             <div className="flex flex-wrap gap-4 text-xs">
                                 <span className="text-slate-400">
                                     {rows.filter(r => r.hasData).length}/{rows.length} athletes tested

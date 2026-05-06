@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import { Upload, X, ChevronRight, CheckCircle2, AlertTriangle, FileSpreadsheet, Users } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
+import { CustomSelect } from '../ui/CustomSelect';
 
 // ── Field definitions ──────────────────────────────────────────────────────
 type FieldKey = 'name' | 'first_name' | 'last_name' | 'age' | 'gender'
@@ -211,7 +212,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                         <X size={18} />
                     </button>
                 </div>
@@ -285,15 +286,16 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                                     <span className="text-sm font-medium text-slate-700 truncate">{h}</span>
                                                 </div>
                                                 <span className="text-xs text-slate-400 truncate pr-3">{sample || '—'}</span>
-                                                <select
+                                                <CustomSelect
+                                                    variant="form"
+                                                    size="xs"
                                                     value={mapped}
                                                     onChange={e => setMapping(prev => ({ ...prev, [h]: e.target.value as FieldKey }))}
-                                                    className={`${SELECT} w-full ${isNameField ? 'border-emerald-300 text-emerald-800' : ''}`}
                                                 >
                                                     {FIELD_OPTIONS.map(o => (
                                                         <option key={o.value} value={o.value}>{o.label}</option>
                                                     ))}
-                                                </select>
+                                                </CustomSelect>
                                             </div>
                                         );
                                     })}
@@ -305,15 +307,20 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 <label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
                                     <Users size={12} /> Assign all imported athletes to
                                 </label>
-                                <select value={teamId} onChange={e => setTeamId(e.target.value)} className={`${SELECT} w-full`}>
+                                <CustomSelect
+                                    variant="form"
+                                    size="sm"
+                                    value={teamId}
+                                    onChange={e => setTeamId(e.target.value)}
+                                >
                                     <option value="">Individual (no team)</option>
                                     {realTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                </select>
+                                </CustomSelect>
                                 <p className="text-[11px] text-slate-400">You can move athletes to different teams from the roster after import.</p>
                             </div>
 
                             {!hasNameMapping && (
-                                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 font-medium">
+                                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-4 py-3 text-sm text-amber-800 font-medium">
                                     <AlertTriangle size={15} className="shrink-0" />
                                     No name column mapped. Set at least one column to Full Name, First Name, or Last Name to continue.
                                 </div>
@@ -356,7 +363,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                     {/* ── STEP 4: Done ── */}
                     {step === 'done' && results && (
                         <div className="text-center py-6 space-y-4">
-                            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
                                 <CheckCircle2 size={36} />
                             </div>
                             <div>
@@ -366,8 +373,8 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 )}
                             </div>
                             {results.failed.length > 0 && (
-                                <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-left">
-                                    <p className="text-sm font-semibold text-rose-700 mb-2 flex items-center gap-1.5">
+                                <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-xl p-4 text-left">
+                                    <p className="text-sm font-semibold text-rose-700 dark:text-rose-400 mb-2 flex items-center gap-1.5">
                                         <AlertTriangle size={14} /> {results.failed.length} failed to save
                                     </p>
                                     <ul className="text-xs text-rose-600 space-y-0.5">
@@ -381,17 +388,17 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
 
                 {/* Footer */}
                 <div className="px-5 py-4 border-t border-slate-100 bg-white flex justify-between items-center shrink-0">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 transition-colors">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         {step === 'done' ? 'Close' : 'Cancel'}
                     </button>
                     <div className="flex gap-2">
                         {step === 'map' && (
-                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
                         {step === 'preview' && (
-                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}

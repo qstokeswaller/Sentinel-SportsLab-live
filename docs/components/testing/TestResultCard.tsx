@@ -69,9 +69,9 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
           </div>
         ))}
         {displayCalcs.map(c => (
-          <div key={c.key} className="bg-indigo-50 rounded-lg px-2.5 py-2">
+          <div key={c.key} className="bg-indigo-50 dark:bg-indigo-900/25 rounded-lg px-2.5 py-2">
             <div className="text-[10px] text-indigo-400 uppercase tracking-wide truncate">{c.label}</div>
-            <div className="text-sm font-bold text-indigo-700">
+            <div className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
               {calculated[c.key]}
               {c.unit && <span className="text-[10px] text-indigo-400 ml-0.5">{c.unit}</span>}
             </div>

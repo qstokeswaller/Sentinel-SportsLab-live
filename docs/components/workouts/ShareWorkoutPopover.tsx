@@ -56,15 +56,15 @@ export const ShareWorkoutPopover: React.FC<ShareWorkoutPopoverProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                            <Link2 size={15} className="text-indigo-600" />
+                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center">
+                            <Link2 size={15} className="text-indigo-600 dark:text-indigo-300" />
                         </div>
                         <div>
                             <h3 className="text-sm font-semibold text-slate-900">Share {workoutType === 'program' ? 'Program' : 'Workout'}</h3>
                             <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{workoutName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-all">
+                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>
@@ -74,7 +74,7 @@ export const ShareWorkoutPopover: React.FC<ShareWorkoutPopoverProps> = ({
                     <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{shareUrl}</p>
                     <button
                         onClick={handleCopy}
-                        className={`p-1.5 rounded-md border transition-all shrink-0 ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200'}`}
+                        className={`p-1.5 rounded-md border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}
                     >
                         {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
                     </button>

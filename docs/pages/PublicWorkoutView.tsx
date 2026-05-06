@@ -13,7 +13,7 @@ const BrandingBanner = () => (
                     <ActivityIcon className="text-white w-3 h-3" />
                 </div>
                 <span className="font-bold text-sm text-slate-900 tracking-tight">
-                    Sentinel <span className="text-indigo-600">SportsLab</span>
+                    Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                 </span>
             </div>
             <span className="text-[9px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
@@ -73,7 +73,7 @@ const ExerciseTable = ({ exercises, sectionLabel, exerciseDetails }: { exercises
                                                 {ex.weight && (
                                                     <span className="flex items-center gap-0.5">
                                                         <Weight size={10} className="text-indigo-500" />
-                                                        <span className="font-semibold text-indigo-600">{ex.weight} kg</span>
+                                                        <span className="font-semibold text-indigo-600 dark:text-indigo-300">{ex.weight} kg</span>
                                                     </span>
                                                 )}
                                                 {(ex.rest_min > 0 || ex.rest_sec > 0) && (
@@ -96,7 +96,7 @@ const ExerciseTable = ({ exercises, sectionLabel, exerciseDetails }: { exercises
                                     {desc && <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>}
                                     {videoUrl && (
                                         <a href={videoUrl} target="_blank" rel="noopener noreferrer"
-                                           className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors print:text-indigo-800 print:underline">
+                                           className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 transition-colors print:text-indigo-800 print:underline">
                                             <ExternalLink size={10} className="print:hidden" />
                                             Video Reference
                                             <span className="hidden print:inline text-[9px] text-slate-400 ml-1 truncate max-w-[200px]">({videoUrl})</span>
@@ -247,7 +247,7 @@ const PublicWorkoutView: React.FC = () => {
                 {(data.tags ?? []).length > 0 && (
                     <div className="max-w-3xl mx-auto px-4 mt-3 flex flex-wrap gap-1.5">
                         {data.tags.map((t: string) => (
-                            <span key={t} className="px-2.5 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[10px] font-semibold">{t}</span>
+                            <span key={t} className="px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded-md text-[10px] font-semibold">{t}</span>
                         ))}
                     </div>
                 )}
@@ -372,7 +372,7 @@ const PublicWorkoutView: React.FC = () => {
                             <h1 className="text-base font-bold text-slate-900">{data.name}</h1>
                             <div className="flex items-center gap-2 mt-0.5">
                                 {data.training_phase && (
-                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-semibold">{data.training_phase}</span>
+                                    <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{data.training_phase}</span>
                                 )}
                                 {data.load && (
                                     <span className="text-[10px] text-slate-400 font-medium">{data.load} Load</span>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { PLATFORM_FIELDS, fuzzyMatchHeader } from './GpsColumnMapper';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -95,13 +96,13 @@ const COLOR_DOT: Record<string, string> = {
     orange:  'bg-orange-500',
 };
 const COLOR_BADGE: Record<string, string> = {
-    indigo:  'bg-indigo-50 text-indigo-700 border-indigo-200',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    sky:     'bg-sky-50 text-sky-700 border-sky-200',
-    amber:   'bg-amber-50 text-amber-700 border-amber-200',
-    rose:    'bg-rose-50 text-rose-700 border-rose-200',
-    violet:  'bg-violet-50 text-violet-700 border-violet-200',
-    teal:    'bg-teal-50 text-teal-700 border-teal-200',
+    indigo:  'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50',
+    sky:     'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/50',
+    amber:   'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50',
+    rose:    'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50',
+    violet:  'bg-violet-50 text-violet-700 border-violet-200 dark:border-violet-800/50',
+    teal:    'bg-teal-50 dark:bg-teal-900/20 text-teal-700 border-teal-200 dark:border-teal-800/50',
     orange:  'bg-orange-50 text-orange-700 border-orange-200',
 };
 
@@ -225,14 +226,14 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                         </div>
                         <div>
                             <h2 className="text-base font-semibold text-slate-900">
-                                Configure GPS Import — <span className="text-indigo-600">{teamName}</span>
+                                Configure GPS Import — <span className="text-indigo-600 dark:text-indigo-300">{teamName}</span>
                             </h2>
                             <p className="text-xs text-slate-400">
                                 Map CSV columns to platform fields once. Future imports auto-apply this profile.
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-xl text-slate-400 transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-xl text-slate-400 transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -258,7 +259,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                             <label className="text-xs font-medium text-slate-600 block mb-1.5">
                                 Upload Sample CSV <span className="text-slate-400 font-normal">(only headers are read — data is not stored)</span>
                             </label>
-                            <label className="flex items-center gap-2 cursor-pointer w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-colors">
+                            <label className="flex items-center gap-2 cursor-pointer w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-slate-300 transition-colors">
                                 <UploadIcon size={14} className="text-indigo-500 shrink-0" />
                                 <span className="truncate">
                                     {hasHeaders
@@ -296,9 +297,9 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-slate-500">{mappedCount} / {totalCount} mapped</span>
                                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                            pct >= 80 ? 'text-emerald-700 bg-emerald-50' :
-                                            pct >= 50 ? 'text-amber-700 bg-amber-50' :
-                                            'text-rose-700 bg-rose-50'
+                                            pct >= 80 ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50' :
+                                            pct >= 50 ? 'text-amber-700 dark:text-amber-400 bg-amber-50' :
+                                            'text-rose-700 dark:text-rose-400 bg-rose-50'
                                         }`}>{pct}%</span>
                                     </div>
                                 </div>
@@ -325,7 +326,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                         {columnMappings.map((m, idx) => (
                                             <div
                                                 key={m.csvColumn}
-                                                className="grid grid-cols-[2fr_2fr_2fr_72px] items-center px-4 py-2.5 gap-3 hover:bg-slate-50/50 transition-colors"
+                                                className="grid grid-cols-[2fr_2fr_2fr_72px] items-center px-4 py-2.5 gap-3 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
                                             >
                                                 <span
                                                     className="text-xs font-mono text-slate-700 truncate"
@@ -333,15 +334,16 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                                 >
                                                     {m.csvColumn}
                                                 </span>
-                                                <select
+                                                <CustomSelect
+                                                    variant="form"
+                                                    size="xs"
                                                     value={m.platformField}
                                                     onChange={e => updateMapping(idx, { platformField: e.target.value })}
-                                                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 transition-colors truncate"
                                                 >
                                                     {PLATFORM_FIELD_OPTIONS.map(opt => (
                                                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                     ))}
-                                                </select>
+                                                </CustomSelect>
                                                 <input
                                                     type="text"
                                                     value={m.displayName}
@@ -353,8 +355,8 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                                     {m.platformField ? (
                                                         <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
                                                             m.autoMapped
-                                                                ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                                                : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                                                                ? 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50'
+                                                                : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50'
                                                         }`}>
                                                             {m.autoMapped ? 'Auto' : 'Manual'}
                                                         </span>
@@ -371,20 +373,21 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                             </div>
 
                             {/* ACWR Column Binding */}
-                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 space-y-3">
+                            <div className="bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-5 space-y-3">
                                 <div className="flex items-center gap-2">
-                                    <ZapIcon size={15} className="text-indigo-600 shrink-0" />
+                                    <ZapIcon size={15} className="text-indigo-600 dark:text-indigo-300 shrink-0" />
                                     <h3 className="text-sm font-semibold text-indigo-900">ACWR Column Binding</h3>
-                                    <span className="text-[10px] text-indigo-500 bg-indigo-100 px-2 py-0.5 rounded-full font-semibold">Required for ACWR</span>
+                                    <span className="text-[10px] text-indigo-500 bg-indigo-100 dark:bg-indigo-900/35 px-2 py-0.5 rounded-full font-semibold">Required for ACWR</span>
                                 </div>
-                                <p className="text-xs text-indigo-700 leading-relaxed">
+                                <p className="text-xs text-indigo-700 dark:text-indigo-400 leading-relaxed">
                                     This team's ACWR method is set to <strong>{methodLabel}</strong>. Select which CSV column
                                     contains that data — the ACWR engine will always read from this column automatically on import.
                                 </p>
-                                <select
+                                <CustomSelect
+                                    variant="form"
                                     value={acwrColumn}
                                     onChange={e => setAcwrColumn(e.target.value)}
-                                    className="w-full bg-white border border-indigo-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-500 transition-colors"
+                                    placeholder="— Select the ACWR load column —"
                                 >
                                     <option value="">— Select the ACWR load column —</option>
                                     {columnMappings.map(m => (
@@ -394,11 +397,11 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                                 : m.csvColumn}
                                         </option>
                                     ))}
-                                </select>
+                                </CustomSelect>
                                 {acwrColumn ? (
-                                    <p className="text-xs text-indigo-700 font-medium flex items-center gap-1.5">
+                                    <p className="text-xs text-indigo-700 dark:text-indigo-400 font-medium flex items-center gap-1.5">
                                         <CheckIcon size={12} className="text-indigo-500" />
-                                        ACWR reads from: <span className="font-mono bg-indigo-100 px-1.5 py-0.5 rounded text-indigo-800">{acwrColumn}</span>
+                                        ACWR reads from: <span className="font-mono bg-indigo-100 dark:bg-indigo-900/35 px-1.5 py-0.5 rounded text-indigo-800">{acwrColumn}</span>
                                     </p>
                                 ) : (
                                     <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
@@ -421,7 +424,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
@@ -498,7 +501,7 @@ export const GpsCategoryManager: React.FC<GpsCategoryManagerProps> = ({ onChange
                         <button
                             onClick={() => handleDelete(cat.id)}
                             title="Remove category"
-                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-colors"
                         >
                             <Trash2Icon size={13} />
                         </button>

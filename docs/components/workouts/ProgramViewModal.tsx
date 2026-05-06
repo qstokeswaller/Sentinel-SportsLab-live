@@ -82,10 +82,10 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
             <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
               <PencilIcon size={13} className="mr-1.5" /> Edit
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 hover:bg-red-50">
+            <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50">
               <Trash2Icon size={13} className="mr-1.5" /> Delete
             </Button>
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>
@@ -165,7 +165,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
         <div className="px-5 py-5 space-y-5">
           {/* Rest Day block */}
           {day.is_rest_day ? (
-            <div className="flex flex-col items-center justify-center py-14 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/50 text-center space-y-3">
+            <div className="flex flex-col items-center justify-center py-14 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 text-center space-y-3">
               <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center">
                 <MoonIcon size={24} className="text-slate-400" />
               </div>
@@ -249,12 +249,12 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
           <div className="text-sm font-medium text-slate-800">{exerciseName}</div>
           {hasMeta && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
-              {row.sets && <span>Sets: <span className="font-medium text-indigo-600">{row.sets}</span></span>}
-              {row.reps && <span>Reps: <span className="font-medium text-indigo-600">{row.reps}</span></span>}
+              {row.sets && <span>Sets: <span className="font-medium text-indigo-600 dark:text-indigo-300">{row.sets}</span></span>}
+              {row.reps && <span>Reps: <span className="font-medium text-indigo-600 dark:text-indigo-300">{row.reps}</span></span>}
               {row.weight && (
                 <span className="flex items-center gap-0.5">
                   <Weight size={10} className="text-indigo-500" />
-                  <span className="font-medium text-indigo-600">{row.weight} kg</span>
+                  <span className="font-medium text-indigo-600 dark:text-indigo-300">{row.weight} kg</span>
                 </span>
               )}
               {(row.rest_min > 0 || row.rest_sec > 0) && (
@@ -279,7 +279,7 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
                 <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-medium">{bp}</span>
               ))}
               {categories.map((cat: string) => (
-                <span key={cat} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">{cat}</span>
+                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-medium">{cat}</span>
               ))}
             </div>
           )}
@@ -287,7 +287,7 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
           {desc && <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>}
           {videoUrl && (
             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+               className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 transition-colors">
               <ExternalLink size={10} />
               Video Reference
             </a>

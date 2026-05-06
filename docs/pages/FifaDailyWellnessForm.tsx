@@ -25,30 +25,30 @@ import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send } 
 // ═══════════════════════════════════════════════════════════════════════
 
 const SCALE_COLORS: Record<number, { selected: string; unselected: string }> = {
-    1:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-    2:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+    1:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
+    2:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
     3:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.03]',       unselected: 'bg-lime-50 border-lime-200 text-lime-700' },
     4:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.03]',       unselected: 'bg-lime-50 border-lime-200 text-lime-700' },
     5:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.03]',   unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
     6:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.03]',   unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
-    7:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.03]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700' },
+    7:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.03]',     unselected: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700' },
     8:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-lg scale-[1.03]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700' },
-    9:  { selected: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 text-red-700' },
-    10: { selected: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 text-red-700' },
+    9:  { selected: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
+    10: { selected: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
 };
 
 // Reversed for positive metrics (1=bad, 10=good)
 const SCALE_COLORS_POSITIVE: Record<number, { selected: string; unselected: string }> = {
-    1:  { selected: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 text-red-700' },
-    2:  { selected: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 text-red-700' },
+    1:  { selected: 'bg-red-600 border-red-600 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
+    2:  { selected: 'bg-red-500 border-red-500 text-white shadow-lg scale-[1.03]',         unselected: 'bg-red-50 border-red-200 dark:border-red-900/50 text-red-700' },
     3:  { selected: 'bg-orange-500 border-orange-500 text-white shadow-lg scale-[1.03]',   unselected: 'bg-orange-50 border-orange-200 text-orange-700' },
-    4:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.03]',     unselected: 'bg-amber-50 border-amber-200 text-amber-700' },
+    4:  { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.03]',     unselected: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700' },
     5:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.03]',   unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
     6:  { selected: 'bg-yellow-400 border-yellow-400 text-white shadow-lg scale-[1.03]',   unselected: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
     7:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.03]',       unselected: 'bg-lime-50 border-lime-200 text-lime-700' },
     8:  { selected: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.03]',       unselected: 'bg-lime-50 border-lime-200 text-lime-700' },
-    9:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-    10: { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+    9:  { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
+    10: { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.03]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' },
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -377,9 +377,9 @@ const FifaDailyWellnessForm: React.FC = () => {
             {options.map(opt => {
                 const isSelected = responses[id] === opt.value;
                 const colorMap = {
-                    emerald: { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-emerald-50 border-emerald-200' },
-                    amber: { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-amber-50 border-amber-200' },
-                    rose: { selected: 'bg-rose-500 border-rose-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-rose-50 border-rose-200' },
+                    emerald: { selected: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50' },
+                    amber: { selected: 'bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' },
+                    rose: { selected: 'bg-rose-500 border-rose-500 text-white shadow-lg scale-[1.02]', unselected: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50' },
                 };
                 const c = colorMap[opt.color] || colorMap.emerald;
                 return (
@@ -440,11 +440,11 @@ const FifaDailyWellnessForm: React.FC = () => {
             ) : weeklyFollowUp ? (
                 /* ── STATE 2: Repeat trigger or recent deep check — ask if anything new ── */
                 <>
-                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-5">
+                    <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-5">
                         <CheckCircle2 size={40} />
                     </div>
                     <h1 className="text-xl font-bold text-slate-900 mb-3">Daily Check-in Saved</h1>
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 max-w-sm text-left">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5 mb-6 max-w-sm text-left">
                         {lastWeeklyDate ? (
                             <>
                                 <p className="text-sm text-slate-700 leading-relaxed">
@@ -493,7 +493,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                 } catch { /* best-effort — reload regardless */ }
                                 window.location.reload();
                             }}
-                            className="w-full px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all text-sm"
+                            className="w-full px-6 py-3.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 rounded-xl font-semibold transition-all text-sm"
                         >
                             No change — same issue as before
                         </button>
@@ -502,7 +502,7 @@ const FifaDailyWellnessForm: React.FC = () => {
             ) : (
                 /* ── STATE 3: No flags — normal success ── */
                 <>
-                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 animate-bounce">
                         <CheckCircle2 size={40} />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">Check-in Complete!</h1>
@@ -540,7 +540,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                             <Activity size={13} className="text-white" />
                         </div>
                         <span className="font-bold text-sm text-slate-900 tracking-tight">
-                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
                     </div>
                     <span className="text-[9px] text-slate-400 tracking-wide uppercase">Daily Wellness Check-in</span>
@@ -581,9 +581,9 @@ const FifaDailyWellnessForm: React.FC = () => {
                             )}
                             <div className="space-y-3">
                                 {[
-                                    { value: 1, label: 'Mild', desc: 'Noticeable but not limiting — I can train normally', color: 'bg-amber-400 border-amber-400', unsel: 'bg-amber-50 border-amber-200 text-amber-800' },
+                                    { value: 1, label: 'Mild', desc: 'Noticeable but not limiting — I can train normally', color: 'bg-amber-400 border-amber-400', unsel: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-800' },
                                     { value: 2, label: 'Moderate', desc: 'Uncomfortable — training may need to be modified', color: 'bg-orange-500 border-orange-500', unsel: 'bg-orange-50 border-orange-200 text-orange-800' },
-                                    { value: 3, label: 'Severe', desc: 'Significant pain — I cannot train or am very limited', color: 'bg-rose-600 border-rose-600', unsel: 'bg-rose-50 border-rose-200 text-rose-800' },
+                                    { value: 3, label: 'Severe', desc: 'Significant pain — I cannot train or am very limited', color: 'bg-rose-600 border-rose-600', unsel: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-800' },
                                 ].map(opt => {
                                     const isSelected = picked === opt.value;
                                     return (
@@ -669,7 +669,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <button type="button" onClick={() => step05(-1)}
-                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
+                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
                                         −
                                     </button>
                                     <input
@@ -689,7 +689,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                         className="flex-1 text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-5 outline-none focus:border-cyan-500 transition-colors"
                                     />
                                     <button type="button" onClick={() => step05(1)}
-                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
+                                        className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
                                         +
                                     </button>
                                 </div>

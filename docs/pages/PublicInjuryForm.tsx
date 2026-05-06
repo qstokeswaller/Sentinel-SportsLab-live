@@ -11,6 +11,7 @@ import {
     WEIGHT_BEARING_OPTIONS, TRAINING_STATUS_OPTIONS, TREATMENT_OPTIONS, RTP_PHASES
 } from '../utils/mocks';
 import { uploadQuestionImage } from '../utils/imageUpload';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -180,7 +181,7 @@ const PublicInjuryForm = () => {
 
     if (submitted) return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6 animate-bounce">
                 <CheckCircle2 size={40} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Report Submitted!</h1>
@@ -214,7 +215,7 @@ const PublicInjuryForm = () => {
                             <Activity size={13} className="text-white" />
                         </div>
                         <span className="font-bold text-sm text-slate-900 tracking-tight">
-                            Sentinel <span className="text-indigo-600">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
                     </div>
                     <span className="text-[9px] text-slate-400 tracking-wide uppercase">Athlete Monitoring & Performance Intelligence</span>
@@ -303,11 +304,15 @@ const PublicInjuryForm = () => {
                     <div className="flex-1 space-y-6">
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Classification</h2>
                         <div><Label>Injury Type</Label>
-                            <select value={form.classification || ''} onChange={e => patch({ classification: e.target.value || undefined })}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500">
+                            <CustomSelect
+                                variant="form"
+                                value={form.classification || ''}
+                                onChange={e => patch({ classification: e.target.value || undefined })}
+                                placeholder="Select..."
+                            >
                                 <option value="">Select...</option>
                                 {INJURY_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                            </CustomSelect>
                         </div>
                         <div><Label>Severity Grade</Label>
                             <PillRow options={SEVERITY_GRADES} value={form.severityGrade} onChange={v => patch({ severityGrade: v })}
@@ -478,7 +483,7 @@ const PublicInjuryForm = () => {
                 {/* Navigation */}
                 <div className="flex items-center gap-3 pt-8 mt-auto">
                     {step > 0 && (
-                        <button onClick={handleBack} className="px-5 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-1">
+                        <button onClick={handleBack} className="px-5 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all flex items-center gap-1">
                             <ChevronLeft size={16} /> Back
                         </button>
                     )}
