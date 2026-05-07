@@ -1,7 +1,7 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
-import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target } from 'lucide-react';
+import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target, ChevronRight } from 'lucide-react';
 import { formatDateShort, DEFAULT_MODALITY_PRESETS, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
 
 function daysBetween(a, b) {
@@ -32,10 +32,47 @@ const STATUS_STYLES = {
 };
 const STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk' };
 
+function GanttPopup({ popup, onClose }) {
+    if (!popup) return null;
+    const safeX = Math.min(popup.x + 14, window.innerWidth - 248);
+    const safeY = Math.min(popup.y - 8,  window.innerHeight - 200);
+    return (
+        <div className="fixed z-[700] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl w-52 overflow-hidden"
+            style={{ left: safeX + 'px', top: safeY + 'px' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
+                style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
+                <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600"><X size={11} /></button>
+            </div>
+            <div className="px-3 py-2 space-y-1.5">
+                {popup.rows.filter(([, v]) => v).map(([label, val]) => (
+                    <div key={label} className="flex gap-2">
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     const { handleUpdatePlan, setIsPlanPhaseModalOpen, setEditingPlanPhase } = useAppState();
     const [newModality, setNewModality] = useState('');
     const [editingModalities, setEditingModalities] = useState(false);
+
+    const [popup, setPopup] = useState(null);
+    useEffect(() => {
+        if (!popup) return;
+        const close = () => setPopup(null);
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+    }, [popup]);
+    const openPopup = (e, id, title, rows, accent) => {
+        e.stopPropagation();
+        setPopup(p => p?.id === id ? null : { id, title, rows, accent, x: e.clientX, y: e.clientY });
+    };
 
     const today         = new Date().toISOString().split('T')[0];
     const totalPeriods  = plan.phases.reduce((s, ph) => s + ph.blocks.length, 0);
@@ -205,7 +242,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
 
             {/* ── Plan Timeline Gantt ──────────────────────────────────── */}
             {ganttDates.start && weeks.length > 0 && (
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
                         <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
@@ -253,28 +290,45 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                     if (!ph.startDate) return null;
                                     const l = pxLeft(ph.startDate);
                                     const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    const isOpen = popup?.id === ph.id;
                                     return (
-                                        <div key={ph.id} title={ph.name}
-                                            className="absolute h-full rounded-lg flex items-center px-2 overflow-hidden"
-                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + '30', border: `1.5px solid ${ph.color || '#6366f1'}80` }}>
+                                        <button key={ph.id}
+                                            onClick={e => openPopup(e, ph.id, ph.name, [
+                                                ['Dates', [ph.startDate && formatDateShort(ph.startDate), ph.endDate && formatDateShort(ph.endDate)].filter(Boolean).join(' — ')],
+                                                ['Goals', ph.goals],
+                                                ['Focus', ph.focuses?.length ? ph.focuses.join(', ') : ph.trainingPhase],
+                                                ['Blocks', ph.blocks.length + ' block' + (ph.blocks.length !== 1 ? 's' : '')],
+                                            ], ph.color || '#6366f1')}
+                                            title={ph.name}
+                                            className="absolute h-full rounded-lg flex items-center px-2 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
+                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + (isOpen ? '40' : '30'), border: `1.5px solid ${ph.color || '#6366f1'}${isOpen ? 'cc' : '80'}` }}>
                                             <span className="text-[9px] font-bold truncate" style={{ color: ph.color || '#6366f1' }}>{ph.name}</span>
-                                        </div>
+                                        </button>
                                     );
                                 })}
                             </div>
                             {/* Block bars */}
                             <div className="relative mb-1.5" style={{ height: '20px' }}>
-                                {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color }))).map(b => {
+                                {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color, phaseName: ph.name }))).map(b => {
                                     if (!b.startDate) return null;
                                     const l = pxLeft(b.startDate);
                                     const w = b.endDate ? pxWidth(b.startDate, b.endDate) : 40;
                                     const color = b.color || b.phaseColor || '#6366f1';
+                                    const isOpen = popup?.id === b.id;
                                     return (
-                                        <div key={b.id} title={`${b.name}${b.label ? ' · ' + b.label : ''}`}
-                                            className="absolute h-full rounded flex items-center px-1.5 overflow-hidden"
-                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: color + '28', border: `1px solid ${color}60` }}>
-                                            <span className="text-[8px] font-semibold truncate" style={{ color }}>{b.name}</span>
-                                        </div>
+                                        <button key={b.id}
+                                            onClick={e => openPopup(e, b.id, b.label || b.name, [
+                                                ['Phase',    b.phaseName],
+                                                ['Dates',    [b.startDate && formatDateShort(b.startDate), b.endDate && formatDateShort(b.endDate)].filter(Boolean).join(' — ')],
+                                                ['Category', b.blockType],
+                                                ['Intensity',b.intensityLevel],
+                                                ['Goals',    b.goals],
+                                            ], color)}
+                                            title={`${b.label || b.name}${b.label && b.name ? ' · ' + b.name : ''}`}
+                                            className="absolute h-full rounded flex items-center px-1.5 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
+                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: color + (isOpen ? '40' : '28'), border: `1px solid ${color}${isOpen ? 'cc' : '60'}` }}>
+                                            <span className="text-[8px] font-semibold truncate" style={{ color }}>{b.label || b.name}</span>
+                                        </button>
                                     );
                                 })}
                                 {/* Today line */}
@@ -291,12 +345,21 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                         const rawW  = ev.endDate ? pxWidth(ev.date, ev.endDate) : pxWidth(ev.date, ev.date);
                                         const w     = Math.max(rawW, 36);
                                         const color = ev.color || EVENT_TYPE_COLORS[ev.type] || '#6366f1';
+                                        const isOpen = popup?.id === ev.id;
                                         return (
-                                            <div key={ev.id} title={ev.label}
-                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden"
-                                                style={{ left: l + 'px', width: w + 'px', backgroundColor: color + '30', border: `1.5px solid ${color}` }}>
-                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label}</span>
-                                            </div>
+                                            <button key={ev.id}
+                                                onClick={e => openPopup(e, ev.id, ev.label || ev.title || '', [
+                                                    ['Type',     ev.type?.replace(/_/g, ' ')],
+                                                    ['Date',     [ev.date && formatDateShort(ev.date), ev.endDate && formatDateShort(ev.endDate)].filter(Boolean).join(' — ')],
+                                                    ['Impt.',    ev.importance],
+                                                    ['Location', ev.location],
+                                                    ['Notes',    ev.description],
+                                                ], color)}
+                                                title={ev.label || ev.title || ''}
+                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
+                                                style={{ left: l + 'px', width: w + 'px', backgroundColor: color + (isOpen ? '50' : '30'), border: `1.5px solid ${color}` }}>
+                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label || ev.title}</span>
+                                            </button>
                                         );
                                     })}
                                 </div>
@@ -305,6 +368,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                         </div>
                     </div>
                 </div>
+                <GanttPopup popup={popup} onClose={() => setPopup(null)} /></>
             )}
 
             {/* Phases summary */}

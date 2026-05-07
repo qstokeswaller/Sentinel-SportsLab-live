@@ -1,8 +1,8 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
-    Plus, PencilIcon, Trash2, MoreHorizontal,
+    Plus, PencilIcon, Trash2, MoreHorizontal, X,
     Layers, BookOpen, BarChart2, Target,
     CheckCircle2, Loader2, Timer, LayoutList,
 } from 'lucide-react';
@@ -67,6 +67,32 @@ function StatCard({ icon, label, value, valueClass = 'text-slate-800 dark:text-[
     );
 }
 
+// ── Gantt popup ────────────────────────────────────────────────────────────────
+function GanttPopup({ popup, onClose }) {
+    if (!popup) return null;
+    const safeX = Math.min(popup.x + 14, window.innerWidth - 248);
+    const safeY = Math.min(popup.y - 8,  window.innerHeight - 200);
+    return (
+        <div className="fixed z-[700] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl w-52 overflow-hidden"
+            style={{ left: safeX + 'px', top: safeY + 'px' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
+                style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
+                <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600"><X size={11} /></button>
+            </div>
+            <div className="px-3 py-2 space-y-1.5">
+                {popup.rows.filter(([, v]) => v).map(([label, val]) => (
+                    <div key={label} className="flex gap-2">
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export const BlocksTab = ({ plan }) => {
     const {
@@ -77,6 +103,30 @@ export const BlocksTab = ({ plan }) => {
     const [selectedKey, setSelectedKey] = useState(null); // "phaseId:blockId"
     const [openMenuKey, setOpenMenuKey] = useState(null);
     const today = new Date().toISOString().split('T')[0];
+
+    const [popup, setPopup] = useState(null);
+    useEffect(() => {
+        if (!popup) return;
+        const close = () => setPopup(null);
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+    }, [popup]);
+    const openEvPopup = (e, ev) => {
+        e.stopPropagation();
+        const color = ev.color || EVENT_TYPE_COLORS[ev.type] || '#6366f1';
+        const title = ev.label || ev.title || '';
+        setPopup(p => p?.id === ev.id ? null : {
+            id: ev.id, title, accent: color,
+            rows: [
+                ['Type',     ev.type?.replace(/_/g, ' ') || '—'],
+                ['Date',     [ev.date && formatDateShort(ev.date), ev.endDate && formatDateShort(ev.endDate)].filter(Boolean).join(' — ') || '—'],
+                ['Impt.',    ev.importance],
+                ['Location', ev.location],
+                ['Notes',    ev.description],
+            ],
+            x: e.clientX, y: e.clientY,
+        });
+    };
 
     // Flat list of all blocks with parent phase info
     const allBlocks = useMemo(() =>
@@ -157,7 +207,7 @@ export const BlocksTab = ({ plan }) => {
 
             {/* ── Gantt — phases + blocks ──────────────────────────────────── */}
             {ganttDates.start && weeks.length > 0 && (
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
                         <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
@@ -229,7 +279,7 @@ export const BlocksTab = ({ plan }) => {
                                     return (
                                         <button key={key}
                                             onClick={e => { e.stopPropagation(); setSelectedKey(isSel ? null : key); }}
-                                            title={`${b.name}${b.label ? ' · ' + b.label : ''}`}
+                                            title={`${b.label || b.name}${b.label && b.name ? ' · ' + b.name : ''}`}
                                             className="absolute h-full rounded-lg flex items-center px-1.5 overflow-hidden transition-all hover:opacity-90"
                                             style={{
                                                 left: l + 'px', width: w + 'px',
@@ -240,7 +290,7 @@ export const BlocksTab = ({ plan }) => {
                                             }}>
                                             <span className="text-[8px] font-bold truncate"
                                                 style={{ color: isSel ? 'white' : (b.color || '#6366f1') }}>
-                                                {b.name}
+                                                {b.label || b.name}
                                             </span>
                                         </button>
                                     );
@@ -260,12 +310,14 @@ export const BlocksTab = ({ plan }) => {
                                         const rawW  = ev.endDate ? pxWidth(ev.date, ev.endDate) : pxWidth(ev.date, ev.date);
                                         const w     = Math.max(rawW, 36);
                                         const color = ev.color || EVENT_TYPE_COLORS[ev.type] || '#6366f1';
+                                        const isOpen = popup?.id === ev.id;
                                         return (
-                                            <div key={ev.id} title={ev.label}
-                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden"
-                                                style={{ left: l + 'px', width: w + 'px', backgroundColor: color + '30', border: `1.5px solid ${color}` }}>
-                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label}</span>
-                                            </div>
+                                            <button key={ev.id} onClick={e => openEvPopup(e, ev)}
+                                                title={ev.label || ev.title || ''}
+                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
+                                                style={{ left: l + 'px', width: w + 'px', backgroundColor: color + (isOpen ? '50' : '30'), border: `1.5px solid ${color}` }}>
+                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label || ev.title}</span>
+                                            </button>
                                         );
                                     })}
                                 </div>
@@ -275,6 +327,7 @@ export const BlocksTab = ({ plan }) => {
                         </div>
                     </div>
                 </div>
+                <GanttPopup popup={popup} onClose={() => setPopup(null)} /></>
             )}
 
             {/* ── Blocks table ─────────────────────────────────────────────── */}

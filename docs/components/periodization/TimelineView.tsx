@@ -603,11 +603,11 @@ export const TimelineView = ({ plan }) => {
                                         onContextMenu={e => handleBlockContextMenu(e, { id: block._phaseId }, block)}
                                         className="absolute top-1.5 bottom-1.5 rounded-lg border-2 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden"
                                         style={{ left: `${left}px`, width: `${width}px`, ...hexToTailwind(block.color || block._phaseColor || '#6366f1', 0.18) }}>
-                                        <span className="text-[10px] font-bold uppercase tracking-wide truncate min-w-0 w-full text-center px-1.5"
-                                            style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.name}</span>
-                                        {!isNarrow && (
-                                            <span className="text-[9px] opacity-75 truncate min-w-0 w-full text-center px-1.5"
-                                                style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.label}</span>
+                                        <span className="text-[10px] font-bold truncate min-w-0 w-full text-center px-1.5"
+                                            style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.label || block.name}</span>
+                                        {!isNarrow && block.label && block.name && (
+                                            <span className="text-[9px] opacity-60 truncate min-w-0 w-full text-center px-1.5"
+                                                style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.name}</span>
                                         )}
                                     </div>
                                 );

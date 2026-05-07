@@ -203,7 +203,7 @@ function PlanGanttStrip({ plan }) {
                                 <button key={b.id} onClick={e => openPopup(e, 'block', b)}
                                     className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
                                     style={{ left: l + 'px', width: w + 'px', backgroundColor: color + (isOpen ? '40' : '28'), border: `1px solid ${color}${isOpen ? 'cc' : '60'}` }}>
-                                    <span className="text-[8px] font-semibold truncate" style={{ color }}>{b.name}</span>
+                                    <span className="text-[8px] font-semibold truncate" style={{ color }}>{b.label || b.name}</span>
                                 </button>
                             );
                         })}
@@ -225,7 +225,7 @@ function PlanGanttStrip({ plan }) {
                                     <button key={ev.id} onClick={e => openPopup(e, 'event', ev)}
                                         className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
                                         style={{ left: l + 'px', width: w + 'px', backgroundColor: color + (isOpen ? '50' : '30'), border: `1.5px solid ${color}` }}>
-                                        <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label}</span>
+                                        <span className="text-[7px] font-semibold truncate" style={{ color }}>{ev.label || ev.title}</span>
                                     </button>
                                 );
                             })}

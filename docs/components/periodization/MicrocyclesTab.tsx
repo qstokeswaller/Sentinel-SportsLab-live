@@ -77,6 +77,31 @@ function weekMonday(dateStr) {
     return d.toISOString().split('T')[0];
 }
 
+function GanttPopup({ popup, onClose }) {
+    if (!popup) return null;
+    const safeX = Math.min(popup.x + 14, window.innerWidth - 248);
+    const safeY = Math.min(popup.y - 8,  window.innerHeight - 200);
+    return (
+        <div className="fixed z-[700] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl w-52 overflow-hidden"
+            style={{ left: safeX + 'px', top: safeY + 'px' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
+                style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
+                <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600"><X size={11} /></button>
+            </div>
+            <div className="px-3 py-2 space-y-1.5">
+                {popup.rows.filter(([, v]) => v).map(([label, val]) => (
+                    <div key={label} className="flex gap-2">
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 const EMPTY_SESSION = { name: '', load: '', modality: '', duration: '' };
 const INPUT_CLS = 'w-full text-[9px] bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded px-1.5 py-1 outline-none focus:border-indigo-400 text-slate-800 dark:text-[#E2E8F0]';
 
@@ -92,6 +117,30 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
     } = useAppState();
     const ganttRef = useRef(null);
     const skipNextBlockJump = useRef(false);
+
+    const [ganttPopup, setGanttPopup] = useState(null);
+    useEffect(() => {
+        if (!ganttPopup) return;
+        const close = () => setGanttPopup(null);
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+    }, [ganttPopup]);
+    const openGanttEvPopup = (e, ev) => {
+        e.stopPropagation();
+        const color = ev.color || EVENT_TYPE_COLORS[ev.type] || '#6366f1';
+        const title = ev.label || ev.title || '';
+        setGanttPopup(p => p?.id === ev.id ? null : {
+            id: ev.id, title, accent: color,
+            rows: [
+                ['Type',     ev.type?.replace(/_/g, ' ')],
+                ['Date',     [ev.date && formatDateShort(ev.date), ev.endDate && formatDateShort(ev.endDate)].filter(Boolean).join(' — ')],
+                ['Impt.',    ev.importance],
+                ['Location', ev.location],
+                ['Notes',    ev.description],
+            ],
+            x: e.clientX, y: e.clientY,
+        });
+    };
 
     const [selPhaseId, setSelPhaseId]       = useState(initialPhaseId || plan.phases[0]?.id || '');
     const [selBlockId, setSelBlockId]       = useState(initialBlockId || '');
@@ -304,10 +353,12 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                     if (!b.startDate) continue;
                     const bEnd = b.endDate || '9999-12-31';
                     if (wDate <= bEnd && wEndStr >= b.startDate) {
+                        skipNextBlockJump.current = true;
                         setSelBlockId(b.id);
                         return;
                     }
                 }
+                skipNextBlockJump.current = true;
                 setSelBlockId(ph.blocks[0]?.id || '');
                 return;
             }
@@ -447,128 +498,151 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
             {/* ── Gantt navigation ─────────────────────────────────────────── */}
             {ganttStart && allWeeks.length > 0 && (
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                    <div ref={ganttRef} className="overflow-x-auto">
-                        <div style={{ width: ganttW + 32 + 'px' }} className="px-4 pt-3 pb-2.5">
+                <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="flex">
 
-                            {/* Month labels */}
-                            <div className="relative mb-0.5" style={{ height: '13px' }}>
-                                {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide"
-                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
-                                        {mg.label}
-                                    </div>
-                                ))}
+                        {/* ── Left row labels ───────────────────────────────── */}
+                        <div className="shrink-0 border-r border-slate-100 dark:border-[#243A58] pt-3 pb-2.5 flex flex-col" style={{ width: '52px' }}>
+                            {/* Spacer: month row 13px + mb-0.5 2px + week row 20px + mb-2 8px = 43px */}
+                            <div style={{ height: '43px' }} />
+                            <div className="flex items-center justify-center" style={{ height: '18px', marginBottom: '4px' }}>
+                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Phases</span>
                             </div>
-
-                            {/* Clickable week buttons — ALL plan weeks */}
-                            <div className="relative mb-2" style={{ height: '20px' }}>
-                                {allWeeks.map((w, i) => {
-                                    const isActive  = w.date === currentWeekStart;
-                                    const inSelBlock = selBlock?.startDate && selBlock?.endDate
-                                        ? (w.date >= selBlock.startDate && w.date <= selBlock.endDate)
-                                        : selBlock?.weeks.some(bw => bw.startDate === w.date);
-                                    const hasSessions = plan.phases.some(ph =>
-                                        ph.blocks.some(b => b.weeks.some(bw => bw.startDate === w.date && bw.sessions?.length > 0))
-                                    );
-                                    return (
-                                        <button key={i}
-                                            onClick={() => jumpToGanttWeek(w.date)}
-                                            title={formatDateShort(w.date)}
-                                            className={`absolute h-full rounded text-[8px] font-semibold flex items-center justify-center transition-all cursor-pointer
-                                                ${isActive
-                                                    ? 'bg-blue-500 text-white'
-                                                    : inSelBlock
-                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/50'
-                                                        : 'text-slate-300 dark:text-[#475569] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-500'
-                                                }`}
-                                            style={{ left: i * WEEK_W + 'px', width: WEEK_W - 2 + 'px' }}>
-                                            W{w.weekNum}
-                                            {hasSessions && !isActive && (
-                                                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-500" />
-                                            )}
-                                        </button>
-                                    );
-                                })}
+                            <div className="flex items-center justify-center" style={{ height: '18px' }}>
+                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Blocks</span>
                             </div>
-
-                            {/* Phase bars — clickable */}
-                            <div className="relative mb-1" style={{ height: '18px' }}>
-                                {plan.phases.map(ph => {
-                                    if (!ph.startDate) return null;
-                                    const isSel = ph.id === selPhaseId;
-                                    const lPx = daysBetween(ganttStart, ph.startDate) / totalDaysPlan * ganttW;
-                                    const wPx = ph.endDate ? Math.max(20, daysBetween(ph.startDate, ph.endDate) / totalDaysPlan * ganttW) : 40;
-                                    return (
-                                        <button key={ph.id}
-                                            onClick={() => jumpToPhase(ph)}
-                                            title={ph.name}
-                                            className="absolute h-full rounded flex items-center px-1.5 overflow-hidden transition-all hover:opacity-90 cursor-pointer"
-                                            style={{
-                                                left: lPx + 'px', width: wPx + 'px',
-                                                backgroundColor: isSel ? (ph.color || '#6366f1') + '50' : (ph.color || '#6366f1') + '20',
-                                                border: `1px solid ${ph.color || '#6366f1'}${isSel ? '90' : '40'}`,
-                                            }}>
-                                            <span className="text-[8px] font-bold truncate" style={{ color: ph.color || '#6366f1' }}>{ph.name}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Block bars — clickable */}
-                            <div className="relative" style={{ height: '18px' }}>
-                                {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color || '#6366f1', phaseId: ph.id }))).map(b => {
-                                    if (!b.startDate) return null;
-                                    const isSel = b.id === selBlockId;
-                                    const bColor = b.color || b.phaseColor;
-                                    const lPx = daysBetween(ganttStart, b.startDate) / totalDaysPlan * ganttW;
-                                    const wPx = b.endDate ? Math.max(20, daysBetween(b.startDate, b.endDate) / totalDaysPlan * ganttW) : 32;
-                                    return (
-                                        <button key={b.id}
-                                            onClick={() => jumpToBlock(b.phaseId, b)}
-                                            title={b.label || b.name}
-                                            className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-90 cursor-pointer"
-                                            style={{
-                                                left: lPx + 'px', width: wPx + 'px',
-                                                backgroundColor: isSel ? bColor : bColor + '28',
-                                                border: `1px solid ${bColor}${isSel ? 'ff' : '80'}`,
-                                                outline: isSel ? `2px solid ${bColor}` : 'none',
-                                                outlineOffset: '1px',
-                                            }}>
-                                            <span className="text-[7px] font-bold truncate" style={{ color: isSel ? 'white' : bColor }}>
-                                                {b.name}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                                {/* Today marker */}
-                                {today >= ganttStart && today <= ganttEnd && (
-                                    <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10"
-                                        style={{ left: daysBetween(ganttStart, today) / totalDaysPlan * ganttW + 'px' }} />
-                                )}
-                            </div>
-
-                            {/* Events row */}
                             {(plan.events || []).length > 0 && (
-                                <div className="relative mt-1" style={{ height: '14px' }}>
-                                    {(plan.events || []).map(e => {
-                                        const color = e.color || EVENT_TYPE_COLORS[e.type] || '#6366f1';
-                                        const lPx = daysBetween(ganttStart, e.date) / totalDaysPlan * ganttW;
-                                        const rawW = e.endDate ? daysBetween(e.date, e.endDate) / totalDaysPlan * ganttW : 0;
-                                        const wPx = Math.max(rawW, 36);
-                                        return (
-                                            <div key={e.id} title={e.label || ''}
-                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden"
-                                                style={{ left: lPx + 'px', width: wPx + 'px', backgroundColor: color + '30', border: `1.5px solid ${color}` }}>
-                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{e.label}</span>
-                                            </div>
-                                        );
-                                    })}
+                                <div className="flex items-center justify-center" style={{ height: '14px', marginTop: '4px' }}>
+                                    <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Events</span>
                                 </div>
                             )}
                         </div>
+
+                        {/* ── Scrollable gantt content ──────────────────────── */}
+                        <div ref={ganttRef} className="flex-1 overflow-x-auto">
+                            <div style={{ width: ganttW + 16 + 'px' }} className="px-2 pt-3 pb-2.5">
+
+                                {/* Month labels */}
+                                <div className="relative mb-0.5" style={{ height: '13px' }}>
+                                    {monthGroups.map((mg, i) => (
+                                        <div key={i} className="absolute text-[9px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide"
+                                            style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                            {mg.label}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Clickable week buttons — ALL plan weeks */}
+                                <div className="relative mb-2" style={{ height: '20px' }}>
+                                    {allWeeks.map((w, i) => {
+                                        const isActive  = w.date === currentWeekStart;
+                                        const inSelBlock = selBlock?.startDate && selBlock?.endDate
+                                            ? (w.date >= selBlock.startDate && w.date <= selBlock.endDate)
+                                            : selBlock?.weeks.some(bw => bw.startDate === w.date);
+                                        const hasSessions = plan.phases.some(ph =>
+                                            ph.blocks.some(b => b.weeks.some(bw => bw.startDate === w.date && bw.sessions?.length > 0))
+                                        );
+                                        return (
+                                            <button key={i}
+                                                onClick={() => jumpToGanttWeek(w.date)}
+                                                title={formatDateShort(w.date)}
+                                                className={`absolute h-full rounded text-[8px] font-semibold flex items-center justify-center transition-all cursor-pointer
+                                                    ${isActive
+                                                        ? 'bg-blue-500 text-white'
+                                                        : inSelBlock
+                                                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/50'
+                                                            : 'text-slate-300 dark:text-[#475569] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-500'
+                                                    }`}
+                                                style={{ left: i * WEEK_W + 'px', width: WEEK_W - 2 + 'px' }}>
+                                                W{w.weekNum}
+                                                {hasSessions && !isActive && (
+                                                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-400 dark:bg-indigo-500" />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Phase bars */}
+                                <div className="relative mb-1" style={{ height: '18px' }}>
+                                    {plan.phases.map(ph => {
+                                        if (!ph.startDate) return null;
+                                        const isSel = ph.id === selPhaseId;
+                                        const lPx = daysBetween(ganttStart, ph.startDate) / totalDaysPlan * ganttW;
+                                        const wPx = ph.endDate ? Math.max(20, daysBetween(ph.startDate, ph.endDate) / totalDaysPlan * ganttW) : 40;
+                                        return (
+                                            <button key={ph.id}
+                                                onClick={() => jumpToPhase(ph)}
+                                                title={ph.name}
+                                                className="absolute h-full rounded flex items-center px-1.5 overflow-hidden transition-all hover:opacity-90 cursor-pointer"
+                                                style={{
+                                                    left: lPx + 'px', width: wPx + 'px',
+                                                    backgroundColor: isSel ? (ph.color || '#6366f1') + '50' : (ph.color || '#6366f1') + '20',
+                                                    border: `1px solid ${ph.color || '#6366f1'}${isSel ? '90' : '40'}`,
+                                                }}>
+                                                <span className="text-[8px] font-bold truncate" style={{ color: ph.color || '#6366f1' }}>{ph.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Block bars */}
+                                <div className="relative" style={{ height: '18px' }}>
+                                    {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color || '#6366f1', phaseId: ph.id }))).map(b => {
+                                        if (!b.startDate) return null;
+                                        const isSel = b.id === selBlockId;
+                                        const bColor = b.color || b.phaseColor;
+                                        const lPx = daysBetween(ganttStart, b.startDate) / totalDaysPlan * ganttW;
+                                        const wPx = b.endDate ? Math.max(20, daysBetween(b.startDate, b.endDate) / totalDaysPlan * ganttW) : 32;
+                                        return (
+                                            <button key={b.id}
+                                                onClick={() => jumpToBlock(b.phaseId, b)}
+                                                title={b.label || b.name}
+                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-90 cursor-pointer"
+                                                style={{
+                                                    left: lPx + 'px', width: wPx + 'px',
+                                                    backgroundColor: isSel ? bColor : bColor + '28',
+                                                    border: `1px solid ${bColor}${isSel ? 'ff' : '80'}`,
+                                                    outline: isSel ? `2px solid ${bColor}` : 'none',
+                                                    outlineOffset: '1px',
+                                                }}>
+                                                <span className="text-[7px] font-bold truncate" style={{ color: isSel ? 'white' : bColor }}>
+                                                    {b.label || b.name}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                    {today >= ganttStart && today <= ganttEnd && (
+                                        <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10"
+                                            style={{ left: daysBetween(ganttStart, today) / totalDaysPlan * ganttW + 'px' }} />
+                                    )}
+                                </div>
+
+                                {/* Events row */}
+                                {(plan.events || []).length > 0 && (
+                                    <div className="relative mt-1" style={{ height: '14px' }}>
+                                        {(plan.events || []).map(e => {
+                                            const color = e.color || EVENT_TYPE_COLORS[e.type] || '#6366f1';
+                                            const lPx = daysBetween(ganttStart, e.date) / totalDaysPlan * ganttW;
+                                            const rawW = e.endDate ? daysBetween(e.date, e.endDate) / totalDaysPlan * ganttW : 0;
+                                            const wPx = Math.max(rawW, 36);
+                                            const isOpen = ganttPopup?.id === e.id;
+                                            return (
+                                                <button key={e.id} onClick={ev => openGanttEvPopup(ev, e)}
+                                                    title={e.label || e.title || ''}
+                                                    className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-80 cursor-pointer"
+                                                    style={{ left: lPx + 'px', width: wPx + 'px', backgroundColor: color + (isOpen ? '50' : '30'), border: `1.5px solid ${color}` }}>
+                                                    <span className="text-[7px] font-semibold truncate" style={{ color }}>{e.label || e.title}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <GanttPopup popup={ganttPopup} onClose={() => setGanttPopup(null)} /></>
             )}
 
             {/* ── Phase / Period / Week selectors ──────────────────────────── */}
