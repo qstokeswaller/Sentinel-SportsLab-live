@@ -1682,6 +1682,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             targetId: planData.targetId || '',
             startDate: planData.startDate || new Date().toISOString().split('T')[0],
             endDate: planData.endDate || undefined,
+            status: planData.status || 'draft',
             viewMode: planData.viewMode || 'timeline',
             modalities: planData.modalities || ['Strength', 'Plyometrics', 'Speed', 'Conditioning', 'Loaded Power'],
             phases: [],
@@ -1774,8 +1775,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         });
         const block = {
             id: _uid(),
-            name: blockData.name || 'New Block',
+            name: blockData.name || 'New Period',
             label: blockData.label || '',
+            intensityLevel: blockData.intensityLevel || 'Moderate',
+            volumeLevel: blockData.volumeLevel || 'Moderate',
             startDate: blockData.startDate,
             endDate: blockData.endDate,
             color: blockData.color || '#8b5cf6',
@@ -1884,6 +1887,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             plannedDuration: sessionData.plannedDuration || null,
             plannedRPE: sessionData.plannedRPE || null,
             load: sessionData.load || null,
+            modality: sessionData.modality || null,
             workoutTemplateId: sessionData.workoutTemplateId || null,
             notes: sessionData.notes || '',
         };

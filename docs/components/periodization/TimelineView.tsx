@@ -313,7 +313,7 @@ export const TimelineView = ({ plan }) => {
                                 ? plan.intensityOverrides?.[weekIdx] !== undefined
                                 : false;
                         const info = isHovered ? getMetricInfo(type, weekIdx) : null;
-                        const wkDate = weekIndexToDate(weekIdx, plan.startDate);
+                        const wkDate = new Date(weekIndexToDate(weekIdx, plan.startDate) + 'T12:00:00');
 
                         return (
                             <div key={weekIdx}
@@ -544,7 +544,7 @@ export const TimelineView = ({ plan }) => {
                         {/* Week numbers + dates */}
                         <div className="flex border-b border-slate-200 bg-slate-50/60 dark:bg-[#132338]/40" style={{ height: `${H_WEEK}px` }}>
                             {Array.from({ length: totalWeeks }, (_, i) => {
-                                const wkDate = weekIndexToDate(i, plan.startDate);
+                                const wkDate = new Date(weekIndexToDate(i, plan.startDate) + 'T12:00:00');
                                 const isToday = showToday && i === todayWkIdx;
                                 return (
                                     <div key={i}

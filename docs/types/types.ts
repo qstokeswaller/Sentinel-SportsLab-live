@@ -333,6 +333,8 @@ export interface InjuryReport {
 
 export type PlanViewMode = 'timeline' | 'cards';
 export type PlanEventType = 'competition' | 'testing' | 'custom';
+export type PlanStatus = 'active' | 'draft' | 'upcoming' | 'at_risk';
+export type LoadIntensity = 'Low' | 'Moderate' | 'High' | 'Very High';
 
 export interface PeriodizationPlan {
   id: string;
@@ -341,6 +343,7 @@ export interface PeriodizationPlan {
   targetId: string;
   startDate: string;
   endDate?: string;
+  status?: PlanStatus;
   viewMode: PlanViewMode;
   modalities: string[];
   phases: PlanPhase[];
@@ -372,6 +375,8 @@ export interface PlanTrainingBlock {
   goals: string;
   modalities: Record<string, string>;
   weeks: PlanWeek[];
+  intensityLevel?: LoadIntensity;
+  volumeLevel?: LoadIntensity;
 }
 
 export interface PlanWeek {
@@ -390,6 +395,7 @@ export interface PlanSession {
   plannedDuration?: number;
   plannedRPE?: number;
   load?: LoadLevel;
+  modality?: string;
   workoutTemplateId?: string;
   notes?: string;
 }
