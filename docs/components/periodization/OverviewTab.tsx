@@ -1,9 +1,29 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
-import { CalendarDays, Users, User, Clock, Layers, Plus, X, Trophy, Target } from 'lucide-react';
+import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target } from 'lucide-react';
 import { formatDateShort } from '../../utils/periodizationUtils';
 import { DEFAULT_MODALITY_PRESETS } from '../../utils/periodizationUtils';
+
+function daysBetween(a, b) {
+    if (!a || !b) return 0;
+    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+}
+
+function getWeeks(startStr, endStr) {
+    if (!startStr || !endStr) return [];
+    const weeks = [];
+    const start = new Date(startStr + 'T12:00:00');
+    const end   = new Date(endStr   + 'T12:00:00');
+    const dow = start.getDay();
+    start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
+    let n = 1;
+    while (start <= end) {
+        weeks.push({ date: start.toISOString().split('T')[0], month: start.toLocaleString('default', { month: 'short' }), year: start.getFullYear(), weekNum: n++ });
+        start.setDate(start.getDate() + 7);
+    }
+    return weeks;
+}
 
 const STATUS_STYLES = {
     active:   'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40',
@@ -18,10 +38,37 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     const [newModality, setNewModality] = useState('');
     const [editingModalities, setEditingModalities] = useState(false);
 
-    const totalPeriods    = plan.phases.reduce((s, ph) => s + ph.blocks.length, 0);
-    const totalWeeks      = plan.phases.reduce((s, ph) => ph.blocks.reduce((bs, b) => bs + (b.weeks || []).length, s), 0);
-    const competitionCount = plan.events.filter(e => e.type === 'competition').length;
-    const totalEvents     = plan.events.length;
+    const today = new Date().toISOString().split('T')[0];
+    const totalPeriods = plan.phases.reduce((s, ph) => s + ph.blocks.length, 0);
+    const totalWeeks   = plan.phases.reduce((s, ph) => ph.blocks.reduce((bs, b) => bs + (b.weeks || []).length, s), 0);
+
+    // Gantt data
+    const ganttDates = useMemo(() => {
+        const starts = [plan.startDate, ...plan.phases.map(ph => ph.startDate)].filter(Boolean).sort();
+        const ends   = [plan.endDate,   ...plan.phases.map(ph => ph.endDate)].filter(Boolean).sort();
+        return { start: starts[0] || null, end: ends[ends.length - 1] || null };
+    }, [plan]);
+
+    const weeks = useMemo(() =>
+        ganttDates.start && ganttDates.end ? getWeeks(ganttDates.start, ganttDates.end) : [],
+        [ganttDates]);
+
+    const monthGroups = useMemo(() => {
+        const groups = [];
+        weeks.forEach((w, i) => {
+            const label = `${w.month} ${w.year}`;
+            if (!groups.length || groups[groups.length - 1].label !== label)
+                groups.push({ label, startIdx: i, count: 1 });
+            else groups[groups.length - 1].count++;
+        });
+        return groups;
+    }, [weeks]);
+
+    const WEEK_W    = 38;
+    const ganttW    = Math.max(640, weeks.length * WEEK_W);
+    const totalDays = Math.max(1, daysBetween(ganttDates.start, ganttDates.end));
+    const pxLeft    = d => Math.max(0, daysBetween(ganttDates.start, d) / totalDays * ganttW);
+    const pxWidth   = (s, e) => Math.max(4, daysBetween(s, e || s) / totalDays * ganttW);
 
     const getTargetName = () => {
         if (plan.targetType === 'Team') return teams.find(t => t.id === plan.targetId)?.name || 'Unknown Team';
@@ -42,10 +89,9 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     };
 
     const STATS = [
-        { label: 'Phases',   value: plan.phases.length },
-        { label: 'Periods',  value: totalPeriods },
-        { label: 'Wk Planned', value: totalWeeks },
-        { label: 'Fixtures', value: competitionCount },
+        { label: 'Phases',      value: plan.phases.length },
+        { label: 'Blocks',      value: totalPeriods },
+        { label: 'Wks Planned', value: totalWeeks },
     ];
 
     return (
@@ -73,7 +119,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-4 gap-3 pt-4 border-t border-slate-100 dark:border-[#243A58]">
+                    <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-[#243A58]">
                         {STATS.map(({ label, value }) => (
                             <div key={label}>
                                 <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
@@ -92,12 +138,6 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                             <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-[#64748B]">
                                 <Clock size={12} />
                                 <span>Created {formatDateShort(plan.createdAt.split('T')[0])}</span>
-                            </div>
-                        )}
-                        {totalEvents > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-[#64748B]">
-                                <Trophy size={12} />
-                                <span>{totalEvents} event{totalEvents !== 1 ? 's' : ''}</span>
                             </div>
                         )}
                     </div>
@@ -155,6 +195,90 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                 </div>
             </div>
 
+            {/* ── Plan Timeline Gantt ──────────────────────────────────── */}
+            {ganttDates.start && weeks.length > 0 && (
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                            {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3">
+                            {/* Month labels */}
+                            <div className="relative mb-0.5" style={{ height: '13px' }}>
+                                {monthGroups.map((mg, i) => (
+                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                        {mg.label}
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Week numbers */}
+                            <div className="relative mb-3" style={{ height: '12px' }}>
+                                {weeks.map((w, i) => (
+                                    <div key={i} className="absolute text-[8px] text-slate-300 dark:text-[#475569] text-center"
+                                        style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
+                                        W{w.weekNum}
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Phase bars */}
+                            <div className="relative mb-2" style={{ height: '24px' }}>
+                                {plan.phases.map(ph => {
+                                    if (!ph.startDate) return null;
+                                    const l = pxLeft(ph.startDate);
+                                    const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    return (
+                                        <div key={ph.id} title={ph.name}
+                                            className="absolute h-full rounded-lg flex items-center px-2 overflow-hidden"
+                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + '30', border: `1.5px solid ${ph.color || '#6366f1'}80` }}>
+                                            <span className="text-[9px] font-bold truncate" style={{ color: ph.color || '#6366f1' }}>{ph.name}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            {/* Block bars */}
+                            <div className="relative" style={{ height: '16px' }}>
+                                {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color }))).map(b => {
+                                    if (!b.startDate) return null;
+                                    const l = pxLeft(b.startDate);
+                                    const w = b.endDate ? pxWidth(b.startDate, b.endDate) : 40;
+                                    return (
+                                        <div key={b.id} title={`${b.name}${b.label ? ' · ' + b.label : ''}`}
+                                            className="absolute h-full rounded flex items-center px-1 overflow-hidden"
+                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (b.color || b.phaseColor || '#94a3b8') + '50', border: `1px solid ${b.color || b.phaseColor || '#94a3b8'}70` }}>
+                                            <span className="text-[8px] font-semibold truncate" style={{ color: b.color || b.phaseColor || '#64748b' }}>{b.name}</span>
+                                        </div>
+                                    );
+                                })}
+                                {/* Today line */}
+                                {today >= ganttDates.start && today <= ganttDates.end && (
+                                    <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 rounded-full"
+                                        style={{ left: pxLeft(today) + 'px' }} />
+                                )}
+                            </div>
+                            {/* Legend */}
+                            <div className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-100 dark:border-[#243A58]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-0.5 bg-blue-500 rounded" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Today</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-2.5 rounded-sm bg-indigo-200/60 border border-indigo-400/50" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Phase</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-1.5 rounded-sm bg-slate-200/70 border border-slate-400/40" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Block</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Phases summary */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
@@ -184,13 +308,13 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                     <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{phase.name}</p>
                                     <p className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                         {formatDateShort(phase.startDate)}{phase.endDate ? ` — ${formatDateShort(phase.endDate)}` : ''}
-                                        {' · '}{phase.blocks.length} period{phase.blocks.length !== 1 ? 's' : ''}
+                                        {' · '}{phase.blocks.length} block{phase.blocks.length !== 1 ? 's' : ''}
                                         {phase.blocks.length > 0 && ' · ' + phase.blocks.reduce((s, b) => s + (b.weeks || []).length, 0) + ' weeks'}
                                     </p>
                                 </div>
                                 <button onClick={() => onSwitchToTab('periods')}
                                     className="text-[10px] font-semibold text-indigo-500 opacity-0 group-hover:opacity-100 transition-all hover:text-indigo-700">
-                                    View Periods →
+                                    View Blocks →
                                 </button>
                             </div>
                         ))}

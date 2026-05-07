@@ -1,0 +1,483 @@
+// @ts-nocheck
+import React, { useState, useMemo } from 'react';
+import { useAppState } from '../../context/AppStateContext';
+import {
+    Plus, PencilIcon, Trash2, MoreHorizontal,
+    Layers, BookOpen, BarChart2, Target,
+    CheckCircle2, Loader2, Timer, LayoutList,
+} from 'lucide-react';
+import { formatDateShort } from '../../utils/periodizationUtils';
+
+// ── Date helpers ───────────────────────────────────────────────────────────────
+function daysBetween(a, b) {
+    if (!a || !b) return 0;
+    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+}
+
+function getWeeks(startStr, endStr) {
+    if (!startStr || !endStr) return [];
+    const weeks = [];
+    const start = new Date(startStr + 'T12:00:00');
+    const end   = new Date(endStr   + 'T12:00:00');
+    const dow   = start.getDay();
+    start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
+    let n = 1;
+    while (start <= end) {
+        weeks.push({ date: start.toISOString().split('T')[0], month: start.toLocaleString('default', { month: 'short' }), year: start.getFullYear(), weekNum: n++ });
+        start.setDate(start.getDate() + 7);
+    }
+    return weeks;
+}
+
+// ── Block status ───────────────────────────────────────────────────────────────
+function getBlockStatus(block, today) {
+    if (!block.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (block.endDate && block.endDate < today) return { label: 'Completed', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (block.startDate <= today && (!block.endDate || block.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
+    return { label: 'Upcoming', cls: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40' };
+}
+
+// ── Intensity badge ────────────────────────────────────────────────────────────
+const INTENSITY_CLS = {
+    'Low':      'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400',
+    'Moderate': 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400',
+    'High':     'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400',
+    'Very High':'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400',
+};
+
+function IntensityBadge({ value }) {
+    if (!value) return <span className="text-slate-300 dark:text-[#475569] text-[9px]">—</span>;
+    return (
+        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INTENSITY_CLS[value] || 'bg-slate-100 text-slate-600'}`}>
+            {value}
+        </span>
+    );
+}
+
+// ── Stat card ──────────────────────────────────────────────────────────────────
+function StatCard({ icon, label, value, valueClass = 'text-slate-800 dark:text-[#E2E8F0]' }) {
+    return (
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex items-center gap-3">
+            <div className="text-slate-300 dark:text-[#475569] shrink-0">{icon}</div>
+            <div>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
+                <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
+            </div>
+        </div>
+    );
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
+export const BlocksTab = ({ plan }) => {
+    const {
+        setIsPlanBlockModalOpenNew, setEditingPlanBlock,
+        handleDeletePlanBlock,
+    } = useAppState();
+
+    const [selectedKey, setSelectedKey] = useState(null); // "phaseId:blockId"
+    const [openMenuKey, setOpenMenuKey] = useState(null);
+    const today = new Date().toISOString().split('T')[0];
+
+    // Flat list of all blocks with parent phase info
+    const allBlocks = useMemo(() =>
+        plan.phases.flatMap(ph =>
+            ph.blocks.map(b => ({ ...b, phaseName: ph.name, phaseColor: ph.color, phaseId: ph.id }))
+        ),
+        [plan.phases]
+    );
+
+    // Stats
+    const stats = useMemo(() => {
+        const completed  = allBlocks.filter(b => b.endDate && b.endDate < today).length;
+        const inProgress = allBlocks.filter(b => b.startDate && b.startDate <= today && (!b.endDate || b.endDate >= today)).length;
+        const upcoming   = allBlocks.filter(b => b.startDate && b.startDate > today).length;
+        return { total: allBlocks.length, completed, inProgress, upcoming };
+    }, [allBlocks, today]);
+
+    // Gantt date range (phases + blocks)
+    const ganttDates = useMemo(() => {
+        const starts = [plan.startDate, ...plan.phases.map(ph => ph.startDate), ...allBlocks.map(b => b.startDate)].filter(Boolean).sort();
+        const ends   = [plan.endDate,   ...plan.phases.map(ph => ph.endDate),   ...allBlocks.map(b => b.endDate)].filter(Boolean).sort();
+        return { start: starts[0] || null, end: ends[ends.length - 1] || null };
+    }, [plan, allBlocks]);
+
+    const weeks = useMemo(() =>
+        ganttDates.start && ganttDates.end ? getWeeks(ganttDates.start, ganttDates.end) : [],
+        [ganttDates]);
+
+    const monthGroups = useMemo(() => {
+        const groups = [];
+        weeks.forEach((w, i) => {
+            const label = `${w.month} ${w.year}`;
+            if (!groups.length || groups[groups.length - 1].label !== label)
+                groups.push({ label, startIdx: i, count: 1 });
+            else groups[groups.length - 1].count++;
+        });
+        return groups;
+    }, [weeks]);
+
+    const WEEK_W    = 38;
+    const ganttW    = Math.max(640, weeks.length * WEEK_W);
+    const totalDays = Math.max(1, daysBetween(ganttDates.start, ganttDates.end));
+    const pxLeft    = d => Math.max(0, daysBetween(ganttDates.start, d) / totalDays * ganttW);
+    const pxWidth   = (s, e) => Math.max(4, daysBetween(s, e || s) / totalDays * ganttW);
+
+    const selectedBlock = allBlocks.find(b => `${b.phaseId}:${b.id}` === selectedKey);
+
+    // ── Empty state ────────────────────────────────────────────────────────────
+    if (plan.phases.length === 0 || allBlocks.length === 0) {
+        return (
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
+                <Layers size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
+                <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8] mb-1">No training blocks yet</p>
+                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">
+                    {plan.phases.length === 0
+                        ? 'Add phases first, then add training blocks (periods) within each phase.'
+                        : 'Add training blocks within your phases to see them here.'}
+                </p>
+                <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
+                    disabled={plan.phases.length === 0}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    + Add First Block
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4" onClick={() => setOpenMenuKey(null)}>
+
+            {/* ── Stat cards ──────────────────────────────────────────────── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <StatCard icon={<LayoutList size={18} />}   label="Total Blocks"  value={stats.total} />
+                <StatCard icon={<CheckCircle2 size={18} />} label="Completed"     value={stats.completed} />
+                <StatCard icon={<Loader2 size={18} />}      label="In Progress"   value={stats.inProgress} valueClass="text-green-600 dark:text-green-400" />
+                <StatCard icon={<Timer size={18} />}        label="Upcoming"      value={stats.upcoming}   valueClass="text-blue-600 dark:text-blue-400" />
+            </div>
+
+            {/* ── Gantt — phases + blocks ──────────────────────────────────── */}
+            {ganttDates.start && weeks.length > 0 && (
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                            {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3">
+
+                            {/* Month labels */}
+                            <div className="relative mb-0.5" style={{ height: '13px' }}>
+                                {monthGroups.map((mg, i) => (
+                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                        {mg.label}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Week numbers */}
+                            <div className="relative mb-2" style={{ height: '12px' }}>
+                                {weeks.map((w, i) => (
+                                    <div key={i} className="absolute text-[8px] text-slate-300 dark:text-[#475569] text-center"
+                                        style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
+                                        W{w.weekNum}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Phase bars (reference row) */}
+                            <div className="relative mb-1.5" style={{ height: '20px' }}>
+                                {plan.phases.map(ph => {
+                                    if (!ph.startDate) return null;
+                                    const l = pxLeft(ph.startDate);
+                                    const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    return (
+                                        <div key={ph.id} title={ph.name}
+                                            className="absolute h-full rounded flex items-center px-2 overflow-hidden"
+                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + '20', border: `1px solid ${ph.color || '#6366f1'}60` }}>
+                                            <span className="text-[8px] font-semibold text-slate-500 dark:text-[#94A3B8] truncate">{ph.name}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Block bars — clickable */}
+                            <div className="relative" style={{ height: '24px' }}>
+                                {allBlocks.map(b => {
+                                    if (!b.startDate) return null;
+                                    const key  = `${b.phaseId}:${b.id}`;
+                                    const l    = pxLeft(b.startDate);
+                                    const w    = b.endDate ? pxWidth(b.startDate, b.endDate) : 50;
+                                    const isSel = key === selectedKey;
+                                    return (
+                                        <button key={key}
+                                            onClick={e => { e.stopPropagation(); setSelectedKey(isSel ? null : key); }}
+                                            title={`${b.name}${b.label ? ' · ' + b.label : ''}`}
+                                            className="absolute h-full rounded-lg flex items-center px-1.5 overflow-hidden transition-all hover:opacity-90"
+                                            style={{
+                                                left: l + 'px', width: w + 'px',
+                                                backgroundColor: isSel ? (b.color || '#6366f1') : (b.color || '#6366f1') + '35',
+                                                border: `1.5px solid ${b.color || '#6366f1'}${isSel ? 'ff' : '80'}`,
+                                                outline: isSel ? `2px solid ${b.color || '#6366f1'}` : 'none',
+                                                outlineOffset: '1px',
+                                            }}>
+                                            <span className="text-[8px] font-bold truncate"
+                                                style={{ color: isSel ? 'white' : (b.color || '#6366f1') }}>
+                                                {b.name}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                                {/* Today line */}
+                                {today >= ganttDates.start && today <= ganttDates.end && (
+                                    <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 rounded-full"
+                                        style={{ left: pxLeft(today) + 'px' }} />
+                                )}
+                            </div>
+
+                            {/* Legend */}
+                            <div className="flex items-center gap-4 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#243A58]">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-0.5 bg-blue-500 rounded" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Today</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-2 rounded-sm bg-slate-100 border border-slate-300/50" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Phase</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-3 rounded-sm bg-indigo-200/60 border border-indigo-400/50" />
+                                    <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Block (click to select)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Blocks table ─────────────────────────────────────────────── */}
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
+                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Training Blocks</h4>
+                    <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
+                        className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">
+                        <Plus size={11} /> Add Block
+                    </button>
+                </div>
+
+                {/* Table header */}
+                <div className="hidden md:grid px-5 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50/40 dark:bg-[#0F1C30]/20"
+                    style={{ gridTemplateColumns: '28px 110px 1fr 130px 150px 44px 90px 90px 32px' }}>
+                    {['#', 'Phase', 'Block', 'Category', 'Dates', 'Wks', 'Intensity', 'Status', ''].map(h => (
+                        <span key={h} className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">{h}</span>
+                    ))}
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-[#243A58]">
+                    {allBlocks.map((block, idx) => {
+                        const key     = `${block.phaseId}:${block.id}`;
+                        const status  = getBlockStatus(block, today);
+                        const isSel   = key === selectedKey;
+
+                        return (
+                            <div key={key}
+                                onClick={() => setSelectedKey(isSel ? null : key)}
+                                className={`grid px-5 py-3.5 cursor-pointer transition-colors items-center gap-2 ${isSel ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]/50'}`}
+                                style={{ gridTemplateColumns: '28px 110px 1fr 130px 150px 44px 90px 90px 32px' }}>
+
+                                {/* # */}
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                    style={{ backgroundColor: block.color || '#6366f1' }}>
+                                    {idx + 1}
+                                </div>
+
+                                {/* Phase */}
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: block.phaseColor || '#6366f1' }} />
+                                    <span className="text-[10px] text-slate-500 dark:text-[#94A3B8] truncate">{block.phaseName}</span>
+                                </div>
+
+                                {/* Block name + label */}
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: block.color || '#6366f1' }} />
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate">
+                                            {block.name}{block.label ? <span className="font-normal text-slate-500 dark:text-[#94A3B8]"> · {block.label}</span> : ''}
+                                        </p>
+                                        {block.goals && (
+                                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] truncate">{block.goals}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Category */}
+                                <div className="text-[10px] font-medium text-slate-600 dark:text-[#CBD5E1] truncate">
+                                    {block.blockType || '—'}
+                                </div>
+
+                                {/* Dates */}
+                                <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">
+                                    {block.startDate ? formatDateShort(block.startDate) : '—'}
+                                    {block.endDate ? ` — ${formatDateShort(block.endDate)}` : ''}
+                                </div>
+
+                                {/* Weeks */}
+                                <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] text-center">
+                                    {(block.weeks || []).length > 0
+                                        ? (block.weeks || []).length
+                                        : <span className="text-slate-300 dark:text-[#475569]">—</span>}
+                                </div>
+
+                                {/* Intensity */}
+                                <div><IntensityBadge value={block.intensityLevel} /></div>
+
+                                {/* Status */}
+                                <div>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide whitespace-nowrap ${status.cls}`}>
+                                        {status.label}
+                                    </span>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="relative" onClick={e => e.stopPropagation()}>
+                                    <button
+                                        onClick={() => setOpenMenuKey(openMenuKey === key ? null : key)}
+                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 transition-colors">
+                                        <MoreHorizontal size={13} />
+                                    </button>
+                                    {openMenuKey === key && (
+                                        <div className="absolute right-0 top-7 z-20 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg py-1.5 w-36">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingPlanBlock({ ...block, _phaseId: block.phaseId });
+                                                    setIsPlanBlockModalOpenNew(true);
+                                                    setOpenMenuKey(null);
+                                                }}
+                                                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                <PencilIcon size={12} /> Edit Block
+                                            </button>
+                                            <div className="my-1 border-t border-slate-100 dark:border-[#243A58]" />
+                                            <button
+                                                onClick={() => {
+                                                    handleDeletePlanBlock(block.phaseId, block.id);
+                                                    setOpenMenuKey(null);
+                                                    if (selectedKey === key) setSelectedKey(null);
+                                                }}
+                                                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                <Trash2 size={12} /> Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* ── Selected block detail panel ───────────────────────────────── */}
+            {selectedBlock && (() => {
+                const totalWeeks    = (selectedBlock.weeks || []).length;
+                const totalSessions = (selectedBlock.weeks || []).reduce((s, w) => s + (w.sessions || []).length, 0);
+                const modEntries    = Object.entries(selectedBlock.modalities || {});
+
+                return (
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: selectedBlock.color || '#6366f1' }} />
+                                <div>
+                                    <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
+                                        {selectedBlock.name}{selectedBlock.label ? ` · ${selectedBlock.label}` : ''}
+                                    </span>
+                                    <span className="text-xs text-slate-400 dark:text-[#64748B] ml-2">
+                                        {formatDateShort(selectedBlock.startDate)}
+                                        {selectedBlock.endDate ? ` — ${formatDateShort(selectedBlock.endDate)}` : ''}
+                                        {' · '}{selectedBlock.blockType}
+                                        {' · '}{selectedBlock.phaseName}
+                                    </span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setEditingPlanBlock({ ...selectedBlock, _phaseId: selectedBlock.phaseId }); setIsPlanBlockModalOpenNew(true); }}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
+                                <PencilIcon size={12} /> Edit Block
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-[#243A58]">
+
+                            {/* Goals */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                    <BookOpen size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Goals & Objectives</p>
+                                </div>
+                                {selectedBlock.goals ? (
+                                    <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{selectedBlock.goals}</p>
+                                ) : (
+                                    <p className="text-[10px] italic text-slate-300 dark:text-[#475569]">No goals set — edit block to add.</p>
+                                )}
+                                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#243A58]">
+                                    <div className="flex items-center gap-3">
+                                        <div>
+                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">Intensity</p>
+                                            <IntensityBadge value={selectedBlock.intensityLevel} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">Volume</p>
+                                            <IntensityBadge value={selectedBlock.volumeLevel} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Planning summary */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-3">
+                                    <BarChart2 size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Planning Summary</p>
+                                </div>
+                                <div className="space-y-2.5">
+                                    {[
+                                        { label: 'Microcycles', value: totalWeeks },
+                                        { label: 'Sessions',    value: totalSessions },
+                                    ].map(({ label, value }) => (
+                                        <div key={label} className="flex items-center justify-between">
+                                            <span className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{label}</span>
+                                            <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Modalities */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-3">
+                                    <Target size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Block Modalities</p>
+                                </div>
+                                {modEntries.length > 0 ? (
+                                    <div className="space-y-1.5">
+                                        {modEntries.map(([mod, desc]) => (
+                                            <div key={mod} className="flex items-start gap-2">
+                                                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] shrink-0">{mod}</span>
+                                                {desc && <span className="text-[9px] text-slate-400 dark:text-[#64748B] leading-tight">{desc}</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-[10px] italic text-slate-300 dark:text-[#475569]">
+                                        No modalities assigned — configure them in the Microcycles tab.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+        </div>
+    );
+};

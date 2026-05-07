@@ -1,10 +1,11 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import {
     CalendarDays, Plus, ArrowLeft, Trash2,
     Users, User, GanttChart, Clock, Filter, X,
-    LayoutList, Layers2, BarChart3, Target
+    LayoutList, Layers2, BarChart3, Target, Crosshair
 } from 'lucide-react';
 import { CreatePlanModal } from '../components/periodization/CreatePlanModal';
 import { TimelineView } from '../components/periodization/TimelineView';
@@ -13,11 +14,14 @@ import { AddBlockModal } from '../components/periodization/AddBlockModal';
 import { AddPlanEventModal } from '../components/periodization/AddPlanEventModal';
 import { OverviewTab } from '../components/periodization/OverviewTab';
 import { PeriodsTab } from '../components/periodization/PeriodsTab';
+import { BlocksTab } from '../components/periodization/BlocksTab';
 import { MicrocyclesTab } from '../components/periodization/MicrocyclesTab';
+import { TargetsTab } from '../components/periodization/TargetsTab';
+import { AddTargetModal } from '../components/periodization/AddTargetModal';
 import { formatDateShort } from '../utils/periodizationUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
 
-type TabId = 'overview' | 'timeline' | 'periods' | 'microcycles';
+type TabId = 'overview' | 'timeline' | 'periods' | 'blocks' | 'microcycles' | 'targets';
 
 const PLAN_STATUS_STYLES = {
     active:   'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40',
@@ -28,13 +32,16 @@ const PLAN_STATUS_STYLES = {
 const PLAN_STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk' };
 
 const TABS: { id: TabId; label: string; icon: React.FC<any> }[] = [
-    { id: 'overview',     label: 'Overview',     icon: Target },
-    { id: 'timeline',     label: 'Timeline',     icon: GanttChart },
-    { id: 'periods',      label: 'Periods',      icon: LayoutList },
-    { id: 'microcycles',  label: 'Microcycles',  icon: BarChart3 },
+    { id: 'overview',    label: 'Overview',    icon: Target },
+    { id: 'timeline',   label: 'Timeline',    icon: GanttChart },
+    { id: 'periods',    label: 'Phases',      icon: LayoutList },
+    { id: 'blocks',     label: 'Blocks',      icon: Layers2 },
+    { id: 'microcycles',label: 'Microcycles', icon: BarChart3 },
+    { id: 'targets',    label: 'Targets',     icon: Crosshair },
 ];
 
 export const PeriodizationPage = () => {
+    const location = useLocation();
     const {
         periodizationPlans, activePlanId, setActivePlanId,
         setPlanDrillPath,
@@ -42,6 +49,7 @@ export const PeriodizationPage = () => {
         setIsPlanPhaseModalOpen, setEditingPlanPhase,
         setIsPlanBlockModalOpenNew, setEditingPlanBlock,
         setIsPlanEventModalOpen, setEditingPlanEvent,
+        setIsPlanTargetModalOpen, setEditingPlanTarget,
         handleDeletePlan, teams, isLoading,
     } = useAppState();
 
@@ -51,13 +59,23 @@ export const PeriodizationPage = () => {
     const [activeTab, setActiveTab] = useState<TabId>('overview');
     useEffect(() => { setActiveTab('overview'); }, [activePlanId]);
 
-    // Cross-tab navigation: Periods → Microcycles
-    const [microcyclesJump, setMicrocyclesJump] = useState<{ phaseId: string; blockId: string } | null>(null);
+    // Cross-tab navigation: Periods → Microcycles, and return from WorkoutPackets
+    const [microcyclesJump, setMicrocyclesJump] = useState<{ phaseId: string; blockId: string; weekStart?: string; selectedDate?: string } | null>(null);
 
     const handleViewInMicrocycles = (phaseId: string, blockId: string) => {
         setMicrocyclesJump({ phaseId, blockId });
         setActiveTab('microcycles');
     };
+
+    // On mount: check if returning from WorkoutPackets with a specific week/day to reopen
+    useEffect(() => {
+        const ret = (location.state as any)?.returnToMicrocycles;
+        if (ret) {
+            setActiveTab('microcycles');
+            setMicrocyclesJump({ phaseId: ret.phaseId, blockId: ret.blockId, weekStart: ret.weekStart, selectedDate: ret.selectedDate });
+            window.history.replaceState({}, document.title);
+        }
+    }, []);
 
     // Filter state for plan list
     const [filterType, setFilterType] = useState('all');
@@ -225,7 +243,7 @@ export const PeriodizationPage = () => {
                                             </span>
                                             <span className="text-slate-200 dark:text-[#243A58]">·</span>
                                             <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
-                                                {periodCount} period{periodCount !== 1 ? 's' : ''}
+                                                {periodCount} block{periodCount !== 1 ? 's' : ''}
                                             </span>
                                             {plan.modalities?.length > 0 && (
                                                 <>
@@ -281,9 +299,18 @@ export const PeriodizationPage = () => {
         if (activeTab === 'periods') {
             return (
                 <button
+                    onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <Plus size={12} /> Add Phase
+                </button>
+            );
+        }
+        if (activeTab === 'blocks') {
+            return (
+                <button
                     onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
-                    <Plus size={12} /> Add Period
+                    <Plus size={12} /> Add Block
                 </button>
             );
         }
@@ -293,6 +320,15 @@ export const PeriodizationPage = () => {
                     onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-[#CBD5E1] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                     <Plus size={12} /> Add Phase
+                </button>
+            );
+        }
+        if (activeTab === 'targets') {
+            return (
+                <button
+                    onClick={() => { setEditingPlanTarget(null); setIsPlanTargetModalOpen(true); }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <Plus size={12} /> Add Target
                 </button>
             );
         }
@@ -367,12 +403,20 @@ export const PeriodizationPage = () => {
                     {activeTab === 'periods' && (
                         <PeriodsTab plan={activePlan} onViewInMicrocycles={handleViewInMicrocycles} />
                     )}
+                    {activeTab === 'blocks' && (
+                        <BlocksTab plan={activePlan} />
+                    )}
                     {activeTab === 'microcycles' && (
                         <MicrocyclesTab
                             plan={activePlan}
                             initialPhaseId={microcyclesJump?.phaseId}
                             initialBlockId={microcyclesJump?.blockId}
+                            initialWeekStart={microcyclesJump?.weekStart}
+                            initialSelectedDate={microcyclesJump?.selectedDate}
                         />
+                    )}
+                    {activeTab === 'targets' && (
+                        <TargetsTab plan={activePlan} />
                     )}
                 </>
             )}
@@ -382,6 +426,7 @@ export const PeriodizationPage = () => {
             <AddPhaseModal />
             <AddBlockModal />
             <AddPlanEventModal />
+            <AddTargetModal />
         </div>
     );
 };

@@ -167,6 +167,8 @@ export const WorkoutPacketsPage = () => {
 
     const [scheduling, setScheduling] = useState(false);
     const [assigning, setAssigning] = useState(false);
+    const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+    const [librarySearch, setLibrarySearch] = useState('');
     const [showWeightroomSheet, setShowWeightroomSheet] = useState(false);
     const [weightroomSheetConfig, setWeightroomSheetConfig] = useState(null);
     const { resolveExerciseName, exerciseFullMap } = useExerciseMap();
@@ -189,6 +191,21 @@ export const WorkoutPacketsPage = () => {
             notes: r.notes || '',
             weight: String(r.weight || ''),
         };
+    };
+
+    // ── Load an existing template into the builder ──────────────────────────
+    const loadFromLibrary = (tpl: any) => {
+        setTitle(tpl.name || '');
+        setTrainingPhase(tpl.trainingPhase || tpl.training_phase || 'Strength');
+        setLoad(tpl.load || 'Medium');
+        const sd = tpl.sections || {};
+        setSections({
+            warmup:   (sd.warmup   || []).map(normalizeRow),
+            workout:  (sd.workout  || []).map(normalizeRow),
+            cooldown: (sd.cooldown || []).map(normalizeRow),
+        });
+        setShowLibraryPicker(false);
+        setLibrarySearch('');
     };
 
     // ── Populate form from incoming edit data ───────────────────────────────
@@ -286,8 +303,50 @@ export const WorkoutPacketsPage = () => {
                 assignCtx.sessionId,
                 { workoutTemplateId: templateId }
             );
-            showToast('Workout assigned to plan', 'success');
-            navigate(returnTo);
+
+            // 3. Also schedule on the dashboard calendar so the session appears there
+            const plan = periodizationPlans.find(p => p.id === assignCtx.planId);
+            if (plan) {
+                const phase = plan.phases.find(ph => ph.id === assignCtx.phaseId);
+                const block = phase?.blocks.find(b => b.id === assignCtx.blockId);
+                const week  = block?.weeks.find(w => w.id === assignCtx.weekId);
+                const sess  = week?.sessions.find(s => s.id === assignCtx.sessionId);
+                const attachOverrides = (r: any) => r;
+                try {
+                    await scheduleWorkoutSession({
+                        title: title.trim(),
+                        date: assignCtx.date,
+                        time: '09:00',
+                        target_type: plan.targetType,
+                        target_id: plan.targetId,
+                        training_phase: phase?.trainingPhase || 'General Preparation',
+                        load: sess?.load || load || 'Medium',
+                        status: 'Scheduled',
+                        planned_duration: sess?.plannedDuration || 60,
+                        session_type: 'workout',
+                        exercises: {
+                            warmup:   sections.warmup.map(attachOverrides),
+                            workout:  sections.workout.map(attachOverrides),
+                            cooldown: sections.cooldown.map(attachOverrides),
+                        },
+                    });
+                } catch {
+                    // Non-fatal — plan session link already saved
+                }
+            }
+
+            showToast('Workout assigned to plan & added to calendar', 'success');
+            // Navigate back with return coords so PeriodizationPage reopens the correct week/day
+            navigate(returnTo, {
+                state: assignCtx.returnWeekStart ? {
+                    returnToMicrocycles: {
+                        phaseId: assignCtx.returnPhaseId || assignCtx.phaseId,
+                        blockId: assignCtx.returnBlockId || assignCtx.blockId,
+                        weekStart: assignCtx.returnWeekStart,
+                        selectedDate: assignCtx.returnSelectedDate || assignCtx.date,
+                    }
+                } : undefined
+            });
         } catch (err) {
             showToast('Failed to assign workout', 'error');
         } finally {
@@ -643,6 +702,54 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             </div>
                         );
                     })()}
+
+                    {/* Library picker — only shown when assigning */}
+                    {isAssigning && workoutTemplates.length > 0 && (
+                        <div className="border-b border-slate-100 dark:border-[#243A58]">
+                            <button
+                                onClick={() => setShowLibraryPicker(v => !v)}
+                                className="flex items-center gap-2 w-full px-6 py-2.5 text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48]/40 transition-colors">
+                                <span className={`transition-transform text-slate-400 ${showLibraryPicker ? 'rotate-90' : ''}`}>▶</span>
+                                Load from existing workout template
+                                <span className="ml-auto text-[10px] font-normal text-slate-400 dark:text-[#64748B]">{workoutTemplates.length} saved</span>
+                            </button>
+                            {showLibraryPicker && (
+                                <div className="px-6 pb-4">
+                                    <input
+                                        className="w-full mb-3 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 outline-none focus:border-indigo-400 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0] placeholder-slate-400"
+                                        placeholder="Search templates…"
+                                        value={librarySearch}
+                                        onChange={e => setLibrarySearch(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                                        {workoutTemplates
+                                            .filter(t => !librarySearch || t.name?.toLowerCase().includes(librarySearch.toLowerCase()))
+                                            .map(tpl => {
+                                                const exCount = [
+                                                    ...(tpl.sections?.warmup || []),
+                                                    ...(tpl.sections?.workout || []),
+                                                    ...(tpl.sections?.cooldown || []),
+                                                ].length;
+                                                return (
+                                                    <button key={tpl.id} onClick={() => loadFromLibrary(tpl)}
+                                                        className="text-left px-3 py-2.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-all bg-white dark:bg-[#0F1C30]">
+                                                        <p className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] truncate">{tpl.name || 'Untitled'}</p>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            {tpl.load && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{tpl.load}</span>}
+                                                            {exCount > 0 && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{exCount} exercise{exCount !== 1 ? 's' : ''}</span>}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        {workoutTemplates.filter(t => !librarySearch || t.name?.toLowerCase().includes(librarySearch.toLowerCase())).length === 0 && (
+                                            <p className="col-span-2 text-xs text-slate-400 dark:text-[#64748B] italic py-2">No templates match.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Weightroom Sheet Panel */}
                     {showWeightroomSheet && (

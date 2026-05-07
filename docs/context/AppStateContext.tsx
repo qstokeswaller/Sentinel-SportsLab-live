@@ -459,9 +459,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [isPlanPhaseModalOpen, setIsPlanPhaseModalOpen] = useState(false);
     const [isPlanBlockModalOpenNew, setIsPlanBlockModalOpenNew] = useState(false);
     const [isPlanEventModalOpen, setIsPlanEventModalOpen] = useState(false);
+    const [isPlanTargetModalOpen, setIsPlanTargetModalOpen] = useState(false);
     const [editingPlanPhase, setEditingPlanPhase] = useState(null);
     const [editingPlanBlock, setEditingPlanBlock] = useState(null);
     const [editingPlanEvent, setEditingPlanEvent] = useState(null);
+    const [editingPlanTarget, setEditingPlanTarget] = useState(null);
 
     // Weightroom Sheet State
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
@@ -1725,13 +1727,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleAddPlanPhase = async (phaseData) => {
+        const focuses = phaseData.focuses?.length ? phaseData.focuses : [phaseData.trainingPhase || 'General Preparation'];
         const phase = {
             id: _uid(),
             name: phaseData.name || 'New Phase',
             startDate: phaseData.startDate,
             endDate: phaseData.endDate,
             color: phaseData.color || '#6366f1',
-            trainingPhase: phaseData.trainingPhase || 'General Preparation',
+            trainingPhase: focuses[0] || 'General Preparation',
+            focuses,
+            goals: phaseData.goals || '',
+            notes: phaseData.notes || '',
             blocks: [],
         };
         await _updateActivePlan(p => ({ ...p, phases: [...p.phases, phase] }));
@@ -1822,6 +1828,29 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setEditingPlanBlock(null);
     };
 
+    const handleAddPlanTarget = async (targetData) => {
+        const target = { id: _uid(), ...targetData };
+        await _updateActivePlan(p => ({ ...p, targets: [...(p.targets || []), target] }));
+        setIsPlanTargetModalOpen(false);
+        setEditingPlanTarget(null);
+    };
+
+    const handleUpdatePlanTarget = async (targetId, updates) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            targets: (p.targets || []).map(t => t.id === targetId ? { ...t, ...updates } : t),
+        }));
+        setIsPlanTargetModalOpen(false);
+        setEditingPlanTarget(null);
+    };
+
+    const handleDeletePlanTarget = async (targetId) => {
+        await _updateActivePlan(p => ({
+            ...p,
+            targets: (p.targets || []).filter(t => t.id !== targetId),
+        }));
+    };
+
     const handleUpdateBlockModality = async (phaseId, blockId, modality, value) => {
         await _updateActivePlan(p => ({
             ...p,
@@ -1871,6 +1900,40 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                             sessions: [],
                         };
                         return { ...b, weeks: [...b.weeks, newWeek] };
+                    })
+                }
+                : ph
+            )
+        }));
+    };
+
+    // Creates a week at weekStartDate if it doesn't exist, then adds the session
+    const handleAddSessionWithWeek = async (phaseId, blockId, weekStartDate, sessionData) => {
+        const session = {
+            id: _uid(),
+            date: sessionData.date,
+            name: sessionData.name || 'New Session',
+            sections: [],
+            plannedDuration: sessionData.plannedDuration || null,
+            plannedRPE: null,
+            load: sessionData.load || null,
+            modality: sessionData.modality || null,
+            workoutTemplateId: null,
+            notes: '',
+        };
+        await _updateActivePlan(p => ({
+            ...p,
+            phases: p.phases.map(ph => ph.id === phaseId
+                ? {
+                    ...ph, blocks: ph.blocks.map(b => {
+                        if (b.id !== blockId) return b;
+                        const existing = b.weeks.find(w => w.startDate === weekStartDate);
+                        if (existing) {
+                            return { ...b, weeks: b.weeks.map(w => w.id === existing.id ? { ...w, sessions: [...w.sessions, session] } : w) };
+                        }
+                        const newWeek = { id: _uid(), weekNumber: 0, startDate: weekStartDate, intent: '', sessions: [session] };
+                        const sorted = [...b.weeks, newWeek].sort((a, z) => a.startDate.localeCompare(z.startDate));
+                        return { ...b, weeks: sorted.map((w, i) => ({ ...w, weekNumber: i + 1 })) };
                     })
                 }
                 : ph
@@ -1942,13 +2005,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleAddPlanEvent = async (eventData) => {
-        const event = {
-            id: _uid(),
-            date: eventData.date,
-            type: eventData.type || 'custom',
-            label: eventData.label || '',
-            color: eventData.color,
-        };
+        const event = { id: _uid(), ...eventData };
         await _updateActivePlan(p => ({ ...p, events: [...p.events, event] }));
         setIsPlanEventModalOpen(false);
         setEditingPlanEvent(null);
@@ -2868,12 +2925,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setIsPlanBlockModalOpenNew,
         isPlanEventModalOpen,
         setIsPlanEventModalOpen,
+        isPlanTargetModalOpen,
+        setIsPlanTargetModalOpen,
         editingPlanPhase,
         setEditingPlanPhase,
         editingPlanBlock,
         setEditingPlanBlock,
         editingPlanEvent,
         setEditingPlanEvent,
+        editingPlanTarget,
+        setEditingPlanTarget,
         handleCreatePlan,
         handleUpdatePlan,
         handleDeletePlan,
@@ -2886,12 +2947,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleUpdateBlockModality,
         handleUpdatePlanWeek,
         handleAddPlanWeek,
+        handleAddSessionWithWeek,
         handleAddPlanSession,
         handleUpdatePlanSession,
         handleDeletePlanSession,
         handleAddPlanEvent,
         handleUpdatePlanEvent,
         handleDeletePlanEvent,
+        handleAddPlanTarget,
+        handleUpdatePlanTarget,
+        handleDeletePlanTarget,
         isDarkMode,
         toggleDarkMode,
     };

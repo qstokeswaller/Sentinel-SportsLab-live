@@ -177,3 +177,147 @@ export const BLOCK_COLOR_PRESETS = [
 export const DEFAULT_MODALITY_PRESETS = [
     'Strength', 'Plyometrics', 'Speed', 'Conditioning', 'Loaded Power',
 ];
+
+// ── Target metric catalogue ────────────────────────────────────────────────────
+
+export interface MetricDefinition {
+    key: string;
+    label: string;
+    unit: string;
+    defaultOp: '>=' | '<=' | '=' | 'between' | 'qualitative';
+}
+
+export interface CategoryDefinition {
+    label: string;
+    color: string;
+    source: string;
+    metrics: MetricDefinition[];
+}
+
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+    competition: 'Competition',
+    testing:     'Testing / Assessment',
+    custom:      'Custom Event',
+    travel:      'Travel',
+    recovery:    'Recovery Block',
+    camp:        'Training Camp',
+    deadline:    'Deadline / Milestone',
+    medical:     'Medical / Screening',
+};
+
+export const EVENT_TYPE_COLORS: Record<string, string> = {
+    competition: '#f59e0b',
+    testing:     '#6366f1',
+    custom:      '#10b981',
+    travel:      '#0ea5e9',
+    recovery:    '#14b8a6',
+    camp:        '#8b5cf6',
+    deadline:    '#ef4444',
+    medical:     '#ec4899',
+};
+
+export const METRIC_CATALOGUE: Record<string, CategoryDefinition> = {
+    performance: {
+        label: 'Performance',
+        color: '#6366f1',
+        source: 'Testing',
+        metrics: [
+            { key: 'yoyo_ir1',         label: 'Yo-Yo IR1',                     unit: 'm',          defaultOp: '>=' },
+            { key: 'yoyo_ir2',         label: 'Yo-Yo IR2',                     unit: 'm',          defaultOp: '>=' },
+            { key: 'cmj',              label: 'CMJ Height',                     unit: 'cm',         defaultOp: '>=' },
+            { key: 'sprint_10m',       label: 'Sprint 10m',                     unit: 's',          defaultOp: '<=' },
+            { key: 'sprint_20m',       label: 'Sprint 20m',                     unit: 's',          defaultOp: '<=' },
+            { key: 'sprint_30m',       label: 'Sprint 30m',                     unit: 's',          defaultOp: '<=' },
+            { key: 'sprint_40m',       label: 'Sprint 40m',                     unit: 's',          defaultOp: '<=' },
+            { key: 'sprint_rep_avg',   label: '5×30m — Avg Split',             unit: 's',          defaultOp: '<=' },
+            { key: 'sprint_rep_fi',    label: '5×30m — Fatigue Index',         unit: '%',          defaultOp: '<=' },
+            { key: 'max_vel_field',    label: 'Max Velocity (Field Test)',      unit: 'km/h',       defaultOp: '>=' },
+            { key: 'rsi',              label: 'Reactive Strength Index',        unit: '',           defaultOp: '>=' },
+            { key: 'imtp',             label: 'Isometric Mid-Thigh Pull',      unit: 'N',          defaultOp: '>=' },
+            { key: 'vo2_est',          label: 'Est. VO₂ Max',                  unit: 'mL/kg/min',  defaultOp: '>=' },
+        ],
+    },
+    gps: {
+        label: 'GPS & Match Output',
+        color: '#0ea5e9',
+        source: 'GPS / Match Data',
+        metrics: [
+            { key: 'total_distance',   label: 'Total Distance',                 unit: 'km',         defaultOp: '>=' },
+            { key: 'hsr',              label: 'High-Speed Running (>19 km/h)', unit: 'm',          defaultOp: '>=' },
+            { key: 'sprint_dist',      label: 'Sprint Distance (>25 km/h)',    unit: 'm',          defaultOp: '>=' },
+            { key: 'max_vel_gps',      label: 'Max Velocity — GPS',            unit: 'km/h',       defaultOp: '>=' },
+            { key: 'accelerations',    label: 'Accelerations',                  unit: 'count',      defaultOp: '>=' },
+            { key: 'decelerations',    label: 'Decelerations',                  unit: 'count',      defaultOp: '>=' },
+            { key: 'player_load',      label: 'Player Load',                   unit: 'AU',         defaultOp: '>=' },
+            { key: 'dist_per_min',     label: 'Distance per Minute',           unit: 'm/min',      defaultOp: '>=' },
+        ],
+    },
+    load: {
+        label: 'Load Management',
+        color: '#f59e0b',
+        source: 'Load Management',
+        metrics: [
+            { key: 'acwr',             label: 'ACWR',                           unit: '',           defaultOp: 'between' },
+            { key: 'weekly_load',      label: 'Weekly Training Load',          unit: 'AU',         defaultOp: '<=' },
+            { key: 'session_rpe',      label: 'Avg Session RPE',               unit: '/10',        defaultOp: '<=' },
+            { key: 'monotony',         label: 'Training Monotony',              unit: '',           defaultOp: '<=' },
+            { key: 'strain',           label: 'Training Strain',               unit: 'AU',         defaultOp: '<=' },
+            { key: 'sessions_pw',      label: 'Sessions per Week',             unit: '',           defaultOp: '=' },
+            { key: 'availability',     label: 'Player Availability',           unit: '%',          defaultOp: '>=' },
+        ],
+    },
+    wellness: {
+        label: 'Wellness',
+        color: '#10b981',
+        source: 'Wellness Hub',
+        metrics: [
+            { key: 'wellness_score',   label: 'Overall Wellness Score',        unit: '/10',        defaultOp: '>=' },
+            { key: 'sleep_quality',    label: 'Sleep Quality',                  unit: '/10',        defaultOp: '>=' },
+            { key: 'sleep_duration',   label: 'Sleep Duration',                unit: 'hrs',        defaultOp: '>=' },
+            { key: 'fatigue',          label: 'Fatigue',                        unit: '/10',        defaultOp: '<=' },
+            { key: 'soreness',         label: 'Muscle Soreness',               unit: '/10',        defaultOp: '<=' },
+            { key: 'mood',             label: 'Mood',                           unit: '/10',        defaultOp: '>=' },
+            { key: 'stress',           label: 'Stress',                         unit: '/10',        defaultOp: '<=' },
+            { key: 'energy',           label: 'Energy Level',                  unit: '/10',        defaultOp: '>=' },
+            { key: 'readiness',        label: 'Perceived Readiness',           unit: '/10',        defaultOp: '>=' },
+        ],
+    },
+    injury: {
+        label: 'Injury & Medical',
+        color: '#ef4444',
+        source: 'Injury Hub',
+        metrics: [
+            { key: 'injury_count',     label: 'Injury Incidence',              unit: 'count',      defaultOp: '<=' },
+            { key: 'days_lost',        label: 'Days Lost — Injury',            unit: 'days',       defaultOp: '<=' },
+            { key: 'time_loss',        label: 'Time-Loss Injuries',            unit: 'count',      defaultOp: '<=' },
+            { key: 'avail_medical',    label: 'Player Availability',           unit: '%',          defaultOp: '>=' },
+            { key: 'injury_burden',    label: 'Injury Burden',                 unit: 'days/1000h', defaultOp: '<=' },
+        ],
+    },
+    physical: {
+        label: 'Body Composition',
+        color: '#8b5cf6',
+        source: 'Testing / Medical',
+        metrics: [
+            { key: 'body_weight',      label: 'Body Weight',                   unit: 'kg',         defaultOp: '=' },
+            { key: 'body_fat',         label: 'Body Fat %',                    unit: '%',          defaultOp: '<=' },
+            { key: 'lean_mass',        label: 'Lean Muscle Mass',              unit: 'kg',         defaultOp: '>=' },
+            { key: 'bmi',              label: 'BMI',                           unit: '',           defaultOp: 'between' },
+        ],
+    },
+    tactical: {
+        label: 'Tactical / Match',
+        color: '#f97316',
+        source: 'Match Stats',
+        metrics: [
+            { key: 'possession',       label: 'Team Possession %',             unit: '%',          defaultOp: '>=' },
+            { key: 'pass_completion',  label: 'Pass Completion %',             unit: '%',          defaultOp: '>=' },
+            { key: 'press_events',     label: 'High-Intensity Pressing Events', unit: 'count',     defaultOp: '>=' },
+            { key: 'goals_scored',     label: 'Goals Scored',                  unit: 'count',      defaultOp: '>=' },
+            { key: 'goals_conceded',   label: 'Goals Conceded',                unit: 'count',      defaultOp: '<=' },
+            { key: 'xg',              label: 'Expected Goals (xG)',            unit: 'xG',         defaultOp: '>=' },
+            { key: 'def_duels',        label: 'Defensive Duels Won %',        unit: '%',          defaultOp: '>=' },
+            { key: 'aerial_duels',     label: 'Aerial Duels Won %',           unit: '%',          defaultOp: '>=' },
+        ],
+    },
+};

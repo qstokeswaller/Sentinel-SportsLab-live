@@ -2,8 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
-    Plus, PencilIcon, Trash2, Eye, Target,
+    Plus, PencilIcon, Trash2, Target,
     MoreHorizontal, CheckCircle2, Loader2, Timer, LayoutList,
+    CalendarDays, BookOpen, MessageSquare, BarChart2,
 } from 'lucide-react';
 import { formatDateShort } from '../../utils/periodizationUtils';
 
@@ -22,23 +23,30 @@ function getWeeks(startStr, endStr) {
     start.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1));
     let n = 1;
     while (start <= end) {
-        weeks.push({
-            date:    start.toISOString().split('T')[0],
-            month:   start.toLocaleString('default', { month: 'short' }),
-            year:    start.getFullYear(),
-            weekNum: n++,
-        });
+        weeks.push({ date: start.toISOString().split('T')[0], month: start.toLocaleString('default', { month: 'short' }), year: start.getFullYear(), weekNum: n++ });
         start.setDate(start.getDate() + 7);
     }
     return weeks;
 }
 
-// ── Block status ───────────────────────────────────────────────────────────────
-function getBlockStatus(block, today) {
-    if (!block.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
-    if (block.endDate && block.endDate < today)   return { label: 'Completed',  cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
-    if (block.startDate <= today && (!block.endDate || block.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
+// ── Phase status from dates ────────────────────────────────────────────────────
+function getPhaseStatus(phase, today) {
+    if (!phase.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (phase.endDate && phase.endDate < today)   return { label: 'Completed',  cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (phase.startDate <= today && (!phase.endDate || phase.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
     return { label: 'Upcoming', cls: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40' };
+}
+
+// ── Phase stats helpers ────────────────────────────────────────────────────────
+function phaseTotalWeeks(phase) {
+    return phase.blocks.reduce((sum, b) => sum + (b.weeks || []).length, 0);
+}
+
+function phaseTotalSessions(phase) {
+    return phase.blocks.reduce((sum, b) =>
+        sum + b.blocks?.reduce?.((ws, w) => ws + (w.sessions || []).length, 0) ||
+        b.weeks?.reduce?.((ws, w) => ws + (w.sessions || []).length, 0) || 0
+    , 0);
 }
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
@@ -57,37 +65,28 @@ function StatCard({ icon, label, value, valueClass = 'text-slate-800 dark:text-[
 // ── Main component ─────────────────────────────────────────────────────────────
 export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
     const {
-        setIsPlanBlockModalOpenNew, setEditingPlanBlock,
-        setIsPlanPhaseModalOpen,    setEditingPlanPhase,
-        handleDeletePlanBlock,
+        setIsPlanPhaseModalOpen, setEditingPlanPhase,
+        handleDeletePlanPhase,
     } = useAppState();
 
     const [selectedId, setSelectedId] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
     const today = new Date().toISOString().split('T')[0];
 
-    // Flatten all blocks across phases, sorted by start date
-    const allBlocks = useMemo(() => {
-        let num = 0;
-        return plan.phases
-            .flatMap(phase => phase.blocks.map(block => ({ ...block, phase, globalNum: ++num })))
-            .sort((a, b) => (a.startDate || 'zzz') < (b.startDate || 'zzz') ? -1 : 1);
-    }, [plan.phases]);
-
-    // Stats
+    // Stats across all phases
     const stats = useMemo(() => {
-        const completed  = allBlocks.filter(b => b.endDate && b.endDate < today).length;
-        const inProgress = allBlocks.filter(b => b.startDate && b.startDate <= today && (!b.endDate || b.endDate >= today)).length;
-        const upcoming   = allBlocks.filter(b => b.startDate && b.startDate > today).length;
-        return { total: allBlocks.length, completed, inProgress, upcoming };
-    }, [allBlocks, today]);
+        const completed  = plan.phases.filter(ph => ph.endDate && ph.endDate < today).length;
+        const inProgress = plan.phases.filter(ph => ph.startDate && ph.startDate <= today && (!ph.endDate || ph.endDate >= today)).length;
+        const upcoming   = plan.phases.filter(ph => ph.startDate && ph.startDate > today).length;
+        return { total: plan.phases.length, completed, inProgress, upcoming };
+    }, [plan.phases, today]);
 
-    // Date range for Gantt
+    // Date range for Gantt (all phases)
     const ganttDates = useMemo(() => {
-        const starts = [plan.startDate, ...allBlocks.map(b => b.startDate)].filter(Boolean).sort();
-        const ends   = [plan.endDate,   ...allBlocks.map(b => b.endDate)].filter(Boolean).sort();
+        const starts = [plan.startDate, ...plan.phases.map(ph => ph.startDate)].filter(Boolean).sort();
+        const ends   = [plan.endDate,   ...plan.phases.map(ph => ph.endDate)].filter(Boolean).sort();
         return { start: starts[0] || null, end: ends[ends.length - 1] || null };
-    }, [plan, allBlocks]);
+    }, [plan]);
 
     const weeks = useMemo(() =>
         ganttDates.start && ganttDates.end ? getWeeks(ganttDates.start, ganttDates.end) : [],
@@ -109,9 +108,9 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
     const ganttW    = Math.max(640, weeks.length * WEEK_W);
     const totalDays = Math.max(1, daysBetween(ganttDates.start, ganttDates.end));
     const pxLeft    = d => Math.max(0, daysBetween(ganttDates.start, d) / totalDays * ganttW);
-    const pxWidth   = (s, e) => Math.max(2, daysBetween(s, e || s) / totalDays * ganttW);
+    const pxWidth   = (s, e) => Math.max(4, daysBetween(s, e || s) / totalDays * ganttW);
 
-    const selectedBlock = allBlocks.find(b => b.id === selectedId);
+    const selectedPhase = plan.phases.find(ph => ph.id === selectedId);
 
     // ── Empty state ────────────────────────────────────────────────────────────
     if (plan.phases.length === 0) {
@@ -119,7 +118,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
                 <Target size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
                 <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8] mb-1">No phases yet</p>
-                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">Add a phase first, then create periods within it.</p>
+                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">Add your first phase to begin structuring this plan.</p>
                 <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
                     + Add First Phase
@@ -133,23 +132,23 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
 
             {/* ── Stat cards ──────────────────────────────────────────────── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard icon={<LayoutList size={18} />}   label="Total Periods" value={stats.total} />
+                <StatCard icon={<LayoutList size={18} />}   label="Total Phases"  value={stats.total} />
                 <StatCard icon={<CheckCircle2 size={18} />} label="Completed"     value={stats.completed} />
                 <StatCard icon={<Loader2 size={18} />}      label="In Progress"   value={stats.inProgress} valueClass="text-green-600 dark:text-green-400" />
                 <StatCard icon={<Timer size={18} />}        label="Upcoming"      value={stats.upcoming}   valueClass="text-blue-600 dark:text-blue-400" />
             </div>
 
-            {/* ── Mini Gantt ───────────────────────────────────────────────── */}
+            {/* ── Gantt — phases only ──────────────────────────────────────── */}
             {ganttDates.start && weeks.length > 0 && (
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Timeline</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
                         <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                             {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
                         </span>
                     </div>
                     <div className="overflow-x-auto">
-                        <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3 relative">
+                        <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3">
 
                             {/* Month labels */}
                             <div className="relative mb-0.5" style={{ height: '13px' }}>
@@ -161,8 +160,8 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 ))}
                             </div>
 
-                            {/* Week labels */}
-                            <div className="relative mb-2.5" style={{ height: '12px' }}>
+                            {/* Week numbers */}
+                            <div className="relative mb-3" style={{ height: '12px' }}>
                                 {weeks.map((w, i) => (
                                     <div key={i} className="absolute text-[8px] text-slate-300 dark:text-[#475569] text-center"
                                         style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
@@ -171,44 +170,28 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 ))}
                             </div>
 
-                            {/* Phase bars */}
-                            <div className="relative mb-1.5" style={{ height: '20px' }}>
-                                {plan.phases.map(ph => {
+                            {/* Phase bars — click to select */}
+                            <div className="relative" style={{ height: '28px' }}>
+                                {plan.phases.map((ph, idx) => {
                                     if (!ph.startDate) return null;
-                                    const l = pxLeft(ph.startDate);
-                                    const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 40;
+                                    const l    = pxLeft(ph.startDate);
+                                    const w    = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    const isSel = ph.id === selectedId;
                                     return (
-                                        <div key={ph.id}
-                                            className="absolute h-full rounded flex items-center px-2 overflow-hidden"
-                                            style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + '25', border: `1px solid ${ph.color || '#6366f1'}50` }}>
-                                            <span className="text-[9px] font-bold truncate" style={{ color: ph.color || '#6366f1' }}>{ph.name}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Period bars — click to select */}
-                            <div className="relative" style={{ height: '22px' }}>
-                                {allBlocks.map(block => {
-                                    if (!block.startDate) return null;
-                                    const l    = pxLeft(block.startDate);
-                                    const w    = block.endDate ? Math.max(20, pxWidth(block.startDate, block.endDate)) : 28;
-                                    const isSel = block.id === selectedId;
-                                    return (
-                                        <button key={block.id}
-                                            onClick={e => { e.stopPropagation(); setSelectedId(isSel ? null : block.id); }}
-                                            title={block.label || block.name}
-                                            className="absolute h-full rounded flex items-center justify-center transition-all hover:opacity-90"
+                                        <button key={ph.id}
+                                            onClick={e => { e.stopPropagation(); setSelectedId(isSel ? null : ph.id); }}
+                                            title={ph.name}
+                                            className="absolute h-full rounded-lg flex items-center px-2 overflow-hidden transition-all hover:opacity-90"
                                             style={{
                                                 left: l + 'px', width: w + 'px',
-                                                backgroundColor: isSel ? (block.phase.color || '#6366f1') : (block.phase.color || '#6366f1') + '20',
-                                                border: `1px solid ${block.phase.color || '#6366f1'}${isSel ? 'ff' : '60'}`,
-                                                outline: isSel ? `2px solid ${block.phase.color || '#6366f1'}` : 'none',
+                                                backgroundColor: isSel ? (ph.color || '#6366f1') : (ph.color || '#6366f1') + '30',
+                                                border: `1.5px solid ${ph.color || '#6366f1'}${isSel ? 'ff' : '80'}`,
+                                                outline: isSel ? `2px solid ${ph.color || '#6366f1'}` : 'none',
                                                 outlineOffset: '1px',
                                             }}>
-                                            <span className="text-[8px] font-bold px-1 truncate"
-                                                style={{ color: isSel ? 'white' : (block.phase.color || '#6366f1') }}>
-                                                {block.globalNum}
+                                            <span className="text-[9px] font-bold truncate"
+                                                style={{ color: isSel ? 'white' : (ph.color || '#6366f1') }}>
+                                                {ph.name}
                                             </span>
                                         </button>
                                     );
@@ -221,14 +204,14 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             </div>
 
                             {/* Legend */}
-                            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-slate-100 dark:border-[#243A58]">
+                            <div className="flex items-center gap-4 mt-2.5 pt-2 border-t border-slate-100 dark:border-[#243A58]">
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-3 h-0.5 bg-blue-500 rounded" />
                                     <span className="text-[8px] text-slate-400 dark:text-[#64748B]">Today</span>
                                 </div>
                                 {plan.phases.map(ph => (
                                     <div key={ph.id} className="flex items-center gap-1">
-                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ph.color || '#6366f1' }} />
+                                        <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: ph.color || '#6366f1' }} />
                                         <span className="text-[8px] text-slate-400 dark:text-[#64748B]">{ph.name}</span>
                                     </div>
                                 ))}
@@ -238,10 +221,10 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                 </div>
             )}
 
-            {/* ── Flat table ───────────────────────────────────────────────── */}
+            {/* ── Phases table ─────────────────────────────────────────────── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
-                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">All Periods</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Phases</h4>
                     <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
                         className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">
                         <Plus size={11} /> Add Phase
@@ -250,60 +233,77 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
 
                 {/* Table header */}
                 <div className="hidden md:grid px-5 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50/40 dark:bg-[#0F1C30]/20"
-                    style={{ gridTemplateColumns: '32px 1fr 130px 44px 140px 100px 32px' }}>
-                    {['#', 'Period', 'Dates', 'Wks', 'Block Type', 'Status', ''].map(h => (
-                        <span key={h} className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">{h}</span>
+                    style={{ gridTemplateColumns: '28px 1fr 190px 150px 52px 80px 100px 32px' }}>
+                    {[
+                        { h: '#',       cls: '' },
+                        { h: 'Phase',   cls: '' },
+                        { h: 'Focuses', cls: '' },
+                        { h: 'Dates',   cls: '' },
+                        { h: 'Wks',     cls: 'text-center' },
+                        { h: 'Blocks',  cls: 'text-center' },
+                        { h: 'Status',  cls: '' },
+                        { h: '',        cls: '' },
+                    ].map(({ h, cls }) => (
+                        <span key={h || 'actions'} className={`text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide ${cls}`}>{h}</span>
                     ))}
                 </div>
 
-                {allBlocks.length === 0 && (
-                    <div className="px-5 py-10 text-center">
-                        <p className="text-xs text-slate-400 dark:text-[#64748B]">No periods yet. Add periods within each phase.</p>
-                    </div>
-                )}
-
                 <div className="divide-y divide-slate-100 dark:divide-[#243A58]">
-                    {allBlocks.map(block => {
-                        const status = getBlockStatus(block, today);
-                        const isSel  = block.id === selectedId;
+                    {plan.phases.map((phase, idx) => {
+                        const status    = getPhaseStatus(phase, today);
+                        const totalWeeks = phaseTotalWeeks(phase);
+                        const isSel     = phase.id === selectedId;
 
                         return (
-                            <div key={block.id}
-                                onClick={() => setSelectedId(isSel ? null : block.id)}
+                            <div key={phase.id}
+                                onClick={() => setSelectedId(isSel ? null : phase.id)}
                                 className={`grid px-5 py-3 cursor-pointer transition-colors items-center gap-2 ${isSel ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]/50'}`}
-                                style={{ gridTemplateColumns: '32px 1fr 130px 44px 140px 100px 32px' }}>
+                                style={{ gridTemplateColumns: '28px 1fr 190px 150px 52px 80px 100px 32px' }}>
 
                                 {/* # badge */}
                                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                                    style={{ backgroundColor: block.phase.color || '#6366f1' }}>
-                                    {block.globalNum}
+                                    style={{ backgroundColor: phase.color || '#6366f1' }}>
+                                    {idx + 1}
                                 </div>
 
-                                {/* Period name + phase */}
+                                {/* Phase name */}
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: block.phase.color || '#6366f1' }} />
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate">{block.label || block.name}</p>
-                                        <p className="text-[9px] text-slate-400 dark:text-[#64748B] truncate">{block.phase.name}</p>
+                                    <div className="w-1 h-full min-h-[36px] rounded-full shrink-0" style={{ backgroundColor: phase.color || '#6366f1' }} />
+                                    <div className="min-w-0 py-0.5">
+                                        <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{phase.name}</p>
+                                        {phase.goals && (
+                                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] truncate mt-0.5">{phase.goals}</p>
+                                        )}
                                     </div>
+                                </div>
+
+                                {/* Training Focuses */}
+                                <div className="flex flex-wrap gap-1">
+                                    {(phase.focuses?.length ? phase.focuses : phase.trainingPhase ? [phase.trainingPhase] : []).map((f, fi) => (
+                                        <span key={f} className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${
+                                            fi === 0
+                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/40'
+                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'
+                                        }`}>
+                                            {f}
+                                        </span>
+                                    ))}
                                 </div>
 
                                 {/* Dates */}
                                 <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">
-                                    {block.startDate ? formatDateShort(block.startDate) : '—'}
-                                    {block.endDate ? ` — ${formatDateShort(block.endDate)}` : ''}
+                                    {phase.startDate ? formatDateShort(phase.startDate) : '—'}
+                                    {phase.endDate ? ` — ${formatDateShort(phase.endDate)}` : ''}
                                 </div>
 
                                 {/* Weeks */}
                                 <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] text-center">
-                                    {(block.weeks || []).length}
+                                    {totalWeeks > 0 ? totalWeeks : <span className="text-slate-300 dark:text-[#475569]">—</span>}
                                 </div>
 
-                                {/* Block type */}
-                                <div className="min-w-0">
-                                    <p className="text-[10px] font-medium text-slate-600 dark:text-[#CBD5E1] truncate">
-                                        {block.blockType || '—'}
-                                    </p>
+                                {/* Blocks count */}
+                                <div className="text-[10px] text-slate-500 dark:text-[#94A3B8] text-center">
+                                    {phase.blocks.length} block{phase.blocks.length !== 1 ? 's' : ''}
                                 </div>
 
                                 {/* Status */}
@@ -313,31 +313,26 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                     </span>
                                 </div>
 
-                                {/* Actions menu */}
+                                {/* Actions */}
                                 <div className="relative" onClick={e => e.stopPropagation()}>
                                     <button
-                                        onClick={() => setOpenMenuId(openMenuId === block.id ? null : block.id)}
+                                        onClick={() => setOpenMenuId(openMenuId === phase.id ? null : phase.id)}
                                         className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 transition-colors">
                                         <MoreHorizontal size={13} />
                                     </button>
-                                    {openMenuId === block.id && (
-                                        <div className="absolute right-0 top-7 z-20 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg py-1.5 w-44">
+                                    {openMenuId === phase.id && (
+                                        <div className="absolute right-0 top-7 z-20 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg py-1.5 w-36">
                                             <button
-                                                onClick={() => { onViewInMicrocycles(block.phase.id, block.id); setOpenMenuId(null); }}
+                                                onClick={() => { setEditingPlanPhase(phase); setIsPlanPhaseModalOpen(true); setOpenMenuId(null); }}
                                                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
-                                                <Eye size={12} /> View Microcycles
-                                            </button>
-                                            <button
-                                                onClick={() => { setEditingPlanBlock({ ...block, _phaseId: block.phase.id }); setIsPlanBlockModalOpenNew(true); setOpenMenuId(null); }}
-                                                className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
-                                                <PencilIcon size={12} /> Edit Period
+                                                <PencilIcon size={12} /> Edit Phase
                                             </button>
                                             <div className="my-1 border-t border-slate-100 dark:border-[#243A58]" />
                                             <button
                                                 onClick={() => {
-                                                    handleDeletePlanBlock(block.phase.id, block.id);
+                                                    handleDeletePlanPhase(phase.id);
                                                     setOpenMenuId(null);
-                                                    if (selectedId === block.id) setSelectedId(null);
+                                                    if (selectedId === phase.id) setSelectedId(null);
                                                 }}
                                                 className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                                                 <Trash2 size={12} /> Delete
@@ -349,103 +344,106 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                         );
                     })}
                 </div>
-
-                {/* Per-phase add-period buttons */}
-                <div className="px-5 py-3 border-t border-slate-100 dark:border-[#243A58] flex flex-wrap gap-2">
-                    {plan.phases.map(ph => (
-                        <button key={ph.id}
-                            onClick={() => { setEditingPlanBlock({ _phaseId: ph.id }); setIsPlanBlockModalOpenNew(true); }}
-                            className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-lg border border-dashed hover:border-solid transition-all"
-                            style={{ color: ph.color || '#6366f1', borderColor: (ph.color || '#6366f1') + '60' }}>
-                            <Plus size={10} /> Add to {ph.name}
-                        </button>
-                    ))}
-                </div>
             </div>
 
-            {/* ── Selected period detail panel ──────────────────────────────── */}
-            {selectedBlock && (
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: selectedBlock.phase.color }} />
-                            <div>
-                                <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">{selectedBlock.label || selectedBlock.name}</span>
-                                <span className="text-xs text-slate-400 dark:text-[#64748B] ml-2">
-                                    {formatDateShort(selectedBlock.startDate)}
-                                    {selectedBlock.endDate ? ` — ${formatDateShort(selectedBlock.endDate)}` : ''}
-                                    {(selectedBlock.weeks || []).length > 0 ? ` · ${(selectedBlock.weeks || []).length} weeks` : ''}
-                                </span>
+            {/* ── Selected phase detail panel ───────────────────────────────── */}
+            {selectedPhase && (() => {
+                const totalWeeks    = phaseTotalWeeks(selectedPhase);
+                const totalSessions = selectedPhase.blocks.reduce((sum, b) =>
+                    sum + (b.weeks || []).reduce((ws, w) => ws + (w.sessions || []).length, 0), 0);
+
+                return (
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: selectedPhase.color }} />
+                                <div>
+                                    <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">{selectedPhase.name}</span>
+                                    <span className="text-xs text-slate-400 dark:text-[#64748B] ml-2">
+                                        {formatDateShort(selectedPhase.startDate)}
+                                        {selectedPhase.endDate ? ` — ${formatDateShort(selectedPhase.endDate)}` : ''}
+                                        {' · '}{(selectedPhase.focuses?.length ? selectedPhase.focuses : [selectedPhase.trainingPhase]).join(' + ')}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => onViewInMicrocycles(selectedBlock.phase.id, selectedBlock.id)}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border border-indigo-200 dark:border-indigo-800/40">
-                                <Eye size={12} /> View Microcycles
-                            </button>
-                            <button
-                                onClick={() => { setEditingPlanBlock({ ...selectedBlock, _phaseId: selectedBlock.phase.id }); setIsPlanBlockModalOpenNew(true); }}
+                                onClick={() => { setEditingPlanPhase(selectedPhase); setIsPlanPhaseModalOpen(true); }}
                                 className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
-                                <PencilIcon size={12} /> Edit Period
+                                <PencilIcon size={12} /> Edit Phase
                             </button>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-[#243A58]">
-                        {/* Goals */}
-                        <div className="p-5">
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Goals & Objectives</p>
-                            {selectedBlock.goals ? (
-                                <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{selectedBlock.goals}</p>
-                            ) : (
-                                <p className="text-[10px] italic text-slate-300 dark:text-[#475569]">No goals set — edit period to add.</p>
-                            )}
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-[#243A58]">
 
-                        {/* Modality mix */}
-                        <div className="p-5">
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Training Modalities</p>
-                            {Object.keys(selectedBlock.modalities || {}).length > 0 ? (
-                                <div className="space-y-1.5">
-                                    {Object.entries(selectedBlock.modalities).map(([mod, level]) => (
-                                        <div key={mod} className="flex items-center justify-between">
-                                            <span className="text-[10px] font-medium text-slate-600 dark:text-[#CBD5E1]">{mod}</span>
-                                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58]">{level}</span>
+                            {/* Goals */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                    <BookOpen size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Goals & Objectives</p>
+                                </div>
+                                {selectedPhase.goals ? (
+                                    <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{selectedPhase.goals}</p>
+                                ) : (
+                                    <p className="text-[10px] italic text-slate-300 dark:text-[#475569]">No goals set — edit phase to add.</p>
+                                )}
+                                {selectedPhase.notes && (
+                                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#243A58]">
+                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                            <MessageSquare size={11} className="text-slate-400" />
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Notes</p>
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{selectedPhase.notes}</p>
+                                    </div>
+                                )}
+                                {!selectedPhase.notes && (
+                                    <p className="text-[10px] italic text-slate-300 dark:text-[#475569] mt-3 pt-3 border-t border-slate-100 dark:border-[#243A58]">No notes — edit phase to add.</p>
+                                )}
+                            </div>
+
+                            {/* Planning stats */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-3">
+                                    <BarChart2 size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Planning Summary</p>
+                                </div>
+                                <div className="space-y-2.5">
+                                    {[
+                                        { label: 'Blocks',      value: selectedPhase.blocks.length },
+                                        { label: 'Microcycles', value: totalWeeks },
+                                        { label: 'Sessions',    value: totalSessions },
+                                    ].map(({ label, value }) => (
+                                        <div key={label} className="flex items-center justify-between">
+                                            <span className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{label}</span>
+                                            <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{value}</span>
                                         </div>
                                     ))}
                                 </div>
-                            ) : (
-                                <p className="text-[10px] italic text-slate-300 dark:text-[#475569]">No modality loads set — edit period to add.</p>
-                            )}
-                            <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-[#243A58] grid grid-cols-2 gap-2 text-[10px]">
-                                <div>
-                                    <span className="text-slate-400 dark:text-[#64748B]">Intensity</span>
-                                    <p className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedBlock.intensityLevel || '—'}</p>
-                                </div>
-                                <div>
-                                    <span className="text-slate-400 dark:text-[#64748B]">Volume</span>
-                                    <p className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedBlock.volumeLevel || '—'}</p>
-                                </div>
                             </div>
-                        </div>
 
-                        {/* Microcycles */}
-                        <div className="p-5">
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Microcycles</p>
-                            <div className="flex items-baseline gap-1.5 mb-3">
-                                <span className="text-3xl font-bold text-slate-800 dark:text-[#E2E8F0]">{(selectedBlock.weeks || []).length}</span>
-                                <span className="text-xs text-slate-400 dark:text-[#64748B]">weeks planned</span>
+                            {/* Key metric targets — foundation */}
+                            <div className="p-5">
+                                <div className="flex items-center gap-1.5 mb-3">
+                                    <CalendarDays size={12} className="text-slate-400" />
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Key Metric Targets</p>
+                                </div>
+                                <p className="text-[10px] italic text-slate-300 dark:text-[#475569] leading-relaxed">
+                                    Target metrics (ACWR range, weekly load, intensity %) will be configurable here in a future update.
+                                </p>
+                                <div className="mt-3 space-y-1.5">
+                                    {selectedPhase.blocks.length > 0 && selectedPhase.blocks.slice(0, 3).map(b => (
+                                        <div key={b.id} className="flex items-center justify-between">
+                                            <span className="text-[9px] text-slate-400 dark:text-[#64748B] truncate">{b.label || b.name}</span>
+                                            <span className="text-[9px] font-medium text-slate-600 dark:text-[#CBD5E1] shrink-0 ml-2">
+                                                {b.intensityLevel || '—'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <button
-                                onClick={() => onViewInMicrocycles(selectedBlock.phase.id, selectedBlock.id)}
-                                className="flex items-center justify-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border border-indigo-200 dark:border-indigo-800/40 w-full">
-                                <Eye size={12} /> View Microcycles
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 };

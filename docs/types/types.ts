@@ -332,7 +332,7 @@ export interface InjuryReport {
 // --- PERIODIZATION PLAN TYPES ---
 
 export type PlanViewMode = 'timeline' | 'cards';
-export type PlanEventType = 'competition' | 'testing' | 'custom';
+export type PlanEventType = 'competition' | 'testing' | 'custom' | 'travel' | 'recovery' | 'camp' | 'deadline' | 'medical';
 export type PlanStatus = 'active' | 'draft' | 'upcoming' | 'at_risk';
 export type LoadIntensity = 'Low' | 'Moderate' | 'High' | 'Very High';
 
@@ -348,6 +348,7 @@ export interface PeriodizationPlan {
   modalities: string[];
   phases: PlanPhase[];
   events: PlanEvent[];
+  targets?: PlanTarget[];
   volumeOverrides: Record<number, number>;
   intensityOverrides: Record<number, number>;
   createdAt: string;
@@ -361,6 +362,9 @@ export interface PlanPhase {
   endDate?: string;
   color: string;
   trainingPhase: TrainingPhase;
+  focuses?: string[];  // multi-select; trainingPhase kept for compat as focuses[0]
+  goals?: string;
+  notes?: string;
   blocks: PlanTrainingBlock[];
 }
 
@@ -418,7 +422,38 @@ export interface PlanSessionExercise {
 export interface PlanEvent {
   id: string;
   date: string;
+  endDate?: string;
   type: PlanEventType;
   label: string;
   color?: string;
+  description?: string;
+  location?: string;
+  importance?: 'major' | 'minor';
+}
+
+// --- PERIODIZATION TARGET TYPES ---
+
+export type TargetCategory = 'performance' | 'gps' | 'load' | 'wellness' | 'injury' | 'physical' | 'tactical';
+export type TargetOperator = '>=' | '<=' | '=' | 'between' | 'qualitative';
+export type TargetStatus   = 'pending' | 'on_track' | 'at_risk' | 'off_track';
+export type TargetPriority = 'high' | 'medium' | 'low';
+export type TargetScope    = 'plan' | 'phase' | 'block';
+
+export interface PlanTarget {
+  id: string;
+  category: TargetCategory;
+  metricKey: string;
+  metricLabel: string;
+  metricUnit: string;
+  metricSource: string;
+  operator: TargetOperator;
+  targetValue: string;
+  targetValueMax?: string;
+  scope: TargetScope;
+  phaseId?: string;
+  blockId?: string;
+  priority: TargetPriority;
+  status: TargetStatus;
+  notes?: string;
+  currentValue?: string;
 }

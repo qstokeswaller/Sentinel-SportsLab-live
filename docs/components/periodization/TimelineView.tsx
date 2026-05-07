@@ -4,12 +4,13 @@ import { useAppState } from '../../context/AppStateContext';
 import {
     Trophy, FlaskConical, Target, Zap, Dumbbell, Wind, Footprints,
     TrendingUp, TrendingDown, Plus, ChevronRight, Star,
-    ArrowLeft, Clock, HelpCircle,
+    ArrowLeft, Clock, HelpCircle, Calendar,
+    Plane, Heart, Tent, Flag, Stethoscope,
 } from 'lucide-react';
 import {
     dateToWeekIndex, weekIndexToDate, calculateTotalWeeks,
     getMonthLabels, calculateWeeklyVolume, calculateWeeklyIntensity,
-    calculatePeakingIndex, formatDateShort,
+    calculatePeakingIndex, formatDateShort, EVENT_TYPE_COLORS, EVENT_TYPE_LABELS,
 } from '../../utils/periodizationUtils';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
@@ -490,7 +491,7 @@ export const TimelineView = ({ plan }) => {
 
                     {/* Events label */}
                     <div className="border-b border-slate-100 flex items-center gap-2 px-3" style={{ height: `${H_EVENT}px` }}>
-                        <Trophy size={12} className="text-yellow-500 shrink-0" />
+                        <Calendar size={12} className="text-indigo-400 shrink-0" />
                         <span className="text-[11px] font-semibold text-slate-600">Events</span>
                         <button onClick={() => { setEditingPlanEvent(null); setIsPlanEventModalOpen(true); }}
                             className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-300 hover:text-indigo-500 transition-colors" title="Add event">
@@ -653,26 +654,40 @@ export const TimelineView = ({ plan }) => {
                         {modalities.length > 0 && <div className="h-px bg-slate-300" />}
 
                         {/* Events row */}
-                        <div className="border-b border-slate-100 relative flex" style={{ height: `${H_EVENT}px` }}>
-                            {Array.from({ length: totalWeeks }, (_, i) => {
-                                const event = plan.events?.find(ev => dateToWeekIndex(ev.date, plan.startDate) === i);
-                                return (
+                        <div className="border-b border-slate-100 relative" style={{ height: `${H_EVENT}px` }}>
+                            {/* Background click-to-add grid */}
+                            <div className="absolute inset-0 flex">
+                                {Array.from({ length: totalWeeks }, (_, i) => (
                                     <div key={i}
-                                        className="border-r border-slate-100/40 flex items-center justify-center cursor-pointer hover:bg-indigo-50/20 transition-colors"
-                                        style={{ width: `${WEEK_WIDTH}px` }}
-                                        onClick={() => event ? handleEventClick(null, event) : handleEventRowClick(i)}>
-                                        {event && (
-                                            <div title={event.label}
-                                                className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm
-                                                    ${event.type === 'competition' ? 'bg-yellow-100 border border-yellow-300'
-                                                    : event.type === 'testing'     ? 'bg-indigo-100 dark:bg-indigo-900/35 border border-indigo-300'
-                                                    :                                'bg-emerald-100 dark:bg-emerald-900/35 border border-emerald-300'}`}>
-                                                {event.type === 'competition'
-                                                    ? <Trophy size={10} className="text-yellow-600" />
-                                                    : event.type === 'testing'
-                                                        ? <FlaskConical size={10} className="text-indigo-600 dark:text-indigo-300" />
-                                                        : <Star size={10} className="text-emerald-600 dark:text-emerald-400" />}
-                                            </div>
+                                        className="border-r border-slate-100/40 cursor-pointer hover:bg-indigo-50/20 transition-colors"
+                                        style={{ width: `${WEEK_WIDTH}px`, flex: 'none' }}
+                                        onClick={() => handleEventRowClick(i)} />
+                                ))}
+                            </div>
+                            {/* Event bars */}
+                            {(plan.events || []).map(event => {
+                                const startWk = dateToWeekIndex(event.date, plan.startDate);
+                                const endWk   = event.endDate
+                                    ? dateToWeekIndex(event.endDate, plan.startDate)
+                                    : startWk;
+                                const left  = startWk * WEEK_WIDTH + 2;
+                                const width = Math.max((endWk - startWk + 1) * WEEK_WIDTH - 4, WEEK_WIDTH - 4);
+                                const color = event.color || EVENT_TYPE_COLORS[event.type] || '#6366f1';
+                                const isMultiDay = event.endDate && event.endDate !== event.date;
+                                return (
+                                    <div key={event.id}
+                                        title={`${event.label}${event.location ? ' · ' + event.location : ''}${isMultiDay ? ' (multi-day)' : ''}`}
+                                        onClick={e => handleEventClick(e, event)}
+                                        className="absolute top-1.5 bottom-1.5 rounded-md flex items-center gap-1 px-2 shadow-sm cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10"
+                                        style={{ left: `${left}px`, width: `${width}px`, backgroundColor: color + '28', border: `1.5px solid ${color}` }}>
+                                        {isMultiDay && (
+                                            <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                        )}
+                                        <span className="text-[9px] font-semibold truncate" style={{ color }}>
+                                            {event.label}
+                                        </span>
+                                        {event.importance === 'major' && (
+                                            <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
                                         )}
                                     </div>
                                 );
@@ -693,18 +708,16 @@ export const TimelineView = ({ plan }) => {
             <div className="flex items-center gap-4 px-4 py-3 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex-wrap rounded-b-xl">
 
                 {/* Event types */}
-                <div className="flex items-center gap-3">
-                    {[
-                        { type: 'competition', icon: Trophy,     bg: 'bg-yellow-100', border: 'border-yellow-300', iconColor: 'text-yellow-600', label: 'Competition' },
-                        { type: 'testing',     icon: FlaskConical, bg: 'bg-indigo-100', border: 'border-indigo-300', iconColor: 'text-indigo-600', label: 'Testing' },
-                    ].map(({ type, icon: Icon, bg, border, iconColor, label }) => (
-                        <div key={type} className="flex items-center gap-1.5">
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${bg} border ${border}`}>
-                                <Icon size={9} className={iconColor} />
+                <div className="flex items-center gap-2 flex-wrap">
+                    {Object.entries(EVENT_TYPE_LABELS).map(([type, label]) => {
+                        const color = EVENT_TYPE_COLORS[type];
+                        return (
+                            <div key={type} className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: color + '40', border: `1.5px solid ${color}` }} />
+                                <span className="text-[9px] text-slate-500">{label.split(' / ')[0]}</span>
                             </div>
-                            <span className="text-[10px] text-slate-500">{label}</span>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 <div className="w-px h-4 bg-slate-200 shrink-0" />
