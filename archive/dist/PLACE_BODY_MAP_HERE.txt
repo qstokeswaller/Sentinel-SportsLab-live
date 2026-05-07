@@ -1,6 +1,0 @@
-Save the muscle anatomy image (front + back view) to this folder as:
-
-    docs/public/body-map.png
-
-Vite serves files from docs/public/ as static assets.
-Reference in code as: src="/body-map.png"
