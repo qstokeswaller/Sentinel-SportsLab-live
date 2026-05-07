@@ -493,7 +493,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             </div>
 
                             {/* Phase bars — clickable */}
-                            <div className="relative mb-1" style={{ height: '16px' }}>
+                            <div className="relative mb-1" style={{ height: '18px' }}>
                                 {plan.phases.map(ph => {
                                     if (!ph.startDate) return null;
                                     const isSel = ph.id === selPhaseId;
@@ -516,12 +516,13 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             </div>
 
                             {/* Block bars — clickable */}
-                            <div className="relative" style={{ height: '16px' }}>
+                            <div className="relative" style={{ height: '18px' }}>
                                 {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color || '#6366f1', phaseId: ph.id }))).map(b => {
                                     if (!b.startDate) return null;
                                     const isSel = b.id === selBlockId;
+                                    const bColor = b.color || b.phaseColor;
                                     const lPx = daysBetween(ganttStart, b.startDate) / totalDaysPlan * ganttW;
-                                    const wPx = b.endDate ? Math.max(16, daysBetween(b.startDate, b.endDate) / totalDaysPlan * ganttW) : 28;
+                                    const wPx = b.endDate ? Math.max(20, daysBetween(b.startDate, b.endDate) / totalDaysPlan * ganttW) : 32;
                                     return (
                                         <button key={b.id}
                                             onClick={() => jumpToBlock(b.phaseId, b)}
@@ -529,12 +530,12 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                             className="absolute h-full rounded flex items-center px-1 overflow-hidden transition-all hover:opacity-90 cursor-pointer"
                                             style={{
                                                 left: lPx + 'px', width: wPx + 'px',
-                                                backgroundColor: isSel ? b.phaseColor : b.phaseColor + '40',
-                                                border: `1px solid ${b.phaseColor}${isSel ? 'ff' : '70'}`,
-                                                outline: isSel ? `2px solid ${b.phaseColor}` : 'none',
+                                                backgroundColor: isSel ? bColor : bColor + '28',
+                                                border: `1px solid ${bColor}${isSel ? 'ff' : '80'}`,
+                                                outline: isSel ? `2px solid ${bColor}` : 'none',
                                                 outlineOffset: '1px',
                                             }}>
-                                            <span className="text-[7px] font-bold truncate" style={{ color: isSel ? 'white' : b.phaseColor }}>
+                                            <span className="text-[7px] font-bold truncate" style={{ color: isSel ? 'white' : bColor }}>
                                                 {b.name}
                                             </span>
                                         </button>
@@ -549,16 +550,18 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                             {/* Events row */}
                             {(plan.events || []).length > 0 && (
-                                <div className="relative mt-1" style={{ height: '10px' }}>
+                                <div className="relative mt-1" style={{ height: '14px' }}>
                                     {(plan.events || []).map(e => {
                                         const color = e.color || EVENT_TYPE_COLORS[e.type] || '#6366f1';
                                         const lPx = daysBetween(ganttStart, e.date) / totalDaysPlan * ganttW;
                                         const rawW = e.endDate ? daysBetween(e.date, e.endDate) / totalDaysPlan * ganttW : 0;
-                                        const wPx = Math.max(rawW, 8);
+                                        const wPx = Math.max(rawW, 36);
                                         return (
                                             <div key={e.id} title={e.label || ''}
-                                                className="absolute h-full rounded"
-                                                style={{ left: lPx + 'px', width: wPx + 'px', backgroundColor: color + '80', border: `1px solid ${color}` }} />
+                                                className="absolute h-full rounded flex items-center px-1 overflow-hidden"
+                                                style={{ left: lPx + 'px', width: wPx + 'px', backgroundColor: color + '30', border: `1.5px solid ${color}` }}>
+                                                <span className="text-[7px] font-semibold truncate" style={{ color }}>{e.label}</span>
+                                            </div>
                                         );
                                     })}
                                 </div>

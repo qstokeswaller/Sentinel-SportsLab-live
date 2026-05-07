@@ -271,7 +271,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                 </div>
 
                 {/* Table header */}
-                <div className="hidden md:grid px-5 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50/40 dark:bg-[#0F1C30]/20"
+                <div className="hidden md:grid gap-2 px-5 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50/40 dark:bg-[#0F1C30]/20"
                     style={{ gridTemplateColumns: '28px 1fr 190px 150px 52px 80px 100px 32px' }}>
                     {[
                         { h: '#',       cls: '' },
