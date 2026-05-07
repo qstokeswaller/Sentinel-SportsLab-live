@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* Sentinel SportsLab - Design Tokens */
+:root {
+  --brand: 99 102 241;        /* indigo-500 */
+  --brand-dark: 67 56 202;    /* indigo-700 */
+  --surface: 255 255 255;
+  --bg: 248 250 252;          /* slate-50 */
+  --border: 226 232 240;      /* slate-200 */
+  --text-primary: 15 23 42;   /* slate-900 */
+  --text-secondary: 100 116 139; /* slate-500 */
+}
+
+/* Sentinel SportsLab - Base Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@media print {
+    @page {
+        margin: 8mm;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STANDALONE PUBLIC PAGES (.printing-standalone on body)
+       These are full-page routes with NO sidebar or app shell.
+       Print the page content naturally — only hide buttons.
+       ══════════════════════════════════════════════════════════════ */
+    body.printing-standalone .print\:hidden,
+    body.printing-standalone .no-print {
+        display: none !important;
+    }
+
+    /* Note: break-inside-avoid removed — it was pushing all exercises
+       to page 2 when header took space on page 1 */
+
+    /* Reset ALL elements that could cause blank pages:
+       - height/min-height: 100vh forces full viewport = blank page
+       - overflow: hidden clips content in print
+       - position: fixed/absolute removes from flow */
+    body.printing-standalone,
+    body.printing-standalone html {
+        height: initial !important;
+        min-height: 0 !important;
+        overflow: initial !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body.printing-standalone #root,
+    body.printing-standalone #root > *,
+    body.printing-standalone #root > * > *,
+    body.printing-standalone .print-standalone,
+    body.printing-standalone #print-content {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        background: white !important;
+        display: block !important;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INTERNAL APP PAGES (weightroom sheets via #print-packet)
+       Hide everything except #print-packet.
+       Only applies when body does NOT have .printing-standalone.
+       ══════════════════════════════════════════════════════════════ */
+    body:not(.printing-standalone) * {
+        visibility: hidden;
+    }
+
+    body:not(.printing-standalone) #print-packet,
+    body:not(.printing-standalone) #print-packet * {
+        visibility: visible;
+    }
+
+    body:not(.printing-standalone) #print-packet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+        background: white !important;
+    }
+
+    body:not(.printing-standalone) body,
+    body:not(.printing-standalone) html {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    body:not(.printing-standalone) #root,
+    body:not(.printing-standalone) #root > div,
+    body:not(.printing-standalone) main {
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+    }
+
+    /* Pro-Sheet Table Styling */
+    #print-packet table {
+        border-spacing: 0;
+        width: 100% !important;
+    }
+
+    #print-packet th,
+    #print-packet td {
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    #print-packet img {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}

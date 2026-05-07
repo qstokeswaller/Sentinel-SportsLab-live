@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+archive/dist/
+
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+secure/
+.mcp.json
+
+# Logs & temp
+logs/
+temp_analysis/
+*.log
+tmp_*.js
+
+# Editor
+.vscode/
+*.swp
+.DS_Store
+
+# Sensitive files
+api_keys.json
+
+# Claude session data
+.claude/
+
+# Query/scratch files
+query.json
+matches.txt
+
+# Supabase local dev
+supabase/.branches/
+supabase/.temp/
+
+.vercel
