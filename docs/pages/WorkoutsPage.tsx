@@ -478,7 +478,7 @@ export const WorkoutsPage = () => {
                         {/* Content */}
                         {isLoading && filteredTemplates.length === 0 ? (
                             <div className="py-10 flex flex-col items-center justify-center gap-3">
-                                <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-800/50 border-t-emerald-600 rounded-full animate-spin" />
+                                <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
                                 <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout packets...</span>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full mt-2">
                                     {[1, 2, 3].map(i => (
@@ -499,7 +499,7 @@ export const WorkoutsPage = () => {
                                 <p className="text-sm text-slate-400 dark:text-[#64748B]">{search ? `No packets matching "${search}"` : 'No workout packets saved yet'}</p>
                                 {!search && <p className="text-xs text-slate-300 dark:text-[#475569] mt-1">Build a workout and save it as a template to see it here</p>}
                                 {!search && (
-                                    <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
+                                    <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
                                         <PlusIcon size={12} className="inline mr-1" /> Create Workout
                                     </button>
                                 )}
@@ -509,16 +509,16 @@ export const WorkoutsPage = () => {
                                 {filteredTemplates.map(tpl => {
                                     const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                     return (
-                                        <div key={tpl.id} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 hover:shadow-md hover:border-emerald-200 dark:border-emerald-800/50 transition-all group relative overflow-hidden cursor-pointer"
+                                        <div key={tpl.id} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 hover:shadow-md hover:border-emerald-200 dark:border-emerald-500/30 transition-all group relative overflow-hidden cursor-pointer"
                                             onClick={() => { setViewingTemplate(tpl); setIsTemplateViewOpen(true); }}>
                                             <div className="absolute top-0 left-0 w-full h-0.5 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             <div className="flex items-start justify-between mb-2">
                                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:text-emerald-400 transition-colors truncate flex-1 pr-2">{tpl.name}</h4>
                                                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded-lg transition-all" title="Share">
+                                                    <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 dark:bg-emerald-500/15 rounded-lg transition-all" title="Share">
                                                         <Share2Icon size={12} />
                                                     </button>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded-lg transition-all" title="Edit">
+                                                    <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 dark:bg-emerald-500/15 rounded-lg transition-all" title="Edit">
                                                         <PencilIcon size={12} />
                                                     </button>
                                                     <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all" title="Delete">
@@ -537,7 +537,7 @@ export const WorkoutsPage = () => {
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }}
-                                                className="w-full py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1.5"
+                                                className="w-full py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <CalendarPlusIcon size={11} /> Assign & Schedule
                                             </button>
@@ -575,13 +575,13 @@ export const WorkoutsPage = () => {
                                                     <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">{new Date(tpl.createdAt).toLocaleDateString()}</td>
                                                     <td className="px-5 py-3.5">
                                                         <div className="flex items-center justify-end gap-1.5">
-                                                            <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Share">
+                                                            <button onClick={(e) => { e.stopPropagation(); setShareTarget({ type: 'template', id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 dark:bg-emerald-500/15 transition-all" title="Share">
                                                                 <Share2Icon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Edit">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleEditTemplate(tpl); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 dark:bg-emerald-500/15 transition-all" title="Edit">
                                                                 <PencilIcon size={13} />
                                                             </button>
-                                                            <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 transition-all" title="Assign">
+                                                            <button onClick={(e) => { e.stopPropagation(); navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts' } }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 dark:bg-emerald-500/15 transition-all" title="Assign">
                                                                 <CalendarPlusIcon size={13} />
                                                             </button>
                                                             <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteTemplate({ id: tpl.id, name: tpl.name }); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">

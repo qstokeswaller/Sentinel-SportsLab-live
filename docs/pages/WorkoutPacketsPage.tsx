@@ -48,7 +48,7 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 const VOLUME_COLORS: Record<string, string> = {
     'Upper Body': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
-    'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
+    'Lower Body': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700',
     'Core': 'bg-amber-100 text-amber-700',
     'Full Body': 'bg-purple-100 text-purple-700',
     'Plyometric': 'bg-orange-100 text-orange-700',
@@ -65,7 +65,7 @@ const BODY_PART_COLORS: Record<string, string> = {
     'Shoulders': 'bg-amber-100 text-amber-700',
     'Biceps': 'bg-cyan-100 text-cyan-700',
     'Triceps': 'bg-violet-100 text-violet-700',
-    'Quadriceps': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
+    'Quadriceps': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700',
     'Hamstrings': 'bg-lime-100 text-lime-700',
     'Glutes': 'bg-pink-100 text-pink-700',
     'Calves': 'bg-teal-100 text-teal-700',
@@ -636,7 +636,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         <div className="flex items-center gap-2">
                             {isAssigning ? (
                                 <>
-                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all" title="Save as template without assigning">
+                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all" title="Save as template without assigning">
                                         <SaveIcon size={12} /> Save Template Only
                                     </button>
                                     <button onClick={handleAssignToPlan} disabled={assigning || !title.trim() || totalExercises === 0}
@@ -646,15 +646,15 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 </>
                             ) : isEditing ? (
                                 <>
-                                    <button onClick={handleUpdateTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all">
+                                    <button onClick={handleUpdateTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all">
                                         <RefreshCwIcon size={12} /> Update Template
                                     </button>
-                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all">
+                                    <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all">
                                         <CopyIcon size={12} /> Save as New
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all" title="Save as template">
+                                <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all" title="Save as template">
                                     <SaveIcon size={12} /> Save Template
                                 </button>
                             )}
@@ -690,7 +690,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         const session = week?.sessions.find(s => s.id === assignCtx.sessionId);
                         const dayName = new Date(assignCtx.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
                         return (
-                            <div className="px-6 py-2.5 bg-emerald-50 dark:bg-emerald-900/25 border-b border-emerald-200 dark:border-emerald-800/50 flex items-center gap-3 shrink-0">
+                            <div className="px-6 py-2.5 bg-emerald-50 dark:bg-emerald-500/15 border-b border-emerald-200 dark:border-emerald-500/30 flex items-center gap-3 shrink-0">
                                 <LinkIcon size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <p className="text-[11px] text-emerald-800 font-medium">
                                     Assigning to: <span className="font-bold">{plan?.name || 'Plan'}</span>
@@ -1073,7 +1073,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         key={ex.id}
                                         onClick={() => !already && addExercise(ex)}
                                         disabled={already}
-                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/25 cursor-default' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40'}`}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 cursor-default' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40'}`}
                                     >
                                         <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
                                             {already ? <span className="text-[8px]">&#10003;</span> : <PlusIcon size={10} />}

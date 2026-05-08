@@ -43,7 +43,7 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600"><X size={11} /></button>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (

@@ -218,7 +218,7 @@ export const WorkoutHistoryPage = () => {
                             </div>
                         ))}
                         <div className="flex flex-col items-center py-4">
-                            <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-800/50 border-t-emerald-600 rounded-full animate-spin mb-2" />
+                            <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mb-2" />
                             <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout history...</span>
                         </div>
                     </div>
@@ -227,7 +227,7 @@ export const WorkoutHistoryPage = () => {
                         <ClockIcon size={32} className="opacity-40" />
                         <p className="text-xs text-slate-400 dark:text-[#64748B]">No workout sessions found</p>
                         <p className="text-[10px] text-slate-300 dark:text-[#475569]">Schedule workouts from Workout Packets to see them here</p>
-                        <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
+                        <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
                             Go to Workout Packets
                         </button>
                     </div>
@@ -240,7 +240,7 @@ export const WorkoutHistoryPage = () => {
                             ? (Array.isArray(exRaw) ? exRaw.length : (exRaw.warmup?.length || 0) + (exRaw.workout?.length || 0) + (exRaw.cooldown?.length || 0))
                             : (session.exercise_ids || []).length;
                         const isTeam = (session.targetType || session.target_type) === 'Team';
-                        const statusColor = session.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' : 'bg-blue-100 text-blue-600';
+                        const statusColor = session.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' : 'bg-blue-100 text-blue-600';
 
                         return (
                             <div key={session.id} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all group shadow-sm">
@@ -309,7 +309,7 @@ export const WorkoutHistoryPage = () => {
                                         {session.status !== 'Completed' && (
                                             <button
                                                 onClick={() => setCompletingSession(session)}
-                                                className="px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                                className="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                             >
                                                 <CheckCircle2Icon size={11} /> Complete
                                             </button>
@@ -323,7 +323,7 @@ export const WorkoutHistoryPage = () => {
                                         </button>
                                         <button
                                             onClick={() => handleReassign(session)}
-                                            className="px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
+                                            className="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
                                         >
                                             <RepeatIcon size={11} /> Reassign
                                         </button>
