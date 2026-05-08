@@ -39,8 +39,8 @@ async function syncTeamPro(access_token) {
 
   if (!teams.length) return { sessions: [], message: 'No teams found in Polar Team Pro account.' };
 
-  // Last 7 days — keeps total API calls well within the burst bucket of 100
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Last 30 days — still keeps total API calls within the burst bucket of 100 for typical teams
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const allSessions = [];
   let playerSummaryCalls = 0;
