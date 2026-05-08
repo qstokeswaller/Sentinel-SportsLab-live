@@ -5,7 +5,7 @@ import { useUserProfile } from './useUserProfile';
 
 export interface Exercise {
   id: string;
-  club_id: string | null;
+  user_id: string | null;
   name: string;
   description: string | null;
   body_parts: string[];
@@ -110,11 +110,11 @@ export function useCreateExercise() {
   const { data: profile } = useUserProfile();
 
   return useMutation({
-    mutationFn: async (exercise: Omit<Exercise, 'id' | 'club_id' | 'created_at'>) => {
-      if (!profile?.club_id) throw new Error('No club associated with your account.');
+    mutationFn: async (exercise: Omit<Exercise, 'id' | 'user_id' | 'created_at'>) => {
+      if (!profile?.id) throw new Error('Not authenticated.');
       const { data, error } = await supabase
         .from('exercises')
-        .insert({ ...exercise, club_id: profile.club_id })
+        .insert({ ...exercise, user_id: profile.id })
         .select()
         .single();
       if (error) throw error;
@@ -136,10 +136,10 @@ export function useUpdateExercise() {
         .from('exercises')
         .update(updates)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
       if (error) throw error;
-      return data as Exercise;
+      if (!data || data.length === 0) throw new Error('You can only edit exercises you created.');
+      return data[0] as Exercise;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['exercises'] });

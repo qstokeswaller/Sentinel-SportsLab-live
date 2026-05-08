@@ -69,12 +69,12 @@ export const PROTOCOL_CATEGORIES = [
 ] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Return to Play': 'bg-red-50 text-red-600 border-red-100 dark:border-red-900/40',
-    'Screening': 'bg-blue-50 text-blue-600 border-blue-100 dark:border-blue-800/40',
-    'Monitoring': 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40',
-    'Performance': 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
-    'Prehab': 'bg-purple-50 text-purple-600 border-purple-100 dark:border-purple-800/40',
-    'Custom': 'bg-slate-50 text-slate-600 border-slate-200',
+    'Return to Play': 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800/40',
+    'Screening':      'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/40',
+    'Monitoring':     'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800/40',
+    'Performance':    'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
+    'Prehab':         'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800/40',
+    'Custom':         'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]',
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,17 +94,17 @@ const countBlocks = (blocks: ProtocolBlock[]) => blocks.length;
 import { DEFAULT_PROTOCOLS } from '../../utils/defaultProtocols';
 
 const ViewToggle: React.FC<{ view: 'grid' | 'list'; setView: (v: 'grid' | 'list') => void }> = ({ view, setView }) => (
-    <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+    <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
         <button
             onClick={() => setView('list')}
-            className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
             title="List view"
         >
             <ListIcon size={13} />
         </button>
         <button
             onClick={() => setView('grid')}
-            className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}
+            className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
             title="Grid view"
         >
             <LayoutGridIcon size={13} />
@@ -198,7 +198,7 @@ export const ProtocolLibrary: React.FC = () => {
     // ── Sub-Views ─────────────────────────────────────────────────────────────
 
     if (loading) {
-        return <div className="text-center py-12 text-sm text-slate-400">Loading protocols...</div>;
+        return <div className="text-center py-12 text-sm text-slate-400 dark:text-[#64748B]">Loading protocols...</div>;
     }
 
     if (pageView === 'create') {
@@ -255,7 +255,7 @@ export const ProtocolLibrary: React.FC = () => {
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
                                 categoryFilter === cat
                                     ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 dark:border-indigo-800/50 hover:text-indigo-600'
+                                    : 'bg-white dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-300'
                             }`}
                         >
                             {cat}
@@ -274,28 +274,28 @@ export const ProtocolLibrary: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className="bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-                <SearchIcon size={16} className="text-slate-400 shrink-0" />
+            <div className="bg-white dark:bg-[#132338] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm flex items-center gap-3">
+                <SearchIcon size={16} className="text-slate-400 dark:text-[#64748B] shrink-0" />
                 <input
                     type="text"
                     placeholder="Search protocols..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="flex-1 bg-transparent text-sm outline-none text-slate-900 placeholder:text-slate-400"
+                    className="flex-1 bg-transparent text-sm outline-none text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569]"
                 />
-                <span className="text-xs text-slate-400 border-l border-slate-200 pl-3 shrink-0">
+                <span className="text-xs text-slate-400 dark:text-[#64748B] border-l border-slate-200 dark:border-[#243A58] pl-3 shrink-0">
                     {filtered.length} protocol{filtered.length !== 1 ? 's' : ''}
                 </span>
             </div>
 
             {/* Protocol cards / table */}
             {filtered.length === 0 ? (
-                <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-xl">
-                    <ClipboardListIcon size={32} className="mx-auto text-slate-300 mb-3" />
-                    <p className="text-sm text-slate-400 font-medium">
+                <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl">
+                    <ClipboardListIcon size={32} className="mx-auto text-slate-300 dark:text-[#475569] mb-3" />
+                    <p className="text-sm text-slate-400 dark:text-[#64748B] font-medium">
                         {protocols.length === 0 ? 'No protocols yet' : 'No protocols match your filters'}
                     </p>
-                    <p className="text-xs text-slate-300 mt-1">
+                    <p className="text-xs text-slate-300 dark:text-[#475569] mt-1">
                         {protocols.length === 0
                             ? 'Create your first protocol document — RTP frameworks, testing protocols, screening guides & more'
                             : 'Try adjusting your search or category filter'}
@@ -319,21 +319,21 @@ export const ProtocolLibrary: React.FC = () => {
                             <div
                                 key={protocol.id}
                                 onClick={() => { setActiveProtocol(protocol); setPageView('view'); }}
-                                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all cursor-pointer group relative"
+                                className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-700/60 transition-all cursor-pointer group relative"
                             >
                                 <button
                                     onClick={(e) => handleShare(e, protocol)}
-                                    className="absolute bottom-3 right-3 p-1.5 rounded-lg border opacity-0 group-hover:opacity-100 transition-all bg-white border-slate-200 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200 dark:border-indigo-800/50"
+                                    className="absolute bottom-3 right-3 p-1.5 rounded-lg border opacity-0 group-hover:opacity-100 transition-all bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-200 dark:hover:border-indigo-700"
                                     title="Share protocol"
                                 >
                                     <Link2Icon size={12} />
                                 </button>
                                 <div className="flex items-start gap-3 mb-3">
                                     <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
-                                        <FileTextIcon size={16} className="text-indigo-500" />
+                                        <FileTextIcon size={16} className="text-indigo-500 dark:text-indigo-400" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">
+                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                                             {protocol.name}
                                         </h4>
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border mt-1 ${CATEGORY_COLORS[protocol.category] || CATEGORY_COLORS['Custom']}`}>
@@ -342,7 +342,7 @@ export const ProtocolLibrary: React.FC = () => {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                                <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-[#64748B]">
                                     <span className="flex items-center gap-1">
                                         <LayersIcon size={10} />
                                         {blockCount} block{blockCount !== 1 ? 's' : ''}
@@ -360,18 +360,18 @@ export const ProtocolLibrary: React.FC = () => {
                 </div>
             ) : (
                 /* ── List View (table) ─────────────────────────────────────── */
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50">
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Protocol Name</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Category</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Blocks</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Exercises</th>
-                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">Actions</th>
+                            <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Protocol Name</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Category</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Blocks</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Exercises</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                             {filtered.map(protocol => {
                                 const exerciseCount = countExercises(protocol.blocks);
                                 const blockCount = countBlocks(protocol.blocks);
@@ -384,9 +384,9 @@ export const ProtocolLibrary: React.FC = () => {
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-2.5">
                                                 <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
-                                                    <FileTextIcon size={14} className="text-indigo-500" />
+                                                    <FileTextIcon size={14} className="text-indigo-500 dark:text-indigo-400" />
                                                 </div>
-                                                <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-indigo-300 transition-colors truncate">
+                                                <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors truncate">
                                                     {protocol.name}
                                                 </span>
                                             </div>
@@ -396,27 +396,27 @@ export const ProtocolLibrary: React.FC = () => {
                                                 {protocol.category}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3 text-xs text-slate-500">{blockCount}</td>
-                                        <td className="px-5 py-3 text-xs text-slate-500">{exerciseCount || '—'}</td>
+                                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-[#94A3B8]">{blockCount}</td>
+                                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-[#94A3B8]">{exerciseCount || '—'}</td>
                                         <td className="px-5 py-3 text-right">
                                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setActiveProtocol(protocol); setPageView('view'); }}
-                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
+                                                    className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all"
                                                     title="View"
                                                 >
                                                     <EyeIcon size={14} />
                                                 </button>
                                                 <button
                                                     onClick={e => handleShare(e, protocol)}
-                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
+                                                    className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all"
                                                     title="Share protocol"
                                                 >
                                                     <Link2Icon size={14} />
                                                 </button>
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setConfirmDeleteProto({ id: protocol.id, name: protocol.name }); }}
-                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                                    className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                                                     title="Delete"
                                                 >
                                                     <Trash2Icon size={14} />

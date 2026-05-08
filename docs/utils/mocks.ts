@@ -10,6 +10,9 @@ export const MECHANICS = ["Compound", "Isolation", "Isometric", "Plyometric", "U
 export const EXECUTION_MODES = ["Continuous", "Alternating", "Isometric", "Unsorted"];
 export const EQUIPMENT_LIST = ["Barbell", "Dumbbell", "Kettlebell", "Cable", "Machine", "Bodyweight", "Band", "Medicine Ball", "Stability Ball", "BOSU", "TRX", "Rings", "Foam Roller", "Unsorted", "Other"];
 export const MOVEMENT_PATTERNS = ["Ankle Dorsiflexion", "Ankle Plantar Flexion", "Anti-Extension", "Anti-Flexion", "Anti-Lateral Flexion", "Anti-Rotational", "Elbow Extension", "Elbow Flexion", "Hip Abduction", "Hip Adduction", "Hip Dominant", "Hip Extension", "Hip External Rotation", "Hip Flexion", "Hip Hinge", "Horizontal Adduction", "Horizontal Pull", "Horizontal Push", "Isometric Hold", "Knee Dominant", "Lateral Flexion", "Lateral Locomotion", "Loaded Carry", "Locomotion", "Rotational", "Scapular Elevation", "Shoulder Abduction", "Shoulder External Rotation", "Shoulder Flexion", "Shoulder Internal Rotation", "Shoulder Scapular Plane Elevation", "Spinal Extension", "Spinal Flexion", "Vertical Pull", "Vertical Push", "Wrist Extension", "Wrist Flexion", "Unsorted"];
+export const FORCE_TYPES = ["Push (Anterior)", "Pull (Posterior)", "Bilateral", "Unilateral", "Rotational", "Isometric", "Eccentric", "Concentric", "Unsorted"];
+export const CNS_DEMAND_LEVELS = ["Low", "Moderate", "High", "Very High"] as const;
+export const DIFFICULTY_LEVELS = ["Low", "Moderate", "High", "Extreme"] as const;
 
 export const MOCK_PROTOCOLS = [
     { id: 'p1', name: 'Standard Warmup', category: 'Warmup', description: 'General preparedness', exerciseIds: ['ex_sq_1', 'ex_lng_1'] },

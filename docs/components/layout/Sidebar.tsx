@@ -175,7 +175,7 @@ export const Sidebar = () => {
         return (
             <nav
                 data-tour="sidebar-nav"
-                className={`${collapsed ? 'w-16' : 'w-60'} bg-white dark:bg-[#132338] border-r border-slate-200 dark:border-[#243A58] flex flex-col shrink-0 z-30 transition-all duration-300 print:hidden`}
+                className={`${collapsed ? 'w-14' : 'w-52'} bg-white dark:bg-[#132338] border-r border-slate-200 dark:border-[#243A58] flex flex-col shrink-0 z-30 transition-all duration-300 print:hidden`}
             >
                 {navContent(!collapsed)}
             </nav>
