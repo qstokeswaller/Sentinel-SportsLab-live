@@ -2,12 +2,10 @@
  * Vercel Serverless Function — Polar OAuth Token Exchange
  *
  * POST /api/polar-token
- * Body: { code: string, redirect_uri: string }
+ * Body: { code: string, redirect_uri: string, type: 'team_pro' | 'individual' }
  *
- * Exchanges an authorization code for a Polar AccessLink access token.
- * The client_secret is kept server-side and never exposed to the browser.
- *
- * Also registers the user with Polar AccessLink (required on first connect).
+ * Team Pro uses auth.polar.com for token exchange (no AccessLink registration needed).
+ * Individual uses polarremote.com and requires AccessLink user registration.
  */
 
 export default async function handler(req, res) {
@@ -15,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { code, redirect_uri } = req.body;
+  const { code, redirect_uri, type = 'team_pro' } = req.body;
 
   if (!code || !redirect_uri) {
     return res.status(400).json({ error: 'Missing code or redirect_uri' });
@@ -29,9 +27,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Exchange code for access token
     const credentials = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
-    const tokenRes = await fetch('https://polarremote.com/v2/oauth2/token', {
+
+    // Team Pro uses auth.polar.com; individual AccessLink uses polarremote.com
+    const tokenUrl = type === 'team_pro'
+      ? 'https://auth.polar.com/oauth/token'
+      : 'https://polarremote.com/v2/oauth2/token';
+
+    const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${credentials}`,
@@ -54,22 +57,23 @@ export default async function handler(req, res) {
     const tokenData = await tokenRes.json();
     // tokenData: { access_token, token_type, x_user_id }
 
-    // Step 2: Register user with AccessLink (required before any data access)
-    // This is idempotent — if already registered, returns 409 which we treat as success
-    const registerRes = await fetch('https://www.polaraccesslink.com/v3/users', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ 'member-id': String(tokenData.x_user_id) }),
-    });
+    // AccessLink requires user registration before any data access.
+    // Team Pro does not — skip registration for team_pro connections.
+    if (type === 'individual') {
+      const registerRes = await fetch('https://www.polaraccesslink.com/v3/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ 'member-id': String(tokenData.x_user_id) }),
+      });
 
-    // 200 = newly registered, 409 = already registered — both are fine
-    if (!registerRes.ok && registerRes.status !== 409) {
-      console.warn('Polar user registration warning:', registerRes.status);
-      // Non-fatal — continue anyway, data pull may still work
+      // 200 = newly registered, 409 = already registered — both are fine
+      if (!registerRes.ok && registerRes.status !== 409) {
+        console.warn('Polar user registration warning:', registerRes.status);
+      }
     }
 
     return res.status(200).json({

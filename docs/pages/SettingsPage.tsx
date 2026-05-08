@@ -403,7 +403,10 @@ const SettingsPage: React.FC = () => {
     const scope = type === 'team_pro' ? 'team_read' : 'accesslink.read_all';
     // Pass type via OAuth state param so callback knows which type was used
     const state = encodeURIComponent(JSON.stringify({ type }));
-    const url = `https://flow.polar.com/oauth2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+    const authBase = type === 'team_pro'
+      ? 'https://auth.polar.com/oauth/authorize'
+      : 'https://flow.polar.com/oauth2/authorization';
+    const url = `${authBase}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
     window.location.href = url;
   };
 

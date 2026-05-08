@@ -48,7 +48,7 @@ export default function PolarCallbackPage() {
                 const res = await fetch('/api/polar-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }),
+                    body: JSON.stringify({ code, redirect_uri: REDIRECT_URI, type: connectionType }),
                 });
 
                 if (!res.ok) {
