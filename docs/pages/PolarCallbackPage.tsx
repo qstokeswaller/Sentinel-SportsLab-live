@@ -56,12 +56,14 @@ export default function PolarCallbackPage() {
                     throw new Error(err.error || 'Token exchange failed');
                 }
 
-                const { access_token, polar_user_id } = await res.json();
+                const { access_token, refresh_token, expires_at, polar_user_id } = await res.json();
 
                 await StorageService.savePolarIntegration({
                     connected: true,
                     accessToken: access_token,
-                    polarUserId: polar_user_id,
+                    refreshToken: refresh_token ?? null,
+                    expiresAt: expires_at ?? null,
+                    polarUserId: polar_user_id ?? null,
                     connectedAt: new Date().toISOString(),
                     type: connectionType,
                 });

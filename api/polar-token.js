@@ -6,6 +6,8 @@
  *
  * Team Pro uses auth.polar.com for token exchange (no AccessLink registration needed).
  * Individual uses polarremote.com and requires AccessLink user registration.
+ *
+ * Returns: { access_token, refresh_token, expires_at, polar_user_id }
  */
 
 export default async function handler(req, res) {
@@ -55,7 +57,8 @@ export default async function handler(req, res) {
     }
 
     const tokenData = await tokenRes.json();
-    // tokenData: { access_token, token_type, x_user_id }
+    // Team Pro response: { access_token, token_type, refresh_token, expires_in, scope, jti }
+    // AccessLink response: { access_token, token_type, x_user_id }
 
     // AccessLink requires user registration before any data access.
     // Team Pro does not — skip registration for team_pro connections.
@@ -76,9 +79,16 @@ export default async function handler(req, res) {
       }
     }
 
+    // Calculate absolute expiry time from expires_in seconds (Team Pro tokens expire in ~12 hours)
+    const expiresAt = tokenData.expires_in
+      ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+      : null;
+
     return res.status(200).json({
-      access_token: tokenData.access_token,
-      polar_user_id: tokenData.x_user_id,
+      access_token:  tokenData.access_token,
+      refresh_token: tokenData.refresh_token ?? null,
+      expires_at:    expiresAt,
+      polar_user_id: tokenData.x_user_id ?? null, // only present for AccessLink (individual)
     });
 
   } catch (err) {
