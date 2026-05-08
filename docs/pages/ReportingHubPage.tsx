@@ -12,9 +12,9 @@ import {
 } from 'recharts';
 import { useExerciseMap } from '../hooks/useExerciseMap';
 import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
-import GpsColumnMapper, { findMatchingProfile } from '../components/performance/GpsColumnMapper';
+import GpsColumnMapper, { findMatchingProfile, fuzzyMatchHeader, PLATFORM_FIELDS } from '../components/performance/GpsColumnMapper';
 import type { GpsProfile, ProfileMatchResult } from '../components/performance/GpsColumnMapper';
-import { loadGpsProfiles, loadGpsCategories, saveGpsCategories, getProfileForTeam } from '../components/performance/GpsConfigModal';
+import { loadGpsProfiles, saveGpsProfiles, loadGpsCategories, saveGpsCategories, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import type { GpsTeamProfile, GpsCategory } from '../components/performance/GpsConfigModal';
 import SmartCsvMapper from '../components/ui/SmartCsvMapper';
 import { HR_SCHEMA, normaliseDate } from '../utils/csvSchemas';
@@ -2470,15 +2470,24 @@ export const ReportingHubPage = () => {
                     return [...prev, ...fresh];
                 });
 
-                // Auto-create a GPS team profile for this Polar team on first sync so
-                // ACWR and column labels work identically to a manually configured CSV import.
-                if (selectedTeam?.id) {
+                // Auto-create a GPS team profile on first sync using the actual columns
+                // returned by Polar so all fields (zones, HRV, load metrics, etc.) are
+                // available in the GPS Data Hub and ACWR without manual configuration.
+                if (selectedTeam?.id && newRecords.length > 0) {
                     const existingProfiles = loadGpsProfiles();
                     if (!existingProfiles.some(p => p.teamId === selectedTeam.id)) {
+                        const sampleColumns = Object.keys(newRecords[0]?.rawColumns || {});
+                        const columnMapping = sampleColumns.map(col => {
+                            const { fieldId } = fuzzyMatchHeader(col);
+                            const field = PLATFORM_FIELDS.find(f => f.id === fieldId);
+                            return {
+                                csvColumn:     col,
+                                platformField: fieldId || '',
+                                displayName:   field?.label || col,
+                                autoMapped:    !!fieldId,
+                            };
+                        });
                         const teamAcwrMethod = acwrSettings?.[selectedTeam.id]?.method || 'total_distance';
-                        // Map each supported ACWR method to the best available Polar column.
-                        // Polar does not provide sprint distance or player load directly,
-                        // so those fall back to total distance / training load score.
                         const POLAR_ACWR_COLS: Record<string, string> = {
                             total_distance:  'Total distance [m]',
                             sprint_distance: 'Total distance [m]',
@@ -2487,24 +2496,13 @@ export const ReportingHubPage = () => {
                             srpe:            'Training load score',
                         };
                         saveGpsProfiles([...existingProfiles, {
-                            teamId:   selectedTeam.id,
-                            teamName: selectedTeam.name,
-                            provider: 'Polar Team Pro',
-                            columnMapping: [
-                                { csvColumn: 'Session name',         platformField: 'session_title',       displayName: 'Session Title',        autoMapped: true },
-                                { csvColumn: 'Duration',             platformField: 'duration_minutes',    displayName: 'Duration (min)',        autoMapped: true },
-                                { csvColumn: 'Total distance [m]',   platformField: 'total_distance',      displayName: 'Total Distance (m)',    autoMapped: true },
-                                { csvColumn: 'Maximum speed [km/h]', platformField: 'max_speed',           displayName: 'Max Speed (km/h)',      autoMapped: true },
-                                { csvColumn: 'Average speed [km/h]', platformField: 'avg_speed',           displayName: 'Avg Speed (km/h)',      autoMapped: true },
-                                { csvColumn: 'Sprints',              platformField: 'sprints',             displayName: 'Sprint Count',          autoMapped: true },
-                                { csvColumn: 'HR avg [bpm]',         platformField: 'heart_rate_avg',      displayName: 'Avg Heart Rate (bpm)', autoMapped: true },
-                                { csvColumn: 'HR max [bpm]',         platformField: 'heart_rate_max',      displayName: 'Max Heart Rate (bpm)', autoMapped: true },
-                                { csvColumn: 'Training load score',  platformField: 'polar_training_load', displayName: 'Training Load Score',  autoMapped: true },
-                                { csvColumn: 'Calories [kcal]',      platformField: 'calories',            displayName: 'Calories (kcal)',       autoMapped: true },
-                            ],
-                            acwrColumn: POLAR_ACWR_COLS[teamAcwrMethod] || 'Total distance [m]',
-                            headerFingerprint: ['session name', 'duration', 'total distance [m]', 'maximum speed [km/h]', 'average speed [km/h]', 'sprints', 'hr avg [bpm]', 'hr max [bpm]', 'training load score', 'calories [kcal]'].sort(),
-                            savedAt: new Date().toISOString(),
+                            teamId:            selectedTeam.id,
+                            teamName:          selectedTeam.name,
+                            provider:          'Polar Team Pro',
+                            columnMapping,
+                            acwrColumn:        POLAR_ACWR_COLS[teamAcwrMethod] || 'Total distance [m]',
+                            headerFingerprint: sampleColumns.map(h => h.toLowerCase().trim()).sort(),
+                            savedAt:           new Date().toISOString(),
                         }]);
                     }
                 }

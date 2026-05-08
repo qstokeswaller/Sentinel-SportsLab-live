@@ -5,19 +5,130 @@
  * Body: { access_token: string, type: 'team_pro' | 'individual' }
  *
  * Team Pro flow (per docs at polar.com/teampro-api):
- *   1. GET /v1/teams                                           — list teams (paginated, data[])
- *   2. GET /v1/teams/{id}                                      — team detail including players[]
- *   3. GET /v1/teams/{id}/training_sessions                    — sessions last 7 days (data[])
- *   4. GET /v1/teams/training_sessions/{id}                    — team aggregate + participants[]
- *   5. GET /v1/training_sessions/{player_session_id}/session_summary — per-player metrics
+ *   1. GET /v1/teams                                                  — list teams (data[])
+ *   2. GET /v1/teams/{id}                                             — team detail + players[]
+ *   3. GET /v1/teams/{id}/training_sessions                           — sessions last 30 days
+ *   4. GET /v1/teams/training_sessions/{id}                           — participants[]
+ *   5. GET /v1/training_sessions/{player_session_id}/session_summary  — full per-player metrics
+ *
+ * All available Polar fields (zones, load, HR, RR, energy substrate, etc.) are
+ * captured via flattenPolarSummary() so trainers can map any column they need.
  *
  * Rate limit: burst of 100 requests, then 1 req/sec.
- * We stay within the 100-call burst by limiting to 7 days and capping player
- * summary calls to 80 total (overhead ~15 calls + 80 = 95, under burst).
+ * Player summary calls are capped at 80 (overhead ~15 = 95 total, under burst).
  *
  * Individual flow:
- *   GET /v3/exercises on AccessLink — recent exercise summaries
+ *   GET /v3/exercises on AccessLink + flattenAccessLinkExercise()
  */
+
+// ─── Flatten helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Converts a Polar session_summary JSON into a flat rawColumns object.
+ * All numeric values are stored as numbers so charts and ACWR can parseFloat them.
+ * Column names match the aliases in GpsColumnMapper so fuzzy auto-mapping works.
+ */
+function flattenPolarSummary(summary, sessionName) {
+  const c = {};
+
+  if (sessionName) c['Session name'] = sessionName;
+
+  // Core metrics
+  if (summary.duration       != null) c['Duration [min]']         = Math.round(summary.duration / 60 * 10) / 10;
+  if (summary.distance       != null) c['Total distance [m]']     = summary.distance;
+  if (summary.max_speed      != null) c['Maximum speed [km/h]']   = summary.max_speed;
+  if (summary.avg_speed      != null) c['Average speed [km/h]']   = summary.avg_speed;
+  if (summary.sprint_counter != null) c['Sprints']                = summary.sprint_counter;
+
+  // Calories (Polar field name is kilocalories)
+  const kcal = summary.kilocalories ?? summary.calories;
+  if (kcal != null) c['Calories [kcal]'] = kcal;
+
+  // Load metrics
+  if (summary.training_load != null) c['Training load score'] = summary.training_load;
+  if (summary.cardio_load   != null) c['Cardio load']         = summary.cardio_load;
+  if (summary.muscle_load   != null) c['Muscle load']         = summary.muscle_load;
+  if (summary.recovery_time != null) c['Recovery time [h]']   = summary.recovery_time;
+
+  // Heart rate — may be nested object or flat fields
+  const hrAvg = summary.heart_rate?.average ?? summary.avg_heart_rate;
+  const hrMax = summary.heart_rate?.maximum ?? summary.max_heart_rate;
+  const hrMin = summary.heart_rate?.minimum ?? summary.min_heart_rate;
+  if (hrAvg != null) c['HR avg [bpm]'] = hrAvg;
+  if (hrMax != null) c['HR max [bpm]'] = hrMax;
+  if (hrMin != null) c['HR min [bpm]'] = hrMin;
+
+  // Speed zones — distance in each zone
+  const speedZones = summary.speed_zones ?? summary.speedZones ?? [];
+  speedZones.forEach((zone, i) => {
+    const dist = zone.distance ?? zone.in_zone ?? zone.value;
+    if (dist != null) c[`Speed zone ${i + 1} [m]`] = dist;
+  });
+
+  // HR zones — time in each zone (seconds)
+  const hrZones = summary.heart_rate_zones ?? summary.hr_zones ?? summary.heartRateZones ?? [];
+  hrZones.forEach((zone, i) => {
+    const secs = zone.duration ?? zone.in_zone ?? zone.seconds;
+    if (secs != null) c[`HR zone ${i + 1} time [s]`] = secs;
+  });
+
+  // RR intervals / HRV
+  const rr = summary.rr_intervals ?? summary.rr;
+  if (rr) {
+    if (rr.average != null) c['RR avg [ms]'] = rr.average;
+    if (rr.minimum != null) c['RR min [ms]'] = rr.minimum;
+    if (rr.maximum != null) c['RR max [ms]'] = rr.maximum;
+  }
+
+  // Acceleration zones (effort count per zone)
+  const accelZones = summary.acceleration_zones ?? summary.accel_zones ?? [];
+  accelZones.forEach((zone, i) => {
+    const count = zone.count ?? zone.efforts;
+    if (count != null) c[`Accel zone ${i + 1} [count]`] = count;
+  });
+
+  // Energy substrate
+  if (summary.fat_percentage  != null) c['Fat [%]']  = summary.fat_percentage;
+  if (summary.carb_percentage != null) c['Carbs [%]'] = summary.carb_percentage;
+
+  return c;
+}
+
+/**
+ * Converts a Polar AccessLink exercise object into a flat rawColumns object.
+ */
+function flattenAccessLinkExercise(ex) {
+  const c = {};
+
+  if (ex.sport) c['Session name'] = ex.sport;
+  if (ex.duration != null)  c['Duration [min]']       = Math.round(ex.duration / 60 * 10) / 10;
+  if (ex.distance != null)  c['Total distance [m]']   = ex.distance;
+  if (ex.sport)             c['Sport']                = ex.sport;
+
+  const kcal = ex.kilocalories ?? ex.calories;
+  if (kcal != null) c['Calories [kcal]'] = kcal;
+
+  const hrAvg = ex.heart_rate?.average ?? ex.avg_heart_rate;
+  const hrMax = ex.heart_rate?.maximum ?? ex.max_heart_rate;
+  if (hrAvg != null) c['HR avg [bpm]'] = hrAvg;
+  if (hrMax != null) c['HR max [bpm]'] = hrMax;
+
+  // Training load — may be nested object or scalar
+  const tl = typeof ex.training_load === 'object' ? ex.training_load?.score : ex.training_load;
+  if (tl != null) c['Training load score'] = tl;
+
+  // Cardio load
+  const cl = typeof ex.cardio_load === 'object' ? ex.cardio_load?.strain_index : ex.cardio_load;
+  if (cl != null) c['Cardio load'] = cl;
+
+  if (ex.fat_percentage  != null) c['Fat [%]']  = ex.fat_percentage;
+  if (ex.carb_percentage != null) c['Carbs [%]'] = ex.carb_percentage;
+  if (ex.recovery_time   != null) c['Recovery time [h]'] = ex.recovery_time;
+
+  return c;
+}
+
+// ─── Team Pro sync ────────────────────────────────────────────────────────────
 
 async function syncTeamPro(access_token) {
   const BASE = 'https://teampro.api.polar.com/v1';
@@ -30,31 +141,26 @@ async function syncTeamPro(access_token) {
     return res;
   };
 
-  // 1. Get teams — response: { data: [...], page: {...} }
+  // 1. Get teams
   const teamsRes = await polarFetch(`${BASE}/teams?per_page=100`);
   if (!teamsRes.ok) throw { status: teamsRes.status, message: `Polar Team Pro API error ${teamsRes.status}` };
 
   const teamsData = await teamsRes.json();
   const teams = teamsData?.data ?? (Array.isArray(teamsData) ? teamsData : []);
-
   if (!teams.length) return { sessions: [], message: 'No teams found in Polar Team Pro account.' };
 
-  // Last 30 days — still keeps total API calls within the burst bucket of 100 for typical teams
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
   const allSessions = [];
   let playerSummaryCalls = 0;
-  const PLAYER_SUMMARY_CAP = 80; // stay under 100-call burst (overhead ~15 calls + up to 80 player summaries)
+  const PLAYER_SUMMARY_CAP = 80;
 
   for (const team of teams) {
-    // 2. Get team detail — includes players[] with player_id, player_number, first_name, last_name
+    // 2. Team detail — includes players[]
     const teamDetailRes = await polarFetch(`${BASE}/teams/${team.id}`);
     const teamDetail = teamDetailRes.ok ? await teamDetailRes.json() : null;
     const teamPlayers = teamDetail?.players ?? [];
 
-    // 3. Get team training sessions (last 7 days)
-    // Response: { data: [...], page: {...} }
-    // Session fields: id, name, type, start_time, record_start_time, distance, kilocalories
+    // 3. Training sessions last 30 days
     const sessionsRes = await polarFetch(`${BASE}/teams/${team.id}/training_sessions?since=${since}&per_page=100`);
     if (!sessionsRes.ok) continue;
 
@@ -62,14 +168,12 @@ async function syncTeamPro(access_token) {
     const sessions = sessionsData?.data ?? (Array.isArray(sessionsData) ? sessionsData : []);
 
     for (const session of sessions) {
-      // 4. Get session detail — returns team-level aggregates + participants[] with player_session_id
+      // 4. Session detail — team aggregates + participants[] with player_session_id
       const detailRes = await polarFetch(`${BASE}/teams/training_sessions/${session.id}`);
       const detail = detailRes.ok ? await detailRes.json() : null;
-
-      // participants[] each has: player_id, player_session_id
       const participants = detail?.participants ?? [];
 
-      // 5. Fetch per-player session_summary for each participant (within call budget)
+      // 5. Per-player session_summary — full metrics flattened
       const playerData = [];
       for (const participant of participants) {
         if (!participant.player_session_id) continue;
@@ -79,29 +183,18 @@ async function syncTeamPro(access_token) {
           `${BASE}/training_sessions/${participant.player_session_id}/session_summary`
         );
         playerSummaryCalls++;
-
         if (!summaryRes.ok) continue;
-        const summary = await summaryRes.json();
 
+        const summary = await summaryRes.json();
         const rosterPlayer = teamPlayers.find(pl => pl.player_id === participant.player_id);
+
         playerData.push({
           playerId:     participant.player_id ?? '',
           playerName:   rosterPlayer
             ? `${rosterPlayer.first_name ?? ''} ${rosterPlayer.last_name ?? ''}`.trim()
             : `Player ${participant.player_id}`,
           playerNumber: String(rosterPlayer?.player_number ?? ''),
-          rawColumns: {
-            'Session name':         session.name ?? '',
-            'Duration':             summary.duration    ? `${Math.round(summary.duration / 60)} min` : '—',
-            'Total distance [m]':   summary.distance    ?? '—',
-            'Maximum speed [km/h]': summary.max_speed   ?? '—',
-            'Average speed [km/h]': summary.avg_speed   ?? '—',
-            'Sprints':              summary.sprint_counter ?? '—',
-            'HR avg [bpm]':         summary.heart_rate?.average ?? summary.avg_heart_rate ?? '—',
-            'HR max [bpm]':         summary.heart_rate?.maximum ?? summary.max_heart_rate ?? '—',
-            'Training load score':  summary.training_load ?? '—',
-            'Calories [kcal]':      summary.kilocalories ?? summary.calories ?? '—',
-          },
+          rawColumns:   flattenPolarSummary(summary, session.name),
         });
       }
 
@@ -115,41 +208,17 @@ async function syncTeamPro(access_token) {
           players:  playerData,
         });
       } else {
-        // No per-player data (cap hit or no participants) — use team-level aggregates
+        // Fallback: team-level aggregates spread across roster (or a single team record)
         const metrics = detail ?? session;
+        const fallbackColumns = flattenPolarSummary(metrics, session.name);
         const fallbackPlayers = teamPlayers.length > 0
           ? teamPlayers.map(player => ({
               playerId:     player.player_id,
               playerName:   `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim() || `Player ${player.player_id}`,
               playerNumber: String(player.player_number ?? ''),
-              rawColumns: {
-                'Session name':         session.name ?? '',
-                'Duration':             metrics.duration     ? `${Math.round(metrics.duration / 60)} min` : '—',
-                'Total distance [m]':   metrics.distance     ?? '—',
-                'Maximum speed [km/h]': metrics.max_speed    ?? '—',
-                'Average speed [km/h]': metrics.avg_speed    ?? '—',
-                'Sprints':              metrics.sprint_counter ?? '—',
-                'HR avg [bpm]':         metrics.heart_rate?.average ?? '—',
-                'HR max [bpm]':         metrics.heart_rate?.maximum ?? '—',
-                'Training load score':  metrics.training_load ?? '—',
-                'Calories [kcal]':      metrics.kilocalories ?? metrics.calories ?? '—',
-              },
+              rawColumns:   fallbackColumns,
             }))
-          : [{
-              playerId:     'team',
-              playerName:   team.name,
-              playerNumber: '',
-              rawColumns: {
-                'Session name':         session.name ?? '',
-                'Duration':             metrics.duration     ? `${Math.round(metrics.duration / 60)} min` : '—',
-                'Total distance [m]':   metrics.distance     ?? '—',
-                'Maximum speed [km/h]': metrics.max_speed    ?? '—',
-                'Sprints':              metrics.sprint_counter ?? '—',
-                'HR avg [bpm]':         metrics.heart_rate?.average ?? '—',
-                'Training load score':  metrics.training_load ?? '—',
-                'Calories [kcal]':      metrics.kilocalories ?? '—',
-              },
-            }];
+          : [{ playerId: 'team', playerName: team.name, playerNumber: '', rawColumns: fallbackColumns }];
 
         allSessions.push({
           source:   'polar_team_pro',
@@ -163,6 +232,8 @@ async function syncTeamPro(access_token) {
 
   return { sessions: allSessions };
 }
+
+// ─── Individual (AccessLink) sync ────────────────────────────────────────────
 
 async function syncIndividual(access_token) {
   const exercisesRes = await fetch('https://www.polaraccesslink.com/v3/exercises', {
@@ -188,21 +259,14 @@ async function syncIndividual(access_token) {
       playerId:     'self',
       playerName:   '',
       playerNumber: '',
-      rawColumns: {
-        'Duration':             ex.duration ? `${Math.round(ex.duration / 60)} min` : '—',
-        'Total distance [m]':   ex.distance ?? '—',
-        'HR avg [bpm]':         ex.heart_rate?.average ?? '—',
-        'HR max [bpm]':         ex.heart_rate?.maximum ?? '—',
-        'Calories [kcal]':      ex.kilocalories ?? ex.calories ?? '—',
-        'Sport':                ex.sport ?? '—',
-        'Training load score':  ex.training_load?.score ?? '—',
-        'Cardio load':          ex.cardio_load?.strain_index ?? '—',
-      },
+      rawColumns:   flattenAccessLinkExercise(ex),
     }],
   }));
 
   return { sessions };
 }
+
+// ─── Handler ──────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
