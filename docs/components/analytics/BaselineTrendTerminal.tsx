@@ -287,7 +287,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                     <div className="px-5 py-4">
                         <div className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">Deviation Signals</div>
                         <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
-                            A significant deviation from baseline (>15%) in either direction signals a meaningful shift. Rising load with falling wellness readiness is the classic early fatigue pattern.
+                            A significant deviation from baseline (&gt;15%) in either direction signals a meaningful shift. Rising load with falling wellness readiness is the classic early fatigue pattern.
                         </p>
                     </div>
                     <div className="px-5 py-4">
