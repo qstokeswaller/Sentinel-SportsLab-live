@@ -133,7 +133,7 @@ export const PerformanceIntelligenceTerminal = ({
         if (s === 'warning') return <AlertTriangleIcon size={16} className="text-amber-500" />;
         return <InfoIcon size={16} className="text-sky-500" />;
     };
-    const severityBg = (s) => s === 'critical' ? 'border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-rose-50' : s === 'warning' ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50' : 'border-sky-200 dark:border-sky-900/50 bg-sky-50';
+    const severityBg = (s) => s === 'critical' ? 'border-rose-200 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-900/20' : s === 'warning' ? 'border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20' : 'border-sky-200 dark:border-sky-800/50 bg-sky-50 dark:bg-sky-900/20';
     const severityBadge = (s) => s === 'critical' ? 'bg-rose-100 text-rose-700' : s === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700';
     const categoryIcon = (c) => {
         if (c === 'Risk') return <ShieldAlertIcon size={14} />;
@@ -148,25 +148,25 @@ export const PerformanceIntelligenceTerminal = ({
     // ── Shared UI blocks ──
 
     const renderReadinessBreakdown = (r) => (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-tight">Readiness Breakdown</h3>
-                <span className="text-[10px] text-slate-400">{r.domainsUsed} of {r.domainsTotal} domains active</span>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Readiness Breakdown</h3>
+                <span className="text-[10px] text-slate-400 dark:text-[#64748B]">{r.domainsUsed} of {r.domainsTotal} domains active</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {r.domains.map(d => (
-                    <div key={d.name} className={`p-3 rounded-xl border ${d.available ? 'bg-white border-slate-200' : 'bg-slate-50 border-dashed border-slate-200 opacity-60'}`}>
-                        <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">{d.name}</div>
+                    <div key={d.name} className={`p-3 rounded-xl border ${d.available ? 'bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58]' : 'bg-slate-50 dark:bg-[#0F1C30] border-dashed border-slate-200 dark:border-[#243A58] opacity-60'}`}>
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">{d.name}</div>
                         {d.available ? (
                             <>
-                                <div className={`text-xl font-bold ${d.score >= 80 ? 'text-emerald-600' : d.score >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>{d.score}</div>
-                                <div className="w-full h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                                <div className={`text-xl font-bold ${d.score >= 80 ? 'text-emerald-600 dark:text-emerald-400' : d.score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>{d.score}</div>
+                                <div className="w-full h-1.5 bg-slate-100 dark:bg-[#243A58] rounded-full mt-2 overflow-hidden">
                                     <div className={`h-full rounded-full transition-all ${d.score >= 80 ? 'bg-emerald-500' : d.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${d.score}%` }} />
                                 </div>
-                                <div className="text-[8px] text-slate-400 mt-1 truncate" title={d.reason}>{d.reason}</div>
+                                <div className="text-[8px] text-slate-400 dark:text-[#64748B] mt-1 truncate" title={d.reason}>{d.reason}</div>
                             </>
                         ) : (
-                            <div className="text-[10px] text-slate-400 italic mt-1">{d.reason}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#64748B] italic mt-1">{d.reason}</div>
                         )}
                     </div>
                 ))}
@@ -176,28 +176,28 @@ export const PerformanceIntelligenceTerminal = ({
 
     const renderInsightFeed = (insightList, title = 'Intelligence Feed', subtitle = 'Actionable insights generated from cross-domain analysis') => (
         insightList.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100">
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-tight">{title}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{subtitle}</p>
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">{title}</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">{subtitle}</p>
                 </div>
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                     {insightList.map(ins => {
                         const isExpanded = expandedInsight === ins.id;
                         return (
                             <div key={ins.id}>
                                 <button
                                     onClick={() => setExpandedInsight(isExpanded ? null : ins.id)}
-                                    className="w-full px-6 py-4 flex items-start gap-4 text-left hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
+                                    className="w-full px-6 py-4 flex items-start gap-4 text-left hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors"
                                 >
                                     <div className="mt-0.5 shrink-0">{severityIcon(ins.severity)}</div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${severityBadge(ins.severity)}`}>{ins.severity}</span>
-                                            <span className="text-[9px] font-semibold text-slate-400 uppercase flex items-center gap-1">{categoryIcon(ins.category)} {ins.category}</span>
+                                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase flex items-center gap-1">{categoryIcon(ins.category)} {ins.category}</span>
                                         </div>
-                                        <h4 className="text-sm font-semibold text-slate-900 mt-1">{ins.title}</h4>
-                                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{ins.message}</p>
+                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] mt-1">{ins.title}</h4>
+                                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5 line-clamp-2">{ins.message}</p>
                                     </div>
                                     <div className="shrink-0 mt-1">
                                         {isExpanded ? <ChevronDownIcon size={14} className="text-slate-400" /> : <ChevronRightIcon size={14} className="text-slate-400" />}
@@ -206,11 +206,11 @@ export const PerformanceIntelligenceTerminal = ({
                                 {isExpanded && (
                                     <div className="px-6 pb-4 ml-10">
                                         <div className={`p-4 rounded-xl border ${severityBg(ins.severity)}`}>
-                                            <div className="text-[9px] font-bold text-slate-500 uppercase mb-1">Recommendation</div>
-                                            <p className="text-xs text-slate-700 leading-relaxed">{ins.recommendation}</p>
-                                            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-200/50">
-                                                <span className="text-[9px] text-slate-400">Source: {ins.dataSource}</span>
-                                                {ins.confidence && <span className="text-[9px] text-slate-400">| {ins.confidence}</span>}
+                                            <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase mb-1">Recommendation</div>
+                                            <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{ins.recommendation}</p>
+                                            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-200/50 dark:border-[#243A58]/50">
+                                                <span className="text-[9px] text-slate-400 dark:text-[#64748B]">Source: {ins.dataSource}</span>
+                                                {ins.confidence && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">| {ins.confidence}</span>}
                                             </div>
                                         </div>
                                     </div>
@@ -225,8 +225,8 @@ export const PerformanceIntelligenceTerminal = ({
 
     const renderAssessmentProfile = (p) => (
         p && Object.keys(p.assessmentsByType).length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-tight">Assessment Profile</h3>
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Assessment Profile</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {Object.entries(p.assessmentsByType).map(([type, data]) => {
                         const m = data.latest?.metrics || {};
@@ -237,23 +237,23 @@ export const PerformanceIntelligenceTerminal = ({
                         const stale = data.daysSinceLatest > 60;
                         const label = m.exerciseLabel || type.replace(/^rm_/, '').replace(/_/g, ' ');
                         return (
-                            <div key={type} className={`p-4 rounded-xl border ${stale ? 'border-dashed border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40' : 'border-slate-200 bg-white'}`}>
+                            <div key={type} className={`p-4 rounded-xl border ${stale ? 'border-dashed border-slate-200 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/50' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48]'}`}>
                                 <div className="text-[9px] font-bold text-indigo-500 uppercase">{label}</div>
                                 <div className="flex items-baseline gap-1 mt-1">
-                                    <span className="text-2xl font-bold text-slate-900">{val !== null ? val.toFixed(val < 10 ? 2 : 0) : '--'}</span>
-                                    <span className="text-[9px] text-slate-400">{m.unit || ''}</span>
+                                    <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{val !== null ? val.toFixed(val < 10 ? 2 : 0) : '--'}</span>
+                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{m.unit || ''}</span>
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     {trend !== null && (
-                                        <span className={`text-[10px] font-semibold ${Number(trend) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        <span className={`text-[10px] font-semibold ${Number(trend) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                             {Number(trend) >= 0 ? '+' : ''}{trend}%
                                         </span>
                                     )}
-                                    <span className={`text-[9px] ${stale ? 'text-amber-500' : 'text-slate-400'}`}>
+                                    <span className={`text-[9px] ${stale ? 'text-amber-500' : 'text-slate-400 dark:text-[#64748B]'}`}>
                                         {data.daysSinceLatest}d ago
                                     </span>
                                 </div>
-                                {data.count > 1 && <div className="text-[8px] text-slate-400 mt-1">{data.count} tests logged</div>}
+                                {data.count > 1 && <div className="text-[8px] text-slate-400 dark:text-[#64748B] mt-1">{data.count} tests logged</div>}
                             </div>
                         );
                     })}
@@ -271,7 +271,7 @@ export const PerformanceIntelligenceTerminal = ({
     return (
         <div className="space-y-5 animate-in fade-in duration-500">
             {/* Compact header — readiness badge + context + back button */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-3.5 flex items-center justify-between flex-wrap gap-3">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-3.5 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                     {/* Back to squad (when drilled into player) */}
                     {focusedPlayerId && (
@@ -286,10 +286,10 @@ export const PerformanceIntelligenceTerminal = ({
                         </>
                     )}
                     <div>
-                        <div className="text-sm font-semibold text-slate-900">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">
                             {focusedPlayerName || (isTeam ? `${teamProfiles.length} Athletes` : selectedSubject?.name)}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-400 dark:text-[#64748B]">
                             {insights.length} insight{insights.length !== 1 ? 's' : ''} generated
                             {focusedPlayerName && ' — individual deep-dive'}
                         </div>
@@ -328,9 +328,9 @@ export const PerformanceIntelligenceTerminal = ({
             {/* ── Team Summary Stats ── */}
             {isTeam && !focusedPlayerId && teamReadiness && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                        <div className="text-[9px] font-bold text-slate-400 uppercase">Squad Size</div>
-                        <div className="text-2xl font-bold text-slate-900">{teamProfiles.length}</div>
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase">Squad Size</div>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{teamProfiles.length}</div>
                     </div>
                     <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-xl border border-emerald-200 dark:border-emerald-800/50 p-4">
                         <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Green (80+)</div>
@@ -354,10 +354,10 @@ export const PerformanceIntelligenceTerminal = ({
                     {renderInsightFeed(individualInsights)}
                     {renderAssessmentProfile(profile)}
                     {individualInsights.length === 0 && !isLoading && (
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-                            <BrainIcon size={32} className="text-slate-300 mx-auto mb-3" />
-                            <h3 className="text-sm font-semibold text-slate-600 mb-1">No Insights Available</h3>
-                            <p className="text-xs text-slate-400 max-w-md mx-auto">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
+                            <BrainIcon size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
+                            <h3 className="text-sm font-semibold text-slate-600 dark:text-[#94A3B8] mb-1">No Insights Available</h3>
+                            <p className="text-xs text-slate-400 dark:text-[#64748B] max-w-md mx-auto">
                                 {focusedPlayerName
                                     ? `No data found for ${focusedPlayerName}. Log training loads, wellness check-ins, or test results to generate insights.`
                                     : 'Start logging training loads, wellness check-ins, and test results to unlock cross-domain intelligence.'}
@@ -374,11 +374,11 @@ export const PerformanceIntelligenceTerminal = ({
                     {renderInsightFeed(teamInsights, 'Squad-Wide Patterns', `Flags shared across 30%+ of ${selectedSubject?.name || 'the squad'}`)}
 
                     {/* Squad Readiness Matrix */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-tight">Squad Readiness Matrix</h3>
-                                <p className="text-[10px] text-slate-400 mt-0.5">Click any athlete to view their full individual profile</p>
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Squad Readiness Matrix</h3>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Click any athlete to view their full individual profile</p>
                             </div>
                             <div className="flex items-center gap-2 text-[9px]">
                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 80+</span>
@@ -386,7 +386,7 @@ export const PerformanceIntelligenceTerminal = ({
                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> &lt;50</span>
                             </div>
                         </div>
-                        <div className="divide-y divide-slate-50">
+                        <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                             {teamProfiles.map(player => {
                                 const r = player.readiness;
                                 const isExp = expandedPlayer === player.id;
@@ -397,14 +397,14 @@ export const PerformanceIntelligenceTerminal = ({
                                         <div className="flex items-center">
                                             <button
                                                 onClick={() => setExpandedPlayer(isExp ? null : player.id)}
-                                                className="flex-1 px-6 py-3 flex items-center gap-4 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
+                                                className="flex-1 px-6 py-3 flex items-center gap-4 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors"
                                             >
                                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold border-2 ${statusBg(r.status)}`}>
                                                     <span className={statusColor(r.status)}>{r.overall}</span>
                                                 </div>
                                                 <div className="flex-1 text-left min-w-0">
-                                                    <div className="text-sm font-semibold text-slate-900">{player.name}</div>
-                                                    <div className="text-[9px] text-slate-400">{r.confidence} confidence — {r.domainsUsed} domains</div>
+                                                    <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</div>
+                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{r.confidence} confidence — {r.domainsUsed} domains</div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {critCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:text-rose-400">{critCount} critical</span>}
@@ -451,23 +451,23 @@ export const PerformanceIntelligenceTerminal = ({
 
                     {/* Re-Test Schedule */}
                     {retestSchedule.length > 0 && (
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 border-b border-slate-100">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
                                 <div className="flex items-center gap-2">
                                     <CalendarIcon size={14} className="text-indigo-500" />
-                                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-tight">Re-Test Schedule</h3>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Re-Test Schedule</h3>
                                 </div>
-                                <p className="text-[10px] text-slate-400 mt-0.5">{retestSchedule.length} overdue assessments across the squad</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">{retestSchedule.length} overdue assessments across the squad</p>
                             </div>
-                            <div className="divide-y divide-slate-50">
+                            <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                                 {retestSchedule.map((entry) => (
                                     <div key={entry.id} className="px-6 py-3 flex items-center gap-4">
                                         <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
                                             <CalendarIcon size={12} className="text-amber-500" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-xs font-semibold text-slate-900">{entry.playerName}</div>
-                                            <div className="text-[10px] text-slate-500">{entry.message}</div>
+                                            <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{entry.playerName}</div>
+                                            <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{entry.message}</div>
                                         </div>
                                         <button
                                             onClick={() => { setFocusedPlayerId(entry.playerId); setExpandedInsight(null); }}

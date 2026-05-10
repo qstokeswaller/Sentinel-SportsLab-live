@@ -14,11 +14,23 @@
 
 import React, { useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
-import { ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
     TrendingUpIcon, TrendingDownIcon, MinusIcon, ActivityIcon,
-    CalendarIcon, UserIcon, UsersIcon, InfoIcon,
+    CalendarIcon, InfoIcon,
 } from 'lucide-react';
+
+const formatTestName = (type) => {
+    const names = {
+        cmj: 'CMJ', cmj_advanced: 'CMJ Adv', squat_jump: 'SJ', drop_jump: 'Drop Jump',
+        imtp_basic: 'IMTP', imtp_advanced: 'IMTP Adv', '1rm': '1RM', hamstring: 'Nordic',
+        rsi: 'RSI', rsi_mod: 'RSImod', dsi: 'DSI', sprint_10m: '10m Sprint',
+        sprint_20m: '20m Sprint', sprint_30m: '30m Sprint', sprint_40m: '40m Sprint',
+        broad_jump: 'Broad Jump', inbody: 'InBody',
+    };
+    if (names[type]) return names[type];
+    if (type?.startsWith('rm_')) return type.replace('rm_', '').replace(/_/g, ' ');
+    return type?.replace(/_/g, ' ') || 'Test';
+};
 
 const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, analyticsStartDate, analyticsEndDate }) => {
     const { teams, loadRecords } = useAppState();
@@ -124,33 +136,29 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
         return results.sort((a, b) => b.totalLoad - a.totalLoad);
     }, [targetAthletes, loadRecords, blockStart, blockEnd]);
 
-    const formatTestName = (type) => {
-        const names = {
-            cmj: 'CMJ', cmj_advanced: 'CMJ Adv', squat_jump: 'SJ', drop_jump: 'Drop Jump',
-            imtp_basic: 'IMTP', imtp_advanced: 'IMTP Adv', '1rm': '1RM', hamstring: 'Nordic',
-            rsi: 'RSI', rsi_mod: 'RSImod', dsi: 'DSI', sprint_10m: '10m Sprint',
-            sprint_20m: '20m Sprint', sprint_30m: '30m Sprint', sprint_40m: '40m Sprint',
-            broad_jump: 'Broad Jump', inbody: 'InBody',
-        };
-        if (names[type]) return names[type];
-        if (type?.startsWith('rm_')) return type.replace('rm_', '').replace(/_/g, ' ');
-        return type?.replace(/_/g, ' ') || 'Test';
-    };
-
     const athletesWithResponses = analysis.filter(a => a.hasResponses);
     const athletesLoadOnly = analysis.filter(a => !a.hasResponses);
 
     return (
         <div className="space-y-5">
+
+            {/* ── Header ──────────────────────────────────────────────────── */}
+            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                <h4 className="text-lg font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Dose-Response Analysis</h4>
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mt-1">
+                    Did this training block produce performance gains? · pre/post test comparison · responder classification
+                </p>
+            </div>
+
             {/* Block date range selector */}
             <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2">
-                    <CalendarIcon size={13} className="text-slate-400" />
-                    <input type="date" value={blockStart} onChange={e => setBlockStart(e.target.value)} className="text-xs font-medium text-slate-700 outline-none bg-transparent" />
-                    <span className="text-slate-300">—</span>
-                    <input type="date" value={blockEnd} onChange={e => setBlockEnd(e.target.value)} className="text-xs font-medium text-slate-700 outline-none bg-transparent" />
+                <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
+                    <CalendarIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
+                    <input type="date" value={blockStart} onChange={e => setBlockStart(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
+                    <span className="text-slate-300 dark:text-[#475569]">—</span>
+                    <input type="date" value={blockEnd} onChange={e => setBlockEnd(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
                 </div>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                     {Math.ceil((new Date(blockEnd) - new Date(blockStart)) / 86400000)} days · {analysis.length} athlete{analysis.length !== 1 ? 's' : ''} with load data
                 </span>
             </div>
@@ -181,36 +189,36 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
 
             {/* Per-athlete results */}
             {athletesWithResponses.map(a => (
-                <div key={a.athlete.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <div key={a.athlete.id} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden shadow-sm">
+                    <div className="px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold">
                                 {a.athlete.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </div>
                             <div>
-                                <span className="text-sm font-semibold text-slate-800">{a.athlete.name}</span>
-                                <span className="text-[10px] text-slate-400 ml-2">{a.athlete.teamName}</span>
+                                <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{a.athlete.name}</span>
+                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] ml-2">{a.athlete.teamName}</span>
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-xs font-bold text-slate-700">{a.totalLoad.toLocaleString()} AU</div>
-                            <div className="text-[10px] text-slate-400">{a.sessionCount} sessions · {a.avgDailyLoad} AU/day</div>
+                            <div className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">{a.totalLoad.toLocaleString()} AU</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#64748B]">{a.sessionCount} sessions · {a.avgDailyLoad} AU/day</div>
                         </div>
                     </div>
                     <div className="p-4 space-y-2">
                         {a.responses.map((r, i) => (
                             <div key={i} className={`flex items-center justify-between px-3 py-2 rounded-lg ${
-                                r.improved ? 'bg-emerald-50' : r.declined ? 'bg-rose-50' : 'bg-slate-50'
+                                r.improved ? 'bg-emerald-50 dark:bg-emerald-900/20' : r.declined ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-slate-50 dark:bg-[#1A2D48]'
                             }`}>
                                 <div className="flex items-center gap-2">
                                     {r.improved ? <TrendingUpIcon size={14} className="text-emerald-500" />
                                         : r.declined ? <TrendingDownIcon size={14} className="text-rose-500" />
                                         : <MinusIcon size={14} className="text-slate-400" />}
-                                    <span className="text-xs font-medium text-slate-700 capitalize">{r.testName}</span>
+                                    <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1] capitalize">{r.testName}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs">
-                                    <span className="text-slate-400">{r.preVal} → {r.postVal}</span>
-                                    <span className={`font-bold ${r.improved ? 'text-emerald-600' : r.declined ? 'text-rose-600' : 'text-slate-500'}`}>
+                                    <span className="text-slate-400 dark:text-[#64748B]">{r.preVal} → {r.postVal}</span>
+                                    <span className={`font-bold ${r.improved ? 'text-emerald-600 dark:text-emerald-400' : r.declined ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-[#94A3B8]'}`}>
                                         {Number(r.effectiveChange) > 0 ? '+' : ''}{r.effectiveChange}%
                                     </span>
                                 </div>
@@ -222,13 +230,13 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
 
             {/* Athletes with load data but no test bookmarks */}
             {athletesLoadOnly.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-2">
+                <div className="bg-slate-50 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-xl p-4">
+                    <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">
                         {athletesLoadOnly.length} athlete{athletesLoadOnly.length > 1 ? 's' : ''} with load data only (no pre/post tests in this window)
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {athletesLoadOnly.map(a => (
-                            <span key={a.athlete.id} className="text-xs text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200">
+                            <span key={a.athlete.id} className="text-xs text-slate-500 dark:text-[#94A3B8] bg-white dark:bg-[#132338] px-2 py-1 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {a.athlete.name} · {a.totalLoad.toLocaleString()} AU
                             </span>
                         ))}
@@ -238,20 +246,45 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
 
             {/* Empty state */}
             {analysis.length === 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-                    <ActivityIcon size={24} className="mx-auto text-slate-300 mb-2" />
-                    <p className="text-sm text-slate-400">No load data found for the selected athletes in this date range.</p>
+                <div className="bg-white dark:bg-[#132338] border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl p-8 text-center">
+                    <ActivityIcon size={24} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
+                    <p className="text-sm text-slate-400 dark:text-[#64748B]">No load data found for the selected athletes in this date range.</p>
+                    <p className="text-xs text-slate-400 dark:text-[#475569] mt-1">Adjust the date range or select a different athlete/team above.</p>
                 </div>
             )}
 
-            {/* Methodology note */}
-            <div className="bg-slate-800 text-white rounded-xl p-4">
-                <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide mb-1">Dose-Response Methodology</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Dose = total accumulated training load within the selected date range. Response = percentage change in test results that bookend the range (pre-block vs post-block).
-                    Responder classification: &gt;3% improvement = positive responder, &lt;-3% = adverse responder, within ±3% = stable (adapted from Hopkins SWC, 2004).
-                    Works with whatever test data exists — if only pre-season and mid-season tests are available, the system uses those as bookends.
-                </p>
+            {/* ── How This Works ─────────────────────────────────────────── */}
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">How This Works</div>
+                    <div className="text-[9px] text-slate-400 dark:text-[#475569] mt-0.5">Dose-response methodology · how to set the date range · reading results</div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-[#1A2D48]">
+                    <div className="px-5 py-4">
+                        <div className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide mb-2">What is Dose?</div>
+                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                            Dose = total training load accumulated within the selected date range. Set the start and end date to match your training block — e.g. a pre-season block, a competition mesocycle, or a strength phase.
+                        </p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-2">What is Response?</div>
+                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                            Response = the percentage change in test results that bookend the block. The most recent test before the block start = pre; the earliest test after the block end = post. The system uses whatever test data exists.
+                        </p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <div className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">Responder Classification</div>
+                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                            Adapted from Hopkins SWC (2004): &gt;3% improvement = positive responder · &lt;-3% = adverse responder · within ±3% = stable. Time-based tests (sprints) treat a lower value as improvement.
+                        </p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase tracking-wide mb-2">No Tests? Add Tests</div>
+                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                            If athletes appear in the load-only list, no matching pre/post tests exist in this window. Log assessments via the Athlete Profile before and after each block to unlock response data.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

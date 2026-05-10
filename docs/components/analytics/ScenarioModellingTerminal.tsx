@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
     UsersIcon, TargetIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon,
@@ -7,6 +7,7 @@ import {
     BookmarkIcon, Trash2Icon, TrophyIcon, FlaskConicalIcon, GitCompareIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import { supabase } from '../../lib/supabase';
 
 // ─── Anchor projection helper ─────────────────────────────────────────────────
 // Iterates day-by-day: pinned days use their fixed load; others are algebraically
@@ -55,6 +56,7 @@ const buildSafeRange = (startAcute, startChronic, days, acuteN, chronicN) => {
     });
 };
 
+
 export const ScenarioModellingTerminal = ({
     scheduledSessions = [],
     loadRecords = [],
@@ -66,6 +68,8 @@ export const ScenarioModellingTerminal = ({
     teams = [],
     periodizationPlans = [],
 }) => {
+    const SCENARIO_COLORS = ['#6366f1', '#10b981', '#f59e0b'];
+
     const [targetRatio,    setTargetRatio]    = useState(1.0);
     const [projectionDays, setProjectionDays] = useState(7);
     const [expandedPlayer, setExpandedPlayer] = useState(null);
@@ -78,10 +82,44 @@ export const ScenarioModellingTerminal = ({
     const [pinnedDays,   setPinnedDays]   = useState(new Set()); // Set<number>
 
     // Scenario save/compare state
-    const [savedScenarios,  setSavedScenarios]  = useState([]); // max 3
+    const [savedScenarios,  setSavedScenarios]  = useState([]);
     const [savingName,      setSavingName]      = useState('');
     const [showSaveInput,   setShowSaveInput]   = useState(false);
     const [compareMode,     setCompareMode]     = useState(false);
+    const [dbSaving,        setDbSaving]        = useState(false);
+    const [dbError,         setDbError]         = useState('');
+
+    // Load saved scenarios from Supabase on mount
+    useEffect(() => {
+        const subjectKey = selectedAnalyticsAthleteId || '';
+        if (!subjectKey) return;
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data } = await supabase
+                .from('analytics_scenarios')
+                .select('*')
+                .eq('user_id', user.id)
+                .or(subjectKey.startsWith('team_')
+                    ? `team_id.eq.${subjectKey.replace('team_', '')}`
+                    : `athlete_id.eq.${subjectKey}`)
+                .order('created_at', { ascending: false })
+                .limit(3);
+            if (data && data.length > 0) {
+                setSavedScenarios(data.map((row, i) => ({
+                    id:            row.id,
+                    name:          row.name,
+                    projection:    row.projection || [],
+                    targetRatio:   row.target_ratio,
+                    projectionDays:row.projection_days,
+                    mode:          row.mode,
+                    pinnedCount:   (row.pinned_days || []).length,
+                    color:         SCENARIO_COLORS[i % 3],
+                    dbId:          row.id,
+                })));
+            }
+        })();
+    }, [selectedAnalyticsAthleteId]);
 
     const isTeam = (subjectAthleteIds || []).length > 1;
 
@@ -239,25 +277,62 @@ export const ScenarioModellingTerminal = ({
     };
 
     // Save current projection as a named scenario (max 3)
-    const SCENARIO_COLORS = ['#6366f1', '#10b981', '#f59e0b'];
-    const saveCurrentScenario = () => {
+    const saveCurrentScenario = async () => {
         const name = savingName.trim();
         if (!name || savedScenarios.length >= 3) return;
-        setSavedScenarios(prev => [...prev, {
-            id:           Date.now(),
-            name,
-            projection:   activeProjection,
-            targetRatio,
-            projectionDays,
-            mode:         viewMode,
-            pinnedCount:  pinnedDays.size,
-            color:        SCENARIO_COLORS[prev.length % 3],
-        }]);
-        setSavingName('');
-        setShowSaveInput(false);
+        setDbSaving(true);
+        setDbError('');
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const isTeamSubject = selectedAnalyticsAthleteId?.startsWith('team_');
+            const row = {
+                user_id:         user?.id,
+                team_id:         isTeamSubject ? selectedAnalyticsAthleteId.replace('team_', '') : null,
+                athlete_id:      !isTeamSubject ? selectedAnalyticsAthleteId : null,
+                name,
+                mode:            viewMode,
+                target_ratio:    targetRatio,
+                projection_days: projectionDays,
+                metric_type:     metricType,
+                pinned_days:     [...pinnedDays],
+                anchor_inputs:   anchorInputs,
+                manual_overrides:manualOverrides,
+                projection:      activeProjection,
+            };
+            const { data, error } = await supabase
+                .from('analytics_scenarios')
+                .insert(row)
+                .select()
+                .single();
+            if (error) throw error;
+            setSavedScenarios(prev => [...prev, {
+                id:            data.id,
+                name,
+                projection:    activeProjection,
+                targetRatio,
+                projectionDays,
+                mode:          viewMode,
+                pinnedCount:   pinnedDays.size,
+                color:         SCENARIO_COLORS[prev.length % 3],
+                dbId:          data.id,
+            }]);
+        } catch (e: any) {
+            setDbError(e.message || 'Failed to save scenario');
+        } finally {
+            setDbSaving(false);
+            setSavingName('');
+            setShowSaveInput(false);
+        }
     };
 
-    const deleteScenario = (id) => setSavedScenarios(prev => prev.filter(s => s.id !== id));
+    const deleteScenarioFromDb = async (scenario) => {
+        if (scenario.dbId) {
+            await supabase.from('analytics_scenarios').delete().eq('id', scenario.dbId);
+        }
+        setSavedScenarios(prev => prev.filter(s => s.id !== scenario.id));
+    };
+
+    const deleteScenario = (id) => deleteScenarioFromDb(savedScenarios.find(s => s.id === id));
 
     // ── Utilities ─────────────────────────────────────────────────────────────
     const getDateLabel = (dayOffset) => {
@@ -294,13 +369,13 @@ export const ScenarioModellingTerminal = ({
     const pinnedCount = pinnedDays.size;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-4 animate-in fade-in duration-500">
 
             {/* ── Header + Current State ────────────────────────────────────── */}
-            <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-6">
+            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-5">
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
-                        <h4 className="text-2xl font-semibold uppercase tracking-tighter text-indigo-900">Scenario Modelling</h4>
+                        <h4 className="text-lg font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Scenario Modelling</h4>
                         <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mt-1">
                             EWMA load projections · anchor heavy days · safe-zone ranges
                         </p>
@@ -308,13 +383,13 @@ export const ScenarioModellingTerminal = ({
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/25 px-3 py-2 rounded-lg">
                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                            <span className="text-[10px] font-semibold uppercase text-indigo-900">{metricInfo.label}</span>
+                            <span className="text-[10px] font-semibold uppercase text-indigo-900 dark:text-indigo-300">{metricInfo.label}</span>
                             <span className="text-[9px] text-indigo-400">({metricInfo.unit})</span>
                         </div>
                         {isTeam && (
-                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#1A2D48] px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 <UsersIcon size={12} className="text-slate-500" />
-                                <span className="text-[10px] font-semibold text-slate-700">{(subjectAthleteIds || []).length} Athletes</span>
+                                <span className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1]">{(subjectAthleteIds || []).length} Athletes</span>
                             </div>
                         )}
                     </div>
@@ -322,60 +397,59 @@ export const ScenarioModellingTerminal = ({
 
                 {/* Current state cards */}
                 {hasData ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-5 gap-4">
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Current ACWR</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-5 gap-3">
+                        <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl p-4 border border-slate-100 dark:border-[#243A58]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">Current ACWR</div>
                             <div className={`text-2xl font-bold tracking-tight ${getRatioColor(currentRatio)}`}>{currentRatio.toFixed(2)}</div>
                             <div className={`text-[9px] font-semibold uppercase mt-1 ${statusInfo.color}`}>{statusInfo.label}</div>
                         </div>
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Acute Load</div>
-                            <div className="text-2xl font-bold tracking-tight text-indigo-900">{currentAcute}</div>
-                            <div className="text-[9px] text-slate-400">{acuteN}-day EWMA</div>
+                        <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl p-4 border border-slate-100 dark:border-[#243A58]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">Acute Load</div>
+                            <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[#E2E8F0]">{currentAcute}</div>
+                            <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{acuteN}-day EWMA</div>
                         </div>
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Chronic Load</div>
-                            <div className="text-2xl font-bold tracking-tight text-indigo-900">{currentChronic}</div>
-                            <div className="text-[9px] text-slate-400">{chronicN}-day EWMA</div>
+                        <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl p-4 border border-slate-100 dark:border-[#243A58]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">Chronic Load</div>
+                            <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-[#E2E8F0]">{currentChronic}</div>
+                            <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{chronicN}-day EWMA</div>
                         </div>
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Load Model</div>
-                            <div className="text-lg font-bold tracking-tight text-indigo-900">{metricInfo.label}</div>
-                            <div className="text-[9px] text-slate-400">{metricInfo.desc}</div>
+                        <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl p-4 border border-slate-100 dark:border-[#243A58]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">Load Model</div>
+                            <div className="text-base font-bold tracking-tight text-slate-900 dark:text-[#E2E8F0]">{metricInfo.label}</div>
+                            <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{metricInfo.desc}</div>
                         </div>
-                        {/* 28-day historical band card */}
-                        {historicalBand ? (
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 col-span-2 sm:col-span-1">
-                                <div className="text-[9px] font-bold text-slate-400 uppercase mb-2">28-day Load Band</div>
+                        {historicalBand && (
+                            <div className="bg-slate-50 dark:bg-[#1A2D48] rounded-xl p-4 border border-slate-100 dark:border-[#243A58] col-span-2 sm:col-span-1">
+                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-2">28-Day Load Band</div>
                                 <div className="flex items-center justify-between mb-1.5">
                                     <div className="text-center">
-                                        <div className="text-[9px] text-slate-400">Min</div>
+                                        <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Min</div>
                                         <div className="text-sm font-bold text-sky-600">{historicalBand.min}</div>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-[9px] text-slate-400">Avg</div>
+                                        <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Avg</div>
                                         <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{historicalBand.avg}</div>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-[9px] text-slate-400">P75</div>
+                                        <div className="text-[9px] text-slate-400 dark:text-[#64748B]">P75</div>
                                         <div className="text-sm font-bold text-amber-600">{historicalBand.p75}</div>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-[9px] text-slate-400">Max</div>
+                                        <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Max</div>
                                         <div className="text-sm font-bold text-rose-600">{historicalBand.max}</div>
                                     </div>
                                 </div>
-                                <div className="text-[8px] text-slate-300">From {historicalBand.n} training days · {metricInfo.unit}</div>
+                                <div className="text-[8px] text-slate-400 dark:text-[#475569]">From {historicalBand.n} training days · {metricInfo.unit}</div>
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 ) : (
-                    <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        <InfoIcon size={24} className="mx-auto text-slate-300 mb-3" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    <div className="text-center py-8 bg-slate-50 dark:bg-[#1A2D48] rounded-xl border border-dashed border-slate-200 dark:border-[#243A58]">
+                        <InfoIcon size={24} className="mx-auto text-slate-300 dark:text-[#475569] mb-3" />
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">
                             No training load data found for {selectedSubject?.name}
                         </p>
-                        <p className="text-[9px] text-slate-400 mt-1">Log loads via the ACWR Monitoring dashboard first</p>
+                        <p className="text-[9px] text-slate-400 dark:text-[#475569] mt-1">Log loads via the ACWR Monitoring dashboard first</p>
                     </div>
                 )}
 
@@ -408,14 +482,14 @@ export const ScenarioModellingTerminal = ({
                         </div>
 
                         {/* Mode toggle — 3 options */}
-                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0F1C30] rounded-lg p-0.5">
                             {[
                                 { id: 'optimal', label: 'Optimal Plan' },
                                 { id: 'anchor',  label: 'Anchor Mode' },
                                 { id: 'whatif',  label: 'What-If' },
                             ].map(m => (
                                 <button key={m.id} onClick={() => setViewMode(m.id)}
-                                    className={`text-[10px] font-semibold px-3 py-1.5 rounded-md transition-all ${viewMode === m.id ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                    className={`text-[10px] font-semibold px-3 py-1.5 rounded-md transition-all ${viewMode === m.id ? 'bg-white dark:bg-[#1A2D48] text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-[#64748B] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}>
                                     {m.label}
                                 </button>
                             ))}
@@ -456,9 +530,9 @@ export const ScenarioModellingTerminal = ({
                                             onChange={e => setSavingName(e.target.value)}
                                             onKeyDown={e => { if (e.key === 'Enter') saveCurrentScenario(); if (e.key === 'Escape') { setShowSaveInput(false); setSavingName(''); } }}
                                         />
-                                        <button onClick={saveCurrentScenario} disabled={!savingName.trim()}
+                                        <button onClick={saveCurrentScenario} disabled={!savingName.trim() || dbSaving}
                                             className="text-[10px] font-semibold px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-all">
-                                            Save
+                                            {dbSaving ? 'Saving…' : 'Save'}
                                         </button>
                                         <button onClick={() => { setShowSaveInput(false); setSavingName(''); }}
                                             className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors">
@@ -490,10 +564,10 @@ export const ScenarioModellingTerminal = ({
 
             {/* ── Historical Load Mini-Chart ────────────────────────────────── */}
             {hasData && historicalBand && historicalBand.chartBars.length > 0 && (
-                <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm px-8 py-5">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <div>
-                            <h4 className="text-sm font-semibold uppercase tracking-tighter text-indigo-900">Recent Load History</h4>
+                            <h4 className="text-sm font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Recent Load History</h4>
                             <p className="text-[9px] text-indigo-400 font-semibold uppercase mt-0.5">Last {historicalBand.chartBars.length} days · {metricInfo.unit} · reference for realistic load targets</p>
                         </div>
                         <div className="flex items-center gap-3 text-[9px]">
@@ -545,7 +619,7 @@ export const ScenarioModellingTerminal = ({
                 <>
                     {/* ── Upcoming Plan Events (from Periodization Planner) ─── */}
                     {upcomingPlanEvents.length > 0 && (
-                        <div className="bg-white rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm px-6 py-4">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm px-6 py-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <CalendarIcon size={13} className="text-amber-500" />
                                 <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Upcoming Plan Events in Projection Window</span>
@@ -579,7 +653,7 @@ export const ScenarioModellingTerminal = ({
 
                     {/* ── Saved scenarios list (compact) ────────────────────── */}
                     {savedScenarios.length > 0 && (
-                        <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-4">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-4">
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
                                     <BookmarkIcon size={11} />
@@ -594,7 +668,7 @@ export const ScenarioModellingTerminal = ({
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {savedScenarios.map(sc => (
-                                    <div key={sc.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
+                                    <div key={sc.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#1A2D48]">
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sc.color }} />
                                         <span className="text-xs font-semibold text-slate-700">{sc.name}</span>
                                         <span className="text-[9px] text-slate-400">
@@ -611,9 +685,9 @@ export const ScenarioModellingTerminal = ({
                     )}
 
                     {/* ── Projected Load Table ──────────────────────────────── */}
-                    <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm overflow-hidden">
-                        <div className="px-8 py-5 border-b border-slate-100">
-                            <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-8 py-5 border-b border-slate-100 dark:border-[#1A2D48]">
+                            <h4 className="text-base font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">
                                 {viewMode === 'optimal' ? 'Recommended Daily Loads'
                                     : viewMode === 'anchor' ? 'Anchor Mode — Pin Heavy Days'
                                     : 'What-If Scenario'}
@@ -643,13 +717,13 @@ export const ScenarioModellingTerminal = ({
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="bg-slate-50">
-                                        <th className="text-left text-[9px] font-bold text-slate-500 uppercase px-6 py-3">Day</th>
-                                        <th className="text-left text-[9px] font-bold text-slate-500 uppercase px-4 py-3">Date</th>
+                                    <tr className="bg-slate-50 dark:bg-[#0F1C30]">
+                                        <th className="text-left text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-6 py-3">Day</th>
+                                        <th className="text-left text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-4 py-3">Date</th>
                                         {viewMode === 'anchor' && (
-                                            <th className="text-center text-[9px] font-bold text-slate-500 uppercase px-2 py-3">Anchor</th>
+                                            <th className="text-center text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-2 py-3">Anchor</th>
                                         )}
-                                        <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-4 py-3">
+                                        <th className="text-right text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-4 py-3">
                                             {viewMode === 'whatif' ? 'Planned Load'
                                                 : viewMode === 'anchor' ? 'Day Load'
                                                 : 'Suggested Load'}
@@ -657,9 +731,9 @@ export const ScenarioModellingTerminal = ({
                                         {showSafeRange && (
                                             <th className="text-right text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase px-4 py-3">Safe Range</th>
                                         )}
-                                        <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-4 py-3">Acute</th>
-                                        <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-4 py-3">Chronic</th>
-                                        <th className="text-right text-[9px] font-bold text-slate-500 uppercase px-6 py-3">ACWR</th>
+                                        <th className="text-right text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-4 py-3">Acute</th>
+                                        <th className="text-right text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-4 py-3">Chronic</th>
+                                        <th className="text-right text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase px-6 py-3">ACWR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -674,7 +748,7 @@ export const ScenarioModellingTerminal = ({
                                                 <td className="px-6 py-3">
                                                     <div className="flex items-center gap-1.5">
                                                         {isPinned && <LockIcon size={10} className="text-amber-500" />}
-                                                        <span className="text-xs font-bold text-indigo-900">D+{point.day}</span>
+                                                        <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300">D+{point.day}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -710,7 +784,7 @@ export const ScenarioModellingTerminal = ({
                                                                 : 'bg-slate-50 border border-slate-200 text-slate-400 placeholder-slate-400 focus:border-indigo-300 focus:text-slate-700'}`}
                                                         />
                                                     ) : (
-                                                        <span className={`text-sm font-bold ${outOfRange ? 'text-rose-600' : 'text-indigo-900'}`}>
+                                                        <span className={`text-sm font-bold ${outOfRange ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-900 dark:text-indigo-300'}`}>
                                                             {point.load} <span className="text-[9px] text-slate-400 font-normal">{metricInfo.unit}</span>
                                                         </span>
                                                     )}
@@ -762,8 +836,8 @@ export const ScenarioModellingTerminal = ({
                     </div>
 
                     {/* ── ACWR Trajectory Chart ─────────────────────────────── */}
-                    <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-6">
-                        <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">ACWR Trajectory</h4>
+                    <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
+                        <h4 className="text-base font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">ACWR Trajectory</h4>
                         <div className="h-56 flex items-end justify-between gap-1 px-4 border-b border-l border-indigo-50 relative pt-10">
                             {/* Green safe zone shading */}
                             <div className="absolute left-0 right-0 bg-emerald-50/40 pointer-events-none"
@@ -817,9 +891,9 @@ export const ScenarioModellingTerminal = ({
 
                     {/* ── Per-Player Drill-Down ─────────────────────────────── */}
                     {isTeam && playerBreakdowns.length > 0 && (
-                        <div className="bg-white rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm overflow-hidden">
-                            <div className="px-8 py-5 border-b border-slate-100">
-                                <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">Individual Athlete Loads</h4>
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
+                                <h4 className="text-base font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Individual Athlete Loads</h4>
                                 <p className="text-[10px] text-indigo-400 font-semibold uppercase mt-0.5">
                                     Per-player suggested loads to maintain ACWR at {targetRatio.toFixed(2)}
                                 </p>
@@ -856,7 +930,7 @@ export const ScenarioModellingTerminal = ({
                                                             </div>
                                                             <div className="text-right">
                                                                 <div className="text-[9px] text-slate-400 uppercase">Next Day</div>
-                                                                <div className="text-sm font-bold text-indigo-900">
+                                                                <div className="text-sm font-bold text-indigo-900 dark:text-indigo-300">
                                                                     {player.projection[0]?.load || '—'} <span className="text-[9px] text-slate-400 font-normal">{metricInfo.unit}</span>
                                                                 </div>
                                                             </div>
@@ -881,9 +955,9 @@ export const ScenarioModellingTerminal = ({
                                                             <tbody>
                                                                 {player.projection.map((pt) => (
                                                                     <tr key={pt.day} className="border-t border-slate-100">
-                                                                        <td className="px-4 py-2 text-xs font-semibold text-indigo-900">D+{pt.day}</td>
+                                                                        <td className="px-4 py-2 text-xs font-semibold text-indigo-900 dark:text-indigo-300">D+{pt.day}</td>
                                                                         <td className="px-4 py-2 text-xs text-slate-600">{getDateLabel(pt.day)}</td>
-                                                                        <td className="px-4 py-2 text-right text-xs font-bold text-indigo-900">
+                                                                        <td className="px-4 py-2 text-right text-xs font-bold text-indigo-900 dark:text-indigo-300">
                                                                             {pt.load} <span className="text-[9px] text-slate-400 font-normal">{metricInfo.unit}</span>
                                                                         </td>
                                                                         <td className="px-4 py-2 text-right">
@@ -922,10 +996,10 @@ export const ScenarioModellingTerminal = ({
 
                     {/* ── Scenario Comparison Chart ─────────────────────────── */}
                     {compareMode && savedScenarios.length >= 2 && (
-                        <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm space-y-5">
+                        <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900">Scenario Comparison</h4>
+                                    <h4 className="text-base font-bold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Scenario Comparison</h4>
                                     <p className="text-[10px] text-indigo-400 font-semibold uppercase mt-0.5">
                                         ACWR trajectory across {savedScenarios.length} saved scenarios
                                     </p>
@@ -1034,54 +1108,98 @@ export const ScenarioModellingTerminal = ({
                         </div>
                     )}
 
-                    {/* ── Insight Summary ───────────────────────────────────── */}
-                    <div className="bg-white p-8 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm">
-                        <h4 className="text-lg font-semibold uppercase tracking-tighter text-indigo-900 mb-4">Insight Summary</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className={`p-5 rounded-xl border ${getRatioBg(currentRatio)} ${currentRatio > 1.3 ? 'border-amber-200 dark:border-amber-800/50' : currentRatio < 0.8 ? 'border-sky-200 dark:border-sky-900/50' : 'border-emerald-200 dark:border-emerald-800/50'}`}>
-                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">Current State</div>
-                                <p className="text-[11px] leading-relaxed text-slate-700">
-                                    {currentRatio > 1.5
-                                        ? 'ACWR is in the danger zone. Strongly recommend de-loading for the next few days to allow chronic fitness to catch up with the acute spike.'
-                                        : currentRatio > 1.3
-                                            ? 'ACWR is elevated into the caution zone. Moderate the next sessions — the suggested loads will gradually bring the ratio back to optimal.'
-                                            : currentRatio < 0.8
-                                                ? 'ACWR is below optimal — the athlete/team is underexposed. Progressively increase load to build acute fitness without overshooting.'
-                                                : 'ACWR is in the optimal sweet spot. The suggested loads maintain this balance while supporting progressive adaptation.'}
+                    {/* ── Summary + Coach Actions ────────────────────────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                        {/* Quick stat cards */}
+                        <div className={`p-4 rounded-xl border ${getRatioBg(currentRatio)} ${currentRatio > 1.3 ? 'border-amber-200 dark:border-amber-800/50' : currentRatio < 0.8 ? 'border-sky-200 dark:border-sky-900/50' : 'border-emerald-200 dark:border-emerald-800/50'}`}>
+                            <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase tracking-widest mb-1.5">Current State</div>
+                            <div className={`text-2xl font-bold tracking-tight mb-1 ${getRatioColor(currentRatio)}`}>{currentRatio.toFixed(2)}</div>
+                            <p className="text-[10px] leading-relaxed text-slate-600 dark:text-[#94A3B8]">
+                                {currentRatio > 1.5 ? 'Danger zone — de-load immediately.'
+                                    : currentRatio > 1.3 ? 'Caution — moderate load over next 2–3 days.'
+                                    : currentRatio < 0.8 ? 'Underexposed — progressively increase load.'
+                                    : 'Optimal zone — maintain planned load structure.'}
+                            </p>
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5">
+                                {viewMode === 'anchor' && pinnedCount > 0 ? 'Next Non-Anchored Day' : "D+1 Target Load"}
+                            </div>
+                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-300 tracking-tight">
+                                {activeProjection[0]?.load || '—'}
+                                <span className="text-sm text-slate-400 dark:text-[#64748B] font-normal ml-1">{metricInfo.unit}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] mt-1">
+                                {isTeam ? 'Avg per athlete' : 'Individual target'} · ACWR target {targetRatio.toFixed(2)}
+                            </p>
+                            {showSafeRange && safeRange[0] && (
+                                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">
+                                    Safe zone: {safeRange[0].minLoad}–{safeRange[0].maxLoad} {metricInfo.unit}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]">
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5">End-of-Period ACWR</div>
+                            <div className={`text-2xl font-bold tracking-tight ${getRatioColor(activeProjection[activeProjection.length - 1]?.ratio || 0)}`}>
+                                {(activeProjection[activeProjection.length - 1]?.ratio || 0).toFixed(2)}
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] mt-1">
+                                After {projectionDays} days · {viewMode === 'optimal' ? 'recommended' : viewMode === 'anchor' ? 'anchored' : 'what-if'} plan
+                            </p>
+                            {viewMode === 'anchor' && pinnedCount > 0 && (
+                                <p className="text-[9px] text-amber-600 dark:text-amber-400 mt-1 font-semibold">
+                                    {pinnedCount} anchored day{pinnedCount > 1 ? 's' : ''} fixed
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── How Scenario Modelling Works ──────────────────────── */}
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                            <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">How This Works</div>
+                            <div className="text-[9px] text-slate-400 dark:text-[#475569] mt-0.5">ACWR methodology · load projection logic · zone thresholds</div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-[#1A2D48]">
+                            <div className="px-5 py-4">
+                                <div className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide mb-2">ACWR Calculation</div>
+                                <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                                    Acute:Chronic Workload Ratio compares short-term fitness (acute, {acuteN}-day EWMA) to long-term conditioning (chronic, {chronicN}-day EWMA).
+                                    A ratio of 1.0 means recent load exactly matches the established base.
                                 </p>
                             </div>
-                            <div className="p-5 rounded-xl border border-slate-100 bg-slate-50">
-                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">
-                                    {viewMode === 'anchor' && pinnedCount > 0 ? 'Next Non-Anchored Day' : "Tomorrow's Target"}
-                                </div>
-                                <div className="text-3xl font-bold text-indigo-900 tracking-tight">
-                                    {activeProjection[0]?.load || '—'}
-                                    <span className="text-sm text-slate-400 font-normal ml-1">{metricInfo.unit}</span>
-                                </div>
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                    {isTeam ? 'Average per athlete' : 'Individual target'} to {targetRatio >= 1.1 ? 'progressively overload' : 'maintain'} at {targetRatio.toFixed(2)} ACWR
+                            <div className="px-5 py-4">
+                                <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-2">Optimal Zone 0.8–1.3</div>
+                                <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                                    The 0.8–1.3 range (Hulin et al.) is associated with the lowest injury risk.
+                                    Below 0.8 indicates underexposure; above 1.3 indicates spikes that outpace the athlete's conditioning base.
                                 </p>
-                                {showSafeRange && safeRange[0] && (
-                                    <p className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-1.5 font-semibold">
-                                        Green zone: {safeRange[0].minLoad}–{safeRange[0].maxLoad} {metricInfo.unit}
-                                    </p>
-                                )}
                             </div>
-                            <div className="p-5 rounded-xl border border-slate-100 bg-slate-50">
-                                <div className="text-[9px] font-bold text-slate-500 uppercase mb-2">End-of-Period ACWR</div>
-                                <div className={`text-3xl font-bold tracking-tight ${getRatioColor(activeProjection[activeProjection.length - 1]?.ratio || 0)}`}>
-                                    {(activeProjection[activeProjection.length - 1]?.ratio || 0).toFixed(2)}
-                                </div>
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                    Projected after {projectionDays} days following the {viewMode === 'optimal' ? 'recommended' : viewMode === 'anchor' ? 'anchored' : 'planned'} loads
+                            <div className="px-5 py-4">
+                                <div className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">Projection Modes</div>
+                                <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                                    <strong className="text-slate-700 dark:text-[#CBD5E1]">Optimal</strong> — auto-solves daily loads to maintain target ACWR.
+                                    <strong className="text-slate-700 dark:text-[#CBD5E1]"> Anchor</strong> — pin match/test days and the model adjusts surrounding sessions.
+                                    <strong className="text-slate-700 dark:text-[#CBD5E1]"> What-if</strong> — enter any loads to preview projected ACWR impact.
                                 </p>
-                                {viewMode === 'anchor' && pinnedCount > 0 && (
-                                    <p className="text-[9px] text-amber-600 mt-1.5 font-semibold">
-                                        {pinnedCount} anchored day{pinnedCount > 1 ? 's' : ''} fixed in this projection
-                                    </p>
-                                )}
+                            </div>
+                            <div className="px-5 py-4">
+                                <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase tracking-wide mb-2">Saving Scenarios</div>
+                                <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
+                                    Save up to 3 scenarios per subject to compare planning options side-by-side.
+                                    Scenarios persist across sessions — use them to model a conservative, moderate, and progressive week simultaneously.
+                                </p>
                             </div>
                         </div>
+                        {dbError && (
+                            <div className="px-5 pb-3 border-t border-slate-50 dark:border-[#1A2D48] flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 pt-3">
+                                <InfoIcon size={12} />
+                                {dbError}
+                            </div>
+                        )}
                     </div>
                 </>
             )}
