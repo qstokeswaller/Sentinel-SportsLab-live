@@ -521,10 +521,10 @@ const ACWRMonitoringHub: React.FC = () => {
         doAcwrImport([...acwrPendingMatched, ...newlyMatched], acwrPendingMapping);
     };
 
-    const doAcwrImport = (rows: any[], mapping: Record<string, string>) => {
+    const doAcwrImport = async (rows: any[], mapping: Record<string, string>) => {
         const lockedMethod = teamSettings?.method || 'srpe';
         const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamId: t.id })));
-        let imported = 0;
+        const batch: any[] = [];
         let skippedExcluded = 0;
 
         for (const row of rows) {
@@ -551,20 +551,26 @@ const ACWRMonitoringHub: React.FC = () => {
             }
 
             if (value > 0) {
-                try {
-                    DatabaseService.saveTrainingLoad({
-                        athlete_id: player.id, team_id: player.teamId, date,
-                        metric_type: lockedMethod, value,
-                        session_type: sessionType,
-                        rpe: Number(getVal('rpe')) || null,
-                        duration_minutes: Number(getVal('duration')) || null,
-                    });
-                    imported++;
-                } catch (err) {}
+                batch.push({
+                    athlete_id: player.id, team_id: player.teamId, date,
+                    metric_type: lockedMethod, value,
+                    session_type: sessionType,
+                    rpe: Number(getVal('rpe')) || null,
+                    duration_minutes: Number(getVal('duration')) || null,
+                });
             }
         }
+
+        if (batch.length > 0) {
+            try {
+                await DatabaseService.saveTrainingLoadsBatch(batch);
+            } catch (err) {
+                console.warn('ACWR import batch save failed:', err);
+            }
+        }
+
         const skipMsg = skippedExcluded > 0 ? ` · ${skippedExcluded} excluded player${skippedExcluded > 1 ? 's' : ''} skipped` : '';
-        showToast?.(`Imported ${imported} training load records${skipMsg}`);
+        showToast?.(`Imported ${batch.length} training load records${skipMsg}`);
     };
 
     // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
