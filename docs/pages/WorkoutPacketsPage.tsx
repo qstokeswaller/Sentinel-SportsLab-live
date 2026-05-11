@@ -120,7 +120,7 @@ export const WorkoutPacketsPage = () => {
         scheduleWorkoutSession, showToast,
         workoutTemplates, setWorkoutTemplates,
         handleUpdatePlanSession, periodizationPlans,
-        maxHistory,
+        maxHistory, scheduledSessions,
         wattbikeSessions, conditioningSessions,
         personalExerciseIds,
     } = useAppState();
@@ -391,6 +391,38 @@ export const WorkoutPacketsPage = () => {
         return { byRegion, byBodyPart };
     }, [sections]);
 
+    const sessionSummary = useMemo(() => {
+        const allRows = [...sections.warmup, ...sections.workout, ...sections.cooldown];
+        let totalSets = 0, estTonnage = 0, rpeSum = 0, rpeCount = 0;
+        for (const row of allRows) {
+            const sets = parseInt(row.sets) || 0;
+            const reps = parseInt(row.reps) || 0;
+            const weight = parseFloat(row.weight) || 0;
+            const rpe = parseFloat(row.rpe) || 0;
+            totalSets += sets;
+            if (weight > 0) estTonnage += sets * reps * weight;
+            if (rpe > 0) { rpeSum += rpe; rpeCount++; }
+        }
+        return { totalSets, estTonnage, avgRpe: rpeCount > 0 ? rpeSum / rpeCount : 0 };
+    }, [sections]);
+
+    const thisWeekSessions = useMemo(() => {
+        if (!targetId) return [];
+        const now = new Date();
+        const dow = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        return (scheduledSessions || []).filter(s => {
+            const sid = s.target_id || s.targetId;
+            const d = new Date(s.date);
+            return sid === targetId && d >= monday && d <= sunday;
+        });
+    }, [scheduledSessions, targetId]);
+
     // ── Exercise row handlers ──────────────────────────────────────────────
     const addExercise = (ex: { id: string; name: string; body_parts?: string[]; categories?: string[] }) => {
         setSections(prev => ({
@@ -609,26 +641,26 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
 
     // ── Render ─────────────────────────────────────────────────────────────
     return (
-        <div className="fixed inset-0 z-40 flex flex-col bg-slate-50">
+        <div className="fixed inset-0 z-40 flex flex-col bg-slate-50 dark:bg-[#0F1C30]">
             <div className="flex-1 flex overflow-hidden">
 
                 {/* ── LEFT: Main Panel ───────────────────────────────────── */}
                 <div className="flex-1 flex flex-col overflow-hidden">
 
                     {/* Header */}
-                    <div className="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
+                    <div className="px-6 py-3 bg-white dark:bg-[#132338] border-b border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
-                            <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all" title="Back">
+                            <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] transition-all" title="Back">
                                 <ArrowLeftIcon size={18} />
                             </button>
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAssigning ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
                                 <PackageIcon size={14} className="text-white" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900">
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
                                     {isAssigning ? 'Assign Workout to Plan' : isEditing ? 'Edit Workout Packet' : 'New Workout Packet'}
                                 </h2>
-                                <p className="text-[10px] text-slate-400">
+                                <p className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                     {isAssigning ? 'Build a workout and assign it to your periodization plan session' : 'Build, schedule & print one-off workouts'}
                                 </p>
                             </div>
@@ -680,6 +712,45 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             )}
                         </div>
                     </div>
+
+                    {/* Session overview bar — compact context when session has data */}
+                    {title.trim() && (
+                        <div className="px-6 py-2 bg-slate-50 dark:bg-[#1A2D48] border-b border-slate-200 dark:border-[#243A58] flex items-center gap-4 shrink-0 overflow-x-auto no-scrollbar">
+                            <span className="text-xs font-bold text-slate-700 dark:text-[#E2E8F0] whitespace-nowrap shrink-0">{title}</span>
+                            {trainingPhase && (
+                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-[9px] font-bold whitespace-nowrap shrink-0">{trainingPhase}</span>
+                            )}
+                            {!isAssigning && date && (
+                                <span className="text-[10px] text-slate-500 dark:text-[#94A3B8] whitespace-nowrap shrink-0">
+                                    {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    {time ? ` · ${time}` : ''}
+                                </span>
+                            )}
+                            {targetId && (
+                                <span className="text-[10px] text-slate-500 dark:text-[#94A3B8] whitespace-nowrap shrink-0">
+                                    {resolveTargetName(targetId, targetType)}
+                                </span>
+                            )}
+                            {totalExercises > 0 && (
+                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] whitespace-nowrap shrink-0">
+                                    {totalExercises} exercise{totalExercises !== 1 ? 's' : ''}
+                                </span>
+                            )}
+                            {sessionSummary.totalSets > 0 && (
+                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] whitespace-nowrap shrink-0">
+                                    {sessionSummary.totalSets} sets
+                                </span>
+                            )}
+                            {sessionSummary.estTonnage > 0 && (
+                                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap shrink-0">
+                                    ~{Math.round(sessionSummary.estTonnage).toLocaleString()} kg
+                                </span>
+                            )}
+                            <span className={`ml-auto px-2 py-0.5 rounded text-[9px] font-bold shrink-0 ${load === 'Low' ? 'bg-emerald-100 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400' : load === 'Medium' ? 'bg-amber-100 dark:bg-amber-900/25 text-amber-700 dark:text-amber-400' : 'bg-rose-100 dark:bg-rose-900/25 text-rose-700 dark:text-rose-400'}`}>
+                                {load}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Assignment context banner */}
                     {isAssigning && (() => {
@@ -777,10 +848,10 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50/60 dark:bg-[#132338]/40">
                         {/* Session Info Card */}
-                        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 space-y-4">
                             <div className="flex items-center gap-2 mb-1">
                                 <ClockIcon size={14} className={isAssigning ? 'text-emerald-500' : 'text-indigo-500'} />
-                                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                                <h3 className="text-xs font-semibold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wide">
                                     {isAssigning ? 'Workout Details' : 'Session Details'}
                                 </h3>
                             </div>
@@ -791,7 +862,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 placeholder="Workout title (e.g. Upper Body Power)"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none hover:border-slate-300 focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                                className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-sm font-medium text-slate-800 dark:text-[#E2E8F0] outline-none hover:border-slate-300 dark:hover:border-[#364E6E] focus:border-indigo-400 transition-all placeholder:text-slate-300 dark:placeholder:text-[#475569]"
                             />
 
                             {/* Phase + Load (always shown) */}
@@ -799,24 +870,24 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 {!isAssigning && (
                                     <>
                                         <div>
-                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Date</label>
-                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Date</label>
+                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-800 dark:text-[#E2E8F0] rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Time</label>
-                                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Time</label>
+                                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-800 dark:text-[#E2E8F0] rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
                                         </div>
                                     </>
                                 )}
                                 <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Phase</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Phase</label>
                                     <CustomSelect value={trainingPhase} onChange={e => setTrainingPhase(e.target.value)} variant="form" size="xs">
                                         {TRAINING_PHASES.map(p => <option key={p}>{p}</option>)}
                                     </CustomSelect>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Load</label>
-                                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                    <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Load</label>
+                                    <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl border border-slate-200 dark:border-[#243A58]">
                                         {['Low', 'Medium', 'High'].map(l => (
                                             <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700'}`}>
                                                 {l}
@@ -825,13 +896,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Track Tonnage</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Track Tonnage</label>
                                     <div className="flex items-center gap-2 mt-1.5">
                                         <button type="button" onClick={() => setTrackTonnage(v => !v)}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-[#243A58]'}`}>
                                             <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
                                         </button>
-                                        <span className="text-[10px] text-slate-400">
+                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                                             {trackTonnage ? 'Feeds Tracking Hub' : 'Tracking off'}
                                         </span>
                                     </div>
@@ -842,8 +913,8 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             {!isAssigning && (
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Target Type</label>
-                                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Target Type</label>
+                                        <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl border border-slate-200 dark:border-[#243A58]">
                                             {['Team', 'Individual'].map(tt => (
                                                 <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
                                                     {tt}
@@ -852,7 +923,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
+                                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">
                                             {targetType === 'Team' ? 'Select Team' : 'Select Athlete'}
                                         </label>
                                         <CustomSelect value={targetId} onChange={e => setTargetId(e.target.value)} variant="form" size="xs" placeholder="Select...">
@@ -868,11 +939,11 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         </div>
 
                         {/* Workout Builder */}
-                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                             {/* Section tabs */}
-                            <div className="flex border-b border-slate-100">
+                            <div className="flex border-b border-slate-100 dark:border-[#243A58]">
                                 {SECTIONS.map(sec => (
-                                    <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-indigo-300 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                                    <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-indigo-300 bg-indigo-50/30 dark:bg-indigo-900/10' : 'border-transparent text-slate-400 dark:text-[#64748B] hover:text-slate-600 dark:hover:text-[#94A3B8]'}`}>
                                         {SECTION_LABELS[sec]}
                                         {sections[sec].length > 0 && <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 rounded-full text-[8px]">{sections[sec].length}</span>}
                                     </button>
@@ -921,11 +992,11 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     </div>
                                 ) : (
                                     sections[activeSection].map((row, idx) => (
-                                        <div key={row.tempId} className="bg-slate-50/50 dark:bg-[#132338]/40 border border-slate-100 rounded-xl p-4 hover:border-slate-200 transition-all">
+                                        <div key={row.tempId} className="bg-slate-50/50 dark:bg-[#1A2D48]/60 border border-slate-100 dark:border-[#243A58] rounded-xl p-4 hover:border-slate-200 dark:hover:border-[#364E6E] transition-all">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
-                                                    <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
+                                                    <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.exerciseName}</span>
                                                     {weightroomSheetConfig?.columns?.some(c => c.exerciseId && (row.exerciseName === c.exerciseId || row.exerciseName.toLowerCase().includes(c.exerciseId.toLowerCase()))) && (
                                                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 text-[8px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide">
                                                             <LinkIcon size={8} /> 1RM
@@ -952,7 +1023,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                             value={row[f.key]}
                                                             onChange={e => updateRow(activeSection, row.tempId, f.key, e.target.value)}
                                                             placeholder={f.placeholder}
-                                                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                                                            className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300 dark:placeholder:text-[#475569]"
                                                         />
                                                     </div>
                                                 ))}
@@ -992,15 +1063,95 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     </div>
                 </div>
 
-                {/* ── RIGHT: Exercise Picker ─────────────────────────────── */}
-                <div className="w-72 shrink-0 bg-white border-l border-slate-200 flex flex-col overflow-hidden">
-                    <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
+                {/* ── RIGHT: Exercise Picker + Session Summary ───────────── */}
+                <div className="w-72 shrink-0 bg-white dark:bg-[#132338] border-l border-slate-200 dark:border-[#243A58] flex flex-col overflow-hidden">
+
+                    {/* Session Summary — shown when exercises added */}
+                    {totalExercises > 0 && (
+                        <div className="border-b border-slate-200 dark:border-[#243A58] p-3.5 space-y-3 shrink-0 bg-slate-50 dark:bg-[#1A2D48]">
+                            <div className="flex items-center gap-2">
+                                <ActivityIcon size={11} className="text-indigo-500" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#94A3B8]">Session Summary</span>
+                            </div>
+                            {/* Stat row */}
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { label: 'Exercises', value: totalExercises },
+                                    { label: 'Total Sets', value: sessionSummary.totalSets },
+                                    { label: 'Est. Tonnage', value: sessionSummary.estTonnage > 0 ? `${Math.round(sessionSummary.estTonnage).toLocaleString()} kg` : '—' },
+                                ].map(s => (
+                                    <div key={s.label} className="bg-white dark:bg-[#132338] rounded-lg p-2 text-center border border-slate-200 dark:border-[#243A58]">
+                                        <div className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0] leading-tight">{s.value}</div>
+                                        <div className="text-[7px] text-slate-400 dark:text-[#64748B] mt-0.5 leading-tight">{s.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* RPE + Load badge */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-[9px] text-slate-500 dark:text-[#94A3B8]">
+                                    Avg RPE: <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{sessionSummary.avgRpe > 0 ? sessionSummary.avgRpe.toFixed(1) : '—'}</span>
+                                </span>
+                                <span className={`px-2 py-0.5 rounded text-[8px] font-semibold ${load === 'Low' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : load === 'High' ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
+                                    {load} Load
+                                </span>
+                            </div>
+                            {/* Muscle breakdown */}
+                            {Object.keys(packetVolume.byBodyPart).length > 0 && (
+                                <div className="space-y-1.5">
+                                    <span className="text-[8px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#64748B]">Muscle Focus</span>
+                                    {(() => {
+                                        const total = Object.values(packetVolume.byBodyPart).reduce((s, v) => s + v, 0);
+                                        return Object.entries(packetVolume.byBodyPart)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .slice(0, 4)
+                                            .map(([part, sets]) => {
+                                                const pct = Math.round((sets / total) * 100);
+                                                return (
+                                                    <div key={part} className="flex items-center gap-2">
+                                                        <span className="text-[9px] text-slate-500 dark:text-[#94A3B8] w-16 truncate shrink-0">{part}</span>
+                                                        <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#243A58] rounded-full overflow-hidden">
+                                                            <div className="h-full bg-indigo-500 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="text-[8px] text-slate-400 dark:text-[#64748B] w-7 text-right shrink-0">{pct}%</span>
+                                                    </div>
+                                                );
+                                            });
+                                    })()}
+                                </div>
+                            )}
+                            {/* This week context */}
+                            {targetId && (
+                                <div className="bg-white dark:bg-[#132338] rounded-lg p-2.5 border border-slate-200 dark:border-[#243A58]">
+                                    <div className="text-[8px] text-slate-400 dark:text-[#64748B] uppercase font-semibold tracking-wide mb-1.5">This Week</div>
+                                    {thisWeekSessions.length === 0 ? (
+                                        <p className="text-[9px] text-slate-400 dark:text-[#64748B]">No sessions this week</p>
+                                    ) : (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-slate-800 dark:text-[#E2E8F0]">{thisWeekSessions.length} session{thisWeekSessions.length !== 1 ? 's' : ''}</span>
+                                            <span className="text-[9px] text-slate-500 dark:text-[#94A3B8]">{thisWeekSessions.filter(s => s.status === 'Completed').length} done</span>
+                                        </div>
+                                    )}
+                                    {thisWeekSessions.length > 0 && (
+                                        <div className="mt-1.5 flex flex-wrap gap-1">
+                                            {thisWeekSessions.slice(0, 3).map(s => (
+                                                <span key={s.id} className={`text-[8px] px-1.5 py-0.5 rounded font-medium ${s.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-[#243A58] text-slate-500 dark:text-[#94A3B8]'}`}>
+                                                    {new Date(s.date).toLocaleDateString('en-US', { weekday: 'short' })} · {s.load || 'Med'}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="px-4 py-4 border-b border-slate-200 dark:border-[#243A58] space-y-3 shrink-0">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-xs font-semibold text-slate-700">Choose Exercise</h3>
-                            <span className="text-[9px] text-slate-400">{pickerSource === 'mine' ? displayExercises.length : (exData?.total ?? 0)} total</span>
+                            <h3 className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">Choose Exercise</h3>
+                            <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{pickerSource === 'mine' ? displayExercises.length : (exData?.total ?? 0)} total</span>
                         </div>
                         {/* All / Mine toggle */}
-                        <div className="flex bg-slate-100 rounded-lg p-0.5">
+                        <div className="flex bg-slate-100 dark:bg-[#0F1C30] rounded-lg p-0.5">
                             <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
                             <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
@@ -1008,13 +1159,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             </button>
                         </div>
                         <div className="relative">
-                            <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748B]" />
                             <input
                                 type="text"
                                 value={exSearch}
                                 onChange={e => setExSearch(e.target.value)}
                                 placeholder="Search exercises..."
-                                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 transition-all"
+                                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-700 dark:text-[#CBD5E1] rounded-xl text-xs font-medium outline-none focus:border-indigo-400 transition-all placeholder:text-slate-400 dark:placeholder:text-[#475569]"
                             />
                         </div>
                         {/* Did you mean? */}
@@ -1060,9 +1211,9 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
 
                     <div className="flex-1 overflow-y-auto p-3 space-y-1">
                         {exLoading ? (
-                            <div className="py-12 flex items-center justify-center text-slate-400 text-xs">Loading...</div>
+                            <div className="py-12 flex items-center justify-center text-slate-400 dark:text-[#64748B] text-xs">Loading...</div>
                         ) : displayExercises.length === 0 ? (
-                            <div className="py-12 flex flex-col items-center justify-center text-slate-400 text-xs gap-1">
+                            <div className="py-12 flex flex-col items-center justify-center text-slate-400 dark:text-[#64748B] text-xs gap-1">
                                 {pickerSource === 'mine' ? <><span>No exercises in your library</span><span className="text-[9px]">Star exercises from the Exercise Library page</span></> : 'No exercises found'}
                             </div>
                         ) : (
@@ -1073,15 +1224,15 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         key={ex.id}
                                         onClick={() => !already && addExercise(ex)}
                                         disabled={already}
-                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 cursor-default' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40'}`}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 cursor-default' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10'}`}
                                     >
-                                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-[#243A58] text-slate-500 dark:text-[#94A3B8]'}`}>
                                             {already ? <span className="text-[8px]">&#10003;</span> : <PlusIcon size={10} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[10px] font-semibold text-slate-700 leading-tight truncate">{ex.name}</div>
+                                            <div className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] leading-tight truncate">{ex.name}</div>
                                             {ex.categories?.[0] && (
-                                                <div className="text-[8px] text-slate-400 mt-0.5">{ex.categories[0]}</div>
+                                                <div className="text-[8px] text-slate-400 dark:text-[#64748B] mt-0.5">{ex.categories[0]}</div>
                                             )}
                                         </div>
                                     </button>
@@ -1091,13 +1242,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     </div>
 
                     {(exData?.totalPages || 0) > 1 && (
-                        <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between shrink-0">
+                        <div className="px-4 py-3 border-t border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
                             <button onClick={() => setExPage(p => Math.max(1, p - 1))} disabled={exPage <= 1} className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
-                                <ChevronLeftIcon size={14} className="text-slate-500" />
+                                <ChevronLeftIcon size={14} className="text-slate-500 dark:text-[#94A3B8]" />
                             </button>
-                            <span className="text-[10px] font-medium text-slate-500">{exPage} / {exData?.totalPages}</span>
+                            <span className="text-[10px] font-medium text-slate-500 dark:text-[#94A3B8]">{exPage} / {exData?.totalPages}</span>
                             <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
-                                <ChevronRightIcon size={14} className="text-slate-500" />
+                                <ChevronRightIcon size={14} className="text-slate-500 dark:text-[#94A3B8]" />
                             </button>
                         </div>
                     )}

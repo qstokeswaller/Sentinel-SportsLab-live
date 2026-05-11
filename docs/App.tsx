@@ -23,8 +23,10 @@ const WellnessHubPage    = lazy(() => import('./pages/WellnessHubPage').then(m =
 const SettingsPage       = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.default })));
 const WorkoutPacketsPage = lazy(() => import('./pages/WorkoutPacketsPage').then(m => ({ default: m.WorkoutPacketsPage })));
 const WeightroomSheetsPage = lazy(() => import('./pages/WeightroomSheetsPage').then(m => ({ default: m.WeightroomSheetsPage })));
-const WorkoutHistoryPage = lazy(() => import('./pages/WorkoutHistoryPage').then(m => ({ default: m.WorkoutHistoryPage })));
-const TestingHubPage     = lazy(() => import('./pages/TestingHubPage').then(m => ({ default: m.TestingHubPage })));
+const WorkoutHistoryPage  = lazy(() => import('./pages/WorkoutHistoryPage').then(m => ({ default: m.WorkoutHistoryPage })));
+const WorkoutProgramsPage = lazy(() => import('./pages/WorkoutProgramsPage').then(m => ({ default: m.WorkoutProgramsPage })));
+const WorkoutSessionsPage = lazy(() => import('./pages/WorkoutSessionsPage').then(m => ({ default: m.WorkoutSessionsPage })));
+const TestingHubPage      = lazy(() => import('./pages/TestingHubPage').then(m => ({ default: m.TestingHubPage })));
 import WorkoutPacketModal from './components/WorkoutPacketModal';
 import AddEventModal from './components/calendar/AddEventModal';
 import { WEIGHTROOM_1RM_EXERCISES } from './utils/constants';
@@ -436,7 +438,10 @@ const App = () => {
                         <Route path="/periodization" element={<PeriodizationPage />} />
                         <Route path="/clients" element={<RosterPage />} />
                         <Route path="/workouts" element={<WorkoutsPage />} />
+                        <Route path="/workouts/programs" element={<WorkoutProgramsPage />} />
+                        <Route path="/workouts/sessions" element={<WorkoutSessionsPage />} />
                         <Route path="/workouts/packets" element={<WorkoutPacketsPage />} />
+                        <Route path="/workouts/sheets" element={<WeightroomSheetsPage />} />
                         <Route path="/workouts/weightroom-sheets" element={<WeightroomSheetsPage />} />
                         <Route path="/workouts/history" element={<WorkoutHistoryPage />} />
                         <Route path="/library" element={<ExerciseLibraryPage />} />

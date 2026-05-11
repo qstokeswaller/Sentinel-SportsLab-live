@@ -46,6 +46,43 @@ export const WorkoutHistoryPage = () => {
 
     const maxLookup = useMemo(() => buildMaxLookup(maxHistory), [maxHistory]);
 
+    // ── Stat card derivations ────────────────────────────────────────────────
+    const stats = useMemo(() => {
+        const all = scheduledSessions || [];
+        const completed = all.filter(s => s.status === 'Completed');
+        const scheduled = all.filter(s => s.status === 'Scheduled');
+
+        // Average RPE from exercise rows of completed sessions
+        let rpeSum = 0, rpeCount = 0;
+        for (const s of completed) {
+            const exRaw = s.exercises;
+            if (!exRaw) continue;
+            const rows = Array.isArray(exRaw)
+                ? exRaw
+                : [...(exRaw.warmup || []), ...(exRaw.workout || []), ...(exRaw.cooldown || [])];
+            for (const r of rows) {
+                const rpe = parseFloat(r.rpe) || 0;
+                if (rpe > 0) { rpeSum += rpe; rpeCount++; }
+            }
+        }
+
+        // Phase distribution
+        const phases: Record<string, number> = {};
+        for (const s of all) {
+            const p = s.trainingPhase || s.training_phase;
+            if (p) phases[p] = (phases[p] || 0) + 1;
+        }
+        const topPhase = Object.entries(phases).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+        return {
+            total: all.length,
+            completed: completed.length,
+            scheduled: scheduled.length,
+            avgRpe: rpeCount > 0 ? (rpeSum / rpeCount).toFixed(1) : '—',
+            topPhase,
+        };
+    }, [scheduledSessions]);
+
     const allPlayers = useMemo(() => teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)), [teams]);
 
     // Athletes shown in the athlete dropdown — scoped to selected team when one is picked
@@ -151,6 +188,23 @@ export const WorkoutHistoryPage = () => {
                 </div>
             </div>
 
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                {[
+                    { label: 'Total Sessions', value: stats.total, color: 'text-slate-900 dark:text-[#E2E8F0]', sub: 'all time' },
+                    { label: 'Completed', value: stats.completed, color: 'text-emerald-600 dark:text-emerald-400', sub: `${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}% rate` },
+                    { label: 'Scheduled', value: stats.scheduled, color: 'text-indigo-600 dark:text-indigo-400', sub: 'upcoming' },
+                    { label: 'Avg RPE', value: stats.avgRpe, color: 'text-amber-600 dark:text-amber-400', sub: 'from completed' },
+                    { label: 'Top Phase', value: stats.topPhase, color: 'text-purple-600 dark:text-purple-400', sub: 'most sessions' },
+                ].map(card => (
+                    <div key={card.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] px-4 py-3.5 shadow-sm">
+                        <div className={`text-lg font-bold leading-tight ${card.color}`}>{card.value}</div>
+                        <div className="text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] mt-0.5">{card.label}</div>
+                        <div className="text-[9px] text-slate-400 dark:text-[#64748B] mt-0.5">{card.sub}</div>
+                    </div>
+                ))}
+            </div>
+
             {/* Filters */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-4">
                 <div className="flex items-center justify-between mb-3">
@@ -198,166 +252,201 @@ export const WorkoutHistoryPage = () => {
                 </div>
             </div>
 
-            {/* Sessions list */}
-            <div className="space-y-2">
+            {/* Sessions table */}
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 {isLoading ? (
-                    <div className="space-y-2">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 shadow-sm">
-                                <div className="flex items-start justify-between">
-                                    <div className="space-y-2 flex-1">
-                                        <div className="flex gap-2">
-                                            <div className="h-5 w-16 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
-                                            <div className="h-5 w-14 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
-                                        </div>
-                                        <div className="h-4 w-48 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
-                                        <div className="h-3 w-32 bg-slate-50 dark:bg-[#0F1C30] rounded animate-pulse" />
-                                    </div>
-                                    <div className="h-8 w-20 bg-slate-50 dark:bg-[#0F1C30] rounded-lg animate-pulse" />
-                                </div>
-                            </div>
-                        ))}
-                        <div className="flex flex-col items-center py-4">
-                            <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mb-2" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout history...</span>
-                        </div>
+                    <div className="flex flex-col items-center py-16 gap-3">
+                        <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading workout history...</span>
                     </div>
                 ) : historySessions.length === 0 ? (
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm py-16 flex flex-col items-center text-slate-300 dark:text-[#475569] gap-2">
-                        <ClockIcon size={32} className="opacity-40" />
+                    <div className="py-16 flex flex-col items-center gap-2">
+                        <ClockIcon size={32} className="text-slate-200 dark:text-[#243A58]" />
                         <p className="text-xs text-slate-400 dark:text-[#64748B]">No workout sessions found</p>
-                        <p className="text-[10px] text-slate-300 dark:text-[#475569]">Schedule workouts from Workout Packets to see them here</p>
+                        <p className="text-[10px] text-slate-300 dark:text-[#475569]">Schedule workouts from the builder to see them here</p>
                         <button onClick={() => navigate('/workouts/packets')} className="mt-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-semibold transition-all">
-                            Go to Workout Packets
+                            Build a Session
                         </button>
                     </div>
                 ) : (
-                    historySessions.map(session => {
-                        const targetName = resolveTargetName(session.targetId || session.target_id, session.targetType || session.target_type);
-                        const phase = session.trainingPhase || session.training_phase || '';
-                        const exRaw = session.exercises;
-                        const exCount = exRaw
-                            ? (Array.isArray(exRaw) ? exRaw.length : (exRaw.warmup?.length || 0) + (exRaw.workout?.length || 0) + (exRaw.cooldown?.length || 0))
-                            : (session.exercise_ids || []).length;
-                        const isTeam = (session.targetType || session.target_type) === 'Team';
-                        const statusColor = session.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600' : session.status === 'Cancelled' ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' : 'bg-blue-100 text-blue-600';
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
+                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Session</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Date & Time</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Team / Group</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Focus</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Tonnage</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">RPE</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Status</th>
+                                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                                {historySessions.map(session => {
+                                    const targetName = resolveTargetName(session.targetId || session.target_id, session.targetType || session.target_type);
+                                    const phase = session.trainingPhase || session.training_phase || '';
+                                    const exRaw = session.exercises;
+                                    const isTeam = (session.targetType || session.target_type) === 'Team';
 
-                        return (
-                            <div key={session.id} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all group shadow-sm">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor}`}>{session.status || 'Scheduled'}</span>
-                                            {phase && <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{phase}</span>}
-                                            {session.load && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{session.load} Load</span>}
-                                        </div>
-                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:text-emerald-400 transition-colors truncate">{session.title || 'Untitled Session'}</h4>
-                                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-[#64748B]">
-                                            <span className="flex items-center gap-1">
-                                                <ClockIcon size={10} />
-                                                {formatDate(session.date)}{session.time ? ` at ${session.time}` : ''}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                {isTeam ? <UsersIcon size={10} /> : <UserIcon size={10} />}
-                                                {targetName}
-                                            </span>
-                                            {exCount > 0 && (
-                                                <span className="flex items-center gap-1">
-                                                    <DumbbellIcon size={10} />
-                                                    {exCount} exercises
+                                    // Compute tonnage from actual_results
+                                    let tonnage = 0;
+                                    if (session.actual_results && typeof session.actual_results === 'object') {
+                                        for (const rows of Object.values(session.actual_results)) {
+                                            if (Array.isArray(rows)) {
+                                                for (const r of rows) {
+                                                    tonnage += parseFloat(r.tonnage || 0) || (parseFloat(r.sets) * parseFloat(r.reps) * parseFloat(r.weight) || 0);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    const statusStyles: Record<string, string> = {
+                                        Completed: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+                                        Scheduled: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300',
+                                        Draft:     'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]',
+                                        Missed:    'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400',
+                                    };
+                                    const phaseStyles: Record<string, string> = {
+                                        Strength:    'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-300',
+                                        Hypertrophy: 'bg-purple-50 dark:bg-purple-900/25 text-purple-700 dark:text-purple-300',
+                                        Power:       'bg-orange-50 dark:bg-orange-900/25 text-orange-700 dark:text-orange-300',
+                                        Speed:       'bg-cyan-50 dark:bg-cyan-900/25 text-cyan-700 dark:text-cyan-300',
+                                    };
+
+                                    return (
+                                        <tr key={session.id} className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48]/60 transition-colors">
+                                            <td className="px-5 py-3.5">
+                                                <div className="flex items-center gap-2">
+                                                    {exRaw?.weightroomSheet && (
+                                                        <span className="w-4 h-4 rounded bg-teal-100 dark:bg-teal-900/25 flex items-center justify-center shrink-0">
+                                                            <ClipboardListIcon size={9} className="text-teal-600 dark:text-teal-400" />
+                                                        </span>
+                                                    )}
+                                                    <div>
+                                                        <div className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{session.title || 'Untitled'}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8] whitespace-nowrap">
+                                                {formatDate(session.date)}{session.time ? ` · ${session.time}` : ''}
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <div className="flex items-center gap-1.5">
+                                                    {isTeam ? <UsersIcon size={11} className="text-slate-400 dark:text-[#64748B] shrink-0" /> : <UserIcon size={11} className="text-slate-400 dark:text-[#64748B] shrink-0" />}
+                                                    <span className="text-xs text-slate-600 dark:text-[#CBD5E1] truncate max-w-[100px]">{targetName || '—'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                {phase ? (
+                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${phaseStyles[phase] ?? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'}`}>
+                                                        {phase}
+                                                    </span>
+                                                ) : <span className="text-slate-300 dark:text-[#475569] text-xs">—</span>}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-xs text-slate-600 dark:text-[#CBD5E1] font-medium">
+                                                {tonnage > 0 ? `${Math.round(tonnage).toLocaleString()} kg` : '—'}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-xs text-slate-500 dark:text-[#94A3B8]">
+                                                {session.actual_rpe ? (
+                                                    <span className="font-semibold text-amber-600 dark:text-amber-400">{session.actual_rpe}</span>
+                                                ) : '—'}
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <span className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide ${statusStyles[session.status] ?? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'}`}>
+                                                    {session.status || 'Scheduled'}
                                                 </span>
-                                            )}
-                                            {exRaw?.weightroomSheet && (
-                                                <span className="flex items-center gap-1 text-teal-600 font-semibold">
-                                                    <ClipboardListIcon size={10} />
-                                                    Sheet
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="shrink-0 ml-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {exRaw?.weightroomSheet && (
-                                            <>
-                                                <button
-                                                    onClick={() => setViewingSheetSession(session)}
-                                                    className="px-3 py-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 text-teal-700 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                                >
-                                                    <ClipboardListIcon size={11} /> View Sheet
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        const tid = session.target_id || session.targetId;
-                                                        const ttype = session.target_type || session.targetType;
-                                                        let athletes = [];
-                                                        if (ttype === 'Team') {
-                                                            const team = teams.find(t => t.id === tid);
-                                                            athletes = [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
-                                                        } else {
-                                                            for (const t of teams) {
-                                                                const p = (t.players || []).find(p => p.id === tid);
-                                                                if (p) { athletes = [p]; break; }
-                                                            }
-                                                        }
-                                                        printSheet(exRaw.weightroomSheet, athletes, maxLookup, session.title);
-                                                    }}
-                                                    className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                                >
-                                                    <PrinterIcon size={11} /> Print Sheet
-                                                </button>
-                                            </>
-                                        )}
-                                        {session.status !== 'Completed' && (
-                                            <button
-                                                onClick={() => setCompletingSession(session)}
-                                                className="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                            >
-                                                <CheckCircle2Icon size={11} /> Complete
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => handleEdit(session)}
-                                            className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                            title="Edit workout"
-                                        >
-                                            <PencilIcon size={11} /> Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleReassign(session)}
-                                            className="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                        >
-                                            <RepeatIcon size={11} /> Reassign
-                                        </button>
-                                        {confirmDeleteId === session.id ? (
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-[9px] font-semibold text-red-600">Delete?</span>
-                                                <button
-                                                    onClick={() => handleDelete(session.id)}
-                                                    disabled={deleting}
-                                                    className="px-2.5 py-1.5 bg-red-600 text-white rounded-lg text-[10px] font-semibold transition-all hover:bg-red-700"
-                                                >
-                                                    {deleting ? '...' : 'Yes'}
-                                                </button>
-                                                <button
-                                                    onClick={() => setConfirmDeleteId(null)}
-                                                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all hover:bg-slate-200"
-                                                >
-                                                    No
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => setConfirmDeleteId(session.id)}
-                                                className="px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] hover:bg-red-50 text-slate-400 dark:text-[#64748B] hover:text-red-500 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1.5"
-                                                title="Remove from history"
-                                            >
-                                                <Trash2Icon size={11} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
+                                            </td>
+                                            <td className="px-4 py-3.5">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {exRaw?.weightroomSheet && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => setViewingSheetSession(session)}
+                                                                className="p-1.5 rounded-lg text-teal-500 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all"
+                                                                title="View Sheet"
+                                                            >
+                                                                <ClipboardListIcon size={13} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const tid = session.target_id || session.targetId;
+                                                                    const ttype = session.target_type || session.targetType;
+                                                                    let athletes = [];
+                                                                    if (ttype === 'Team') {
+                                                                        const team = teams.find(t => t.id === tid);
+                                                                        athletes = [...(team?.players || [])].sort((a, b) => a.name.localeCompare(b.name));
+                                                                    } else {
+                                                                        for (const t of teams) {
+                                                                            const p = (t.players || []).find(p => p.id === tid);
+                                                                            if (p) { athletes = [p]; break; }
+                                                                        }
+                                                                    }
+                                                                    printSheet(exRaw.weightroomSheet, athletes, maxLookup, session.title);
+                                                                }}
+                                                                className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
+                                                                title="Print Sheet"
+                                                            >
+                                                                <PrinterIcon size={13} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {session.status !== 'Completed' && (
+                                                        <button
+                                                            onClick={() => setCompletingSession(session)}
+                                                            className="p-1.5 rounded-lg text-emerald-500 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
+                                                            title="Mark Complete"
+                                                        >
+                                                            <CheckCircle2Icon size={13} />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleEdit(session)}
+                                                        className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+                                                        title="Edit"
+                                                    >
+                                                        <PencilIcon size={13} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleReassign(session)}
+                                                        className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
+                                                        title="Reassign"
+                                                    >
+                                                        <RepeatIcon size={13} />
+                                                    </button>
+                                                    {confirmDeleteId === session.id ? (
+                                                        <div className="flex items-center gap-1">
+                                                            <button onClick={() => handleDelete(session.id)} disabled={deleting} className="px-2 py-1 bg-red-600 text-white rounded text-[9px] font-semibold hover:bg-red-700">
+                                                                {deleting ? '…' : 'Delete'}
+                                                            </button>
+                                                            <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-semibold">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => setConfirmDeleteId(session.id)}
+                                                            className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2Icon size={13} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        <div className="px-5 py-3 border-t border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                                Showing {historySessions.length} session{historySessions.length !== 1 ? 's' : ''}
+                                {(teamFilter || athleteFilter) ? ' (filtered)' : ''}
+                            </span>
+                        </div>
+                    </div>
                 )}
             </div>
 
