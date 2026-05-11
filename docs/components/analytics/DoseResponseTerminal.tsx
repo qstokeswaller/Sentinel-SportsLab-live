@@ -12,11 +12,12 @@
  * - Works with WHATEVER test data exists — doesn't force a testing schedule
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
     TrendingUpIcon, TrendingDownIcon, MinusIcon, ActivityIcon,
-    CalendarIcon, InfoIcon,
+    CalendarIcon, ChevronDownIcon,
 } from 'lucide-react';
 
 const formatTestName = (type) => {
@@ -39,6 +40,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
         const d = new Date(); d.setDate(d.getDate() - 42); return d.toISOString().split('T')[0];
     })());
     const [blockEnd, setBlockEnd] = useState(analyticsEndDate || new Date().toISOString().split('T')[0]);
+    const [selectedMetric, setSelectedMetric] = useState('srpe');
 
     const allAthletes = useMemo(() => teams.flatMap(t => (t.players || []).map(p => ({ ...p, performanceMetrics: p.performanceMetrics || [], teamName: t.name }))), [teams]);
     const targetAthletes = useMemo(() => {
@@ -47,17 +49,40 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
         return allAthletes;
     }, [allAthletes, selectedAnalyticsAthleteId, subjectAthleteIds]);
 
+    // Detect which metric types have data for target athletes in the window
+    const availableMetrics = useMemo(() => {
+        const windowLoads = (loadRecords || []).filter(l => {
+            const aid = l.athleteId || l.athlete_id;
+            return targetAthletes.some(a => a.id === aid) && l.date >= blockStart && l.date <= blockEnd;
+        });
+        const found = [...new Set(windowLoads.map(l => l.metric_type || 'srpe').filter(Boolean))];
+        // Always include srpe in the list so it's always an option (may just have 0 data)
+        if (!found.includes('srpe')) found.unshift('srpe');
+        return found;
+    }, [loadRecords, targetAthletes, blockStart, blockEnd]);
+
+    // Auto-select first available metric when window changes and current selection has no data
+    useEffect(() => {
+        if (!availableMetrics.includes(selectedMetric)) {
+            setSelectedMetric(availableMetrics[0] || 'srpe');
+        }
+    }, [availableMetrics]);
+
+    const loadMeta = ACWR_METRIC_TYPES[selectedMetric] || { label: selectedMetric, unit: 'AU', desc: 'Training load' };
+    const loadUnit = loadMeta.unit;
+
     // Compute dose-response for each athlete
     const analysis = useMemo(() => {
         const results = [];
 
         for (const athlete of targetAthletes) {
-            // DOSE: sum load records within block
+            // DOSE: sum load records within block for the selected metric type
             const blockLoads = (loadRecords || []).filter(l =>
                 (l.athleteId === athlete.id || l.athlete_id === athlete.id) &&
-                l.date >= blockStart && l.date <= blockEnd
+                l.date >= blockStart && l.date <= blockEnd &&
+                (l.metric_type || 'srpe') === selectedMetric
             );
-            const totalLoad = blockLoads.reduce((sum, l) => sum + (l.value || l.sRPE || 0), 0);
+            const totalLoad = blockLoads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
             const sessionCount = blockLoads.length;
             if (sessionCount === 0) continue; // no load data in this block
 
@@ -134,7 +159,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
         }
 
         return results.sort((a, b) => b.totalLoad - a.totalLoad);
-    }, [targetAthletes, loadRecords, blockStart, blockEnd]);
+    }, [targetAthletes, loadRecords, blockStart, blockEnd, selectedMetric]);
 
     const athletesWithResponses = analysis.filter(a => a.hasResponses);
     const athletesLoadOnly = analysis.filter(a => !a.hasResponses);
@@ -150,13 +175,28 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                 </p>
             </div>
 
-            {/* Block date range selector */}
+            {/* Block date range + metric selector */}
             <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
                     <CalendarIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
                     <input type="date" value={blockStart} onChange={e => setBlockStart(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
                     <span className="text-slate-300 dark:text-[#475569]">—</span>
                     <input type="date" value={blockEnd} onChange={e => setBlockEnd(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
+                </div>
+                {/* Load metric selector */}
+                <div className="relative flex items-center gap-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Load:</span>
+                    <select
+                        value={selectedMetric}
+                        onChange={e => setSelectedMetric(e.target.value)}
+                        className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] bg-transparent outline-none cursor-pointer pr-4 appearance-none"
+                    >
+                        {availableMetrics.map(m => {
+                            const meta = ACWR_METRIC_TYPES[m] || { label: m, unit: '?' };
+                            return <option key={m} value={m}>{meta.label} ({meta.unit})</option>;
+                        })}
+                    </select>
+                    <ChevronDownIcon size={11} className="text-slate-400 dark:text-[#64748B] pointer-events-none absolute right-2" />
                 </div>
                 <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
                     {Math.ceil((new Date(blockEnd) - new Date(blockStart)) / 86400000)} days · {analysis.length} athlete{analysis.length !== 1 ? 's' : ''} with load data
@@ -201,8 +241,8 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">{a.totalLoad.toLocaleString()} AU</div>
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B]">{a.sessionCount} sessions · {a.avgDailyLoad} AU/day</div>
+                            <div className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">{a.totalLoad.toLocaleString()} {loadUnit}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#64748B]">{a.sessionCount} sessions · {a.avgDailyLoad} {loadUnit}/day</div>
                         </div>
                     </div>
                     <div className="p-4 space-y-2">
@@ -237,7 +277,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                     <div className="flex flex-wrap gap-2">
                         {athletesLoadOnly.map(a => (
                             <span key={a.athlete.id} className="text-xs text-slate-500 dark:text-[#94A3B8] bg-white dark:bg-[#132338] px-2 py-1 rounded-lg border border-slate-200 dark:border-[#243A58]">
-                                {a.athlete.name} · {a.totalLoad.toLocaleString()} AU
+                                {a.athlete.name} · {a.totalLoad.toLocaleString()} {loadUnit}
                             </span>
                         ))}
                     </div>
@@ -261,15 +301,23 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-[#1A2D48]">
                     <div className="px-5 py-4">
-                        <div className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide mb-2">What is Dose?</div>
-                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
-                            Dose = total training load accumulated within the selected date range. Set the start and end date to match your training block — e.g. a pre-season block, a competition mesocycle, or a strength phase.
+                        <div className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide mb-2">Dose &amp; Load Method</div>
+                        <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed mb-2">
+                            Dose = total load within the block. Use the <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">Load</span> selector to switch the metric that best fits how you track training:
                         </p>
+                        <ul className="text-[10px] text-slate-500 dark:text-[#64748B] space-y-1 leading-relaxed">
+                            {Object.entries(ACWR_METRIC_TYPES).map(([key, m]) => (
+                                <li key={key} className={`flex items-start gap-1 ${key === selectedMetric ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''}`}>
+                                    <span className="shrink-0 mt-0.5">{key === selectedMetric ? '▸' : '·'}</span>
+                                    <span><span className="font-medium">{m.label}</span> — {m.desc} ({m.unit})</span>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                     <div className="px-5 py-4">
                         <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-2">What is Response?</div>
                         <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
-                            Response = the percentage change in test results that bookend the block. The most recent test before the block start = pre; the earliest test after the block end = post. The system uses whatever test data exists.
+                            Response = the percentage change in test results that bookend the block. The most recent test before the block start = pre; the earliest test after the block end = post. The system uses whatever test data exists — no fixed testing schedule required.
                         </p>
                     </div>
                     <div className="px-5 py-4">
@@ -279,9 +327,9 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                         </p>
                     </div>
                     <div className="px-5 py-4">
-                        <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase tracking-wide mb-2">No Tests? Add Tests</div>
+                        <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase tracking-wide mb-2">No Data? Why?</div>
                         <p className="text-[10px] text-slate-600 dark:text-[#94A3B8] leading-relaxed">
-                            If athletes appear in the load-only list, no matching pre/post tests exist in this window. Log assessments via the Athlete Profile before and after each block to unlock response data.
+                            If athletes show 0 load for your selected metric, that method isn't being recorded. Switch to a metric type that matches your data — e.g. if you don't use RPE questionnaires, switch to GPS or Duration. Log assessments before and after blocks to unlock response data.
                         </p>
                     </div>
                 </div>
