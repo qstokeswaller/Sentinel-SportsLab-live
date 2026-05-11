@@ -201,19 +201,21 @@ function ExerciseRow({
                 {(ex.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-0.5 mt-1">
                         {ex.tags.map((t: string) => (
-                            <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#2D4A6B]">{t}</span>
+                            <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40">{t}</span>
                         ))}
                     </div>
                 )}
             </td>
             <td className="px-3 py-2 text-center">
                 {ex.options?.movementPattern && ex.options.movementPattern !== 'Unsorted' ? (
-                    <span className="text-[11px] text-slate-600 dark:text-[#94A3B8]">{ex.options.movementPattern}</span>
+                    <span className="inline-block px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/25 text-[11px] font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/40">
+                        {ex.options.movementPattern}
+                    </span>
                 ) : <span className="text-slate-300 dark:text-[#475569] text-[11px]">—</span>}
             </td>
             <td className="px-3 py-2 text-center">
                 {ex.body_parts?.[0] ? (
-                    <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2D48] text-[11px] font-medium text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58]">
+                    <span className="inline-block px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/25 text-[11px] font-medium text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-700/40">
                         {ex.body_parts[0]}
                     </span>
                 ) : <span className="text-slate-300 dark:text-[#475569] text-[11px]">—</span>}
