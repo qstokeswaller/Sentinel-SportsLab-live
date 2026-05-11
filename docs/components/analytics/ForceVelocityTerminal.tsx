@@ -48,6 +48,7 @@ function buildFVProfile(
     imtpForce?: number,
     sprint10m?: number,
     sprint30m?: number,
+    loadedCmjPoints?: { loadKg: number; heightCm: number }[],
     hPO = DEFAULT_HPO
 ): FVProfile | null {
     if (!bodyMass) return null;
@@ -73,6 +74,17 @@ function buildFVProfile(
         const vMax = 20 / (sprint30m - sprint10m);
         const FSprint = bodyMass * vMax / (sprint10m * 0.8);
         dataPoints.push({ label: 'Sprint', force: FSprint, velocity: vMax, source: 'Sprint split derivation' });
+    }
+    // Loaded CMJ — each (load, height) pair is a direct F-V data point
+    if (loadedCmjPoints?.length) {
+        loadedCmjPoints.forEach(({ loadKg, heightCm }, i) => {
+            if (heightCm > 0) {
+                const h = toM(heightCm);
+                const v = Math.sqrt(2 * G * h);
+                const F = (bodyMass + loadKg) * G * (h / hPO + 1);
+                dataPoints.push({ label: `LCMJ${i === 0 ? ' BW' : `+${loadKg}kg`}`, force: F, velocity: v, source: 'Loaded CMJ V-L profile' });
+            }
+        });
     }
     if (dataPoints.length < 2) return null;
 
@@ -276,7 +288,9 @@ function DataStatusBadge({ label, date, present }: { label: string; date?: strin
 
 const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }) => {
     const { teams } = useAppState();
-    const [selectedId, setSelectedId] = useState(selectedAnalyticsAthleteId || '');
+    const [selectedId, setSelectedId] = useState(
+        (!selectedAnalyticsAthleteId || selectedAnalyticsAthleteId.startsWith('team_')) ? '' : selectedAnalyticsAthleteId
+    );
     const [showMethodology, setShowMethodology] = useState(false);
 
     const allAthletes = useMemo(() =>
@@ -303,6 +317,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
         const cmj   = getLatest(['cmj', 'cmj_advanced']);
         const sj    = getLatest(['squat_jump']);
         const imtp  = getLatest(['imtp_basic', 'imtp_advanced']);
+        const loadedCmj = getLatest(['loaded_cmj']);
         const sprintMetrics = metrics
             .filter(m => m.type?.startsWith('sprint_'))
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -313,21 +328,23 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
             if (m.type === 'sprint_10m' && !sprint10) sprint10 = { ...m, resolvedTime: t };
             if ((m.type === 'sprint_30m' || m.type === 'sprint_40m' || m.type === 'sprint_20m') && !sprint30) sprint30 = { ...m, resolvedTime: t };
         }
-        return { cmj, sj, imtp, sprint10, sprint30 };
+        return { cmj, sj, imtp, loadedCmj, sprint10, sprint30 };
     }, [athlete]);
 
     const profile = useMemo(() => {
         if (!athlete) return null;
-        const { cmj, sj, imtp, sprint10, sprint30 } = testData;
+        const { cmj, sj, imtp, loadedCmj, sprint10, sprint30 } = testData;
         const bodyMass = athlete.weight_kg || athlete.weight || 80;
         const cmjH  = cmj?.height  || cmj?.jump_height  || cmj?.metrics?.jump_height  || cmj?.value;
         const sjH   = sj?.height   || sj?.jump_height   || sj?.metrics?.jump_height   || sj?.value;
         const imtpF = imtp?.peak_force || imtp?.metrics?.peak_force || imtp?.value;
-        return buildFVProfile(
-            bodyMass, cmjH, sjH, imtpF,
-            sprint10?.resolvedTime ?? null,
-            sprint30?.resolvedTime ?? null
-        );
+        const lcmj = loadedCmj ? [
+            { loadKg: 0,                                              heightCm: loadedCmj.metrics?.bw_height   || loadedCmj.bw_height   || 0 },
+            { loadKg: loadedCmj.metrics?.load_1_kg || loadedCmj.load_1_kg || 0, heightCm: loadedCmj.metrics?.load_1_height || loadedCmj.load_1_height || 0 },
+            { loadKg: loadedCmj.metrics?.load_2_kg || loadedCmj.load_2_kg || 0, heightCm: loadedCmj.metrics?.load_2_height || loadedCmj.load_2_height || 0 },
+            { loadKg: loadedCmj.metrics?.load_3_kg || loadedCmj.load_3_kg || 0, heightCm: loadedCmj.metrics?.load_3_height || loadedCmj.load_3_height || 0 },
+        ].filter(p => p.heightCm > 0) : undefined;
+        return buildFVProfile(bodyMass, cmjH, sjH, imtpF, sprint10?.resolvedTime ?? null, sprint30?.resolvedTime ?? null, lcmj);
     }, [athlete, testData]);
 
     // Historical profiles — one per date where sufficient data exists
@@ -351,13 +368,21 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                 const imtp = mets.find(m => ['imtp_basic', 'imtp_advanced'].includes(m.type));
                 const s10  = mets.find(m => m.type === 'sprint_10m');
                 const s30  = mets.find(m => ['sprint_30m', 'sprint_40m', 'sprint_20m'].includes(m.type));
+                const lcmjH = mets.find(m => m.type === 'loaded_cmj');
+                const lcmjPts = lcmjH ? [
+                    { loadKg: 0, heightCm: lcmjH.metrics?.bw_height || lcmjH.bw_height || 0 },
+                    { loadKg: lcmjH.metrics?.load_1_kg || 0, heightCm: lcmjH.metrics?.load_1_height || 0 },
+                    { loadKg: lcmjH.metrics?.load_2_kg || 0, heightCm: lcmjH.metrics?.load_2_height || 0 },
+                    { loadKg: lcmjH.metrics?.load_3_kg || 0, heightCm: lcmjH.metrics?.load_3_height || 0 },
+                ].filter(p => p.heightCm > 0) : undefined;
                 const p = buildFVProfile(
                     bodyMass,
                     cmj?.height || cmj?.value,
                     sj?.height  || sj?.value,
                     imtp?.peak_force || imtp?.value,
                     s10?.time   || s10?.value,
-                    s30?.time   || s30?.value
+                    s30?.time   || s30?.value,
+                    lcmjPts
                 );
                 return p ? { date, profile: p } : null;
             })
@@ -373,6 +398,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
     const completedTests = [
         !!testData.cmj, !!testData.sj, !!testData.imtp,
         !!(testData.sprint10 && testData.sprint30),
+        !!testData.loadedCmj,
     ].filter(Boolean).length;
 
     const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : undefined;
@@ -431,17 +457,18 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                         <div className="flex items-center gap-2 mb-4">
                             <AlertTriangleIcon size={14} className="text-amber-500" />
                             <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                                Insufficient data to build F-V profile — {completedTests}/4 tests completed
+                                Insufficient data to build F-V profile — {completedTests}/5 tests completed
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-[#94A3B8] mb-4">
-                            At least 2 of the following tests must be logged to compute the Force-Velocity profile.
+                            At least 2 of the following tests must be logged to compute the Force-Velocity profile. Loaded CMJ alone provides the most data points.
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                             <DataStatusBadge label="Countermovement Jump (CMJ)" date={fmtDate(testData.cmj?.date)} present={!!testData.cmj} />
                             <DataStatusBadge label="Squat Jump (SJ)" date={fmtDate(testData.sj?.date)} present={!!testData.sj} />
                             <DataStatusBadge label="IMTP (Isometric Mid-Thigh Pull)" date={fmtDate(testData.imtp?.date)} present={!!testData.imtp} />
                             <DataStatusBadge label="Sprint (10m + 30m/20m splits)" date={fmtDate(testData.sprint10?.date)} present={!!(testData.sprint10 && testData.sprint30)} />
+                            <DataStatusBadge label="Loaded CMJ — Velocity-Load Profile" date={fmtDate(testData.loadedCmj?.date)} present={!!testData.loadedCmj} />
                         </div>
                     </div>
                 </div>
