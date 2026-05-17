@@ -12,7 +12,7 @@ import {
     dateToWeekIndex, weekIndexToDate, calculateTotalWeeks,
     getMonthLabels, calculateWeeklyVolume, calculateWeeklyIntensity,
     calculatePeakingIndex, formatDateShort, EVENT_TYPE_COLORS, EVENT_TYPE_LABELS,
-    isStandardModality, getModalityLevels,
+    isStandardModality, getModalityLevels, getModalityDescription,
 } from '../../utils/periodizationUtils';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
