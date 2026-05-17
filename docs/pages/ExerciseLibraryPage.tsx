@@ -45,14 +45,14 @@ function CnsDots({ value }: { value: string | null }) {
 // ── Collection colour map ─────────────────────────────────────────────────────
 
 const COLLECTION_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-    indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-900/20',  border: 'border-indigo-200 dark:border-indigo-700/40',  text: 'text-indigo-700 dark:text-indigo-300',  dot: 'bg-indigo-500' },
-    blue:    { bg: 'bg-blue-50 dark:bg-blue-900/20',      border: 'border-blue-200 dark:border-blue-700/40',      text: 'text-blue-700 dark:text-blue-300',      dot: 'bg-blue-500' },
-    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/10',border: 'border-emerald-200 dark:border-emerald-500/30',text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
-    amber:   { bg: 'bg-amber-50 dark:bg-amber-900/20',    border: 'border-amber-200 dark:border-amber-700/40',    text: 'text-amber-700 dark:text-amber-400',    dot: 'bg-amber-500' },
-    rose:    { bg: 'bg-rose-50 dark:bg-rose-900/20',      border: 'border-rose-200 dark:border-rose-700/40',      text: 'text-rose-700 dark:text-rose-400',      dot: 'bg-rose-500' },
-    violet:  { bg: 'bg-violet-50 dark:bg-violet-900/20',  border: 'border-violet-200 dark:border-violet-700/40',  text: 'text-violet-700 dark:text-violet-300',  dot: 'bg-violet-500' },
-    teal:    { bg: 'bg-teal-50 dark:bg-teal-900/20',      border: 'border-teal-200 dark:border-teal-700/40',      text: 'text-teal-700 dark:text-teal-400',      dot: 'bg-teal-500' },
-    orange:  { bg: 'bg-orange-50 dark:bg-orange-900/20',  border: 'border-orange-200 dark:border-orange-700/40',  text: 'text-orange-700 dark:text-orange-400',  dot: 'bg-orange-500' },
+    indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-500/15',   border: 'border-indigo-200 dark:border-indigo-500/30',   text: 'text-indigo-700 dark:text-indigo-300',  dot: 'bg-indigo-500' },
+    blue:    { bg: 'bg-blue-50 dark:bg-blue-500/15',       border: 'border-blue-200 dark:border-blue-500/30',       text: 'text-blue-700 dark:text-blue-300',      dot: 'bg-blue-500' },
+    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/15', border: 'border-emerald-200 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
+    amber:   { bg: 'bg-amber-50 dark:bg-amber-500/15',     border: 'border-amber-200 dark:border-amber-500/30',     text: 'text-amber-700 dark:text-amber-400',    dot: 'bg-amber-500' },
+    rose:    { bg: 'bg-rose-50 dark:bg-rose-500/15',       border: 'border-rose-200 dark:border-rose-500/30',       text: 'text-rose-700 dark:text-rose-400',      dot: 'bg-rose-500' },
+    violet:  { bg: 'bg-violet-50 dark:bg-violet-500/15',   border: 'border-violet-200 dark:border-violet-500/30',   text: 'text-violet-700 dark:text-violet-300',  dot: 'bg-violet-500' },
+    teal:    { bg: 'bg-teal-50 dark:bg-teal-500/15',       border: 'border-teal-200 dark:border-teal-500/30',       text: 'text-teal-700 dark:text-teal-400',      dot: 'bg-teal-500' },
+    orange:  { bg: 'bg-orange-50 dark:bg-orange-500/15',   border: 'border-orange-200 dark:border-orange-500/30',   text: 'text-orange-700 dark:text-orange-400',  dot: 'bg-orange-500' },
 };
 const COLOR_KEYS = Object.keys(COLLECTION_COLORS);
 const getColColor = (color: string) => COLLECTION_COLORS[color] ?? COLLECTION_COLORS.indigo;
@@ -72,7 +72,7 @@ function NewCollectionModal({ onClose, onSave }: { onClose: () => void; onSave: 
                 </div>
                 <div className="px-5 py-4 space-y-4">
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5 block">Collection Name *</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">Collection Name *</label>
                         <input
                             autoFocus type="text" value={name}
                             onChange={e => setName(e.target.value)}
@@ -82,7 +82,7 @@ function NewCollectionModal({ onClose, onSave }: { onClose: () => void; onSave: 
                         />
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5 block">Description</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">Description</label>
                         <textarea
                             value={description}
                             onChange={e => setDescription(e.target.value)}
@@ -92,7 +92,7 @@ function NewCollectionModal({ onClose, onSave }: { onClose: () => void; onSave: 
                         />
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-2 block">Colour</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-2 block">Colour</label>
                         <div className="flex flex-wrap gap-2">
                             {COLOR_KEYS.map(c => (
                                 <button key={c} onClick={() => setColor(c)} className={`w-6 h-6 rounded-full ${getColColor(c).dot} border-2 transition-all ${color === c ? 'border-slate-900 dark:border-white scale-110' : 'border-transparent'}`} />
@@ -116,12 +116,12 @@ function ExerciseTableHeader({ showCheckbox = false }: { showCheckbox?: boolean 
         <thead className="sticky top-0 z-20">
             <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
                 {showCheckbox && <th className="w-8 px-3 py-2" />}
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Exercise</th>
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-center">Movement</th>
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-center">Primary Muscle</th>
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-center">Classification</th>
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-center">CNS Demand</th>
-                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] text-center w-24">Manage</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Exercise</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-center">Movement</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-center">Primary Muscle</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-center">Classification</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-center">CNS Demand</th>
+                <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-center w-24">Manage</th>
             </tr>
         </thead>
     );
@@ -132,17 +132,17 @@ function ExerciseTableHeader({ showCheckbox = false }: { showCheckbox?: boolean 
 function Pagination({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
     if (total <= 1) return null;
     return (
-        <div className="flex items-center justify-center gap-3 py-3 shrink-0">
+        <div className="flex items-center justify-center gap-2 py-1.5 shrink-0">
             <button onClick={() => onChange(Math.max(1, page - 1))} disabled={page === 1}
-                className="p-2 rounded-lg bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
-                <ChevronLeftIcon size={15} />
+                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                <ChevronLeftIcon size={12} />
             </button>
-            <span className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1]">
                 Page <span className="text-indigo-600 dark:text-indigo-300 font-semibold">{page}</span> of {total}
             </span>
             <button onClick={() => onChange(Math.min(total, page + 1))} disabled={page === total}
-                className="p-2 rounded-lg bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
-                <ChevronRightIcon size={15} />
+                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                <ChevronRightIcon size={12} />
             </button>
         </div>
     );
@@ -201,28 +201,28 @@ function ExerciseRow({
                 {(ex.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-0.5 mt-1">
                         {ex.tags.map((t: string) => (
-                            <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/40">{t}</span>
+                            <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-600 dark:text-[#CBD5E1]">{t}</span>
                         ))}
                     </div>
                 )}
             </td>
             <td className="px-3 py-2 text-center">
                 {ex.options?.movementPattern && ex.options.movementPattern !== 'Unsorted' ? (
-                    <span className="inline-block px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/25 text-[11px] font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/40">
+                    <span className="inline-block px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/15 text-[11px] font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
                         {ex.options.movementPattern}
                     </span>
                 ) : <span className="text-slate-300 dark:text-[#475569] text-[11px]">—</span>}
             </td>
             <td className="px-3 py-2 text-center">
                 {ex.body_parts?.[0] ? (
-                    <span className="inline-block px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/25 text-[11px] font-medium text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-700/40">
+                    <span className="inline-block px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-500/15 text-[11px] font-medium text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30">
                         {ex.body_parts[0]}
                     </span>
                 ) : <span className="text-slate-300 dark:text-[#475569] text-[11px]">—</span>}
             </td>
             <td className="px-3 py-2 text-center">
                 {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' ? (
-                    <span className="inline-block px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/25 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/40">
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30">
                         {ex.categories[1]}
                     </span>
                 ) : <span className="text-slate-300 dark:text-[#475569] text-[11px]">—</span>}
@@ -241,17 +241,17 @@ function ExerciseRow({
                             <StarIcon size={13} fill={inLib ? 'currentColor' : 'none'} />
                         </button>
                         {ex.user_id && (
-                            <button onClick={() => onEdit(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all" title="Edit">
+                            <button onClick={() => onEdit(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all" title="Edit">
                                 <PencilIcon size={13} />
                             </button>
                         )}
                         {showDelete && ex.user_id && (
-                            <button onClick={() => onDelete(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
+                            <button onClick={() => onDelete(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Delete">
                                 <Trash2Icon size={13} />
                             </button>
                         )}
                         {onRemoveFromCollection && (
-                            <button onClick={onRemoveFromCollection} className="p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-red-500 hover:bg-red-50 transition-all" title="Remove from collection">
+                            <button onClick={onRemoveFromCollection} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Remove from collection">
                                 <XIcon size={13} />
                             </button>
                         )}
@@ -456,7 +456,6 @@ export const ExerciseLibraryPage = () => {
 
     const handleAddToCollection = (exId: string, collectionId: string) => {
         addExerciseToCollection.mutate({ collectionId, exerciseId: exId });
-        if (!isInPersonalLibrary(exId)) addToPersonalLibrary(exId);
         showToast('Added to collection', 'success');
     };
 
@@ -475,6 +474,7 @@ export const ExerciseLibraryPage = () => {
             bodyRegion: ex.categories?.[0] || 'Unsorted',
             classification: ex.categories?.[1] || 'Unsorted',
             primaryMuscle: ex.body_parts?.[0] || 'Unsorted',
+            secondaryMuscles: Array.isArray(ex.body_parts) ? ex.body_parts.slice(1) : [],
             posture: ex.options?.posture || 'Unsorted',
             grip: ex.options?.grip || 'Unsorted',
             mechanics: ex.options?.mechanics || 'Unsorted',
@@ -486,6 +486,7 @@ export const ExerciseLibraryPage = () => {
             difficulty: ex.options?.difficulty || '',
             videoUrl: ex.video_url || '',
             description: ex.description || '',
+            tags: Array.isArray(ex.tags) ? ex.tags : [],
         });
         setIsEditLiftModalOpen(true);
     };
@@ -513,6 +514,84 @@ export const ExerciseLibraryPage = () => {
                     <DidYouMeanBanner suggestions={suggestions} onSelect={n => { setLibrarySearch(n); setLibraryPage(1); }} />
                 )}
                 <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
+                    {/* ── Embedded filter + alphabet header ── */}
+                    <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 dark:border-[#1A2D48] shrink-0 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 flex-1 min-w-[160px]">
+                                <SearchIcon size={12} className="text-slate-400 shrink-0" />
+                                <input
+                                    type="text"
+                                    placeholder="Search exercises..."
+                                    value={librarySearch}
+                                    onChange={e => { setLibrarySearch(e.target.value); setLibraryPage(1); setPersonalPage(1); }}
+                                    className="flex-1 bg-transparent text-xs outline-none text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400"
+                                />
+                                {librarySearch && (
+                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]">
+                                        <XIcon size={10} />
+                                    </button>
+                                )}
+                            </div>
+                            <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
+                                <option value="All">All</option>
+                                {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
+                            </CustomSelect>
+                            <CustomSelect value={filterEquipment} onChange={e => { setFilterEquipment(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Equipment">
+                                <option value="All">All</option>
+                                {EQUIPMENT_LIST.filter(e => e !== 'Unsorted').map(e => <option key={e} value={e}>{e}</option>)}
+                            </CustomSelect>
+                            <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
+                                <option value="All">All</option>
+                                {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
+                            </CustomSelect>
+                            <button
+                                onClick={() => setShowMoreFilters(v => !v)}
+                                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
+                            >
+                                <SlidersHorizontalIcon size={11} />
+                                More
+                            </button>
+                            <div className="flex items-center gap-2 ml-auto">
+                                {hasActiveFilters && (
+                                    <button onClick={clearAllFilters} className="flex items-center gap-1 text-[11px] text-rose-500 hover:text-rose-700 font-medium transition-colors">
+                                        <XIcon size={10} /> Clear
+                                    </button>
+                                )}
+                                <span className="text-[11px] text-slate-500 dark:text-[#CBD5E1] border-l border-slate-200 dark:border-[#243A58] pl-2">
+                                    {exercisesLoading ? '...' : `${totalCount.toLocaleString()} exercises`}
+                                </span>
+                            </div>
+                        </div>
+                        {showMoreFilters && (
+                            <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
+                                <CustomSelect value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Region">
+                                    <option value="All">All</option>
+                                    {BODY_REGIONS.filter(r => r !== 'Unsorted').map(r => <option key={r} value={r}>{r}</option>)}
+                                </CustomSelect>
+                                <CustomSelect value={selectedClassification} onChange={e => { setSelectedClassification(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Class">
+                                    <option value="All">All</option>
+                                    {CLASSIFICATIONS.filter(c => c !== 'Unsorted').map(c => <option key={c} value={c}>{c}</option>)}
+                                </CustomSelect>
+                                <CustomSelect value={selectedMuscleGroup} onChange={e => { setSelectedMuscleGroup(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Muscle">
+                                    <option value="All">All</option>
+                                    {MUSCLE_GROUPS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
+                                </CustomSelect>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-1 flex-wrap">
+                            <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
+                                className={`px-1.5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                All
+                            </button>
+                            {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
+                                <button key={l}
+                                    onClick={() => { setAlphabetLetter(alphabetLetter === l ? 'All' : l); setLibraryPage(1); setPersonalPage(1); }}
+                                    className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                    {l}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     <div className="overflow-y-auto flex-1 custom-scrollbar">
                         <table className="w-full text-left border-collapse relative">
                             <ExerciseTableHeader />
@@ -529,7 +608,7 @@ export const ExerciseLibraryPage = () => {
                                         </tr>
                                     ))
                                 ) : filteredExercises.length === 0 ? (
-                                    <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-400 dark:text-[#64748B]">
+                                    <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">
                                         No exercises found{librarySearch ? ` for "${librarySearch}"` : ''}
                                     </td></tr>
                                 ) : filteredExercises.map(ex => (
@@ -557,6 +636,7 @@ export const ExerciseLibraryPage = () => {
                         isInCollection={isInCollection}
                         onAddToCollection={handleAddToCollection}
                         onSelectRelated={ex => setSelectedExercise(ex)}
+                        onEdit={openEditModal}
                     />
                 ) : (
                     <ExerciseDetailEmptyState />
@@ -576,7 +656,7 @@ export const ExerciseLibraryPage = () => {
                     {/* Breadcrumb + collection header */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 shrink-0">
                         <button onClick={() => setActiveCollectionId(null)}
-                            className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#94A3B8] hover:text-indigo-600 dark:hover:text-indigo-300 font-medium transition-colors mb-2">
+                            className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 font-medium transition-colors mb-2">
                             <ArrowLeftIcon size={13} /> Back to My Library
                         </button>
                         <div className="flex items-center gap-3">
@@ -586,9 +666,9 @@ export const ExerciseLibraryPage = () => {
                             <div>
                                 <h3 className={`text-sm font-semibold ${c.text}`}>{activeCollection.name}</h3>
                                 {activeCollection.description && (
-                                    <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] mt-0.5 leading-snug">{activeCollection.description}</p>
+                                    <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 leading-snug">{activeCollection.description}</p>
                                 )}
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">
+                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
                                     {activeCollection.exercise_ids.length} exercise{activeCollection.exercise_ids.length !== 1 ? 's' : ''}
                                 </p>
                             </div>
@@ -604,7 +684,7 @@ export const ExerciseLibraryPage = () => {
                                     {collectionExercises.length === 0 ? (
                                         <tr><td colSpan={6} className="py-12 text-center">
                                             <FolderIcon size={24} className="text-slate-200 dark:text-[#243A58] mx-auto mb-2" />
-                                            <p className="text-sm text-slate-400 dark:text-[#64748B]">This collection is empty</p>
+                                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">This collection is empty</p>
                                             <p className="text-[11px] text-slate-300 dark:text-[#475569] mt-1">Go back and use "Add to Collection" to populate it</p>
                                         </td></tr>
                                     ) : collectionExercises.map(ex => (
@@ -640,15 +720,15 @@ export const ExerciseLibraryPage = () => {
                     {/* Collections strip — compact horizontal row */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-3 py-2.5 shrink-0">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">
                                 My Collections
                                 {collections.length > 0 && (
-                                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] text-[9px]">{collections.length}</span>
+                                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] text-[9px]">{collections.length}</span>
                                 )}
                             </span>
                             <button
                                 onClick={() => setShowNewCollectionModal(true)}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-all"
                             >
                                 <FolderPlusIcon size={10} /> New
                             </button>
@@ -667,14 +747,14 @@ export const ExerciseLibraryPage = () => {
                                             >
                                                 <span className={`w-2 h-2 rounded-full ${c.dot} shrink-0`} />
                                                 <span className={`text-[11px] font-semibold ${c.text} whitespace-nowrap`}>{col.name}</span>
-                                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] whitespace-nowrap">{col.exercise_ids.length}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] whitespace-nowrap">{col.exercise_ids.length}</span>
                                                 <ChevronRightIcon size={10} className="text-slate-300 dark:text-[#475569]" />
                                             </button>
                                             {/* Collection menu */}
                                             <div ref={collectionMenuId === col.id ? menuRef : null} className="absolute top-1 right-1 z-10">
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setCollectionMenuId(collectionMenuId === col.id ? null : col.id); }}
-                                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-[#64748B] transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-all"
                                                 >
                                                     <MoreHorizontalIcon size={11} />
                                                 </button>
@@ -694,7 +774,7 @@ export const ExerciseLibraryPage = () => {
                                                                 deleteCollection.mutate(col.id, { onSuccess: () => showToast(`"${col.name}" deleted`, 'info') });
                                                                 setCollectionMenuId(null);
                                                             }}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                                                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-colors"
                                                         >
                                                             <Trash2Icon size={11} /> Delete
                                                         </button>
@@ -711,7 +791,7 @@ export const ExerciseLibraryPage = () => {
                     {/* All Saved Exercises — primary content */}
                     <div className="flex flex-col flex-1 min-h-0">
                         <div className="flex items-center justify-between mb-1.5 shrink-0 px-0.5">
-                            <h3 className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">
+                            <h3 className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">
                                 All Saved Exercises
                                 {(personalExerciseIds || []).length > 0 && (
                                     <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[9px] font-bold">{(personalExerciseIds || []).length}</span>
@@ -720,7 +800,7 @@ export const ExerciseLibraryPage = () => {
                             {!bulkSelectMode && (personalExerciseIds || []).length > 0 && (
                                 <button
                                     onClick={() => setBulkSelectMode(true)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-indigo-600 dark:text-white bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all"
                                 >
                                     <CheckIcon size={11} /> Add to Collection
                                 </button>
@@ -755,7 +835,7 @@ export const ExerciseLibraryPage = () => {
                                 </Button>
                                 <button
                                     onClick={exitBulkMode}
-                                    className="text-xs text-slate-400 dark:text-[#64748B] hover:text-slate-600 font-medium transition-colors shrink-0"
+                                    className="text-xs text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 font-medium transition-colors shrink-0"
                                 >
                                     Cancel
                                 </button>
@@ -765,9 +845,9 @@ export const ExerciseLibraryPage = () => {
                         {(personalExerciseIds || []).length === 0 ? (
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm py-12 flex flex-col items-center gap-3 flex-1">
                                 <StarIcon size={28} className="text-slate-200 dark:text-[#243A58]" />
-                                <p className="text-sm text-slate-400 dark:text-[#64748B]">Your library is empty</p>
+                                <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">Your library is empty</p>
                                 <p className="text-xs text-slate-300 dark:text-[#475569]">Star exercises from the Exercises tab</p>
-                                <button onClick={() => setLibraryViewMode('exercises')} className="mt-1 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-all">
+                                <button onClick={() => setLibraryViewMode('exercises')} className="mt-1 px-4 py-2 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-all">
                                     Browse Exercises
                                 </button>
                             </div>
@@ -778,7 +858,7 @@ export const ExerciseLibraryPage = () => {
                                         <ExerciseTableHeader showCheckbox={bulkSelectMode} />
                                         <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48] bg-white dark:bg-[#132338]">
                                             {pagedPersonalExercises.length === 0 ? (
-                                                <tr><td colSpan={bulkSelectMode ? 7 : 6} className="py-8 text-center text-sm text-slate-400 dark:text-[#64748B]">No exercises match your filters</td></tr>
+                                                <tr><td colSpan={bulkSelectMode ? 7 : 6} className="py-8 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">No exercises match your filters</td></tr>
                                             ) : pagedPersonalExercises.map(ex => (
                                                 <ExerciseRow
                                                     key={ex.id}
@@ -805,7 +885,7 @@ export const ExerciseLibraryPage = () => {
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3">
                         <div className="flex items-center gap-2 mb-2.5">
                             <ClockIcon size={11} className="text-amber-500" />
-                            <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">Smart Suggestions</h3>
+                            <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Smart Suggestions</h3>
                         </div>
                         {recentNotInPersonal.length === 0 ? (
                             <p className="text-[11px] text-slate-300 dark:text-[#475569] text-center py-3">Recently used exercises will appear here</p>
@@ -816,12 +896,12 @@ export const ExerciseLibraryPage = () => {
                                         <div className="min-w-0 flex-1">
                                             <p className="text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] truncate">{ex.name}</p>
                                             {ex.categories?.[1] && ex.categories[1] !== 'Unsorted' && (
-                                                <p className="text-[10px] text-slate-400 dark:text-[#64748B]">{ex.categories[1]}</p>
+                                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{ex.categories[1]}</p>
                                             )}
                                         </div>
                                         <button
                                             onClick={() => { addToPersonalLibrary(ex.id); showToast(`Added ${ex.name}`, 'success'); }}
-                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all shrink-0"
+                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all shrink-0"
                                         >
                                             <PlusIcon size={10} /> Add
                                         </button>
@@ -832,7 +912,7 @@ export const ExerciseLibraryPage = () => {
                     </div>
 
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3">
-                        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] mb-2.5">Quick Actions</h3>
+                        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] mb-2.5">Quick Actions</h3>
                         <div className="space-y-1.5">
                             <button
                                 onClick={() => setShowNewCollectionModal(true)}
@@ -841,7 +921,7 @@ export const ExerciseLibraryPage = () => {
                                 <FolderPlusIcon size={13} className="text-indigo-500 shrink-0" />
                                 <div>
                                     <p className="text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0]">New Collection</p>
-                                    <p className="text-[10px] text-slate-400 dark:text-[#64748B]">Organise exercises</p>
+                                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Organise exercises</p>
                                 </div>
                             </button>
                             {(personalExerciseIds || []).length > 0 && (
@@ -852,7 +932,7 @@ export const ExerciseLibraryPage = () => {
                                     <CheckIcon size={13} className="text-indigo-500 shrink-0" />
                                     <div>
                                         <p className="text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0]">Add to Collection</p>
-                                        <p className="text-[10px] text-slate-400 dark:text-[#64748B]">Select & batch assign</p>
+                                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Select & batch assign</p>
                                     </div>
                                 </button>
                             )}
@@ -881,13 +961,13 @@ export const ExerciseLibraryPage = () => {
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 <button
                                     onClick={() => { setLibraryViewMode('exercises'); setSelectedExercise(null); }}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'exercises' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'exercises' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                 >
                                     Exercises
                                 </button>
                                 <button
                                     onClick={() => { setLibraryViewMode('myLibrary'); exitBulkMode(); }}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'myLibrary' ? 'bg-white dark:bg-[#132338] text-amber-600 shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'myLibrary' ? 'bg-white dark:bg-[#132338] text-amber-600 shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                 >
                                     <span className="flex items-center gap-1.5">
                                         <StarIcon size={11} fill="currentColor" />
@@ -899,7 +979,7 @@ export const ExerciseLibraryPage = () => {
                                 </button>
                                 <button
                                     onClick={() => setLibraryViewMode('protocols')}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'protocols' ? 'bg-white dark:bg-[#132338] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${libraryViewMode === 'protocols' ? 'bg-white dark:bg-[#132338] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                 >
                                     Protocols
                                 </button>
@@ -909,10 +989,11 @@ export const ExerciseLibraryPage = () => {
                                     setEditingExercise(null);
                                     setNewExercise({
                                         name: '', bodyRegion: 'Unsorted', classification: 'Unsorted',
-                                        primaryMuscle: 'Unsorted', posture: 'Unsorted', grip: 'Unsorted',
+                                        primaryMuscle: 'Unsorted', secondaryMuscles: [],
+                                        posture: 'Unsorted', grip: 'Unsorted',
                                         mechanics: 'Unsorted', execution: 'Unsorted', primaryEquipment: 'Unsorted',
                                         movementPattern: 'Unsorted', forceType: 'Unsorted', cnsDemand: '', difficulty: '',
-                                        videoUrl: '', description: '',
+                                        videoUrl: '', description: '', tags: [],
                                     });
                                     setIsEditLiftModalOpen(true);
                                 }}>
@@ -923,8 +1004,8 @@ export const ExerciseLibraryPage = () => {
                     </div>
                 </div>
 
-                {/* Filter bar — inlined JSX (not a component) to keep dropdowns stable */}
-                {libraryViewMode !== 'protocols' && (
+                {/* Filter bar — only for My Library tab; Exercises tab has filters embedded in its card */}
+                {libraryViewMode === 'myLibrary' && (
                     <div className="bg-white dark:bg-[#132338] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm shrink-0 space-y-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
                             <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 flex-1 min-w-[180px]">
@@ -937,7 +1018,7 @@ export const ExerciseLibraryPage = () => {
                                     className="flex-1 bg-transparent text-xs outline-none text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400"
                                 />
                                 {librarySearch && (
-                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600">
+                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]">
                                         <XIcon size={11} />
                                     </button>
                                 )}
@@ -956,7 +1037,7 @@ export const ExerciseLibraryPage = () => {
                             </CustomSelect>
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
                             >
                                 <SlidersHorizontalIcon size={12} />
                                 More Filters
@@ -967,7 +1048,7 @@ export const ExerciseLibraryPage = () => {
                                         <XIcon size={11} /> Clear
                                     </button>
                                 )}
-                                <span className="text-xs text-slate-400 dark:text-[#64748B] border-l border-slate-200 dark:border-[#243A58] pl-2">
+                                <span className="text-xs text-slate-400 dark:text-[#CBD5E1] border-l border-slate-200 dark:border-[#243A58] pl-2">
                                     {exercisesLoading ? '...' : `${totalCount.toLocaleString()} exercises`}
                                 </span>
                             </div>
@@ -989,17 +1070,17 @@ export const ExerciseLibraryPage = () => {
                             </div>
                         )}
                         <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#64748B] shrink-0">A–Z</span>
+                            <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] shrink-0">A–Z</span>
                             <div className="h-3 w-px bg-slate-200 dark:bg-[#243A58] shrink-0" />
                             <div className="flex flex-wrap gap-0.5">
                                 <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
-                                    className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] hover:bg-indigo-50 border border-slate-200 dark:border-[#243A58]'}`}>
+                                    className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                     All
                                 </button>
                                 {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
                                     <button key={l}
                                         onClick={() => { setAlphabetLetter(alphabetLetter === l ? 'All' : l); setLibraryPage(1); setPersonalPage(1); }}
-                                        className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] hover:bg-indigo-50 border border-slate-200 dark:border-[#243A58]'}`}>
+                                        className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                         {l}
                                     </button>
                                 ))}

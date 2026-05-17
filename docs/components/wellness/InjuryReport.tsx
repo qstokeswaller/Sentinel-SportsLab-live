@@ -65,7 +65,7 @@ const PillRow = ({ options, value, onChange, colorMap }) => (
                     key={val}
                     type="button"
                     onClick={() => onChange(isActive ? undefined : val)}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600 dark:text-[#CBD5E1]'}`}
                 >
                     {label}
                 </button>
@@ -83,7 +83,7 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
                     key={opt}
                     type="button"
                     onClick={() => onChange(toggleMulti(value, opt))}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600 dark:text-[#CBD5E1]'}`}
                 >
                     {opt}
                 </button>
@@ -93,12 +93,12 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
 );
 
 const Label = ({ children }) => (
-    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1.5 block">{children}</label>
+    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1 block">{children}</label>
 );
 
 const SectionCard = ({ title, children }) => (
     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
-        <h5 className="text-sm font-semibold text-slate-700 border-b border-slate-100 pb-3">{title}</h5>
+        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1] border-b border-slate-100 pb-3">{title}</h5>
         {children}
     </div>
 );
@@ -227,7 +227,7 @@ const InjuryReportComponent = () => {
                         <ShieldAlertIcon size={20} />
                     </div>
                     <div>
-                        <h4 className="text-lg font-semibold text-slate-900">Injury Report</h4>
+                        <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Injury Report</h4>
                         <p className="text-[10px] text-slate-500 uppercase tracking-wide">Injury Tracking & Return to Play</p>
                     </div>
                 </div>
@@ -237,13 +237,13 @@ const InjuryReportComponent = () => {
                     <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                         <button
                             onClick={() => setActiveTab('new')}
-                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'new' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'new' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
                             <PlusIcon size={12} /> New Report
                         </button>
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'history' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
                             <HistoryIcon size={12} /> History ({filteredReports.length})
                         </button>
@@ -314,7 +314,7 @@ const InjuryReportComponent = () => {
                                         <Link2Icon size={16} className="text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <div>
-                                        <h5 className="text-sm font-semibold text-slate-700">Share with Physio</h5>
+                                        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Share with Physio</h5>
                                         <p className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">No login required</p>
                                     </div>
                                 </div>
@@ -409,7 +409,7 @@ const InjuryReportComponent = () => {
                                     type="date"
                                     value={form.dateOfInjury}
                                     onChange={e => { patch({ dateOfInjury: e.target.value }); clearError('dateOfInjury'); }}
-                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
+                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
                                 />
                                 {validationErrors.dateOfInjury && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.dateOfInjury}</p>}
                             </div>
@@ -420,7 +420,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Describe how the injury occurred..."
                                     value={form.mechanism}
                                     onChange={e => patch({ mechanism: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-24 resize-none"
+                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-24 resize-none"
                                 />
                             </div>
 
@@ -510,7 +510,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Rehabilitation protocol, exercises, restrictions..."
                                     value={form.treatmentRecommendations}
                                     onChange={e => patch({ treatmentRecommendations: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-24 resize-none"
+                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-24 resize-none"
                                 />
                             </div>
 
@@ -521,7 +521,7 @@ const InjuryReportComponent = () => {
                                         type="date"
                                         value={form.followUpDate}
                                         onChange={e => patch({ followUpDate: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900"
+                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0]"
                                     />
                                 </div>
                                 <div>
@@ -531,7 +531,7 @@ const InjuryReportComponent = () => {
                                         placeholder="e.g. 2-3 weeks"
                                         value={form.expectedTimeOut}
                                         onChange={e => patch({ expectedTimeOut: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium"
+                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium"
                                     />
                                 </div>
                             </div>
@@ -549,7 +549,7 @@ const InjuryReportComponent = () => {
                                                 type="button"
                                                 onClick={() => patch({ returnToPlayPhase: isActive ? undefined : phase })}
                                                 className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'rounded-l-xl' : ''} ${i === RTP_PHASES.length - 1 ? 'rounded-r-xl' : ''}
-                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                                             >
                                                 {phase.split(' - ')[1] || phase}
                                             </button>
@@ -567,7 +567,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Clinical observations, prognosis, additional notes..."
                                     value={form.comments}
                                     onChange={e => patch({ comments: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-32 resize-none"
+                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-32 resize-none"
                                 />
                             </div>
                         </SectionCard>
@@ -622,7 +622,7 @@ const InjuryReportComponent = () => {
                     <div className="lg:col-span-1">
                         <div className="sticky top-5 space-y-5" ref={sectionRefs.bodyMap}>
                             <div className={`bg-white p-6 rounded-xl border shadow-sm space-y-4 ${validationErrors.bodyMap ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'}`}>
-                                <h5 className="text-sm font-semibold text-slate-700 border-b border-slate-100 pb-3">Body Map — Injury Location <span className="text-red-400">*</span></h5>
+                                <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1] border-b border-slate-100 pb-3">Body Map — Injury Location <span className="text-red-400">*</span></h5>
                                 {validationErrors.bodyMap && <p className="text-red-500 text-[10px] font-semibold pl-1">{validationErrors.bodyMap}</p>}
                                 <BodyMapSelector
                                     value={form.areas}
@@ -633,7 +633,7 @@ const InjuryReportComponent = () => {
                                         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Selected Areas</p>
                                         {form.areas.map(a => (
                                             <div key={a.area} className="flex items-center justify-between text-xs">
-                                                <span className="font-semibold text-slate-700 capitalize">{a.area.replace(/_/g, ' ')}</span>
+                                                <span className="font-semibold text-slate-700 dark:text-[#CBD5E1] capitalize">{a.area.replace(/_/g, ' ')}</span>
                                                 <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${a.severity === 3 ? 'bg-red-100 text-red-600' : a.severity === 2 ? 'bg-orange-100 text-orange-600' : 'bg-yellow-100 text-yellow-600'}`}>
                                                     {a.severity === 3 ? 'Severe' : a.severity === 2 ? 'Moderate' : 'Mild'}
                                                 </span>
@@ -667,14 +667,14 @@ const InjuryReportComponent = () => {
                             <tbody>
                                 {filteredReports.map(report => (
                                     <tr key={report.id} className="border-b border-slate-100 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
-                                        <td className="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap">
+                                        <td className="px-4 py-3.5 font-semibold text-slate-700 dark:text-[#CBD5E1] whitespace-nowrap">
                                             {new Date(report.dateOfInjury).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </td>
-                                        <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap">{report.athleteName}</td>
-                                        <td className="px-4 py-3.5 text-slate-600 capitalize">
+                                        <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-[#E2E8F0] whitespace-nowrap">{report.athleteName}</td>
+                                        <td className="px-4 py-3.5 text-slate-600 dark:text-[#CBD5E1] capitalize">
                                             {report.areas.map(a => a.area.replace(/_/g, ' ')).join(', ')}
                                         </td>
-                                        <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap">{report.classification || '—'}</td>
+                                        <td className="px-4 py-3.5 text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap">{report.classification || '—'}</td>
                                         <td className="px-4 py-3.5">
                                             {report.severityGrade ? (
                                                 <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.severityGrade === 3 ? 'bg-red-100 text-red-600' : report.severityGrade === 2 ? 'bg-orange-100 text-orange-600' : 'bg-yellow-100 text-yellow-600'}`}>
@@ -692,7 +692,7 @@ const InjuryReportComponent = () => {
                                         <td className="px-4 py-3.5 text-slate-500 text-[10px] whitespace-nowrap">{report.returnToPlayPhase || '—'}</td>
                                         <td className="px-4 py-3.5">
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 hover:text-indigo-700 dark:text-indigo-400 transition-all" title="Edit">
+                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 text-indigo-500 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-white transition-all" title="Edit">
                                                     <PencilIcon size={13} />
                                                 </button>
                                                 <button onClick={() => handleDelete(report.id)} className="p-1.5 rounded-lg bg-slate-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all" title="Delete">

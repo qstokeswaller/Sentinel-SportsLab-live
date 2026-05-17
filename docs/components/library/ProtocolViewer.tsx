@@ -15,7 +15,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     'Monitoring': 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40',
     'Performance': 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
     'Prehab': 'bg-purple-50 text-purple-600 border-purple-100 dark:border-purple-800/40',
-    'Custom': 'bg-slate-50 text-slate-600 border-slate-200',
+    'Custom': 'bg-slate-50 text-slate-600 dark:text-[#CBD5E1] border-slate-200',
 };
 
 const formatDate = (iso: string) =>
@@ -51,21 +51,21 @@ const renderTextLines = (lines: TextLine[]) => {
 
         if (line.type === 'heading1') {
             elements.push(
-                <h2 key={line.id} className="text-xl font-bold text-slate-900 mt-5 mb-2 first:mt-0">
+                <h2 key={line.id} className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0] mt-5 mb-2 first:mt-0">
                     {renderBold(line.content)}
                 </h2>
             );
             i++;
         } else if (line.type === 'heading2') {
             elements.push(
-                <h3 key={line.id} className="text-base font-semibold text-slate-800 mt-4 mb-1.5 first:mt-0">
+                <h3 key={line.id} className="text-base font-semibold text-slate-800 dark:text-[#E2E8F0] mt-4 mb-1.5 first:mt-0">
                     {renderBold(line.content)}
                 </h3>
             );
             i++;
         } else if (line.type === 'paragraph') {
             elements.push(
-                <p key={line.id} className="text-sm text-slate-700 leading-relaxed mb-2">
+                <p key={line.id} className="text-sm text-slate-700 dark:text-[#CBD5E1] leading-relaxed mb-2">
                     {renderBold(line.content)}
                 </p>
             );
@@ -83,7 +83,7 @@ const renderTextLines = (lines: TextLine[]) => {
             elements.push(
                 <ul key={items[0].id} className="list-disc list-inside space-y-1 mb-2 ml-1">
                     {items.filter(it => it.content).map(it => (
-                        <li key={it.id} className="text-sm text-slate-700">{renderBold(it.content)}</li>
+                        <li key={it.id} className="text-sm text-slate-700 dark:text-[#CBD5E1]">{renderBold(it.content)}</li>
                     ))}
                 </ul>
             );
@@ -97,7 +97,7 @@ const renderTextLines = (lines: TextLine[]) => {
             elements.push(
                 <ol key={items[0].id} className="list-decimal list-inside space-y-1 mb-2 ml-1">
                     {items.filter(it => it.content).map(it => (
-                        <li key={it.id} className="text-sm text-slate-700">{renderBold(it.content)}</li>
+                        <li key={it.id} className="text-sm text-slate-700 dark:text-[#CBD5E1]">{renderBold(it.content)}</li>
                     ))}
                 </ol>
             );
@@ -139,7 +139,7 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
                                     {idx + 1}.
                                 </span>
                                 <div className="min-w-0">
-                                    <p className="text-sm font-medium text-slate-800">{ex.name}</p>
+                                    <p className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0]">{ex.name}</p>
                                     {ex.notes && (
                                         <p className="text-xs text-slate-500 mt-0.5">{ex.notes}</p>
                                     )}
@@ -162,7 +162,7 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
                         <FileIcon size={14} className="text-rose-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800">{block.pdfTitle || block.pdfFileName}</p>
+                        <p className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{block.pdfTitle || block.pdfFileName}</p>
                         <p className="text-xs text-slate-400">{block.pdfFileName} — {formatFileSize(block.pdfFileSize || 0)}</p>
                     </div>
                     <button
@@ -209,13 +209,13 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                 <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
                     >
                         <ArrowLeftIcon size={16} />
                     </button>
 
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-slate-900 truncate">{protocol.name}</h3>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0] truncate">{protocol.name}</h3>
                         <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${catColor}`}>
                                 <TagIcon size={9} />
@@ -236,19 +236,19 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                     <div className="flex items-center gap-1.5 shrink-0">
                         <button
                             onClick={onShare}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <Link2Icon size={12} /> Share Link
                         </button>
                         <button
                             onClick={handleSaveAsPdf}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <PrinterIcon size={12} /> Save as PDF
                         </button>
                         <button
                             onClick={onEdit}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                         >
                             <PencilIcon size={12} /> Edit
                         </button>
@@ -278,7 +278,7 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
                     <div className="flex items-center gap-2">
                         <PaperclipIcon size={14} className="text-slate-500" />
-                        <h4 className="text-sm font-semibold text-slate-700">Attachments</h4>
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Attachments</h4>
                         <span className="text-xs text-slate-400">{protocol.attachments.length} file{protocol.attachments.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="space-y-2">
@@ -286,12 +286,12 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                             <div key={att.id} className="flex items-center gap-3 bg-slate-50 rounded-lg border border-slate-200 p-3">
                                 <FileIcon size={16} className="text-rose-500 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-slate-800 truncate">{att.title || att.fileName}</p>
+                                    <p className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0] truncate">{att.title || att.fileName}</p>
                                     <p className="text-xs text-slate-400">{att.fileName} — {formatFileSize(att.fileSize)}</p>
                                 </div>
                                 <button
                                     onClick={() => window.open(att.url, '_blank')}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                                 >
                                     <ExternalLinkIcon size={12} /> Open
                                 </button>

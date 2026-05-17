@@ -85,12 +85,12 @@ const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 1
             <table className="w-full text-[10px]">
                 <thead>
                     <tr>
-                        <th className="sticky left-0 bg-white z-10 px-3 py-2 text-left text-[9px] font-semibold text-slate-400 uppercase tracking-wide w-32 min-w-[128px]">Athlete</th>
+                        <th className="sticky left-0 bg-white dark:bg-[#132338] z-10 px-3 py-2 text-left text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-32 min-w-[128px]">Athlete</th>
                         {dateColumns.map(d => {
                             const dayNum = new Date(d + 'T12:00:00').getDate();
                             const dayName = new Date(d + 'T12:00:00').toLocaleDateString('en', { weekday: 'narrow' });
                             return (
-                                <th key={d} className="px-0.5 py-2 text-center text-[8px] text-slate-400 min-w-[28px]">
+                                <th key={d} className="px-0.5 py-2 text-center text-[8px] text-slate-400 dark:text-[#CBD5E1] min-w-[28px]">
                                     <div>{dayName}</div>
                                     <div className="font-bold">{dayNum}</div>
                                 </th>
@@ -103,7 +103,7 @@ const WellnessHeatmap: React.FC<HeatmapProps> = ({ athletes, responses, days = 1
                         const athleteData = heatData.get(athlete.id);
                         return (
                             <tr key={athlete.id} className={idx % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}>
-                                <td className="sticky left-0 bg-white z-10 px-3 py-1.5 font-medium text-slate-700 truncate max-w-[128px]">
+                                <td className="sticky left-0 bg-white dark:bg-[#132338] z-10 px-3 py-1.5 font-medium text-slate-700 dark:text-[#E2E8F0] truncate max-w-[128px]">
                                     {athlete.name}
                                 </td>
                                 {dateColumns.map(d => {

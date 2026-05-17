@@ -301,7 +301,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-[800] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 border-t border-t-indigo-600">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 flex items-center gap-2">
+                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
                         <FlaskConicalIcon size={24} className="text-indigo-600 dark:text-indigo-300" />
                         Performance Lab
                     </h3>
@@ -329,11 +329,11 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Weight (kg/lbs)</label>
-                                    <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="100" />
+                                    <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="100" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Reps</label>
-                                    <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="5" />
+                                    <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="5" />
                                 </div>
                             </div>
                             <div className="bg-slate-900 rounded-xl p-6 text-white text-center">
@@ -365,14 +365,14 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                         </optgroup>
                                     ))}
                                 </CustomSelect>
-                                <button onClick={() => handleSave('1rm')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 transition-colors">Save 1RM</button>
+                                <button onClick={() => handleSave('1rm')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-500 transition-colors">Save 1RM</button>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'dsi' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 rounded-xl text-xs text-indigo-900 leading-relaxed">
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 rounded-xl text-xs text-indigo-900 leading-relaxed">
                                 <strong className="block uppercase tracking-wide mb-1 text-indigo-600 dark:text-indigo-300">Dynamic Strength Index</strong>
                                 <p className="mb-3">Measures the difference between an athlete's ballistic peak force (e.g. CMJ) and isometric peak force (e.g. IMTP).</p>
                                 <div className="flex gap-2 items-center">
@@ -397,11 +397,11 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Peak Force: Ballistic (N)</label>
-                                    <input type="number" value={dsiBallistic} onChange={(e) => setDsiBallistic(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-cyan-500/20" placeholder="e.g. 1800" />
+                                    <input type="number" value={dsiBallistic} onChange={(e) => setDsiBallistic(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-cyan-500/20" placeholder="e.g. 1800" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Peak Force: Isometric (N)</label>
-                                    <input type="number" value={dsiIsometric} onChange={(e) => setDsiIsometric(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 3200" />
+                                    <input type="number" value={dsiIsometric} onChange={(e) => setDsiIsometric(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 3200" />
                                 </div>
                             </div>
                             {dsiScore && (
@@ -432,7 +432,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                     <option value="">Select Athlete to Save Score...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </CustomSelect>
-                                <button onClick={() => handleSave('dsi')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 transition-colors">Save DSI Profile</button>
+                                <button onClick={() => handleSave('dsi')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-500 transition-colors">Save DSI Profile</button>
                             </div>
                         </div>
                     )}
@@ -446,11 +446,11 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Jump Height (m)</label>
-                                    <input type="number" step="0.01" value={rsiHeight} onChange={(e) => setRsiHeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.35" />
+                                    <input type="number" step="0.01" value={rsiHeight} onChange={(e) => setRsiHeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.35" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Contact Time (s)</label>
-                                    <input type="number" step="0.001" value={rsiContactTime} onChange={(e) => setRsiContactTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.18" />
+                                    <input type="number" step="0.001" value={rsiContactTime} onChange={(e) => setRsiContactTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.18" />
                                 </div>
                             </div>
                             {rsiScore && (
@@ -481,7 +481,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         const targetWatts = watts * (pct / 100);
                         return (
                             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 pb-2">
-                                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 rounded-xl">
+                                <div className="p-4 bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 rounded-xl">
                                     <p className="text-[10px] font-semibold uppercase text-indigo-600 dark:text-indigo-300 tracking-wide">Wattbike MAP Calculator</p>
                                     <p className="text-[10px] font-medium text-indigo-400 mt-0.5">Convert your MAP into RPM targets for specific Fan settings.</p>
                                 </div>
@@ -494,7 +494,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                             value={mapWatts}
                                             onChange={(e) => setMapWatts(e.target.value)}
                                             placeholder="e.g. 300"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -505,7 +505,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                             max="200"
                                             value={targetPct}
                                             onChange={(e) => setTargetPct(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20"
                                         />
                                     </div>
                                 </div>
@@ -515,7 +515,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                         <button
                                             key={m}
                                             onClick={() => setBikeModel(m)}
-                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                         >
                                             {m}
                                         </button>
@@ -540,8 +540,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                     {activeTab === 'hamstring' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             <div className="flex bg-slate-100 p-1 rounded-xl">
-                                <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Split (L/R)</button>
-                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Average</button>
+                                <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Split (L/R)</button>
+                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Average</button>
                             </div>
                             {hamAssessmentMode === 'split' ? (
                                 <div className="space-y-6">
@@ -552,15 +552,15 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                     <div className="grid grid-cols-3 gap-4">
                                         <div>
                                             <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Left (N)</label>
-                                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="350" />
+                                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="350" />
                                         </div>
                                         <div>
                                             <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Right (N)</label>
-                                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="340" />
+                                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="340" />
                                         </div>
                                         <div>
                                             <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">BW (kg)</label>
-                                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="85" />
+                                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="85" />
                                         </div>
                                     </div>
                                     {hamResults && (
@@ -581,8 +581,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                         <p>Input average force across both limbs and body weight to calculate relative strength.</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
+                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
+                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
                                     </div>
                                     {hamResults && (
                                         <div className="bg-slate-900 rounded-xl p-6 text-white space-y-4">
@@ -614,7 +614,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                     <option value="">Select Athlete to Save Score...</option>
                                     {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </CustomSelect>
-                                <button onClick={() => handleSave('hamstring')} className="w-full py-3 bg-orange-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-orange-700 transition-colors">Save Assessment</button>
+                                <button onClick={() => handleSave('hamstring')} className="w-full py-3 bg-orange-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-orange-500 transition-colors">Save Assessment</button>
                             </div>
                         </div>
                     )}

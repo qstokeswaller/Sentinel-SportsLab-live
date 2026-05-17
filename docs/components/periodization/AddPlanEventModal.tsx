@@ -5,7 +5,7 @@ import { X, Trash2, Trophy, FlaskConical, Star, Plane, Heart, Tent, Flag, Stetho
 import { EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide mb-1';
+const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const EVENT_TYPE_ICONS = {
     competition: Trophy,
@@ -127,7 +127,7 @@ export const AddPlanEventModal = () => {
                                         <span className="p-1.5 rounded-lg" style={{ backgroundColor: color + '20' }}>
                                             <Icon size={12} style={{ color }} />
                                         </span>
-                                        <span className={`text-[8px] font-semibold text-center leading-tight ${isActive ? '' : 'text-slate-500 dark:text-[#94A3B8]'}`}
+                                        <span className={`text-[8px] font-semibold text-center leading-tight ${isActive ? '' : 'text-slate-500 dark:text-[#CBD5E1]'}`}
                                             style={{ color: isActive ? color : undefined }}>
                                             {EVENT_TYPE_LABELS[et].split(' / ')[0]}
                                         </span>
@@ -153,7 +153,7 @@ export const AddPlanEventModal = () => {
                         <div>
                             <label className={LABEL}>
                                 End Date
-                                <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional)</span>
+                                <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional)</span>
                             </label>
                             <input type="date" className={INPUT} value={endDate}
                                 min={date || undefined}
@@ -170,7 +170,7 @@ export const AddPlanEventModal = () => {
                                     className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                                         importance === v
                                             ? 'bg-indigo-600 text-white border-indigo-600'
-                                            : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
+                                            : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
                                     }`}>
                                     {l}
                                 </button>
@@ -182,7 +182,7 @@ export const AddPlanEventModal = () => {
                     <div>
                         <label className={LABEL}>
                             Location
-                            <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional)</span>
+                            <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional)</span>
                         </label>
                         <div className="relative">
                             <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -195,7 +195,7 @@ export const AddPlanEventModal = () => {
                     <div>
                         <label className={LABEL}>
                             Notes
-                            <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional)</span>
+                            <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional)</span>
                         </label>
                         <textarea className={`${INPUT} resize-none`} rows={2}
                             placeholder="Any relevant context, preparation notes…"
@@ -206,7 +206,7 @@ export const AddPlanEventModal = () => {
                     <div>
                         <label className={LABEL}>
                             Custom Colour
-                            <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional — overrides type default)</span>
+                            <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional — overrides type default)</span>
                         </label>
                         <div className="flex items-center gap-3">
                             <div className="relative shrink-0">
@@ -216,12 +216,12 @@ export const AddPlanEventModal = () => {
                             </div>
                             {customColor && (
                                 <button type="button" onClick={() => setCustomColor('')}
-                                    className="text-[10px] text-slate-400 hover:text-slate-600 underline">
+                                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] underline">
                                     Reset to type default
                                 </button>
                             )}
                             {!customColor && (
-                                <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                                     Using {EVENT_TYPE_LABELS[eventType]} default
                                 </span>
                             )}
@@ -238,11 +238,11 @@ export const AddPlanEventModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700">
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={!canSubmit}
-                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40 transition-colors">
                             {isEditing ? 'Update Event' : 'Add Event'}
                         </button>
                     </div>

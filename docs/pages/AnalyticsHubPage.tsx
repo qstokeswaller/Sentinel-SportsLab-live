@@ -99,13 +99,13 @@ export const AnalyticsHubPage = () => {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
                         <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Analytics Hub</h2>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Diagnostic monitoring terminals for elite high-performance units.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Diagnostic monitoring terminals for elite high-performance units.</p>
                     </div>
                     {/* Dual subject selector */}
                     <div className="flex items-center gap-2 flex-wrap" data-tour="analytics-selector">
                         {/* Team/Squad */}
                         <div className="space-y-0.5">
-                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest flex items-center gap-1">
+                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest flex items-center gap-1">
                                 <UsersIcon size={9} /> Team / Squad
                             </p>
                             <CustomSelect
@@ -125,7 +125,7 @@ export const AnalyticsHubPage = () => {
                         </div>
                         {/* Athlete */}
                         <div className="space-y-0.5">
-                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest flex items-center gap-1">
+                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest flex items-center gap-1">
                                 <UserIcon size={9} /> Athlete
                             </p>
                             <CustomSelect
@@ -147,7 +147,7 @@ export const AnalyticsHubPage = () => {
                         {hasFilter && (
                             <button
                                 onClick={() => { setTeamScope(''); setSelectedAnalyticsAthleteId(null); }}
-                                className="mt-4 p-1.5 rounded-lg text-slate-400 dark:text-[#64748B] hover:text-slate-600 dark:hover:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                                className="mt-4 p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                                 title="Clear selection"
                             >
                                 <XIcon size={13} />
@@ -189,7 +189,7 @@ export const AnalyticsHubPage = () => {
                     </div>
                     <div className="flex flex-col items-center py-3">
                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading analytics modules...</span>
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading analytics modules...</span>
                     </div>
                 </div>
             ) : (
@@ -207,18 +207,18 @@ export const AnalyticsHubPage = () => {
                         >
                             {!selectedAnalyticsAthleteId && (
                                 <div className="absolute top-3 right-3">
-                                    <div className="bg-slate-100 dark:bg-[#1A2D48] p-1.5 rounded-lg text-slate-400 dark:text-[#64748B]">
+                                    <div className="bg-slate-100 dark:bg-[#1A2D48] p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1]">
                                         <LockIcon size={13} />
                                     </div>
                                 </div>
                             )}
                             <div className="flex items-start gap-4 h-full">
-                                <div className={`w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 ${selectedAnalyticsAthleteId ? 'group-hover:bg-indigo-600 group-hover:text-white' : ''} flex items-center justify-center transition-all shrink-0`}>
+                                <div className={`w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 ${selectedAnalyticsAthleteId ? 'group-hover:bg-indigo-600 group-hover:text-white' : ''} flex items-center justify-center transition-all shrink-0`}>
                                     <mod.icon size={20} />
                                 </div>
                                 <div className="flex flex-col justify-center h-full">
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1 leading-tight">{mod.title}</h3>
-                                    <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{mod.description}</p>
+                                    <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{mod.description}</p>
                                 </div>
                             </div>
                         </button>
@@ -233,7 +233,7 @@ export const AnalyticsHubPage = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setActiveAnalyticsModule(null)}
-                        className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-[#64748B] hover:text-slate-900 transition-all"
+                        className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-all"
                     >
                         <ArrowLeftIcon size={14} /> Hub
                     </button>
@@ -244,12 +244,12 @@ export const AnalyticsHubPage = () => {
                         </div>
                         <div>
                             <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{modules.find(m => m.id === activeAnalyticsModule)?.title}</h3>
-                            <p className="text-[10px] text-slate-400 dark:text-[#64748B]">{selectedSubject?.name} · {isTeamSelection ? 'Squad' : 'Individual'}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{selectedSubject?.name} · {isTeamSelection ? 'Squad' : 'Individual'}</p>
                         </div>
                     </div>
                 </div>
                 <div data-tour="analytics-dates" className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-1.5 border border-slate-200 dark:border-[#243A58]">
-                    <CalendarIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
+                    <CalendarIcon size={13} className="text-slate-400 dark:text-[#CBD5E1]" />
                     <input type="date" value={analyticsStartDate} onChange={(e) => setAnalyticsStartDate(e.target.value)} className="text-xs text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer" />
                     <span className="text-slate-300 dark:text-[#475569] text-xs">–</span>
                     <input type="date" value={analyticsEndDate} onChange={(e) => setAnalyticsEndDate(e.target.value)} className="text-xs text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer" />
@@ -261,7 +261,7 @@ export const AnalyticsHubPage = () => {
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl min-h-[200px]">
                             <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {selectedSubject?.name} baseline & trend data...</span>
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedSubject?.name} baseline & trend data...</span>
                         </div>
                     )}
                     <BaselineTrendTerminal
@@ -277,7 +277,7 @@ export const AnalyticsHubPage = () => {
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl min-h-[200px]">
                             <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {selectedSubject?.name} performance intelligence...</span>
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedSubject?.name} performance intelligence...</span>
                         </div>
                     )}
                     <PerformanceIntelligenceTerminal
@@ -299,7 +299,7 @@ export const AnalyticsHubPage = () => {
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl min-h-[200px]">
                             <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {selectedSubject?.name} scenario model...</span>
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedSubject?.name} scenario model...</span>
                         </div>
                     )}
                     <ScenarioModellingTerminal

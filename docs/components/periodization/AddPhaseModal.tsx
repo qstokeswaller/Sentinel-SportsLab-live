@@ -6,7 +6,7 @@ import { PHASE_COLOR_PRESETS } from '../../utils/periodizationUtils';
 import { formatDateShort } from '../../utils/periodizationUtils';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide mb-1';
+const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const PRESET_FOCUSES = [
     'General Preparation', 'Specific Preparation', 'Pre-Competition',
@@ -121,7 +121,7 @@ export const AddPhaseModal = () => {
                     <div>
                         <label className={LABEL}>
                             Training Focuses
-                            <span className="text-slate-400 dark:text-[#64748B] normal-case ml-1">(first selected = primary)</span>
+                            <span className="text-slate-400 dark:text-[#CBD5E1] normal-case ml-1">(first selected = primary)</span>
                         </label>
 
                         {/* Preset chips */}
@@ -174,7 +174,7 @@ export const AddPhaseModal = () => {
                             />
                             <button type="button" onClick={addCustomFocus}
                                 disabled={!customFocusInput.trim()}
-                                className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-40">
+                                className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40">
                                 <Plus size={12} />
                             </button>
                         </div>
@@ -192,7 +192,7 @@ export const AddPhaseModal = () => {
                                 <input type="date" className={INPUT} value={startDate} onChange={e => setStartDate(e.target.value)} />
                             </div>
                             <div>
-                                <label className={LABEL}>End Date <span className="text-slate-400 dark:text-[#64748B] normal-case">(optional)</span></label>
+                                <label className={LABEL}>End Date <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
                                 <input type="date" className={INPUT} value={endDate} onChange={e => setEndDate(e.target.value)} />
                             </div>
                         </div>
@@ -200,13 +200,13 @@ export const AddPhaseModal = () => {
                         {/* Existing phase dates reference */}
                         {otherPhases.length > 0 && (
                             <div className="mt-2.5 bg-slate-50 dark:bg-[#0F1C30]/50 rounded-lg px-3 py-2.5 border border-slate-100 dark:border-[#243A58]">
-                                <p className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Other phases</p>
+                                <p className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">Other phases</p>
                                 <div className="space-y-1.5">
                                     {otherPhases.map(ph => (
                                         <div key={ph.id} className="flex items-center gap-2">
                                             <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ph.color || '#6366f1' }} />
                                             <span className="text-[10px] font-medium text-slate-600 dark:text-[#CBD5E1] truncate flex-1">{ph.name}</span>
-                                            <span className="text-[10px] text-slate-400 dark:text-[#64748B] shrink-0 tabular-nums">
+                                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] shrink-0 tabular-nums">
                                                 {ph.startDate ? formatDateShort(ph.startDate) : '—'}
                                                 {ph.endDate ? ` – ${formatDateShort(ph.endDate)}` : ' →'}
                                             </span>
@@ -231,7 +231,7 @@ export const AddPhaseModal = () => {
 
                     {/* Goals */}
                     <div>
-                        <label className={LABEL}>Goals & Objectives <span className="text-slate-400 dark:text-[#64748B] normal-case">(optional)</span></label>
+                        <label className={LABEL}>Goals & Objectives <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
                         <textarea className={INPUT + ' resize-none'} rows={3}
                             placeholder="e.g. Build aerobic base, improve strength foundation..."
                             value={goals} onChange={e => setGoals(e.target.value)} />
@@ -239,7 +239,7 @@ export const AddPhaseModal = () => {
 
                     {/* Notes */}
                     <div>
-                        <label className={LABEL}>Notes <span className="text-slate-400 dark:text-[#64748B] normal-case">(optional)</span></label>
+                        <label className={LABEL}>Notes <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
                         <textarea className={INPUT + ' resize-none'} rows={2}
                             placeholder="Any additional notes for this phase..."
                             value={notes} onChange={e => setNotes(e.target.value)} />
@@ -254,9 +254,9 @@ export const AddPhaseModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700">Cancel</button>
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">Cancel</button>
                         <button onClick={handleSubmit} disabled={!name.trim() || !startDate}
-                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-40">
+                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40">
                             {isEditing ? 'Update' : 'Add Phase'}
                         </button>
                     </div>

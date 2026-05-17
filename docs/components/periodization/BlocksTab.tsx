@@ -31,8 +31,8 @@ function getWeeks(startStr, endStr) {
 
 // ── Block status ───────────────────────────────────────────────────────────────
 function getBlockStatus(block, today) {
-    if (!block.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
-    if (block.endDate && block.endDate < today) return { label: 'Completed', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (!block.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
+    if (block.endDate && block.endDate < today) return { label: 'Completed', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
     if (block.startDate <= today && (!block.endDate || block.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
     return { label: 'Upcoming', cls: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40' };
 }
@@ -48,7 +48,7 @@ const INTENSITY_CLS = {
 function IntensityBadge({ value }) {
     if (!value) return <span className="text-slate-300 dark:text-[#475569] text-[9px]">—</span>;
     return (
-        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INTENSITY_CLS[value] || 'bg-slate-100 text-slate-600'}`}>
+        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INTENSITY_CLS[value] || 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]'}`}>
             {value}
         </span>
     );
@@ -60,7 +60,7 @@ function StatCard({ icon, label, value, valueClass = 'text-slate-800 dark:text-[
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex items-center gap-3">
             <div className="text-slate-300 dark:text-[#475569] shrink-0">{icon}</div>
             <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">{label}</p>
                 <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
             </div>
         </div>
@@ -79,12 +79,12 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={11} /></button>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (
                     <div key={label} className="flex gap-2">
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide shrink-0 w-14">{label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
                     </div>
                 ))}
@@ -179,15 +179,15 @@ export const BlocksTab = ({ plan }) => {
         return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
                 <Layers size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8] mb-1">No training blocks yet</p>
-                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">
+                <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1] mb-1">No training blocks yet</p>
+                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mb-4">
                     {plan.phases.length === 0
                         ? 'Add phases first, then add training blocks (periods) within each phase.'
                         : 'Add training blocks within your phases to see them here.'}
                 </p>
                 <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
                     disabled={plan.phases.length === 0}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     + Add First Block
                 </button>
             </div>
@@ -209,8 +209,8 @@ export const BlocksTab = ({ plan }) => {
             {ganttDates.start && weeks.length > 0 && (
                 <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Plan Timeline</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                             {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
                         </span>
                     </div>
@@ -218,14 +218,14 @@ export const BlocksTab = ({ plan }) => {
                         <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
                             <div style={{ height: '35px' }} />
                             <div className="flex items-center" style={{ height: '20px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Phases</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
                             </div>
                             <div className="flex items-center" style={{ height: '24px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Blocks</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center" style={{ height: '14px' }}>
-                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Events</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
                                 </div>
                             )}
                         </div>
@@ -235,7 +235,7 @@ export const BlocksTab = ({ plan }) => {
                             {/* Month labels */}
                             <div className="relative mb-0.5" style={{ height: '13px' }}>
                                 {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
                                         style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
                                         {mg.label}
                                     </div>
@@ -262,7 +262,7 @@ export const BlocksTab = ({ plan }) => {
                                         <div key={ph.id} title={ph.name}
                                             className="absolute h-full rounded flex items-center px-2 overflow-hidden"
                                             style={{ left: l + 'px', width: w + 'px', backgroundColor: (ph.color || '#6366f1') + '20', border: `1px solid ${ph.color || '#6366f1'}60` }}>
-                                            <span className="text-[8px] font-semibold text-slate-500 dark:text-[#94A3B8] truncate">{ph.name}</span>
+                                            <span className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] truncate">{ph.name}</span>
                                         </div>
                                     );
                                 })}
@@ -333,7 +333,7 @@ export const BlocksTab = ({ plan }) => {
             {/* ── Blocks table ─────────────────────────────────────────────── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
-                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Training Blocks</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Training Blocks</h4>
                     <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
                         className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">
                         <Plus size={11} /> Add Block
@@ -354,7 +354,7 @@ export const BlocksTab = ({ plan }) => {
                         { h: 'Status',    cls: '' },
                         { h: '',          cls: '' },
                     ].map(({ h, cls }) => (
-                        <span key={h || 'actions'} className={`text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide ${cls}`}>{h}</span>
+                        <span key={h || 'actions'} className={`text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide ${cls}`}>{h}</span>
                     ))}
                 </div>
 
@@ -379,7 +379,7 @@ export const BlocksTab = ({ plan }) => {
                                 {/* Phase */}
                                 <div className="flex items-center gap-1.5 min-w-0">
                                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: block.phaseColor || '#6366f1' }} />
-                                    <span className="text-[10px] text-slate-500 dark:text-[#94A3B8] truncate">{block.phaseName}</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1] truncate">{block.phaseName}</span>
                                 </div>
 
                                 {/* Block name + label */}
@@ -387,10 +387,10 @@ export const BlocksTab = ({ plan }) => {
                                     <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: block.color || '#6366f1' }} />
                                     <div className="min-w-0">
                                         <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate">
-                                            {block.name}{block.label ? <span className="font-normal text-slate-500 dark:text-[#94A3B8]"> · {block.label}</span> : ''}
+                                            {block.name}{block.label ? <span className="font-normal text-slate-500 dark:text-[#CBD5E1]"> · {block.label}</span> : ''}
                                         </p>
                                         {block.goals && (
-                                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] truncate">{block.goals}</p>
+                                            <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] truncate">{block.goals}</p>
                                         )}
                                     </div>
                                 </div>
@@ -401,7 +401,7 @@ export const BlocksTab = ({ plan }) => {
                                 </div>
 
                                 {/* Dates */}
-                                <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">
+                                <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
                                     {block.startDate ? formatDateShort(block.startDate) : '—'}
                                     {block.endDate ? ` — ${formatDateShort(block.endDate)}` : ''}
                                 </div>
@@ -427,7 +427,7 @@ export const BlocksTab = ({ plan }) => {
                                 <div className="relative" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setOpenMenuKey(openMenuKey === key ? null : key)}
-                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 transition-colors">
+                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                         <MoreHorizontal size={13} />
                                     </button>
                                     {openMenuKey === key && (
@@ -475,7 +475,7 @@ export const BlocksTab = ({ plan }) => {
                                     <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
                                         {selectedBlock.name}{selectedBlock.label ? ` · ${selectedBlock.label}` : ''}
                                     </span>
-                                    <span className="text-xs text-slate-400 dark:text-[#64748B] ml-2">
+                                    <span className="text-xs text-slate-400 dark:text-[#CBD5E1] ml-2">
                                         {formatDateShort(selectedBlock.startDate)}
                                         {selectedBlock.endDate ? ` — ${formatDateShort(selectedBlock.endDate)}` : ''}
                                         {' · '}{selectedBlock.blockType}
@@ -485,7 +485,7 @@ export const BlocksTab = ({ plan }) => {
                             </div>
                             <button
                                 onClick={() => { setEditingPlanBlock({ ...selectedBlock, _phaseId: selectedBlock.phaseId }); setIsPlanBlockModalOpenNew(true); }}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
+                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
                                 <PencilIcon size={12} /> Edit Block
                             </button>
                         </div>
@@ -496,7 +496,7 @@ export const BlocksTab = ({ plan }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-2">
                                     <BookOpen size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Goals & Objectives</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Goals & Objectives</p>
                                 </div>
                                 {selectedBlock.goals ? (
                                     <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{selectedBlock.goals}</p>
@@ -506,11 +506,11 @@ export const BlocksTab = ({ plan }) => {
                                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#243A58]">
                                     <div className="flex items-center gap-3">
                                         <div>
-                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">Intensity</p>
+                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">Intensity</p>
                                             <IntensityBadge value={selectedBlock.intensityLevel} />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">Volume</p>
+                                            <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">Volume</p>
                                             <IntensityBadge value={selectedBlock.volumeLevel} />
                                         </div>
                                     </div>
@@ -521,7 +521,7 @@ export const BlocksTab = ({ plan }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-3">
                                     <BarChart2 size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Planning Summary</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Planning Summary</p>
                                 </div>
                                 <div className="space-y-2.5">
                                     {[
@@ -529,7 +529,7 @@ export const BlocksTab = ({ plan }) => {
                                         { label: 'Sessions',    value: totalSessions },
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center justify-between">
-                                            <span className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{label}</span>
+                                            <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
                                             <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{value}</span>
                                         </div>
                                     ))}
@@ -540,14 +540,14 @@ export const BlocksTab = ({ plan }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-3">
                                     <Target size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Block Modalities</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Block Modalities</p>
                                 </div>
                                 {modEntries.length > 0 ? (
                                     <div className="space-y-1.5">
                                         {modEntries.map(([mod, desc]) => (
                                             <div key={mod} className="flex items-start gap-2">
                                                 <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] shrink-0">{mod}</span>
-                                                {desc && <span className="text-[9px] text-slate-400 dark:text-[#64748B] leading-tight">{desc}</span>}
+                                                {desc && <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] leading-tight">{desc}</span>}
                                             </div>
                                         ))}
                                     </div>

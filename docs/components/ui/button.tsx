@@ -7,11 +7,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-indigo-600 text-white hover:bg-indigo-700 rounded-full',
-        secondary: 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] rounded-lg',
-        ghost: 'text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 rounded-lg',
-        destructive: 'bg-rose-500 text-white hover:bg-rose-600 rounded-full',
-        outline: 'border border-indigo-200 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded-lg',
+        default: 'bg-indigo-600 dark:bg-indigo-600 text-white hover:bg-indigo-500 dark:hover:bg-indigo-500 rounded-full',
+        secondary: 'border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58] rounded-lg',
+        ghost: 'text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0] rounded-lg',
+        destructive: 'bg-rose-600 dark:bg-rose-600 text-white hover:bg-rose-500 dark:hover:bg-rose-500 rounded-full',
+        outline: 'border border-indigo-200 dark:border-indigo-600 text-indigo-600 dark:text-white hover:bg-indigo-50 dark:hover:bg-indigo-500 dark:bg-indigo-600 rounded-lg',
       },
       size: {
         default: 'h-9 px-5 py-2',

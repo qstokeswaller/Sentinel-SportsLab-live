@@ -26,7 +26,7 @@ function getWeeks(startStr, endStr) {
 
 const STATUS_STYLES = {
     active:   'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40',
-    draft:    'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]',
+    draft:    'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]',
     upcoming: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40',
     at_risk:  'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40',
 };
@@ -43,12 +43,12 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={11} /></button>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (
                     <div key={label} className="flex gap-2">
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide shrink-0 w-14">{label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
                     </div>
                 ))}
@@ -149,7 +149,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                             <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0]">{plan.name}</h3>
                             <div className="flex items-center gap-2 mt-1.5">
                                 {plan.targetType === 'Team' ? <Users size={12} className="text-slate-400" /> : <User size={12} className="text-slate-400" />}
-                                <span className="text-xs text-slate-500 dark:text-[#94A3B8]">{getTargetName()}</span>
+                                <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{getTargetName()}</span>
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border ${plan.targetType === 'Team' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/40' : 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-100 dark:border-violet-800/40'}`}>
                                     {plan.targetType}
                                 </span>
@@ -166,21 +166,21 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                     <div className="grid grid-cols-3 md:grid-cols-6 gap-3 pt-4 border-t border-slate-100 dark:border-[#243A58]">
                         {STATS.map(({ label, value, sub }) => (
                             <div key={label}>
-                                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
+                                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">{label}</p>
                                 <p className="text-2xl font-bold text-slate-800 dark:text-[#E2E8F0] leading-none">{value}</p>
-                                <p className="text-[9px] text-slate-400 dark:text-[#64748B] mt-0.5">{sub}</p>
+                                <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{sub}</p>
                             </div>
                         ))}
                     </div>
 
                     {/* Date + created */}
                     <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100 dark:border-[#243A58]">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#94A3B8]">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#CBD5E1]">
                             <CalendarDays size={12} />
                             <span>{formatDateShort(plan.startDate)}{plan.endDate ? ` — ${formatDateShort(plan.endDate)}` : ' — Open-ended'}</span>
                         </div>
                         {plan.createdAt && (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-[#64748B]">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-[#CBD5E1]">
                                 <Clock size={12} />
                                 <span>Created {formatDateShort(plan.createdAt.split('T')[0])}</span>
                             </div>
@@ -203,7 +203,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
 
                     <div className="flex flex-wrap gap-1.5 mb-3 min-h-[24px]">
                         {(plan.modalities || []).length === 0 && (
-                            <span className="text-[10px] text-slate-400 dark:text-[#64748B] italic">No modalities set</span>
+                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] italic">No modalities set</span>
                         )}
                         {(plan.modalities || []).map(mod => (
                             <span key={mod} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58]">
@@ -225,7 +225,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                     onChange={e => setNewModality(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && addModality()}
                                 />
-                                <button onClick={() => addModality()} className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-medium">Add</button>
+                                <button onClick={() => addModality()} className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-xs font-medium">Add</button>
                             </div>
                             <div className="flex flex-wrap gap-1">
                                 {DEFAULT_MODALITY_PRESETS.filter(p => !(plan.modalities || []).includes(p)).map(preset => (
@@ -244,8 +244,8 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
             {ganttDates.start && weeks.length > 0 && (
                 <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Plan Timeline</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                             {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
                         </span>
                     </div>
@@ -253,14 +253,14 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                         <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
                             <div style={{ height: '39px' }} />
                             <div className="flex items-center" style={{ height: '24px', marginBottom: '8px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Phases</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
                             </div>
                             <div className="flex items-center" style={{ height: '20px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Blocks</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center" style={{ height: '14px' }}>
-                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Events</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
                                 </div>
                             )}
                         </div>
@@ -269,7 +269,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                             {/* Month labels */}
                             <div className="relative mb-0.5" style={{ height: '13px' }}>
                                 {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
                                         style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
                                         {mg.label}
                                     </div>
@@ -374,7 +374,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
             {/* Phases summary */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
-                    <h4 className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Phases</h4>
+                    <h4 className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Phases</h4>
                     <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
                         className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">
                         <Plus size={11} /> Add Phase
@@ -384,10 +384,10 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                 {plan.phases.length === 0 ? (
                     <div className="p-10 text-center">
                         <Target size={28} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                        <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8] mb-1">No phases yet</p>
-                        <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">Add your first phase to begin structuring the plan.</p>
+                        <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1] mb-1">No phases yet</p>
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mb-4">Add your first phase to begin structuring the plan.</p>
                         <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors">
                             + Add First Phase
                         </button>
                     </div>
@@ -398,7 +398,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                 <div className="w-1.5 h-10 rounded-full shrink-0" style={{ backgroundColor: phase.color }} />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{phase.name}</p>
-                                    <p className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                                         {formatDateShort(phase.startDate)}{phase.endDate ? ` — ${formatDateShort(phase.endDate)}` : ''}
                                         {' · '}{phase.blocks.length} block{phase.blocks.length !== 1 ? 's' : ''}
                                         {phase.blocks.length > 0 && ' · ' + phase.blocks.reduce((s, b) => s + (b.weeks || []).length, 0) + ' weeks'}

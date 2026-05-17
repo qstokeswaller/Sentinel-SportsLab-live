@@ -54,15 +54,15 @@ export const ShareProtocolPopover: React.FC<ShareProtocolPopoverProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center">
                             <Link2 size={15} className="text-indigo-600 dark:text-indigo-300" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900">Share Protocol</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Share Protocol</h3>
                             <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{protocolName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>
@@ -82,7 +82,7 @@ export const ShareProtocolPopover: React.FC<ShareProtocolPopoverProps> = ({
                 <div className="flex flex-col gap-2.5">
                     <button
                         onClick={handleCopy}
-                        className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-indigo-600 dark:bg-indigo-600 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-indigo-500 dark:hover:bg-indigo-500 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
                         {copied ? <><CheckCircle2 size={14} /> Copied!</> : <><Copy size={14} /> Copy Link</>}
                     </button>

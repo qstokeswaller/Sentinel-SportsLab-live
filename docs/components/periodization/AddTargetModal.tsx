@@ -6,7 +6,7 @@ import { METRIC_CATALOGUE } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide mb-1';
+const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const OPERATOR_OPTIONS = [
     { value: '>=',         label: '≥  Greater than or equal' },
@@ -168,7 +168,7 @@ export const AddTargetModal = () => {
                                     className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                                         scope === v
                                             ? 'bg-indigo-600 text-white border-indigo-600'
-                                            : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
+                                            : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
                                     }`}>
                                     {l}
                                 </button>
@@ -188,7 +188,7 @@ export const AddTargetModal = () => {
                             </div>
                             {scope === 'block' && phaseId && (
                                 <div>
-                                    <label className={LABEL}>Block <span className="normal-case text-slate-400 dark:text-[#64748B]">(optional)</span></label>
+                                    <label className={LABEL}>Block <span className="normal-case text-slate-400 dark:text-[#CBD5E1]">(optional)</span></label>
                                     <CustomSelect value={blockId} onChange={e => setBlockId(e.target.value)} variant="form">
                                         <option value="">All blocks (phase-level)</option>
                                         {phaseBlocks.map(b => (
@@ -209,7 +209,7 @@ export const AddTargetModal = () => {
                                     className={`py-1.5 px-2 rounded-lg text-[8px] font-bold border transition-all text-center leading-tight ${
                                         category === key
                                             ? 'text-white border-transparent'
-                                            : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-current'
+                                            : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-current'
                                     }`}
                                     style={category === key ? { backgroundColor: def.color, borderColor: def.color } : {}}>
                                     {def.label}
@@ -229,7 +229,7 @@ export const AddTargetModal = () => {
                             ))}
                         </CustomSelect>
                         {catDef && (
-                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] mt-1">
+                            <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-1">
                                 Source: <span className="font-semibold">{catDef.source}</span>
                             </p>
                         )}
@@ -261,7 +261,7 @@ export const AddTargetModal = () => {
                             )}
                         </div>
                         {operator === 'between' && (
-                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] mt-1">
+                            <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-1">
                                 Useful for ACWR (e.g. 0.8 — 1.3), BMI ranges, and load windows.
                             </p>
                         )}
@@ -271,7 +271,7 @@ export const AddTargetModal = () => {
                     <div>
                         <label className={LABEL}>
                             Current Value
-                            <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional — enables progress tracking)</span>
+                            <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional — enables progress tracking)</span>
                         </label>
                         <input
                             className={INPUT}
@@ -301,7 +301,7 @@ export const AddTargetModal = () => {
                     <div>
                         <label className={LABEL}>
                             Notes
-                            <span className="normal-case font-normal text-slate-400 dark:text-[#64748B] ml-1">(optional)</span>
+                            <span className="normal-case font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">(optional)</span>
                         </label>
                         <textarea className={`${INPUT} resize-none`} rows={2}
                             placeholder="Testing protocol, rationale, context…"
@@ -319,11 +319,11 @@ export const AddTargetModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700">
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={!canSubmit}
-                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40 transition-colors">
                             {isEditing ? 'Update Target' : 'Add Target'}
                         </button>
                     </div>

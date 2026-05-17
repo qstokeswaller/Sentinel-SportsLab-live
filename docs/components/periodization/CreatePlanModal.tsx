@@ -6,10 +6,10 @@ import { DEFAULT_MODALITY_PRESETS } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide mb-1';
+const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const STATUS_OPTIONS = [
-    { key: 'draft',    label: 'Draft',    cls: 'border-slate-300 text-slate-600 bg-slate-50 dark:bg-[#1A2D48] dark:text-[#94A3B8]' },
+    { key: 'draft',    label: 'Draft',    cls: 'border-slate-300 text-slate-600 bg-slate-50 dark:bg-[#1A2D48] dark:text-[#CBD5E1]' },
     { key: 'upcoming', label: 'Upcoming', cls: 'border-blue-300 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' },
     { key: 'active',   label: 'Active',   cls: 'border-green-300 text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' },
     { key: 'at_risk',  label: 'At Risk',  cls: 'border-red-300 text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' },
@@ -71,7 +71,7 @@ export const CreatePlanModal = () => {
                         <div className="grid grid-cols-4 gap-2">
                             {STATUS_OPTIONS.map(opt => (
                                 <button key={opt.key} onClick={() => setStatus(opt.key)}
-                                    className={`px-2 py-1.5 rounded-lg border-2 text-[11px] font-semibold transition-all ${status === opt.key ? opt.cls + ' border-current' : 'border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] bg-white dark:bg-[#132338]'}`}>
+                                    className={`px-2 py-1.5 rounded-lg border-2 text-[11px] font-semibold transition-all ${status === opt.key ? opt.cls + ' border-current' : 'border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] bg-white dark:bg-[#132338]'}`}>
                                     {opt.label}
                                 </button>
                             ))}
@@ -84,7 +84,7 @@ export const CreatePlanModal = () => {
                         <div className="flex gap-2 mb-2">
                             {['Team', 'Individual'].map(t => (
                                 <button key={t} onClick={() => { setTargetType(t); setTargetId(''); }}
-                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${targetType === t ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#132338] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}>
+                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${targetType === t ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#132338] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}>
                                     {t === 'Team' ? <Users size={13} /> : <User size={13} />} {t}
                                 </button>
                             ))}
@@ -140,9 +140,9 @@ export const CreatePlanModal = () => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/30">
-                    <button onClick={() => setIsCreatePlanModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                    <button onClick={() => setIsCreatePlanModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] transition-colors">Cancel</button>
                     <button onClick={handleSubmit} disabled={!name.trim()}
-                        className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                         Create Plan
                     </button>
                 </div>

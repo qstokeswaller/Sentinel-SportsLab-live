@@ -32,15 +32,15 @@ export const DeleteExerciseModal = ({ exercise, isOpen, onClose, showToast }: De
 
   return (
     <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-sm shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
         <div className="px-5 py-5 text-center space-y-4">
-          <div className="w-12 h-12 bg-red-50 rounded-full mx-auto flex items-center justify-center">
-            <AlertTriangleIcon size={22} className="text-red-500" />
+          <div className="w-12 h-12 bg-red-50 dark:bg-rose-900/20 rounded-full mx-auto flex items-center justify-center">
+            <AlertTriangleIcon size={22} className="text-red-500 dark:text-rose-400" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-slate-900 mb-1">Delete Exercise</h3>
-            <p className="text-sm text-slate-500">
-              Are you sure you want to delete <span className="font-semibold text-slate-700">{exercise.name}</span>? This cannot be undone.
+            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1">Delete Exercise</h3>
+            <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">
+              Are you sure you want to delete <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{exercise.name}</span>? This cannot be undone.
             </p>
           </div>
           <div className="flex items-center justify-center gap-2 pt-2">

@@ -1021,19 +1021,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const getSessionTypeColor = (phase) => {
         const map = {
-            'Strength': 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-700',
+            'Strength': 'bg-indigo-50 dark:bg-indigo-600 border-indigo-200 dark:border-indigo-800/50 text-indigo-700',
             'Hypertrophy': 'bg-purple-50 border-purple-200 dark:border-purple-800/50 text-purple-700',
             'Power': 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700',
             'Speed': 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700',
             'Conditioning': 'bg-cyan-50 border-cyan-200 text-cyan-700',
             'GPP': 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700',
-            'Technical': 'bg-slate-100 border-slate-200 text-slate-700',
+            'Technical': 'bg-slate-100 border-slate-200 text-slate-700 dark:text-[#CBD5E1]',
             'Tactical': 'bg-slate-800 border-slate-900 text-slate-100',
             'Recovery': 'bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-900/40 text-sky-600',
             'Rehab': 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700',
             'Competition': 'bg-rose-600 border-rose-700 text-white',
             'Match Prep': 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700',
-            'Maintenance': 'bg-slate-100 border-slate-200 text-slate-600',
+            'Maintenance': 'bg-slate-100 border-slate-200 text-slate-600 dark:text-[#CBD5E1]',
             'Tempo': 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50 text-sky-700'
         };
         return map[phase] || 'bg-slate-50 border-slate-100 text-slate-500';
@@ -1056,14 +1056,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         name: '',
         bodyRegion: 'Unsorted',
         classification: 'Strength',
+        primaryMuscle: 'Unsorted',
+        secondaryMuscles: [],
         posture: 'Standing',
         grip: 'Neutral',
         mechanics: 'Compound',
         execution: 'Continuous',
         primaryEquipment: 'Bodyweight',
         targetMuscle: 'Full Body',
+        movementPattern: 'Unsorted',
+        forceType: 'Unsorted',
+        cnsDemand: '',
+        difficulty: '',
         videoUrl: '',
-        description: ''
+        description: '',
+        tags: [],
     });
 
     const [editingExercise, setEditingExercise] = useState(null);

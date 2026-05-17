@@ -247,7 +247,7 @@ const PublicWorkoutView: React.FC = () => {
                 {(data.tags ?? []).length > 0 && (
                     <div className="max-w-3xl mx-auto px-4 mt-3 flex flex-wrap gap-1.5">
                         {data.tags.map((t: string) => (
-                            <span key={t} className="px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded-md text-[10px] font-semibold">{t}</span>
+                            <span key={t} className="px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-md text-[10px] font-semibold">{t}</span>
                         ))}
                     </div>
                 )}
@@ -372,7 +372,7 @@ const PublicWorkoutView: React.FC = () => {
                             <h1 className="text-base font-bold text-slate-900">{data.name}</h1>
                             <div className="flex items-center gap-2 mt-0.5">
                                 {data.training_phase && (
-                                    <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{data.training_phase}</span>
+                                    <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-semibold">{data.training_phase}</span>
                                 )}
                                 {data.load && (
                                     <span className="text-[10px] text-slate-400 font-medium">{data.load} Load</span>

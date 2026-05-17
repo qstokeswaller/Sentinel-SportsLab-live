@@ -109,13 +109,13 @@ const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSess
             <table className="w-full" style={{ minWidth: `${Math.max(640, (cols.length + 1) * 110)}px` }}>
                 <thead>
                     <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
-                        <th className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0F1C30] px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide whitespace-nowrap min-w-[180px] border-r border-slate-200 dark:border-[#243A58] text-left">Athlete</th>
+                        <th className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0F1C30] px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide whitespace-nowrap min-w-[180px] border-r border-slate-200 dark:border-[#243A58] text-left">Athlete</th>
                         {cols.map(k => (
-                            <th key={k} className="group px-3 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide whitespace-nowrap text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">
+                            <th key={k} className="group px-3 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide whitespace-nowrap text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">
                                 <div className="flex items-center justify-center gap-1">
                                     <span className="truncate max-w-[130px]" title={colLabel(k)}>{colLabel(k)}</span>
                                     <button onClick={() => onHideCol(k)} title="Hide column"
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] hover:text-slate-600">
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600">
                                         <EyeOffIcon size={10} />
                                     </button>
                                 </div>
@@ -134,7 +134,7 @@ const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSess
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{r.matchedName || r.playerName}</span>
                                                 {playerNum && (
-                                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B]">#{playerNum}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1]">#{playerNum}</span>
                                                 )}
                                             </div>
                                             <span className={`block text-[9px] font-bold uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400' : 'text-emerald-500'}`}>
@@ -150,7 +150,7 @@ const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSess
                         );
                     })}
                     <tr className="bg-slate-50/80 border-t-2 border-slate-200 dark:border-[#243A58] font-semibold">
-                        <td className="sticky left-0 z-10 bg-slate-100 dark:bg-[#1A2D48] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8] whitespace-nowrap border-r border-slate-200 dark:border-[#243A58] text-left">Squad Avg</td>
+                        <td className="sticky left-0 z-10 bg-slate-100 dark:bg-[#1A2D48] px-4 py-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] whitespace-nowrap border-r border-slate-200 dark:border-[#243A58] text-left">Squad Avg</td>
                         {cols.map(k => (
                             <td key={k} className="px-3 py-2.5 text-sm font-semibold text-slate-700 dark:text-[#E2E8F0] whitespace-nowrap tabular-nums text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">{avgs[k]}</td>
                         ))}
@@ -187,8 +187,8 @@ const GpsDateRangeView = React.memo(({ records, cols, colLabel, onHideCol, categ
 
     const CAT_COLORS: Record<string, string> = {
         match: 'bg-red-50 text-red-600 border-red-200 dark:border-red-900/50',
-        recovery: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50',
-        training: 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50',
+        recovery: 'bg-emerald-50 dark:bg-[#1A2D48] text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-[#243A58]',
+        training: 'bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white border-indigo-200 dark:border-indigo-600',
     };
 
     return (
@@ -196,8 +196,8 @@ const GpsDateRangeView = React.memo(({ records, cols, colLabel, onHideCol, categ
             <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{dateGroups.length} sessions · {records.length} athlete records</p>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setExpandedDates(new Set())} className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Collapse All</button>
-                    <button onClick={() => setExpandedDates(new Set(dateGroups))} className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Expand All</button>
+                    <button onClick={() => setExpandedDates(new Set())} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Collapse All</button>
+                    <button onClick={() => setExpandedDates(new Set(dateGroups))} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Expand All</button>
                 </div>
             </div>
             {dateGroups.map((date, idx) => {
@@ -218,7 +218,7 @@ const GpsDateRangeView = React.memo(({ records, cols, colLabel, onHideCol, categ
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{fmtDate(date)}</h4>
-                                    <p className="text-[10px] text-slate-400 dark:text-[#64748B]">{dateRows.length} athletes</p>
+                                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{dateRows.length} athletes</p>
                                 </div>
                             </button>
                             {/* Session type dropdown */}
@@ -679,7 +679,7 @@ export const ReportingHubPage = () => {
                     <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
                         {['Team', 'Individual'].map(m => (
                             <button key={m} onClick={() => setHrReportViewMode(m)}
-                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                 {m} View
                             </button>
                         ))}
@@ -699,7 +699,7 @@ export const ReportingHubPage = () => {
                         </CustomSelect>
                     )}
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] px-4 py-2 rounded-xl border border-slate-200 dark:border-[#243A58]">
-                        <CalendarIcon size={14} className="text-slate-400 dark:text-[#64748B]" />
+                        <CalendarIcon size={14} className="text-slate-400 dark:text-[#CBD5E1]" />
                         <input type="date" value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })}
                             className="bg-transparent text-xs font-bold text-slate-700 dark:text-[#E2E8F0] outline-none uppercase w-24" />
                         <span className="text-slate-300 dark:text-[#475569]">-</span>
@@ -708,11 +708,11 @@ export const ReportingHubPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <input ref={hrFileRef} type="file" accept=".csv" className="hidden" onChange={handleHrFileUpload} />
-                        <button onClick={() => hrFileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-semibold uppercase tracking-wide hover:bg-indigo-700 transition-all">
+                        <button onClick={() => hrFileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-semibold uppercase tracking-wide hover:bg-indigo-500 transition-all">
                             <UploadIcon size={13} /> Import CSV
                         </button>
                         {safeHrData.length > 0 && (
-                            <button onClick={handleClearHrData} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] rounded-lg text-[10px] font-semibold hover:bg-red-50 hover:text-red-500 transition-all">
+                            <button onClick={handleClearHrData} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold hover:bg-red-50 hover:text-red-500 transition-all">
                                 <Trash2Icon size={12} /> Clear
                             </button>
                         )}
@@ -732,14 +732,14 @@ export const ReportingHubPage = () => {
                     <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-6 text-center space-y-3">
                         <HeartPulseIcon size={32} className="mx-auto text-slate-300 dark:text-[#475569]" />
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">Import Heart Rate Data</h4>
-                        <p className="text-xs text-slate-400 dark:text-[#64748B] max-w-md mx-auto">Upload a CSV file from your HR monitoring system (Polar, Garmin, Catapult, FirstBeat, etc). Supported columns:</p>
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1] max-w-md mx-auto">Upload a CSV file from your HR monitoring system (Polar, Garmin, Catapult, FirstBeat, etc). Supported columns:</p>
                         <div className="flex flex-wrap justify-center gap-1.5 mt-2">
                             {['date', 'session', 'athlete', 'avg_hr', 'max_hr', 'min_hr', 'duration', 'trimp', 'calories', 'z1-z5', 'recovery_hr'].map(c => (
                                 <span key={c} className="px-2 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded text-[10px] font-mono text-slate-600 dark:text-[#CBD5E1]">{c}</span>
                             ))}
                         </div>
-                        <p className="text-[10px] text-slate-400 dark:text-[#64748B]">Minimum required: <strong>avg_hr</strong> or <strong>max_hr</strong>. All other columns are optional.</p>
-                        <button onClick={() => hrFileRef.current?.click()} className="mt-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all">
+                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Minimum required: <strong>avg_hr</strong> or <strong>max_hr</strong>. All other columns are optional.</p>
+                        <button onClick={() => hrFileRef.current?.click()} className="mt-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-all">
                             <UploadIcon size={14} className="inline mr-1.5" /> Choose CSV File
                         </button>
                     </div>
@@ -750,31 +750,31 @@ export const ReportingHubPage = () => {
                     <>
                         {/* KPI Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-indigo-200 dark:border-indigo-800/50 transition-colors">
-                                <div className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Avg Session HR</div>
-                                <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{avgSessionHr} <span className="text-sm font-normal text-slate-400 dark:text-[#64748B]">BPM</span></div>
+                            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-indigo-200 dark:border-indigo-600 transition-colors">
+                                <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Avg Session HR</div>
+                                <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{avgSessionHr} <span className="text-sm font-normal text-slate-400 dark:text-[#CBD5E1]">BPM</span></div>
                                 <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden"><div className="h-full bg-indigo-600 rounded-full" style={{ width: `${Math.min((avgSessionHr / 200) * 100, 100)}%` }} /></div>
                             </div>
-                            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-indigo-200 dark:border-indigo-800/50 transition-colors">
-                                <div className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Peak HR (Period)</div>
-                                <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{peakHr} <span className="text-sm font-normal text-slate-400 dark:text-[#64748B]">BPM</span></div>
+                            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-indigo-200 dark:border-indigo-600 transition-colors">
+                                <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Peak HR (Period)</div>
+                                <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{peakHr} <span className="text-sm font-normal text-slate-400 dark:text-[#CBD5E1]">BPM</span></div>
                                 <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden"><div className="h-full bg-rose-500 rounded-full" style={{ width: `${Math.min((peakHr / 220) * 100, 100)}%` }} /></div>
                             </div>
                             <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-emerald-200 dark:border-emerald-800/50 transition-colors">
-                                <div className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">{avgRecoveryHr > 0 ? 'Avg Recovery HR' : 'Total Sessions'}</div>
+                                <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{avgRecoveryHr > 0 ? 'Avg Recovery HR' : 'Total Sessions'}</div>
                                 {avgRecoveryHr > 0
                                     ? <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{avgRecoveryHr} <span className="text-sm font-normal text-emerald-300">BPM</span></div>
                                     : <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{totalSessions}</div>
                                 }
-                                <div className="text-xs text-slate-400 dark:text-[#64748B]">{avgRecoveryHr > 0 ? 'Post-session 2min recovery' : `In selected date range`}</div>
+                                <div className="text-xs text-slate-400 dark:text-[#CBD5E1]">{avgRecoveryHr > 0 ? 'Post-session 2min recovery' : `In selected date range`}</div>
                             </div>
                             <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2 hover:border-amber-200 dark:border-amber-800/50 transition-colors">
-                                <div className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">{avgTrimp > 0 ? 'Avg TRIMP' : 'Total Sessions'}</div>
+                                <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{avgTrimp > 0 ? 'Avg TRIMP' : 'Total Sessions'}</div>
                                 {avgTrimp > 0
                                     ? <div className="text-3xl font-bold text-amber-600">{avgTrimp} <span className="text-sm font-normal text-amber-300">AU</span></div>
                                     : <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{totalSessions}</div>
                                 }
-                                <div className="text-xs text-slate-400 dark:text-[#64748B]">{avgTrimp > 0 ? 'Training impulse per session' : 'Across period'}</div>
+                                <div className="text-xs text-slate-400 dark:text-[#CBD5E1]">{avgTrimp > 0 ? 'Training impulse per session' : 'Across period'}</div>
                             </div>
                         </div>
 
@@ -783,8 +783,8 @@ export const ReportingHubPage = () => {
                             <div className="flex justify-between items-center">
                                 <h4 className="text-base font-semibold text-slate-800 dark:text-[#E2E8F0]">Session Load Analysis</h4>
                                 <div className="flex gap-4">
-                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-xs text-slate-400 dark:text-[#64748B]">Avg HR</span></div>
-                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-300" /><span className="text-xs text-slate-400 dark:text-[#64748B]">Max HR</span></div>
+                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-xs text-slate-400 dark:text-[#CBD5E1]">Avg HR</span></div>
+                                    <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-300" /><span className="text-xs text-slate-400 dark:text-[#CBD5E1]">Max HR</span></div>
                                 </div>
                             </div>
                             <div className="h-64 flex items-end gap-1 px-2 overflow-x-auto">
@@ -801,7 +801,7 @@ export const ReportingHubPage = () => {
                                             </div>
                                         </div>
                                         <div className="w-full text-center">
-                                            <div className="text-[8px] font-black uppercase text-slate-400 dark:text-[#64748B] truncate">{d.date.slice(5)}</div>
+                                            <div className="text-[8px] font-black uppercase text-slate-400 dark:text-[#CBD5E1] truncate">{d.date.slice(5)}</div>
                                             <div className="text-[7px] font-bold uppercase text-indigo-300 truncate">{d.session}</div>
                                         </div>
                                     </div>
@@ -820,13 +820,13 @@ export const ReportingHubPage = () => {
                                             const pct = totalZoneTime > 0 ? (val / totalZoneTime) * 100 : 0;
                                             return (
                                                 <div key={z.zone} className="flex items-center gap-3">
-                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] w-6">{z.zone}</span>
-                                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B] w-16">{z.label}</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] w-6">{z.zone}</span>
+                                                    <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] w-16">{z.label}</span>
                                                     <div className="flex-1 h-3 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
                                                         <div className={`h-full ${z.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
                                                     </div>
                                                     <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] w-10 text-right">{Math.round(pct)}%</span>
-                                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B] w-12 text-right">{Math.round(val)}m</span>
+                                                    <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] w-12 text-right">{Math.round(val)}m</span>
                                                 </div>
                                             );
                                         })}
@@ -838,8 +838,8 @@ export const ReportingHubPage = () => {
                                             const pct = totalSessions > 0 ? (count / totalSessions) * 100 : 0;
                                             return (
                                                 <div key={z.zone} className="flex items-center gap-3">
-                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] w-6">{z.zone}</span>
-                                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B] w-16">{z.label}</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] w-6">{z.zone}</span>
+                                                    <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] w-16">{z.label}</span>
                                                     <div className="flex-1 h-3 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
                                                         <div className={`h-full ${z.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
                                                     </div>
@@ -847,7 +847,7 @@ export const ReportingHubPage = () => {
                                                 </div>
                                             );
                                         })}
-                                        <p className="text-[9px] text-slate-400 dark:text-[#64748B] italic">Based on avg HR per session. Import z1–z5 columns for time-in-zone breakdown.</p>
+                                        <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] italic">Based on avg HR per session. Import z1–z5 columns for time-in-zone breakdown.</p>
                                     </div>
                                 )}
                             </div>
@@ -857,7 +857,7 @@ export const ReportingHubPage = () => {
                                 <div className="max-h-64 overflow-y-auto -mx-1">
                                     <table className="w-full text-xs">
                                         <thead className="sticky top-0 bg-white dark:bg-[#132338]">
-                                            <tr className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide border-b border-slate-100 dark:border-[#1A2D48]">
+                                            <tr className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide border-b border-slate-100 dark:border-[#1A2D48]">
                                                 <th className="text-left py-2 px-2">Date</th>
                                                 <th className="text-left py-2 px-2">Session</th>
                                                 {hrReportViewMode === 'Team' && <th className="text-left py-2 px-2">Athlete</th>}
@@ -874,7 +874,7 @@ export const ReportingHubPage = () => {
                                                     <tr key={d.id || i} className="border-b border-slate-50 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                                         <td className="py-2 px-2 text-slate-600 dark:text-[#CBD5E1] font-medium">{d.date}</td>
                                                         <td className="py-2 px-2 text-slate-700 dark:text-[#E2E8F0] font-semibold">{d.session}</td>
-                                                        {hrReportViewMode === 'Team' && <td className="py-2 px-2 text-slate-500 dark:text-[#94A3B8]">{d.athlete || '—'}</td>}
+                                                        {hrReportViewMode === 'Team' && <td className="py-2 px-2 text-slate-500 dark:text-[#CBD5E1]">{d.athlete || '—'}</td>}
                                                         <td className="py-2 px-2 text-right font-bold text-indigo-600 dark:text-indigo-300">{d.avgHr}</td>
                                                         <td className="py-2 px-2 text-right font-bold text-slate-700 dark:text-[#E2E8F0]">{d.maxHr || '—'}</td>
                                                         <td className="py-2 px-2 text-right"><span className={`px-1.5 py-0.5 rounded text-[9px] font-bold text-white ${zDef?.color || 'bg-slate-400'}`}>{d.zone}</span></td>
@@ -1059,7 +1059,7 @@ export const ReportingHubPage = () => {
         'Chest': 'bg-rose-100 text-rose-700', 'Back': 'bg-sky-100 text-sky-700', 'Shoulders': 'bg-amber-100 text-amber-700',
         'Biceps': 'bg-cyan-100 text-cyan-700', 'Triceps': 'bg-violet-100 text-violet-700', 'Quadriceps': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
         'Hamstrings': 'bg-lime-100 text-lime-700', 'Glutes': 'bg-pink-100 text-pink-700', 'Calves': 'bg-teal-100 text-teal-700',
-        'Abdominals': 'bg-orange-100 text-orange-700', 'Forearms': 'bg-stone-100 text-stone-600', 'Trapezius': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
+        'Abdominals': 'bg-orange-100 text-orange-700', 'Forearms': 'bg-stone-100 text-stone-600', 'Trapezius': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
         'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700', 'Adductors': 'bg-blue-100 text-blue-700', 'Abductors': 'bg-purple-100 text-purple-700',
         'Shins': 'bg-green-100 text-green-700',
     };
@@ -1067,7 +1067,7 @@ export const ReportingHubPage = () => {
         'Upper Body': '#6366f1', 'Lower Body': '#10b981', 'Core': '#f59e0b', 'Full Body': '#a855f7',
     };
     const REGION_BG: Record<string, string> = {
-        'Upper Body': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700', 'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
+        'Upper Body': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700', 'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
         'Core': 'bg-amber-100 text-amber-700', 'Full Body': 'bg-purple-100 text-purple-700',
     };
     // Map body parts → regions
@@ -1157,7 +1157,7 @@ export const ReportingHubPage = () => {
     const TrackingTrendArrow = ({ value }: { value: number }) => {
         if (value > 2) return <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold"><ArrowUpIcon size={12} />+{value}%</span>;
         if (value < -2) return <span className="flex items-center gap-0.5 text-rose-600 text-xs font-bold"><ArrowDownIcon size={12} />{value}%</span>;
-        return <span className="flex items-center gap-0.5 text-slate-400 dark:text-[#64748B] text-xs font-bold"><MinusIcon size={12} />0%</span>;
+        return <span className="flex items-center gap-0.5 text-slate-400 dark:text-[#CBD5E1] text-xs font-bold"><MinusIcon size={12} />0%</span>;
     };
 
     // (trackingMedalColors removed — leaderboard replaced with load distribution)
@@ -1171,7 +1171,7 @@ export const ReportingHubPage = () => {
                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit border border-slate-200 dark:border-[#243A58]">
                     {tabs.map(tab => (
                         <button key={tab} onClick={() => setTrackingTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#64748B] hover:text-slate-600"}`}>
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600"}`}>
                             {tab}
                         </button>
                     ))}
@@ -1183,18 +1183,18 @@ export const ReportingHubPage = () => {
                         {/* Controls */}
                         <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                             <div>
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">Athlete</label>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Athlete</label>
                                 <CustomSelect value={trackingSelectedAthlete} onChange={e => setTrackingSelectedAthlete(e.target.value)} variant="form" size="xs">
                                     {allTrackingAthletes.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">From</label>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
                                 <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
                                     className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
                             </div>
                             <div>
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">To</label>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
                                 <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
                                     className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
                             </div>
@@ -1210,11 +1210,11 @@ export const ReportingHubPage = () => {
                             ].map(kpi => (
                                 <div key={kpi.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center">{kpi.icon}</div>
-                                        <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">{kpi.label}</span>
+                                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center">{kpi.icon}</div>
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">{kpi.label}</span>
                                     </div>
                                     <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{kpi.value}</div>
-                                    <div className="text-[10px] text-slate-400 dark:text-[#64748B] mt-1">{kpi.sub}</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1">{kpi.sub}</div>
                                 </div>
                             ))}
                         </div>
@@ -1234,7 +1234,7 @@ export const ReportingHubPage = () => {
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-[280px] flex items-center justify-center text-sm text-slate-400 dark:text-[#64748B]">No data for selected range</div>
+                                <div className="h-[280px] flex items-center justify-center text-sm text-slate-400 dark:text-[#CBD5E1]">No data for selected range</div>
                             )}
                         </div>
 
@@ -1246,11 +1246,11 @@ export const ReportingHubPage = () => {
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
-                                        <th className="px-5 py-3 text-left text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">Exercise</th>
-                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">Sets</th>
-                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">Reps</th>
-                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">Avg Weight</th>
-                                        <th className="px-4 py-3 text-right text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide">Tonnage</th>
+                                        <th className="px-5 py-3 text-left text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Exercise</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Sets</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Reps</th>
+                                        <th className="px-4 py-3 text-center text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Avg Weight</th>
+                                        <th className="px-4 py-3 text-right text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Tonnage</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1284,7 +1284,7 @@ export const ReportingHubPage = () => {
                         {/* Controls */}
                         <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                             <div>
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">Team</label>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Team</label>
                                 <CustomSelect value={trackingSelectedTeam} onChange={e => setTrackingSelectedTeam(e.target.value)} variant="form" size="xs">
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </CustomSelect>
@@ -1292,7 +1292,7 @@ export const ReportingHubPage = () => {
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {(['This Week', 'This Month', 'Custom'] as const).map(p => (
                                     <button key={p} onClick={() => setTrackingPeriod(p)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                         {p}
                                     </button>
                                 ))}
@@ -1300,12 +1300,12 @@ export const ReportingHubPage = () => {
                             {trackingPeriod === 'Custom' && (
                                 <>
                                     <div>
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">From</label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
                                         <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
                                             className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">To</label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
                                         <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
                                             className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
                                     </div>
@@ -1326,7 +1326,7 @@ export const ReportingHubPage = () => {
                                             { key: 'trend', label: 'Trend', align: 'center' },
                                         ].map(col => (
                                             <th key={col.key} onClick={() => handleTrackingSort(col.key)}
-                                                className={`px-5 py-3 text-${col.align} text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-wide cursor-pointer hover:text-slate-600 transition-colors select-none`}>
+                                                className={`px-5 py-3 text-${col.align} text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide cursor-pointer hover:text-slate-600 transition-colors select-none`}>
                                                 <span className="inline-flex items-center gap-1">{col.label} <TrackingSortIcon col={col.key} /></span>
                                             </th>
                                         ))}
@@ -1342,7 +1342,7 @@ export const ReportingHubPage = () => {
                                             <td className="px-4 py-3.5 text-center"><TrackingTrendArrow value={row.trend} /></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-[#64748B]">Select a team to view tonnage data</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">Select a team to view tonnage data</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1356,7 +1356,7 @@ export const ReportingHubPage = () => {
                         {/* Controls */}
                         <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                             <div>
-                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">Team</label>
+                                <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Team</label>
                                 <CustomSelect value={trackingSelectedTeam} onChange={e => setTrackingSelectedTeam(e.target.value)} variant="form" size="xs">
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </CustomSelect>
@@ -1364,7 +1364,7 @@ export const ReportingHubPage = () => {
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {(['Day', 'Week', 'Month', 'Custom'] as const).map(p => (
                                     <button key={p} onClick={() => setTrackingLoadPeriod(p)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                         {p}
                                     </button>
                                 ))}
@@ -1372,13 +1372,13 @@ export const ReportingHubPage = () => {
                             {trackingLoadPeriod === 'Custom' && (
                                 <div className="flex items-end gap-2">
                                     <div>
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">From</label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
                                         <input type="date" value={trackingLoadCustomRange.start}
                                             onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, start: e.target.value }))}
                                             className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide block mb-1">To</label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
                                         <input type="date" value={trackingLoadCustomRange.end}
                                             onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, end: e.target.value }))}
                                             min={trackingLoadCustomRange.start}
@@ -1389,7 +1389,7 @@ export const ReportingHubPage = () => {
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {([['body_part', 'By Muscle'], ['region', 'By Region']] as const).map(([key, label]) => (
                                     <button key={key} onClick={() => setTrackingLoadView(key as any)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadView === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadView === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                         {label}
                                     </button>
                                 ))}
@@ -1399,19 +1399,19 @@ export const ReportingHubPage = () => {
                         {/* Summary KPI Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wider mb-1">Total Tonnage</div>
-                                <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{trackingLoadData.totalTonnage.toLocaleString()} <span className="text-xs font-semibold text-slate-400 dark:text-[#64748B]">kg</span></div>
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wider mb-1">Total Tonnage</div>
+                                <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{trackingLoadData.totalTonnage.toLocaleString()} <span className="text-xs font-semibold text-slate-400 dark:text-[#CBD5E1]">kg</span></div>
                             </div>
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wider mb-1">Total Sets</div>
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wider mb-1">Total Sets</div>
                                 <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{trackingLoadData.totalSets.toLocaleString()}</div>
                             </div>
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wider mb-1">{trackingLoadView === 'body_part' ? 'Muscle Groups' : 'Regions'} Trained</div>
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wider mb-1">{trackingLoadView === 'body_part' ? 'Muscle Groups' : 'Regions'} Trained</div>
                                 <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList.length : trackingLoadData.regionList.length}</div>
                             </div>
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wider mb-1">Top {trackingLoadView === 'body_part' ? 'Muscle' : 'Region'}</div>
+                                <div className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wider mb-1">Top {trackingLoadView === 'body_part' ? 'Muscle' : 'Region'}</div>
                                 <div className="text-lg font-black text-slate-900 dark:text-[#E2E8F0] truncate">
                                     {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList[0]?.name : trackingLoadData.regionList[0]?.name) || '—'}
                                 </div>
@@ -1422,13 +1422,13 @@ export const ReportingHubPage = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Bar chart */}
                             <div className="lg:col-span-2 bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                                <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-widest mb-4">
+                                <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-widest mb-4">
                                     Tonnage {trackingLoadView === 'body_part' ? 'by Muscle Group' : 'by Region'}
                                 </div>
                                 {(() => {
                                     const items = trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList;
                                     const colorsMap = trackingLoadView === 'body_part' ? BODY_PART_COLORS_MAP : REGION_COLORS_MAP;
-                                    if (items.length === 0) return <div className="text-center py-12 text-sm text-slate-400 dark:text-[#64748B]">No tonnage data for this period</div>;
+                                    if (items.length === 0) return <div className="text-center py-12 text-sm text-slate-400 dark:text-[#CBD5E1]">No tonnage data for this period</div>;
                                     return (
                                         <ResponsiveContainer width="100%" height={Math.max(200, items.length * 36)}>
                                             <BarChart data={items} layout="vertical" margin={{ left: 10, right: 30 }}>
@@ -1452,7 +1452,7 @@ export const ReportingHubPage = () => {
 
                             {/* Breakdown list */}
                             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                                <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#64748B] tracking-widest mb-4">Breakdown</div>
+                                <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-widest mb-4">Breakdown</div>
                                 <div className="space-y-3">
                                     {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList).map(item => {
                                         const bgClass = trackingLoadView === 'body_part'
@@ -1474,9 +1474,9 @@ export const ReportingHubPage = () => {
                                                             }}
                                                         />
                                                     </div>
-                                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] w-8 text-right">{item.pct}%</span>
+                                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] w-8 text-right">{item.pct}%</span>
                                                 </div>
-                                                <div className="flex items-center gap-3 text-[9px] text-slate-400 dark:text-[#64748B]">
+                                                <div className="flex items-center gap-3 text-[9px] text-slate-400 dark:text-[#CBD5E1]">
                                                     <span>{item.sets} sets</span>
                                                     {'exerciseCount' in item && <span>{(item as any).exerciseCount} exercises</span>}
                                                 </div>
@@ -1484,7 +1484,7 @@ export const ReportingHubPage = () => {
                                         );
                                     })}
                                     {(trackingLoadView === 'body_part' ? trackingLoadData.bodyPartList : trackingLoadData.regionList).length === 0 && (
-                                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#64748B]">No data for this period</div>
+                                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">No data for this period</div>
                                     )}
                                 </div>
                             </div>
@@ -1585,7 +1585,7 @@ export const ReportingHubPage = () => {
                                 { name: 'Lower Body Power', date: '21 Oct', score: '8.4', status: 'Optimal' },
                                 { name: 'Reactive Strength', date: '15 Oct', score: '6.2', status: 'Warning' }
                             ].map((ev, i) => (
-                                <div key={i} className="flex justify-between items-center p-4 bg-indigo-50/50 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 transition-colors cursor-pointer border border-indigo-100 dark:border-indigo-800/40">
+                                <div key={i} className="flex justify-between items-center p-4 bg-indigo-50/50 rounded-xl hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-colors cursor-pointer border border-indigo-100 dark:border-indigo-800/40">
                                     <div>
                                         <div className="text-xs font-black text-indigo-900">{ev.name}</div>
                                         <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">{ev.date}</div>
@@ -1643,7 +1643,7 @@ export const ReportingHubPage = () => {
                                 <div className="relative w-full bg-slate-100 dark:bg-[#1A2D48] rounded-xl overflow-hidden flex items-end group-hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors" style={{ height: '200px' }}>
                                     <div className="w-full bg-indigo-600 rounded-t-2xl transition-all duration-1000" style={{ height: `${count * 15}%` }}></div>
                                 </div>
-                                <span className="text-[10px] font-black text-slate-400 dark:text-[#64748B] uppercase">Day {i + 1}</span>
+                                <span className="text-[10px] font-black text-slate-400 dark:text-[#CBD5E1] uppercase">Day {i + 1}</span>
                             </div>
                         ))}
                     </div>
@@ -1756,8 +1756,8 @@ export const ReportingHubPage = () => {
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-16 flex flex-col items-center gap-4 text-center">
                     <ActivityIcon size={40} className="text-slate-200" />
                     <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">No GPS data yet</p>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B]">Import a GPS CSV first, then come back here to visualise your data.</p>
-                    <button onClick={() => setGpsTab('import')} className="mt-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Import a GPS CSV first, then come back here to visualise your data.</p>
+                    <button onClick={() => setGpsTab('import')} className="mt-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-500 transition-colors">
                         Go to Data Import
                     </button>
                 </div>
@@ -1779,7 +1779,7 @@ export const ReportingHubPage = () => {
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-wrap items-end gap-3">
                 {/* Team filter */}
                 <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Team</span>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Team</span>
                     <CustomSelect
                         value={insightTeamFilter}
                         onChange={e => setInsightTeamFilter(e.target.value)}
@@ -1794,17 +1794,17 @@ export const ReportingHubPage = () => {
 
                 {/* Scope */}
                 <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Scope</span>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Scope</span>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
-                        <button onClick={() => setInsightScope('team')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'team' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>Team</button>
-                        <button onClick={() => setInsightScope('individual')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'individual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>Individual</button>
+                        <button onClick={() => setInsightScope('team')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'team' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Team</button>
+                        <button onClick={() => setInsightScope('individual')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'individual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Individual</button>
                     </div>
                 </div>
 
                 {/* Athlete picker (individual mode only) */}
                 {insightScope === 'individual' && athletesInScope.length > 0 && (
                     <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Athlete</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Athlete</span>
                         <CustomSelect value={activeAthleteId} onChange={e => setInsightAthleteId(e.target.value)} variant="form" size="xs">
                             {athletesInScope.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </CustomSelect>
@@ -1813,7 +1813,7 @@ export const ReportingHubPage = () => {
 
                 {/* Metric selector */}
                 <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Metric</span>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Metric</span>
                     <CustomSelect value={activeMetric} onChange={e => setInsightMetric(e.target.value)} variant="form" size="xs">
                         {groupOrder.filter(g => groupedCols[g]?.length).map(grp => (
                             <optgroup key={grp} label={grp}>
@@ -1825,10 +1825,10 @@ export const ReportingHubPage = () => {
 
                 {/* Date mode toggle */}
                 <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">View</span>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">View</span>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
-                        <button onClick={() => setInsightDateMode('range')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'range' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>Trend</button>
-                        <button onClick={() => setInsightDateMode('single')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'single' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>Single Day</button>
+                        <button onClick={() => setInsightDateMode('range')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'range' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Trend</button>
+                        <button onClick={() => setInsightDateMode('single')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'single' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Single Day</button>
                     </div>
                 </div>
 
@@ -1836,19 +1836,19 @@ export const ReportingHubPage = () => {
                 {insightDateMode === 'range' ? (
                     <>
                         <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">From</span>
+                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">From</span>
                             <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)}
                                 className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">To</span>
+                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">To</span>
                             <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)}
                                 className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
                         </div>
                     </>
                 ) : (
                     <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Date</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Date</span>
                         <input type="date" value={insightSingleDate} onChange={e => setInsightSingleDate(e.target.value)}
                             className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
                     </div>
@@ -1897,7 +1897,7 @@ export const ReportingHubPage = () => {
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 flex flex-col items-center gap-3 text-center">
                             <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">No data for {fmtDateFull(insightSingleDate)}</p>
                             {sessionDatesWithData.length > 0 && (
-                                <p className="text-xs text-slate-400 dark:text-[#64748B]">Nearest session: <button onClick={() => setInsightSingleDate(sessionDatesWithData[sessionDatesWithData.length - 1])} className="text-indigo-600 dark:text-indigo-300 font-medium hover:underline">{fmtDate(sessionDatesWithData[sessionDatesWithData.length - 1])}</button></p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Nearest session: <button onClick={() => setInsightSingleDate(sessionDatesWithData[sessionDatesWithData.length - 1])} className="text-indigo-600 dark:text-indigo-300 font-medium hover:underline">{fmtDate(sessionDatesWithData[sessionDatesWithData.length - 1])}</button></p>
                             )}
                         </div>
                     ) : (
@@ -1905,15 +1905,15 @@ export const ReportingHubPage = () => {
                             <div className="flex items-start justify-between mb-4">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{metricLabel} — Team Comparison</h3>
-                                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">{fmtDateFull(insightSingleDate)}{unit && ` · ${unit}`} · {barData.length} athletes</p>
+                                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">{fmtDateFull(insightSingleDate)}{unit && ` · ${unit}`} · {barData.length} athletes</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <button onClick={() => prevDate && setInsightSingleDate(prevDate)} disabled={!prevDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
                                     </button>
                                     <button onClick={() => nextDate && setInsightSingleDate(nextDate)} disabled={!nextDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
                                     </button>
                                 </div>
@@ -1946,7 +1946,7 @@ export const ReportingHubPage = () => {
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                            <div className="flex items-center gap-4 mt-3 justify-center text-[10px] text-slate-400 dark:text-[#64748B] flex-wrap">
+                            <div className="flex items-center gap-4 mt-3 justify-center text-[10px] text-slate-400 dark:text-[#CBD5E1] flex-wrap">
                                 {Object.entries(CAT_COLORS).map(([cat, color]) => (
                                     <span key={cat} className="flex items-center gap-1.5 capitalize">
                                         <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }} />{cat}
@@ -1966,9 +1966,9 @@ export const ReportingHubPage = () => {
                                     { label: 'Lowest', value: bottom.value.toLocaleString(undefined, { maximumFractionDigits: 1 }), sub: bottom.fullName, color: 'text-rose-500' },
                                 ].map(s => (
                                     <div key={s.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 text-center">
-                                        <div className={`text-xl font-bold ${s.color}`}>{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#64748B] ml-1">{unit}</span>}</div>
-                                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] mt-1">{s.label}</div>
-                                        <div className="text-[9px] text-slate-400 dark:text-[#64748B] mt-0.5 truncate">{s.sub}</div>
+                                        <div className={`text-xl font-bold ${s.color}`}>{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">{unit}</span>}</div>
+                                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mt-1">{s.label}</div>
+                                        <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">{s.sub}</div>
                                     </div>
                                 ))}
                             </div>
@@ -2027,7 +2027,7 @@ export const ReportingHubPage = () => {
                         {controlsBar}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 flex flex-col items-center gap-3 text-center">
                             <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">No data in this date range</p>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B]">Adjust the date range above or switch to a different metric.</p>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Adjust the date range above or switch to a different metric.</p>
                         </div>
                     </div>
                 );
@@ -2053,7 +2053,7 @@ export const ReportingHubPage = () => {
                                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">
                                     {insightShowPerAthlete ? 'Per-Athlete Trend' : 'Team Average Trend'} — {metricLabel}
                                 </h3>
-                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">
                                     {insightTeamFilter === 'All Athletes' ? 'All athletes' : insightTeamFilter} · {gpsRangeStart} → {gpsRangeEnd}
                                     {unit && ` · ${unit}`}
                                 </p>
@@ -2061,7 +2061,7 @@ export const ReportingHubPage = () => {
                             {!insightShowPerAthlete && (
                                 <div className="text-right shrink-0">
                                     <div className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{overallMean.toLocaleString(undefined, { maximumFractionDigits: 1 })}</div>
-                                    <div className="text-[10px] text-slate-400 dark:text-[#64748B]">Period average{unit && ` (${unit})`}</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Period average{unit && ` (${unit})`}</div>
                                 </div>
                             )}
                         </div>
@@ -2103,7 +2103,7 @@ export const ReportingHubPage = () => {
                                 {insightShowPerAthlete && <Legend wrapperStyle={{ fontSize: 10, paddingTop: 12 }} />}
                             </LineChart>
                         </ResponsiveContainer>
-                        <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-3 text-center">{teamChartData.length} session dates · hover to inspect</p>
+                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-3 text-center">{teamChartData.length} session dates · hover to inspect</p>
                     </div>
 
                     {/* Summary stats strip — team average mode */}
@@ -2121,9 +2121,9 @@ export const ReportingHubPage = () => {
                                     { label: 'Lowest Session', value: tMin.toLocaleString(undefined, { maximumFractionDigits: 1 }), sub: tMinDate },
                                 ].map(s => (
                                     <div key={s.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 text-center">
-                                        <div className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0]">{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#64748B] ml-1">{unit}</span>}</div>
-                                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] mt-1">{s.label}</div>
-                                        {s.sub && s.sub !== unit && <div className="text-[9px] text-slate-400 dark:text-[#64748B] mt-0.5">{s.sub}</div>}
+                                        <div className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0]">{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">{unit}</span>}</div>
+                                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mt-1">{s.label}</div>
+                                        {s.sub && s.sub !== unit && <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{s.sub}</div>}
                                     </div>
                                 ))}
                             </div>
@@ -2148,11 +2148,11 @@ export const ReportingHubPage = () => {
                                     <table className="w-full text-xs">
                                         <thead className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
                                             <tr>
-                                                <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] border-r border-slate-200 dark:border-[#243A58]">Athlete</th>
-                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] border-r border-slate-100 dark:border-[#1A2D48]">Sessions</th>
-                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] border-r border-slate-100 dark:border-[#1A2D48]">Average</th>
-                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] border-r border-slate-100 dark:border-[#1A2D48]">Peak</th>
-                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8]">Lowest</th>
+                                                <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] border-r border-slate-200 dark:border-[#243A58]">Athlete</th>
+                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] border-r border-slate-100 dark:border-[#1A2D48]">Sessions</th>
+                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] border-r border-slate-100 dark:border-[#1A2D48]">Average</th>
+                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] border-r border-slate-100 dark:border-[#1A2D48]">Peak</th>
+                                                <th className="text-center px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Lowest</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
@@ -2164,10 +2164,10 @@ export const ReportingHubPage = () => {
                                                             <span className="font-medium text-slate-800 dark:text-[#E2E8F0]">{r.name}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#94A3B8] tabular-nums border-r border-slate-100 dark:border-[#1A2D48]">{r.sessions}</td>
+                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#CBD5E1] tabular-nums border-r border-slate-100 dark:border-[#1A2D48]">{r.sessions}</td>
                                                     <td className="text-center px-4 py-2.5 font-semibold text-slate-800 dark:text-[#E2E8F0] tabular-nums border-r border-slate-100 dark:border-[#1A2D48]">{r.avg !== null ? r.avg.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '—'}{unit && r.avg !== null ? ` ${unit}` : ''}</td>
-                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#94A3B8] tabular-nums border-r border-slate-100 dark:border-[#1A2D48]">{r.max !== null ? r.max.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '—'}</td>
-                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#94A3B8] tabular-nums">{r.min !== null ? r.min.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '—'}</td>
+                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#CBD5E1] tabular-nums border-r border-slate-100 dark:border-[#1A2D48]">{r.max !== null ? r.max.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '—'}</td>
+                                                    <td className="text-center px-4 py-2.5 text-slate-500 dark:text-[#CBD5E1] tabular-nums">{r.min !== null ? r.min.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '—'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -2218,7 +2218,7 @@ export const ReportingHubPage = () => {
                                 </p>
                             )}
                             {!isExcludedToday && sessionDatesForAthlete.length > 0 && (
-                                <p className="text-xs text-slate-400 dark:text-[#64748B]">Most recent session: <button onClick={() => setInsightSingleDate(sessionDatesForAthlete[sessionDatesForAthlete.length - 1])} className="text-indigo-600 dark:text-indigo-300 font-medium hover:underline">{fmtDate(sessionDatesForAthlete[sessionDatesForAthlete.length - 1])}</button></p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Most recent session: <button onClick={() => setInsightSingleDate(sessionDatesForAthlete[sessionDatesForAthlete.length - 1])} className="text-indigo-600 dark:text-indigo-300 font-medium hover:underline">{fmtDate(sessionDatesForAthlete[sessionDatesForAthlete.length - 1])}</button></p>
                             )}
                         </div>
                     ) : (
@@ -2226,15 +2226,15 @@ export const ReportingHubPage = () => {
                             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeAthleteName} — Session Snapshot</h3>
-                                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">{fmtDateFull(insightSingleDate)} · {statCards.length} metrics</p>
+                                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">{fmtDateFull(insightSingleDate)} · {statCards.length} metrics</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <button onClick={() => prevDate && setInsightSingleDate(prevDate)} disabled={!prevDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
                                     </button>
                                     <button onClick={() => nextDate && setInsightSingleDate(nextDate)} disabled={!nextDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
                                     </button>
                                 </div>
@@ -2242,10 +2242,10 @@ export const ReportingHubPage = () => {
                             <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                                 {statCards.map(s => (
                                     <div key={s.key} className={`rounded-xl border p-3.5 flex flex-col gap-1 ${s.key === activeMetric ? 'border-indigo-300 bg-indigo-50/60' : 'border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40'}`}>
-                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide leading-tight truncate" title={s.label}>{s.label}</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide leading-tight truncate" title={s.label}>{s.label}</span>
                                         <span className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0] tabular-nums leading-tight">
                                             {s.value.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                                            {s.unit && <span className="text-xs font-normal text-slate-400 dark:text-[#64748B] ml-1">{s.unit}</span>}
+                                            {s.unit && <span className="text-xs font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">{s.unit}</span>}
                                         </span>
                                     </div>
                                 ))}
@@ -2288,7 +2288,7 @@ export const ReportingHubPage = () => {
                         <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">
                             {athletesInScope.length === 0 ? 'No linked athletes in this dataset' : `No data for ${activeAthleteName} in this date range`}
                         </p>
-                        <p className="text-xs text-slate-400 dark:text-[#64748B]">
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">
                             {athletesInScope.length === 0 ? 'Athletes must be linked to your roster to appear here.' : 'Adjust the date range or select a different athlete.'}
                         </p>
                     </div>
@@ -2315,11 +2315,11 @@ export const ReportingHubPage = () => {
                     <div className="flex items-start justify-between mb-4">
                         <div>
                             <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeAthleteName} — {metricLabel}</h3>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">{gpsRangeStart} → {gpsRangeEnd}{unit && ` · ${unit}`}</p>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">{gpsRangeStart} → {gpsRangeEnd}{unit && ` · ${unit}`}</p>
                         </div>
                         <div className="text-right shrink-0">
                             <div className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{indMean.toLocaleString(undefined, { maximumFractionDigits: 1 })}</div>
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B]">Period average{unit && ` (${unit})`}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Period average{unit && ` (${unit})`}</div>
                         </div>
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
@@ -2363,7 +2363,7 @@ export const ReportingHubPage = () => {
                             {insightRollingAvg && <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />}
                         </LineChart>
                     </ResponsiveContainer>
-                    <div className="flex items-center gap-4 mt-3 justify-center text-[10px] text-slate-400 dark:text-[#64748B] flex-wrap">
+                    <div className="flex items-center gap-4 mt-3 justify-center text-[10px] text-slate-400 dark:text-[#CBD5E1] flex-wrap">
                         {Object.entries(CAT_DOT_COLOR).map(([cat, color]) => (
                             <span key={cat} className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
@@ -2382,8 +2382,8 @@ export const ReportingHubPage = () => {
                         { label: 'Lowest', value: indMinVal.toLocaleString(undefined, { maximumFractionDigits: 1 }), color: 'text-rose-500' },
                     ].map(s => (
                         <div key={s.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 text-center">
-                            <div className={`text-xl font-bold ${s.color}`}>{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#64748B] ml-1">{unit}</span>}</div>
-                            <div className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] mt-1">{s.label}</div>
+                            <div className={`text-xl font-bold ${s.color}`}>{s.value}{unit && <span className="text-xs font-normal text-slate-400 dark:text-[#CBD5E1] ml-1">{unit}</span>}</div>
+                            <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mt-1">{s.label}</div>
                         </div>
                     ))}
                 </div>
@@ -2686,7 +2686,7 @@ export const ReportingHubPage = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Smart GPS Import</h3>
-                                    <p className="text-xs text-slate-400 dark:text-[#64748B]">{gpsSmartDialog.rows.length} rows · {gpsSmartDialog.headers.length} columns — all imported as-is</p>
+                                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">{gpsSmartDialog.rows.length} rows · {gpsSmartDialog.headers.length} columns — all imported as-is</p>
                                 </div>
                             </div>
                             <div className="p-6 space-y-6">
@@ -2733,7 +2733,7 @@ export const ReportingHubPage = () => {
                                 {/* ── Team + Category row ── */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide">Team <span className="text-slate-400 dark:text-[#64748B] font-normal">(for profile lookup)</span></label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide">Team <span className="text-slate-400 dark:text-[#CBD5E1] font-normal">(for profile lookup)</span></label>
                                         <CustomSelect
                                             value={gpsImportTeamId}
                                             onChange={e => setGpsImportTeamId(e.target.value)}
@@ -2748,7 +2748,7 @@ export const ReportingHubPage = () => {
                                         </CustomSelect>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide">Session Category</label>
+                                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide">Session Category</label>
                                         {gpsShowNewCat ? (
                                             <div className="flex gap-2">
                                                 <input
@@ -2773,7 +2773,7 @@ export const ReportingHubPage = () => {
                                                     }}
                                                     className="flex-1 bg-white dark:bg-[#132338] border border-indigo-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-500"
                                                 />
-                                                <button onClick={() => { setGpsShowNewCat(false); setGpsNewCatLabel(''); }} className="px-2 py-2 text-slate-400 dark:text-[#64748B] hover:text-slate-600 text-xs">✕</button>
+                                                <button onClick={() => { setGpsShowNewCat(false); setGpsNewCatLabel(''); }} className="px-2 py-2 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 text-xs">✕</button>
                                             </div>
                                         ) : (
                                             <div className="flex gap-2">
@@ -2790,7 +2790,7 @@ export const ReportingHubPage = () => {
                                                 <button
                                                     onClick={() => setGpsShowNewCat(true)}
                                                     title="Add new category"
-                                                    className="px-2.5 py-2 bg-slate-100 dark:bg-[#1A2D48] hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 hover:text-indigo-600 dark:text-indigo-300 text-slate-500 dark:text-[#94A3B8] rounded-lg border border-slate-200 dark:border-[#243A58] transition-colors text-xs font-bold"
+                                                    className="px-2.5 py-2 bg-slate-100 dark:bg-[#1A2D48] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-600 dark:text-white text-slate-500 rounded-lg border border-slate-200 dark:border-indigo-600 transition-colors text-xs font-bold"
                                                 >
                                                     +
                                                 </button>
@@ -2806,7 +2806,7 @@ export const ReportingHubPage = () => {
                                         { label: 'Phase / Section', required: false, val: gpsDialogPhaseCol, set: setGpsDialogPhaseCol, color: 'amber' },
                                     ].map(({ label, required, val, set, color }) => (
                                         <div key={label} className="space-y-1.5">
-                                            <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide">
+                                            <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide">
                                                 {label} {required && <span className="text-rose-400">*</span>}
                                             </label>
                                             <CustomSelect value={val} onChange={e => set(e.target.value)} variant="form" size="xs" placeholder={`— ${required ? 'select' : 'none'} —`}>
@@ -2815,7 +2815,7 @@ export const ReportingHubPage = () => {
                                             </CustomSelect>
                                             {val
                                                 ? <p className={`text-[10px] text-${color}-600 font-medium`}>✓ {val}</p>
-                                                : !required && <p className="text-[10px] text-slate-400 dark:text-[#64748B]">Optional — enables section grouping</p>
+                                                : !required && <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Optional — enables section grouping</p>
                                             }
                                         </div>
                                     ))}
@@ -2832,13 +2832,13 @@ export const ReportingHubPage = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide mb-2">Preview — first 3 rows</p>
+                                    <p className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide mb-2">Preview — first 3 rows</p>
                                     <div className="overflow-x-auto border border-slate-200 dark:border-[#243A58] rounded-lg">
                                         <table className="text-left text-xs w-full">
                                             <thead>
                                                 <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
                                                     {gpsSmartDialog.headers.slice(0, 8).map(h => (
-                                                        <th key={h} className={`px-3 py-2 font-semibold whitespace-nowrap ${h === gpsDialogAthleteCol ? 'text-indigo-600 dark:text-indigo-300 bg-indigo-50' : h === gpsDialogDateCol ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : h === gpsDialogPhaseCol ? 'text-amber-600 bg-amber-50' : 'text-slate-500 dark:text-[#94A3B8]'}`}>{h}</th>
+                                                        <th key={h} className={`px-3 py-2 font-semibold whitespace-nowrap ${h === gpsDialogAthleteCol ? 'text-indigo-600 dark:text-indigo-300 bg-indigo-50' : h === gpsDialogDateCol ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : h === gpsDialogPhaseCol ? 'text-amber-600 bg-amber-50' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>{h}</th>
                                                     ))}
                                                     {gpsSmartDialog.headers.length > 8 && <th className="px-3 py-2 text-slate-300 dark:text-[#475569] italic">+{gpsSmartDialog.headers.length - 8} more…</th>}
                                                 </tr>
@@ -2857,8 +2857,8 @@ export const ReportingHubPage = () => {
                                 <div className="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-[#1A2D48]">
                                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-2.5">
                                         <div className="flex-1">
-                                            <p className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Override Import Date</p>
-                                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Leave blank to read dates from the selected date column. Set a date to apply it to all rows.</p>
+                                            <p className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Override Import Date</p>
+                                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Leave blank to read dates from the selected date column. Set a date to apply it to all rows.</p>
                                         </div>
                                         <input
                                             type="date"
@@ -2868,13 +2868,13 @@ export const ReportingHubPage = () => {
                                         />
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-xs text-slate-400 dark:text-[#64748B]">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
+                                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
                                         <div className="flex items-center gap-3">
-                                            <button onClick={() => { setGpsSmartDialog(null); setGpsImportDateOverride(''); }} className="px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">Cancel</button>
+                                            <button onClick={() => { setGpsSmartDialog(null); setGpsImportDateOverride(''); }} className="px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">Cancel</button>
                                             <button
                                                 disabled={!gpsDialogAthleteCol || (!gpsDialogDateCol && !gpsImportDateOverride)}
                                                 onClick={() => handleSmartImport(gpsDialogAthleteCol, gpsDialogDateCol, gpsDialogPhaseCol)}
-                                                className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                                                className="px-5 py-2.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                                                 Import {gpsSmartDialog.rows.length} Rows
                                             </button>
                                         </div>
@@ -2896,7 +2896,7 @@ export const ReportingHubPage = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Unlinked Athletes</h3>
-                                    <p className="text-xs text-slate-500 dark:text-[#94A3B8]">These names in the CSV didn't match your roster</p>
+                                    <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">These names in the CSV didn't match your roster</p>
                                 </div>
                             </div>
                             <div className="p-6 space-y-3">
@@ -2906,7 +2906,7 @@ export const ReportingHubPage = () => {
                                         <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">UNLINKED</span>
                                     </div>
                                 ))}
-                                <p className="text-[11px] text-slate-400 dark:text-[#64748B] pt-1">GPS data was still imported. Go to Roster to add these athletes, then re-import to link them.</p>
+                                <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] pt-1">GPS data was still imported. Go to Roster to add these athletes, then re-import to link them.</p>
                                 <div className="flex justify-end pt-2">
                                     <button onClick={() => setGpsUnlinkedDialog(null)} className="px-5 py-2.5 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition-all">OK</button>
                                 </div>
@@ -2953,7 +2953,7 @@ export const ReportingHubPage = () => {
                             {/* Header */}
                             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30] flex items-center justify-between gap-4">
                                 <div className="flex-1 relative">
-                                    <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748B]" />
+                                    <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                                     <input
                                         value={gpsColSearch}
                                         onChange={e => setGpsColSearch(e.target.value)}
@@ -2962,16 +2962,16 @@ export const ReportingHubPage = () => {
                                     />
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[10px] text-slate-400 dark:text-[#64748B]">{visibleCount}/{mergedColConfig.length} shown</span>
-                                    <button onClick={() => toggleAll(true)} className="px-2.5 py-1.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-900/25 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 transition-colors">Show All</button>
-                                    <button onClick={() => toggleAll(false)} className="px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide All</button>
-                                    <button onClick={() => { setGpsColConfigOpen(false); setGpsColSearch(''); }} className="p-1.5 text-slate-400 dark:text-[#64748B] hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><XIcon size={14} /></button>
+                                    <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{visibleCount}/{mergedColConfig.length} shown</span>
+                                    <button onClick={() => toggleAll(true)} className="px-2.5 py-1.5 text-[10px] font-semibold text-indigo-600 dark:text-white border border-indigo-200 dark:border-indigo-600 bg-indigo-50 dark:bg-[#1A2D48] rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-colors">Show All</button>
+                                    <button onClick={() => toggleAll(false)} className="px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide All</button>
+                                    <button onClick={() => { setGpsColConfigOpen(false); setGpsColSearch(''); }} className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><XIcon size={14} /></button>
                                 </div>
                             </div>
                             {/* Grouped columns */}
                             <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-50">
                                 {mergedColConfig.length === 0 ? (
-                                    <p className="text-xs text-slate-400 dark:text-[#64748B] text-center py-8">No columns yet — import a CSV first</p>
+                                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] text-center py-8">No columns yet — import a CSV first</p>
                                 ) : COL_GROUPS.map(grp => {
                                     const grpCols = filteredCols.filter(c => getColGroup(c.key) === grp.id);
                                     if (grpCols.length === 0) return null;
@@ -2979,20 +2979,20 @@ export const ReportingHubPage = () => {
                                     return (
                                         <div key={grp.id} className="px-5 py-3 space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">{grp.label}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">{grp.label}</span>
                                                 <div className="flex gap-1.5">
-                                                    <button onClick={() => toggleGroup(grp.id, true)} className="text-[9px] font-semibold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-colors">Show</button>
-                                                    <button onClick={() => toggleGroup(grp.id, false)} className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] hover:text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide</button>
+                                                    <button onClick={() => toggleGroup(grp.id, true)} className="text-[9px] font-semibold text-indigo-500 hover:text-indigo-700 dark:text-white px-1.5 py-0.5 rounded hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-colors">Show</button>
+                                                    <button onClick={() => toggleGroup(grp.id, false)} className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide</button>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-1.5">
                                                 {grpCols.map(col => (
-                                                    <label key={col.key} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all text-xs ${col.visible !== false ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/60 text-slate-700 dark:text-[#E2E8F0]' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#64748B]'}`}>
+                                                    <label key={col.key} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all text-xs ${col.visible !== false ? 'border-indigo-200 dark:border-indigo-600 bg-indigo-50/60 text-slate-700 dark:text-[#E2E8F0]' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                         <input type="checkbox" checked={col.visible !== false} onChange={() => {
                                                             saveColConfig(mergedColConfig.map(c => c.key === col.key ? { ...c, visible: c.visible === false } : c));
                                                         }} className="rounded accent-indigo-600 shrink-0" />
                                                         <span className="flex-1 min-w-0 truncate font-medium">{colLabel(col.key)}</span>
-                                                        {col.retired && <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] bg-slate-200 dark:bg-[#243A58] px-1 py-0.5 rounded shrink-0">OLD</span>}
+                                                        {col.retired && <span className="text-[8px] font-bold text-slate-400 dark:text-[#CBD5E1] bg-slate-200 dark:bg-[#243A58] px-1 py-0.5 rounded shrink-0">OLD</span>}
                                                     </label>
                                                 ))}
                                             </div>
@@ -3008,13 +3008,13 @@ export const ReportingHubPage = () => {
                 <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg">
-                            <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
                                 <span className="flex items-center gap-1.5"><UploadIcon size={12} />Data Import</span>
                             </button>
-                            <button onClick={() => setGpsTab('manual')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'manual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('manual')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'manual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
                                 <span className="flex items-center gap-1.5"><Edit3Icon size={12} />Manual Entry</span>
                             </button>
-                            <button onClick={() => setGpsTab('insights')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'insights' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('insights')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'insights' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
                                 <span className="flex items-center gap-1.5"><ActivityIcon size={12} />GPS Insights</span>
                             </button>
                         </div>
@@ -3025,11 +3025,11 @@ export const ReportingHubPage = () => {
                                 </span>
                             )}
                             {historicalColKeys.length > 0 && (
-                                <button onClick={() => setGpsColConfigOpen(v => !v)} className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${gpsColConfigOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:bg-slate-50'}`}>
+                                <button onClick={() => setGpsColConfigOpen(v => !v)} className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${gpsColConfigOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50'}`}>
                                     <SlidersIcon size={13} />Columns
                                 </button>
                             )}
-                            <button onClick={clearGpsData} title="Clear all GPS data" className="p-2 text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20"><Trash2Icon size={15} /></button>
+                            <button onClick={clearGpsData} title="Clear all GPS data" className="p-2 text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-rose-50 dark:hover:bg-[#1A2D48]"><Trash2Icon size={15} /></button>
                         </div>
                     </div>
 
@@ -3058,8 +3058,8 @@ export const ReportingHubPage = () => {
 
                                 {/* View mode toggle */}
                                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg">
-                                    <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>Session</button>
-                                    <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>Range</button>
+                                    <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>Session</button>
+                                    <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>Range</button>
                                 </div>
 
                                 {/* Session mode: date navigation */}
@@ -3068,10 +3068,10 @@ export const ReportingHubPage = () => {
                                         <button
                                             disabled={effectiveIdx >= gpsSessionDates.length - 1}
                                             onClick={() => setGpsSpecificDate(gpsSessionDates[effectiveIdx + 1])}
-                                            className="p-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                            className="p-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         ><ArrowLeftIcon size={14} /></button>
                                         <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
-                                            <CalendarIcon size={13} className="text-slate-400 dark:text-[#64748B] shrink-0" />
+                                            <CalendarIcon size={13} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
                                             <input
                                                 type="date"
                                                 value={effectiveSessionDate}
@@ -3081,14 +3081,14 @@ export const ReportingHubPage = () => {
                                         </div>
                                         <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">{fmtSessionDate(effectiveSessionDate)}</span>
                                         {gpsSessionDates.length > 0 && (
-                                            <span className="text-[10px] text-slate-400 dark:text-[#64748B] bg-slate-100 dark:bg-[#1A2D48] px-2 py-1 rounded-full">
+                                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] bg-slate-100 dark:bg-[#1A2D48] px-2 py-1 rounded-full">
                                                 {effectiveIdx + 1} / {gpsSessionDates.length} sessions
                                             </span>
                                         )}
                                         <button
                                             disabled={effectiveIdx <= 0}
                                             onClick={() => setGpsSpecificDate(gpsSessionDates[effectiveIdx - 1])}
-                                            className="p-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                            className="p-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         ><ArrowRightIcon size={14} /></button>
                                     </div>
                                 )}
@@ -3097,7 +3097,7 @@ export const ReportingHubPage = () => {
                                 {gpsFilterDateMode === 'range' && (
                                     <div className="flex items-center gap-2">
                                         <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
-                                        <span className="text-xs text-slate-400 dark:text-[#64748B]">to</span>
+                                        <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">to</span>
                                         <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
                                     </div>
                                 )}
@@ -3108,7 +3108,7 @@ export const ReportingHubPage = () => {
                                         <button
                                             onClick={handlePolarSync}
                                             disabled={polarSyncStatus === 'syncing'}
-                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-all whitespace-nowrap"
+                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 disabled:opacity-60 transition-all whitespace-nowrap"
                                         >
                                             {polarSyncStatus === 'syncing'
                                                 ? <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Syncing...</>
@@ -3117,7 +3117,7 @@ export const ReportingHubPage = () => {
                                         </button>
                                     )}
                                     {/* Import CSV — always available as fallback */}
-                                    <label className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${isPolarSource ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                                    <label className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${isPolarSource ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}>
                                         <UploadIcon size={13} /> Import CSV
                                         <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                                     </label>
@@ -3129,7 +3129,7 @@ export const ReportingHubPage = () => {
                                 <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold ${
                                     polarSyncStatus === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700' :
                                     polarSyncStatus === 'error' ? 'bg-red-50 border border-red-200 dark:border-red-900/50 text-red-700' :
-                                    'bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 text-indigo-700'
+                                    'bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-600 text-indigo-700'
                                 }`}>
                                     {polarSyncStatus === 'syncing' && <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />}
                                     {polarSyncStatus === 'success' && <CheckIcon size={13} />}
@@ -3146,21 +3146,21 @@ export const ReportingHubPage = () => {
                         <div className="space-y-4 pt-1">
                             <div className="flex flex-wrap items-end gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide pl-1">Team</label>
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide pl-1">Team</label>
                                     <CustomSelect value={manualTeamId} onChange={e => { setManualTeamId(e.target.value); setManualRows({}); }} variant="form" size="xs" placeholder="— select team —">
                                         <option value="">— select team —</option>
                                         {teams.filter(t => t.id !== 't_private').map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                     </CustomSelect>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide pl-1">Session Date</label>
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide pl-1">Session Date</label>
                                     <input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
                                 </div>
                                 <button onClick={() => setManualColPickerOpen(v => !v)} className={`px-3 py-2.5 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${manualColPickerOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50'}`}>
                                     <PlusCircleIcon size={13} /> Configure Columns
                                 </button>
                                 {manualAthletes.length > 0 && manualColConfig.length > 0 && (
-                                    <button onClick={handleManualSave} className="px-4 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-all flex items-center gap-1.5">
+                                    <button onClick={handleManualSave} className="px-4 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-500 transition-all flex items-center gap-1.5">
                                         <CheckIcon size={13} /> Save Session
                                     </button>
                                 )}
@@ -3169,7 +3169,7 @@ export const ReportingHubPage = () => {
                             {/* Column picker */}
                             {manualColPickerOpen && (
                                 <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-3">
-                                    <p className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8] tracking-wide">Active Columns</p>
+                                    <p className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide">Active Columns</p>
                                     <div className="flex flex-wrap gap-2">
                                         {manualColConfig.map(col => (
                                             <div key={col.key} className="flex items-center gap-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">
@@ -3177,12 +3177,12 @@ export const ReportingHubPage = () => {
                                                 <button onClick={() => setManualColConfig(prev => prev.filter(c => c.key !== col.key))} className="text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors"><XIcon size={11} /></button>
                                             </div>
                                         ))}
-                                        {manualColConfig.length === 0 && <p className="text-xs text-slate-400 dark:text-[#64748B]">No columns configured yet</p>}
+                                        {manualColConfig.length === 0 && <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">No columns configured yet</p>}
                                     </div>
                                     {/* Add from history or new */}
                                     {historicalColKeys.length > 0 && (
                                         <div className="space-y-1.5">
-                                            <p className="text-[10px] text-slate-400 dark:text-[#64748B]">Add from import history:</p>
+                                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Add from import history:</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {historicalColKeys.filter(k => !manualColConfig.some(c => c.key === k)).map(k => (
                                                     <button key={k} onClick={() => setManualColConfig(prev => [...prev, { key: k, label: k.replace(/_/g, ' ') }])}
@@ -3198,7 +3198,7 @@ export const ReportingHubPage = () => {
                                             onKeyDown={e => { if (e.key === 'Enter' && newManualColName.trim()) { setManualColConfig(prev => [...prev, { key: newManualColName.trim().replace(/\s+/g,'_'), label: newManualColName.trim() }]); setNewManualColName(''); }}}
                                             placeholder="Or type a new column name…" className="flex-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
                                         <button onClick={() => { if (newManualColName.trim()) { setManualColConfig(prev => [...prev, { key: newManualColName.trim().replace(/\s+/g,'_'), label: newManualColName.trim() }]); setNewManualColName(''); }}}
-                                            className="px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-all">Add</button>
+                                            className="px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-500 transition-all">Add</button>
                                     </div>
                                 </div>
                             )}
@@ -3209,9 +3209,9 @@ export const ReportingHubPage = () => {
                                     <table className="w-full" style={{ minWidth: `${(manualColConfig.length + 1) * 140}px` }}>
                                         <thead>
                                             <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
-                                                <th className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0F1C30] px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide whitespace-nowrap text-left border-r border-slate-200 dark:border-[#243A58]">Athlete</th>
+                                                <th className="sticky left-0 z-10 bg-slate-50 dark:bg-[#0F1C30] px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide whitespace-nowrap text-left border-r border-slate-200 dark:border-[#243A58]">Athlete</th>
                                                 {manualColConfig.map(col => (
-                                                    <th key={col.key} className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide whitespace-nowrap text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">{col.label}</th>
+                                                    <th key={col.key} className="px-4 py-3 text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide whitespace-nowrap text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">{col.label}</th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -3240,10 +3240,10 @@ export const ReportingHubPage = () => {
                                 </div>
                             )}
                             {manualTeamId && manualAthletes.length === 0 && (
-                                <p className="text-sm text-slate-400 dark:text-[#64748B] text-center py-6">No athletes in this team yet</p>
+                                <p className="text-sm text-slate-400 dark:text-[#CBD5E1] text-center py-6">No athletes in this team yet</p>
                             )}
                             {!manualTeamId && (
-                                <p className="text-sm text-slate-400 dark:text-[#64748B] text-center py-6">Select a team to start entering data</p>
+                                <p className="text-sm text-slate-400 dark:text-[#CBD5E1] text-center py-6">Select a team to start entering data</p>
                             )}
                         </div>
                     )}
@@ -3259,7 +3259,7 @@ export const ReportingHubPage = () => {
                             <ActivityIcon size={48} className="text-slate-100" />
                             <div>
                                 <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">No GPS telemetry data</p>
-                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1">Click "Import CSV" to upload from any GPS provider — all columns imported as-is</p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1">Click "Import CSV" to upload from any GPS provider — all columns imported as-is</p>
                             </div>
                         </div>
                     );
@@ -3267,7 +3267,7 @@ export const ReportingHubPage = () => {
                     if (records.length === 0) return (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 flex flex-col items-center gap-3 text-center">
                             <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">No records for this {gpsFilterDateMode === 'single' ? 'session date' : 'date range'}</p>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B]">{gpsData.length} total records — {gpsFilterDateMode === 'single' ? 'use the arrows to navigate to a session date with data' : 'adjust the date range'}</p>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">{gpsData.length} total records — {gpsFilterDateMode === 'single' ? 'use the arrows to navigate to a session date with data' : 'adjust the date range'}</p>
                         </div>
                     );
 
@@ -3276,7 +3276,7 @@ export const ReportingHubPage = () => {
                     const CAT_COLORS: Record<string, string> = {
                         match: 'bg-red-50 text-red-600 border-red-200 dark:border-red-900/50',
                         recovery: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50',
-                        training: 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50',
+                        training: 'bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white border-indigo-200 dark:border-indigo-600',
                     };
 
                     // Session mode: single date table
@@ -3294,7 +3294,7 @@ export const ReportingHubPage = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{fmtFull(sessionDate)}</h4>
-                                        <p className="text-[10px] text-slate-400 dark:text-[#64748B]">{records.length} athletes · {cols.length} columns visible</p>
+                                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{records.length} athletes · {cols.length} columns visible</p>
                                     </div>
                                     <CustomSelect
                                         value={sessionCat}
@@ -3365,7 +3365,7 @@ export const ReportingHubPage = () => {
                         </div>
                         <div>
                             <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Status</h4>
-                            <p className="text-slate-500 dark:text-[#94A3B8] text-sm">Update availability and log opt-out reasons.</p>
+                            <p className="text-slate-500 dark:text-[#CBD5E1] text-sm">Update availability and log opt-out reasons.</p>
                         </div>
                     </div>
 
@@ -3377,7 +3377,7 @@ export const ReportingHubPage = () => {
                                     <button
                                         key={status}
                                         onClick={() => setOptOutForm({ ...optOutForm, status })}
-                                        className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-300 hover:bg-indigo-100/50'}`}
+                                        className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-300 hover:bg-indigo-100/50'}`}
                                     >
                                         {status}
                                     </button>
@@ -3386,7 +3386,7 @@ export const ReportingHubPage = () => {
                         </div>
 
                         <div>
-                            <label className="text-xs font-black uppercase text-slate-400 dark:text-[#64748B] tracking-widest pl-2 mb-2 block">Reason</label>
+                            <label className="text-xs font-black uppercase text-slate-400 dark:text-[#CBD5E1] tracking-widest pl-2 mb-2 block">Reason</label>
                             <input
                                 type="text"
                                 placeholder="e.g. Flu, Ankle Sprain"
@@ -3397,7 +3397,7 @@ export const ReportingHubPage = () => {
                         </div>
 
                         <div>
-                            <label className="text-xs font-black uppercase text-slate-400 dark:text-[#64748B] tracking-widest pl-2 mb-2 block">Notes</label>
+                            <label className="text-xs font-black uppercase text-slate-400 dark:text-[#CBD5E1] tracking-widest pl-2 mb-2 block">Notes</label>
                             <textarea
                                 placeholder="Additional context..."
                                 value={optOutForm.notes}
@@ -3451,7 +3451,7 @@ export const ReportingHubPage = () => {
                         </div>
                         <div>
                             <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Medical Hub</h4>
-                            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Intelligence & Availability</p>
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Intelligence & Availability</p>
                         </div>
                     </div>
 
@@ -3459,13 +3459,13 @@ export const ReportingHubPage = () => {
                         <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-inner">
                             <button
                                 onClick={() => { setMedicalModalMode('upload'); setIsMedicalModalOpen(true); }}
-                                className="px-4 py-2.5 bg-white dark:bg-[#132338] text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all flex items-center gap-2 border border-slate-200 dark:border-[#243A58]"
+                                className="px-4 py-2.5 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-all flex items-center gap-2 border border-slate-200 dark:border-indigo-600"
                             >
                                 <UploadCloudIcon size={14} /> Upload Doc
                             </button>
                             <button
                                 onClick={() => { setMedicalModalMode('text'); setIsMedicalModalOpen(true); }}
-                                className="px-4 py-2.5 text-slate-500 dark:text-[#94A3B8] hover:text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
+                                className="px-4 py-2.5 text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
                             >
                                 <FileTextIcon size={14} /> Quick Log
                             </button>
@@ -3474,7 +3474,7 @@ export const ReportingHubPage = () => {
                         <div className="h-10 w-[1px] bg-slate-200 dark:bg-[#243A58] mx-2"></div>
 
                         <div>
-                            <label className="text-[9px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide block mb-1">Filter View</label>
+                            <label className="text-[9px] font-medium text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Filter View</label>
                             <CustomSelect
                                 value={medicalFilterAthleteId}
                                 onChange={(e) => setMedicalFilterAthleteId(e.target.value)}
@@ -3522,19 +3522,19 @@ export const ReportingHubPage = () => {
                                 <div
                                     onClick={() => entry.timelineType === 'medical' && setInspectingMedicalRecord(entry)}
                                     className={`p-5 rounded-xl border transition-all ${entry.timelineType === 'medical'
-                                        ? 'bg-slate-50/50 dark:bg-[#132338]/40 border-slate-100 dark:border-[#1A2D48] hover:border-indigo-200 dark:border-indigo-800/50 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
+                                        ? 'bg-slate-50/50 dark:bg-[#132338]/40 border-slate-100 dark:border-[#1A2D48] hover:border-indigo-200 dark:border-indigo-600 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
                                         : 'bg-white dark:bg-[#132338] border-indigo-50 shadow-sm'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
-                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest ${entry.timelineType === 'medical' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : entry.status === 'Modified' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')
+                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest border ${entry.timelineType === 'medical' ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300' : (entry.status === 'Available' ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : entry.status === 'Modified' ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400')
                                                 }`}>
                                                 {entry.timelineType === 'medical' ? (entry.type === 'upload' ? 'DOCUMENT' : 'LOG') : entry.status}
                                             </span>
                                             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-lg">
                                                 <div className="w-4 h-4 rounded-full bg-slate-300 flex items-center justify-center text-[8px] font-black text-white">{entry.targetName?.charAt(0) || 'A'}</div>
-                                                <span className="text-[9px] font-black uppercase text-slate-500 dark:text-[#94A3B8] tracking-widest">{entry.targetName}</span>
+                                                <span className="text-[9px] font-black uppercase text-slate-500 dark:text-[#CBD5E1] tracking-widest">{entry.targetName}</span>
                                             </div>
                                         </div>
                                         {entry.timelineType === 'medical' && entry.type === 'upload' && <FileIcon size={18} className="text-indigo-300" />}
@@ -3543,7 +3543,7 @@ export const ReportingHubPage = () => {
                                     <h6 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover/item:text-indigo-900 transition-colors">{entry.title}</h6>
 
                                     {entry.description && (
-                                        <p className="text-sm font-medium text-slate-400 dark:text-[#64748B] mt-3 leading-relaxed max-w-xl line-clamp-2">
+                                        <p className="text-sm font-medium text-slate-400 dark:text-[#CBD5E1] mt-3 leading-relaxed max-w-xl line-clamp-2">
                                             {entry.description}
                                         </p>
                                     )}
@@ -3551,7 +3551,7 @@ export const ReportingHubPage = () => {
                                     {entry.timelineType === 'medical' && (
                                         <div className="mt-6 pt-6 border-t border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-slate-100 dark:bg-[#1A2D48] rounded-full flex items-center justify-center text-[8px] font-black text-slate-400 dark:text-[#64748B]">S</div>
+                                                <div className="w-6 h-6 bg-slate-100 dark:bg-[#1A2D48] rounded-full flex items-center justify-center text-[8px] font-black text-slate-400 dark:text-[#CBD5E1]">S</div>
                                                 <span className="text-[9px] font-black text-slate-300 dark:text-[#475569] uppercase tracking-widest">Logged by Medical Staff</span>
                                             </div>
                                             <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest group-hover/item:translate-x-1 transition-transform flex items-center gap-1">View Details <ChevronRightIcon size={12} /></span>
@@ -3589,7 +3589,7 @@ export const ReportingHubPage = () => {
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="bg-white dark:bg-[#132338] p-12 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm text-center space-y-8">
                     <div className="max-w-lg mx-auto space-y-4">
-                        <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/25 rounded-xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
+                        <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-600 rounded-xl flex items-center justify-center text-indigo-400 mx-auto mb-6">
                             <TableIcon size={32} />
                         </div>
                         <h4 className="text-3xl font-black uppercase tracking-tighter text-indigo-900">Data Export Portal</h4>
@@ -3627,12 +3627,12 @@ export const ReportingHubPage = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => { setActiveReport(null); setReportMode('analytics'); }}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Reporting Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Reporting Hub</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeReport}</h2>
                         </div>
                     </div>
@@ -3641,8 +3641,8 @@ export const ReportingHubPage = () => {
                 <div className="min-h-[600px] relative">
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
-                            <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {activeReport?.toLowerCase()} data...</span>
+                            <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-600 border-t-indigo-600 rounded-full animate-spin" />
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {activeReport?.toLowerCase()} data...</span>
                         </div>
                     )}
                     {activeReport === 'Heart Rate Metrics' && renderHeartRateMetricsReport()}
@@ -3658,7 +3658,7 @@ export const ReportingHubPage = () => {
         <div className="space-y-5 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Reporting Hub</h2>
-                <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Performance intelligence reports and data exports.</p>
+                <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Performance intelligence reports and data exports.</p>
             </div>
 
             <div data-tour="report-cards" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -3671,15 +3671,15 @@ export const ReportingHubPage = () => {
                     <button
                         key={i}
                         onClick={() => setActiveReport(report.title)}
-                        className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
+                        className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-600 transition-all group flex flex-col text-left h-[150px]"
                     >
                         <div className="flex items-start gap-4 h-full">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                 <report.icon size={20} />
                             </div>
                             <div className="flex flex-col justify-center h-full">
                                 <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1 leading-tight">{report.title}</h3>
-                                <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{report.desc}</p>
+                                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{report.desc}</p>
                             </div>
                         </div>
                     </button>

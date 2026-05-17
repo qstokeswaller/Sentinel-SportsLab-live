@@ -57,7 +57,7 @@ const ComplianceTracker: React.FC<ComplianceProps> = ({ athletes, responses, day
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                    <h4 className="text-sm font-semibold text-slate-800">Compliance</h4>
+                    <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Compliance</h4>
                     <p className="text-[10px] text-slate-400">Daily form completion rate</p>
                 </div>
                 <div className="text-right">

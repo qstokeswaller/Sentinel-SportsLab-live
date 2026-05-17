@@ -626,7 +626,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                     }`}>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
-                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} className="text-cyan-600" />}
+                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} handled inline />}
                                     </div>
                                 </button>
                             ))}

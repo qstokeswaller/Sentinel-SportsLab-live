@@ -56,15 +56,15 @@ export const ShareWorkoutPopover: React.FC<ShareWorkoutPopoverProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center">
                             <Link2 size={15} className="text-indigo-600 dark:text-indigo-300" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900">Share {workoutType === 'program' ? 'Program' : 'Workout'}</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Share {workoutType === 'program' ? 'Program' : 'Workout'}</h3>
                             <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{workoutName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>

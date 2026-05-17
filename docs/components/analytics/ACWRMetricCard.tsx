@@ -18,9 +18,9 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
     const status = ACWR_UTILS.getRatioStatus(acwrValue);
 
     return (
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg text-indigo-600 dark:text-indigo-300">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-600 rounded-lg text-indigo-600 dark:text-white">
                     <ActivityIcon size={18} />
                 </div>
                 <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color.replace('text-', 'bg-').replace('600', '100')} ${status.color}`}>
@@ -29,7 +29,7 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
             </div>
             <div>
                 <div className="text-xs font-medium text-slate-400 mb-1">Acute:Chronic Ratio</div>
-                <div className="text-3xl font-bold text-slate-900">{acwrValue.toFixed(2)}</div>
+                <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrValue.toFixed(2)}</div>
             </div>
             <div className="pt-2 border-t border-slate-100">
                 <div className="flex justify-between items-center">

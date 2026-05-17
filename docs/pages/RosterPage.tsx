@@ -82,14 +82,14 @@ export const RosterPage = () => {
         <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-1 gap-0.5">
             <button
                 onClick={() => switchViewMode('list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
                 title="List view"
             >
                 <ListIcon size={15} />
             </button>
             <button
                 onClick={() => switchViewMode('grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
                 title="Grid view"
             >
                 <LayoutGridIcon size={15} />
@@ -104,7 +104,7 @@ export const RosterPage = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
-                    <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Manage athletes and squads across your organisation.</p>
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
                 <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
@@ -113,7 +113,7 @@ export const RosterPage = () => {
                     </Button>
                     <button
                         onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                     >
                         <UserPlusIcon size={11} /> Add Athlete
                     </button>
@@ -123,19 +123,19 @@ export const RosterPage = () => {
             <div data-tour="team-list" className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 {/* Table header */}
                 <div className="grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Athlete</span>
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Team</span>
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Sport</span>
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide text-right">Actions</span>
+                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Athlete</span>
+                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Team</span>
+                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Sport</span>
+                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide text-right">Actions</span>
                 </div>
 
                 {teams.length === 0 ? (
                     <div className="py-16 text-center">
-                        <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-900/25 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-600 flex items-center justify-center mx-auto mb-4">
                             <UserPlusIcon size={24} className="text-indigo-300" />
                         </div>
-                        <p className="text-sm font-semibold text-slate-500 dark:text-[#94A3B8]">No teams yet</p>
-                        <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
+                        <p className="text-sm font-semibold text-slate-500 dark:text-[#CBD5E1]">No teams yet</p>
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
                     </div>
                 ) : teams.map((team, teamIdx) => {
                     const isCollapsed = collapsedTeams.has(team.id);
@@ -150,15 +150,15 @@ export const RosterPage = () => {
                             className="px-4 py-2.5 bg-slate-50/60 dark:bg-[#132338]/40 border-b border-slate-100 dark:border-[#1A2D48] flex items-center gap-2 group/team cursor-pointer select-none"
                             onClick={toggleCollapse}
                         >
-                            <button className="p-0.5 text-slate-400 dark:text-[#64748B] transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                            <button className="p-0.5 text-slate-400 dark:text-[#CBD5E1] transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
                                 <ChevronDownIcon size={14} />
                             </button>
                             <ShieldIcon size={12} className="text-indigo-400" />
                             <span className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1]">{team.name}</span>
-                            <span className="text-xs text-slate-400 dark:text-[#64748B]">· {(team.players || []).length} athletes</span>
+                            <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">· {(team.players || []).length} athletes</span>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
-                                className="ml-auto p-1 rounded text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all opacity-0 group-hover/team:opacity-100"
+                                className="ml-auto p-1 rounded text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover/team:opacity-100"
                                 title="Delete team"
                             >
                                 <Trash2Icon size={12} />
@@ -176,17 +176,17 @@ export const RosterPage = () => {
                                     onClick={() => setViewingPlayer(player)}
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-xs font-semibold shrink-0">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-xs font-semibold shrink-0">
                                             {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                         </div>
                                         <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</span>
                                     </div>
-                                    <span className="text-sm text-slate-500 dark:text-[#94A3B8] truncate">{team.name}</span>
-                                    <span className="text-sm text-slate-500 dark:text-[#94A3B8] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
+                                    <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{team.name}</span>
+                                    <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
                                     <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                                         <button
                                             onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
-                                            className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                            className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
                                             title="Delete athlete"
                                         >
                                             <Trash2Icon size={13} />
@@ -200,7 +200,7 @@ export const RosterPage = () => {
                                     </div>
                                 </div>
                             )) : (
-                                <div className="px-4 py-4 text-sm text-slate-400 dark:text-[#64748B] italic border-b border-slate-100 dark:border-[#1A2D48]">
+                                <div className="px-4 py-4 text-sm text-slate-400 dark:text-[#CBD5E1] italic border-b border-slate-100 dark:border-[#1A2D48]">
                                     No athletes assigned to this team yet.
                                 </div>
                             )
@@ -210,10 +210,10 @@ export const RosterPage = () => {
                 })}
 
                 <div className="px-4 py-3 bg-slate-50/40 dark:bg-[#0F1C30]/40 border-t border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
-                    <span className="text-xs text-slate-400 dark:text-[#64748B]">{allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}</span>
+                    <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">{allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}</span>
                     <button
                         onClick={() => { setAddAthleteMode('team'); setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                     >
                         <PlusIcon size={11} /> Add Team
                     </button>
@@ -229,13 +229,13 @@ export const RosterPage = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
-                    <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Manage athletes and squads across your organisation.</p>
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
                 <div data-tour="add-athlete" className="flex items-center gap-2">
                     <ViewToggle />
                     <button
                         onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                     >
                         <UserPlusIcon size={11} /> Add Athlete
                     </button>
@@ -245,11 +245,11 @@ export const RosterPage = () => {
             {/* Team cards grid */}
             {teams.length === 0 ? (
                 <div className="py-20 text-center">
-                    <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-900/25 flex items-center justify-center mx-auto mb-4">
+                    <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-600 flex items-center justify-center mx-auto mb-4">
                         <UserPlusIcon size={24} className="text-indigo-300" />
                     </div>
-                    <p className="text-sm font-semibold text-slate-500 dark:text-[#94A3B8]">No teams yet</p>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-[#CBD5E1]">No teams yet</p>
+                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1">Click "Add Athlete" above to create your first team and start building your roster.</p>
                 </div>
             ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -270,7 +270,7 @@ export const RosterPage = () => {
                             {/* Delete team */}
                             <button
                                 onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
-                                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
                                 title="Delete team"
                             >
                                 <Trash2Icon size={13} />
@@ -279,14 +279,14 @@ export const RosterPage = () => {
                             <div className="p-5">
                                 {/* Icon + name */}
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/25 flex items-center justify-center shrink-0">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-600 flex items-center justify-center shrink-0">
                                         <ShieldIcon size={18} className="text-indigo-500" />
                                     </div>
                                     <div className="min-w-0">
                                         <div className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">
                                             {team.name}
                                         </div>
-                                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mt-0.5">
+                                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mt-0.5">
                                             {team.sport || 'Team'}
                                         </div>
                                     </div>
@@ -294,8 +294,8 @@ export const RosterPage = () => {
 
                                 {/* Athlete count */}
                                 <div className="flex items-center gap-1.5 mb-4">
-                                    <UsersIcon size={12} className="text-slate-400 dark:text-[#64748B]" />
-                                    <span className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8]">
+                                    <UsersIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
+                                    <span className="text-xs font-semibold text-slate-500 dark:text-[#CBD5E1]">
                                         {players.length} athlete{players.length !== 1 ? 's' : ''}
                                     </span>
                                 </div>
@@ -307,7 +307,7 @@ export const RosterPage = () => {
                                             {preview.map(p => (
                                                 <div
                                                     key={p.id}
-                                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/35 border-2 border-white flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold shrink-0"
+                                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 border-2 border-white flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold shrink-0"
                                                     title={p.name}
                                                 >
                                                     {p.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -315,7 +315,7 @@ export const RosterPage = () => {
                                             ))}
                                         </div>
                                         {overflow > 0 && (
-                                            <span className="ml-2 text-[10px] font-semibold text-slate-400 dark:text-[#64748B]">
+                                            <span className="ml-2 text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1]">
                                                 +{overflow} more
                                             </span>
                                         )}
@@ -335,7 +335,7 @@ export const RosterPage = () => {
             </div>
             )}
 
-            <div className="text-xs text-slate-400 dark:text-[#64748B]">
+            <div className="text-xs text-slate-400 dark:text-[#CBD5E1]">
                 {allAthletes.length} athletes across {teams.length} team{teams.length !== 1 ? 's' : ''}
             </div>
         </>
@@ -353,7 +353,7 @@ export const RosterPage = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setSelectedTeamId(null)}
-                            className="flex items-center gap-1.5 text-sm font-semibold text-slate-400 dark:text-[#64748B] hover:text-slate-900 transition-colors"
+                            className="flex items-center gap-1.5 text-sm font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors"
                         >
                             <ArrowLeftIcon size={15} />
                             Teams
@@ -362,7 +362,7 @@ export const RosterPage = () => {
                         <div className="flex items-center gap-2">
                             <ShieldIcon size={14} className="text-indigo-400" />
                             <h1 className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0]">{selectedTeam.name}</h1>
-                            <span className="text-sm text-slate-400 dark:text-[#64748B]">· {players.length} athletes</span>
+                            <span className="text-sm text-slate-400 dark:text-[#CBD5E1]">· {players.length} athletes</span>
                         </div>
                     </div>
 
@@ -372,14 +372,14 @@ export const RosterPage = () => {
                             <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-1 gap-0.5">
                                 <button
                                     onClick={() => setPlayerLayout('list')}
-                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
                                     title="List"
                                 >
                                     <LayoutListIcon size={14} />
                                 </button>
                                 <button
                                     onClick={() => setPlayerLayout('cards')}
-                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-700'}`}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
                                     title="Cards"
                                 >
                                     <LayoutGridIcon size={14} />
@@ -390,14 +390,14 @@ export const RosterPage = () => {
                         <ViewToggle />
                         <button
                             onClick={() => setConfirmDelete({ type: 'team', id: selectedTeam.id, name: selectedTeam.name })}
-                            className="p-2 rounded-xl border border-slate-200 dark:border-[#243A58] text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:border-rose-100 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-[#243A58] text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:border-rose-100 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all"
                             title="Delete team"
                         >
                             <Trash2Icon size={14} />
                         </button>
                         <button
                             onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                            className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                         >
                             <UserPlusIcon size={11} /> Add Athlete
                         </button>
@@ -411,7 +411,7 @@ export const RosterPage = () => {
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                             teamDetailTab === 'athletes'
                                 ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]'
-                                : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'
+                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'
                         }`}
                     >
                         <UsersIcon size={13} /> Athletes
@@ -421,7 +421,7 @@ export const RosterPage = () => {
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                             teamDetailTab === 'register'
                                 ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]'
-                                : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700'
+                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'
                         }`}
                     >
                         <ClipboardListIcon size={13} /> Register
@@ -434,7 +434,7 @@ export const RosterPage = () => {
                 ) : players.length === 0 ? (
                     <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] p-12 text-center">
                         <UsersIcon size={28} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                        <p className="text-sm font-medium text-slate-400 dark:text-[#64748B]">No athletes in this team yet.</p>
+                        <p className="text-sm font-medium text-slate-400 dark:text-[#CBD5E1]">No athletes in this team yet.</p>
                     </div>
                 ) : playerLayout === 'cards' ? (
                     /* ── Cards layout ── */
@@ -447,24 +447,24 @@ export const RosterPage = () => {
                             >
                                 <button
                                     onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'athlete', id: player.id, name: player.name }); }}
-                                    className="absolute top-2 right-2 p-1 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                    className="absolute top-2 right-2 p-1 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
                                     title="Delete athlete"
                                 >
                                     <Trash2Icon size={13} />
                                 </button>
 
-                                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-lg font-bold ring-2 ring-white shadow">
+                                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-lg font-bold ring-2 ring-white shadow">
                                     {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                 </div>
 
                                 <div className="text-center min-w-0 w-full">
                                     <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</div>
-                                    <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide truncate mt-0.5">
+                                    <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide truncate mt-0.5">
                                         {player.sport || player.position || 'Athlete'}
                                     </div>
                                 </div>
 
-                                <span className="text-[9px] font-bold uppercase tracking-wide text-indigo-500 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40 px-2 py-0.5 rounded-full mt-auto">
+                                <span className="text-[9px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 px-2 py-0.5 rounded-full mt-auto">
                                     View Profile
                                 </span>
                             </div>
@@ -474,9 +474,9 @@ export const RosterPage = () => {
                     /* ── List layout ── */
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                         <div className="grid grid-cols-[2fr_1fr_120px] px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
-                            <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Athlete</span>
-                            <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Sport</span>
-                            <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide text-right">Actions</span>
+                            <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Athlete</span>
+                            <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Sport</span>
+                            <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide text-right">Actions</span>
                         </div>
                         {players.map((player, idx) => (
                             <div
@@ -487,16 +487,16 @@ export const RosterPage = () => {
                                 onClick={() => setViewingPlayer(player)}
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-xs font-semibold shrink-0">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-xs font-semibold shrink-0">
                                         {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                     </div>
                                     <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</span>
                                 </div>
-                                <span className="text-sm text-slate-500 dark:text-[#94A3B8] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
+                                <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
                                 <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
-                                        className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
                                         title="Delete athlete"
                                     >
                                         <Trash2Icon size={13} />
@@ -523,13 +523,13 @@ export const RosterPage = () => {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Manage athletes and squads across your organisation.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <ViewToggle />
                         <button
                             onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                            className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
                         >
                             <UserPlusIcon size={11} /> Add Athlete
                         </button>
@@ -537,11 +537,11 @@ export const RosterPage = () => {
                 </div>
                 <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] p-16 text-center">
                     <UsersIcon size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8]">No teams yet</p>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1 mb-4">Create a team and add your first athletes to get started.</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">No teams yet</p>
+                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1 mb-4">Create a team and add your first athletes to get started.</p>
                     <button
                         onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
-                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mx-auto"
+                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 mx-auto"
                     >
                         <UserPlusIcon size={11} /> Add Athlete
                     </button>
@@ -565,7 +565,7 @@ export const RosterPage = () => {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Manage athletes and squads across your organisation.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -588,7 +588,7 @@ export const RosterPage = () => {
                 </div>
                 <div className="flex flex-col items-center py-6">
                     <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                    <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading roster data...</span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading roster data...</span>
                 </div>
             </div>
         );

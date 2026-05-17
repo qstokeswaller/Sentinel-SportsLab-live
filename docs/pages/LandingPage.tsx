@@ -160,7 +160,7 @@ const LandingPage: React.FC = () => {
                         </div>
                         <div className="flex flex-wrap gap-1">
                             {['Baseline Trend','Dose-Response','Scenario Model','F-V Profile'].map(m => (
-                                <span key={m} className={`text-[7px] px-1.5 py-0.5 rounded font-medium ${dark ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-cyan-50 text-cyan-600'}`}>{m}</span>
+                                <span key={m} className={`text-[7px] px-1.5 py-0.5 rounded font-medium ${dark ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400'}`}>{m}</span>
                             ))}
                         </div>
                     </div>
@@ -313,7 +313,7 @@ const LandingPage: React.FC = () => {
                 </div>
 
                 <div ref={rHero.ref} style={rHero.style} className="relative max-w-7xl mx-auto px-4 sm:px-8 text-center">
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-100 dark:border-indigo-800/40 text-indigo-600'} border rounded-full text-xs font-semibold mb-10`}>
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 dark:bg-indigo-600 border-indigo-100 dark:border-indigo-800/40 text-indigo-600'} border rounded-full text-xs font-semibold mb-10`}>
                         <SparklesIcon size={13} /> Sports Science Intelligence Platform
                     </div>
                     <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-[-0.03em] leading-[0.95]">
@@ -376,7 +376,7 @@ const LandingPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-1 gap-3">
-                                        <div className={`${dark ? 'bg-indigo-500/10' : 'bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-100 dark:border-indigo-800/40'} rounded-xl p-3`}>
+                                        <div className={`${dark ? 'bg-indigo-500/10' : 'bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40'} rounded-xl p-3`}>
                                             <div className={`text-[8px] font-semibold ${dark ? 'text-indigo-400' : 'text-indigo-500'} uppercase tracking-wider`}>Readiness</div>
                                             <div className={`text-2xl font-bold mt-1 ${dark ? 'text-indigo-300' : 'text-indigo-600'}`}>82</div>
                                         </div>
@@ -667,7 +667,7 @@ const LandingPage: React.FC = () => {
                                     onClick={() => t.cust ? (window.location.href = 'mailto:hello@sentinelsportslab.com') : nav('/login')}
                                     className={`w-full py-3 font-semibold rounded-xl text-sm transition-all ${
                                         t.pop
-                                            ? 'bg-white text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
+                                            ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
                                             : t.cust
                                                 ? 'bg-white text-slate-900 hover:bg-slate-100'
                                                 : dark
@@ -700,7 +700,7 @@ const LandingPage: React.FC = () => {
                         If you hold your program to a higher standard, Sentinel was built for you.
                     </p>
                     <button onClick={() => nav('/login')}
-                        className="mt-10 px-10 py-4 bg-white text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-2xl hover:shadow-[0_20px_60px_rgba(255,255,255,0.2)] hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all active:scale-[0.97] text-[15px]">
+                        className="mt-10 px-10 py-4 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-2xl hover:shadow-[0_20px_60px_rgba(255,255,255,0.2)] hover:bg-indigo-50 dark:hover:bg-indigo-600 transition-all active:scale-[0.97] text-[15px]">
                         Start Your Free Trial
                     </button>
                 </div>

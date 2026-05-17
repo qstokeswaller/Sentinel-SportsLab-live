@@ -59,7 +59,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 const VOLUME_COLORS: Record<string, string> = {
-  'Upper Body': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
+  'Upper Body': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
   'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
   'Core': 'bg-amber-100 text-amber-700',
   'Full Body': 'bg-purple-100 text-purple-700',
@@ -83,7 +83,7 @@ const BODY_PART_COLORS: Record<string, string> = {
   'Calves': 'bg-teal-100 text-teal-700',
   'Abdominals': 'bg-orange-100 text-orange-700',
   'Forearms': 'bg-stone-100 text-stone-600',
-  'Trapezius': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700',
+  'Trapezius': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
   'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
   'Adductors': 'bg-blue-100 text-blue-700',
   'Abductors': 'bg-purple-100 text-purple-700',
@@ -167,7 +167,7 @@ const ExRow = ({
         <span className="w-6 h-6 bg-slate-900 text-white rounded-md flex items-center justify-center text-[10px] font-semibold shrink-0">
           {letter}
         </span>
-        <span className="flex-1 text-sm font-bold text-slate-800 truncate">{row.exerciseName}</span>
+        <span className="flex-1 text-sm font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{row.exerciseName}</span>
         <div className="flex flex-wrap gap-1">
           {row.exerciseCategories.slice(0, 2).map((c) => (
             <span key={c} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">
@@ -175,7 +175,7 @@ const ExRow = ({
             </span>
           ))}
         </div>
-        <button onClick={onRemove} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all ml-1">
+        <button onClick={onRemove} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all ml-1">
           <Trash2Icon size={14} />
         </button>
       </div>
@@ -517,11 +517,11 @@ export const ProgramBuilderModal = ({
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-bold">
+            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-[#E2E8F0] dark:hover:text-[#E2E8F0] transition-colors text-sm font-bold">
               <ArrowLeftIcon size={18} /> Back
             </button>
             <div className="h-5 w-px bg-slate-200" />
-            <h2 className="text-lg font-semibold text-slate-900 uppercase tracking-tight">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">
               {editingProgram ? 'Edit Program' : 'Create a Program'}
             </h2>
           </div>
@@ -540,7 +540,7 @@ export const ProgramBuilderModal = ({
               data-tour="program-save-button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50"
             >
               <SaveIcon size={16} />
               {saving ? 'Saving...' : editingProgram ? 'Save Changes' : 'Save & Close'}
@@ -555,7 +555,7 @@ export const ProgramBuilderModal = ({
             {/* Program meta */}
             <div data-tour="program-meta" className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Name *</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1 block">Program Name *</label>
                 <input
                   data-tour="program-name-input"
                   value={programName}
@@ -565,7 +565,7 @@ export const ProgramBuilderModal = ({
                 />
               </div>
               <div>
-                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Tags (comma separated)</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1 block">Tags (comma separated)</label>
                 <input
                   value={programTags}
                   onChange={(e) => setProgramTags(e.target.value)}
@@ -587,7 +587,7 @@ export const ProgramBuilderModal = ({
                 </span>
               </div>
               <div className="col-span-2">
-                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Program Overview</label>
+                <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1 block">Program Overview</label>
                 <textarea
                   value={programOverview}
                   onChange={(e) => setProgramOverview(e.target.value)}
@@ -639,7 +639,7 @@ export const ProgramBuilderModal = ({
                               ? d.isRestDay
                                 ? 'border-slate-400 text-slate-500 bg-white'
                                 : 'border-indigo-600 text-indigo-600 dark:text-indigo-300 bg-white'
-                              : 'border-transparent text-slate-400 hover:text-slate-700'
+                              : 'border-transparent text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1]'
                           }`}
                         >
                           Day {i + 1}
@@ -679,7 +679,7 @@ export const ProgramBuilderModal = ({
                           className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all shrink-0 ${
                             activeDay.isRestDay
                               ? 'bg-slate-800 text-white border-slate-800 hover:bg-slate-700'
-                              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700'
+                              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700 dark:text-[#CBD5E1]'
                           }`}
                         >
                           <MoonIcon size={13} />
@@ -688,7 +688,7 @@ export const ProgramBuilderModal = ({
                         {days.length > 1 && (
                           <button
                             onClick={() => removeDay(activeDayIdx)}
-                            className="p-2.5 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
+                            className="p-2.5 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all border border-slate-200"
                             title="Remove this day"
                           >
                             <Trash2Icon size={16} />
@@ -703,7 +703,7 @@ export const ProgramBuilderModal = ({
                             <MoonIcon size={22} className="text-slate-400" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-slate-600">Rest Day</p>
+                            <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">Rest Day</p>
                             <p className="text-xs text-slate-400 mt-0.5">No exercises scheduled — recovery is part of the plan.</p>
                           </div>
                           <button
@@ -723,7 +723,7 @@ export const ProgramBuilderModal = ({
                             <div className="flex flex-wrap gap-2 items-center">
                               <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Body Part Volume</span>
                               {Object.entries(volume.byBodyPart).sort((a, b) => b[1] - a[1]).map(([part, sets]) => {
-                                const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600';
+                                const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
                                 return (
                                   <span key={part} className={`px-3 py-1 rounded-full text-[10px] font-semibold ${color}`}>
                                     {part} {sets}
@@ -736,7 +736,7 @@ export const ProgramBuilderModal = ({
                             <div className="flex flex-wrap gap-2 items-center">
                               <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Region Volume</span>
                               {Object.entries(volume.byRegion).sort((a, b) => b[1] - a[1]).map(([region, sets]) => {
-                                const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600';
+                                const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
                                 return (
                                   <span key={region} className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase ${color}`}>
                                     {region} {sets}
@@ -770,7 +770,7 @@ export const ProgramBuilderModal = ({
                             className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wide border-2 border-dashed transition-all ${
                               activeSection === sec
                                 ? 'border-indigo-400 text-indigo-500 bg-indigo-50'
-                                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:text-[#CBD5E1]'
                             }`}
                           >
                             <PlusIcon size={12} className="inline mr-1.5" />
@@ -782,7 +782,7 @@ export const ProgramBuilderModal = ({
                       </div>}
                       {/* Day instructions — visible for all day types */}
                       <div>
-                        <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 block">Day Instructions</label>
+                        <label className="text-[10px] font-semibold uppercase text-slate-400 mb-1 block">Day Instructions</label>
                         <textarea
                           value={activeDay.instructions}
                           onChange={(e) => updateDay(activeDayIdx, 'instructions', e.target.value)}
@@ -825,7 +825,7 @@ export const ProgramBuilderModal = ({
             {/* Add Week button — always visible */}
             <button
               onClick={addWeek}
-              className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-all flex items-center justify-center gap-2"
             >
               <PlusIcon size={14} />
               Add Week {weeks.length + 1}
@@ -840,12 +840,12 @@ export const ProgramBuilderModal = ({
 
         {/* Header / filters */}
         <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
-          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Choose Exercise</h3>
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-700 dark:text-[#CBD5E1]">Choose Exercise</h3>
 
           {/* All / Mine toggle */}
           <div className="flex bg-slate-100 rounded-lg p-0.5">
-            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
-            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
+            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
               Mine
             </button>
@@ -904,7 +904,7 @@ export const ProgramBuilderModal = ({
               <button
                 onClick={() => { setExLetter(''); setExSearch(''); }}
                 className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
-                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'
+                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'
                 }`}
               >
                 ✕
@@ -919,7 +919,7 @@ export const ProgramBuilderModal = ({
                   className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
                     exLetter === l
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'
+                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'
                   }`}
                 >
                   {l}
@@ -929,7 +929,7 @@ export const ProgramBuilderModal = ({
           </div>
 
           {/* Adding to indicator */}
-          <div className="bg-indigo-50 dark:bg-indigo-900/25 rounded-xl px-3 py-2">
+          <div className="bg-indigo-50 dark:bg-indigo-600 rounded-xl px-3 py-2">
             <span className="text-[9px] font-semibold uppercase text-indigo-400 tracking-wide">Adding to: </span>
             <span className="text-[9px] font-semibold uppercase text-indigo-700 dark:text-indigo-400 tracking-wide">{SECTION_LABELS[activeSection]}</span>
             <span className="text-[9px] text-indigo-400 ml-1">
@@ -952,10 +952,10 @@ export const ProgramBuilderModal = ({
                 <button
                   key={ex.id}
                   onClick={() => addExercise(ex)}
-                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-colors group flex items-start gap-3"
+                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-colors group flex items-start gap-3"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-800 leading-tight truncate">
+                    <div className="text-xs font-bold text-slate-800 dark:text-[#E2E8F0] group-hover:text-indigo-800 leading-tight truncate">
                       {ex.name}
                     </div>
                     {ex.categories?.[0] && (

@@ -49,14 +49,14 @@ export const HamstringReport: React.FC = () => {
                         <ActivityIcon size={20} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Hamstring Intelligence</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Hamstring Intelligence</h3>
                         <p className="text-xs text-orange-500 uppercase tracking-wide mt-0.5">Nordic Force & Asymmetry Analysis</p>
                     </div>
                 </div>
                 <div className="flex bg-slate-100 p-1.5 rounded-xl">
                     {['Analysis', 'Assessment', 'Import'].map(tab => (
                         <button key={tab} onClick={() => setHamstringReportTab(tab)}
-                            className={`px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>
                             {tab}
                         </button>
                     ))}
@@ -124,7 +124,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
     const hasAnyFilter = hamAnalysisTeamFilter || hamstringReportSelectedAthlete !== 'All' || hamDateFilterStart || hamDateFilterEnd;
     const clearAllFilters = () => { setHamAnalysisTeamFilter(''); setHamstringReportSelectedAthlete('All'); setHamDateFilterStart(''); setHamDateFilterEnd(''); };
     const handlePrint = () => { window.print(); };
-    const selectCls = 'bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-semibold text-slate-700 outline-none focus:border-orange-300 shadow-sm appearance-none cursor-pointer transition-all hover:bg-slate-50';
+    const selectCls = 'bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-orange-300 shadow-sm appearance-none cursor-pointer transition-all hover:bg-slate-50';
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -133,9 +133,9 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
                         <CalendarIcon size={13} className="text-slate-400 shrink-0" />
-                        <input type="date" value={hamDateFilterStart} onChange={(e) => setHamDateFilterStart(e.target.value)} className="text-[10px] font-semibold text-slate-700 outline-none w-28 cursor-pointer bg-transparent" />
+                        <input type="date" value={hamDateFilterStart} onChange={(e) => setHamDateFilterStart(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
                         <span className="text-slate-300 font-bold text-xs">—</span>
-                        <input type="date" value={hamDateFilterEnd} onChange={(e) => setHamDateFilterEnd(e.target.value)} className="text-[10px] font-semibold text-slate-700 outline-none w-28 cursor-pointer bg-transparent" />
+                        <input type="date" value={hamDateFilterEnd} onChange={(e) => setHamDateFilterEnd(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
                         {(hamDateFilterStart || hamDateFilterEnd) && (
                             <button onClick={() => { setHamDateFilterStart(''); setHamDateFilterEnd(''); }} className="ml-1 text-slate-300 hover:text-rose-500 transition-colors"><XIcon size={12} /></button>
                         )}
@@ -156,7 +156,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                         }
                     </CustomSelect>
                     {hasAnyFilter && (
-                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 rounded-xl transition-all">
+                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-700 hover:bg-rose-100 rounded-xl transition-all">
                             <XIcon size={12} /> Clear filters
                         </button>
                     )}
@@ -177,7 +177,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
             <div className="grid grid-cols-3 gap-6 mb-8">
                 <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                     <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Total Reports</span>
-                    <div className="text-2xl font-bold text-slate-800">{filteredEntries.length}</div>
+                    <div className="text-2xl font-bold text-slate-800 dark:text-[#E2E8F0]">{filteredEntries.length}</div>
                 </div>
                 <div className="bg-white px-5 py-5 rounded-xl border border-rose-100 dark:border-rose-900/40 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                     <span className="text-[9px] font-semibold uppercase text-rose-400 tracking-wide">High Risk</span>
@@ -185,7 +185,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 </div>
                 <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
                     <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Avg Asymmetry</span>
-                    <div className="text-2xl font-bold text-slate-800">{avgAsymmetry}<span className="text-lg ml-0.5">%</span></div>
+                    <div className="text-2xl font-bold text-slate-800 dark:text-[#E2E8F0]">{avgAsymmetry}<span className="text-lg ml-0.5">%</span></div>
                 </div>
             </div>
             <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -215,14 +215,14 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                 return (
                                     <tr key={entry.id || idx} onClick={() => !isHamstringEditMode && setInspectHamEntry(entry)}
                                         className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30 dark:bg-[#0F1C30]/30' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40 cursor-pointer'}`}>
-                                        <td className="px-4 py-3"><div className="text-xs font-semibold text-slate-900">{entry.date.slice(0, 10)}</div></td>
+                                        <td className="px-4 py-3"><div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{entry.date.slice(0, 10)}</div></td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-[10px]">{entry.athleteName.split(' ').map(n => n[0]).join('')}</div>
-                                                <div className="text-xs font-semibold text-slate-800">{entry.athleteName}</div>
+                                                <div className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{entry.athleteName}</div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-center"><div className="text-sm font-semibold text-slate-900">{avgForceValue} <span className="text-[9px] text-slate-300">N</span></div></td>
+                                        <td className="px-4 py-3 text-center"><div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{avgForceValue} <span className="text-[9px] text-slate-300">N</span></div></td>
                                         <td className="px-4 py-3 text-center"><div className={`text-sm font-semibold ${riskText}`}>{rs} <span className="text-[9px] opacity-70">N/kg</span></div></td>
                                         <td className="px-4 py-3 text-center">
                                             {entry.mode === 'split' ? (
@@ -238,7 +238,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                         {isHamstringEditMode && (
                                             <td className="px-4 py-4 text-center print:hidden">
                                                 <button onClick={(e) => { e.stopPropagation(); if (confirm(`Delete record for ${entry.athleteName} on ${entry.date}?`)) { handleDeleteMetric(entry.athleteId, entry.id); } }}
-                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all"><Trash2Icon size={16} /></button>
+                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 dark:hover:text-rose-400 rounded-lg transition-all"><Trash2Icon size={16} /></button>
                                             </td>
                                         )}
                                     </tr>
@@ -263,9 +263,9 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                         </div>
                         <div className="p-10 space-y-8">
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Bodyweight</span><span className="text-sm font-semibold text-slate-800">{inspectHamEntry.weight}kg</span></div>
+                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Bodyweight</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.weight}kg</span></div>
                                 <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Rel. Strength</span><span className="text-sm font-semibold text-rose-500">{inspectHamEntry.relativeStrength}</span></div>
-                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Asymmetry</span><span className="text-sm font-semibold text-slate-800">{inspectHamEntry.asymmetry || '0'}%</span></div>
+                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Asymmetry</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.asymmetry || '0'}%</span></div>
                             </div>
                             <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-semibold uppercase tracking-wide text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
                         </div>
@@ -374,8 +374,8 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
             {/* Mode toggle + dropdowns */}
             <div className="bg-slate-50/50 dark:bg-[#132338]/40 px-6 py-5 border-b border-slate-100 space-y-4">
                 <div className="flex bg-white border border-slate-200 p-1 rounded-xl w-fit shadow-sm">
-                    <button onClick={() => setHamEntryMode('individual')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'individual' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Individual</button>
-                    <button onClick={() => setHamEntryMode('team')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'team' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>Team Batch</button>
+                    <button onClick={() => setHamEntryMode('individual')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'individual' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Individual</button>
+                    <button onClick={() => setHamEntryMode('team')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'team' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Team Batch</button>
                 </div>
                 {hamEntryMode === 'individual' && (
                     <div>
@@ -461,7 +461,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                             </div>
                             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                                 <CalendarIcon size={13} className="text-slate-400" />
-                                <input type="date" value={teamBatchDate} onChange={(e) => setTeamBatchDate(e.target.value)} className="text-xs font-bold outline-none bg-transparent text-slate-700" />
+                                <input type="date" value={teamBatchDate} onChange={(e) => setTeamBatchDate(e.target.value)} className="text-xs font-bold outline-none bg-transparent text-slate-700 dark:text-[#CBD5E1]" />
                             </div>
                             <div className="ml-auto flex items-center gap-3">
                                 <span className="text-[10px] font-medium text-slate-400">{savedRows.size}/{allTeamPlayers.length} saved</span>
@@ -472,7 +472,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                         </div>
                         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
                             <div className="w-7 h-7 bg-orange-50 rounded-lg flex items-center justify-center shrink-0"><UsersIcon size={14} className="text-orange-500" /></div>
-                            <span className="text-xs font-semibold text-slate-700">{selectedTeam.name}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedTeam.name}</span>
                             {hamTeamAthleteFilter
                                 ? <span className="text-[9px] font-medium text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">Filtered: 1 athlete</span>
                                 : <span className="text-[9px] font-medium text-slate-400">{allTeamPlayers.length} athletes</span>
@@ -508,7 +508,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                                                 <td className={`px-4 py-2.5 sticky left-0 ${rowBg}`}>
                                                     <div className="flex items-center gap-2">
                                                         {isSaved ? <CheckCircleIcon size={12} className="text-emerald-500 shrink-0" /> : <div className="w-3 h-3 rounded-full border-2 border-slate-200 shrink-0" />}
-                                                        <span className="font-bold text-slate-800 truncate max-w-[130px]">{player.name}</span>
+                                                        <span className="font-bold text-slate-800 dark:text-[#E2E8F0] truncate max-w-[130px]">{player.name}</span>
                                                     </div>
                                                 </td>
                                                 {teamBatchMode === 'split' ? (
@@ -517,9 +517,9 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                                                 ) : (<td className="px-2 py-1.5"><input type="number" value={row.aggregate || ''} onChange={(e) => updateRow(player.id, 'aggregate', e.target.value)} placeholder="—" disabled={isSaved} className={inputCls(isSaved)} /></td>)}
                                                 <td className="px-2 py-1.5"><input type="number" value={row.bw || ''} onChange={(e) => updateRow(player.id, 'bw', e.target.value)} placeholder="—" disabled={isSaved} className={inputCls(isSaved)} /></td>
                                                 {teamBatchMode === 'split' && (
-                                                    <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold ${parseFloat(res?.asym) > 15 ? 'text-rose-500' : res?.asym ? 'text-slate-700' : 'text-slate-300'}`}>{res?.asym ? `${res.asym}%` : '—'}</span></td>
+                                                    <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold ${parseFloat(res?.asym) > 15 ? 'text-rose-500' : res?.asym ? 'text-slate-700 dark:text-[#CBD5E1]' : 'text-slate-300'}`}>{res?.asym ? `${res.asym}%` : '—'}</span></td>
                                                 )}
-                                                <td className="px-3 py-2.5 text-center"><span className="text-xs font-semibold text-slate-700">{res?.rel && parseFloat(res.rel) > 0 ? res.rel : '—'}</span></td>
+                                                <td className="px-3 py-2.5 text-center"><span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{res?.rel && parseFloat(res.rel) > 0 ? res.rel : '—'}</span></td>
                                                 <td className="px-3 py-2.5 text-center">
                                                     {res?.risk ? <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-lg uppercase tracking-wider ${res.riskColor}`}>{res.risk}</span> : <span className="text-slate-300 text-xs">—</span>}
                                                 </td>
@@ -681,7 +681,7 @@ const ImportTab = ({ teams, setTeams, showToast, setHamstringReportTab, handleSa
         <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center space-y-4">
             <div className="mx-auto w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500"><FileTextIcon size={22} /></div>
             <div>
-                <h4 className="text-base font-semibold text-slate-900">Import CSV Data</h4>
+                <h4 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Import CSV Data</h4>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
                     Supports single-value, multi-attempt, and summary (peak/average) NordBord formats.
                 </p>

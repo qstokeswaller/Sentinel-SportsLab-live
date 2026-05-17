@@ -53,8 +53,8 @@ export const TopBar = () => {
             <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] truncate flex-1 min-w-0">{pageTitle}</span>
 
             {/* User avatar */}
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 dark:text-indigo-400">{userInitial}</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center shrink-0">
+                <span className="text-xs font-semibold text-indigo-600 dark:text-white">{userInitial}</span>
             </div>
         </header>
     );

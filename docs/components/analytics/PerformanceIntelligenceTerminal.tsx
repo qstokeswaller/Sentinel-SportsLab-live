@@ -151,22 +151,22 @@ export const PerformanceIntelligenceTerminal = ({
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Readiness Breakdown</h3>
-                <span className="text-[10px] text-slate-400 dark:text-[#64748B]">{r.domainsUsed} of {r.domainsTotal} domains active</span>
+                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{r.domainsUsed} of {r.domainsTotal} domains active</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {r.domains.map(d => (
                     <div key={d.name} className={`p-3 rounded-xl border ${d.available ? 'bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58]' : 'bg-slate-50 dark:bg-[#0F1C30] border-dashed border-slate-200 dark:border-[#243A58] opacity-60'}`}>
-                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase mb-1">{d.name}</div>
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase mb-1">{d.name}</div>
                         {d.available ? (
                             <>
                                 <div className={`text-xl font-bold ${d.score >= 80 ? 'text-emerald-600 dark:text-emerald-400' : d.score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>{d.score}</div>
                                 <div className="w-full h-1.5 bg-slate-100 dark:bg-[#243A58] rounded-full mt-2 overflow-hidden">
                                     <div className={`h-full rounded-full transition-all ${d.score >= 80 ? 'bg-emerald-500' : d.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${d.score}%` }} />
                                 </div>
-                                <div className="text-[8px] text-slate-400 dark:text-[#64748B] mt-1 truncate" title={d.reason}>{d.reason}</div>
+                                <div className="text-[8px] text-slate-400 dark:text-[#CBD5E1] mt-1 truncate" title={d.reason}>{d.reason}</div>
                             </>
                         ) : (
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B] italic mt-1">{d.reason}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] italic mt-1">{d.reason}</div>
                         )}
                     </div>
                 ))}
@@ -179,7 +179,7 @@ export const PerformanceIntelligenceTerminal = ({
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">{title}</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">{subtitle}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{subtitle}</p>
                 </div>
                 <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                     {insightList.map(ins => {
@@ -194,10 +194,10 @@ export const PerformanceIntelligenceTerminal = ({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${severityBadge(ins.severity)}`}>{ins.severity}</span>
-                                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase flex items-center gap-1">{categoryIcon(ins.category)} {ins.category}</span>
+                                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase flex items-center gap-1">{categoryIcon(ins.category)} {ins.category}</span>
                                         </div>
                                         <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] mt-1">{ins.title}</h4>
-                                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5 line-clamp-2">{ins.message}</p>
+                                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5 line-clamp-2">{ins.message}</p>
                                     </div>
                                     <div className="shrink-0 mt-1">
                                         {isExpanded ? <ChevronDownIcon size={14} className="text-slate-400" /> : <ChevronRightIcon size={14} className="text-slate-400" />}
@@ -206,11 +206,11 @@ export const PerformanceIntelligenceTerminal = ({
                                 {isExpanded && (
                                     <div className="px-6 pb-4 ml-10">
                                         <div className={`p-4 rounded-xl border ${severityBg(ins.severity)}`}>
-                                            <div className="text-[9px] font-bold text-slate-500 dark:text-[#64748B] uppercase mb-1">Recommendation</div>
+                                            <div className="text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mb-1">Recommendation</div>
                                             <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{ins.recommendation}</p>
                                             <div className="flex items-center gap-3 mt-3 pt-2 border-t border-slate-200/50 dark:border-[#243A58]/50">
-                                                <span className="text-[9px] text-slate-400 dark:text-[#64748B]">Source: {ins.dataSource}</span>
-                                                {ins.confidence && <span className="text-[9px] text-slate-400 dark:text-[#64748B]">| {ins.confidence}</span>}
+                                                <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">Source: {ins.dataSource}</span>
+                                                {ins.confidence && <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">| {ins.confidence}</span>}
                                             </div>
                                         </div>
                                     </div>
@@ -241,7 +241,7 @@ export const PerformanceIntelligenceTerminal = ({
                                 <div className="text-[9px] font-bold text-indigo-500 uppercase">{label}</div>
                                 <div className="flex items-baseline gap-1 mt-1">
                                     <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{val !== null ? val.toFixed(val < 10 ? 2 : 0) : '--'}</span>
-                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{m.unit || ''}</span>
+                                    <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{m.unit || ''}</span>
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     {trend !== null && (
@@ -249,11 +249,11 @@ export const PerformanceIntelligenceTerminal = ({
                                             {Number(trend) >= 0 ? '+' : ''}{trend}%
                                         </span>
                                     )}
-                                    <span className={`text-[9px] ${stale ? 'text-amber-500' : 'text-slate-400 dark:text-[#64748B]'}`}>
+                                    <span className={`text-[9px] ${stale ? 'text-amber-500' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
                                         {data.daysSinceLatest}d ago
                                     </span>
                                 </div>
-                                {data.count > 1 && <div className="text-[8px] text-slate-400 dark:text-[#64748B] mt-1">{data.count} tests logged</div>}
+                                {data.count > 1 && <div className="text-[8px] text-slate-400 dark:text-[#CBD5E1] mt-1">{data.count} tests logged</div>}
                             </div>
                         );
                     })}
@@ -278,7 +278,7 @@ export const PerformanceIntelligenceTerminal = ({
                         <>
                             <button
                                 onClick={() => { setFocusedPlayerId(null); setExpandedInsight(null); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-lg text-xs font-medium transition-all"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-all"
                             >
                                 <ChevronRightIcon size={12} className="rotate-180" /> Squad
                             </button>
@@ -289,7 +289,7 @@ export const PerformanceIntelligenceTerminal = ({
                         <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">
                             {focusedPlayerName || (isTeam ? `${teamProfiles.length} Athletes` : selectedSubject?.name)}
                         </div>
-                        <div className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                        <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                             {insights.length} insight{insights.length !== 1 ? 's' : ''} generated
                             {focusedPlayerName && ' — individual deep-dive'}
                         </div>
@@ -329,7 +329,7 @@ export const PerformanceIntelligenceTerminal = ({
             {isTeam && !focusedPlayerId && teamReadiness && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase">Squad Size</div>
+                        <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase">Squad Size</div>
                         <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{teamProfiles.length}</div>
                     </div>
                     <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-xl border border-emerald-200 dark:border-emerald-800/50 p-4">
@@ -356,8 +356,8 @@ export const PerformanceIntelligenceTerminal = ({
                     {individualInsights.length === 0 && !isLoading && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
                             <BrainIcon size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                            <h3 className="text-sm font-semibold text-slate-600 dark:text-[#94A3B8] mb-1">No Insights Available</h3>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B] max-w-md mx-auto">
+                            <h3 className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1] mb-1">No Insights Available</h3>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] max-w-md mx-auto">
                                 {focusedPlayerName
                                     ? `No data found for ${focusedPlayerName}. Log training loads, wellness check-ins, or test results to generate insights.`
                                     : 'Start logging training loads, wellness check-ins, and test results to unlock cross-domain intelligence.'}
@@ -378,7 +378,7 @@ export const PerformanceIntelligenceTerminal = ({
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Squad Readiness Matrix</h3>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Click any athlete to view their full individual profile</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Click any athlete to view their full individual profile</p>
                             </div>
                             <div className="flex items-center gap-2 text-[9px]">
                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 80+</span>
@@ -404,7 +404,7 @@ export const PerformanceIntelligenceTerminal = ({
                                                 </div>
                                                 <div className="flex-1 text-left min-w-0">
                                                     <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</div>
-                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{r.confidence} confidence — {r.domainsUsed} domains</div>
+                                                    <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{r.confidence} confidence — {r.domainsUsed} domains</div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {critCount > 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:text-rose-400">{critCount} critical</span>}
@@ -416,7 +416,7 @@ export const PerformanceIntelligenceTerminal = ({
                                             {/* Drill-in button */}
                                             <button
                                                 onClick={() => { setFocusedPlayerId(player.id); setExpandedInsight(null); }}
-                                                className="px-3 py-3 text-slate-300 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all border-l border-slate-100"
+                                                className="px-3 py-3 text-slate-300 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-all border-l border-slate-100"
                                                 title={`View ${player.name}'s full profile`}
                                             >
                                                 <ArrowRightIcon size={14} />
@@ -436,8 +436,8 @@ export const PerformanceIntelligenceTerminal = ({
                                                     <div key={ins.id} className={`p-3 rounded-lg border ${severityBg(ins.severity)} flex items-start gap-2`}>
                                                         {severityIcon(ins.severity)}
                                                         <div>
-                                                            <div className="text-xs font-semibold text-slate-800">{ins.title}</div>
-                                                            <div className="text-[10px] text-slate-600 mt-0.5">{ins.recommendation}</div>
+                                                            <div className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{ins.title}</div>
+                                                            <div className="text-[10px] text-slate-600 dark:text-[#CBD5E1] mt-0.5">{ins.recommendation}</div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -457,7 +457,7 @@ export const PerformanceIntelligenceTerminal = ({
                                     <CalendarIcon size={14} className="text-indigo-500" />
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Re-Test Schedule</h3>
                                 </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">{retestSchedule.length} overdue assessments across the squad</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{retestSchedule.length} overdue assessments across the squad</p>
                             </div>
                             <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                                 {retestSchedule.map((entry) => (
@@ -467,7 +467,7 @@ export const PerformanceIntelligenceTerminal = ({
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{entry.playerName}</div>
-                                            <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{entry.message}</div>
+                                            <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{entry.message}</div>
                                         </div>
                                         <button
                                             onClick={() => { setFocusedPlayerId(entry.playerId); setExpandedInsight(null); }}

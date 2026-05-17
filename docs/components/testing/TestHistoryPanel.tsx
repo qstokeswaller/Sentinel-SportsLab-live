@@ -67,7 +67,7 @@ export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName
             >
                 <div className="flex items-center gap-2">
                     <ClockIcon size={14} className="text-slate-400" />
-                    <h3 className="text-sm font-semibold text-slate-700">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">
                         History ({results.length})
                     </h3>
                 </div>

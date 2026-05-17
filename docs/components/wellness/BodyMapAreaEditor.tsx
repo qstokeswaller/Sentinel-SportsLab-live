@@ -148,7 +148,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 <button
                     type="button"
                     onClick={resetToDefaults}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors"
                     title="Reset to default areas"
                 >
                     <RotateCcw size={11} /> Reset Defaults
@@ -189,7 +189,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                                 nums.push(nums.length + 1);
                                 onChange({ ...config, subInputOptions: opts, subInputNumericMap: nums });
                             }}
-                            className="flex items-center gap-1 text-[9px] font-semibold uppercase text-cyan-600 hover:text-cyan-700"
+                            className="flex items-center gap-1 text-[9px] font-semibold uppercase text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300"
                         >
                             <Plus size={11} /> Add
                         </button>
@@ -446,7 +446,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                         <button
                             type="button"
                             onClick={() => onChange({ ...config, severityLevels: [...DEFAULT_SEVERITY_LEVELS] })}
-                            className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 transition-colors mt-1"
+                            className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors mt-1"
                         >
                             <RotateCcw size={10} /> Reset Severity Defaults
                         </button>

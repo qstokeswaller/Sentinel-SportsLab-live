@@ -317,12 +317,12 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
 
     // ── Card ─────────────────────────────────────────────────────────────────
     return (
-        <div className="bg-white rounded-xl border-2 border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Header */}
             <div className="p-5 border-b border-slate-50">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-900 leading-tight">
+                        <p className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">
                             {question.text || 'Unnamed question'}
                         </p>
                         {question.templateName && (

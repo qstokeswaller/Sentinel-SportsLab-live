@@ -175,7 +175,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
 
         {/* Session info */}
         <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
-          <h3 className="text-sm font-bold text-slate-900">{session.title || 'Untitled Session'}</h3>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{session.title || 'Untitled Session'}</h3>
           <p className="text-[10px] text-slate-400 mt-0.5">
             {new Date(session.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
             {session.time ? ` at ${session.time}` : ''}
@@ -221,7 +221,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
                   const tonnage = row.sets * row.reps * row.weight;
                   return (
                     <tr key={`${row.exerciseId}-${idx}`} className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-semibold text-slate-800">{row.exerciseName}</td>
+                      <td className="py-2.5 pr-3 font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.exerciseName}</td>
                       <td className="py-2.5">
                         <input
                           className={inputCls}
@@ -239,7 +239,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
                       <td className="py-2.5">
                         {row.fromSheet ? (
                           <div className="relative" title="Weight from 1RM sheet — edit the sheet to change">
-                            <input className={`${inputCls} bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 pr-7`} value={row.weight || ''} readOnly />
+                            <input className={`${inputCls} bg-indigo-50 dark:bg-indigo-500/20 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 pr-7`} value={row.weight || ''} readOnly />
                             <LockIcon size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400" />
                           </div>
                         ) : (
@@ -250,7 +250,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
                           />
                         )}
                       </td>
-                      <td className="py-2.5 text-center font-bold text-slate-600">
+                      <td className="py-2.5 text-center font-bold text-slate-600 dark:text-[#CBD5E1]">
                         {tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}
                       </td>
                     </tr>
@@ -267,7 +267,7 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
             <div className="flex items-center gap-4">
               <div>
                 <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wider">Total Tonnage</span>
-                <div className="text-lg font-black text-slate-900">{totalTonnage.toLocaleString()} kg</div>
+                <div className="text-lg font-black text-slate-900 dark:text-[#E2E8F0]">{totalTonnage.toLocaleString()} kg</div>
               </div>
               <div>
                 <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wider block mb-1">Session RPE</label>
@@ -285,14 +285,14 @@ export const CompleteSessionModal = ({ session, athletes, onComplete, onClose }:
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-xl text-xs font-semibold transition-all"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-xl text-xs font-semibold transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleComplete}
                 disabled={saving}
-                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg transition-all disabled:opacity-50 active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg transition-all disabled:opacity-50 active:scale-95"
               >
                 <CheckCircle2Icon size={14} />
                 {saving ? 'Saving...' : 'Mark Complete'}

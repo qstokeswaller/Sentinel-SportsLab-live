@@ -61,7 +61,7 @@ const getAthleteStatus = (res: any): 'green' | 'amber' | 'red' | null => {
 
 /** Returns gradient badge classes for an RPE value (1-10) */
 const getRpeBadge = (rpe: number): string => {
-    if (rpe >= 9) return 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40';
+    if (rpe >= 9) return 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border-rose-100 dark:border-rose-900/40';
     if (rpe >= 7) return 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100 dark:border-amber-800/40';
     if (rpe >= 5) return 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 border-sky-100 dark:border-sky-900/40';
     if (rpe >= 3) return 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40';
@@ -370,7 +370,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                 <div>
                     <h2 className="text-4xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">Questionnaire Data</h2>
-                    <p className="text-slate-400 dark:text-[#64748B] font-bold uppercase text-[11px] tracking-[0.2em] mt-2 flex items-center gap-2">
+                    <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[11px] tracking-[0.2em] mt-2 flex items-center gap-2">
                         <Activity size={14} className="text-cyan-500" />
                         {formatDate(TODAY)} — Real-time Readiness Monitoring
                     </p>
@@ -420,12 +420,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             )}
 
                             <div className="relative z-10 space-y-5">
-                                <div className="w-14 h-14 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#64748B] group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-colors">
+                                <div className="w-14 h-14 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-colors">
                                     <Users size={28} />
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{team.name}</h3>
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mt-1">
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mt-1">
                                         {totalAthletes} Athletes • {team.sport}
                                     </p>
                                 </div>
@@ -444,14 +444,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             </span>
                                         )}
                                         {outCount > 0 && (
-                                            <span className="flex items-center gap-1.5 text-[10px] font-semibold text-rose-600 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-full">
+                                            <span className="flex items-center gap-1.5 text-[10px] font-semibold text-rose-600 bg-rose-50 dark:bg-rose-700 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-full">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" />
                                                 {outCount} Out
                                             </span>
                                         )}
                                     </div>
                                 ) : (
-                                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-tighter">
+                                    <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-tighter">
                                         <Zap size={10} className="text-cyan-400" /> No responses today
                                     </span>
                                 )}
@@ -587,7 +587,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             : r.value >= 7 ? '#22c55e' : r.value >= 4 ? '#f59e0b' : '#ef4444';
                         return (
                             <div key={i} className="flex items-center gap-2">
-                                <span className="text-[9px] font-semibold text-slate-500 dark:text-[#94A3B8] w-20 text-right truncate" title={r.fullName}>{r.name}</span>
+                                <span className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] w-20 text-right truncate" title={r.fullName}>{r.name}</span>
                                 <div className="flex-1 h-5 bg-slate-50 dark:bg-[#0F1C30] rounded-md overflow-hidden border border-slate-100 dark:border-[#1A2D48]">
                                     <div className="h-full rounded-md transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: barColor }} />
                                 </div>
@@ -626,13 +626,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         <div className="text-6xl font-bold tracking-tight" style={{ color: activeDef.color }}>
                             {activeDef.key === 'sleep_hours' ? `${avg.toFixed(1)}h` : avg.toFixed(1)}
                         </div>
-                        <div className="text-[10px] text-slate-400 dark:text-[#64748B] font-semibold uppercase tracking-wide mt-1">
+                        <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] font-semibold uppercase tracking-wide mt-1">
                             Team Average — {vals.length} response{vals.length !== 1 ? 's' : ''}
                         </div>
                     </div>
                     {trend.length >= 2 && (
                         <div className="w-full max-w-md">
-                            <div className="text-[9px] text-slate-400 dark:text-[#64748B] font-semibold uppercase mb-1">Daily Average Trend</div>
+                            <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-semibold uppercase mb-1">Daily Average Trend</div>
                             {(() => {
                                 const tVals = trend.map(t => t.avg);
                                 const yMax = activeDef.max || 10;
@@ -758,7 +758,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
             return (
                 <div className="py-2">
-                    <div className="text-[9px] text-slate-400 dark:text-[#64748B] font-semibold mb-1 ml-7">
+                    <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-semibold mb-1 ml-7">
                         {activeDef.label} — daily team average · scale {yMin}–{yMax}{activeDef.key === 'sleep_hours' ? 'h' : ''}
                     </div>
                     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: '140px' }}>
@@ -826,7 +826,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         <div key={b.range} className="flex-1 flex flex-col items-center gap-1">
                             <span className="text-[9px] font-bold text-slate-700 dark:text-[#E2E8F0]">{b.count}</span>
                             <div className="w-full rounded-t-md transition-all duration-500" style={{ height: `${(b.count / maxCount) * 100}%`, backgroundColor: b.color, minHeight: b.count > 0 ? 8 : 0 }} />
-                            <span className="text-[8px] font-semibold text-slate-400 dark:text-[#64748B]">{b.range}</span>
+                            <span className="text-[8px] font-semibold text-slate-400 dark:text-[#CBD5E1]">{b.range}</span>
                         </div>
                     ))}
                 </div>
@@ -896,7 +896,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div className="space-y-2 py-4">
                     {data.map(([label, count]) => (
                         <div key={label} className="flex items-center gap-3">
-                            <span className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] w-24 text-right capitalize">{label.replace('_', ' ')}</span>
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] w-24 text-right capitalize">{label.replace('_', ' ')}</span>
                             <div className="flex-1 h-6 bg-slate-50 dark:bg-[#0F1C30] rounded-md overflow-hidden border border-slate-100 dark:border-[#1A2D48]">
                                 <div className="h-full rounded-md transition-all duration-500" style={{ width: `${(count / maxC) * 100}%`, backgroundColor: COLORS[label] || '#6366f1' }} />
                             </div>
@@ -956,7 +956,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             return (
                 <div>
                     {/* Explanation */}
-                    <p className="text-[10px] text-slate-400 dark:text-[#64748B] mb-3 leading-relaxed">
+                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mb-3 leading-relaxed">
                         Each athlete shows two bars side-by-side — <span className="font-semibold" style={{ color: activeDef.color }}>{activeDef.label}</span> (left) vs <span className="font-semibold" style={{ color: compareDef.color }}>{compareDef.label}</span> (right). Both use the 1–10 scale. Useful for spotting patterns, e.g. high fatigue + low mood together.
                     </p>
                     {isSameMetric && (
@@ -993,7 +993,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             <div className="rounded-t transition-all duration-500" style={{ width: '45%', height: `${(r.v2 / maxVal) * 100}%`, backgroundColor: compareDef.color }} title={`${compareDef.label}: ${r.v2}`} />
                                         )}
                                     </div>
-                                    <span className="text-[7px] font-semibold text-slate-400 dark:text-[#64748B] truncate w-full text-center" title={r.name}>{r.name}</span>
+                                    <span className="text-[7px] font-semibold text-slate-400 dark:text-[#CBD5E1] truncate w-full text-center" title={r.name}>{r.name}</span>
                                 </div>
                             ))}
                         </div>
@@ -1022,7 +1022,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             return (
                 <div className="p-16 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
                     <BarChart3 size={40} className="mx-auto text-slate-200 mb-4" />
-                    <p className="text-slate-400 dark:text-[#64748B] text-sm font-semibold uppercase tracking-wide mb-2">No daily responses yet</p>
+                    <p className="text-slate-400 dark:text-[#CBD5E1] text-sm font-semibold uppercase tracking-wide mb-2">No daily responses yet</p>
                     <p className="text-slate-300 dark:text-[#475569] text-xs font-bold max-w-xs mx-auto">Share the Daily Wellness Check with your athletes to start collecting data.</p>
                 </div>
             );
@@ -1036,14 +1036,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
                         {/* Metric pills */}
                         <div className="flex-1 min-w-0">
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Metric</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">Metric</div>
                             <div className="flex flex-wrap gap-1.5">
                                 {METRIC_DEFS.map(m => (
                                     <button key={m.key} onClick={() => { setInsightMetric(m.key); setInsightView(VIEWS_FOR_TYPE[m.type]?.[0]?.id || 'bar_sorted'); }}
                                         className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all border ${
                                             insightMetric === m.key
-                                                ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 shadow-sm'
-                                                : 'border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] hover:border-slate-200 hover:text-slate-700'
+                                                ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-sm'
+                                                : 'border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:border-slate-200 hover:text-slate-700'
                                         }`}>
                                         {m.label}
                                     </button>
@@ -1053,12 +1053,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                         {/* View toggle */}
                         <div className="shrink-0">
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">View</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">View</div>
                             <div className="flex gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
                                 {viewOptions.map(v => (
                                     <button key={v.id} onClick={() => setInsightView(v.id)}
                                         className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                            activeView === v.id ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'
+                                            activeView === v.id ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'
                                         }`}>
                                         {v.label}
                                     </button>
@@ -1069,7 +1069,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         {/* Compare-with dropdown (only for comparison view) */}
                         {activeView === 'comparison' && (
                             <div className="shrink-0">
-                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Compare With</div>
+                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">Compare With</div>
                                 <CustomSelect
                                     variant="filter"
                                     size="xs"
@@ -1086,15 +1086,15 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         {/* Period toggle + Date picker */}
                         {activeView !== 'trend' && (
                             <div className="shrink-0">
-                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2">Time Range</div>
+                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">Time Range</div>
                                 <div className="flex items-center gap-2">
                                     <div className="flex gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
                                         <button onClick={() => setInsightPeriodMode(false)}
-                                            className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${!insightPeriodMode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                            className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${!insightPeriodMode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                             Single Day
                                         </button>
                                         <button onClick={() => setInsightPeriodMode(true)}
-                                            className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${insightPeriodMode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'}`}>
+                                            className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${insightPeriodMode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
                                             Period
                                         </button>
                                     </div>
@@ -1111,7 +1111,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         </CustomSelect>
                                     )}
                                     {insightPeriodMode && (
-                                        <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 px-3 py-1.5 rounded-lg">
+                                        <span className="text-[10px] font-semibold text-indigo-600 dark:text-white bg-indigo-50 dark:bg-indigo-600 px-3 py-1.5 rounded-lg">
                                             {wellnessDateRange === 'today' ? 'Today' : wellnessDateRange === '7d' ? 'Last 7 Days' : 'Last 30 Days'}
                                         </span>
                                     )}
@@ -1127,7 +1127,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         <div className="flex items-center gap-2">
                             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: activeDef.color }} />
                             <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{activeDef.label}</span>
-                            <span className="text-[9px] text-slate-400 dark:text-[#64748B] font-medium">
+                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-medium">
                                 {activeView === 'trend'
                                     ? `${dailyResponses.length} total responses`
                                     : insightPeriodMode
@@ -1136,7 +1136,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 }
                             </span>
                             {insightPeriodMode && activeView === 'bar_sorted' && (
-                                <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500">Avg per athlete</span>
+                                <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-600 text-indigo-500">Avg per athlete</span>
                             )}
                         </div>
                         {activeDef.type === 'scale' && (
@@ -1160,7 +1160,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         return (
                             <button key={m.key} onClick={() => { setInsightMetric(m.key); setInsightView('bar_sorted'); }}
                                 className={`p-3 rounded-xl border transition-all text-left ${insightMetric === m.key ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/50' : 'border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] hover:border-slate-200'}`}>
-                                <div className="text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">{m.label}</div>
+                                <div className="text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">{m.label}</div>
                                 <div className="text-xl font-bold mt-0.5" style={{ color: m.color }}>
                                     {avg != null ? (m.key === 'sleep_hours' ? `${avg.toFixed(1)}h` : avg.toFixed(1)) : '—'}
                                 </div>
@@ -1200,19 +1200,19 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         avgSev: illnessChecks.length ? +(illnessChecks.reduce((s, dc) => s + (dc.responses?.[k] || 0), 0) / illnessChecks.length).toFixed(1) : 0,
                     })).filter(s => s.count > 0).sort((a,b) => b.count - a.count);
 
-                    const PATH_STYLES: Record<string,string> = { injury:'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40', illness:'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40', both:'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/40', trends:'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
+                    const PATH_STYLES: Record<string,string> = { injury:'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40', illness:'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40', both:'bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white border-indigo-100 dark:border-indigo-800/40', trends:'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
                     const PATH_LABELS: Record<string,string> = { injury:'Injury', illness:'Illness', both:'Injury + Illness', trends:'Health Trends' };
 
                     return (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-indigo-50 shadow-sm p-6 space-y-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/25 rounded-xl flex items-center justify-center text-indigo-500">
+                                    <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-600 rounded-xl flex items-center justify-center text-indigo-500">
                                         <Thermometer size={18} />
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-[#E2E8F0]">Deep Check Insights</h3>
-                                        <p className="text-[9px] text-slate-400 dark:text-[#64748B] font-semibold mt-0.5">{weeklyResponses.length} deep check{weeklyResponses.length !== 1 ? 's' : ''} completed in period</p>
+                                        <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-semibold mt-0.5">{weeklyResponses.length} deep check{weeklyResponses.length !== 1 ? 's' : ''} completed in period</p>
                                     </div>
                                 </div>
                             </div>
@@ -1220,7 +1220,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Path breakdown */}
                                 <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#64748B] mb-3">Check Paths</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-3">Check Paths</p>
                                     <div className="space-y-2">
                                         {Object.entries(pathCounts).filter(([,c]) => c > 0).map(([path, count]) => (
                                             <div key={path} className="flex items-center justify-between">
@@ -1236,18 +1236,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                                 {/* Hydration + Nutrition */}
                                 <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#64748B] mb-3">Avg Scores (Team)</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-3">Avg Scores (Team)</p>
                                     <div className="space-y-3">
                                         {avgHyd != null && (
-                                            <div className="flex items-center justify-between p-3 bg-cyan-50 border border-cyan-100 rounded-xl">
-                                                <span className="text-[10px] font-bold text-cyan-700 uppercase">Hydration</span>
-                                                <span className="text-xl font-bold text-cyan-600">{avgHyd}<span className="text-xs font-medium opacity-50">/10</span></span>
+                                            <div className="flex items-center justify-between p-3 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800/40 rounded-xl">
+                                                <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400 uppercase">Hydration</span>
+                                                <span className="text-xl font-bold text-cyan-600 dark:text-cyan-400">{avgHyd}<span className="text-xs font-medium text-cyan-400 dark:text-cyan-600">/10</span></span>
                                             </div>
                                         )}
                                         {avgNut != null && (
                                             <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-xl">
                                                 <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Nutrition</span>
-                                                <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{avgNut}<span className="text-xs font-medium opacity-50">/10</span></span>
+                                                <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{avgNut}<span className="text-xs font-medium text-emerald-400 dark:text-emerald-600">/10</span></span>
                                             </div>
                                         )}
                                         {avgHyd == null && avgNut == null && <p className="text-xs text-slate-300 dark:text-[#475569] italic">No data</p>}
@@ -1256,7 +1256,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                                 {/* Symptom frequency */}
                                 <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#64748B] mb-3">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-3">
                                         Illness Symptoms{illnessChecks.length > 0 ? ` (${illnessChecks.length} checks)` : ''}
                                     </p>
                                     {symptomFreq.length > 0 ? (
@@ -1266,7 +1266,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     <div className="flex-1 bg-slate-100 dark:bg-[#1A2D48] rounded-full h-1.5 overflow-hidden">
                                                         <div className="bg-sky-400 h-full rounded-full" style={{ width: `${(s.count / illnessChecks.length) * 100}%` }} />
                                                     </div>
-                                                    <span className="text-[9px] font-semibold text-slate-500 dark:text-[#94A3B8] w-20 truncate">{s.label}</span>
+                                                    <span className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] w-20 truncate">{s.label}</span>
                                                     <span className="text-[9px] font-bold text-slate-700 dark:text-[#E2E8F0] w-6 text-right">{s.count}</span>
                                                 </div>
                                             ))}
@@ -1284,18 +1284,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 {!insightPeriodMode && (
                     <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm overflow-hidden">
                         <div className="px-6 py-3 border-b border-slate-50 bg-slate-50/40 dark:bg-[#0F1C30]/40">
-                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">Individual Breakdown — {periodLabel}</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">Individual Breakdown — {periodLabel}</h4>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-[11px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/30 dark:bg-[#0F1C30]/30">
-                                        <th className="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-[#94A3B8]">Athlete</th>
+                                        <th className="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-[#CBD5E1]">Athlete</th>
                                         {METRIC_DEFS.filter(m => m.type === 'scale').map(m => (
-                                            <th key={m.key} className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#94A3B8]">{m.label}</th>
+                                            <th key={m.key} className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#CBD5E1]">{m.label}</th>
                                         ))}
-                                        <th className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#94A3B8]">Sleep</th>
-                                        <th className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#94A3B8]">Status</th>
+                                        <th className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#CBD5E1]">Sleep</th>
+                                        <th className="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-[#CBD5E1]">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -1349,17 +1349,17 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div className="flex items-center gap-6">
                     <button
                         onClick={() => setViewMode('selection')}
-                        className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#64748B] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                        className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
                         <div className="flex items-center gap-3 flex-wrap">
                             <h2 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTeam?.name}</h2>
-                            <span className="px-3 py-1 bg-cyan-100 text-cyan-600 rounded-lg text-[10px] font-semibold uppercase tracking-wide">Dashboard</span>
+                            <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 rounded-lg text-[10px] font-semibold uppercase tracking-wide">Dashboard</span>
                         </div>
                         {/* Improvement #4: date + response count */}
-                        <p className="text-slate-400 dark:text-[#64748B] font-bold uppercase text-[10px] tracking-wide mt-1">
+                        <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[10px] tracking-wide mt-1">
                             {formatDate(TODAY)} — {kpi.total} daily response{kpi.total !== 1 ? 's' : ''} from {activeTeam?.players.length} athlete{activeTeam?.players.length !== 1 ? 's' : ''}
                         </p>
                     </div>
@@ -1382,7 +1382,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     <button
                         onClick={() => setIsKpiExpanded(v => !v)}
                         title={isKpiExpanded ? 'Hide availability summary' : 'Show availability summary'}
-                        className="flex items-center gap-1.5 px-3 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:border-slate-400 transition-all text-[10px] font-bold uppercase tracking-wide"
+                        className="flex items-center gap-1.5 px-3 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:border-slate-400 transition-all text-[10px] font-bold uppercase tracking-wide"
                     >
                         {isKpiExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                         {isKpiExpanded ? 'Hide' : 'Show'}
@@ -1390,7 +1390,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     <button
                         data-tour="wellness-share"
                         onClick={() => setViewMode('share')}
-                        className="p-3.5 bg-cyan-600 text-white rounded-xl hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-200"
+                        className="p-3.5 bg-cyan-600 text-white rounded-xl hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-200 dark:shadow-none"
                     >
                         <Share2 size={20} />
                     </button>
@@ -1402,12 +1402,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                     { label: 'Responses',   value: kpi.total,       color: 'text-slate-900 dark:text-[#E2E8F0]',   bg: 'bg-white dark:bg-[#132338]',       border: 'border-slate-100 dark:border-[#1A2D48]' },
-                    { label: 'Available',   value: kpi.available,   color: 'text-emerald-600', bg: 'bg-emerald-50',  border: 'border-emerald-100 dark:border-emerald-800/40' },
-                    { label: 'Modified',    value: kpi.modified,    color: 'text-amber-600',   bg: 'bg-amber-50',    border: 'border-amber-100 dark:border-amber-800/40' },
-                    { label: 'Unavailable', value: kpi.unavailable, color: 'text-rose-600',    bg: 'bg-rose-50',     border: 'border-rose-100 dark:border-rose-900/40' },
+                    { label: 'Available',   value: kpi.available,   color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20',  border: 'border-emerald-100 dark:border-emerald-800/40' },
+                    { label: 'Modified',    value: kpi.modified,    color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/20',    border: 'border-amber-100 dark:border-amber-800/40' },
+                    { label: 'Unavailable', value: kpi.unavailable, color: 'text-rose-600 dark:text-rose-400',    bg: 'bg-rose-50 dark:bg-rose-700',     border: 'border-rose-100 dark:border-rose-900/40' },
                 ].map(kpiItem => (
                     <div key={kpiItem.label} className={`${kpiItem.bg} border-2 ${kpiItem.border} rounded-xl p-6 flex flex-col gap-1`}>
-                        <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">{kpiItem.label}</span>
+                        <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">{kpiItem.label}</span>
                         <span className={`text-4xl font-semibold tracking-tighter ${kpiItem.color}`}>{kpiItem.value}</span>
                     </div>
                 ))}
@@ -1429,7 +1429,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             { label: 'Unavailable',  color: 'bg-rose-500' },
                             { label: 'No Response',  color: 'bg-slate-200 dark:bg-[#243A58]' },
                         ].map(l => (
-                            <span key={l.label} className="flex items-center gap-1.5 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#64748B]">
+                            <span key={l.label} className="flex items-center gap-1.5 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1]">
                                 <span className={`w-2 h-2 rounded-full ${l.color}`} />{l.label}
                             </span>
                         ))}
@@ -1446,8 +1446,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         onClick={() => setDashboardTab(tab)}
                         className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wide transition-all ${
                             dashboardTab === tab
-                                ? 'bg-slate-900 text-white shadow-sm'
-                                : 'text-slate-400 dark:text-[#64748B] hover:text-slate-900'
+                                ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-sm'
+                                : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
                         }`}
                     >
                         {tab === 'overview' ? 'Overview' : 'Insights'}
@@ -1483,10 +1483,10 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     return (
                                         <div key={metric.id}>
                                             <div className="flex justify-between items-center mb-1.5">
-                                                <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#94A3B8]">{metric.label}</span>
+                                                <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1]">{metric.label}</span>
                                                 <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">
                                                     {metric.id === 'sleep_hours' ? `${avg.toFixed(1)}h` : avg.toFixed(1)}
-                                                    <span className="text-[9px] text-slate-400 dark:text-[#64748B] ml-1">/{metric.max}</span>
+                                                    <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] ml-1">/{metric.max}</span>
                                                 </span>
                                             </div>
                                             <div className="h-3 bg-slate-50 dark:bg-[#0F1C30] rounded-full overflow-hidden border border-slate-100 dark:border-[#1A2D48]">
@@ -1501,17 +1501,17 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden">
+                        <div className="bg-slate-900 dark:bg-[#1A2D48] dark:border dark:border-[#2D4A6A] p-8 rounded-xl text-white shadow-xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none"><Activity size={80} /></div>
                             <div className="relative z-10 h-full flex flex-col justify-between">
                                 <div>
-                                    <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">Response Rate</h3>
+                                    <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">Response Rate</h3>
                                     {compliance.expected > 0 ? (
                                         <>
                                             <div className="text-5xl font-semibold mt-2 tracking-tighter">
                                                 {compliance.rate}%
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase mt-2">
+                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-2">
                                                 {compliance.actual} of {compliance.expected} expected
                                             </p>
                                             <p className="text-[9px] font-medium text-slate-600 dark:text-[#CBD5E1] mt-1">
@@ -1523,7 +1523,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             <div className="text-5xl font-semibold mt-2 tracking-tighter text-slate-600 dark:text-[#CBD5E1]">
                                                 —
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase mt-2">
+                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-2">
                                                 No days tracked yet in this period
                                             </p>
                                         </>
@@ -1548,7 +1548,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div>
                     <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center text-rose-500">
+                            <div className="w-10 h-10 bg-rose-50 dark:bg-rose-700 rounded-xl flex items-center justify-center text-rose-500">
                                 <AlertTriangle size={20} />
                             </div>
                             <div>
@@ -1597,7 +1597,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
                                         >
                                             {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
-                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center border border-slate-200 dark:border-[#243A58] shrink-0">
+                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border border-slate-200 dark:border-[#243A58] shrink-0">
                                                 <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
                                             </div>
                                             <div className="min-w-0 flex-1">
@@ -1615,7 +1615,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         {hiddenCount > 0 && (
                                             <button
                                                 onClick={() => setAlertsModalOpen(true)}
-                                                className="w-full py-2.5 rounded-xl border border-dashed border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-colors"
+                                                className="w-full py-2.5 rounded-xl border border-dashed border-rose-200 dark:border-rose-700/50 text-xs font-semibold text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-colors"
                                             >
                                                 + {hiddenCount} more flagged athlete{hiddenCount !== 1 ? 's' : ''}
                                             </button>
@@ -1628,7 +1628,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     {/* Header */}
                                                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center text-rose-500">
+                                                            <div className="w-9 h-9 bg-rose-50 dark:bg-rose-700 rounded-xl flex items-center justify-center text-rose-500">
                                                                 <AlertTriangle size={18} />
                                                             </div>
                                                             <div>
@@ -1636,7 +1636,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 <p className="text-[10px] text-rose-500 font-bold uppercase mt-0.5">{flagged.length} athlete{flagged.length !== 1 ? 's' : ''} flagged today</p>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => setAlertsModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] transition-colors">
+                                                        <button onClick={() => setAlertsModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-colors">
                                                             <X size={16} />
                                                         </button>
                                                     </div>
@@ -1654,7 +1654,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             {kpi.alerts === 0 && (
                                 <div className="text-center py-10">
                                     <CheckCircle2 size={36} className="mx-auto text-emerald-300 mb-3" />
-                                    <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide leading-relaxed">
+                                    <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide leading-relaxed">
                                         All clear — no flags<br />for this period.
                                     </p>
                                 </div>
@@ -1669,18 +1669,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 {/* ── Header ── */}
                 <div className="p-5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/30 dark:bg-[#0F1C30]/30 flex flex-wrap items-center gap-3">
                     <button onClick={() => setIsRundownOpen(v => !v)} className="flex items-center gap-2 hover:text-indigo-600 dark:text-indigo-300 transition-colors mr-auto">
-                        <div className={`text-slate-400 dark:text-[#64748B] transition-transform ${isRundownOpen ? '' : '-rotate-90'}`}><ChevronDown size={16} /></div>
+                        <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isRundownOpen ? '' : '-rotate-90'}`}><ChevronDown size={16} /></div>
                         <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0] tracking-wide">Individual Rundown</h3>
-                        <span className="text-[9px] text-slate-400 dark:text-[#64748B] font-medium ml-1">({new Set(dailyResponses.filter(r => r.session_date === TODAY).map(r => r.athlete_id)).size} today)</span>
+                        <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-medium ml-1">({new Set(dailyResponses.filter(r => r.session_date === TODAY).map(r => r.athlete_id)).size} today)</span>
                     </button>
                     {/* Date range pickers */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-[#94A3B8] font-semibold">
-                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#64748B]">From</span>
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-[#CBD5E1] font-semibold">
+                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">From</span>
                         <input type="date" value={rundownFrom} max={rundownTo}
                             onChange={e => setRundownFrom(e.target.value)}
                             className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
                         />
-                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#64748B]">To</span>
+                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">To</span>
                         <input type="date" value={rundownTo} max={TODAY} min={rundownFrom}
                             onChange={e => setRundownTo(e.target.value)}
                             className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
@@ -1688,13 +1688,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     </div>
                     {rundownTab === 'daily' && (
                         <button onClick={() => setShowDailyTracker(v => !v)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${showDailyTracker ? 'bg-cyan-50 border-cyan-200 text-cyan-700' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:border-slate-400'}`}>
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${showDailyTracker ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800/50 text-cyan-700 dark:text-cyan-400' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:border-slate-400'}`}>
                             <Calendar size={12} />
                             {showDailyTracker ? 'Hide' : 'Daily'} Tracker
                         </button>
                     )}
                     <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748B]" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                         <input type="text" placeholder="Find athlete..."
                             className="pl-9 pr-4 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-full text-[10px] font-bold outline-none focus:ring-2 focus:ring-cyan-500/10 w-36"
                             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -1709,11 +1709,11 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         <button key={tab} onClick={() => setRundownTab(tab)}
                             className={`flex items-center gap-2 px-6 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${
                                 rundownTab === tab
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-300 bg-indigo-50/30'
-                                    : 'border-transparent text-slate-400 dark:text-[#64748B] hover:text-slate-700 hover:border-slate-200'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-300 bg-indigo-50/30 dark:bg-indigo-900/20'
+                                    : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:border-slate-200 dark:hover:border-[#243A58]'
                             }`}>
                             {label}
-                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${rundownTab === tab ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]'}`}>{count}</span>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black ${rundownTab === tab ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]'}`}>{count}</span>
                         </button>
                     ))}
                 </div>
@@ -1725,8 +1725,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     <div className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/40 dark:bg-[#0F1C30]/40 animate-in slide-in-from-top-2 duration-300">
                         <div className="px-6 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-7 h-7 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-600"><Calendar size={14} /></div>
-                                <span className="text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Who responded on</span>
+                                <div className="w-7 h-7 bg-cyan-50 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-400"><Calendar size={14} /></div>
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Who responded on</span>
                                 <input type="date" value={responseViewDate} onChange={e => setResponseViewDate(e.target.value)} max={TODAY}
                                     className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
                                 />
@@ -1735,7 +1735,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 const respondedSet = new Set(rundownDailyFiltered.filter(r => r.session_date === responseViewDate).map(r => r.athlete_id));
                                 const totalAthletes = activeTeam?.players?.length || 0;
                                 return (
-                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold ${respondedSet.size === totalAthletes && totalAthletes > 0 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : respondedSet.size === 0 ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' : 'bg-amber-100 text-amber-600'}`}>
+                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold ${respondedSet.size === totalAthletes && totalAthletes > 0 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : respondedSet.size === 0 ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]' : 'bg-amber-100 text-amber-600'}`}>
                                         {respondedSet.size} of {totalAthletes} responded
                                     </span>
                                 );
@@ -1756,7 +1756,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         {allAthletes.filter(a => !respondedIds.has(a.id)).map(a => (
                                             <div key={a.id} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg">
                                                 <Clock size={12} className="text-slate-300 dark:text-[#475569] shrink-0" />
-                                                <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] truncate">{a.name}</span>
+                                                <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] truncate">{a.name}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -1767,7 +1767,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 )}
                 <div className="overflow-x-auto relative">
                     <table className="w-full text-left">
-                        <thead className="bg-slate-50 dark:bg-[#0F1C30] text-[9px] text-slate-400 dark:text-[#64748B] uppercase tracking-[0.15em] font-semibold">
+                        <thead className="bg-slate-50 dark:bg-[#0F1C30] text-[9px] text-slate-400 dark:text-[#CBD5E1] uppercase tracking-[0.15em] font-semibold">
                             <tr>
                                 <th className="pl-4 pr-1 py-4 w-9">
                                     {/* select-all rendered inline once visible is computed below */}
@@ -1837,7 +1837,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             />
                                         </td>
                                         <td colSpan={8} className="pr-4 py-3">
-                                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">
+                                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">
                                                 {allSelected ? `All ${allVisibleIds.length} selected` : someSelected ? `${selectedResponseIds.size} selected` : 'Select all'}
                                             </span>
                                         </td>
@@ -1867,8 +1867,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             </td>
                                             <td colSpan={8} className="px-2 py-2">
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-[#94A3B8]">{label}</span>
-                                                    {badge && <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-100">{badge}</span>}
+                                                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
+                                                    {badge && <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-800/50">{badge}</span>}
                                                     <span className="ml-auto text-[8px] font-semibold text-slate-300 dark:text-[#475569] uppercase tracking-wide">{items.length} response{items.length !== 1 ? 's' : ''}</span>
                                                 </div>
                                             </td>
@@ -1884,7 +1884,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         const soreness = resp.soreness;
                                         const isChecked = selectedResponseIds.has(res.id);
                                         rows.push(
-                                            <tr key={res.id} className={`group transition-colors border-t border-slate-50 ${isChecked ? 'bg-indigo-50/40' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
+                                            <tr key={res.id} className={`group transition-colors border-t border-slate-50 ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                                                 <td className="pl-4 pr-1 py-4">
                                                     <input
                                                         type="checkbox"
@@ -1906,28 +1906,28 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 <td className="px-6 py-4">
                                                     {player ? (
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
+                                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
                                                                 <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0, 2).toUpperCase()}</span>
                                                             </div>
                                                             <div>
                                                                 <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</div>
-                                                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-tighter">{player.subsection}</div>
+                                                                <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-tighter">{player.subsection}</div>
                                                             </div>
                                                         </div>
-                                                    ) : <span className="text-slate-400 dark:text-[#64748B] text-xs">Unknown athlete</span>}
+                                                    ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown athlete</span>}
                                                 </td>
                                                 <td className="px-4 py-4 font-semibold uppercase text-[9px]">
                                                     {(() => {
                                                         const avail = resolveAvailability(res);
                                                         if (avail === 'available')   return <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 px-2.5 py-1 rounded-full">Full</span>;
                                                         if (avail === 'modified')    return <span className="text-amber-600 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 px-2.5 py-1 rounded-full">Modified</span>;
-                                                        if (avail === 'unavailable') return <span className="text-rose-600 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-full">Out</span>;
+                                                        if (avail === 'unavailable') return <span className="text-rose-600 bg-rose-50 dark:bg-rose-700 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-full">Out</span>;
                                                         return <span className="text-slate-300 dark:text-[#475569]">—</span>;
                                                     })()}
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     {sleepH != null
-                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${sleepH >= 7 ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : sleepH >= 6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40'}`}>{sleepH}h</span>
+                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${sleepH >= 7 ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : sleepH >= 6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40'}`}>{sleepH}h</span>
                                                         : <span className="text-slate-300 dark:text-[#475569] text-[10px] font-bold">—</span>}
                                                 </td>
                                                 <td className="px-4 py-4">
@@ -1939,7 +1939,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     {soreness != null
-                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${soreness >= 7 ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' : soreness >= 4 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40'}`}>{soreness}/10</span>
+                                                        ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${soreness >= 7 ? 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' : soreness >= 4 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40'}`}>{soreness}/10</span>
                                                         : <span className="text-slate-300 dark:text-[#475569] text-[10px] font-bold">—</span>}
                                                 </td>
                                                 <td className="px-4 py-4">
@@ -1965,15 +1965,15 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         {confirmDeleteId === res.id ? (
                                                             <div className="flex items-center gap-1">
                                                                 <span className="text-[9px] font-bold text-rose-500 uppercase">Delete?</span>
-                                                                <button onClick={() => handleDeleteResponse(res.id)} className="px-1.5 py-1 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100">Yes</button>
-                                                                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">No</button>
+                                                                <button onClick={() => handleDeleteResponse(res.id)} className="px-1.5 py-1 bg-rose-50 dark:bg-rose-700 border border-rose-200 dark:border-rose-700 dark:border-rose-700 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100">Yes</button>
+                                                                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">No</button>
                                                             </div>
                                                         ) : (
                                                             <button onClick={() => setConfirmDeleteId(res.id)} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:border-rose-100 hover:shadow-sm transition-all" title="Delete response">
                                                                 <Trash2 size={13} />
                                                             </button>
                                                         )}
-                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
+                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
                                                             <ChevronRight size={16} />
                                                         </button>
                                                     </div>
@@ -2005,7 +2005,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         <span className="text-[9px] text-amber-500 ml-1">Athletes who flagged but did not complete the deep check form within 3 days</span>
                                     </div>
                                     <table className="w-full text-left">
-                                        <thead className="bg-amber-50/50 text-[9px] text-slate-400 dark:text-[#64748B] uppercase tracking-[0.15em] font-semibold border-b border-amber-100 dark:border-amber-800/40">
+                                        <thead className="bg-amber-50/50 text-[9px] text-slate-400 dark:text-[#CBD5E1] uppercase tracking-[0.15em] font-semibold border-b border-amber-100 dark:border-amber-800/40">
                                             <tr>
                                                 <th className="px-6 py-3">Date</th>
                                                 <th className="px-6 py-3">Athlete</th>
@@ -2040,7 +2040,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                         </div>
                                                                         <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                                     </div>
-                                                                ) : <span className="text-slate-400 dark:text-[#64748B] text-xs">Unknown</span>}
+                                                                ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
                                                             </td>
                                                             <td className="px-4 py-3.5">
                                                                 <div className="flex flex-wrap gap-1">
@@ -2050,7 +2050,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-3.5">
-                                                                <span className="px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40">
+                                                                <span className="px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border-rose-100 dark:border-rose-900/40">
                                                                     Incomplete
                                                                 </span>
                                                             </td>
@@ -2070,14 +2070,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             return (
                                 <div className="border-b border-slate-100 dark:border-[#1A2D48]">
                                     <div className="px-6 py-3 bg-slate-50 dark:bg-[#0F1C30] flex items-center gap-2">
-                                        <CheckCircle2 size={14} className="text-slate-400 dark:text-[#64748B] shrink-0" />
-                                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-[#94A3B8]">
+                                        <CheckCircle2 size={14} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">
                                             Same Issue — No Change ({triggeredNoChange.length})
                                         </span>
-                                        <span className="text-[9px] text-slate-400 dark:text-[#64748B] ml-1">Athletes who flagged and confirmed no new developments since their last report</span>
+                                        <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] ml-1">Athletes who flagged and confirmed no new developments since their last report</span>
                                     </div>
                                     <table className="w-full text-left">
-                                        <thead className="bg-slate-50/50 dark:bg-[#132338]/40 text-[9px] text-slate-400 dark:text-[#64748B] uppercase tracking-[0.15em] font-semibold border-b border-slate-100 dark:border-[#1A2D48]">
+                                        <thead className="bg-slate-50/50 dark:bg-[#132338]/40 text-[9px] text-slate-400 dark:text-[#CBD5E1] uppercase tracking-[0.15em] font-semibold border-b border-slate-100 dark:border-[#1A2D48]">
                                             <tr>
                                                 <th className="px-6 py-3">Date</th>
                                                 <th className="px-6 py-3">Athlete</th>
@@ -2108,11 +2108,11 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 {player ? (
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#1A2D48] flex items-center justify-center shrink-0">
-                                                                            <span className="text-[9px] font-bold text-slate-500 dark:text-[#94A3B8]">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
+                                                                            <span className="text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1]">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
                                                                         </div>
                                                                         <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                                     </div>
-                                                                ) : <span className="text-slate-400 dark:text-[#64748B] text-xs">Unknown</span>}
+                                                                ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
                                                             </td>
                                                             <td className="px-4 py-3.5">
                                                                 <div className="flex flex-wrap gap-1">
@@ -2122,7 +2122,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-3.5">
-                                                                <span className="px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]">
+                                                                <span className="px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]">
                                                                     No Change
                                                                 </span>
                                                             </td>
@@ -2139,7 +2139,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         {rundownDeepChecks.length === 0 && triggeredIncomplete.length === 0 && triggeredNoChange.length === 0 ? (
                             <div className="px-6 py-16 text-center">
                                 <Thermometer size={36} className="mx-auto text-slate-200 mb-4" />
-                                <p className="text-sm font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">No deep checks in this period</p>
+                                <p className="text-sm font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">No deep checks in this period</p>
                                 <p className="text-[10px] text-slate-300 dark:text-[#475569] mt-2">Adjust the date range or share the Deep Health Check form with your athletes.</p>
                             </div>
                         ) : rundownDeepChecks.length === 0 ? null : (
@@ -2153,7 +2153,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 <span className="text-[9px] text-emerald-500 ml-1">Athletes who completed the full deep health check form</span>
                             </div>
                             <table className="w-full text-left">
-                                <thead className="bg-slate-50 dark:bg-[#0F1C30] text-[9px] text-slate-400 dark:text-[#64748B] uppercase tracking-[0.15em] font-semibold">
+                                <thead className="bg-slate-50 dark:bg-[#0F1C30] text-[9px] text-slate-400 dark:text-[#CBD5E1] uppercase tracking-[0.15em] font-semibold">
                                     <tr>
                                         <th className="px-6 py-4">Date</th>
                                         <th className="px-6 py-4">Athlete</th>
@@ -2203,7 +2203,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             const dt = new Date(y, m - 1, d);
                                             const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
-                                            const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40', Illness:'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40', Both:'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/40', 'Health Trends':'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+                                            const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40', Illness:'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40', Both:'bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white border-indigo-100 dark:border-indigo-800/40', 'Health Trends':'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
 
                                             return (
                                                 <tr key={dc.id} className="group hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors border-t border-slate-50">
@@ -2213,20 +2213,20 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     <td className="px-6 py-4">
                                                         {player ? (
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center border border-white shadow-sm ring-1 ring-slate-100 shrink-0">
+                                                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border border-white shadow-sm ring-1 ring-slate-100 shrink-0">
                                                                     <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-300">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
                                                                 </div>
                                                                 <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                             </div>
-                                                        ) : <span className="text-slate-400 dark:text-[#64748B] text-xs">Unknown</span>}
+                                                        ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase ${wasTriggered ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'}`}>
+                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold uppercase ${wasTriggered ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'}`}>
                                                             {wasTriggered ? 'Daily Flag' : 'Coach Sent'}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold ${PATH_STYLES[path] || 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'}`}>{path}</span>
+                                                        <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold ${PATH_STYLES[path] || 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'}`}>{path}</span>
                                                     </td>
                                                     <td className="px-4 py-4 max-w-[200px]">
                                                         {activeSymptoms.length > 0 ? (
@@ -2234,12 +2234,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 {activeSymptoms.slice(0, 3).map(s => (
                                                                     <span key={s} className="px-1.5 py-0.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-900/40 rounded text-[8px] font-semibold">{s}</span>
                                                                 ))}
-                                                                {activeSymptoms.length > 3 && <span className="text-[8px] text-slate-400 dark:text-[#64748B] font-semibold">+{activeSymptoms.length - 3} more</span>}
+                                                                {activeSymptoms.length > 3 && <span className="text-[8px] text-slate-400 dark:text-[#CBD5E1] font-semibold">+{activeSymptoms.length - 3} more</span>}
                                                             </div>
                                                         ) : illnessSev ? (
-                                                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold border capitalize ${illnessSev === 'severe' ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' : illnessSev === 'moderate' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40'}`}>{illnessSev}</span>
+                                                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold border capitalize ${illnessSev === 'severe' ? 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' : illnessSev === 'moderate' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40'}`}>{illnessSev}</span>
                                                         ) : complaint === 'injury' || complaint === 'both' ? (
-                                                            <span className="text-[9px] text-slate-400 dark:text-[#64748B] italic">See detail →</span>
+                                                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] italic">See detail →</span>
                                                         ) : <span className="text-slate-300 dark:text-[#475569] text-[10px]">—</span>}
                                                     </td>
                                                     <td className="px-4 py-4">
@@ -2257,7 +2257,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         })()}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
+                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
                                                             <ChevronRight size={16} />
                                                         </button>
                                                     </td>
@@ -2299,7 +2299,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         d.setDate(d.getDate() - heatmapDays);
                                         setHeatmapAnchor(d.toISOString().split('T')[0]);
                                     }}
-                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 transition-colors"
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors"
                                     title="Previous period"
                                 >
                                     <ChevronLeft size={14} />
@@ -2322,7 +2322,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         setHeatmapAnchor(next > today ? today : next);
                                     }}
                                     disabled={heatmapAnchor >= localDateStr()}
-                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                     title="Next period"
                                 >
                                     <ChevronRight size={14} />
@@ -2330,7 +2330,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 <button
                                     onClick={() => setHeatmapAnchor(localDateStr())}
                                     disabled={heatmapAnchor >= localDateStr()}
-                                    className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
                                     Today
                                 </button>
@@ -2350,7 +2350,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
                                             heatmapDays === d
                                                 ? 'bg-indigo-600 text-white'
-                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] hover:bg-slate-200'
+                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
                                         }`}
                                     >
                                         {d}d
@@ -2389,12 +2389,12 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     <div className="flex items-center gap-5">
                         <button
                             onClick={() => setViewMode('dashboard')}
-                            className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#64748B] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                            className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
                         >
                             <ArrowLeft size={20} />
                         </button>
                         <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-xl bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center border-2 border-white shadow-md ring-1 ring-slate-100">
+                            <div className="w-16 h-16 rounded-xl bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border-2 border-white shadow-md ring-1 ring-slate-100">
                                 <span className="text-lg font-bold text-indigo-600 dark:text-indigo-300">{activeAthlete?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
                             </div>
                             <div>
@@ -2404,7 +2404,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         <span className={`w-3 h-3 rounded-full ${STATUS_DOT[status]} shadow-md`} />
                                     )}
                                 </div>
-                                <p className="text-slate-400 dark:text-[#64748B] font-bold uppercase text-[10px] tracking-wide mt-1">
+                                <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[10px] tracking-wide mt-1">
                                     {activeAthlete?.subsection} • Individual Profile
                                 </p>
                             </div>
@@ -2416,7 +2416,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         if (!avail) return null;
                         const cls = avail === 'available' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40'
                                   : avail === 'modified'  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border border-amber-100 dark:border-amber-800/40'
-                                                          : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border border-rose-100 dark:border-rose-900/40';
+                                                          : 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border border-rose-100 dark:border-rose-900/40';
                         const label = avail === 'available' ? 'Full Training' : avail === 'modified' ? 'Modified Training' : 'Unavailable';
                         return <span className={`px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{label}</span>;
                     })()}
@@ -2447,9 +2447,9 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 const pct = max ? val / max : 0;
                                 let chipColor = 'bg-slate-50 dark:bg-[#0F1C30] text-slate-700 dark:text-[#E2E8F0] border-slate-100 dark:border-[#1A2D48]';
                                 if (isHighBad && max) {
-                                    chipColor = pct >= 0.8 ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' : pct >= 0.6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40';
+                                    chipColor = pct >= 0.8 ? 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' : pct >= 0.6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40';
                                 } else if (isHighGood && max) {
-                                    chipColor = pct <= 0.4 ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' : pct <= 0.6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40';
+                                    chipColor = pct <= 0.4 ? 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' : pct <= 0.6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40';
                                 }
                                 return (
                                     <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold ${chipColor}`}>
@@ -2475,18 +2475,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             const READINESS_COLORS: Record<string, string> = {
                                 ready: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
                                 compromised: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40',
-                                not_ready: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40',
+                                not_ready: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40',
                             };
                             const SEVERITY_COLORS: Record<string, string> = {
                                 mild: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40',
-                                moderate: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40',
-                                severe: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40',
+                                moderate: 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border-rose-100 dark:border-rose-900/40',
+                                severe: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40',
                             };
                             const TREND_COLORS: Record<string, string> = {
                                 improving: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
                                 stable: 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]',
-                                declining: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40',
-                                worsening: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40',
+                                declining: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40',
+                                worsening: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40',
                             };
                             const URTI_LABELS: Record<string, string> = {
                                 urti_hoarseness: 'Hoarseness', urti_blocked_nose: 'Blocked Nose', urti_runny_nose: 'Runny Nose',
@@ -2505,7 +2505,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     {/* Daily wellness metrics */}
                                     {dailyRes && (
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#64748B] mb-3">Daily Wellness</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-3">Daily Wellness</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {dailyResp.readiness && (
                                                     <StrPill label="Readiness" val={dailyResp.readiness} colorMap={READINESS_COLORS} />
@@ -2529,21 +2529,21 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 <AlertTriangle size={10} /> Injury
                                             </p>
                                             <div className="flex flex-wrap gap-2">
-                                                <StrPill label="Complaint" val="Injury flagged" colorMap={{ 'Injury flagged': 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' }} />
+                                                <StrPill label="Complaint" val="Injury flagged" colorMap={{ 'Injury flagged': 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' }} />
                                                 {dailyRes?.injury_report?.areas?.map((a: any) => (
-                                                    <span key={a.area} className="px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40 uppercase">
+                                                    <span key={a.area} className="px-3 py-1.5 rounded-xl border text-[10px] font-bold bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40 uppercase">
                                                         {a.area.replace(/_/g,' ')}
                                                     </span>
                                                 ))}
                                                 {/* Injury classification details from deep check */}
                                                 {weeklyHasInjury && weeklyResp.onset && (
-                                                    <StrPill label="Onset" val={weeklyResp.onset} colorMap={{ sudden: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40', gradual: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' }} />
+                                                    <StrPill label="Onset" val={weeklyResp.onset} colorMap={{ sudden: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40', gradual: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.status && (
-                                                    <StrPill label="Status" val={weeklyResp.status} colorMap={{ new: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40', recurrence: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', exacerbation: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' }} />
+                                                    <StrPill label="Status" val={weeklyResp.status} colorMap={{ new: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40', recurrence: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', exacerbation: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.impact && weeklyResp.impact !== 'none' && (
-                                                    <StrPill label="Impact" val={weeklyResp.impact} colorMap={{ minor: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', moderate: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40', severe: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' }} />
+                                                    <StrPill label="Impact" val={weeklyResp.impact} colorMap={{ minor: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', moderate: 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border-rose-100 dark:border-rose-900/40', severe: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' }} />
                                                 )}
                                                 {weeklyHasInjury && weeklyResp.time_loss && weeklyResp.time_loss !== '0' && (
                                                     <StrPill label="Time loss" val={weeklyResp.time_loss} colorMap={{}} />
@@ -2570,7 +2570,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     </div>
                                                 ))}
                                                 {weeklyResp.illness_impact && weeklyResp.illness_impact !== 'none' && (
-                                                    <StrPill label="Impact" val={weeklyResp.illness_impact} colorMap={{ no_impact: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40', minor: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', moderate: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/40', severe: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' }} />
+                                                    <StrPill label="Impact" val={weeklyResp.illness_impact} colorMap={{ no_impact: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40', minor: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40', moderate: 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border-rose-100 dark:border-rose-900/40', severe: 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' }} />
                                                 )}
                                                 {weeklyResp.illness_time_loss && weeklyResp.illness_time_loss !== '0' && (
                                                     <StrPill label="Time loss" val={weeklyResp.illness_time_loss} colorMap={{}} />
@@ -2598,7 +2598,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 )}
                                                 {Array.isArray(weeklyResp.stress_sources) && weeklyResp.stress_sources.filter((s: string) => s !== 'None').length > 0 && (
                                                     <div className="w-full flex flex-wrap gap-1.5 mt-1">
-                                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#64748B] w-full">Stress sources</span>
+                                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] w-full">Stress sources</span>
                                                         {weeklyResp.stress_sources.filter((s: string) => s !== 'None').map((s: string) => (
                                                             <span key={s} className="px-2.5 py-1 rounded-lg border text-[10px] font-semibold bg-pink-50 text-pink-700 border-pink-100">{s}</span>
                                                         ))}
@@ -2612,7 +2612,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         })() : (
                             <div className="p-10 text-center border-2 border-dashed border-slate-100 dark:border-[#1A2D48] rounded-xl">
                                 <Clock size={40} className="mx-auto text-slate-200 mb-4" />
-                                <p className="text-sm font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">No response for this date range.</p>
+                                <p className="text-sm font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">No response for this date range.</p>
                             </div>
                         )}
                     </div>
@@ -2644,7 +2644,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 {(!res?.injury_report || res.injury_report.areas.length === 0) && (
                                     <div className="flex flex-col items-center justify-center h-full w-full text-center opacity-30">
                                         <CheckCircle2 size={48} className="text-emerald-500 mb-4" />
-                                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">All Clear</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">All Clear</p>
                                     </div>
                                 )}
                             </div>
@@ -2683,7 +2683,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 <div className="flex flex-wrap gap-2">
                                                     {details.map(d => (
                                                         <div key={d.label} className="px-2.5 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg">
-                                                            <span className="text-[8px] font-bold uppercase text-slate-400 dark:text-[#64748B] block">{d.label}</span>
+                                                            <span className="text-[8px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] block">{d.label}</span>
                                                             <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0]">{String(d.value)}</span>
                                                         </div>
                                                     ))}
@@ -2756,13 +2756,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div className="flex items-center gap-6">
                     <button
                         onClick={() => setViewMode('dashboard')}
-                        className="w-12 h-12 bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#64748B] hover:bg-slate-50 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                        className="w-12 h-12 bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
                         <h2 className="text-3xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">Share Check-in Link</h2>
-                        <p className="text-slate-400 dark:text-[#64748B] font-bold uppercase text-[10px] tracking-wide mt-1">
+                        <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[10px] tracking-wide mt-1">
                             Share link and track daily responses
                         </p>
                     </div>
@@ -2771,19 +2771,19 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Left: Template list + create card */}
                     <div data-tour="share-template-picker" className="space-y-4">
-                        <label className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#64748B] tracking-wide ml-1">Select Questionnaire</label>
+                        <label className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide ml-1">Select Questionnaire</label>
                         <div className="space-y-3">
                             {/* Built-in: Daily Wellness Check */}
                             <div
                                 onClick={() => setSelectedTemplate({ id: '__wellness_check__', name: 'Wellness Check', questions: [] })}
                                 className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
                                     selectedTemplate?.id === '__wellness_check__'
-                                        ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200 text-white'
+                                        ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200 dark:shadow-none text-white'
                                         : 'bg-white dark:bg-[#132338] border-indigo-100 dark:border-indigo-800/40 text-slate-900 dark:text-[#E2E8F0] hover:border-indigo-200'
                                 }`}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__wellness_check__' ? 'bg-white/20' : 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500'}`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__wellness_check__' ? 'bg-white/20' : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-500'}`}>
                                         <Activity size={20} />
                                     </div>
                                     <div>
@@ -2800,7 +2800,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 onClick={() => setSelectedTemplate({ id: '__weekly_health__', name: 'Deep Health Check', questions: [] })}
                                 className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
                                     selectedTemplate?.id === '__weekly_health__'
-                                        ? 'bg-amber-600 border-amber-600 shadow-xl shadow-amber-200 text-white'
+                                        ? 'bg-amber-600 border-amber-600 shadow-xl shadow-amber-200 dark:shadow-none text-white'
                                         : 'bg-white dark:bg-[#132338] border-amber-100 dark:border-amber-800/40 text-slate-900 dark:text-[#E2E8F0] hover:border-amber-200'
                                 }`}
                             >
@@ -2826,18 +2826,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         onClick={() => setSelectedTemplate(isSelected ? null : t)}
                                         className={`p-5 rounded-xl border-2 transition-all cursor-pointer ${
                                             isSelected
-                                                ? 'bg-cyan-600 border-cyan-600 shadow-xl shadow-cyan-200 text-white'
+                                                ? 'bg-cyan-600 border-cyan-600 shadow-xl shadow-cyan-200 dark:shadow-none text-white'
                                                 : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] hover:border-cyan-200'
                                         }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#64748B]'}`}>
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                     <ClipboardList size={20} />
                                                 </div>
                                                 <div>
                                                     <div className="font-semibold text-base">{t.name || t.title}</div>
-                                                    <div className={`text-[9px] font-bold uppercase tracking-wide ${isSelected ? 'text-cyan-100' : 'text-slate-400 dark:text-[#64748B]'}`}>
+                                                    <div className={`text-[9px] font-bold uppercase tracking-wide ${isSelected ? 'text-cyan-100' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                         {t.questions?.length || 0} questions
                                                     </div>
                                                 </div>
@@ -2865,7 +2865,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         <Plus size={20} />
                                     </div>
                                     <div>
-                                        <div className="font-semibold text-sm text-slate-500 dark:text-[#94A3B8] group-hover:text-slate-700 transition-colors">Create New Template</div>
+                                        <div className="font-semibold text-sm text-slate-500 dark:text-[#CBD5E1] group-hover:text-slate-700 dark:group-hover:text-[#CBD5E1] transition-colors">Create New Template</div>
                                         <div className="text-[9px] font-bold uppercase tracking-wide text-slate-300 dark:text-[#475569]">
                                             Build a custom questionnaire to share
                                         </div>
@@ -2886,7 +2886,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-slate-900 dark:text-[#E2E8F0] text-lg">Link Ready</p>
-                                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mt-1">
+                                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mt-1">
                                             {selectedTemplate.name || selectedTemplate.title} · {activeTeam?.name}
                                         </p>
                                     </div>
@@ -2894,10 +2894,10 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                                 {/* URL preview row */}
                                 <div className="bg-slate-50 dark:bg-[#0F1C30] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl p-4 flex items-center gap-3">
-                                    <p className="text-[10px] font-mono text-slate-400 dark:text-[#64748B] truncate flex-1">{previewLink}</p>
+                                    <p className="text-[10px] font-mono text-slate-400 dark:text-[#CBD5E1] truncate flex-1">{previewLink}</p>
                                     <button
                                         onClick={handleCopy}
-                                        className={`p-2 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-600' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] hover:text-cyan-600 hover:border-cyan-200'}`}
+                                        className={`p-2 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-600' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-200'}`}
                                     >
                                         {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
                                     </button>
@@ -2907,7 +2907,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 <div data-tour="share-actions" className="flex flex-col gap-3">
                                     <button
                                         onClick={handleCopy}
-                                        className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                        className="w-full py-3.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl font-semibold text-[10px] uppercase tracking-wide hover:bg-indigo-500 dark:hover:bg-indigo-500 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                                     >
                                         <Copy size={14} /> {copied ? 'Copied!' : 'Copy Link'}
                                     </button>
@@ -2941,7 +2941,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             <button
                                                 onClick={handleTrackToday}
                                                 disabled={sharingInProgress}
-                                                className="w-full py-3 rounded-xl font-semibold text-[10px] uppercase tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border-2 bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#94A3B8] hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 disabled:opacity-60"
+                                                className="w-full py-3 rounded-xl font-semibold text-[10px] uppercase tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border-2 bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 disabled:opacity-60"
                                             >
                                                 {sharingInProgress ? (
                                                     <><Clock size={14} className="animate-spin" /> Creating...</>
@@ -2962,7 +2962,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         ) : (
                             <div className="hidden md:flex flex-col items-center justify-center h-full text-center py-16 opacity-30">
                                 <Share2 size={32} className="text-slate-300 dark:text-[#475569] mb-3" />
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#64748B]">Select a questionnaire<br />to generate a share link</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">Select a questionnaire<br />to generate a share link</p>
                             </div>
                         )}
                     </div>
@@ -2982,18 +2982,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 <div className="space-y-6">
                     <button
                         onClick={() => setViewMode('selection')}
-                        className="flex items-center gap-2 text-slate-400 dark:text-[#64748B] hover:text-slate-900 transition-colors font-bold text-[10px] uppercase tracking-[0.2em]"
+                        className="flex items-center gap-2 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors font-bold text-[10px] uppercase tracking-[0.2em]"
                     >
                         <ArrowLeft size={14} /> Back to Hub
                     </button>
 
                     {/* Built-in form templates */}
                     <div>
-                        <h3 className="text-xs font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-3">Built-in Templates</h3>
+                        <h3 className="text-xs font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">Built-in Templates</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div onClick={() => setPreviewTemplate('daily')} className="bg-white dark:bg-[#132338] border-2 border-indigo-100 dark:border-indigo-800/40 rounded-xl p-5 space-y-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-600 text-indigo-500 flex items-center justify-center">
                                         <Activity size={20} />
                                     </div>
                                     <div className="flex-1">
@@ -3002,7 +3002,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     </div>
                                     <ChevronRight size={16} className="text-slate-300 dark:text-[#475569] group-hover:text-indigo-400 transition-colors" />
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">
+                                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">
                                     Availability, health complaint, fatigue, soreness, sleep quality, stress, mood, sleep hours, readiness. Auto-generates wellness flags.
                                 </p>
                             </div>
@@ -3017,7 +3017,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     </div>
                                     <ChevronRight size={16} className="text-slate-300 dark:text-[#475569] group-hover:text-amber-400 transition-colors" />
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">
+                                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">
                                     Problem classification, onset, recurrence, body area (FIFA), mechanism, impact, time-loss, wellness trends, recovery.
                                 </p>
                             </div>
@@ -3030,18 +3030,18 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPreviewTemplate(null)} />
                             <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                 {/* Header */}
-                                <div className={`px-5 py-4 border-b ${previewTemplate === 'daily' ? 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-100 dark:border-indigo-800/40' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40'} flex items-center justify-between`}>
+                                <div className={`px-5 py-4 border-b ${previewTemplate === 'daily' ? 'bg-indigo-50 dark:bg-indigo-600 border-indigo-100 dark:border-indigo-800/40' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40'} flex items-center justify-between`}>
                                     <div className="flex items-center gap-3">
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${previewTemplate === 'daily' ? 'bg-indigo-500 text-white' : 'bg-amber-500 text-white'}`}>
                                             {previewTemplate === 'daily' ? <Activity size={16} /> : <ShieldIcon size={16} />}
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{previewTemplate === 'daily' ? 'Wellness Check' : 'Deep Health Check'}</h3>
-                                            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · 2–5 min'}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · 2–5 min'}</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
-                                        <X size={16} className="text-slate-400 dark:text-[#64748B]" />
+                                        <X size={16} className="text-slate-400 dark:text-[#CBD5E1]" />
                                     </button>
                                 </div>
 
@@ -3107,11 +3107,11 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{q.label}</span>
-                                                                <span className="text-[9px] font-medium text-slate-400 dark:text-[#64748B] bg-slate-200 dark:bg-[#243A58] px-1.5 py-0.5 rounded">{q.type}</span>
+                                                                <span className="text-[9px] font-medium text-slate-400 dark:text-[#CBD5E1] bg-slate-200 dark:bg-[#243A58] px-1.5 py-0.5 rounded">{q.type}</span>
                                                             </div>
                                                             {q.note && <p className="text-[9px] text-amber-500 italic mt-0.5">{q.note}</p>}
                                                         </div>
-                                                        <ChevronDown size={14} className={`text-slate-400 dark:text-[#64748B] transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                                        <ChevronDown size={14} className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                                     </div>
 
                                                     {/* Mini phone preview */}
@@ -3126,7 +3126,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                         </div>
                                                                         <span className="text-[7px] font-bold text-slate-700 dark:text-[#E2E8F0]">SportsLab</span>
                                                                     </div>
-                                                                    <span className="text-[7px] text-slate-400 dark:text-[#64748B]">{i + 1}/{questions.length}</span>
+                                                                    <span className="text-[7px] text-slate-400 dark:text-[#CBD5E1]">{i + 1}/{questions.length}</span>
                                                                 </div>
                                                                 {/* Progress bar */}
                                                                 <div className="h-[2px] bg-slate-100 dark:bg-[#1A2D48]">
@@ -3135,7 +3135,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                 {/* Content */}
                                                                 <div className="px-4 py-3 space-y-2">
                                                                     <h3 className="text-[10px] font-bold text-slate-900 dark:text-[#E2E8F0]">{q.label}</h3>
-                                                                    {q.instruction && <p className="text-[7px] text-slate-500 dark:text-[#94A3B8]">{q.instruction}</p>}
+                                                                    {q.instruction && <p className="text-[7px] text-slate-500 dark:text-[#CBD5E1]">{q.instruction}</p>}
 
                                                                     {/* Render based on type */}
                                                                     {q.type === 'Buttons' && q.options && (
@@ -3160,7 +3160,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                                                                     {q.type === '1-10 Scale' && (
                                                                         <div>
-                                                                            <div className="flex justify-between text-[6px] text-slate-400 dark:text-[#64748B] mb-1 px-0.5">
+                                                                            <div className="flex justify-between text-[6px] text-slate-400 dark:text-[#CBD5E1] mb-1 px-0.5">
                                                                                 <span>{q.lowLabel}</span>
                                                                                 <span>{q.highLabel}</span>
                                                                             </div>
@@ -3168,7 +3168,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                                 {[1,2,3,4,5,6,7,8,9,10].map(v => {
                                                                                     const colors = q.negative ? negColors : posColors;
                                                                                     return (
-                                                                                        <div key={v} className={`aspect-square rounded-md flex items-center justify-center text-[7px] font-bold ${v === 3 ? `${colors[v-1]} text-white` : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'}`}>
+                                                                                        <div key={v} className={`aspect-square rounded-md flex items-center justify-center text-[7px] font-bold ${v === 3 ? `${colors[v-1]} text-white` : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'}`}>
                                                                                             {v}
                                                                                         </div>
                                                                                     );
@@ -3182,7 +3182,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                             <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg py-2 text-center text-[12px] font-bold text-slate-900 dark:text-[#E2E8F0]">7.5</div>
                                                                             <div className="flex gap-1">
                                                                                 {(q.quickSelect || []).map(h => (
-                                                                                    <div key={h} className={`flex-1 py-1 rounded-md text-center text-[7px] font-bold ${h === '7h' ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'}`}>{h}</div>
+                                                                                    <div key={h} className={`flex-1 py-1 rounded-md text-center text-[7px] font-bold ${h === '7h' ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'}`}>{h}</div>
                                                                                 ))}
                                                                             </div>
                                                                         </div>
@@ -3195,7 +3195,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                                                     {opt}
                                                                                 </div>
                                                                             ))}
-                                                                            {q.options.length > 6 && <div className="text-[7px] text-slate-400 dark:text-[#64748B] text-center">+{q.options.length - 6} more</div>}
+                                                                            {q.options.length > 6 && <div className="text-[7px] text-slate-400 dark:text-[#CBD5E1] text-center">+{q.options.length - 6} more</div>}
                                                                         </div>
                                                                     )}
 
@@ -3232,7 +3232,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     })()}
 
                                     {/* Info callout */}
-                                    <div className={`mt-4 p-3 ${previewTemplate === 'daily' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'} border rounded-xl`}>
+                                    <div className={`mt-4 p-3 ${previewTemplate === 'daily' ? 'bg-rose-50 dark:bg-rose-700 border-rose-200 dark:border-rose-700' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'} border rounded-xl`}>
                                         <p className={`text-[10px] font-semibold ${previewTemplate === 'daily' ? 'text-rose-600' : 'text-amber-600'} uppercase tracking-wide mb-1`}>
                                             {previewTemplate === 'daily' ? 'Auto-Flag & Trigger System' : 'FIFA/IOC Aligned'}
                                         </p>
@@ -3249,7 +3249,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
 
                     {/* Divider */}
                     <div className="border-t border-slate-200 dark:border-[#243A58] pt-2">
-                        <h3 className="text-xs font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-3">Custom Templates</h3>
+                        <h3 className="text-xs font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">Custom Templates</h3>
                     </div>
 
                     <QuestionnaireManager
@@ -3276,7 +3276,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     </button>
                     <button
                         onClick={() => setSelectedResponseIds(new Set())}
-                        className="p-1.5 text-slate-400 dark:text-[#64748B] hover:text-white transition-colors rounded-lg hover:bg-slate-800"
+                        className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-white transition-colors rounded-lg hover:bg-slate-800"
                         title="Clear selection"
                     >
                         <X size={14} />
@@ -3288,11 +3288,11 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             {showBulkConfirm && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#243A58] p-6 w-full max-w-sm mx-4">
-                        <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center mb-4">
+                        <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-700 flex items-center justify-center mb-4">
                             <Trash2 size={20} className="text-rose-500" />
                         </div>
                         <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0] mb-1">Delete {selectedResponseIds.size} response{selectedResponseIds.size !== 1 ? 's' : ''}?</h3>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mb-5">This will permanently remove the selected wellness responses. This cannot be undone.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mb-5">This will permanently remove the selected wellness responses. This cannot be undone.</p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowBulkConfirm(false)}

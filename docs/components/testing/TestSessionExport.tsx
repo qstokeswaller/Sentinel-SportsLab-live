@@ -125,7 +125,7 @@ export const TestSessionExport: React.FC = () => {
             <div className="bg-white border border-slate-200 rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <CalendarIcon size={12} className="inline mr-1" />From
                         </label>
                         <input
@@ -136,7 +136,7 @@ export const TestSessionExport: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <CalendarIcon size={12} className="inline mr-1" />To
                         </label>
                         <input
@@ -147,7 +147,7 @@ export const TestSessionExport: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <UsersIcon size={12} className="inline mr-1" />Team
                         </label>
                         <CustomSelect
@@ -163,7 +163,7 @@ export const TestSessionExport: React.FC = () => {
                         <button
                             onClick={loadData}
                             disabled={loading}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-all disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition-all disabled:opacity-50"
                         >
                             <FilterIcon size={14} />
                             {loading ? 'Loading...' : 'Load Data'}
@@ -178,7 +178,7 @@ export const TestSessionExport: React.FC = () => {
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                         <div className="flex items-center gap-2">
                             <FileTextIcon size={14} className="text-slate-400" />
-                            <span className="text-sm font-semibold text-slate-700">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">
                                 {results.length} assessments across {groupedByTest.length} tests
                             </span>
                         </div>
@@ -186,21 +186,21 @@ export const TestSessionExport: React.FC = () => {
                             <button
                                 onClick={exportCSV}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <DownloadIcon size={12} />CSV (Flat)
                             </button>
                             <button
                                 onClick={exportDetailedCSV}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <DownloadIcon size={12} />CSV (Detailed)
                             </button>
                             <button
                                 onClick={() => window.print()}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
                             >
                                 <PrinterIcon size={12} />Print
                             </button>
@@ -221,7 +221,7 @@ export const TestSessionExport: React.FC = () => {
                                 return (
                                     <div key={group.test.id} className="px-4 py-3">
                                         <div className="flex items-center justify-between mb-2">
-                                            <h4 className="text-sm font-semibold text-slate-800">{group.test.name}</h4>
+                                            <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{group.test.name}</h4>
                                             <span className="text-xs text-slate-400">{group.entries.length} entries</span>
                                         </div>
                                         <div className="overflow-x-auto">
@@ -249,10 +249,10 @@ export const TestSessionExport: React.FC = () => {
                                                         for (const calc of calcs) { calculated[calc.key] = calc.formula(m); }
                                                         return (
                                                             <tr key={entry.id} className="border-t border-slate-50">
-                                                                <td className="px-2 py-1.5 font-medium text-slate-800 whitespace-nowrap">{getAthleteName(entry.athlete_id)}</td>
+                                                                <td className="px-2 py-1.5 font-medium text-slate-800 dark:text-[#E2E8F0] whitespace-nowrap">{getAthleteName(entry.athlete_id)}</td>
                                                                 <td className="px-2 py-1.5 text-slate-500">{entry.date}</td>
                                                                 {fields.map(f => (
-                                                                    <td key={f.key} className="px-2 py-1.5 tabular-nums text-slate-700">
+                                                                    <td key={f.key} className="px-2 py-1.5 tabular-nums text-slate-700 dark:text-[#CBD5E1]">
                                                                         {m[f.key] ?? <span className="text-slate-300">—</span>}
                                                                     </td>
                                                                 ))}

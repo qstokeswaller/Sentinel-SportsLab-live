@@ -271,7 +271,7 @@ function DataStatusBadge({ label, date, present }: { label: string; date?: strin
                 {present
                     ? <CheckCircleIcon size={13} className="text-emerald-500 shrink-0" />
                     : <ClockIcon size={13} className="text-slate-400 dark:text-[#475569] shrink-0" />}
-                <span className={`text-xs font-semibold ${present ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-[#64748B]'}`}>
+                <span className={`text-xs font-semibold ${present ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
                     {label}
                 </span>
             </div>
@@ -414,7 +414,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                             <ZapIcon size={16} className="text-indigo-500" />
                             Force-Velocity Profile
                         </h4>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mt-0.5">
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mt-0.5">
                             Explosive Capacity · Strength-Velocity Balance · Performance Potential
                         </p>
                     </div>
@@ -442,11 +442,11 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
             {/* ── Empty states ─────────────────────────────────────────────── */}
             {!selectedId && (
                 <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-10 text-center">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/25 flex items-center justify-center mx-auto mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-600 flex items-center justify-center mx-auto mb-3">
                         <ZapIcon size={22} className="text-indigo-400" />
                     </div>
-                    <p className="text-sm font-semibold text-slate-500 dark:text-[#94A3B8]">Select an athlete to view their Force-Velocity profile</p>
-                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1">Requires at least 2 of: CMJ, Squat Jump, IMTP, Sprint data</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-[#CBD5E1]">Select an athlete to view their Force-Velocity profile</p>
+                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1">Requires at least 2 of: CMJ, Squat Jump, IMTP, Sprint data</p>
                 </div>
             )}
 
@@ -460,7 +460,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                                 Insufficient data to build F-V profile — {completedTests}/5 tests completed
                             </span>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] mb-4">
+                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mb-4">
                             At least 2 of the following tests must be logged to compute the Force-Velocity profile. Loaded CMJ alone provides the most data points.
                         </p>
                         <div className="grid grid-cols-2 gap-2">
@@ -480,38 +480,38 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                     {/* ── Summary Stat Cards ──────────────────────────────────── */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-5 gap-3">
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 shadow-sm">
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1">F₀ Max Force</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1">F₀ Max Force</div>
                             <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0] tracking-tight">
                                 {(profile.F0 / 1000).toFixed(2)}
                             </div>
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">kN</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">kN</div>
                         </div>
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 shadow-sm">
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1">V₀ Max Velocity</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1">V₀ Max Velocity</div>
                             <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0] tracking-tight">{profile.V0}</div>
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">m/s</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">m/s</div>
                         </div>
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 shadow-sm">
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1">Pmax Peak Power</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1">Pmax Peak Power</div>
                             <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-300 tracking-tight">
                                 {(profile.Pmax / 1000).toFixed(1)}
                             </div>
-                            <div className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">kW</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">kW</div>
                         </div>
                         <div className={`rounded-xl border p-4 shadow-sm ${cls.bg} ${cls.border}`}>
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1">FV Imbalance</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1">FV Imbalance</div>
                             <div className={`text-2xl font-bold tracking-tight ${cls.text}`}>
                                 {profile.FVimbalance > 0 ? '+' : ''}{profile.FVimbalance}%
                             </div>
                             <div className={`text-[10px] font-semibold mt-0.5 ${cls.text}`}>{cls.label}</div>
                         </div>
                         <div className={`rounded-xl border p-4 shadow-sm col-span-2 sm:col-span-1 ${cls.bg} ${cls.border}`}>
-                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1">Profile Type</div>
+                            <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1">Profile Type</div>
                             <div className="flex items-center gap-1.5 mt-1">
                                 <span className={`w-2.5 h-2.5 rounded-full ${cls.dot}`} />
                                 <span className={`text-sm font-bold ${cls.text}`}>{cls.label}</span>
                             </div>
-                            <div className="text-[10px] text-slate-500 dark:text-[#94A3B8] mt-1 leading-tight">
+                            <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1] mt-1 leading-tight">
                                 {profile.FVimbalance < -10 ? 'Strength · Velocity Balance' :
                                     profile.FVimbalance > 10 ? 'Velocity · Strength Balance' : 'Strength · Velocity Balance'}
                             </div>
@@ -525,12 +525,12 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                         <div className="xl:col-span-2 bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5 shadow-sm">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
-                                    <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Force-Velocity Curve</div>
+                                    <div className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Force-Velocity Curve</div>
                                     <div className="text-[9px] text-slate-400 dark:text-[#475569] mt-0.5">
                                         Based on {profile.dataPoints.length} test data point{profile.dataPoints.length !== 1 ? 's' : ''}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-[9px] text-slate-400 dark:text-[#64748B]">
+                                <div className="flex items-center gap-3 text-[9px] text-slate-400 dark:text-[#CBD5E1]">
                                     <span className="flex items-center gap-1">
                                         <span className="inline-block w-4 h-0.5 bg-indigo-500 rounded" />
                                         Athlete Profile
@@ -545,7 +545,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-slate-800 dark:text-[#94A3B8]">
+                            <div className="text-slate-800 dark:text-[#CBD5E1]">
                                 <FVCurveChart profile={profile} />
                             </div>
                         </div>
@@ -553,7 +553,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                         {/* Data Status */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5 shadow-sm space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Data Status</div>
+                                <div className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Data Status</div>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                     completedTests === 4
                                         ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
@@ -582,15 +582,15 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
 
                             {/* Profile summary */}
                             <div className="pt-2 space-y-2 border-t border-slate-100 dark:border-[#1A2D48]">
-                                <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Profile Summary</div>
+                                <div className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Profile Summary</div>
                                 {[
-                                    { label: 'Strength Qualities', val: profile.F0 > 3000 ? 'Above Average' : profile.F0 > 2000 ? 'Average' : 'Below Average', color: profile.F0 > 3000 ? 'text-emerald-600 dark:text-emerald-400' : profile.F0 > 2000 ? 'text-slate-600 dark:text-[#94A3B8]' : 'text-amber-600 dark:text-amber-400' },
-                                    { label: 'Velocity Qualities', val: profile.V0 > 9 ? 'Above Average' : profile.V0 > 7 ? 'Average' : 'Below Average', color: profile.V0 > 9 ? 'text-emerald-600 dark:text-emerald-400' : profile.V0 > 7 ? 'text-slate-600 dark:text-[#94A3B8]' : 'text-amber-600 dark:text-amber-400' },
-                                    { label: 'Power Qualities', val: profile.Pmax > 7000 ? 'Above Average' : profile.Pmax > 5000 ? 'Average' : 'Below Average', color: profile.Pmax > 7000 ? 'text-emerald-600 dark:text-emerald-400' : profile.Pmax > 5000 ? 'text-slate-600 dark:text-[#94A3B8]' : 'text-amber-600 dark:text-amber-400' },
+                                    { label: 'Strength Qualities', val: profile.F0 > 3000 ? 'Above Average' : profile.F0 > 2000 ? 'Average' : 'Below Average', color: profile.F0 > 3000 ? 'text-emerald-600 dark:text-emerald-400' : profile.F0 > 2000 ? 'text-slate-600 dark:text-[#CBD5E1]' : 'text-amber-600 dark:text-amber-400' },
+                                    { label: 'Velocity Qualities', val: profile.V0 > 9 ? 'Above Average' : profile.V0 > 7 ? 'Average' : 'Below Average', color: profile.V0 > 9 ? 'text-emerald-600 dark:text-emerald-400' : profile.V0 > 7 ? 'text-slate-600 dark:text-[#CBD5E1]' : 'text-amber-600 dark:text-amber-400' },
+                                    { label: 'Power Qualities', val: profile.Pmax > 7000 ? 'Above Average' : profile.Pmax > 5000 ? 'Average' : 'Below Average', color: profile.Pmax > 7000 ? 'text-emerald-600 dark:text-emerald-400' : profile.Pmax > 5000 ? 'text-slate-600 dark:text-[#CBD5E1]' : 'text-amber-600 dark:text-amber-400' },
                                     { label: 'Balance', val: cls.label, color: cls.text },
                                 ].map(row => (
                                     <div key={row.label} className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 dark:text-[#94A3B8]">{row.label}</span>
+                                        <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{row.label}</span>
                                         <span className={`text-xs font-semibold ${row.color}`}>{row.val}</span>
                                     </div>
                                 ))}
@@ -613,12 +613,12 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                                 </div>
                                 <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{profile.recommendation}</p>
                                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-[#243A58]/60">
-                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Training Focus: </span>
-                                    <span className="text-[10px] text-slate-600 dark:text-[#94A3B8]">{profile.trainingFocus}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Training Focus: </span>
+                                    <span className="text-[10px] text-slate-600 dark:text-[#CBD5E1]">{profile.trainingFocus}</span>
                                 </div>
                                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-[#243A58]/60">
-                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">SFV Slope: </span>
-                                    <span className="text-[10px] text-slate-600 dark:text-[#94A3B8]">
+                                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">SFV Slope: </span>
+                                    <span className="text-[10px] text-slate-600 dark:text-[#CBD5E1]">
                                         Actual {profile.SFV} N·s/m · Optimal {profile.SFV_opt} N·s/m
                                     </span>
                                 </div>
@@ -629,18 +629,18 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                     {/* ── Historical Trend (if multiple test sessions) ──────── */}
                     {historicalProfiles.length >= 2 && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5 shadow-sm">
-                            <div className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-4">
+                            <div className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-4">
                                 Historical Trend — F₀, V₀, Pmax across test sessions
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs">
                                     <thead>
                                         <tr className="border-b border-slate-100 dark:border-[#1A2D48]">
-                                            <th className="text-left text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase py-2 pr-4">Date</th>
-                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase py-2 px-3">F₀ (kN)</th>
-                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase py-2 px-3">V₀ (m/s)</th>
-                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase py-2 px-3">Pmax (kW)</th>
-                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase py-2 pl-3">Profile</th>
+                                            <th className="text-left text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase py-2 pr-4">Date</th>
+                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase py-2 px-3">F₀ (kN)</th>
+                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase py-2 px-3">V₀ (m/s)</th>
+                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase py-2 px-3">Pmax (kW)</th>
+                                            <th className="text-right text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase py-2 pl-3">Profile</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -651,7 +651,7 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                                             const hcls = { force_deficit: 'text-amber-600 dark:text-amber-400', velocity_deficit: 'text-sky-600 dark:text-sky-400', well_balanced: 'text-emerald-600 dark:text-emerald-400' }[hp.classification];
                                             return (
                                                 <tr key={date} className={`border-t border-slate-50 dark:border-[#1A2D48] ${i === historicalProfiles.length - 1 ? 'font-semibold bg-slate-50 dark:bg-[#1A2D48]/40' : ''}`}>
-                                                    <td className="py-2 pr-4 text-slate-600 dark:text-[#94A3B8]">
+                                                    <td className="py-2 pr-4 text-slate-600 dark:text-[#CBD5E1]">
                                                         {new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                                                         {i === historicalProfiles.length - 1 && <span className="ml-1.5 text-[9px] text-indigo-500">latest</span>}
                                                     </td>
@@ -683,20 +683,20 @@ const ForceVelocityTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds }
                             className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <InfoIcon size={13} className="text-slate-400 dark:text-[#64748B]" />
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Methodology</span>
+                                <InfoIcon size={13} className="text-slate-400 dark:text-[#CBD5E1]" />
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Methodology</span>
                             </div>
                             {showMethodology ? <ChevronUpIcon size={14} className="text-slate-400" /> : <ChevronDownIcon size={14} className="text-slate-400" />}
                         </button>
                         {showMethodology && (
                             <div className="px-5 pb-4 space-y-2 border-t border-slate-100 dark:border-[#1A2D48]">
-                                <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] leading-relaxed pt-3">
+                                <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] leading-relaxed pt-3">
                                     F-V profile computed using the Samozino simple method (2008, 2014). Push-off distance assumed at {DEFAULT_HPO}m.
                                     F₀ and V₀ derived from linear regression across available data points (CMJ, SJ, IMTP, Sprint).
                                     Optimal slope per Samozino et al. (2014). FV imbalance thresholds: &gt;±10% indicates a deficit (Jimenez-Reyes et al., 2019).
                                     This is a proxy profile — accuracy improves with loaded jump testing (multi-point method).
                                 </p>
-                                <p className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                                     Sources: Samozino et al. MSSE 2008, JAB 2014 · Morin & Samozino IJSS 2016 · Jimenez-Reyes et al. JSCR 2019
                                 </p>
                             </div>

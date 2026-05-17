@@ -168,21 +168,21 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
             <div className="bg-white border border-slate-200 rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Team</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">Team</label>
                         <CustomSelect value={selectedTeamId} onChange={e => { setSelectedTeamId(e.target.value); setResults([]); }} variant="form" placeholder="— Select Team —">
                             <option value="">— Select Team —</option>
                             {teams.map(t => <option key={t.id} value={t.id}>{t.name} ({t.players.length})</option>)}
                         </CustomSelect>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">Category</label>
                         <CustomSelect value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value as TestCategory); setSelectedTestId(''); setResults([]); }} variant="form" placeholder="— Select Category —">
                             <option value="">— Select Category —</option>
                             {TEST_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </CustomSelect>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Test</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">Test</label>
                         <CustomSelect value={selectedTestId} onChange={e => { setSelectedTestId(e.target.value); setResults([]); }} disabled={!selectedCategory} variant="form" placeholder="— Select Test —">
                             <option value="">— Select Test —</option>
                             {categoryTests.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -198,19 +198,19 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                         <div className="flex items-center gap-2">
                             <UsersIcon size={14} className="text-slate-400" />
-                            <span className="text-sm font-semibold text-slate-700">{selectedTest.name}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedTest.name}</span>
                             <span className="text-xs text-slate-400">— {selectedTeam?.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={exportCSV}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                             >
                                 <DownloadIcon size={12} />CSV
                             </button>
                             <button
                                 onClick={() => window.print()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                             >
                                 <PrinterIcon size={12} />Print
                             </button>
@@ -232,7 +232,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                             <th
                                                 key={f.key}
                                                 onClick={() => toggleSort(f.key)}
-                                                className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none"
+                                                className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 dark:text-[#CBD5E1] select-none"
                                             >
                                                 <span className="flex items-center gap-1">
                                                     {f.label}
@@ -251,7 +251,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                 <tbody>
                                     {rows.map(row => (
                                         <tr key={row.player.id} className="border-b border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
-                                            <td className="px-4 py-2.5 font-medium text-slate-800 sticky left-0 bg-white z-10 whitespace-nowrap">
+                                            <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-[#E2E8F0] sticky left-0 bg-white z-10 whitespace-nowrap">
                                                 {row.player.name}
                                             </td>
                                             <td className="px-3 py-2.5 text-slate-500 text-xs whitespace-nowrap">
@@ -260,7 +260,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                             {displayFields.map(f => (
                                                 <td key={f.key} className="px-3 py-2.5 tabular-nums">
                                                     {row.allValues[f.key] != null ? (
-                                                        <span className={f.isCalc ? 'font-semibold text-indigo-600' : 'text-slate-800'}>
+                                                        <span className={f.isCalc ? 'font-semibold text-indigo-600' : 'text-slate-800 dark:text-[#E2E8F0]'}>
                                                             {row.allValues[f.key]}
                                                         </span>
                                                     ) : (

@@ -91,26 +91,26 @@ export const ConditioningHubPage = () => {
         if (!scheduleOpen) return null;
         const targets = schedTargetType === 'Team' ? teams : allPlayers;
         return (
-            <div className="bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <div className="bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
                 <h4 className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide flex items-center gap-1.5"><CalendarPlusIcon size={13} /> Schedule to Calendar</h4>
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase mb-1 block">Date</label>
+                        <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Date</label>
                         <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase mb-1 block">Time</label>
+                        <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Time</label>
                         <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase mb-1 block">Assign to</label>
+                        <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Assign to</label>
                         <CustomSelect value={schedTargetType} onChange={e => { setSchedTargetType(e.target.value as any); setSchedTargetId(''); }} size="sm">
                             <option value="Team">Team</option>
                             <option value="Individual">Individual</option>
                         </CustomSelect>
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase mb-1 block">{schedTargetType}</label>
+                        <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">{schedTargetType}</label>
                         <CustomSelect value={schedTargetId} onChange={e => setSchedTargetId(e.target.value)} size="sm">
                             <option value="">Select...</option>
                             {targets.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -141,10 +141,10 @@ export const ConditioningHubPage = () => {
     const emptySet = () => ({ id: 'cs_' + Date.now() + Math.random().toString(36).slice(2, 6), reps: '', workDuration: '', workDistance: '', intensityType: '% MAS', intensityValue: '', restDuration: '', interSetRest: '', notes: '' });
 
     const energyColor = (es) => {
-        if (es === 'alactic') return { bg: 'bg-violet-50', border: 'border-violet-200 dark:border-violet-800/50', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-700', accent: 'bg-violet-500' };
-        if (es === 'glycolytic') return { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700', accent: 'bg-orange-500' };
-        if (es === 'aerobic') return { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', badge: 'bg-cyan-100 text-cyan-700', accent: 'bg-cyan-500' };
-        return { bg: 'bg-slate-50 dark:bg-[#0F1C30]', border: 'border-slate-200 dark:border-[#243A58]', text: 'text-slate-700 dark:text-[#E2E8F0]', badge: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#E2E8F0]', accent: 'bg-slate-500' };
+        if (es === 'alactic')    return { bg: 'bg-violet-50 dark:bg-[#0F1C30]', border: 'border-violet-200 dark:border-violet-500/30', text: 'text-violet-700 dark:text-violet-300', badge: 'bg-violet-50 dark:bg-violet-500/15 border border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300', accent: 'bg-violet-500' };
+        if (es === 'glycolytic')  return { bg: 'bg-orange-50 dark:bg-[#0F1C30]', border: 'border-orange-200 dark:border-orange-500/30', text: 'text-orange-700 dark:text-orange-300', badge: 'bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-400', accent: 'bg-orange-500' };
+        if (es === 'aerobic')     return { bg: 'bg-cyan-50 dark:bg-[#0F1C30]',   border: 'border-cyan-200 dark:border-cyan-500/30',   text: 'text-cyan-700 dark:text-cyan-300',   badge: 'bg-cyan-50 dark:bg-cyan-500/15 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400',   accent: 'bg-cyan-500' };
+        return { bg: 'bg-slate-50 dark:bg-[#0F1C30]', border: 'border-slate-200 dark:border-[#243A58]', text: 'text-slate-700 dark:text-[#E2E8F0]', badge: 'bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-700 dark:text-[#CBD5E1]', accent: 'bg-slate-500' };
     };
 
     const addCondSet = () => setNewConditioningSession(prev => ({ ...prev, sets: [...prev.sets, emptySet()] }));
@@ -250,17 +250,17 @@ ${setsHtml}
     };
 
     const renderConditioningSessionCreator = () => {
-        const inputCls = "w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all";
-        const labelCls = "text-[10px] font-medium text-slate-400 dark:text-[#64748B]";
+        const inputCls = "w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2.5 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all";
+        const labelCls = "text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]";
 
         return (
             <div className="max-w-5xl mx-auto pb-10 animate-in fade-in duration-300">
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-6">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-4">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{newConditioningSession.id ? 'Edit Session' : 'Create Conditioning Session'}</h3>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Prescribe sets, reps, intensity & work:rest ratios</p>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Prescribe sets, reps, intensity & work:rest ratios</p>
                         </div>
                         <div className="flex gap-2.5">
                             <Button variant="secondary" size="sm" onClick={() => { setConditioningView('grid'); setNewConditioningSession({ ...emptyConditioningSession }); }}>Cancel</Button>
@@ -272,33 +272,33 @@ ${setsHtml}
                     <div data-tour="cond-meta-fields" className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-xl border border-slate-100 dark:border-[#1A2D48] space-y-4">
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Session Name</label>
+                                <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Session Name</label>
                                 <input type="text" value={newConditioningSession.title} onChange={e => setNewConditioningSession(prev => ({ ...prev, title: e.target.value }))} placeholder="e.g. MAS 95% Aerobic Power" className={inputCls} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Modality</label>
+                                <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Modality</label>
                                 <CustomSelect value={newConditioningSession.modality} onChange={e => setNewConditioningSession(prev => ({ ...prev, modality: e.target.value }))}>
                                     {MODALITIES.map(m => <option key={m} value={m}>{m}</option>)}
                                 </CustomSelect>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Total Duration</label>
+                                <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Total Duration</label>
                                 <input type="text" value={newConditioningSession.totalDuration} onChange={e => setNewConditioningSession(prev => ({ ...prev, totalDuration: e.target.value }))} placeholder="e.g. 25 min" className={inputCls} />
                             </div>
                         </div>
 
                         {/* Energy System Selector */}
                         <div data-tour="cond-energy-system" className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Target Energy System</label>
+                            <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Target Energy System</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {ENERGY_SYSTEMS.map(es => (
                                     <button key={es.value} onClick={() => setNewConditioningSession(prev => ({ ...prev, energySystem: es.value }))}
-                                        className={`p-3 rounded-lg border text-left transition-all ${newConditioningSession.energySystem === es.value ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/25 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-slate-300'}`}>
+                                        className={`p-3 rounded-lg border text-left transition-all ${newConditioningSession.energySystem === es.value ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-slate-300'}`}>
                                         <div className="flex items-center gap-2 mb-1">
                                             <div className={`w-2.5 h-2.5 rounded-full ${es.color}`} />
                                             <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{es.label}</span>
                                         </div>
-                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">{es.desc}</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{es.desc}</span>
                                     </button>
                                 ))}
                             </div>
@@ -306,7 +306,7 @@ ${setsHtml}
 
                         {/* Notes */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Session Notes (optional)</label>
+                            <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Session Notes (optional)</label>
                             <textarea value={newConditioningSession.notes} onChange={e => setNewConditioningSession(prev => ({ ...prev, notes: e.target.value }))} placeholder="e.g. Athletes should be tested on MAS before this session. Stop set if rep drops below 90% target distance." rows={2} className={inputCls + ' resize-none'} />
                         </div>
                     </div>
@@ -314,7 +314,7 @@ ${setsHtml}
                     {/* Sets */}
                     <div data-tour="cond-interval-sets" className="space-y-3">
                         <div className="flex justify-between items-center">
-                            <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Interval Sets</h4>
+                            <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Interval Sets</h4>
                             <button onClick={addCondSet} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-all"><PlusIcon size={13} /> Add Set</button>
                         </div>
                         <div className="space-y-2.5">
@@ -323,9 +323,9 @@ ${setsHtml}
                                 return (
                                     <div key={set.id} className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-xl border border-slate-200 dark:border-[#243A58] animate-in slide-in-from-bottom-2">
                                         <div className="flex items-center justify-between mb-3">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-[#94A3B8]">SET {idx + 1}</span>
+                                            <span className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0]">SET {idx + 1}</span>
                                             <div className="flex items-center gap-1.5">
-                                                {wr && <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700 dark:text-indigo-400 rounded text-[10px] font-bold">W:R {wr}</span>}
+                                                {wr && <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded text-[10px] font-bold">W:R {wr}</span>}
                                                 <button onClick={() => duplicateCondSet(set)} className="p-1.5 text-slate-300 dark:text-[#475569] hover:text-indigo-500 transition-all" title="Duplicate"><CopyIcon size={13} /></button>
                                                 <button onClick={() => removeCondSet(set.id)} className="p-1.5 text-slate-300 dark:text-[#475569] hover:text-red-500 transition-all" title="Remove"><Trash2Icon size={13} /></button>
                                             </div>
@@ -363,13 +363,13 @@ ${setsHtml}
                                             </div>
                                         </div>
                                         <div className="mt-2">
-                                            <input type="text" value={set.notes || ''} onChange={e => updateCondSet(set.id, 'notes', e.target.value)} placeholder="Set notes (e.g. stop if rep drops below 90% target distance)" className="w-full bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg px-2.5 py-1.5 text-xs text-slate-500 dark:text-[#94A3B8] outline-none focus:border-indigo-300" />
+                                            <input type="text" value={set.notes || ''} onChange={e => updateCondSet(set.id, 'notes', e.target.value)} placeholder="Set notes (e.g. stop if rep drops below 90% target distance)" className="w-full bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg px-2.5 py-1.5 text-xs text-slate-500 dark:text-[#CBD5E1] outline-none focus:border-indigo-300" />
                                         </div>
                                     </div>
                                 );
                             })}
                             {newConditioningSession.sets.length === 0 && (
-                                <div onClick={addCondSet} className="py-10 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-[#64748B] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">
+                                <div onClick={addCondSet} className="py-10 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-[#CBD5E1] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">
                                     <div className="w-10 h-10 bg-slate-100 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center"><PlusIcon size={20} /></div>
                                     <p className="text-xs font-medium">Click to add your first set</p>
                                 </div>
@@ -402,10 +402,10 @@ ${setsHtml}
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{session.title}</h3>
                         <div className="flex items-center gap-3 mt-1">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${ec.badge}`}>{sysLabel}</span>
-                            <span className="text-xs text-slate-400 dark:text-[#64748B]">{session.modality}</span>
-                            {session.totalDuration && <span className="text-xs text-slate-400 dark:text-[#64748B]">· {session.totalDuration}</span>}
-                            <span className="text-xs text-slate-400 dark:text-[#64748B]">· {vol.totalReps} total reps</span>
-                            {vol.totalWork > 0 && <span className="text-xs text-slate-400 dark:text-[#64748B]">· {vol.totalWork}m total</span>}
+                            <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">{session.modality}</span>
+                            {session.totalDuration && <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">· {session.totalDuration}</span>}
+                            <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">· {vol.totalReps} total reps</span>
+                            {vol.totalWork > 0 && <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">· {vol.totalWork}m total</span>}
                         </div>
                     </div>
                     <div className="flex gap-2">
@@ -426,12 +426,12 @@ ${setsHtml}
                                 <div className="flex items-center gap-4">
                                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold text-white shrink-0 ${ec.accent}`}>S{idx + 1}</div>
                                     <div className="flex-1 flex flex-wrap items-center gap-6">
-                                        <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">Reps</span><span className={`text-base font-bold ${ec.text}`}>{set.reps || '—'}</span></div>
-                                        <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">Work</span><span className={`text-base font-bold ${ec.text}`}>{set.workDuration || '—'}{set.workDistance ? ` / ${set.workDistance}m` : ''}</span></div>
-                                        <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">Intensity</span><span className={`text-base font-bold ${ec.text}`}>{set.intensityValue || '—'} {set.intensityType || ''}</span></div>
-                                        <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">Rest</span><span className={`text-base font-bold ${ec.text}`}>{set.restDuration || '—'}</span></div>
-                                        {wr && <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">W:R</span><span className={`text-base font-bold ${ec.text}`}>{wr}</span></div>}
-                                        {set.interSetRest && <div className="flex flex-col"><span className="text-[9px] text-slate-400 dark:text-[#64748B] uppercase">Inter-set</span><span className={`text-base font-bold ${ec.text}`}>{set.interSetRest}</span></div>}
+                                        <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">Reps</span><span className={`text-base font-bold ${ec.text}`}>{set.reps || '—'}</span></div>
+                                        <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">Work</span><span className={`text-base font-bold ${ec.text}`}>{set.workDuration || '—'}{set.workDistance ? ` / ${set.workDistance}m` : ''}</span></div>
+                                        <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">Intensity</span><span className={`text-base font-bold ${ec.text}`}>{set.intensityValue || '—'} {set.intensityType || ''}</span></div>
+                                        <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">Rest</span><span className={`text-base font-bold ${ec.text}`}>{set.restDuration || '—'}</span></div>
+                                        {wr && <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">W:R</span><span className={`text-base font-bold ${ec.text}`}>{wr}</span></div>}
+                                        {set.interSetRest && <div className="flex flex-col"><span className="text-[9px] text-slate-700 dark:text-[#E2E8F0] uppercase">Inter-set</span><span className={`text-base font-bold ${ec.text}`}>{set.interSetRest}</span></div>}
                                     </div>
                                 </div>
                                 {set.notes && <div className={`mt-2 ml-11 text-xs italic ${ec.text} opacity-60`}>{set.notes}</div>}
@@ -441,14 +441,14 @@ ${setsHtml}
                 </div>
                 {session.linkedSessions?.length > 0 && (
                     <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2">
-                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Linked Sessions</h4>
+                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Linked Sessions</h4>
                         <div className="flex flex-wrap gap-2">
                             {session.linkedSessions.map(l => {
                                 const src = [wattbikeSource, conditioningSource, workoutTemplateSource].find(s => s.key === l.source);
                                 return (
                                     <div key={l.id} className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${src?.color || 'bg-slate-100 dark:bg-[#1A2D48]'} ${src?.textColor || 'text-slate-500 dark:text-[#94A3B8]'}`}>{src?.icon}</div>
-                                        <div><span className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{l.title}</span>{l.meta && <span className="text-[10px] text-slate-400 dark:text-[#64748B] ml-1.5">{l.meta}</span>}</div>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${src?.color || 'bg-slate-100 dark:bg-[#1A2D48]'} ${src?.textColor || 'text-slate-500 dark:text-[#CBD5E1]'}`}>{src?.icon}</div>
+                                        <div><span className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{l.title}</span>{l.meta && <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-1.5">{l.meta}</span>}</div>
                                     </div>
                                 );
                             })}
@@ -483,11 +483,11 @@ ${setsHtml}
         };
         return (
             <div className="max-w-4xl mx-auto pb-10 animate-in fade-in duration-300">
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-6">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{newWattbikeSession.id ? 'Edit Session' : 'Create New Session'}</h3>
-                            <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Configure performance protocol parameters</p>
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Configure performance protocol parameters</p>
                         </div>
                         <div className="flex gap-2.5">
                             <Button variant="secondary" size="sm" onClick={() => { setWattbikeView('grid'); setNewWattbikeSession({ title: '', duration: '', type: 'Conditioning', sections: [], linkedSessions: [] }); }}>Cancel</Button>
@@ -496,17 +496,17 @@ ${setsHtml}
                     </div>
                     <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-xl border border-slate-100 dark:border-[#1A2D48]">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Session Name</label>
-                            <input type="text" value={newWattbikeSession.title} onChange={(e) => setNewWattbikeSession(prev => ({ ...prev, title: e.target.value }))} placeholder="e.g. Multi-System Top Up" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all" />
+                            <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Session Name</label>
+                            <input type="text" value={newWattbikeSession.title} onChange={(e) => setNewWattbikeSession(prev => ({ ...prev, title: e.target.value }))} placeholder="e.g. Multi-System Top Up" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-500 dark:text-[#94A3B8]">Total Duration</label>
-                            <input type="text" value={newWattbikeSession.duration} onChange={(e) => setNewWattbikeSession(prev => ({ ...prev, duration: e.target.value }))} placeholder="e.g. 40 min" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all" />
+                            <label className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">Total Duration</label>
+                            <input type="text" value={newWattbikeSession.duration} onChange={(e) => setNewWattbikeSession(prev => ({ ...prev, duration: e.target.value }))} placeholder="e.g. 40 min" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all" />
                         </div>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                            <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Session Sections</h4>
+                            <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Session Sections</h4>
                             <button onClick={addSection} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-all"><PlusIcon size={13} /> Add Section</button>
                         </div>
                         <div className="space-y-2.5">
@@ -514,7 +514,7 @@ ${setsHtml}
                                 <div key={section.id} className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-xl border border-slate-200 dark:border-[#243A58] animate-in slide-in-from-bottom-2">
                                     <div className="grid grid-cols-12 gap-3 items-end">
                                         <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">Type</label>
+                                            <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">Type</label>
                                             <CustomSelect value={section.type} onChange={(e) => updateSection(section.id, 'type', e.target.value)} size="sm">
                                                 <option value="Power">Power</option>
                                                 <option value="Rest">Rest</option>
@@ -523,21 +523,21 @@ ${setsHtml}
                                             </CustomSelect>
                                         </div>
                                         <div className={`${section.type === 'Interval' ? 'col-span-5' : 'col-span-3'} space-y-1.5`}>
-                                            <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">Label</label>
-                                            <input type="text" value={section.name} onChange={(e) => updateSection(section.id, 'name', e.target.value)} placeholder="e.g. Warm up" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs outline-none" />
+                                            <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">Label</label>
+                                            <input type="text" value={section.name} onChange={(e) => updateSection(section.id, 'name', e.target.value)} placeholder="e.g. Warm up" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2.5 py-2 text-xs outline-none" />
                                         </div>
                                         <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">Duration</label>
-                                            <input type="text" value={section.duration} onChange={(e) => updateSection(section.id, 'duration', e.target.value)} placeholder="5:00" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs outline-none" />
+                                            <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">Duration</label>
+                                            <input type="text" value={section.duration} onChange={(e) => updateSection(section.id, 'duration', e.target.value)} placeholder="5:00" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2.5 py-2 text-xs outline-none" />
                                         </div>
                                         <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">{section.type === 'Interval' ? 'Sets/Rounds' : 'RPM'}</label>
-                                            <input type="text" value={section.type === 'Interval' ? (section.rounds || '') : (section.rpm || '')} onChange={(e) => updateSection(section.id, section.type === 'Interval' ? 'rounds' : 'rpm', e.target.value)} placeholder={section.type === 'Interval' ? "8" : "70-75"} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs outline-none" />
+                                            <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">{section.type === 'Interval' ? 'Sets/Rounds' : 'RPM'}</label>
+                                            <input type="text" value={section.type === 'Interval' ? (section.rounds || '') : (section.rpm || '')} onChange={(e) => updateSection(section.id, section.type === 'Interval' ? 'rounds' : 'rpm', e.target.value)} placeholder={section.type === 'Interval' ? "8" : "70-75"} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2.5 py-2 text-xs outline-none" />
                                         </div>
                                         {section.type !== 'Interval' && (
                                             <div className="col-span-2 space-y-1.5">
-                                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">Resistance</label>
-                                                <input type="text" value={section.resistance} onChange={(e) => updateSection(section.id, 'resistance', e.target.value)} placeholder="F2" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs outline-none" />
+                                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">Resistance</label>
+                                                <input type="text" value={section.resistance} onChange={(e) => updateSection(section.id, 'resistance', e.target.value)} placeholder="F2" className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2.5 py-2 text-xs outline-none" />
                                             </div>
                                         )}
                                         <div className="col-span-1 flex justify-center pb-1">
@@ -547,21 +547,21 @@ ${setsHtml}
                                     {section.type === 'Interval' && (
                                         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-[#243A58] space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h5 className="text-[10px] font-medium text-slate-400 dark:text-[#64748B]">Interval Sub-sections</h5>
+                                                <h5 className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0]">Interval Sub-sections</h5>
                                                 <button onClick={() => addSubSection(section.id)} className="flex items-center gap-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-all"><PlusIcon size={10} /> Add Sub-segment</button>
                                             </div>
                                             <div className="space-y-1.5">
                                                 {Array.isArray(section.subSections) && section.subSections.map((ss) => (
                                                     <div key={ss.id} className="grid grid-cols-12 gap-2 items-end bg-white dark:bg-[#132338] p-2.5 rounded-lg border border-slate-100 dark:border-[#1A2D48]">
-                                                        <div className="col-span-3 space-y-1"><label className="text-[9px] font-medium text-slate-400 dark:text-[#64748B]">Label</label><input type="text" value={ss.label} onChange={(e) => updateSubSection(section.id, ss.id, 'label', e.target.value)} placeholder="Work" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
-                                                        <div className="col-span-3 space-y-1"><label className="text-[9px] font-medium text-slate-400 dark:text-[#64748B]">Duration</label><input type="text" value={ss.duration} onChange={(e) => updateSubSection(section.id, ss.id, 'duration', e.target.value)} placeholder="30s" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
-                                                        <div className="col-span-2 space-y-1"><label className="text-[9px] font-medium text-slate-400 dark:text-[#64748B]">RPM</label><input type="text" value={ss.rpm} onChange={(e) => updateSubSection(section.id, ss.id, 'rpm', e.target.value)} placeholder="90-95" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
-                                                        <div className="col-span-2 space-y-1"><label className="text-[9px] font-medium text-slate-400 dark:text-[#64748B]">Resistance</label><input type="text" value={ss.resistance} onChange={(e) => updateSubSection(section.id, ss.id, 'resistance', e.target.value)} placeholder="F8" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
+                                                        <div className="col-span-3 space-y-1"><label className="text-[9px] font-medium text-slate-700 dark:text-[#E2E8F0]">Label</label><input type="text" value={ss.label} onChange={(e) => updateSubSection(section.id, ss.id, 'label', e.target.value)} placeholder="Work" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
+                                                        <div className="col-span-3 space-y-1"><label className="text-[9px] font-medium text-slate-700 dark:text-[#E2E8F0]">Duration</label><input type="text" value={ss.duration} onChange={(e) => updateSubSection(section.id, ss.id, 'duration', e.target.value)} placeholder="30s" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
+                                                        <div className="col-span-2 space-y-1"><label className="text-[9px] font-medium text-slate-700 dark:text-[#E2E8F0]">RPM</label><input type="text" value={ss.rpm} onChange={(e) => updateSubSection(section.id, ss.id, 'rpm', e.target.value)} placeholder="90-95" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
+                                                        <div className="col-span-2 space-y-1"><label className="text-[9px] font-medium text-slate-700 dark:text-[#E2E8F0]">Resistance</label><input type="text" value={ss.resistance} onChange={(e) => updateSubSection(section.id, ss.id, 'resistance', e.target.value)} placeholder="F8" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-md px-2 py-1.5 text-xs outline-none" /></div>
                                                         <div className="col-span-2 flex justify-center pb-0.5"><button onClick={() => removeSubSection(section.id, ss.id)} className="p-1.5 text-slate-200 hover:text-red-400 transition-all"><Trash2Icon size={12} /></button></div>
                                                     </div>
                                                 ))}
                                                 {(!section.subSections || section.subSections.length === 0) && (
-                                                    <div className="py-3 border border-dashed border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-xs text-slate-400 dark:text-[#64748B]">No sub-segments defined</div>
+                                                    <div className="py-3 border border-dashed border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-xs text-slate-400 dark:text-[#CBD5E1]">No sub-segments defined</div>
                                                 )}
                                             </div>
                                         </div>
@@ -569,7 +569,7 @@ ${setsHtml}
                                 </div>
                             ))}
                             {newWattbikeSession.sections.length === 0 && (
-                                <div onClick={addSection} className="py-10 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-[#64748B] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">
+                                <div onClick={addSection} className="py-10 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-[#CBD5E1] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all">
                                     <div className="w-10 h-10 bg-slate-100 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center"><PlusIcon size={20} /></div>
                                     <p className="text-xs font-medium">Click to add your first segment</p>
                                 </div>
@@ -660,7 +660,7 @@ ${sectionsHtml}
                 <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <div>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{session.title}</h3>
-                        <div className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Total duration: {session.duration}</div>
+                        <div className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Total duration: {session.duration}</div>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="secondary" size="sm" onClick={() => handlePrintSession(session)}><PrinterIcon size={13} className="mr-1.5" /> Print</Button>
@@ -674,11 +674,11 @@ ${sectionsHtml}
                         const isWarmup = section.name?.toLowerCase().includes('warm') || section.name?.toLowerCase().includes('recovery');
                         const isRest = section.type === 'Rest';
                         const isInterval = section.type === 'Interval' || section.type === 'Max';
-                        let cardColor = 'bg-amber-50/80 border-amber-100 dark:border-amber-800/40';
+                        let cardColor = 'bg-amber-50/80 dark:bg-amber-600/15 border-amber-100 dark:border-amber-800/40';
                         let markerColor = 'bg-amber-500';
-                        let textColor = 'text-amber-900';
-                        if (isWarmup || isRest) { cardColor = 'bg-emerald-50/80 border-emerald-100 dark:border-emerald-800/40'; markerColor = 'bg-emerald-500'; textColor = 'text-emerald-900'; }
-                        else if (isInterval) { cardColor = 'bg-rose-50/80 border-rose-100 dark:border-rose-900/40'; markerColor = 'bg-rose-500'; textColor = 'text-rose-900'; }
+                        let textColor = 'text-amber-900 dark:text-amber-200';
+                        if (isWarmup || isRest) { cardColor = 'bg-emerald-50/80 dark:bg-emerald-600/15 border-emerald-100 dark:border-emerald-800/40'; markerColor = 'bg-emerald-500'; textColor = 'text-emerald-900 dark:text-emerald-200'; }
+                        else if (isInterval) { cardColor = 'bg-rose-50/80 dark:bg-rose-700/15 border-rose-100 dark:border-rose-900/40'; markerColor = 'bg-rose-500'; textColor = 'text-rose-900 dark:text-rose-200'; }
                         return (
                             <div key={section.id} className={`${cardColor} border rounded-xl p-4 shadow-sm print:shadow-none print:border-slate-200 break-inside-avoid`}>
                                 <div className="flex items-center gap-4">
@@ -697,8 +697,8 @@ ${sectionsHtml}
                                 {section.type === 'Interval' && Array.isArray(section.subSections) && section.subSections.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-rose-200 dark:border-rose-900/50 ml-11 space-y-1.5">
                                         {section.subSections.map((ss, ssIdx) => (
-                                            <div key={ss.id} className="flex items-center justify-between text-xs text-rose-800/80">
-                                                <div className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-rose-400" /><span className="min-w-[70px] font-medium text-rose-600">{ss.label || (ssIdx % 2 === 0 ? 'Work' : 'Rest')}</span><span className="min-w-[50px]">{ss.duration}</span></div>
+                                            <div key={ss.id} className="flex items-center justify-between text-xs text-rose-800/80 dark:text-rose-300/80">
+                                                <div className="flex items-center gap-3"><span className="w-1.5 h-1.5 rounded-full bg-rose-400" /><span className="min-w-[70px] font-medium text-rose-600 dark:text-rose-300">{ss.label || (ssIdx % 2 === 0 ? 'Work' : 'Rest')}</span><span className="min-w-[50px]">{ss.duration}</span></div>
                                                 <div className="flex items-center gap-5 opacity-60"><span>{ss.rpm} RPM</span><span className="min-w-[30px] text-right">{ss.resistance}</span></div>
                                             </div>
                                         ))}
@@ -710,14 +710,14 @@ ${sectionsHtml}
                 </div>
                 {session.linkedSessions?.length > 0 && (
                     <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-2">
-                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Linked Sessions</h4>
+                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Linked Sessions</h4>
                         <div className="flex flex-wrap gap-2">
                             {session.linkedSessions.map(l => {
                                 const src = [wattbikeSource, conditioningSource, workoutTemplateSource].find(s => s.key === l.source);
                                 return (
                                     <div key={l.id} className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${src?.color || 'bg-slate-100 dark:bg-[#1A2D48]'} ${src?.textColor || 'text-slate-500 dark:text-[#94A3B8]'}`}>{src?.icon}</div>
-                                        <div><span className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{l.title}</span>{l.meta && <span className="text-[10px] text-slate-400 dark:text-[#64748B] ml-1.5">{l.meta}</span>}</div>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${src?.color || 'bg-slate-100 dark:bg-[#1A2D48]'} ${src?.textColor || 'text-slate-500 dark:text-[#CBD5E1]'}`}>{src?.icon}</div>
+                                        <div><span className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{l.title}</span>{l.meta && <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-1.5">{l.meta}</span>}</div>
                                     </div>
                                 );
                             })}
@@ -734,7 +734,7 @@ ${sectionsHtml}
             {!activeConditioningModule && (
                 <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Hub</h2>
-                    <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Performance conditioning monitoring & Wattbike protocols.</p>
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Performance conditioning monitoring & Wattbike protocols.</p>
                 </div>
             )}
 
@@ -751,7 +751,7 @@ ${sectionsHtml}
                     ))}
                     <div className="col-span-full flex flex-col items-center py-4">
                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading conditioning data...</span>
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading conditioning data...</span>
                     </div>
                 </div>
             )}
@@ -761,11 +761,11 @@ ${sectionsHtml}
                         onClick={() => setActiveConditioningModule('wattbike')}
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
-                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center text-indigo-600 dark:text-white group-hover:bg-indigo-600 group-hover:text-white transition-all">
                             <ActivityIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Wattbike Hub</h3>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] leading-relaxed">High-fidelity Wattbike power profiling and protocol management.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] leading-relaxed">High-fidelity Wattbike power profiling and protocol management.</p>
                     </div>
                     <div
                         onClick={() => setActiveConditioningModule('conditioning')}
@@ -775,7 +775,7 @@ ${sectionsHtml}
                             <TimerIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Sessions</h3>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] leading-relaxed">Prescribe running, bike & sled sessions with sets, reps, intensity & work:rest ratios.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] leading-relaxed">Prescribe running, bike & sled sessions with sets, reps, intensity & work:rest ratios.</p>
                     </div>
                     <div
                         onClick={() => setActiveConditioningModule('mechanics')}
@@ -785,7 +785,7 @@ ${sectionsHtml}
                             <FootprintsIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Running Mechanics</h3>
-                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] leading-relaxed">Gait analysis, sprint mechanics & movement documents.</p>
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] leading-relaxed">Gait analysis, sprint mechanics & movement documents.</p>
                     </div>
                 </div>
             )}
@@ -801,7 +801,7 @@ ${sectionsHtml}
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Wattbike Session Planner</h3>
-                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Plan, manage & print conditioning sessions</p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Plan, manage & print conditioning sessions</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2.5">
@@ -820,7 +820,7 @@ ${sectionsHtml}
                     {wattbikeView === 'grid' && (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#94A3B8]">Session Repository</h4>
+                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">Session Repository</h4>
                                 <Button size="sm" onClick={() => setWattbikeView('create')}>
                                     <PlusIcon size={13} className="mr-1.5" /> Add Session
                                 </Button>
@@ -833,29 +833,13 @@ ${sectionsHtml}
                                         onClick={() => { setSelectedWattbikeSession(session); setWattbikeView('view'); }}
                                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all overflow-hidden flex flex-col p-5 space-y-4 group cursor-pointer"
                                     >
-                                        <div className="flex justify-between items-start">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${session.type === 'Power' ? 'bg-orange-50 text-orange-600' : 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600'} group-hover:scale-105 transition-transform`}>
-                                                {(() => {
-                                                    const iconVal = session.icon;
-                                                    let IconComponent = ActivityIcon;
-                                                    if (typeof iconVal === 'string') {
-                                                        IconComponent = ICON_MAP[iconVal] || ActivityIcon;
-                                                    } else if (typeof iconVal === 'function' || (iconVal && typeof iconVal === 'object' && iconVal.$$typeof)) {
-                                                        IconComponent = iconVal;
-                                                    } else if (iconVal && typeof iconVal === 'object') {
-                                                        console.warn("Invalid icon object found in session:", session.title, iconVal);
-                                                        IconComponent = ActivityIcon;
-                                                    }
-                                                    try { return <IconComponent size={20} />; }
-                                                    catch (e) { console.error("Error rendering icon:", session.title, e); return <ActivityIcon size={20} />; }
-                                                })()}
-                                            </div>
-                                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] rounded-md text-xs font-medium text-slate-500 dark:text-[#94A3B8]">{session.type}</span>
+                                        <div className="flex justify-end items-start">
+                                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] rounded-md text-xs font-medium text-slate-700 dark:text-[#E2E8F0]">{session.type}</span>
                                         </div>
 
                                         <div className="space-y-1">
                                             <h4 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-[#64748B]">
+                                            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-[#CBD5E1]">
                                                 <span className="flex items-center gap-1"><ClockIcon size={11} /> {session.duration}</span>
                                                 <span>·</span>
                                                 <span>{Array.isArray(session.sections) ? session.sections.length : (session.sectionsCount || 0)} sections</span>
@@ -872,7 +856,7 @@ ${sectionsHtml}
                                             </Button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setNewWattbikeSession(session); setWattbikeView('create'); }}
-                                                className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 hover:text-indigo-600 dark:text-indigo-300 transition-all"
+                                                className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-indigo-50 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#CBD5E1] transition-all"
                                                 title="Edit Session"
                                             >
                                                 <FileEditIcon size={15} />
@@ -882,7 +866,7 @@ ${sectionsHtml}
                                                     e.stopPropagation();
                                                     setConfirmDeleteWattbike({ id: session.id, title: session.title });
                                                 }}
-                                                className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] rounded-lg hover:bg-red-50 hover:text-red-500 transition-all"
+                                                className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-red-50 dark:hover:bg-red-500/15 hover:text-red-500 dark:hover:text-red-400 transition-all"
                                                 title="Delete Session"
                                             >
                                                 <Trash2Icon size={15} />
@@ -911,7 +895,7 @@ ${sectionsHtml}
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Session Planner</h3>
-                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Create interval prescriptions with energy system targeting</p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Create interval prescriptions with energy system targeting</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2.5">
@@ -927,7 +911,7 @@ ${sectionsHtml}
                     {conditioningView === 'grid' && (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#94A3B8]">Session Repository ({conditioningSessions.length})</h4>
+                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">Session Repository ({conditioningSessions.length})</h4>
                                 <Button size="sm" onClick={() => setConditioningView('create')}>
                                     <PlusIcon size={13} className="mr-1.5" /> Add Session
                                 </Button>
@@ -936,7 +920,7 @@ ${sectionsHtml}
                             {conditioningSessions.length === 0 && (
                                 <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] py-16 flex flex-col items-center justify-center gap-3">
                                     <div className="w-14 h-14 bg-slate-100 dark:bg-[#1A2D48] rounded-xl flex items-center justify-center"><TimerIcon size={24} className="text-slate-300 dark:text-[#475569]" /></div>
-                                    <p className="text-sm text-slate-400 dark:text-[#64748B] font-medium">No conditioning sessions yet</p>
+                                    <p className="text-sm text-slate-400 dark:text-[#CBD5E1] font-medium">No conditioning sessions yet</p>
                                     <Button size="sm" onClick={() => setConditioningView('create')}><PlusIcon size={13} className="mr-1.5" /> Create Your First Session</Button>
                                 </div>
                             )}
@@ -957,7 +941,7 @@ ${sectionsHtml}
                                             </div>
                                             <div className="space-y-1">
                                                 <h4 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-[#64748B] flex-wrap">
+                                                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-[#CBD5E1] flex-wrap">
                                                     <span>{session.modality}</span>
                                                     {session.totalDuration && <><span>·</span><span className="flex items-center gap-1"><ClockIcon size={11} /> {session.totalDuration}</span></>}
                                                     <span>·</span>
@@ -967,13 +951,13 @@ ${sectionsHtml}
                                             <div className="pt-3 border-t border-slate-100 dark:border-[#1A2D48] flex gap-2">
                                                 <Button size="sm" className="flex-1 text-xs" onClick={e => { e.stopPropagation(); setSelectedConditioningSession(session); setConditioningView('view'); }}>View</Button>
                                                 <button onClick={e => { e.stopPropagation(); setNewConditioningSession(session); setConditioningView('create'); }}
-                                                    className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 hover:text-indigo-600 dark:text-indigo-300 transition-all" title="Edit">
+                                                    className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-indigo-50 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#CBD5E1] transition-all" title="Edit">
                                                     <FileEditIcon size={15} />
                                                 </button>
                                                 <button onClick={e => {
                                                     e.stopPropagation();
                                                     setConfirmDeleteCond({ id: session.id, title: session.title });
-                                                }} className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] rounded-lg hover:bg-red-50 hover:text-red-500 transition-all" title="Delete">
+                                                }} className="p-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-red-50 dark:hover:bg-red-500/15 hover:text-red-500 dark:hover:text-red-400 transition-all" title="Delete">
                                                     <Trash2Icon size={15} />
                                                 </button>
                                             </div>
@@ -995,10 +979,10 @@ ${sectionsHtml}
                         <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm"><ActivityIcon size={20} /></div>
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Metabolic Profiles</h3>
-                            <p className="text-sm text-slate-400 dark:text-[#64748B]">Lactate Threshold & Physiological Monitoring</p>
+                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">Lactate Threshold & Physiological Monitoring</p>
                         </div>
                     </div>
-                    <div className="text-center py-16"><p className="text-slate-400 dark:text-[#64748B] text-sm italic">Module coming soon...</p></div>
+                    <div className="text-center py-16"><p className="text-slate-400 dark:text-[#CBD5E1] text-sm italic">Module coming soon...</p></div>
                 </div>
             )}
 
@@ -1012,7 +996,7 @@ ${sectionsHtml}
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Running Mechanics</h3>
-                                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-0.5">Gait analysis, sprint mechanics & movement documents</p>
+                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Gait analysis, sprint mechanics & movement documents</p>
                             </div>
                         </div>
                     </div>

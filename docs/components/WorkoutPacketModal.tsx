@@ -322,25 +322,25 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 <DumbbellIcon size={16} className="text-white" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900">Workout Packets</h2>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Workout Packets</h2>
                                 <p className="text-[10px] text-slate-400">Build, schedule & print one-off workouts</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             {/* View toggle */}
                             <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                                <button onClick={() => setViewMode('builder')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'builder' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>Builder</button>
-                                <button onClick={() => setViewMode('templates')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'templates' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
-                                    Templates {workoutTemplates.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300 rounded-full text-[8px]">{workoutTemplates.length}</span>}
+                                <button onClick={() => setViewMode('builder')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'builder' ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>Builder</button>
+                                <button onClick={() => setViewMode('templates')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'templates' ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
+                                    Templates {workoutTemplates.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-full text-[8px]">{workoutTemplates.length}</span>}
                                 </button>
                             </div>
-                            <button onClick={handleSaveTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 dark:bg-emerald-900/35 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all" title="Save as template">
+                            <button onClick={handleSaveTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500 border border-emerald-200 dark:border-emerald-600 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-white transition-all" title="Save as template">
                                 <SaveIcon size={12} /> Save Template
                             </button>
                             <button onClick={handlePrint} disabled={totalExercises === 0} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${totalExercises === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}>
                                 <PrinterIcon size={12} /> Print
                             </button>
-                            <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${(scheduling || !title.trim() || !targetId) ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
+                            <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${(scheduling || !title.trim() || !targetId) ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}>
                                 <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
                             </button>
                             <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all">
@@ -372,18 +372,18 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                         <div>
                                                             <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 dark:text-indigo-400 transition-colors">{tpl.name}</h4>
                                                             <div className="flex items-center gap-2 mt-1">
-                                                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
+                                                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-semibold">{tpl.trainingPhase}</span>
                                                                 <span className="text-[9px] text-slate-400">{exCount} exercises</span>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => deleteTemplate(tpl.id)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                                        <button onClick={() => deleteTemplate(tpl.id)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] rounded-lg transition-all opacity-0 group-hover:opacity-100">
                                                             <Trash2Icon size={12} />
                                                         </button>
                                                     </div>
                                                     <div className="text-[10px] text-slate-400 mb-3">
                                                         Created {new Date(tpl.createdAt).toLocaleDateString()}
                                                     </div>
-                                                    <button onClick={() => loadTemplate(tpl)} className="w-full py-2 bg-indigo-50 dark:bg-indigo-900/25 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300 rounded-lg text-[10px] font-semibold transition-all">
+                                                    <button onClick={() => loadTemplate(tpl)} className="w-full py-2 bg-indigo-50 dark:bg-[#1A2D48] hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 text-indigo-600 dark:text-white rounded-lg text-[10px] font-semibold transition-all">
                                                         Load Template
                                                     </button>
                                                 </div>
@@ -399,7 +399,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClockIcon size={14} className="text-indigo-500" />
-                                        <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Session Details</h3>
+                                        <h3 className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wide">Session Details</h3>
                                     </div>
 
                                     {/* Title */}
@@ -431,7 +431,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Load</label>
                                             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                                                 {['Low', 'Medium', 'High'].map(l => (
-                                                    <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700'}`}>
+                                                    <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
                                                         {l}
                                                     </button>
                                                 ))}
@@ -445,7 +445,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Target Type</label>
                                             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                                                 {['Team', 'Individual'].map(tt => (
-                                                    <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
+                                                    <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
                                                         {tt}
                                                     </button>
                                                 ))}
@@ -471,7 +471,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     {/* Section tabs */}
                                     <div className="flex border-b border-slate-100">
                                         {SECTIONS.map(sec => (
-                                            <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-indigo-300 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                                            <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-white bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
                                                 {SECTION_LABELS[sec]}
                                                 {sections[sec].length > 0 && <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 rounded-full text-[8px]">{sections[sec].length}</span>}
                                             </button>
@@ -493,9 +493,9 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                     <div className="flex items-center justify-between mb-1">
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
-                                                            <span className="text-xs font-semibold text-slate-800">{row.exerciseName}</span>
+                                                            <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.exerciseName}</span>
                                                         </div>
-                                                        <button onClick={() => removeRow(activeSection, row.tempId)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all">
+                                                        <button onClick={() => removeRow(activeSection, row.tempId)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] rounded-lg transition-all">
                                                             <Trash2Icon size={12} />
                                                         </button>
                                                     </div>
@@ -524,7 +524,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                                     value={row[f.key]}
                                                                     onChange={e => updateRow(activeSection, row.tempId, f.key, e.target.value)}
                                                                     placeholder={f.placeholder}
-                                                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                                                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
                                                                 />
                                                             </div>
                                                         ))}
@@ -544,13 +544,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     {/* Header */}
                     <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-xs font-semibold text-slate-700">Choose Exercise</h3>
+                            <h3 className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">Choose Exercise</h3>
                             <span className="text-[9px] text-slate-400">{pickerSource === 'mine' ? displayExercises.length : (exData?.total ?? 0)} total</span>
                         </div>
                         {/* All / Mine toggle */}
                         <div className="flex bg-slate-100 rounded-lg p-0.5">
-                            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
-                            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
+                            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
                                 Mine
                             </button>
@@ -593,20 +593,20 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             <div className="flex flex-wrap gap-1">
                                 <button
                                     onClick={() => { setExLetter(''); setExSearch(''); }}
-                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'}`}
+                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
                                 >✕</button>
                                 {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
                                     <button
                                         key={l}
                                         onClick={() => { if (exLetter === l) setExLetter(''); else { setExLetter(l); setExSearch(''); } }}
-                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 hover:text-indigo-700'}`}
+                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
                                     >{l}</button>
                                 ))}
                             </div>
                         </div>
 
                         {/* Adding to indicator */}
-                        <div className="text-[9px] font-medium text-indigo-500 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg px-3 py-1.5">
+                        <div className="text-[9px] font-medium text-indigo-500 bg-indigo-50 dark:bg-indigo-600 rounded-lg px-3 py-1.5">
                             Adding to: <strong>{SECTION_LABELS[activeSection]}</strong>
                         </div>
                     </div>
@@ -633,7 +633,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             {already ? <span className="text-[8px]">✓</span> : <PlusIcon size={10} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[10px] font-semibold text-slate-700 leading-tight truncate">{ex.name}</div>
+                                            <div className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] leading-tight truncate">{ex.name}</div>
                                             {ex.categories?.[0] && (
                                                 <div className="text-[8px] text-slate-400 mt-0.5">{ex.categories[0]}</div>
                                             )}

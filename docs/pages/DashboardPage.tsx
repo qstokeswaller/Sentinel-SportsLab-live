@@ -70,6 +70,8 @@ export const DashboardPage = () => {
 
     // ── Wellness Summary data ─────────────────────────────────────────────
     const wellnessSummary = React.useMemo(() => {
+        const empty = { latest: [], mostRecentDate: '', daysSince: null, metricAvgs: [], flagged: [], total: 0, responseCount: 0, availableCount: 0, modifiedCount: 0, unavailableCount: 0 };
+
         const resolveAvail = (r) => {
             const top = r.availability;
             if (top === 'available' || top === 'modified' || top === 'unavailable') return top;
@@ -81,18 +83,19 @@ export const DashboardPage = () => {
             if (s.includes('unavailable')) return 'unavailable';
         };
 
+        if (heatmapTeamFilter === 'prompt') return empty;
+
         const dailyResponses = (wellnessResponses || []).filter(r => !r.tier || r.tier === 'daily');
-        const teamPlayers = heatmapTeamFilter === 'prompt' ? []
-            : heatmapTeamFilter === 'All Teams'
-                ? teams.flatMap(t => t.players || [])
-                : (teams.find(t => t.name === heatmapTeamFilter)?.players || []);
+        const teamPlayers = heatmapTeamFilter === 'All Teams'
+            ? teams.flatMap(t => t.players || [])
+            : (teams.find(t => t.name === heatmapTeamFilter)?.players || []);
         const playerIds = new Set(teamPlayers.map(p => p.id));
 
         const latestByAthlete = new Map();
         for (const r of [...dailyResponses].sort((a, b) =>
             (a.session_date || a.date || '').localeCompare(b.session_date || b.date || ''))) {
             const aid = r.athlete_id || r.athleteId;
-            if (aid && (playerIds.size === 0 || playerIds.has(aid))) latestByAthlete.set(aid, r);
+            if (aid && playerIds.has(aid)) latestByAthlete.set(aid, r);
         }
         const allLatest = [...latestByAthlete.values()];
 
@@ -169,24 +172,36 @@ export const DashboardPage = () => {
             return h != null && h < 6;
         }).length;
         const { flagged, responseCount } = wellnessSummary;
-        let readinessGrade = 'N/A';
+        let readinessLabel = 'No data';
+        let readinessSubLabel = 'No wellness responses yet';
         let readinessColor: 'slate' | 'rose' | 'amber' | 'emerald' = 'slate';
+        let readinessPct: number | null = null;
         if (responseCount > 0) {
             const pctFlagged = flagged.length / responseCount;
             const hasCritical = flagged.some(f => f.isCritical);
-            if (hasCritical || pctFlagged >= 0.4) { readinessGrade = 'D'; readinessColor = 'rose'; }
-            else if (pctFlagged >= 0.25) { readinessGrade = 'C'; readinessColor = 'amber'; }
-            else if (pctFlagged >= 0.1) { readinessGrade = 'B'; readinessColor = 'amber'; }
-            else { readinessGrade = 'A'; readinessColor = 'emerald'; }
+            readinessPct = Math.round((1 - pctFlagged) * 100);
+            if (hasCritical || pctFlagged >= 0.4) {
+                readinessLabel = 'Poor'; readinessColor = 'rose';
+                readinessSubLabel = hasCritical ? 'Critical flags raised' : `${Math.round(pctFlagged * 100)}% of squad flagged`;
+            } else if (pctFlagged >= 0.25) {
+                readinessLabel = 'Moderate'; readinessColor = 'amber';
+                readinessSubLabel = `${Math.round(pctFlagged * 100)}% of squad flagged`;
+            } else if (pctFlagged >= 0.1) {
+                readinessLabel = 'Good'; readinessColor = 'amber';
+                readinessSubLabel = `${Math.round(pctFlagged * 100)}% of squad flagged`;
+            } else {
+                readinessLabel = 'Ready'; readinessColor = 'emerald';
+                readinessSubLabel = flagged.length === 0 ? 'No flags raised' : `< 10% of squad flagged`;
+            }
         }
-        return { acwrHighRisk, sleepRiskCount, readinessGrade, readinessColor };
+        return { acwrHighRisk, sleepRiskCount, readinessLabel, readinessSubLabel, readinessColor, readinessPct };
     }, [loadRecords, teams, acwrEnabledAthleteIds, acwrExclusions, calculateACWR, wellnessSummary]);
 
     const [activePopover, setActivePopover] = React.useState(null);
     const [isMorningReportExpanded, setIsMorningReportExpanded] = React.useState(false);
     const [isReportCollapsed, setIsReportCollapsed] = React.useState(() => localStorage.getItem('dash_report_collapsed') === '1');
     const [isHeatmapCollapsed, setIsHeatmapCollapsed] = React.useState(() => localStorage.getItem('dash_heatmap_collapsed') === '1');
-    const [calendarViewMode, setCalendarViewMode] = React.useState<'month' | 'week'>('month');
+    const [calendarViewMode, setCalendarViewMode] = React.useState<'month' | 'week'>(() => (localStorage.getItem('dash_calendar_view') as 'month' | 'week') || 'week');
     const toggleReportCollapsed = () => setIsReportCollapsed(v => { const next = !v; localStorage.setItem('dash_report_collapsed', next ? '1' : '0'); return next; });
     const toggleHeatmapCollapsed = () => setIsHeatmapCollapsed(v => { const next = !v; localStorage.setItem('dash_heatmap_collapsed', next ? '1' : '0'); return next; });
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
@@ -220,6 +235,12 @@ export const DashboardPage = () => {
     const [editingEvent, setEditingEvent] = React.useState(null);
     const [overflowDay, setOverflowDay] = React.useState(null); // dateStr of day showing overflow popover
     const [dragOverDate, setDragOverDate] = React.useState(null); // highlight drop target
+    const [isDark, setIsDark] = React.useState(() => document.documentElement.classList.contains('dark'));
+    React.useEffect(() => {
+        const obs = new MutationObserver(() => setIsDark(document.documentElement.classList.contains('dark')));
+        obs.observe(document.documentElement, { attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
     const popoverRef = React.useRef(null);
     const sessionPopoverRef = React.useRef(null);
     const overflowRef = React.useRef(null);
@@ -269,18 +290,34 @@ export const DashboardPage = () => {
     const handleDragEnd = () => { dragDataRef.current = null; setDragOverDate(null); };
 
     // Deterministic color palette for targets (athletes/teams)
+    // darkBg uses the vibrant dot color at ~42% opacity — gives a rich filled tile like reference calendar apps
     const TARGET_COLORS = [
-        { bg: 'bg-red-50', border: 'border-red-200 dark:border-red-900/50', text: 'text-red-700', pillBg: 'bg-red-100', dot: '#ef4444' },
-        { bg: 'bg-blue-50', border: 'border-blue-200 dark:border-blue-800/50', text: 'text-blue-700', pillBg: 'bg-blue-100', dot: '#3b82f6' },
-        { bg: 'bg-emerald-50', border: 'border-emerald-200 dark:border-emerald-800/50', text: 'text-emerald-700', pillBg: 'bg-emerald-100', dot: '#10b981' },
-        { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pillBg: 'bg-orange-100', dot: '#f97316' },
-        { bg: 'bg-violet-50', border: 'border-violet-200 dark:border-violet-800/50', text: 'text-violet-700', pillBg: 'bg-violet-100', dot: '#8b5cf6' },
-        { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-700', pillBg: 'bg-pink-100', dot: '#ec4899' },
-        { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', pillBg: 'bg-cyan-100', dot: '#06b6d4' },
-        { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', pillBg: 'bg-amber-100', dot: '#f59e0b' },
-        { bg: 'bg-lime-50', border: 'border-lime-200', text: 'text-lime-700', pillBg: 'bg-lime-100', dot: '#84cc16' },
-        { bg: 'bg-rose-50', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700', pillBg: 'bg-rose-100', dot: '#f43f5e' },
+        { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-700',     pillBg: 'bg-red-100',     dot: '#ef4444', darkBg: 'rgba(239,68,68,0.42)',   darkBorder: 'rgba(239,68,68,0.65)',  darkText: '#ffffff', darkPillBg: 'rgba(239,68,68,0.55)' },
+        { bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-700',    pillBg: 'bg-blue-100',    dot: '#3b82f6', darkBg: 'rgba(59,130,246,0.42)',  darkBorder: 'rgba(59,130,246,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(59,130,246,0.55)' },
+        { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', pillBg: 'bg-emerald-100', dot: '#10b981', darkBg: 'rgba(16,185,129,0.42)', darkBorder: 'rgba(16,185,129,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(16,185,129,0.55)' },
+        { bg: 'bg-orange-50',  border: 'border-orange-200',  text: 'text-orange-700',  pillBg: 'bg-orange-100',  dot: '#f97316', darkBg: 'rgba(249,115,22,0.42)', darkBorder: 'rgba(249,115,22,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(249,115,22,0.55)' },
+        { bg: 'bg-violet-50',  border: 'border-violet-200',  text: 'text-violet-700',  pillBg: 'bg-violet-100',  dot: '#8b5cf6', darkBg: 'rgba(139,92,246,0.42)', darkBorder: 'rgba(139,92,246,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(139,92,246,0.55)' },
+        { bg: 'bg-pink-50',    border: 'border-pink-200',    text: 'text-pink-700',    pillBg: 'bg-pink-100',    dot: '#ec4899', darkBg: 'rgba(236,72,153,0.42)', darkBorder: 'rgba(236,72,153,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(236,72,153,0.55)' },
+        { bg: 'bg-cyan-50',    border: 'border-cyan-200',    text: 'text-cyan-700',    pillBg: 'bg-cyan-100',    dot: '#06b6d4', darkBg: 'rgba(6,182,212,0.42)',  darkBorder: 'rgba(6,182,212,0.65)',  darkText: '#ffffff', darkPillBg: 'rgba(6,182,212,0.55)' },
+        { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   pillBg: 'bg-amber-100',   dot: '#f59e0b', darkBg: 'rgba(245,158,11,0.42)', darkBorder: 'rgba(245,158,11,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(245,158,11,0.55)' },
+        { bg: 'bg-lime-50',    border: 'border-lime-200',    text: 'text-lime-700',    pillBg: 'bg-lime-100',    dot: '#84cc16', darkBg: 'rgba(132,204,22,0.42)', darkBorder: 'rgba(132,204,22,0.65)', darkText: '#ffffff', darkPillBg: 'rgba(132,204,22,0.55)' },
+        { bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-700',    pillBg: 'bg-rose-100',    dot: '#f43f5e', darkBg: 'rgba(244,63,94,0.42)',  darkBorder: 'rgba(244,63,94,0.65)',  darkText: '#ffffff', darkPillBg: 'rgba(244,63,94,0.55)' },
     ];
+
+    // Derive a darkened color (700-level equivalent) from a hex for light mode event text
+    const darkenHex = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgb(${Math.round(r * 0.55)}, ${Math.round(g * 0.55)}, ${Math.round(b * 0.55)})`;
+    };
+    // Derive a lightened color (300-level equivalent) from a hex for dark mode event text
+    const lightenHex = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgb(${Math.round(r * 0.35 + 255 * 0.65)}, ${Math.round(g * 0.35 + 255 * 0.65)}, ${Math.round(b * 0.35 + 255 * 0.65)})`;
+    };
 
     // Build stable targetId → color index mapping from all sessions
     const targetColorMap = React.useMemo(() => {
@@ -312,22 +349,57 @@ export const DashboardPage = () => {
     }, [activePopover, activeSessionPopover, overflowDay]);
 
     const renderMorningReport = () => {
+        // Show prompt state when no squad is selected
+        if (heatmapTeamFilter === 'prompt') return (
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col h-full">
+                <button
+                    onClick={toggleReportCollapsed}
+                    className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/60 dark:bg-[#132338]/40 flex items-center justify-between w-full text-left hover:bg-slate-100/60 dark:hover:bg-[#1A2D48] transition-colors"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-slate-100 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center text-slate-400 shrink-0">
+                            <ActivityIcon size={14} />
+                        </div>
+                        <div>
+                            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-[#E2E8F0]">Performance Report</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">ACWR readiness</p>
+                        </div>
+                    </div>
+                    <ChevronDownIcon size={14} className={`text-slate-400 dark:text-[#CBD5E1] transition-transform duration-200 shrink-0 ${isReportCollapsed ? '-rotate-90' : ''}`} />
+                </button>
+                {!isReportCollapsed && (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                        <UsersIcon size={20} className="text-slate-300 dark:text-[#475569] mb-2" />
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Select a squad to view the performance report.</p>
+                    </div>
+                )}
+            </div>
+        );
+
         // Show empty state when ACWR is not enabled
         if (!hasAnyAcwrEnabled) return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60 dark:bg-[#132338]/40 flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
-                        <AlertTriangleIcon size={14} />
+                <button
+                    onClick={toggleReportCollapsed}
+                    className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/60 dark:bg-[#132338]/40 flex items-center justify-between w-full text-left hover:bg-slate-100/60 dark:hover:bg-[#1A2D48] transition-colors"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-slate-200 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center text-slate-400 shrink-0">
+                            <AlertTriangleIcon size={14} />
+                        </div>
+                        <div>
+                            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-[#E2E8F0]">Performance Report</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">ACWR readiness</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-[#E2E8F0]">Performance Report</h3>
-                        <p className="text-[10px] text-slate-500">ACWR readiness</p>
+                    <ChevronDownIcon size={14} className={`text-slate-400 dark:text-[#CBD5E1] transition-transform duration-200 shrink-0 ${isReportCollapsed ? '-rotate-90' : ''}`} />
+                </button>
+                {!isReportCollapsed && (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">No ACWR monitoring enabled.</p>
+                        <p className="text-[10px] text-slate-300 dark:text-[#475569] mt-1">Enable ACWR for your teams in Settings → Feature Settings to see the performance report.</p>
                     </div>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                    <p className="text-xs text-slate-400">No ACWR monitoring enabled.</p>
-                    <p className="text-[10px] text-slate-300 mt-1">Enable ACWR for your teams in Settings → Feature Settings to see the performance report.</p>
-                </div>
+                )}
             </div>
         );
 
@@ -394,7 +466,7 @@ export const DashboardPage = () => {
             const borderColor = isInjured ? 'border-l-slate-400' : player.acwr > 1.5 ? 'border-l-rose-500' : player.acwr > 1.3 ? 'border-l-amber-400' : 'border-l-sky-400';
             return (
                 <div key={player.id}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1A2D48]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#132338]/40 dark:bg-[#1A2D48]/30'} hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-sm transition-all cursor-pointer`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1A2D48]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#1A2D48]/30'} hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-sm transition-all cursor-pointer`}
                     onClick={onClick}
                 >
                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${bgColor}`}>
@@ -427,7 +499,7 @@ export const DashboardPage = () => {
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col">
                 <button
                     onClick={toggleReportCollapsed}
-                    className="px-4 py-3 border-b border-slate-100 dark:border-[#243A58] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between w-full text-left hover:bg-rose-50/80 dark:hover:bg-rose-900/20 transition-colors"
+                    className="px-4 py-3 border-b border-slate-100 dark:border-[#243A58] bg-rose-50/60 dark:bg-rose-900/10 flex items-center justify-between w-full text-left hover:bg-rose-50/80 dark:hover:bg-[#1A2D48] transition-colors"
                 >
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white shrink-0">
@@ -448,15 +520,15 @@ export const DashboardPage = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-2 py-0.5 bg-white border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-full text-[10px] font-medium text-rose-600">{atRiskAthletes.length}</span>
-                        <ChevronDownIcon size={14} className={`text-slate-400 transition-transform duration-200 ${isReportCollapsed ? '-rotate-90' : ''}`} />
+                        <span className="px-2 py-0.5 bg-white dark:bg-[#1A2D48] border border-rose-200 dark:border-rose-800/50 rounded-full text-[10px] font-medium text-rose-600 dark:text-rose-400">{atRiskAthletes.length}</span>
+                        <ChevronDownIcon size={14} className={`text-slate-400 dark:text-[#CBD5E1] transition-transform duration-200 ${isReportCollapsed ? '-rotate-90' : ''}`} />
                     </div>
                 </button>
                 {!isReportCollapsed && <div className="p-2.5 space-y-1.5 flex-1 overflow-y-auto">
                     {!hasRecentData ? (
                         <div className="py-8 flex flex-col items-center justify-center gap-2">
                             <ClockIcon size={22} className="text-slate-400" />
-                            <p className="text-[11px] text-slate-600 text-center font-medium">No recent data</p>
+                            <p className="text-[11px] text-slate-600 dark:text-[#CBD5E1] text-center font-medium">No recent data</p>
                             <p className="text-[10px] text-slate-500 text-center">
                                 {mostRecentLoadDate
                                     ? `Last entry was ${mostRecentLoadDate} — more than 7 days ago.`
@@ -473,7 +545,7 @@ export const DashboardPage = () => {
                             {remaining > 0 && (
                                 <button
                                     onClick={() => setIsMorningReportExpanded(true)}
-                                    className="w-full py-2 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded-lg transition-colors"
+                                    className="w-full py-2 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-[#1A2D48] rounded-lg transition-colors"
                                 >
                                     +{remaining} more athlete{remaining > 1 ? 's' : ''}
                                 </button>
@@ -619,91 +691,134 @@ export const DashboardPage = () => {
         });
     }, [dashboardCalendarDate]);
 
+                const noSquadSelected = heatmapTeamFilter === 'prompt';
+
                 return (<>
                     <div className="space-y-6 animate-in fade-in duration-700">
 
                         {/* ── Dashboard Stat Cards ── */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                             {/* Players Flagged */}
-                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-gradient-to-br dark:from-rose-950/90 dark:to-[#132338] rounded-xl border border-slate-200 dark:border-rose-800/50 shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Flagged</span>
+                                    <span className="text-[10px] font-bold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wider">Flagged</span>
                                     <div className="w-7 h-7 bg-rose-50 dark:bg-rose-900/20 rounded-lg flex items-center justify-center">
                                         <AlertTriangleIcon size={13} className="text-rose-500" />
                                     </div>
                                 </div>
-                                <div className="flex items-end gap-1.5">
-                                    <span className={`text-2xl font-bold leading-none ${wellnessSummary.flagged.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
-                                        {wellnessSummary.flagged.length}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">athletes</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">From latest wellness check-in</p>
+                                {noSquadSelected ? (
+                                    <p className="text-[10px] text-slate-700 dark:text-[#CBD5E1] leading-snug mt-1">
+                                        <span className="dark:text-[#E2E8F0]">Athletes with wellness flags from their latest daily check-in — fatigue, injury, or availability concerns.</span>
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="flex items-end gap-1.5">
+                                            <span className={`text-2xl font-bold leading-none ${wellnessSummary.flagged.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                                {wellnessSummary.flagged.length}
+                                            </span>
+                                            <span className="text-[10px] text-slate-700 dark:text-[#E2E8F0] mb-0.5">athletes</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-tight">From latest wellness check-in</p>
+                                    </>
+                                )}
                             </div>
 
                             {/* High Risk ACWR */}
-                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-gradient-to-br dark:from-amber-950/90 dark:to-[#132338] rounded-xl border border-slate-200 dark:border-amber-800/50 shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">ACWR Risk</span>
+                                    <span className="text-[10px] font-bold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wider">ACWR Risk</span>
                                     <div className="w-7 h-7 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
                                         <ActivityIcon size={13} className="text-amber-500" />
                                     </div>
                                 </div>
-                                <div className="flex items-end gap-1.5">
-                                    <span className={`text-2xl font-bold leading-none ${dashboardStats.acwrHighRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
-                                        {dashboardStats.acwrHighRisk}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">{'>'} 1.5</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">High ACWR in last 7 days</p>
+                                {noSquadSelected ? (
+                                    <p className="text-[10px] text-slate-700 dark:text-[#CBD5E1] leading-snug mt-1">
+                                        <span className="dark:text-[#E2E8F0]">Athletes with an acute:chronic workload ratio above 1.5 — elevated injury risk from excessive load spike.</span>
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="flex items-end gap-1.5">
+                                            <span className={`text-2xl font-bold leading-none ${dashboardStats.acwrHighRisk > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                                {dashboardStats.acwrHighRisk}
+                                            </span>
+                                            <span className="text-[10px] text-slate-700 dark:text-[#E2E8F0] mb-0.5">{'>'} 1.5</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-tight">High ACWR in last 7 days</p>
+                                    </>
+                                )}
                             </div>
 
                             {/* Sleep Risk */}
-                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
+                            <div className="bg-white dark:bg-gradient-to-br dark:from-sky-950/90 dark:to-[#132338] rounded-xl border border-slate-200 dark:border-sky-800/50 shadow-sm p-4 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Sleep Risk</span>
+                                    <span className="text-[10px] font-bold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wider">Sleep Risk</span>
                                     <div className="w-7 h-7 bg-sky-50 dark:bg-sky-900/20 rounded-lg flex items-center justify-center">
                                         <ClockIcon size={13} className="text-sky-500" />
                                     </div>
                                 </div>
-                                <div className="flex items-end gap-1.5">
-                                    <span className={`text-2xl font-bold leading-none ${dashboardStats.sleepRiskCount > 0 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
-                                        {dashboardStats.sleepRiskCount}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-0.5">{'<'} 6 hrs</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">Poor sleep from last check-in</p>
+                                {noSquadSelected ? (
+                                    <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-snug mt-1">
+                                        Athletes reporting under 6 hours of sleep — a key recovery and performance risk indicator.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="flex items-end gap-1.5">
+                                            <span className={`text-2xl font-bold leading-none ${dashboardStats.sleepRiskCount > 0 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                                                {dashboardStats.sleepRiskCount}
+                                            </span>
+                                            <span className="text-[10px] text-slate-700 dark:text-[#E2E8F0] mb-0.5">{'<'} 6 hrs</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-tight">Poor sleep from last check-in</p>
+                                    </>
+                                )}
                             </div>
 
-                            {/* Team Readiness */}
-                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2">
+                            {/* Squad Readiness */}
+                            <div className={`bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2 ${
+                                !noSquadSelected && dashboardStats.readinessColor === 'emerald'
+                                    ? 'dark:bg-gradient-to-br dark:from-emerald-950/90 dark:to-[#132338] dark:border-emerald-800/50'
+                                    : !noSquadSelected && dashboardStats.readinessColor === 'amber'
+                                    ? 'dark:bg-gradient-to-br dark:from-amber-950/90 dark:to-[#132338] dark:border-amber-800/50'
+                                    : !noSquadSelected && dashboardStats.readinessColor === 'rose'
+                                    ? 'dark:bg-gradient-to-br dark:from-rose-950/90 dark:to-[#132338] dark:border-rose-800/50'
+                                    : 'dark:bg-[#132338] dark:border-[#243A58]'
+                            }`}>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">Readiness</span>
+                                    <span className="text-[10px] font-bold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wider">Squad Readiness</span>
                                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                                        dashboardStats.readinessColor === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/25 dark:bg-emerald-900/20' :
-                                        dashboardStats.readinessColor === 'amber'   ? 'bg-amber-50 dark:bg-amber-900/20' :
-                                        dashboardStats.readinessColor === 'rose'    ? 'bg-rose-50 dark:bg-rose-900/20' :
+                                        !noSquadSelected && dashboardStats.readinessColor === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
+                                        !noSquadSelected && dashboardStats.readinessColor === 'amber'   ? 'bg-amber-50 dark:bg-amber-900/20' :
+                                        !noSquadSelected && dashboardStats.readinessColor === 'rose'    ? 'bg-rose-50 dark:bg-rose-900/20' :
                                         'bg-slate-50 dark:bg-[#1A2D48]'
                                     }`}>
                                         <CheckCircle2Icon size={13} className={
-                                            dashboardStats.readinessColor === 'emerald' ? 'text-emerald-500' :
-                                            dashboardStats.readinessColor === 'amber'   ? 'text-amber-500' :
-                                            dashboardStats.readinessColor === 'rose'    ? 'text-rose-500' :
+                                            !noSquadSelected && dashboardStats.readinessColor === 'emerald' ? 'text-emerald-500' :
+                                            !noSquadSelected && dashboardStats.readinessColor === 'amber'   ? 'text-amber-500' :
+                                            !noSquadSelected && dashboardStats.readinessColor === 'rose'    ? 'text-rose-500' :
                                             'text-slate-400'
                                         } />
                                     </div>
                                 </div>
-                                <div className="flex items-end gap-1.5">
-                                    <span className={`text-2xl font-bold leading-none ${
-                                        dashboardStats.readinessColor === 'emerald' ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' :
-                                        dashboardStats.readinessColor === 'amber'   ? 'text-amber-600 dark:text-amber-400' :
-                                        dashboardStats.readinessColor === 'rose'    ? 'text-rose-600 dark:text-rose-400' :
-                                        'text-slate-400 dark:text-[#94A3B8]'
-                                    }`}>{dashboardStats.readinessGrade}</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">
-                                    {dashboardStats.readinessGrade === 'N/A' ? 'No wellness data yet' : 'Team wellness grade'}
-                                </p>
+                                {noSquadSelected ? (
+                                    <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-snug mt-1">
+                                        Overall squad wellness readiness based on flagged responses — from fully ready to concerns requiring action.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="flex items-end gap-1.5">
+                                            <span className={`text-xl font-bold leading-none ${
+                                                dashboardStats.readinessColor === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                                                dashboardStats.readinessColor === 'amber'   ? 'text-amber-600 dark:text-amber-400' :
+                                                dashboardStats.readinessColor === 'rose'    ? 'text-rose-600 dark:text-rose-400' :
+                                                'text-slate-700 dark:text-[#E2E8F0]'
+                                            }`}>{dashboardStats.readinessLabel}</span>
+                                            {dashboardStats.readinessPct !== null && (
+                                                <span className="text-[10px] text-slate-700 dark:text-[#E2E8F0] mb-0.5">{dashboardStats.readinessPct}%</span>
+                                            )}
+                                        </div>
+                                        <p className="text-[10px] text-slate-700 dark:text-[#E2E8F0] leading-tight">{dashboardStats.readinessSubLabel}</p>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -829,7 +944,7 @@ export const DashboardPage = () => {
                                                             {/* Stat chips row: date + response counts */}
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {formattedDate && (
-                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40'}`}>
+                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-600 border-emerald-100 dark:border-emerald-800/40'}`}>
                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                                                                         <span className={`text-[10px] font-semibold ${isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
                                                                             {formattedDate}
@@ -840,11 +955,11 @@ export const DashboardPage = () => {
                                                                     </div>
                                                                 )}
                                                                 <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
-                                                                    <span className="text-xs font-bold text-slate-700">{responseCount}</span>
+                                                                    <span className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">{responseCount}</span>
                                                                     <span className="text-[10px] text-slate-400">responses</span>
                                                                 </div>
                                                                 {[
-                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-100 dark:border-emerald-800/40' },
+                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-600 border-emerald-100 dark:border-emerald-800/40' },
                                                                     { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100 dark:border-amber-800/40' },
                                                                     { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600',    bg: 'bg-rose-50 border-rose-100 dark:border-rose-900/40' },
                                                                 ].map(({ dot, val, label, color, bg }) => (
@@ -874,14 +989,14 @@ export const DashboardPage = () => {
                                                                     <div className="space-y-2">
                                                                         {metricAvgs.map(m => (
                                                                             <div key={m.key} className="flex items-center gap-2">
-                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
+                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
                                                                                 <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#243A58] rounded-full overflow-hidden">
                                                                                     {m.avg !== null && (
                                                                                         <div className="h-full rounded-full transition-all duration-700"
                                                                                             style={{ width: `${(m.avg / m.max) * 100}%`, backgroundColor: m.color }} />
                                                                                     )}
                                                                                 </div>
-                                                                                <span className="text-[11px] font-bold text-slate-700 w-9 text-right shrink-0 tabular-nums">
+                                                                                <span className="text-[11px] font-bold text-slate-700 dark:text-[#CBD5E1] w-9 text-right shrink-0 tabular-nums">
                                                                                     {m.avg !== null ? (m.key === 'sleep_hours' ? `${m.avg.toFixed(1)}h` : m.avg.toFixed(1)) : '—'}
                                                                                 </span>
                                                                             </div>
@@ -912,11 +1027,11 @@ export const DashboardPage = () => {
                                                                                 return (
                                                                                     <div key={aid} className="flex items-center gap-2 bg-white dark:bg-[#132338] rounded-lg px-2 py-1.5 border border-slate-100 dark:border-[#243A58]">
                                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/35 flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[8px] font-bold shrink-0">
+                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-[8px] font-bold shrink-0">
                                                                                             {initials}
                                                                                         </div>
                                                                                         <div className="flex-1 min-w-0">
-                                                                                            <p className="text-[10px] font-semibold text-slate-800 truncate leading-tight">{player?.name || 'Unknown'}</p>
+                                                                                            <p className="text-[10px] font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{player?.name || 'Unknown'}</p>
                                                                                             <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wide leading-tight">{reason}</p>
                                                                                         </div>
                                                                                     </div>
@@ -987,15 +1102,15 @@ export const DashboardPage = () => {
                                             {/* Week / Month toggle */}
                                             <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200/50 dark:border-[#243A58]">
                                                 <button
-                                                    onClick={() => setCalendarViewMode('month')}
-                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'month' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                    onClick={() => { setCalendarViewMode('month'); localStorage.setItem('dash_calendar_view', 'month'); }}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'month' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
                                                 >Month</button>
                                                 <button
-                                                    onClick={() => setCalendarViewMode('week')}
-                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'week' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
+                                                    onClick={() => { setCalendarViewMode('week'); localStorage.setItem('dash_calendar_view', 'week'); }}
+                                                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${calendarViewMode === 'week' ? 'bg-white dark:bg-[#243A58] shadow-sm font-semibold text-slate-800 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#94A3B8]'}`}
                                                 >Week</button>
                                             </div>
-                                            <p className="text-xs text-slate-500 dark:text-[#94A3B8]">{calendarFilterLabel}</p>
+                                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">{calendarFilterLabel}</p>
                                         </div>
                                     </div>
 
@@ -1067,7 +1182,7 @@ export const DashboardPage = () => {
                                         )}
 
                                         <button onClick={() => setIsAddEventModalOpen(true)}
-                                            className="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-sm flex items-center gap-1.5 hover:bg-indigo-700 transition-colors"
+                                            className="bg-indigo-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-sm flex items-center gap-1.5 hover:bg-indigo-500 transition-colors"
                                         >
                                             <PlusIcon size={13} /> Add Event
                                         </button>
@@ -1080,7 +1195,7 @@ export const DashboardPage = () => {
                                 {isLoading && (
                                     <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-lg">
                                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                        <span className="text-xs font-medium text-slate-400 dark:text-[#94A3B8]">Loading calendar...</span>
+                                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading calendar...</span>
                                     </div>
                                 )}
 
@@ -1105,14 +1220,14 @@ export const DashboardPage = () => {
                                                         onDrop={(e) => handleDrop(e, wd.dateStr)}
                                                         className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all hover:shadow-md ${
                                                             dragOverDate === wd.dateStr
-                                                                ? 'bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
+                                                                ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
                                                                 : isToday
-                                                                ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                                                : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48]'
+                                                                ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 ring-1 ring-indigo-200 dark:ring-indigo-800/50'
+                                                                : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-white/30'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-[#243A58]/60">
-                                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase">{wd.dayName}</span>
+                                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase">{wd.dayName}</span>
                                                             <span className={`text-sm font-bold leading-none inline-flex items-center justify-center ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{wd.day}</span>
                                                         </div>
                                                         <div className="flex-1 space-y-1 overflow-hidden">
@@ -1130,10 +1245,34 @@ export const DashboardPage = () => {
                                                                             onDragEnd={handleDragEnd}
                                                                             onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
                                                                             className={`flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                            style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
                                                                         >
-                                                                            <div className="text-[9px] font-semibold uppercase tracking-wide truncate">{session.trainingPhase}</div>
-                                                                            <div className="text-[9px] font-medium truncate leading-tight">{session.title}</div>
-                                                                            {session.time && <div className="text-[8px] opacity-70">{session.time}</div>}
+                                                                            <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`} style={isDark ? { backgroundColor: tc.darkPillBg } : undefined}>
+                                                                                <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
+                                                                                    {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                                                                                    {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
+                                                                                    {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} className="shrink-0" />}
+                                                                                    <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-0.5 shrink-0">
+                                                                                    {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
+                                                                                    {session.load && (
+                                                                                        <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
+                                                                                            session.load === 'High' ? 'bg-red-500 text-white' :
+                                                                                            session.load === 'Medium' ? 'bg-amber-400 text-white' :
+                                                                                            'bg-emerald-400 text-white'
+                                                                                        }`}>{session.load[0]}</span>
+                                                                                    )}
+                                                                                    {session.targetType === 'Individual' && <UserIcon size={7} />}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="px-0.5">
+                                                                                <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
+                                                                                <div className="text-[8px] opacity-70 truncate mt-0.5">
+                                                                                    {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                                    {resolveTargetName(session.targetId, session.targetType)}
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     );
                                                                 } else {
@@ -1146,10 +1285,15 @@ export const DashboardPage = () => {
                                                                             onDragEnd={handleDragEnd}
                                                                             onClick={(e) => { e.stopPropagation(); const popKey = `${event.id}_${wd.dateStr}`; setActivePopover({ id: popKey, event }); }}
                                                                             className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
-                                                                            style={{ backgroundColor: `${event.color}12`, borderColor: `${event.color}30` }}
+                                                                            style={{ backgroundColor: `${event.color}${isDark ? '6B' : '26'}`, borderColor: `${event.color}${isDark ? 'A8' : '55'}`, color: isDark ? '#ffffff' : darkenHex(event.color) }}
                                                                         >
                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                            <span className="text-[9px] font-medium leading-tight truncate" style={{ color: event.color }}>{event.title}</span>
+                                                                            <span className="text-[9px] font-medium leading-tight truncate">
+                                                                                {!event.all_day && event.start_time && (
+                                                                                    <span className="font-semibold">{event.start_time} </span>
+                                                                                )}
+                                                                                {event.title}
+                                                                            </span>
                                                                         </div>
                                                                     );
                                                                 }
@@ -1171,7 +1315,7 @@ export const DashboardPage = () => {
                                         { full: 'Thu', short: 'T' }, { full: 'Fri', short: 'F' },
                                         { full: 'Sat', short: 'S' }
                                     ].map(day => (
-                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 dark:text-[#94A3B8] text-center pb-3">
+                                        <div key={day.full} className="text-[11px] font-medium text-slate-400 dark:text-[#CBD5E1] text-center pb-3">
                                             <span className="hidden sm:block">{day.full}</span>
                                             <span className="sm:hidden">{day.short}</span>
                                         </div>
@@ -1189,11 +1333,11 @@ export const DashboardPage = () => {
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
                                                 className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
                                                     ? 'hover:shadow-md cursor-pointer'
-                                                    : 'bg-slate-50/30 dark:bg-[#0F1C30]/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
-                                                        ? 'bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
+                                                    : 'bg-slate-50/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
+                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
                                                         : isToday
-                                                        ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                                        : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48]'}`}
+                                                        ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/50'
+                                                        : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-white/30'}`}
                                                 onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
                                                 {dateObj && (
                                                     <>
@@ -1202,7 +1346,7 @@ export const DashboardPage = () => {
                                                             <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center transition-colors
                                                                 ${isToday
                                                                     ? 'bg-indigo-600 text-white rounded-full w-[18px] h-[18px] sm:w-5 sm:h-5'
-                                                                    : 'text-slate-400 dark:text-[#94A3B8] group-hover:text-slate-800 dark:group-hover:text-[#E2E8F0]'
+                                                                    : 'text-slate-400 dark:text-[#CBD5E1] group-hover:text-slate-800 dark:group-hover:text-[#E2E8F0]'
                                                                 }`}>{dateObj.day}</span>
                                                         </div>
                                                         <div>
@@ -1260,8 +1404,9 @@ export const DashboardPage = () => {
                                                                         setActiveSessionPopover(activeSessionPopover?.id === popKey ? null : { id: popKey, session });
                                                                         setActivePopover(null);
                                                                     }}
-                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}>
-                                                                    <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`}>
+                                                                    className={`flex flex-col gap-0.5 p-1.5 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                    style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}>
+                                                                    <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`} style={isDark ? { backgroundColor: tc.darkPillBg } : undefined}>
                                                                         <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
                                                                             {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
                                                                             {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
@@ -1299,21 +1444,21 @@ export const DashboardPage = () => {
                                                                         <div className="p-3 space-y-2">
                                                                             <div className="flex items-start justify-between">
                                                                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                                                                <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 transition-colors">
+                                                                                <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                                                                     <XIcon size={12} />
                                                                                 </button>
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300">{session.trainingPhase}</span>
+                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300">{session.trainingPhase}</span>
                                                                                 {session.load && (
-                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-semibold ${
-                                                                                        session.load === 'High' ? 'bg-red-50 text-red-600' :
-                                                                                        session.load === 'Medium' ? 'bg-amber-50 text-amber-600' :
-                                                                                        'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'
+                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-semibold border ${
+                                                                                        session.load === 'High'   ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                                                                                        session.load === 'Medium' ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400' :
+                                                                                        'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
                                                                                     }`}>{session.load} Load</span>
                                                                                 )}
                                                                                 {session.status && session.status !== 'Scheduled' && (
-                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500">{session.status}</span>
+                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1]">{session.status}</span>
                                                                                 )}
                                                                             </div>
                                                                             <div className="text-[10px] text-slate-500 space-y-1">
@@ -1326,21 +1471,21 @@ export const DashboardPage = () => {
                                                                             <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
                                                                                 <button
                                                                                     onClick={() => { setViewingSession(session); setActiveSessionPopover(null); }}
-                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
                                                                                 >
                                                                                     <EyeIcon size={10} /> View
                                                                                 </button>
                                                                                 {session.status !== 'Completed' && (
                                                                                     <button
                                                                                         onClick={() => { setCompletingSession(session); setActiveSessionPopover(null); }}
-                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:bg-emerald-900/25 rounded transition-colors"
+                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-500 dark:bg-emerald-600 rounded transition-colors"
                                                                                     >
                                                                                         <CheckCircle2Icon size={10} /> Complete
                                                                                     </button>
                                                                                 )}
                                                                                 <button
                                                                                     onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
-                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
                                                                                 >
                                                                                     <PencilIcon size={10} /> Edit
                                                                                 </button>
@@ -1376,12 +1521,13 @@ export const DashboardPage = () => {
                                                                             }}
                                                                             className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border transition-all hover:scale-[1.02] active:scale-95 cursor-grab"
                                                                             style={{
-                                                                                backgroundColor: `${event.color}12`,
-                                                                                borderColor: `${event.color}30`,
+                                                                                backgroundColor: `${event.color}${isDark ? '6B' : '26'}`,
+                                                                                borderColor: `${event.color}${isDark ? 'A8' : '55'}`,
+                                                                                color: isDark ? '#ffffff' : darkenHex(event.color),
                                                                             }}
                                                                         >
                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                            <span className="text-[9px] font-medium leading-tight truncate" style={{ color: event.color }}>
+                                                                            <span className="text-[9px] font-medium leading-tight truncate">
                                                                                 {!event.all_day && event.start_time && (
                                                                                     <span className="font-semibold">{event.start_time} </span>
                                                                                 )}
@@ -1399,8 +1545,8 @@ export const DashboardPage = () => {
                                                                                 <div className="h-1 rounded-t-lg" style={{ backgroundColor: event.color }} />
                                                                                 <div className="p-3 space-y-2">
                                                                                     <div className="flex items-start justify-between">
-                                                                                        <h4 className="text-sm font-semibold text-slate-900 leading-tight">{event.title}</h4>
-                                                                                        <button onClick={() => { setActivePopover(null); }} className="p-0.5 text-slate-300 hover:text-slate-600 transition-colors">
+                                                                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{event.title}</h4>
+                                                                                        <button onClick={() => { setActivePopover(null); }} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                                                                             <XIcon size={12} />
                                                                                         </button>
                                                                                     </div>
@@ -1430,7 +1576,7 @@ export const DashboardPage = () => {
                                                                                     <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
                                                                                         <button
                                                                                             onClick={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
-                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors"
+                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
                                                                                         >
                                                                                             <PencilIcon size={10} /> Edit
                                                                                         </button>
@@ -1474,7 +1620,7 @@ export const DashboardPage = () => {
                                                                                 setOverflowDay(overflowDay === dateObj.dateStr ? null : dateObj.dateStr);
                                                                                 setActivePopover(null);
                                                                             }}
-                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 font-semibold text-center pt-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded transition-colors cursor-pointer"
+                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 dark:text-white font-semibold text-center pt-0.5 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors cursor-pointer"
                                                                         >
                                                                             +{hidden} more
                                                                         </button>
@@ -1487,7 +1633,7 @@ export const DashboardPage = () => {
                                                                             >
                                                                                 <div className="px-3 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#243A58] rounded-t-lg">
                                                                                     <div className="flex items-center justify-between">
-                                                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">
                                                                                             {new Date(dateObj.dateStr + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                                                                         </span>
                                                                                         <span className="text-[9px] text-slate-400">{total} items</span>
@@ -1506,6 +1652,7 @@ export const DashboardPage = () => {
                                                                                                 onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
                                                                                                 onClick={() => { setViewingSession(session); setOverflowDay(null); }}
                                                                                                 className={`flex items-center gap-2 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                                                style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
                                                                                             >
                                                                                                 <div className="flex-1 min-w-0">
                                                                                                     <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
@@ -1538,12 +1685,13 @@ export const DashboardPage = () => {
                                                                                             }}
                                                                                             className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95"
                                                                                             style={{
-                                                                                                backgroundColor: `${event.color}12`,
-                                                                                                borderColor: `${event.color}30`,
+                                                                                                backgroundColor: `${event.color}${isDark ? '6B' : '26'}`,
+                                                                                                borderColor: `${event.color}${isDark ? 'A8' : '55'}`,
+                                                                                                color: isDark ? '#ffffff' : darkenHex(event.color),
                                                                                             }}
                                                                                         >
                                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                                            <span className="text-[9px] font-medium leading-tight truncate flex-1" style={{ color: event.color }}>
+                                                                                            <span className="text-[9px] font-medium leading-tight truncate flex-1">
                                                                                                 {!event.all_day && event.start_time && (
                                                                                                     <span className="font-semibold">{event.start_time} </span>
                                                                                                 )}
@@ -1586,7 +1734,7 @@ export const DashboardPage = () => {
                                                 <PencilIcon size={16} />
                                             </div>
                                             <div>
-                                                <h2 className="text-sm font-semibold text-slate-900">Edit Event</h2>
+                                                <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Edit Event</h2>
                                                 <p className="text-[10px] text-slate-400 mt-0.5">Update event details</p>
                                             </div>
                                         </div>
@@ -1702,7 +1850,7 @@ export const DashboardPage = () => {
                                             >
                                                 <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${editingEvent.all_day ? 'translate-x-5' : 'translate-x-0.5'}`} />
                                             </button>
-                                            <span className="text-xs font-medium text-slate-700">All Day</span>
+                                            <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1]">All Day</span>
                                         </div>
 
                                         {/* Date */}
@@ -1756,7 +1904,7 @@ export const DashboardPage = () => {
                                                 setEditingEvent(null);
                                             }}
                                             disabled={!editingEvent.title?.trim()}
-                                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40"
+                                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition-colors disabled:opacity-40"
                                         >
                                             Save Changes
                                         </button>
@@ -1771,7 +1919,7 @@ export const DashboardPage = () => {
                         const PHASES = ['Strength', 'Power', 'Hypertrophy', 'Endurance', 'Speed', 'Recovery', 'Testing', 'Pre-Season', 'In-Season', 'Off-Season'];
                         const LOADS = ['Low', 'Medium', 'High'];
                         const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
-                        const LABEL = 'text-xs font-medium text-slate-600 block mb-1.5';
+                        const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
                         return (
                             <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingSession(null)}>
                                 <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -1781,7 +1929,7 @@ export const DashboardPage = () => {
                                             <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                                                 <DumbbellIcon size={16} />
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-900">Edit Session</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">Edit Session</h3>
                                         </div>
                                         <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                                             <XIcon size={16} />
@@ -1847,7 +1995,7 @@ export const DashboardPage = () => {
                                                 setEditingSession(null);
                                             }}
                                             disabled={!editingSession.title?.trim()}
-                                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40"
+                                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition-colors disabled:opacity-40"
                                         >
                                             Save Changes
                                         </button>
@@ -1880,7 +2028,7 @@ export const DashboardPage = () => {
                                 </div>
                                 <div className="p-5 space-y-4">
                                     <div>
-                                        <h3 className="text-sm font-bold text-slate-900">{completingSession.title || 'Untitled Session'}</h3>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{completingSession.title || 'Untitled Session'}</h3>
                                         <p className="text-[10px] text-slate-400 mt-0.5">
                                             {new Date(completingSession.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                                             {completingSession.time ? ` at ${completingSession.time}` : ''}
@@ -1890,12 +2038,12 @@ export const DashboardPage = () => {
                                     <p className="text-xs text-slate-500">Mark this session as completed?</p>
                                     <div className="flex gap-2">
                                         <button onClick={() => setCompletingSession(null)}
-                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-xl text-xs font-semibold transition-colors">
+                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-xl text-xs font-semibold transition-colors">
                                             Cancel
                                         </button>
                                         <button
                                             onClick={() => handleCompleteSession(completingSession.id, {}, null)}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors">
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-colors">
                                             <CheckCircle2Icon size={14} /> Complete
                                         </button>
                                     </div>

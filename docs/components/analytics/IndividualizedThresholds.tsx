@@ -248,13 +248,13 @@ const IndividualizedThresholds: React.FC = () => {
     return (
         <div className="space-y-5">
             {/* Header */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                     <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-500 flex items-center justify-center">
                         <ShieldIcon size={18} />
                     </div>
                     <div>
-                        <h3 className="text-sm font-semibold text-slate-900">Individualized Load Thresholds</h3>
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Individualized Load Thresholds</h3>
                         <p className="text-[10px] text-slate-400">Personal safe training bands based on historical load, wellness, and injury data</p>
                     </div>
                 </div>
@@ -304,7 +304,7 @@ const IndividualizedThresholds: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Personal Band</div>
-                                    <div className="text-lg font-bold text-slate-700">{thresholds.lowerThreshold.toFixed(1)} — {thresholds.upperThreshold.toFixed(1)}</div>
+                                    <div className="text-lg font-bold text-slate-700 dark:text-[#CBD5E1]">{thresholds.lowerThreshold.toFixed(1)} — {thresholds.upperThreshold.toFixed(1)}</div>
                                     <div className={`text-[10px] font-semibold uppercase mt-1 ${
                                         thresholds.confidence === 'high' ? 'text-emerald-600' : thresholds.confidence === 'moderate' ? 'text-amber-600' : 'text-slate-400'
                                     }`}>
@@ -316,7 +316,7 @@ const IndividualizedThresholds: React.FC = () => {
                     )}
 
                     {/* Threshold visualization bar */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
                         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Personal ACWR Zones</div>
                         <div className="relative h-8 rounded-full overflow-hidden bg-slate-100 mb-2">
                             {/* Underexposed zone */}
@@ -330,7 +330,7 @@ const IndividualizedThresholds: React.FC = () => {
                             {/* Current marker */}
                             {currentAcwr != null && (
                                 <div className="absolute top-0 h-full w-0.5 bg-slate-900 z-10" style={{ left: `${Math.min(100, (currentAcwr / 2.0) * 100)}%` }}>
-                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-slate-700 bg-white px-1 rounded shadow-sm">{currentAcwr}</div>
+                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-slate-700 dark:text-[#CBD5E1] bg-white px-1 rounded shadow-sm">{currentAcwr}</div>
                                 </div>
                             )}
                             {/* Population default markers (dashed) */}
@@ -356,12 +356,12 @@ const IndividualizedThresholds: React.FC = () => {
                     </div>
 
                     {/* Comparison to population */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
                         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">vs. Population Defaults</div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="bg-slate-50 rounded-lg p-3 text-center">
                                 <div className="text-[9px] text-slate-400 mb-1">Population Upper</div>
-                                <div className="text-lg font-bold text-slate-600">{POP_UPPER}</div>
+                                <div className="text-lg font-bold text-slate-600 dark:text-[#CBD5E1]">{POP_UPPER}</div>
                             </div>
                             <div className="bg-violet-50 rounded-lg p-3 text-center border border-violet-200 dark:border-violet-800/50">
                                 <div className="text-[9px] text-violet-500 mb-1">Personal Upper</div>
@@ -369,7 +369,7 @@ const IndividualizedThresholds: React.FC = () => {
                             </div>
                             <div className="bg-slate-50 rounded-lg p-3 text-center">
                                 <div className="text-[9px] text-slate-400 mb-1">Difference</div>
-                                <div className={`text-lg font-bold ${thresholds.upperThreshold > POP_UPPER ? 'text-emerald-600' : thresholds.upperThreshold < POP_UPPER ? 'text-amber-600' : 'text-slate-600'}`}>
+                                <div className={`text-lg font-bold ${thresholds.upperThreshold > POP_UPPER ? 'text-emerald-600' : thresholds.upperThreshold < POP_UPPER ? 'text-amber-600' : 'text-slate-600 dark:text-[#CBD5E1]'}`}>
                                     {thresholds.upperThreshold > POP_UPPER ? '+' : ''}{(thresholds.upperThreshold - POP_UPPER).toFixed(2)}
                                 </div>
                             </div>

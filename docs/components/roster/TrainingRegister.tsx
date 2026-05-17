@@ -148,7 +148,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
         return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] p-12 text-center">
                 <ClipboardListIcon size={28} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                <p className="text-sm font-medium text-slate-400 dark:text-[#64748B]">No sessions scheduled for this team.</p>
+                <p className="text-sm font-medium text-slate-400 dark:text-[#CBD5E1]">No sessions scheduled for this team.</p>
                 <p className="text-xs text-slate-300 dark:text-[#475569] mt-1">Schedule training sessions from the Calendar to track attendance here.</p>
             </div>
         );
@@ -175,8 +175,8 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                             onClick={() => handleExpand(session.id)}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors text-left"
                         >
-                            <CalendarIcon size={14} className="text-slate-400 dark:text-[#64748B] shrink-0" />
-                            <span className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] w-28 shrink-0">
+                            <CalendarIcon size={14} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
+                            <span className="text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] w-28 shrink-0">
                                 {fmtDate(session.date)}
                             </span>
                             <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate flex-1">
@@ -202,8 +202,8 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                             )}
 
                             {isExpanded
-                                ? <ChevronUpIcon size={14} className="text-slate-400 dark:text-[#64748B] shrink-0" />
-                                : <ChevronDownIcon size={14} className="text-slate-400 dark:text-[#64748B] shrink-0" />
+                                ? <ChevronUpIcon size={14} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
+                                : <ChevronDownIcon size={14} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
                             }
                         </button>
 
@@ -212,7 +212,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                             <div className="border-t border-slate-100 dark:border-[#1A2D48] px-4 py-4 space-y-4 bg-slate-50/50 dark:bg-[#132338]/40">
                                 {/* Counter bar */}
                                 <div className="flex items-center gap-3">
-                                    <UsersIcon size={14} className="text-slate-400 dark:text-[#64748B]" />
+                                    <UsersIcon size={14} className="text-slate-400 dark:text-[#CBD5E1]" />
                                     <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">
                                         {presentCount}/{players.length} Present
                                     </span>
@@ -226,7 +226,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
 
                                 {/* Athlete chips grid */}
                                 {players.length === 0 ? (
-                                    <p className="text-xs text-slate-400 dark:text-[#64748B] italic">No athletes in this team.</p>
+                                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] italic">No athletes in this team.</p>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                                         {players.map((player: any) => {
@@ -238,19 +238,19 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                                                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
                                                         isAbsent
                                                             ? 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] opacity-50'
-                                                            : 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-900/25 shadow-sm'
+                                                            : 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-600 shadow-sm'
                                                     }`}
                                                 >
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                                                         isAbsent
-                                                            ? 'bg-slate-200 dark:bg-[#243A58] text-slate-400 dark:text-[#64748B]'
+                                                            ? 'bg-slate-200 dark:bg-[#243A58] text-slate-400 dark:text-[#CBD5E1]'
                                                             : 'bg-indigo-500 text-white'
                                                     }`}>
                                                         {player.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                                                     </div>
                                                     <span className={`text-sm font-medium truncate ${
                                                         isAbsent
-                                                            ? 'text-slate-400 dark:text-[#64748B] line-through'
+                                                            ? 'text-slate-400 dark:text-[#CBD5E1] line-through'
                                                             : 'text-slate-900 dark:text-[#E2E8F0]'
                                                     }`}>
                                                         {player.name}
@@ -263,7 +263,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
 
                                 {/* Notes */}
                                 <div>
-                                    <label className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide block mb-1">
+                                    <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide block mb-1">
                                         Notes (optional)
                                     </label>
                                     <textarea
@@ -279,7 +279,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl px-5 py-2.5 transition-colors w-full sm:w-auto"
+                                    className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold rounded-xl px-5 py-2.5 transition-colors w-full sm:w-auto"
                                 >
                                     {saving
                                         ? <><Loader2Icon size={14} className="animate-spin" /> Saving...</>

@@ -98,7 +98,7 @@ function OptionRow({ opt, isSelected, isFocused, onSelect, textSize, indent }: O
     }, [isFocused]);
 
     const bg = isSelected
-        ? 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-400 font-medium'
+        ? 'bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white font-medium'
         : isFocused
         ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0]'
         : opt.disabled
@@ -179,7 +179,7 @@ function Dropdown({ triggerRef, items, value, focusedValue, onSelect, onClose, s
                 {items.map((item, i) =>
                     isGroup(item) ? (
                         <div key={i}>
-                            <div className={`px-3 pt-2.5 pb-1 ${textSize} font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide`}>
+                            <div className={`px-3 pt-2.5 pb-1 ${textSize} font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide`}>
                                 {item.label}
                             </div>
                             {item.items.map(opt => (
@@ -287,20 +287,20 @@ export function CustomSelect({
     const formCls = `w-full ${base} ${
         isOpen
             ? 'border-indigo-400 ring-2 ring-indigo-500/20 bg-white dark:bg-[#132338]'
-            : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-slate-300 dark:hover:border-[#1A2D48]'
+            : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-slate-300 dark:hover:border-[#475569]'
     } ${className}`;
 
     const filterCls = `${base} ${
         isOpen
             ? 'border-indigo-400 ring-2 ring-indigo-500/20 bg-slate-50 dark:bg-[#0F1C30]'
-            : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] hover:border-slate-300 dark:hover:border-[#1A2D48]'
+            : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] hover:border-slate-300 dark:hover:border-[#475569]'
     } ${className}`;
 
     const triggerCls = variant === 'filter' ? filterCls : formCls;
 
     const labelColor = selectedLabel
         ? 'text-slate-800 dark:text-[#E2E8F0]'
-        : 'text-slate-400 dark:text-[#64748B]';
+        : 'text-slate-400 dark:text-[#CBD5E1]';
 
     return (
         <>
@@ -320,13 +320,13 @@ export function CustomSelect({
                 {/* Left slot: icon + prefixLabel + value */}
                 <span className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                     {prefixIcon && (
-                        <span className="shrink-0 text-slate-400 dark:text-[#64748B] flex items-center">
+                        <span className="shrink-0 text-slate-400 dark:text-[#CBD5E1] flex items-center">
                             {prefixIcon}
                         </span>
                     )}
                     {prefixLabel && (
                         <>
-                            <span className="shrink-0 text-slate-400 dark:text-[#64748B] font-medium">{prefixLabel}</span>
+                            <span className="shrink-0 text-slate-500 dark:text-[#CBD5E1] font-medium">{prefixLabel}</span>
                             <span className="shrink-0 w-px h-3 bg-slate-200 dark:bg-[#243A58]" />
                         </>
                     )}
@@ -338,7 +338,7 @@ export function CustomSelect({
                 {/* Chevron */}
                 <ChevronDownIcon
                     size={S.chevron}
-                    className={`shrink-0 text-slate-400 dark:text-[#64748B] transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
+                    className={`shrink-0 text-slate-400 dark:text-[#CBD5E1] transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 

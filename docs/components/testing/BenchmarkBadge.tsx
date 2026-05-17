@@ -116,14 +116,14 @@ export const BenchmarkSummary: React.FC<{ testType: string; athleteId: string; l
                     const rank = i + 1;
                     return (
                         <div key={entry.id} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs ${
-                            isCurrent ? 'bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 font-semibold' : i % 2 === 0 ? 'bg-slate-50' : ''
+                            isCurrent ? 'bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 font-semibold' : i % 2 === 0 ? 'bg-slate-50' : ''
                         }`}>
                             <div className="flex items-center gap-2">
                                 <span className={`w-5 text-center text-[10px] font-bold ${rank <= 3 ? 'text-amber-500' : 'text-slate-400'}`}>{rank}</span>
-                                <span className={isCurrent ? 'text-indigo-700' : 'text-slate-700'}>{entry.name}</span>
+                                <span className={isCurrent ? 'text-indigo-700' : 'text-slate-700 dark:text-[#CBD5E1]'}>{entry.name}</span>
                                 <span className="text-[9px] text-slate-300">{entry.team}</span>
                             </div>
-                            <span className={isCurrent ? 'text-indigo-600' : 'text-slate-600'}>{entry.value}</span>
+                            <span className={isCurrent ? 'text-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1]'}>{entry.value}</span>
                         </div>
                     );
                 })}

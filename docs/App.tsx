@@ -225,20 +225,20 @@ const AddAthleteModal = () => {
     };
 
     const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
-    const LABEL = "text-xs font-medium text-slate-600 block mb-1.5";
+    const LABEL = "text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5";
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
 
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between bg-white dark:bg-[#132338] shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white shrink-0">
                             <UserPlusIcon size={16} />
                         </div>
                         <div>
-                            <h3 className="text-base font-semibold text-slate-900">
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">
                                 {addAthleteMode === 'athlete' ? 'Add New Athlete' : 'Create New Team'}
                             </h3>
                             <span className="text-xs text-slate-500">
@@ -253,11 +253,11 @@ const AddAthleteModal = () => {
                 <div className="px-5 pt-4">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg">
                         <button onClick={() => { setAddAthleteMode('athlete'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                             Athlete
                         </button>
                         <button onClick={() => { setAddAthleteMode('team'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                             Team
                         </button>
                     </div>
@@ -354,19 +354,19 @@ const AddAthleteModal = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-4 border-t border-slate-100 bg-white flex justify-between items-center gap-3 shrink-0">
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] flex justify-between items-center gap-3 shrink-0">
                     <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         Cancel
                     </button>
                     <div className="flex gap-2">
                         {addAthleteMode === 'athlete' && step === 2 && (
-                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
                         {addAthleteMode === 'athlete' && step === 1 && (
                             <button onClick={() => setStep(2)} disabled={!canProceed}
-                                className="px-5 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-40">
+                                className="px-5 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-500 transition-colors disabled:opacity-40">
                                 Next — Profile
                             </button>
                         )}
@@ -376,7 +376,7 @@ const AddAthleteModal = () => {
                                     <button
                                         onClick={handleAddAndNext}
                                         disabled={addingNext}
-                                        className="px-5 py-2 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-full text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                        className="px-5 py-2 bg-indigo-50 dark:bg-[#1A2D48] text-indigo-700 dark:text-white border border-indigo-200 dark:border-indigo-600 rounded-full text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-colors flex items-center gap-2 disabled:opacity-50"
                                     >
                                         <UserPlusIcon size={14} /> Add &amp; Next
                                     </button>
@@ -603,12 +603,12 @@ table { width: 100%; border-collapse: collapse; }
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-none lg:rounded-xl w-full lg:max-w-6xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-6xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between shrink-0 bg-white dark:bg-[#132338]">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0"><PrinterIcon size={16} /></div>
-                        <h3 className="text-base font-semibold text-slate-900">Weightroom Sheets</h3>
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h3>
                     </div>
                     <button onClick={() => setIsWeightroomSheetModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
@@ -616,7 +616,7 @@ table { width: 100%; border-collapse: collapse; }
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/30 dark:bg-[#0F1C30]/30">
                     {/* Top Controls */}
-                    <div className="p-5 border-b border-slate-100 bg-white">
+                    <div className="p-5 border-b border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338]">
                         <div className="flex items-start gap-5 flex-wrap">
                             {/* Target Squad */}
                             <div className="space-y-1.5 min-w-[180px]">
@@ -637,8 +637,8 @@ table { width: 100%; border-collapse: collapse; }
                                             onClick={() => setWsMode(m.id)}
                                             className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
                                                 wsMode === m.id
-                                                    ? 'bg-slate-900 text-white border-slate-900'
-                                                    : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600'
+                                                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500'
+                                                    : 'bg-white dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#2D4A6A] hover:text-slate-600 dark:hover:text-[#CBD5E1]'
                                             }`}
                                         >
                                             {m.label}
@@ -652,7 +652,7 @@ table { width: 100%; border-collapse: collapse; }
                                 <label className="text-[10px] font-semibold text-transparent uppercase tracking-widest">Action</label>
                                 <button
                                     onClick={addColumn}
-                                    className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-700 transition-colors shadow-sm"
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-500 transition-colors shadow-sm"
                                 >
                                     <PlusIcon size={14} /> Add Column
                                 </button>
@@ -674,7 +674,7 @@ table { width: 100%; border-collapse: collapse; }
                                     </p>
                                 </div>
 
-                                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest text-center mb-1">
+                                <h2 className="text-sm font-black text-slate-900 dark:text-[#E2E8F0] uppercase tracking-widest text-center mb-1">
                                     Weight Training - Record Sheet
                                 </h2>
                                 <div className="w-40 h-0.5 bg-slate-900 mx-auto mb-4" />
@@ -696,9 +696,9 @@ table { width: 100%; border-collapse: collapse; }
                                                 <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes in selected squad</td></tr>
                                             ) : athletes.map(a => (
                                                 <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
-                                                    <td className="px-3 py-2 font-semibold text-slate-800 uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                                    <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
                                                     {wsColumns.map(col => (
-                                                        <td key={col.id} className="px-3 py-2 text-slate-600 border border-slate-200 text-center min-w-[80px]">
+                                                        <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 text-center min-w-[80px]">
                                                             {getCellValue(col, a) || <span className="text-slate-200">&nbsp;</span>}
                                                         </td>
                                                     ))}
@@ -733,7 +733,7 @@ table { width: 100%; border-collapse: collapse; }
                                 </div>
                                 <button
                                     onClick={handlePrint}
-                                    className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
+                                    className="w-full py-3 bg-white text-slate-900 dark:text-[#E2E8F0] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
                                 >
                                     <PrinterIcon size={14} /> Print Sheet
                                 </button>
@@ -810,16 +810,16 @@ const AddSessionModal = () => {
     if (!isAddSessionModalOpen) return null;
 
     const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
-    const LABEL = "text-xs font-medium text-slate-600 block mb-1.5";
+    const LABEL = "text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5";
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-lg shadow-xl border border-slate-200 overflow-hidden flex flex-col">
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between shrink-0 bg-white dark:bg-[#132338]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-slate-100 text-slate-900 rounded-lg flex items-center justify-center shrink-0"><CalendarDaysIcon size={16} /></div>
+                        <div className="w-9 h-9 bg-slate-100 text-slate-900 dark:text-[#E2E8F0] rounded-lg flex items-center justify-center shrink-0"><CalendarDaysIcon size={16} /></div>
                         <div>
-                            <h3 className="text-base font-semibold text-slate-900">New Session</h3>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">New Session</h3>
                             <p className="text-xs text-slate-500">Quick schedule</p>
                         </div>
                     </div>
@@ -827,16 +827,16 @@ const AddSessionModal = () => {
                 </div>
 
                 {/* TAB SWITCHER */}
-                <div className="flex px-5 pt-3 bg-white border-b border-slate-100">
+                <div className="flex px-5 pt-3 bg-white dark:bg-[#132338] border-b border-slate-100 dark:border-[#1A2D48]">
                     <button
                         onClick={() => setAddSessionTab('info')}
-                        className={`flex-1 py-3 text-xs font-medium border-b-2 transition-all ${addSessionTab === 'info' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-3 text-xs font-medium border-b-2 transition-all ${addSessionTab === 'info' ? 'border-indigo-500 text-slate-900 dark:text-[#E2E8F0]' : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#CBD5E1]'}`}
                     >
                         1. Basic Info
                     </button>
                     <button
                         onClick={() => setAddSessionTab('exercises')}
-                        className={`flex-1 py-3 text-xs font-medium border-b-2 transition-all ${addSessionTab === 'exercises' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-3 text-xs font-medium border-b-2 transition-all ${addSessionTab === 'exercises' ? 'border-indigo-500 text-slate-900 dark:text-[#E2E8F0]' : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#CBD5E1]'}`}
                     >
                         2. Exercises ({newSession.exercises.length})
                     </button>
@@ -887,7 +887,7 @@ const AddSessionModal = () => {
                                             <button
                                                 key={t}
                                                 onClick={() => setNewSession({ ...newSession, targetType: t, targetId: '' })}
-                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${newSession.targetType === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${newSession.targetType === t ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400'}`}
                                             >
                                                 {t}
                                             </button>
@@ -968,14 +968,14 @@ const AddSessionModal = () => {
                                         const selectedEx = newSession.exercises.find(e => e.id === ex.id);
                                         const isSelected = !!selectedEx;
                                         return (
-                                            <div key={ex.id} className={`p-3.5 rounded-lg border transition-all ${isSelected ? 'bg-slate-50 border-indigo-200 dark:border-indigo-800/50 ring-1 ring-indigo-500/10' : 'bg-white border-slate-200'}`}>
+                                            <div key={ex.id} className={`p-3.5 rounded-lg border transition-all ${isSelected ? 'bg-slate-50 dark:bg-[#0F1C30] border-indigo-200 dark:border-indigo-800/50 ring-1 ring-indigo-500/10' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58]'}`}>
                                                 <div className="flex items-center justify-between mb-2.5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                             <DumbbellIcon size={14} />
                                                         </div>
                                                         <div>
-                                                            <h4 className="text-xs font-medium text-slate-900">{ex.name}</h4>
+                                                            <h4 className="text-xs font-medium text-slate-900 dark:text-[#E2E8F0]">{ex.name}</h4>
                                                             <p className="text-[10px] text-slate-400">{(ex.categories || [])[0] || 'Strength'}</p>
                                                         </div>
                                                     </div>
@@ -986,7 +986,7 @@ const AddSessionModal = () => {
                                                                 : [...newSession.exercises, { id: ex.id, name: ex.name, sets: 3, reps: '10', weight: '-', rpe: 8, notes: '' }];
                                                             setNewSession({ ...newSession, exercises: newExList });
                                                         }}
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700' : 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200'}`}
                                                     >
                                                         {isSelected ? 'Selected' : 'Add'}
                                                     </button>
@@ -1000,21 +1000,21 @@ const AddSessionModal = () => {
                                                             <input type="number" value={selectedEx.sets} onChange={(e) => {
                                                                 const updated = newSession.exercises.map(item => item.id === ex.id ? { ...item, sets: parseInt(e.target.value) } : item);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-white border border-slate-200 rounded-md px-2 py-1.5 text-xs outline-none text-center" />
+                                                            }} className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center text-slate-900 dark:text-[#E2E8F0]" />
                                                         </div>
                                                         <div>
                                                             <label className="text-[9px] font-medium text-slate-400 block mb-1">Reps</label>
                                                             <input type="text" value={selectedEx.reps} onChange={(e) => {
                                                                 const updated = newSession.exercises.map(item => item.id === ex.id ? { ...item, reps: e.target.value } : item);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-white border border-slate-200 rounded-md px-2 py-1.5 text-xs outline-none text-center" />
+                                                            }} className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center text-slate-900 dark:text-[#E2E8F0]" />
                                                         </div>
                                                         <div>
                                                             <label className="text-[9px] font-medium text-slate-400 block mb-1">RPE</label>
                                                             <input type="number" value={selectedEx.rpe} onChange={(e) => {
                                                                 const updated = newSession.exercises.map(item => item.id === ex.id ? { ...item, rpe: parseInt(e.target.value) } : item);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-white border border-slate-200 rounded-md px-2 py-1.5 text-xs outline-none text-center" />
+                                                            }} className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center text-slate-900 dark:text-[#E2E8F0]" />
                                                         </div>
                                                         <div>
                                                             <label className="text-[9px] font-medium text-slate-400 block mb-1">Config</label>
@@ -1032,7 +1032,7 @@ const AddSessionModal = () => {
                         </div>
                     )}
                 </div>
-                <div className="px-5 py-4 border-t border-slate-100 bg-white flex gap-3">
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] flex gap-3">
                     <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
                     <button
                         onClick={handleAddSession}
@@ -1091,7 +1091,7 @@ const SessionModal = () => {
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-md shadow-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-md shadow-xl border border-slate-200 overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1099,7 +1099,7 @@ const SessionModal = () => {
                             {headerIcon}
                         </div>
                         <div>
-                            <h3 className="text-base font-semibold text-slate-900 leading-tight">{viewingSession.title}</h3>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{viewingSession.title}</h3>
                             <p className="text-xs text-slate-400 mt-0.5">{typeLabel}</p>
                         </div>
                     </div>
@@ -1111,11 +1111,11 @@ const SessionModal = () => {
                     {/* Meta row */}
                     <div className="flex items-center gap-2 flex-wrap">
                         {viewingSession.time && (
-                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">{viewingSession.time}</span>
+                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 dark:text-[#CBD5E1] rounded-md text-xs font-medium">{viewingSession.time}</span>
                         )}
                         <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${loadColor}`}>{viewingSession.load} Load</span>
                         {viewingSession.trainingPhase && (
-                            <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
+                            <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
                         )}
                         {viewingSession.status === 'Completed' && (
                             <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-semibold">Completed</span>
@@ -1126,19 +1126,19 @@ const SessionModal = () => {
                     <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 space-y-3">
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400 font-medium">Athlete / Team</span>
-                            <span className="text-sm font-semibold text-slate-900">{targetName}</span>
+                            <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{targetName}</span>
                         </div>
                         <div className="h-px bg-slate-200" />
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400 font-medium">Date</span>
-                            <span className="text-sm text-slate-700">{dateStr}</span>
+                            <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{dateStr}</span>
                         </div>
                         {viewingSession.time && (
                             <>
                                 <div className="h-px bg-slate-200" />
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs text-slate-400 font-medium">Start Time</span>
-                                    <span className="text-sm text-slate-700">{viewingSession.time}</span>
+                                    <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{viewingSession.time}</span>
                                 </div>
                             </>
                         )}
@@ -1147,7 +1147,7 @@ const SessionModal = () => {
                                 <div className="h-px bg-slate-200" />
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs text-slate-400 font-medium">Duration</span>
-                                    <span className="text-sm text-slate-700">{viewingSession.actual_duration || viewingSession.plannedDuration} mins</span>
+                                    <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{viewingSession.actual_duration || viewingSession.plannedDuration} mins</span>
                                 </div>
                             </>
                         )}
@@ -1156,7 +1156,7 @@ const SessionModal = () => {
                                 <div className="h-px bg-slate-200" />
                                 <div>
                                     <span className="text-xs text-slate-400 font-medium block mb-1">Notes</span>
-                                    <p className="text-sm text-slate-600">{viewingSession.notes}</p>
+                                    <p className="text-sm text-slate-600 dark:text-[#CBD5E1]">{viewingSession.notes}</p>
                                 </div>
                             </>
                         )}
@@ -1191,15 +1191,15 @@ const SessionModal = () => {
                                 {linkedSessions.map(l => {
                                     const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
                                         : l.source === 'conditioning' ? 'bg-amber-100 text-amber-700'
-                                        : l.source === 'workout-template' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700'
-                                        : 'bg-slate-100 text-slate-600';
+                                        : l.source === 'workout-template' ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700'
+                                        : 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
                                     const srcIcon = l.source === 'wattbike' ? <ActivityIcon size={10} />
                                         : l.source === 'conditioning' ? <TimerIcon size={10} />
                                         : <DumbbellIcon size={10} />;
                                     return (
                                         <div key={l.id} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5">
                                             <div className={`w-4 h-4 rounded flex items-center justify-center ${srcColor}`}>{srcIcon}</div>
-                                            <span className="text-xs font-medium text-slate-700">{l.title}</span>
+                                            <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1]">{l.title}</span>
                                             {l.meta && <span className="text-[10px] text-slate-400">· {l.meta}</span>}
                                         </div>
                                     );
@@ -1213,7 +1213,7 @@ const SessionModal = () => {
                 <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">Close</button>
-                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg text-sm font-medium transition-colors">
+                        <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg text-sm font-medium transition-colors">
                             <Trash2Icon size={14} /> Delete
                         </button>
                     </div>
@@ -1223,7 +1223,7 @@ const SessionModal = () => {
                         </button>
                     )}
                     {isWattbike && (
-                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+                        <button onClick={() => { setViewingSession(null); navigate('/conditioning'); }} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 transition-colors">
                             <ActivityIcon size={14} /> View in Wattbike Hub
                         </button>
                     )}
@@ -1313,7 +1313,7 @@ const AthleteProfileModal = () => {
     const Stat = ({ label, value, unit = '' }) => (
         <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
             <div className="text-[10px] font-medium text-slate-400">{label}</div>
-            <div className="text-sm font-semibold text-slate-800 mt-0.5">{value != null ? `${value}${unit}` : <span className="text-slate-300">—</span>}</div>
+            <div className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] mt-0.5">{value != null ? `${value}${unit}` : <span className="text-slate-300">—</span>}</div>
         </div>
     );
 
@@ -1352,7 +1352,7 @@ const AthleteProfileModal = () => {
 
     return (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-none lg:rounded-xl w-full lg:max-w-2xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col text-slate-900">
+            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-2xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col text-slate-900 dark:text-[#E2E8F0]">
 
                 {/* ── Header ── */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -1361,11 +1361,11 @@ const AthleteProfileModal = () => {
                             {initials}
                         </div>
                         <div>
-                            <h2 className="text-base font-semibold text-slate-900">{p.name}</h2>
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{p.name}</h2>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 {playerTeam && <span className="text-[10px] text-slate-400">{playerTeam.name}</span>}
                                 {p.sport && <span className="text-[10px] text-slate-400">· {p.sport}</span>}
-                                {p.position && <span className="text-[10px] bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
+                                {p.position && <span className="text-[10px] bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
                             </div>
                         </div>
                     </div>
@@ -1463,7 +1463,7 @@ const AthleteProfileModal = () => {
                                 {testResults.map((m, i) => (
                                     <div key={i} className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
                                         <div className="text-[10px] font-medium text-slate-400 capitalize">{formatTestName(m)}</div>
-                                        <div className="text-sm font-semibold text-slate-800 mt-0.5">{formatTestValue(m)}</div>
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] mt-0.5">{formatTestValue(m)}</div>
                                         <div className="text-[9px] text-slate-300 mt-0.5">{m.date?.slice(0, 10)}</div>
                                     </div>
                                 ))}
@@ -1477,15 +1477,15 @@ const AthleteProfileModal = () => {
                         {(p.goals || p.notes) ? (
                             <>
                                 {p.goals && (
-                                    <div className="bg-indigo-50 dark:bg-indigo-900/25 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800/40 mb-2">
+                                    <div className="bg-indigo-50 dark:bg-indigo-600 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800/40 mb-2">
                                         <div className="text-[10px] font-medium text-indigo-500 mb-1">Training Goals</div>
-                                        <p className="text-xs text-slate-700 leading-relaxed">{p.goals}</p>
+                                        <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{p.goals}</p>
                                     </div>
                                 )}
                                 {p.notes && (
                                     <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
                                         <div className="text-[10px] font-medium text-slate-400 mb-1">Notes</div>
-                                        <p className="text-xs text-slate-600 leading-relaxed">{p.notes}</p>
+                                        <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{p.notes}</p>
                                     </div>
                                 )}
                             </>
@@ -1506,11 +1506,11 @@ const ACWRDetailModal = () => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[500] p-0 lg:p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-none lg:rounded-xl shadow-xl lg:max-w-5xl w-full h-full lg:h-auto lg:max-h-[90vh] overflow-hidden flex flex-col text-slate-900">
+            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl shadow-xl lg:max-w-5xl w-full h-full lg:h-auto lg:max-h-[90vh] overflow-hidden flex flex-col text-slate-900 dark:text-[#E2E8F0]">
                 <div className="px-5 py-4 border-b border-slate-100">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-900">{acwrDetailAthlete.name}</h2>
+                            <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{acwrDetailAthlete.name}</h2>
                             <p className="text-xs text-slate-500 mt-0.5">{acwrDetailAthlete.subsection} · ACWR Analysis</p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -1528,21 +1528,21 @@ const ACWRDetailModal = () => {
                     <div className="grid grid-cols-3 gap-4">
                         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <span className="text-xs font-medium text-slate-500 block mb-1.5">Current ACWR</span>
-                            <span className="text-2xl font-bold text-slate-900">1.12</span>
+                            <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">1.12</span>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <span className="text-xs font-medium text-slate-500 block mb-1.5">Acute Load (7d)</span>
-                            <span className="text-2xl font-bold text-slate-900">420</span>
+                            <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">420</span>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <span className="text-xs font-medium text-slate-500 block mb-1.5">Chronic Load (28d)</span>
-                            <span className="text-2xl font-bold text-slate-900">375</span>
+                            <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">375</span>
                         </div>
                     </div>
 
                     <div className={`p-4 rounded-lg ${status.bgColor} border ${status.color.replace('text-', 'border-')}`}>
                         <h4 className={`text-sm font-semibold mb-1.5 ${status.color}`}>Risk Assessment</h4>
-                        <p className="text-sm text-slate-700">{status.risk} — Athlete is in the sweet spot for adaptation and performance gains.</p>
+                        <p className="text-sm text-slate-700 dark:text-[#CBD5E1]">{status.risk} — Athlete is in the sweet spot for adaptation and performance gains.</p>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">

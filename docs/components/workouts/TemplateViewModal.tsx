@@ -84,7 +84,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between shrink-0">
           <div className="space-y-1.5">
-            <h2 className="text-lg font-semibold text-slate-900 leading-none">{template.name}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-none">{template.name}</h2>
             <div className="flex items-center gap-3 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
                 <CalendarIcon size={11} />
@@ -97,7 +97,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
             </div>
             <div className="flex items-center gap-2 mt-1">
               {template.trainingPhase && (
-                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{template.trainingPhase || template.training_phase}</span>
+                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-semibold">{template.trainingPhase || template.training_phase}</span>
               )}
               {template.load && (
                 <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-semibold">{template.load} Load</span>
@@ -105,11 +105,11 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
             </div>
           </div>
           <div className="flex items-center gap-2 ml-4 shrink-0">
-            <button onClick={() => setShowShare(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-lg text-xs font-medium transition-colors">
+            <button onClick={() => setShowShare(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
               <Share2Icon size={13} /> Share
             </button>
             {onEdit && (
-              <button onClick={() => { onEdit(template); onClose(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 rounded-lg text-xs font-medium transition-colors">
+              <button onClick={() => { onEdit(template); onClose(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
                 <PencilIcon size={13} /> Edit
               </button>
             )}
@@ -163,7 +163,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-slate-800">{name}</div>
+                          <div className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0]">{name}</div>
                           {hasMeta && (
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
                               {ex.sets && <span>Sets: <span className="font-medium text-indigo-600 dark:text-indigo-300">{ex.sets}</span></span>}
@@ -174,8 +174,8 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                                   <span className="font-medium text-indigo-600 dark:text-indigo-300">{ex.weight} kg</span>
                                 </span>
                               )}
-                              {ex.rest && <span>Rest: <span className="text-slate-600">{ex.rest}s</span></span>}
-                              {ex.rpe && <span>RPE: <span className="text-slate-600">{ex.rpe}</span></span>}
+                              {ex.rest && <span>Rest: <span className="text-slate-600 dark:text-[#CBD5E1]">{ex.rest}s</span></span>}
+                              {ex.rpe && <span>RPE: <span className="text-slate-600 dark:text-[#CBD5E1]">{ex.rpe}</span></span>}
                             </div>
                           )}
                         </div>
@@ -192,15 +192,15 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                           {(bodyParts.length > 0 || categories.length > 0) && (
                             <div className="flex flex-wrap gap-1.5">
                               {bodyParts.map((bp: string) => (
-                                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-medium">{bp}</span>
+                                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-medium">{bp}</span>
                               ))}
                               {categories.map((cat: string) => (
-                                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-medium">{cat}</span>
+                                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-medium">{cat}</span>
                               ))}
                             </div>
                           )}
                           {ex.notes && <p className="text-xs text-slate-500 italic">{ex.notes}</p>}
-                          {desc && <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>}
+                          {desc && <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{desc}</p>}
                           {videoUrl && (
                             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
                                className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 transition-colors">

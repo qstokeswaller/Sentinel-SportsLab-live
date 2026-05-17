@@ -31,7 +31,7 @@ const PRESET_COLORS = [
 ];
 
 const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
-const LABEL = 'text-xs font-medium text-slate-600 block mb-1.5';
+const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -231,7 +231,7 @@ const AddEventModal = () => {
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="bg-white dark:bg-[#132338] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                     <div className="flex items-center gap-3">
@@ -239,7 +239,7 @@ const AddEventModal = () => {
                             <CalendarPlusIcon size={16} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-900">Add a New Event</h2>
+                            <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Add a New Event</h2>
                             <p className="text-[10px] text-slate-400 mt-0.5">Schedule an appointment, meeting, or note</p>
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const AddEventModal = () => {
                                     value={newTypeLabel}
                                     onChange={e => setNewTypeLabel(e.target.value)}
                                     placeholder="Type name, e.g. Travel, Clinic..."
-                                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                                    className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-400 text-slate-900 dark:text-[#E2E8F0]"
                                     autoFocus
                                 />
                                 <div className="flex items-center gap-2">
@@ -301,10 +301,10 @@ const AddEventModal = () => {
                                     ))}
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={handleAddCustomType} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
+                                    <button onClick={handleAddCustomType} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors">
                                         Save Type
                                     </button>
-                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">
+                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">
                                         Cancel
                                     </button>
                                 </div>
@@ -364,7 +364,7 @@ const AddEventModal = () => {
                                 <button
                                     key={opt}
                                     onClick={() => { setAssignType(opt); setAssignId(''); setAssignTeamFilter(''); }}
-                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                                 >
                                     {opt === 'team' && <UsersIcon size={12} />}
                                     {opt === 'individual' && <UserIcon size={12} />}
@@ -447,7 +447,7 @@ const AddEventModal = () => {
                         >
                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
-                        <span className="text-xs font-medium text-slate-700">All Day</span>
+                        <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1]">All Day</span>
                     </div>
 
                     {/* Schedule Mode Toggle */}
@@ -456,13 +456,13 @@ const AddEventModal = () => {
                         <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit">
                             <button
                                 onClick={() => setScheduleMode('range')}
-                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'range' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'range' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                             >
                                 <CalendarIcon size={12} /> Date Range
                             </button>
                             <button
                                 onClick={() => setScheduleMode('dates')}
-                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'dates' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'dates' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                             >
                                 <RepeatIcon size={12} /> Specific Dates
                             </button>
@@ -510,7 +510,7 @@ const AddEventModal = () => {
                                 <button
                                     onClick={addSelectedDate}
                                     disabled={!dateToAdd || selectedDates.includes(dateToAdd)}
-                                    className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 shrink-0"
+                                    className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors disabled:opacity-40 shrink-0"
                                 >
                                     <PlusIcon size={14} /> Add
                                 </button>
@@ -519,7 +519,7 @@ const AddEventModal = () => {
                             {selectedDates.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {selectedDates.map(d => (
-                                        <span key={d} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-xs font-medium text-indigo-700 dark:text-indigo-400">
+                                        <span key={d} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-xs font-medium text-indigo-700 dark:text-white">
                                             {formatDateChip(d)}
                                             <button onClick={() => removeSelectedDate(d)} className="text-indigo-400 hover:text-red-500 transition-colors">
                                                 <XIcon size={12} />
@@ -578,7 +578,7 @@ const AddEventModal = () => {
                     <button
                         onClick={handleSubmit}
                         disabled={!canSubmit}
-                        className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         {creating ? 'Creating...' : scheduleMode === 'dates' && selectedDates.length > 1 ? `Create ${selectedDates.length} Events` : 'Create Event'}
                     </button>

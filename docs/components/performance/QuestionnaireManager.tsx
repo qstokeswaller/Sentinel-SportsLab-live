@@ -117,7 +117,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max(0, parseInt(e.target.value) || 0), (q.scaleMax ?? 10) - 1);
                                 update({ scaleMin: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                     <div>
@@ -132,7 +132,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max((q.scaleMin ?? 0) + 1, parseInt(e.target.value) || 10), 20);
                                 update({ scaleMax: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -171,7 +171,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                             value={q.labels?.[0] || ''}
                             onChange={e => update({ labels: [e.target.value, q.labels?.[1] || ''] })}
                             placeholder={`e.g. None (${displayMin})`}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-cyan-400 transition-colors"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                         />
                     </div>
                     <div>
@@ -183,7 +183,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                             value={q.labels?.[1] || ''}
                             onChange={e => update({ labels: [q.labels?.[0] || '', e.target.value] })}
                             placeholder={`e.g. Maximum (${displayMax})`}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-cyan-400 transition-colors"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                         />
                     </div>
                 </div>
@@ -216,7 +216,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 value={opt}
                                 onChange={e => updateOption(oi, e.target.value)}
                                 placeholder={`Option ${oi + 1}`}
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-cyan-400 transition-colors"
+                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                             />
                             <div className="flex items-center gap-1 shrink-0">
                                 <span className="text-[9px] font-semibold text-slate-300 uppercase">=</span>
@@ -225,7 +225,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                     value={q.numericMap?.[oi] ?? ''}
                                     onChange={e => updateNumericMap(oi, e.target.value)}
                                     placeholder="val"
-                                    className="w-14 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-cyan-400 transition-colors text-center"
+                                    className="w-14 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors text-center"
                                 />
                             </div>
                             <button
@@ -269,7 +269,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 value={opt}
                                 onChange={e => updateOption(oi, e.target.value)}
                                 placeholder={`Option ${oi + 1}`}
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-cyan-400 transition-colors"
+                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                             />
                             <button
                                 type="button"
@@ -455,13 +455,13 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
         <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">Questionnaire Templates</h3>
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Questionnaire Templates</h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">Build and manage athlete survey structures</p>
                 </div>
                 <button
                     type="button"
                     onClick={() => { setSelectedTemplate(null); setNewQuestTitle(''); setNewQuestQuestions([]); setViewMode('create'); }}
-                    className="px-6 py-2.5 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-700 hover:scale-105 transition-all flex items-center gap-2"
+                    className="px-6 py-2.5 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-500 hover:scale-105 transition-all flex items-center gap-2"
                 >
                     <Plus size={16} /> New Template
                 </button>
@@ -475,7 +475,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                     <button
                         type="button"
                         onClick={() => { setNewQuestTitle('Daily Wellness Check'); setNewQuestQuestions([...DEFAULT_WELLNESS_QUESTIONS]); setViewMode('create'); }}
-                        className="px-6 py-3 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide hover:bg-cyan-700 transition-all"
+                        className="px-6 py-3 bg-cyan-600 text-white rounded-xl text-[10px] font-semibold uppercase tracking-wide hover:bg-cyan-500 transition-all"
                     >
                         Load Default Wellness Template
                     </button>
@@ -489,7 +489,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                     <ClipboardCheck size={24} />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-semibold text-slate-900 leading-tight mb-1">{t.title || t.name}</h4>
+                                    <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight mb-1">{t.title || t.name}</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">{t.questions?.length || 0} Questions • {t.status || 'Active'}</p>
                                 </div>
 
@@ -522,7 +522,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                     setNewQuestQuestions(t.questions || []);
                                                     setViewMode('create');
                                                 }}
-                                                className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all flex items-center justify-center gap-1.5"
+                                                className="flex-1 py-2 bg-slate-50 text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <Pencil size={12} /> Edit
                                             </button>
@@ -550,7 +550,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
                 <div>
-                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">
                         {selectedTemplate ? 'Edit Template' : 'New Template'}
                     </h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">
@@ -626,7 +626,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                 setNewQuestQuestions(updated);
                                             }}
                                             placeholder="Type your question here..."
-                                            className="w-full text-base font-bold text-slate-800 bg-transparent border-b border-slate-200 focus:border-cyan-500 outline-none py-1 transition-colors"
+                                            className="w-full text-base font-bold text-slate-800 dark:text-[#E2E8F0] bg-transparent border-b border-slate-200 focus:border-cyan-500 outline-none py-1 transition-colors"
                                         />
 
                                         {/* Type + Required row */}
@@ -720,7 +720,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                     <button
                                         type="button"
                                         onClick={() => removeQuestion(i)}
-                                        className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-all shrink-0"
+                                        className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] rounded-lg transition-all shrink-0"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -759,7 +759,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                 type="button"
                 onClick={handleSaveTemplate}
                 disabled={loading}
-                className="w-full py-4 bg-cyan-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-cyan-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide shadow-lg hover:bg-cyan-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 {loading ? 'Saving...' : (selectedTemplate ? 'Save Changes' : 'Create Template')}
             </button>

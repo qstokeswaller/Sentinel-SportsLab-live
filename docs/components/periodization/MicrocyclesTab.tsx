@@ -88,12 +88,12 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={11} /></button>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (
                     <div key={label} className="flex gap-2">
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide shrink-0 w-14">{label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
                     </div>
                 ))}
@@ -478,8 +478,8 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
         return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
                 <CalendarDays size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8]">No phases set up yet.</p>
-                <p className="text-xs text-slate-400 dark:text-[#64748B] mt-1">Add phases and periods first, then plan microcycles here.</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">No phases set up yet.</p>
+                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1">Add phases and periods first, then plan microcycles here.</p>
             </div>
         );
     }
@@ -506,14 +506,14 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             {/* Spacer: month row 13px + mb-0.5 2px + week row 20px + mb-2 8px = 43px */}
                             <div style={{ height: '43px' }} />
                             <div className="flex items-center justify-center" style={{ height: '18px', marginBottom: '4px' }}>
-                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Phases</span>
+                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Phases</span>
                             </div>
                             <div className="flex items-center justify-center" style={{ height: '18px' }}>
-                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Blocks</span>
+                                <span className="text-[8px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center justify-center" style={{ height: '14px', marginTop: '4px' }}>
-                                    <span className="text-[8px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Events</span>
+                                    <span className="text-[8px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Events</span>
                                 </div>
                             )}
                         </div>
@@ -525,7 +525,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                 {/* Month labels */}
                                 <div className="relative mb-0.5" style={{ height: '13px' }}>
                                     {monthGroups.map((mg, i) => (
-                                        <div key={i} className="absolute text-[9px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide"
+                                        <div key={i} className="absolute text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide"
                                             style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
                                             {mg.label}
                                         </div>
@@ -649,14 +649,14 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-5 py-3">
                 <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Phase</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Phase</span>
                         <CustomSelect value={selPhaseId} onChange={e => setSelPhaseId(e.target.value)} variant="filter" size="xs">
                             {plan.phases.map(ph => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
                         </CustomSelect>
                     </div>
                     {selPhase?.blocks.length > 0 && (
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Block</span>
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Block</span>
                             <CustomSelect value={selBlockId} onChange={e => setSelBlockId(e.target.value)} variant="filter" size="xs">
                                 {selPhase.blocks.map(b => <option key={b.id} value={b.id}>{b.label || b.name}</option>)}
                             </CustomSelect>
@@ -666,23 +666,23 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                         <div className="flex items-center gap-2 ml-auto">
                             <button onClick={goToPrev}
                                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
-                                <ChevronLeft size={14} className="text-slate-500 dark:text-[#94A3B8]" />
+                                <ChevronLeft size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
                             </button>
                             <span className={`text-xs font-semibold whitespace-nowrap ${isOutsidePlanRange ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>
                                 {weekLabel}
-                                <span className="text-[10px] font-normal text-slate-400 dark:text-[#64748B] ml-1.5">
+                                <span className="text-[10px] font-normal text-slate-400 dark:text-[#CBD5E1] ml-1.5">
                                     ({formatDateShort(currentWeekStart)} — {formatDateShort(weekEndStr)})
                                 </span>
                             </span>
                             <button onClick={goToNext}
                                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
-                                <ChevronRight size={14} className="text-slate-500 dark:text-[#94A3B8]" />
+                                <ChevronRight size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
                             </button>
                         </div>
                     )}
                 </div>
                 {selPhase?.blocks.length === 0 && (
-                    <p className="text-xs text-slate-400 dark:text-[#64748B] mt-2">No blocks in this phase — add them in the Blocks tab.</p>
+                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-2">No blocks in this phase — add them in the Blocks tab.</p>
                 )}
             </div>
 
@@ -717,14 +717,14 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                     // In a different (but valid) phase/block — soft info
                     <div className="bg-slate-50 dark:bg-[#1A2D48]/60 border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-2.5 flex items-center gap-2.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
-                        <p className="text-[11px] text-slate-500 dark:text-[#94A3B8]">
+                        <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1]">
                             Now viewing <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{contextInfo.phase.name}</span>
                             {contextInfo.block && (
                                 <> › <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{contextInfo.block.label || contextInfo.block.name}</span></>
                             )}
-                            {!contextInfo.block && <span className="italic text-slate-400 dark:text-[#64748B]"> — no block covers this week</span>}
+                            {!contextInfo.block && <span className="italic text-slate-400 dark:text-[#CBD5E1]"> — no block covers this week</span>}
                             {contextInfo.block && (
-                                <span className="text-slate-400 dark:text-[#64748B]"> — sessions saved here go to this block</span>
+                                <span className="text-slate-400 dark:text-[#CBD5E1]"> — sessions saved here go to this block</span>
                             )}
                         </p>
                     </div>
@@ -746,10 +746,10 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                         {/* Week focus bar */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-2.5 flex items-center gap-3">
-                            <CalendarDays size={13} className="text-slate-400 dark:text-[#64748B] shrink-0" />
+                            <CalendarDays size={13} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
                             {effectiveWeek && editingWeekId === effectiveWeek.id ? (
                                 <div className="flex items-center gap-2 flex-1">
-                                    <span className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] shrink-0">Focus:</span>
+                                    <span className="text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] shrink-0">Focus:</span>
                                     <input autoFocus value={editWeekIntent}
                                         onChange={e => setEditWeekIntent(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') saveWeekIntent(); if (e.key === 'Escape') setEditingWeekId(null); }}
@@ -762,7 +762,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                 <div className="flex items-center gap-2 flex-1 group/edit">
                                     <span className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1]">
                                         {effectiveWeek?.intent
-                                            ? <><span className="text-[10px] text-slate-400 dark:text-[#64748B] mr-1">Focus:</span>{effectiveWeek.intent}</>
+                                            ? <><span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mr-1">Focus:</span>{effectiveWeek.intent}</>
                                             : <span className="text-slate-300 dark:text-[#475569] italic">
                                                 {effectiveWeek ? 'No weekly focus — click pencil to set' : 'Unplanned week — add a session below to create it'}
                                               </span>
@@ -813,13 +813,13 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                     : isMatch
                                                         ? 'border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/20'
                                                         : 'border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/30 hover:bg-slate-100 dark:hover:bg-[#1A2D48]/50'}`}>
-                                            <span className={`text-[9px] font-bold uppercase ${isSelDay ? 'text-indigo-600 dark:text-indigo-400' : isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-[#94A3B8]'}`}>
+                                            <span className={`text-[9px] font-bold uppercase ${isSelDay ? 'text-indigo-600 dark:text-indigo-400' : isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
                                                 {dayName}
                                             </span>
-                                            {d && <span className={`text-[8px] ${isSelDay ? 'text-indigo-500 dark:text-indigo-400' : isMatch ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-[#64748B]'}`}>
+                                            {d && <span className={`text-[8px] ${isSelDay ? 'text-indigo-500 dark:text-indigo-400' : isMatch ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                 {d.getDate()} {MONTHS[d.getMonth()]}
                                             </span>}
-                                            {mdLabel && <span className={`text-[8px] font-bold ${isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-[#64748B]'}`}>{mdLabel}</span>}
+                                            {mdLabel && <span className={`text-[8px] font-bold ${isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>{mdLabel}</span>}
                                         </button>
 
                                         {/* Event badges for this day */}
@@ -869,7 +869,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                             className={INPUT_CLS}
                                                             placeholder="Duration (min)" />
                                                         <div className="flex gap-1">
-                                                            <button onClick={() => saveSession(session.id)} className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-700">Save</button>
+                                                            <button onClick={() => saveSession(session.id)} className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-500">Save</button>
                                                             <button onClick={() => setEditingSessionId(null)} className="text-[9px] text-slate-400 px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
                                                         </div>
                                                         <button onClick={() => deleteSession(session.id)} className="flex items-center gap-1 text-[8px] text-red-400 hover:text-red-600">
@@ -892,7 +892,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                                 <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded-full ${LOAD_PILL[session.load] || ''}`}>{session.load}</span>
                                                             )}
                                                             {session.plannedDuration && (
-                                                                <span className="text-[7px] text-slate-400 dark:text-[#64748B] flex items-center gap-0.5">
+                                                                <span className="text-[7px] text-slate-400 dark:text-[#CBD5E1] flex items-center gap-0.5">
                                                                     <Clock size={6} />{session.plannedDuration}m
                                                                 </span>
                                                             )}
@@ -904,10 +904,10 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                                     const tpl = (workoutTemplates || []).find(t => t.id === session.workoutTemplateId);
                                                                     navigate('/workouts/packets', { state: { editTemplate: tpl ? { ...tpl } : { id: session.workoutTemplateId }, returnTo: '/periodization', returnToMicrocycles: { phaseId: selPhaseId, blockId: selBlockId, weekStart: currentWeekStart, selectedDate: dateStr } } });
                                                                 } else {
-                                                                    navigate('/workouts/packets', { state: { assignToPlanSession: buildAssignCtx(session, dateStr) } });
+                                                                    navigate('/workouts/sessions', { state: { assignToPlanSession: buildAssignCtx(session, dateStr) } });
                                                                 }
                                                             }}
-                                                            className="flex items-center gap-0.5 text-[7px] text-slate-400 dark:text-[#64748B] hover:text-indigo-500 dark:hover:text-indigo-400 font-medium mt-1 transition-colors">
+                                                            className="flex items-center gap-0.5 text-[7px] text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 dark:hover:text-indigo-400 font-medium mt-1 transition-colors">
                                                             <LinkIcon size={6} /> {session.workoutTemplateId ? 'View Workout' : 'Assign'}
                                                         </button>
                                                     </div>
@@ -935,7 +935,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                         placeholder="Duration (min)" />
                                                     <div className="flex gap-1">
                                                         <button onClick={() => createSession(dateStr)} disabled={!newSD.name.trim()}
-                                                            className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-700 disabled:opacity-40">Add</button>
+                                                            className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-500 disabled:opacity-40">Add</button>
                                                         <button onClick={() => setAddingDate(null)} className="text-[9px] text-slate-400 px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
                                                     </div>
                                                 </div>
@@ -979,9 +979,9 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     </div>
                                     {daySessions.length === 0 ? (
                                         <div className="px-4 py-4 flex items-center justify-between">
-                                            <p className="text-xs text-slate-400 dark:text-[#64748B] italic">No sessions planned — add one below or use Quick Add.</p>
+                                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] italic">No sessions planned — add one below or use Quick Add.</p>
                                             <button onClick={() => startAdd(selectedDate)}
-                                                className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 transition-colors">
+                                                className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-white px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-[#1A2D48] hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-colors">
                                                 <Plus size={10} /> Add Session
                                             </button>
                                         </div>
@@ -1017,20 +1017,20 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                             )}
                                                             {/* Duration */}
                                                             {session.plannedDuration && (
-                                                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] flex items-center gap-1 shrink-0">
+                                                                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] flex items-center gap-1 shrink-0">
                                                                     <Clock size={10} /> {session.plannedDuration} min
                                                                 </span>
                                                             )}
                                                             {/* Edit */}
                                                             <button
                                                                 onClick={() => startEdit(session, selectedDate)}
-                                                                className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-300 hover:text-slate-600 transition-colors">
+                                                                className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                                                 <PencilIcon size={12} />
                                                             </button>
                                                         </div>
 
                                                         {session.notes && (
-                                                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-1.5 ml-1 leading-relaxed">{session.notes}</p>
+                                                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1.5 ml-1 leading-relaxed">{session.notes}</p>
                                                         )}
 
                                                         {/* Workout packet section */}
@@ -1042,7 +1042,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                                             <span className="text-slate-300 dark:text-[#475569] tabular-nums shrink-0">{i + 1}.</span>
                                                                             <span className="font-medium truncate">{ex.exerciseName || ex.name || 'Exercise'}</span>
                                                                             {(ex.sets || ex.reps) && (
-                                                                                <span className="text-slate-400 dark:text-[#64748B] shrink-0">{ex.sets && `${ex.sets}×`}{ex.reps}</span>
+                                                                                <span className="text-slate-400 dark:text-[#CBD5E1] shrink-0">{ex.sets && `${ex.sets}×`}{ex.reps}</span>
                                                                             )}
                                                                         </p>
                                                                     ))}
@@ -1057,15 +1057,15 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                             <div className="mt-3">
                                                                 <button
                                                                     onClick={() => navigate('/workouts/packets', { state: { editTemplate: { id: session.workoutTemplateId }, returnTo: '/periodization', returnToMicrocycles: { phaseId: selPhaseId, blockId: selBlockId, weekStart: currentWeekStart, selectedDate } } })}
-                                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800/40 transition-colors">
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 transition-colors">
                                                                     <LinkIcon size={10} /> View Workout Packet
                                                                 </button>
                                                             </div>
                                                         ) : (
                                                             <div className="mt-3">
                                                                 <button
-                                                                    onClick={() => navigate('/workouts/packets', { state: { assignToPlanSession: buildAssignCtx({ id: session.id }, selectedDate) } })}
-                                                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-semibold transition-colors shadow-sm">
+                                                                    onClick={() => navigate('/workouts/sessions', { state: { assignToPlanSession: buildAssignCtx({ id: session.id }, selectedDate) } })}
+                                                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-semibold transition-colors shadow-sm">
                                                                     <Plus size={11} /> Assign Workout Packet
                                                                 </button>
                                                             </div>
@@ -1075,7 +1075,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                             })}
                                             <div className="px-4 py-2">
                                                 <button onClick={() => startAdd(selectedDate)}
-                                                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 dark:text-[#64748B] hover:text-indigo-500 transition-colors">
+                                                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 transition-colors">
                                                     <Plus size={10} /> Add another session
                                                 </button>
                                             </div>
@@ -1104,7 +1104,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             {quickAddOpen && (
                                 <div className="px-3.5 pb-3.5 space-y-2 border-t border-slate-100 dark:border-[#243A58] pt-3">
                                     <div>
-                                        <label className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-1 block">Date</label>
+                                        <label className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Date</label>
                                         <input type="date" value={quickSD.date}
                                             onChange={e => setQuickSD(d => ({ ...d, date: e.target.value }))}
                                             className={INPUT_CLS} />
@@ -1134,7 +1134,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     <button
                                         onClick={createQuickSession}
                                         disabled={!quickSD.name.trim() || !quickSD.date}
-                                        className="w-full text-[9px] font-semibold bg-indigo-600 text-white rounded-lg py-1.5 hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+                                        className="w-full text-[9px] font-semibold bg-indigo-600 text-white rounded-lg py-1.5 hover:bg-indigo-500 disabled:opacity-40 transition-colors">
                                         Add & Navigate
                                     </button>
                                 </div>
@@ -1143,7 +1143,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                         {/* Key information */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3.5">
-                            <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2.5">Key Information</h4>
+                            <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2.5">Key Information</h4>
                             <div className="space-y-2">
                                 {[
                                     { label: 'Phase',     value: (isOutsideBlock && effectivePhase?.name !== selPhase?.name) ? effectivePhase?.name : selPhase?.name },
@@ -1154,7 +1154,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     { label: 'Volume',    value: effectiveBlock?.volumeLevel || selBlock?.volumeLevel || '—' },
                                 ].map(({ label, value }) => (
                                     <div key={label} className="flex items-start justify-between gap-2">
-                                        <span className="text-[9px] text-slate-400 dark:text-[#64748B] shrink-0">{label}</span>
+                                        <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] shrink-0">{label}</span>
                                         <span className="text-[9px] font-semibold text-slate-700 dark:text-[#CBD5E1] text-right leading-snug">{value || '—'}</span>
                                     </div>
                                 ))}
@@ -1164,7 +1164,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                             <span className="text-[9px] text-red-500 dark:text-red-400 font-bold">Match</span>
                                             <span className="text-[9px] font-semibold text-red-600 dark:text-red-400">{formatDateShort(matchEvent.date)}</span>
                                         </div>
-                                        <p className="text-[8px] text-slate-400 dark:text-[#64748B] mt-0.5 text-right truncate">{matchEvent.title}</p>
+                                        <p className="text-[8px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 text-right truncate">{matchEvent.title}</p>
                                     </div>
                                 )}
                             </div>
@@ -1172,10 +1172,10 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                         {/* Week summary */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3.5">
-                            <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2.5">Week Summary</h4>
+                            <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2.5">Week Summary</h4>
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[9px] text-slate-500 dark:text-[#94A3B8]">Total Sessions</span>
+                                    <span className="text-[9px] text-slate-500 dark:text-[#CBD5E1]">Total Sessions</span>
                                     <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{weekStats.total}</span>
                                 </div>
                                 {Object.keys(weekStats.byModality).length > 0 && (
@@ -1206,7 +1206,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             const displayBlock = (isOutsideBlock ? effectiveBlock : selBlock);
                             return displayBlock && Object.keys(displayBlock.modalities || {}).length > 0 ? (
                                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3.5">
-                                    <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-2.5">Block Modality Emphasis</h4>
+                                    <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2.5">Block Modality Emphasis</h4>
                                     <div className="space-y-1.5">
                                         {Object.entries(displayBlock.modalities).map(([mod, level]) => {
                                             const meta = modalityMeta(mod);
@@ -1217,7 +1217,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                         <Icon size={7} />
                                                         <span className="text-[8px] font-semibold truncate">{mod}</span>
                                                     </div>
-                                                    <span className="text-[8px] font-semibold text-slate-500 dark:text-[#94A3B8] shrink-0">{level}</span>
+                                                    <span className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] shrink-0">{level}</span>
                                                 </div>
                                             );
                                         })}
@@ -1230,8 +1230,8 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
             ) : (
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-10 text-center">
                     {selPhase?.blocks.length === 0
-                        ? <p className="text-sm text-slate-400 dark:text-[#64748B]">This phase has no blocks — add some in the Blocks tab.</p>
-                        : <p className="text-sm text-slate-400 dark:text-[#64748B]">Select a phase and block to view microcycles.</p>
+                        ? <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">This phase has no blocks — add some in the Blocks tab.</p>
+                        : <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">Select a phase and block to view microcycles.</p>
                     }
                 </div>
             )}

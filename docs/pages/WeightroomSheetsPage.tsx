@@ -124,7 +124,7 @@ table { width: 100%; border-collapse: collapse; }
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#64748B] transition-all" title="Back to Workouts">
+                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all" title="Back to Workouts">
                             <ArrowLeftIcon size={18} />
                         </button>
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0">
@@ -132,7 +132,7 @@ table { width: 100%; border-collapse: collapse; }
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h2>
-                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-0.5">Generate daily prescribed load sheets for your squads</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Generate daily prescribed load sheets for your squads</p>
                         </div>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ table { width: 100%; border-collapse: collapse; }
                 <div className="flex items-start gap-5 flex-wrap">
                     {/* Target Squad */}
                     <div className="space-y-1.5 min-w-[180px]">
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Target Squad</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Target Squad</label>
                         <CustomSelect value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)} variant="form">
                             <option value="All">All Athletes</option>
                             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -152,7 +152,7 @@ table { width: 100%; border-collapse: collapse; }
 
                     {/* Sheet Mode */}
                     <div className="space-y-1.5 flex-1">
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Sheet Mode</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Sheet Mode</label>
                         <div className="grid grid-cols-4 gap-1.5">
                             {WS_MODES.map(m => (
                                 <button
@@ -161,7 +161,7 @@ table { width: 100%; border-collapse: collapse; }
                                     className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
                                         wsMode === m.id
                                             ? 'bg-slate-900 text-white border-slate-900'
-                                            : 'bg-white dark:bg-[#132338] text-slate-400 dark:text-[#64748B] border-slate-200 dark:border-[#243A58] hover:border-slate-300 hover:text-slate-600'
+                                            : 'bg-white dark:bg-[#132338] text-slate-400 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 hover:text-slate-600'
                                     }`}
                                 >
                                     {m.label}
@@ -175,7 +175,7 @@ table { width: 100%; border-collapse: collapse; }
                         <label className="text-[10px] font-semibold text-transparent uppercase tracking-widest">Action</label>
                         <button
                             onClick={addColumn}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-700 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-500 transition-colors shadow-sm"
                         >
                             <PlusIcon size={14} /> Add Column
                         </button>
@@ -190,10 +190,10 @@ table { width: 100%; border-collapse: collapse; }
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                         <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-5">
                             <div className="flex items-center justify-between mb-4">
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">
                                     Live Print Preview ({wsOrientation})
                                 </p>
-                                <p className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-widest">
+                                <p className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-widest">
                                     {athletes.length} Athletes Listed
                                 </p>
                             </div>
@@ -230,7 +230,7 @@ table { width: 100%; border-collapse: collapse; }
                                                     <td colSpan={wsColumns.length + 1} className="py-4 text-center">
                                                         <div className="flex items-center justify-center gap-2">
                                                             <div className="w-5 h-5 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading athlete data...</span>
+                                                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading athlete data...</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -285,7 +285,7 @@ table { width: 100%; border-collapse: collapse; }
 
                     {/* Active Columns */}
                     <div className="border border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-4 space-y-3 shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
                         <div className="space-y-2.5 max-h-[400px] overflow-y-auto no-scrollbar">
                             {wsColumns.map((col, i) => (
                                 <div key={col.id} className="border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 space-y-2">
@@ -324,7 +324,7 @@ table { width: 100%; border-collapse: collapse; }
                                                     min={1} max={200}
                                                     className="w-16 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center focus:border-slate-400"
                                                 />
-                                                <span className="text-[10px] text-slate-400 dark:text-[#64748B] font-medium">% of 1RM</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] font-medium">% of 1RM</span>
                                             </div>
                                         </>
                                     )}

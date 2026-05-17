@@ -118,12 +118,12 @@ export const TestingHubPage: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => { setActiveTestId(null); setEntryMode('individual'); }}
-                                className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                                className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                             >
                                 <ArrowLeftIcon size={16} />
                             </button>
                             <div>
-                                <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Testing Hub</div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
                                 <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTest.name}</h2>
                             </div>
                         </div>
@@ -141,12 +141,12 @@ export const TestingHubPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => { setActiveTestId(null); setEntryMode('individual'); }}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">
                                 {activeCategoryInfo?.name || 'Testing Hub'}
                             </div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTest.name}</h2>
@@ -165,7 +165,7 @@ export const TestingHubPage: React.FC = () => {
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
                                     ${entryMode === m.key
                                         ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm'
-                                        : 'text-slate-400 dark:text-[#64748B] hover:text-slate-600'
+                                        : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'
                                     }`}
                             >
                                 <m.icon size={12} />
@@ -209,12 +209,12 @@ export const TestingHubPage: React.FC = () => {
                             {(activeTest.equipmentRequired?.length || activeTest.estimatedDuration) && (
                                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-[#1A2D48]">
                                     {activeTest.equipmentRequired?.map(eq => (
-                                        <span key={eq} className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] text-[10px] rounded-full uppercase tracking-wide">
+                                        <span key={eq} className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] text-[10px] rounded-full uppercase tracking-wide">
                                             {eq}
                                         </span>
                                     ))}
                                     {activeTest.estimatedDuration && (
-                                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 text-[10px] rounded-full uppercase tracking-wide">
+                                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-500 dark:text-indigo-300 text-[10px] rounded-full uppercase tracking-wide">
                                             ~{activeTest.estimatedDuration}
                                         </span>
                                     )}
@@ -238,7 +238,7 @@ export const TestingHubPage: React.FC = () => {
                             {isLoading && selectedAthleteId && (
                                 <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
                                     <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                    <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {selectedAthlete?.name || 'athlete'} test data...</span>
+                                    <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedAthlete?.name || 'athlete'} test data...</span>
                                 </div>
                             )}
                             <TrendChart
@@ -254,7 +254,7 @@ export const TestingHubPage: React.FC = () => {
                             {isLoading && selectedAthleteId && (
                                 <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
                                     <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                    <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading assessment history...</span>
+                                    <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading assessment history...</span>
                                 </div>
                             )}
                             <TestHistoryPanel
@@ -290,27 +290,27 @@ export const TestingHubPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => { setActiveCategory(null); setSearchQuery(''); }}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 flex items-center justify-center">
                                 <IconComponent size={18} />
                             </div>
                             <div>
-                                <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Testing Hub</div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
                                 <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeCategoryInfo.name}</h2>
                             </div>
                         </div>
                     </div>
-                    <span className="text-xs text-slate-400 dark:text-[#64748B]">{categoryTests.length} test{categoryTests.length !== 1 ? 's' : ''}</span>
+                    <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">{categoryTests.length} test{categoryTests.length !== 1 ? 's' : ''}</span>
                 </div>
 
                 {/* Search within category */}
                 {categoryTests.length > 5 && (
                     <div className="relative">
-                        <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#64748B]" />
+                        <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -333,11 +333,11 @@ export const TestingHubPage: React.FC = () => {
                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">
                                     {test.name}
                                 </h4>
-                                <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-0.5 truncate">{test.description}</p>
+                                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5 truncate">{test.description}</p>
                                 {(test.equipmentRequired?.length || test.estimatedDuration) && (
                                     <div className="flex gap-1.5 mt-1.5">
                                         {test.equipmentRequired?.slice(0, 2).map(eq => (
-                                            <span key={eq} className="px-1.5 py-0.5 bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#64748B] text-[9px] rounded uppercase tracking-wide">{eq}</span>
+                                            <span key={eq} className="px-1.5 py-0.5 bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#CBD5E1] text-[9px] rounded uppercase tracking-wide">{eq}</span>
                                         ))}
                                         {test.estimatedDuration && (
                                             <span className="px-1.5 py-0.5 bg-indigo-50/50 text-indigo-400 text-[9px] rounded uppercase tracking-wide">~{test.estimatedDuration}</span>
@@ -349,7 +349,7 @@ export const TestingHubPage: React.FC = () => {
                         </button>
                     ))}
                     {filteredTests.length === 0 && searchQuery && (
-                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#64748B]">
+                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">
                             No tests match "{searchQuery}"
                         </div>
                     )}
@@ -368,12 +368,12 @@ export const TestingHubPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setHubView('categories')}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Testing Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Team Comparison</h2>
                         </div>
                     </div>
@@ -391,12 +391,12 @@ export const TestingHubPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setHubView('categories')}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Testing Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Export & Print</h2>
                         </div>
                     </div>
@@ -411,7 +411,7 @@ export const TestingHubPage: React.FC = () => {
         <div className="space-y-5 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Testing Hub</h2>
-                <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Sports science assessments, screening protocols & performance testing.</p>
+                <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Sports science assessments, screening protocols & performance testing.</p>
             </div>
 
             {/* Quick tools row */}
@@ -448,7 +448,7 @@ export const TestingHubPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-center py-4">
                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading testing categories...</span>
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading testing categories...</span>
                     </div>
                 </div>
             ) : (
@@ -463,13 +463,13 @@ export const TestingHubPage: React.FC = () => {
                                 className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                             >
                                 <div className="flex items-start gap-4 h-full">
-                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                         <IconComponent size={20} />
                                     </div>
                                     <div className="flex flex-col justify-center h-full">
                                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1 leading-tight">{cat.name}</h3>
-                                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{cat.description}</p>
-                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B] mt-1.5">{visibleTestCount} tests</span>
+                                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{cat.description}</p>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1.5">{visibleTestCount} tests</span>
                                     </div>
                                 </div>
                             </button>

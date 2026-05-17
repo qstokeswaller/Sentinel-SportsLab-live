@@ -125,7 +125,7 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
     return (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100">
-                <h4 className="text-sm font-semibold text-slate-800">{athleteName} — Wellness Trends</h4>
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{athleteName} — Wellness Trends</h4>
                 <p className="text-[10px] text-slate-400">Last {days} days</p>
             </div>
 
@@ -142,7 +142,7 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
                     return (
                         <div key={metric.key} className="flex items-center gap-4 px-4 py-3">
                             <div className="w-20 shrink-0">
-                                <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                                <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] flex items-center gap-1.5">
                                     <span>{metric.icon}</span> {metric.label}
                                 </div>
                                 <div className="text-[10px] text-slate-400">
@@ -162,7 +162,7 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
                 {/* Sleep hours row */}
                 <div className="flex items-center gap-4 px-4 py-3">
                     <div className="w-20 shrink-0">
-                        <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                        <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] flex items-center gap-1.5">
                             <span>🛏️</span> Sleep Hours
                         </div>
                         <div className="text-[10px] text-slate-400">

@@ -50,7 +50,7 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
         {onDelete && (
           <button
             onClick={() => onDelete(record.id)}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"
           >
             <Trash2Icon size={14} />
           </button>
@@ -62,14 +62,14 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
         {displayFields.map(f => (
           <div key={f.key} className="bg-slate-50 rounded-lg px-2.5 py-2">
             <div className="text-[10px] text-slate-400 uppercase tracking-wide truncate">{f.label}</div>
-            <div className="text-sm font-bold text-slate-800">
+            <div className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
               {metrics[f.key]}
               {f.unit && <span className="text-[10px] text-slate-400 ml-0.5">{f.unit}</span>}
             </div>
           </div>
         ))}
         {displayCalcs.map(c => (
-          <div key={c.key} className="bg-indigo-50 dark:bg-indigo-900/25 rounded-lg px-2.5 py-2">
+          <div key={c.key} className="bg-indigo-50 dark:bg-indigo-600 rounded-lg px-2.5 py-2">
             <div className="text-[10px] text-indigo-400 uppercase tracking-wide truncate">{c.label}</div>
             <div className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
               {calculated[c.key]}

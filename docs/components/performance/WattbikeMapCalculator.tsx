@@ -102,7 +102,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                         <ClipboardIcon size={18} />
                     </div>
                     <div>
-                        <h3 className="text-base font-semibold uppercase tracking-tight text-slate-900 leading-none">Map Calculator</h3>
+                        <h3 className="text-base font-semibold uppercase tracking-tight text-slate-900 dark:text-[#E2E8F0] leading-none">Map Calculator</h3>
                         <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Prescription Engine</p>
                     </div>
                 </div>
@@ -209,7 +209,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                     max="200"
                                     value={wbMapPercentage}
                                     onChange={(e) => setWbMapPercentage(parseInt(e.target.value) || 100)}
-                                    className="w-24 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none"
+                                    className="w-24 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none"
                                 />
                             </div>
 
@@ -222,7 +222,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                         value={wbMapManualRPM || ''}
                                         onChange={(e) => setWbMapManualRPM(e.target.value ? parseInt(e.target.value) : null)}
                                         placeholder="RPM"
-                                        className="w-28 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-300"
+                                        className="w-28 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none placeholder:text-slate-300"
                                     />
                                 </div>
                             )}
@@ -234,7 +234,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                         {wbMapTargetType === 'Standalone' ? (
                             <div className="flex flex-col items-center py-6 space-y-5">
                                 <div className="text-center">
-                                    <h4 className="text-lg font-semibold uppercase tracking-tighter text-slate-900">Quick Wattbike Conversion</h4>
+                                    <h4 className="text-lg font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Quick Wattbike Conversion</h4>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-1">Enter MAP watts for instant prescription</p>
                                 </div>
 
@@ -244,7 +244,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                         type="number"
                                         value={wbMapStandaloneInput}
                                         onChange={(e) => { setWbMapStandaloneInput(e.target.value); setPrescriptionReady(false); }}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-16 py-4 text-2xl font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 text-center"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-16 py-4 text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20 text-center"
                                         placeholder="0"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 uppercase">Watts</span>
@@ -255,7 +255,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                         setWbMapStandaloneWatts(parseFloat(wbMapStandaloneInput) || 0);
                                         setPrescriptionReady(true);
                                     }}
-                                    className="w-full max-w-sm py-4 bg-indigo-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                    className="w-full max-w-sm py-4 bg-indigo-600 text-white rounded-xl text-[11px] font-semibold uppercase tracking-wide hover:bg-indigo-500 transition-all"
                                 >
                                     Calculate Prescription
                                 </button>
@@ -310,19 +310,19 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                                     : '–';
                                                 return (
                                                     <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
-                                                        <td className="px-5 py-3.5 text-xs font-semibold text-slate-800">{p.name}</td>
+                                                        <td className="px-5 py-3.5 text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{p.name}</td>
                                                         <td className="px-5 py-3.5 text-xs font-bold text-slate-500">
                                                             {baseMap > 0 ? `${baseMap}W` : <span className="text-slate-300">—</span>}
                                                         </td>
                                                         <td className="px-5 py-3.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                                                             {baseMap > 0 ? `${Math.round(targetWatts)}W` : <span className="text-slate-300">—</span>}
                                                         </td>
-                                                        <td className="px-5 py-3.5 text-xs font-bold text-slate-600">
+                                                        <td className="px-5 py-3.5 text-xs font-bold text-slate-600 dark:text-[#CBD5E1]">
                                                             {baseMap > 0 ? refRPM : <span className="text-slate-300">—</span>}
                                                         </td>
                                                         <td className="px-5 py-3.5">
                                                             {baseMap > 0 ? (
-                                                                <span className="bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-lg text-xs font-semibold border border-indigo-100 dark:border-indigo-800/40">
+                                                                <span className="bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white px-3 py-1 rounded-lg text-xs font-semibold border border-indigo-100 dark:border-indigo-800/40">
                                                                     {fanSetting}
                                                                 </span>
                                                             ) : <span className="text-slate-300">—</span>}
@@ -390,7 +390,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                     type="date"
                                     value={wbMapDate}
                                     onChange={(e) => setWbMapDate(e.target.value)}
-                                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none"
+                                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none"
                                 />
                             </div>
                         </div>
@@ -410,7 +410,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                         <tbody className="divide-y divide-slate-50">
                                             {entryAthletes.map(p => (
                                                 <tr key={p.id} className="hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
-                                                    <td className="px-5 py-3 text-xs font-semibold text-slate-800">{p.name}</td>
+                                                    <td className="px-5 py-3 text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{p.name}</td>
                                                     <td className="px-5 py-3">
                                                         <input
                                                             type="number"

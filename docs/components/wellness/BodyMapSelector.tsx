@@ -38,7 +38,7 @@ const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOn
                     ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
                     : selected && useSeverity
                         ? 'text-white'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                        : 'bg-white border-slate-200 text-slate-600 dark:text-[#CBD5E1] hover:border-slate-300'
             } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
             style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
         >

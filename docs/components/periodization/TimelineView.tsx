@@ -49,7 +49,7 @@ const BlockWeekView = ({ plan, phase, block }) => {
                 <div className="flex items-center justify-between mb-2">
                     <div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{block.name}</span>
-                        <h3 className="text-sm font-bold text-slate-900">{block.label}</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{block.label}</h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                         <Clock size={12} />
@@ -57,12 +57,12 @@ const BlockWeekView = ({ plan, phase, block }) => {
                     </div>
                 </div>
                 {block.goals && (
-                    <p className="text-xs text-slate-600 bg-slate-50 rounded-lg p-3 border border-slate-100">{block.goals}</p>
+                    <p className="text-xs text-slate-600 dark:text-[#CBD5E1] bg-slate-50 rounded-lg p-3 border border-slate-100">{block.goals}</p>
                 )}
                 {Object.keys(block.modalities || {}).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3">
                         {Object.entries(block.modalities).map(([key, val]) => (
-                            <span key={key} className="text-[10px] px-2 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-600">
+                            <span key={key} className="text-[10px] px-2 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-600 dark:text-[#CBD5E1]">
                                 <span className="font-semibold">{key}:</span> {val}
                             </span>
                         ))}
@@ -75,12 +75,12 @@ const BlockWeekView = ({ plan, phase, block }) => {
                         onClick={() => setPlanDrillPath([...planDrillPath, week.weekNumber])}
                         className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 cursor-pointer hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-slate-700">Week {week.weekNumber}</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">Week {week.weekNumber}</span>
                             <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
                         </div>
                         <p className="text-[10px] text-slate-400 mb-2">{formatDateShort(week.startDate)}</p>
                         {week.intent && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/40 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-800/40 font-medium">
                                 {week.intent}
                             </span>
                         )}
@@ -106,10 +106,10 @@ const WeekDayView = ({ plan, phase, block, weekNumber }) => {
                 <div className="flex items-center justify-between">
                     <div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase">Week {week.weekNumber} — {block.name}</span>
-                        <h3 className="text-sm font-bold text-slate-900">{formatDateShort(week.startDate)}</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{formatDateShort(week.startDate)}</h3>
                     </div>
                     {week.intent && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/40 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white border border-indigo-100 dark:border-indigo-800/40 font-medium">
                             {week.intent}
                         </span>
                     )}
@@ -130,7 +130,7 @@ const WeekDayView = ({ plan, phase, block, weekNumber }) => {
                             <div className="p-2">
                                 {session ? (
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-semibold text-slate-700 truncate">{session.name}</p>
+                                        <p className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] truncate">{session.name}</p>
                                         {session.plannedDuration && (
                                             <p className="text-[9px] text-slate-400">{session.plannedDuration} min</p>
                                         )}
@@ -460,7 +460,7 @@ export const TimelineView = ({ plan }) => {
                     <div className="border-b border-slate-100 flex items-center px-3 gap-2" style={{ height: `${H_PHASE}px` }}>
                         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Phase</span>
                         <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
-                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-300 hover:text-indigo-500 transition-colors" title="Add phase">
+                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 text-slate-300 hover:text-indigo-500 transition-colors" title="Add phase">
                             <Plus size={11} />
                         </button>
                     </div>
@@ -469,7 +469,7 @@ export const TimelineView = ({ plan }) => {
                     <div className="border-b border-slate-200 flex items-center px-3 gap-2" style={{ height: `${H_PHASE}px` }}>
                         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide truncate">Training Block</span>
                         <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
-                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-300 hover:text-indigo-500 transition-colors shrink-0" title="Add block">
+                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 text-slate-300 hover:text-indigo-500 transition-colors shrink-0" title="Add block">
                             <Plus size={11} />
                         </button>
                     </div>
@@ -483,7 +483,7 @@ export const TimelineView = ({ plan }) => {
                         return (
                             <div key={mod} className="border-b border-slate-100 flex items-center gap-2 px-3" style={{ height: `${H_MOD}px` }}>
                                 <Icon size={12} className="text-slate-400 shrink-0" />
-                                <span className="text-[11px] font-semibold text-slate-600 truncate">{mod}</span>
+                                <span className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] truncate">{mod}</span>
                             </div>
                         );
                     })}
@@ -492,9 +492,9 @@ export const TimelineView = ({ plan }) => {
                     {/* Events label */}
                     <div className="border-b border-slate-100 flex items-center gap-2 px-3" style={{ height: `${H_EVENT}px` }}>
                         <Calendar size={12} className="text-indigo-400 shrink-0" />
-                        <span className="text-[11px] font-semibold text-slate-600">Events</span>
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Events</span>
                         <button onClick={() => { setEditingPlanEvent(null); setIsPlanEventModalOpen(true); }}
-                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-300 hover:text-indigo-500 transition-colors" title="Add event">
+                            className="ml-auto p-1 rounded-md hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 text-slate-300 hover:text-indigo-500 transition-colors" title="Add event">
                             <Plus size={11} />
                         </button>
                     </div>
@@ -503,7 +503,7 @@ export const TimelineView = ({ plan }) => {
                     <div className="border-b border-slate-100 flex items-center gap-1.5 px-3" style={{ height: `${H_SPARK}px` }}>
                         <TrendingDown size={12} className="text-blue-400 shrink-0" />
                         <div className="min-w-0">
-                            <div className="text-[11px] font-semibold text-slate-600">Volume</div>
+                            <div className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Volume</div>
                             <div className="text-[9px] text-slate-300 leading-none mt-0.5">sets × reps</div>
                         </div>
                     </div>
@@ -512,7 +512,7 @@ export const TimelineView = ({ plan }) => {
                     <div className="border-b border-slate-100 flex items-center gap-1.5 px-3" style={{ height: `${H_SPARK}px` }}>
                         <TrendingUp size={12} className="text-red-400 shrink-0" />
                         <div className="min-w-0">
-                            <div className="text-[11px] font-semibold text-slate-600">Intensity</div>
+                            <div className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Intensity</div>
                             <div className="text-[9px] text-slate-300 leading-none mt-0.5">avg session RPE</div>
                         </div>
                     </div>
@@ -521,7 +521,7 @@ export const TimelineView = ({ plan }) => {
                     <div className="border-b border-slate-100 flex items-center gap-1.5 px-3" style={{ height: `${H_SPARK}px` }}>
                         <Target size={12} className="text-violet-400 shrink-0" />
                         <div className="min-w-0">
-                            <div className="text-[11px] font-semibold text-slate-600">Peaking</div>
+                            <div className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Peaking</div>
                             <div className="text-[9px] text-slate-300 leading-none mt-0.5">derived</div>
                         </div>
                     </div>
@@ -537,7 +537,7 @@ export const TimelineView = ({ plan }) => {
                             {monthLabels.map((m, i) => (
                                 <div key={i} className="border-r border-slate-200 flex items-center justify-center"
                                     style={{ width: `${m.weekSpan * WEEK_WIDTH}px` }}>
-                                    <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{m.label}</span>
+                                    <span className="text-[11px] font-bold text-slate-700 dark:text-[#CBD5E1] uppercase tracking-wider">{m.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -644,7 +644,7 @@ export const TimelineView = ({ plan }) => {
                                                     onKeyDown={e => { if (e.key === 'Enter') saveModality(); if (e.key === 'Escape') setEditingModality(null); }}
                                                 />
                                             ) : (
-                                                <span className="text-[9px] font-semibold text-slate-600 truncate px-1.5">{val || '—'}</span>
+                                                <span className="text-[9px] font-semibold text-slate-600 dark:text-[#CBD5E1] truncate px-1.5">{val || '—'}</span>
                                             )}
                                         </div>
                                     );
@@ -731,7 +731,7 @@ export const TimelineView = ({ plan }) => {
                     ].map(({ color, label, desc, canEdit }) => (
                         <div key={label} className="flex items-center gap-1.5">
                             <div className="w-6 h-0.5 rounded shrink-0" style={{ backgroundColor: color }} />
-                            <span className="text-[10px] font-semibold text-slate-600">{label}</span>
+                            <span className="text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1]">{label}</span>
                             <span className="text-[9px] text-slate-400 hidden sm:inline">({desc})</span>
                         </div>
                     ))}

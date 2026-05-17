@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 
-const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const labelCls = "text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1";
 
 interface TrainingLoadEntryProps {
@@ -206,7 +206,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
     const skippedCount = players.filter(p => getRow(p.id).skip).length;
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Header */}
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -214,7 +214,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                         <ActivityIcon size={16} />
                     </div>
                     <div>
-                        <h3 className="text-sm font-semibold text-slate-900">Log Training Load</h3>
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Log Training Load</h3>
                         <p className="text-xs text-slate-500 mt-0.5">Inline roster entry — fill in each athlete's load</p>
                     </div>
                 </div>
@@ -275,7 +275,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
 
                 {/* Method indicator (locked from settings) */}
                 {selectedTeamId && teamSettings && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                    <div className="bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-lg px-4 py-2.5 flex items-center justify-between">
                         <span className="text-xs font-medium text-indigo-600 dark:text-indigo-300">
                             Method: <span className="font-bold">{metricInfo?.label}</span> — {metricInfo?.desc}
                         </span>
@@ -365,11 +365,11 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                     >
                                         {/* Athlete name */}
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                                            <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] shrink-0">
                                                 {initials}
                                             </div>
                                             <div className="min-w-0">
-                                                <span className="text-sm font-medium text-slate-900 truncate block">{player.name}</span>
+                                                <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate block">{player.name}</span>
                                                 {existing && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 text-[9px] font-semibold">✓ Logged</span>}
                                             </div>
                                         </div>
@@ -382,14 +382,14 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                                     value={row.rpe}
                                                     onChange={e => updateRow(player.id, 'rpe', e.target.value)}
                                                     disabled={row.skip}
-                                                    className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                                    className="bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
                                                 />
                                                 <input
                                                     type="number" min={0} placeholder="min"
                                                     value={row.duration}
                                                     onChange={e => updateRow(player.id, 'duration', e.target.value)}
                                                     disabled={row.skip}
-                                                    className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                                    className="bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
                                                 />
                                             </>
                                         ) : (
@@ -398,13 +398,13 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                                 value={row.value}
                                                 onChange={e => updateRow(player.id, 'value', e.target.value)}
                                                 disabled={row.skip}
-                                                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
+                                                className="bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-2 py-1.5 text-sm text-center w-full focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:opacity-40"
                                             />
                                         )}
 
                                         {/* Computed load */}
                                         <div className={`text-center text-sm font-bold ${
-                                            row.skip ? 'text-slate-400' : computed > 0 ? 'text-indigo-600' : 'text-slate-300'
+                                            row.skip ? 'text-slate-400 dark:text-[#475569]' : computed > 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-300 dark:text-[#334155]'
                                         }`}>
                                             {row.skip ? '—' : computed > 0 ? computed : '—'}
                                         </div>
@@ -415,7 +415,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                                 type="button"
                                                 onClick={() => updateRow(player.id, 'skip', !row.skip)}
                                                 className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                                                    row.skip ? 'bg-amber-100 text-amber-600 border border-amber-300' : 'bg-slate-100 text-slate-300 border border-slate-200 hover:text-slate-500'
+                                                    row.skip ? 'bg-amber-100 dark:bg-amber-600/20 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-300 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] hover:text-slate-500 dark:hover:text-[#94A3B8]'
                                                 }`}
                                                 title={row.skip ? 'Marked as rest day' : 'Mark as rest/skip'}
                                             >
@@ -436,7 +436,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
                                 placeholder="Session notes (optional)"
-                                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-[#CBD5E1] w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                             />
                         </div>
 
@@ -445,7 +445,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                             <button
                                 onClick={handleSaveAll}
                                 disabled={saving || (filledCount === 0 && skippedCount === 0)}
-                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl px-5 py-3 transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl px-5 py-3 transition-colors"
                             >
                                 {saving
                                     ? <><Loader2Icon size={14} className="animate-spin" /> Saving...</>

@@ -6,7 +6,7 @@ import { BLOCK_COLOR_PRESETS } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide mb-1';
+const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const BLOCK_TYPES   = ['Low Intensity', 'Medium Intensity', 'Maximal Load', 'Anthropometrics', 'General', 'Recovery'];
 const CUSTOM_SENTINEL = '__custom__';
@@ -195,14 +195,14 @@ export const AddBlockModal = () => {
                             <input type="date" className={INPUT} value={startDate} onChange={e => setStartDate(e.target.value)} />
                         </div>
                         <div>
-                            <label className={LABEL}>End Date <span className="text-slate-400 dark:text-[#64748B] normal-case">(optional)</span></label>
+                            <label className={LABEL}>End Date <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
                             <input type="date" className={INPUT} value={endDate} onChange={e => setEndDate(e.target.value)} />
                         </div>
                     </div>
 
                     {/* Goals */}
                     <div>
-                        <label className={LABEL}>Goals & Objectives <span className="text-slate-400 dark:text-[#64748B] normal-case">(optional)</span></label>
+                        <label className={LABEL}>Goals & Objectives <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
                         <textarea className={`${INPUT} resize-none`} rows={3}
                             placeholder="Block goals and key objectives..."
                             value={goals} onChange={e => setGoals(e.target.value)} />
@@ -212,7 +212,7 @@ export const AddBlockModal = () => {
                     <div>
                         <label className={LABEL}>
                             Modality Emphasis
-                            <span className="text-slate-400 dark:text-[#64748B] normal-case ml-1">(per training type)</span>
+                            <span className="text-slate-400 dark:text-[#CBD5E1] normal-case ml-1">(per training type)</span>
                         </label>
 
                         {allMods.length > 0 ? (
@@ -245,7 +245,7 @@ export const AddBlockModal = () => {
                                 })}
                             </div>
                         ) : (
-                            <p className="text-[10px] text-slate-400 dark:text-[#64748B] mt-1 italic">
+                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1 italic">
                                 No plan modalities defined yet. Add custom ones below, or define them in the Overview tab.
                             </p>
                         )}
@@ -261,11 +261,11 @@ export const AddBlockModal = () => {
                             />
                             <button type="button" onClick={addCustomMod}
                                 disabled={!customModInput.trim()}
-                                className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-40">
+                                className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40">
                                 <Plus size={12} />
                             </button>
                         </div>
-                        <p className="text-[9px] text-slate-400 dark:text-[#64748B] mt-1">
+                        <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-1">
                             Custom modalities here are for this block only. To share across blocks, add them in the Overview tab.
                         </p>
                     </div>
@@ -291,11 +291,11 @@ export const AddBlockModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700">
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={!name.trim() || !startDate || !phaseId}
-                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-40">
+                            className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40">
                             {isEditing ? 'Update Block' : 'Add Block'}
                         </button>
                     </div>

@@ -40,10 +40,19 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
         }
         setSaving(true);
         try {
+            const secondary = (form.secondaryMuscles || [])
+                .map((m: string) => m?.trim())
+                .filter((m: string) => m && m !== 'Unsorted' && m !== form.primaryMuscle);
+            const primary = form.primaryMuscle && form.primaryMuscle !== 'Unsorted' ? [form.primaryMuscle] : [];
+            const bodyParts = [...primary, ...secondary];
+            const tagsArr = typeof form.tags === 'string'
+                ? form.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+                : (Array.isArray(form.tags) ? form.tags.filter(Boolean) : []);
             const payload = {
                 name: form.name.trim(),
-                body_parts: form.primaryMuscle && form.primaryMuscle !== 'Unsorted' ? [form.primaryMuscle] : null,
+                body_parts: bodyParts.length ? bodyParts : null,
                 categories: [form.bodyRegion, form.classification].filter(c => c && c !== 'Unsorted'),
+                tags: tagsArr.length ? tagsArr : null,
                 video_url: form.videoUrl || null,
                 description: form.description || null,
                 equipment: form.primaryEquipment && form.primaryEquipment !== 'Unsorted' ? [form.primaryEquipment] : null,
@@ -96,10 +105,10 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
                 </div>
 
                 {/* Form */}
-                <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar">
                     {/* Name */}
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5 block">
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">
                             Exercise Name *
                         </label>
                         <input
@@ -113,40 +122,50 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
 
                     {/* Section: Classification */}
                     <div>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-2.5">Classification</p>
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-2">Classification</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Primary Muscle</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Primary Muscle</label>
                                 <CustomSelect value={form.primaryMuscle ?? form.targetMuscle} onChange={e => set('primaryMuscle', e.target.value)} variant="form" size="sm">
                                     {MUSCLE_GROUPS.map(m => <option key={m} value={m}>{m}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Body Region</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Secondary Muscles</label>
+                                <input
+                                    type="text"
+                                    value={Array.isArray(form.secondaryMuscles) ? form.secondaryMuscles.join(', ') : (form.secondaryMuscles || '')}
+                                    onChange={e => set('secondaryMuscles', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+                                    placeholder="e.g. Triceps, Shoulders"
+                                    className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none hover:border-slate-300 dark:hover:border-[#365880] focus:border-indigo-400 transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Body Region</label>
                                 <CustomSelect value={form.bodyRegion} onChange={e => set('bodyRegion', e.target.value)} variant="form" size="sm">
                                     {BODY_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Classification</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Classification</label>
                                 <CustomSelect value={form.classification} onChange={e => set('classification', e.target.value)} variant="form" size="sm">
                                     {CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Movement Pattern</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Movement Pattern</label>
                                 <CustomSelect value={form.movementPattern ?? 'Unsorted'} onChange={e => set('movementPattern', e.target.value)} variant="form" size="sm">
                                     {MOVEMENT_PATTERNS.map(m => <option key={m} value={m}>{m}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Force Type</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Force Type</label>
                                 <CustomSelect value={form.forceType ?? 'Unsorted'} onChange={e => set('forceType', e.target.value)} variant="form" size="sm">
                                     {FORCE_TYPES.map(f => <option key={f} value={f}>{f}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Equipment</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Equipment</label>
                                 <CustomSelect value={form.primaryEquipment} onChange={e => set('primaryEquipment', e.target.value)} variant="form" size="sm">
                                     {EQUIPMENT_LIST.map(eq => <option key={eq} value={eq}>{eq}</option>)}
                                 </CustomSelect>
@@ -156,17 +175,17 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
 
                     {/* Section: Demand */}
                     <div>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-2.5">Demand & Difficulty</p>
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-2">Demand & Difficulty</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">CNS Demand</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">CNS Demand</label>
                                 <CustomSelect value={form.cnsDemand ?? ''} onChange={e => set('cnsDemand', e.target.value)} variant="form" size="sm">
                                     <option value="">— Select —</option>
                                     {CNS_DEMAND_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Difficulty</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Difficulty</label>
                                 <CustomSelect value={form.difficulty ?? ''} onChange={e => set('difficulty', e.target.value)} variant="form" size="sm">
                                     <option value="">— Select —</option>
                                     {DIFFICULTY_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
@@ -177,22 +196,22 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
 
                     {/* Section: Technique */}
                     <div>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-2.5">Technique Details</p>
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-2">Technique Details</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Posture</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Posture</label>
                                 <CustomSelect value={form.posture} onChange={e => set('posture', e.target.value)} variant="form" size="sm">
                                     {POSTURES.map(p => <option key={p} value={p}>{p}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Grip</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Grip</label>
                                 <CustomSelect value={form.grip} onChange={e => set('grip', e.target.value)} variant="form" size="sm">
                                     {GRIPS.map(g => <option key={g} value={g}>{g}</option>)}
                                 </CustomSelect>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] mb-1.5 block">Mechanics</label>
+                                <label className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] mb-1 block">Mechanics</label>
                                 <CustomSelect value={form.mechanics} onChange={e => set('mechanics', e.target.value)} variant="form" size="sm">
                                     {MECHANICS.map(m => <option key={m} value={m}>{m}</option>)}
                                 </CustomSelect>
@@ -202,7 +221,7 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
 
                     {/* Video URL */}
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5 block">Video URL</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">Video URL</label>
                         <input
                             type="url"
                             value={form.videoUrl}
@@ -214,7 +233,7 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
 
                     {/* Description */}
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-widest mb-1.5 block">Description</label>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">Description</label>
                         <textarea
                             value={form.description}
                             onChange={e => set('description', e.target.value)}
@@ -222,6 +241,19 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
                             placeholder="Optional exercise notes..."
                             className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none hover:border-slate-300 dark:hover:border-[#365880] focus:border-indigo-400 transition-all resize-none"
                         />
+                    </div>
+
+                    {/* Tags */}
+                    <div>
+                        <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest mb-1 block">Tags</label>
+                        <input
+                            type="text"
+                            value={Array.isArray(form.tags) ? form.tags.join(', ') : (form.tags || '')}
+                            onChange={e => set('tags', e.target.value)}
+                            placeholder="Comma-separated, e.g. Power, Olympic, Unilateral"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none hover:border-slate-300 dark:hover:border-[#365880] focus:border-indigo-400 transition-all"
+                        />
+                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1">Separate tags with commas. Shown as pills on the exercise card.</p>
                     </div>
                 </div>
 

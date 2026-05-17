@@ -137,7 +137,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
             <div className="bg-white border border-slate-200 rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <UsersIcon size={12} className="inline mr-1" />Team
                         </label>
                         <CustomSelect value={selectedTeamId} onChange={e => { setSelectedTeamId(e.target.value); setAthleteFilter(''); setRowData({}); setSavedRows(new Set()); }} variant="form" placeholder="— Select Team —">
@@ -148,7 +148,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                         </CustomSelect>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <FilterIcon size={12} className="inline mr-1" />Filter Athlete
                         </label>
                         <CustomSelect value={athleteFilter} onChange={e => setAthleteFilter(e.target.value)} disabled={!selectedTeamId} variant="form" placeholder="All Athletes">
@@ -159,7 +159,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                         </CustomSelect>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <CalendarIcon size={12} className="inline mr-1" />Date
                         </label>
                         <input
@@ -179,7 +179,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                     <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
                         <button
                             onClick={() => { setBatchTab('standard'); setRowData({}); setSavedRows(new Set()); }}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${batchTab === 'standard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${batchTab === 'standard' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             1RM Test
                         </button>
@@ -210,7 +210,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                             disabled={readyCount === 0 || saving}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all
                                 ${readyCount > 0 && !saving
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm'
                                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                 }`}
                         >
@@ -249,7 +249,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                             key={player.id}
                                             className={`border-b border-slate-50 transition-colors ${isSaved ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
                                         >
-                                            <td className="px-4 py-2.5 font-medium text-slate-800 sticky left-0 bg-inherit z-10 whitespace-nowrap">
+                                            <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-[#E2E8F0] sticky left-0 bg-inherit z-10 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     {isSaved && <CheckCircleIcon size={14} className="text-emerald-500 shrink-0" />}
                                                     <span className={isSaved ? 'text-emerald-700' : ''}>{player.name}</span>
@@ -315,7 +315,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                                         disabled={!ready}
                                                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
                                                             ${ready
-                                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                                ? 'bg-indigo-600 text-white hover:bg-indigo-500'
                                                                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                                             }`}
                                                     >

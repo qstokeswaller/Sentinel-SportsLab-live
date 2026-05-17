@@ -7,14 +7,14 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-xl w-full max-w-5xl h-[80vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-5xl h-[80vh] shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col animate-in zoom-in-95">
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                             <EyeIcon size={18} />
                         </div>
                         <div>
-                            <h3 className="text-base font-semibold text-slate-900">KPI Global Watchlist</h3>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">KPI Global Watchlist</h3>
                             <p className="text-xs text-slate-400">Real-time anomaly detection across multi-variate metrics</p>
                         </div>
                     </div>
@@ -28,7 +28,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
 
                 <div className="flex-1 p-5 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {watchlistItems.map((item, i) => (
-                        <div key={i} className="group bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                        <div key={i} className="group bg-white dark:bg-[#1A2D48] p-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md transition-all duration-200">
                             <div className="flex justify-between items-start mb-4">
                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${item.severity === 'Critical' ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-500' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-500'}`}>
                                     <ActivityIcon size={18} />
@@ -41,17 +41,17 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
 
                             <div className="space-y-1 mb-4">
                                 <div className="text-xs font-medium text-indigo-500">{item.metric}</div>
-                                <h4 className="text-base font-semibold text-slate-900">{item.athlete}</h4>
+                                <h4 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{item.athlete}</h4>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 mb-3">
                                 <div className="p-3 bg-slate-50 rounded-lg">
                                     <div className="text-[10px] font-medium text-slate-400 mb-1">Current</div>
-                                    <div className="text-lg font-semibold text-slate-900">{item.current}</div>
+                                    <div className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{item.current}</div>
                                 </div>
                                 <div className="p-3 bg-slate-50 rounded-lg">
                                     <div className="text-[10px] font-medium text-slate-400 mb-1">Baseline</div>
-                                    <div className="text-lg font-semibold text-slate-600">{item.baseline}</div>
+                                    <div className="text-lg font-semibold text-slate-600 dark:text-[#CBD5E1]">{item.baseline}</div>
                                 </div>
                             </div>
 

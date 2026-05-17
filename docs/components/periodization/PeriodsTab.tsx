@@ -31,8 +31,8 @@ function getWeeks(startStr, endStr) {
 
 // ── Phase status from dates ────────────────────────────────────────────────────
 function getPhaseStatus(phase, today) {
-    if (!phase.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
-    if (phase.endDate && phase.endDate < today)   return { label: 'Completed',  cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]' };
+    if (!phase.startDate) return { label: 'No Date', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
+    if (phase.endDate && phase.endDate < today)   return { label: 'Completed',  cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
     if (phase.startDate <= today && (!phase.endDate || phase.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
     return { label: 'Upcoming', cls: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40' };
 }
@@ -55,7 +55,7 @@ function StatCard({ icon, label, value, valueClass = 'text-slate-800 dark:text-[
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex items-center gap-3">
             <div className="text-slate-300 dark:text-[#475569] shrink-0">{icon}</div>
             <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">{label}</p>
                 <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
             </div>
         </div>
@@ -74,12 +74,12 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X size={11} /></button>
+                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (
                     <div key={label} className="flex gap-2">
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide shrink-0 w-14">{label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
                     </div>
                 ))}
@@ -167,10 +167,10 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
         return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-12 text-center">
                 <Target size={32} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                <p className="text-sm font-medium text-slate-500 dark:text-[#94A3B8] mb-1">No phases yet</p>
-                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-4">Add your first phase to begin structuring this plan.</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1] mb-1">No phases yet</p>
+                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mb-4">Add your first phase to begin structuring this plan.</p>
                 <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors">
                     + Add First Phase
                 </button>
             </div>
@@ -192,8 +192,8 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
             {ganttDates.start && weeks.length > 0 && (
                 <><div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Plan Timeline</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                             {formatDateShort(ganttDates.start)} — {formatDateShort(ganttDates.end)}
                         </span>
                     </div>
@@ -201,14 +201,14 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                         <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
                             <div style={{ height: '39px' }} />
                             <div className="flex items-center" style={{ height: '28px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Phases</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
                             </div>
                             <div className="flex items-center" style={{ height: '20px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Blocks</span>
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center" style={{ height: '14px' }}>
-                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Events</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
                                 </div>
                             )}
                         </div>
@@ -218,7 +218,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             {/* Month labels */}
                             <div className="relative mb-0.5" style={{ height: '13px' }}>
                                 {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
                                         style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
                                         {mg.label}
                                     </div>
@@ -316,7 +316,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
             {/* ── Phases table ─────────────────────────────────────────────── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
-                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Phases</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Phases</h4>
                     <button onClick={() => { setEditingPlanPhase(null); setIsPlanPhaseModalOpen(true); }}
                         className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">
                         <Plus size={11} /> Add Phase
@@ -336,7 +336,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                         { h: 'Status',  cls: '' },
                         { h: '',        cls: '' },
                     ].map(({ h, cls }) => (
-                        <span key={h || 'actions'} className={`text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide ${cls}`}>{h}</span>
+                        <span key={h || 'actions'} className={`text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide ${cls}`}>{h}</span>
                     ))}
                 </div>
 
@@ -364,7 +364,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                     <div className="min-w-0 py-0.5">
                                         <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{phase.name}</p>
                                         {phase.goals && (
-                                            <p className="text-[9px] text-slate-400 dark:text-[#64748B] truncate mt-0.5">{phase.goals}</p>
+                                            <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] truncate mt-0.5">{phase.goals}</p>
                                         )}
                                     </div>
                                 </div>
@@ -375,7 +375,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                         <span key={f} className={`text-[8px] font-semibold px-1.5 py-0.5 rounded border ${
                                             fi === 0
                                                 ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/40'
-                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'
+                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
                                         }`}>
                                             {f}
                                         </span>
@@ -383,7 +383,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 </div>
 
                                 {/* Dates */}
-                                <div className="text-[10px] text-slate-500 dark:text-[#94A3B8]">
+                                <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
                                     {phase.startDate ? formatDateShort(phase.startDate) : '—'}
                                     {phase.endDate ? ` — ${formatDateShort(phase.endDate)}` : ''}
                                 </div>
@@ -394,7 +394,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 </div>
 
                                 {/* Blocks count */}
-                                <div className="text-[10px] text-slate-500 dark:text-[#94A3B8] text-center">
+                                <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1] text-center">
                                     {phase.blocks.length} block{phase.blocks.length !== 1 ? 's' : ''}
                                 </div>
 
@@ -409,7 +409,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 <div className="relative" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setOpenMenuId(openMenuId === phase.id ? null : phase.id)}
-                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 transition-colors">
+                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                         <MoreHorizontal size={13} />
                                     </button>
                                     {openMenuId === phase.id && (
@@ -451,7 +451,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: selectedPhase.color }} />
                                 <div>
                                     <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">{selectedPhase.name}</span>
-                                    <span className="text-xs text-slate-400 dark:text-[#64748B] ml-2">
+                                    <span className="text-xs text-slate-400 dark:text-[#CBD5E1] ml-2">
                                         {formatDateShort(selectedPhase.startDate)}
                                         {selectedPhase.endDate ? ` — ${formatDateShort(selectedPhase.endDate)}` : ''}
                                         {' · '}{(selectedPhase.focuses?.length ? selectedPhase.focuses : [selectedPhase.trainingPhase]).join(' + ')}
@@ -460,7 +460,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             </div>
                             <button
                                 onClick={() => { setEditingPlanPhase(selectedPhase); setIsPlanPhaseModalOpen(true); }}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
+                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
                                 <PencilIcon size={12} /> Edit Phase
                             </button>
                         </div>
@@ -471,7 +471,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-2">
                                     <BookOpen size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Goals & Objectives</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Goals & Objectives</p>
                                 </div>
                                 {selectedPhase.goals ? (
                                     <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{selectedPhase.goals}</p>
@@ -482,9 +482,9 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#243A58]">
                                         <div className="flex items-center gap-1.5 mb-1.5">
                                             <MessageSquare size={11} className="text-slate-400" />
-                                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Notes</p>
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Notes</p>
                                         </div>
-                                        <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{selectedPhase.notes}</p>
+                                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{selectedPhase.notes}</p>
                                     </div>
                                 )}
                                 {!selectedPhase.notes && (
@@ -496,7 +496,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-3">
                                     <BarChart2 size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Planning Summary</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Planning Summary</p>
                                 </div>
                                 <div className="space-y-2.5">
                                     {[
@@ -505,7 +505,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                         { label: 'Sessions',    value: totalSessions },
                                     ].map(({ label, value }) => (
                                         <div key={label} className="flex items-center justify-between">
-                                            <span className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{label}</span>
+                                            <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
                                             <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{value}</span>
                                         </div>
                                     ))}
@@ -516,7 +516,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             <div className="p-5">
                                 <div className="flex items-center gap-1.5 mb-3">
                                     <CalendarDays size={12} className="text-slate-400" />
-                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Key Metric Targets</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Key Metric Targets</p>
                                 </div>
                                 <p className="text-[10px] italic text-slate-300 dark:text-[#475569] leading-relaxed">
                                     Target metrics (ACWR range, weekly load, intensity %) will be configurable here in a future update.
@@ -524,7 +524,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 <div className="mt-3 space-y-1.5">
                                     {selectedPhase.blocks.length > 0 && selectedPhase.blocks.slice(0, 3).map(b => (
                                         <div key={b.id} className="flex items-center justify-between">
-                                            <span className="text-[9px] text-slate-400 dark:text-[#64748B] truncate">{b.label || b.name}</span>
+                                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] truncate">{b.label || b.name}</span>
                                             <span className="text-[9px] font-medium text-slate-600 dark:text-[#CBD5E1] shrink-0 ml-2">
                                                 {b.intensityLevel || '—'}
                                             </span>

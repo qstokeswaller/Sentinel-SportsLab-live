@@ -68,7 +68,7 @@ function GanttPopup({ popup, onClose }) {
                 style={{ borderLeftWidth: '3px', borderLeftColor: accent }}>
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{item.label || item.name}</p>
-                    <p className="text-[9px] text-slate-400 dark:text-[#64748B] capitalize">{kind}</p>
+                    <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] capitalize">{kind}</p>
                 </div>
                 <button onClick={onClose} className="shrink-0 p-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
                     <ChevronRight size={11} className="text-slate-400" />
@@ -77,7 +77,7 @@ function GanttPopup({ popup, onClose }) {
             <div className="px-3 py-2 space-y-1.5">
                 {rows.map(([label, val]) => (
                     <div key={label} className="flex gap-2">
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide shrink-0 w-14">{label}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide shrink-0 w-14">{label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1] leading-tight flex-1 min-w-0 break-words">{val}</span>
                     </div>
                 ))}
@@ -134,9 +134,9 @@ function PlanGanttStrip({ plan }) {
             <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                     <CalendarDays size={12} className="text-slate-400" />
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Plan Timeline</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Plan Timeline</span>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-[#64748B]">
+                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                     {formatDateShort(ganttStart)} — {formatDateShort(ganttEnd)}
                 </span>
             </div>
@@ -144,14 +144,14 @@ function PlanGanttStrip({ plan }) {
                 <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
                     <div style={{ height: '39px' }} />
                     <div className="flex items-center" style={{ height: '24px', marginBottom: '8px' }}>
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Phases</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
                     </div>
                     <div className="flex items-center" style={{ height: '18px', marginBottom: '6px' }}>
-                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Blocks</span>
+                        <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
                     </div>
                     {(plan.events || []).length > 0 && (
                         <div className="flex items-center" style={{ height: '14px' }}>
-                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Events</span>
+                            <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
                         </div>
                     )}
                 </div>
@@ -160,7 +160,7 @@ function PlanGanttStrip({ plan }) {
                     {/* Month labels */}
                     <div className="relative mb-0.5" style={{ height: '13px' }}>
                         {monthGroups.map((mg, i) => (
-                            <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide"
+                            <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
                                 style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
                                 {mg.label}
                             </div>
@@ -246,7 +246,7 @@ const STATUS_CONFIG = {
     on_track:  { label: 'On Track',  cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40',  Icon: CheckCircle2 },
     at_risk:   { label: 'At Risk',   cls: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/40',   Icon: AlertTriangle },
     off_track: { label: 'Off Track', cls: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/40',               Icon: XCircle },
-    pending:   { label: 'Pending',   cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]',         Icon: Clock },
+    pending:   { label: 'Pending',   cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]',         Icon: Clock },
 };
 
 const PRIORITY_CFG = {
@@ -292,7 +292,7 @@ function DonutChart({ onTrack, atRisk, offTrack, pending }) {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-lg font-bold text-slate-800 dark:text-[#E2E8F0] leading-none">{total}</span>
-                <span className="text-[8px] text-slate-400 dark:text-[#64748B] mt-0.5">Total</span>
+                <span className="text-[8px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Total</span>
             </div>
         </div>
     );
@@ -355,13 +355,13 @@ function TargetRow({ target, phases, onEdit, onDelete }) {
             {/* Metric info */}
             <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{target.metricLabel}</p>
-                <p className="text-[9px] text-slate-400 dark:text-[#64748B]">{target.metricSource}</p>
+                <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{target.metricSource}</p>
             </div>
 
             {/* Block scope */}
             <div className="shrink-0 hidden lg:flex w-32 justify-end">
                 {block ? (
-                    <span className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58] truncate max-w-full">
+                    <span className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] truncate max-w-full">
                         {block.name}{block.label ? ` · ${block.label}` : ''}
                     </span>
                 ) : (
@@ -379,7 +379,7 @@ function TargetRow({ target, phases, onEdit, onDelete }) {
                 {target.currentValue ? (
                     <div>
                         <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[9px] text-slate-400 dark:text-[#64748B]">Current</span>
+                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">Current</span>
                             <span className="text-[9px] font-semibold text-slate-700 dark:text-[#CBD5E1]">
                                 {target.currentValue}{target.metricUnit ? ' ' + target.metricUnit : ''}
                             </span>
@@ -410,13 +410,13 @@ function TargetRow({ target, phases, onEdit, onDelete }) {
             {/* Priority dot */}
             <div className="shrink-0 flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full shrink-0 ${priorityCfg.dot}`} />
-                <span className="text-[9px] text-slate-400 dark:text-[#64748B] hidden 2xl:block">{priorityCfg.label}</span>
+                <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] hidden 2xl:block">{priorityCfg.label}</span>
             </div>
 
             {/* Actions menu */}
             <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
                 <button onClick={() => setMenuOpen(v => !v)}
-                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100">
+                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors opacity-0 group-hover:opacity-100">
                     <MoreHorizontal size={13} />
                 </button>
                 {menuOpen && (
@@ -448,7 +448,7 @@ function PhaseGroup({ phase, targets, phases, onEdit, onDelete, onAddToPhase }) 
                 style={{ backgroundColor: (phase.color || '#6366f1') + '0d' }}>
                 <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: phase.color || '#6366f1' }} />
                 <span className="text-xs font-bold text-slate-800 dark:text-[#E2E8F0] flex-1 text-left">{phase.name}</span>
-                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] bg-white/60 dark:bg-[#1A2D48] px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] bg-white/60 dark:bg-[#1A2D48] px-2 py-0.5 rounded-full">
                     {targets.length} target{targets.length !== 1 ? 's' : ''}
                 </span>
                 <button onClick={e => { e.stopPropagation(); onAddToPhase(phase.id); }}
@@ -527,12 +527,12 @@ export const TargetsTab = ({ plan }) => {
             <PlanGanttStrip plan={plan} />
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-14 text-center">
                 <Target size={36} className="text-slate-300 dark:text-[#475569] mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-500 dark:text-[#94A3B8] mb-1">No targets set</p>
-                <p className="text-xs text-slate-400 dark:text-[#64748B] mb-5 max-w-xs mx-auto leading-relaxed">
+                <p className="text-sm font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1">No targets set</p>
+                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mb-5 max-w-xs mx-auto leading-relaxed">
                     Set measurable targets for phases and blocks — track performance, wellness, load, injury, and tactical outputs.
                 </p>
                 <button onClick={() => openAdd()}
-                    className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">
+                    className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors">
                     + Add First Target
                 </button>
             </div>
@@ -555,9 +555,9 @@ export const TargetsTab = ({ plan }) => {
                     { label: 'Off Track',     value: stats.offTrack, cls: 'text-red-600 dark:text-red-400',        sub: pct(stats.offTrack, stats.total) },
                 ].map(({ label, value, cls, sub }) => (
                     <div key={label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-0.5">{label}</p>
+                        <p className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-0.5">{label}</p>
                         <p className={`text-2xl font-bold ${cls}`}>{value}</p>
-                        <p className="text-[9px] text-slate-400 dark:text-[#64748B] mt-0.5">{sub}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{sub}</p>
                     </div>
                 ))}
             </div>
@@ -570,30 +570,30 @@ export const TargetsTab = ({ plan }) => {
 
                     {/* Filter bar */}
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Status:</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Status:</span>
                         {['all', 'on_track', 'at_risk', 'off_track', 'pending'].map(s => (
                             <button key={s} onClick={() => setFilterStatus(s)}
                                 className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
                                     filterStatus === s
                                         ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
+                                        : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'
                                 }`}>
                                 {s === 'all' ? 'All' : STATUS_CONFIG[s]?.label}
                             </button>
                         ))}
                         {byCat.length > 1 && (
                             <>
-                                <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide ml-2">Category:</span>
+                                <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide ml-2">Category:</span>
                                 <button onClick={() => setFilterCategory('all')}
                                     className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
                                         filterCategory === 'all'
                                             ? 'bg-slate-600 text-white border-slate-600'
-                                            : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'
+                                            : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
                                     }`}>All</button>
                                 {byCat.map(({ key, label, color }) => (
                                     <button key={key} onClick={() => setFilterCategory(filterCategory === key ? 'all' : key)}
                                         className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
-                                            filterCategory === key ? 'text-white border-transparent' : 'text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58]'
+                                            filterCategory === key ? 'text-white border-transparent' : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
                                         }`}
                                         style={filterCategory === key ? { backgroundColor: color, borderColor: color } : {}}>
                                         {label}
@@ -607,7 +607,7 @@ export const TargetsTab = ({ plan }) => {
                     <div className="hidden lg:grid px-5 py-1.5"
                         style={{ gridTemplateColumns: 'auto 1fr 8rem 8rem 9rem 7rem 5rem 2rem' }}>
                         {['Category', 'Metric', 'Scope', 'Target', 'Current', 'Status', 'Priority', ''].map(h => (
-                            <span key={h} className="text-[9px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">{h}</span>
+                            <span key={h} className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">{h}</span>
                         ))}
                     </div>
 
@@ -617,7 +617,7 @@ export const TargetsTab = ({ plan }) => {
                             <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/30">
                                 <div className="w-1.5 h-4 rounded-full bg-slate-300 dark:bg-[#475569] shrink-0" />
                                 <span className="text-xs font-bold text-slate-600 dark:text-[#CBD5E1] flex-1">Plan-wide</span>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B] bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] px-1.5 py-0.5 rounded-full">
+                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] px-1.5 py-0.5 rounded-full">
                                     {planWide.length}
                                 </span>
                             </div>
@@ -643,7 +643,7 @@ export const TargetsTab = ({ plan }) => {
                     {/* Empty filter state */}
                     {filtered.length === 0 && targets.length > 0 && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-8 text-center">
-                            <p className="text-sm text-slate-400 dark:text-[#64748B]">No targets match the current filters.</p>
+                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">No targets match the current filters.</p>
                         </div>
                     )}
                 </div>
@@ -653,7 +653,7 @@ export const TargetsTab = ({ plan }) => {
 
                     {/* Donut + legend */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-4">Target Summary</p>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-4">Target Summary</p>
                         <div className="flex items-center gap-4">
                             <DonutChart
                                 onTrack={stats.onTrack}
@@ -671,11 +671,11 @@ export const TargetsTab = ({ plan }) => {
                                     <div key={label} className="flex items-center justify-between">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                            <span className="text-[10px] text-slate-500 dark:text-[#94A3B8]">{label}</span>
+                                            <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-[10px] font-bold text-slate-700 dark:text-[#E2E8F0]">{count}</span>
-                                            <span className="text-[9px] text-slate-400 dark:text-[#64748B]">
+                                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">
                                                 ({pct(count, stats.total, true)})
                                             </span>
                                         </div>
@@ -688,13 +688,13 @@ export const TargetsTab = ({ plan }) => {
                     {/* By category */}
                     {byCat.length > 0 && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-3">By Category</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">By Category</p>
                             <div className="space-y-3">
                                 {byCat.map(({ key, label, color, total, onTrack }) => (
                                     <div key={key}>
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-[10px] font-medium text-slate-600 dark:text-[#CBD5E1]">{label}</span>
-                                            <span className="text-[9px] text-slate-400 dark:text-[#64748B]">{onTrack} / {total} on track</span>
+                                            <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{onTrack} / {total} on track</span>
                                         </div>
                                         <div className="h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
                                             <div className="h-full rounded-full transition-all duration-500"
@@ -709,7 +709,7 @@ export const TargetsTab = ({ plan }) => {
                     {/* Needs attention */}
                     {topPriority.length > 0 && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#64748B] uppercase tracking-wide mb-3">Needs Attention</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">Needs Attention</p>
                             <div className="space-y-2.5">
                                 {topPriority.map(t => {
                                     const catDef = METRIC_CATALOGUE[t.category];
@@ -720,7 +720,7 @@ export const TargetsTab = ({ plan }) => {
                                             <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${pr.dot}`} />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] truncate">{t.metricLabel}</p>
-                                                <p className="text-[9px] text-slate-400 dark:text-[#64748B]">{catDef?.label || t.category}</p>
+                                                <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{catDef?.label || t.category}</p>
                                             </div>
                                             <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border uppercase shrink-0 ${sc.cls}`}>
                                                 {sc.label}
@@ -732,7 +732,7 @@ export const TargetsTab = ({ plan }) => {
                         </div>
                     )}
 
-                    <p className="text-[9px] text-slate-400 dark:text-[#64748B] italic px-1 leading-relaxed">
+                    <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] italic px-1 leading-relaxed">
                         Status is set manually. Future updates will auto-calculate from live testing, GPS, wellness, and injury data.
                     </p>
                 </div>

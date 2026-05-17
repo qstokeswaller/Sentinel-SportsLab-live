@@ -178,13 +178,13 @@ const MedicalReports: React.FC = () => {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={resetModal}>
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden" onClick={e => e.stopPropagation()}>
                     {/* Header */}
-                    <div className={`px-6 py-4 flex items-center justify-between ${isUpload ? 'bg-indigo-50 dark:bg-indigo-900/25 border-b border-indigo-100 dark:border-indigo-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 border-b border-emerald-100 dark:border-emerald-800/40'}`}>
+                    <div className={`px-6 py-4 flex items-center justify-between ${isUpload ? 'bg-indigo-50 dark:bg-indigo-600 border-b border-indigo-100 dark:border-indigo-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 border-b border-emerald-100 dark:border-emerald-800/40'}`}>
                         <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white ${isUpload ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
                                 {isEditing ? <PencilIcon size={16} /> : isUpload ? <UploadCloudIcon size={16} /> : <FileTextIcon size={16} />}
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">
                                     {isEditing ? 'Edit Record' : isUpload ? 'Upload Document' : 'Quick Log'}
                                 </h3>
                                 <p className="text-[10px] text-slate-500">
@@ -199,7 +199,7 @@ const MedicalReports: React.FC = () => {
                     <div className="p-6 space-y-4">
                         {/* Target */}
                         <div>
-                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Assign To</label>
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Assign To</label>
                             <CustomSelect
                                 variant="form"
                                 value={medicalForm.targetId}
@@ -219,7 +219,7 @@ const MedicalReports: React.FC = () => {
                         {/* Date + Title row */}
                         <div className="grid grid-cols-5 gap-3">
                             <div className="col-span-2">
-                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Date</label>
+                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Date</label>
                                 <input
                                     type="date"
                                     value={medicalForm.date}
@@ -228,7 +228,7 @@ const MedicalReports: React.FC = () => {
                                 />
                             </div>
                             <div className="col-span-3">
-                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Title</label>
+                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Title</label>
                                 <input
                                     type="text"
                                     placeholder={isUpload ? 'e.g. MRI Scan Results' : 'e.g. Post-match assessment'}
@@ -242,16 +242,16 @@ const MedicalReports: React.FC = () => {
                         {/* File upload area (upload mode only) */}
                         {isUpload && (
                             <div>
-                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Document</label>
+                                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">Document</label>
                                 <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.csv" onChange={handleFileChange} />
                                 {fileData ? (
-                                    <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
+                                    <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
                                         <FileIcon size={18} className="text-indigo-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">{fileData.name}</p>
+                                            <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{fileData.name}</p>
                                             <p className="text-[10px] text-slate-500">{fileData.size ? `${(fileData.size / 1024).toFixed(1)} KB` : medicalForm.fileSize}</p>
                                         </div>
-                                        <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 rounded-lg transition-colors">
+                                        <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded-lg transition-colors">
                                             <XIcon size={14} className="text-indigo-400" />
                                         </button>
                                     </div>
@@ -270,7 +270,7 @@ const MedicalReports: React.FC = () => {
 
                         {/* Description / Notes */}
                         <div>
-                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">{isUpload ? 'Notes (optional)' : 'Notes'}</label>
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1 block">{isUpload ? 'Notes (optional)' : 'Notes'}</label>
                             <textarea
                                 placeholder="Additional details..."
                                 value={medicalForm.description}
@@ -282,11 +282,11 @@ const MedicalReports: React.FC = () => {
 
                     {/* Footer */}
                     <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                        <button onClick={resetModal} className="px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                        <button onClick={resetModal} className="px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] transition-colors">Cancel</button>
                         <button
                             onClick={handleSaveReport}
                             disabled={!medicalForm.title || !medicalForm.targetId}
-                            className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm ${(!medicalForm.title || !medicalForm.targetId) ? 'bg-slate-300 cursor-not-allowed' : isUpload ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                            className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm ${(!medicalForm.title || !medicalForm.targetId) ? 'bg-slate-300 cursor-not-allowed' : isUpload ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
                         >
                             {isEditing ? 'Save Changes' : isUpload ? 'Upload Document' : 'Save Log'}
                         </button>
@@ -312,7 +312,7 @@ const MedicalReports: React.FC = () => {
                                 {isUpload ? <FileIcon size={16} /> : <FileTextIcon size={16} />}
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">{record.title}</h3>
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{record.title}</h3>
                                 <p className="text-[10px] text-slate-500">{isUpload ? 'Document' : 'Medical Log'} — {new Date(record.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                             </div>
                         </div>
@@ -326,7 +326,7 @@ const MedicalReports: React.FC = () => {
                                 {record.targetName?.charAt(0) || 'A'}
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-slate-900">{record.targetName}</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{record.targetName}</p>
                                 <p className="text-[10px] text-slate-400">Assigned target</p>
                             </div>
                         </div>
@@ -334,21 +334,21 @@ const MedicalReports: React.FC = () => {
                         {record.description && (
                             <div>
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Notes</label>
-                                <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-4 border border-slate-100 leading-relaxed">{record.description}</p>
+                                <p className="text-sm text-slate-700 dark:text-[#CBD5E1] bg-slate-50 rounded-xl p-4 border border-slate-100 leading-relaxed">{record.description}</p>
                             </div>
                         )}
 
                         {isUpload && record.fileName && (
                             <div>
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Attached File</label>
-                                <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/25 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
+                                <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-xl px-4 py-3">
                                     <FileIcon size={18} className="text-indigo-500 shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-slate-900 truncate">{record.fileName}</p>
+                                        <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{record.fileName}</p>
                                         {record.fileSize && <p className="text-[10px] text-slate-500">{record.fileSize}</p>}
                                     </div>
                                     {record.fileData && (
-                                        <a href={record.fileData} download={record.fileName} className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 dark:bg-indigo-900/35 rounded-lg transition-colors">
+                                        <a href={record.fileData} download={record.fileName} className="p-2 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded-lg transition-colors">
                                             <DownloadIcon size={14} className="text-indigo-500" />
                                         </a>
                                     )}
@@ -366,13 +366,13 @@ const MedicalReports: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleDeleteReport(record.id)}
-                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] rounded-lg transition-colors"
                             >
                                 <Trash2Icon size={12} /> Delete
                             </button>
                             <button
                                 onClick={() => handleEditReport(record)}
-                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-medium text-indigo-500 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded-lg transition-colors"
                             >
                                 <PencilIcon size={12} /> Edit
                             </button>
@@ -393,7 +393,7 @@ const MedicalReports: React.FC = () => {
                         <UserIcon size={20} />
                     </div>
                     <div>
-                        <h4 className="text-lg font-semibold text-slate-900">
+                        <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">
                             {editingOptOutId ? 'Edit Athlete Status' : 'Athlete Status'}
                         </h4>
                         <p className="text-slate-500 text-sm">
@@ -424,7 +424,7 @@ const MedicalReports: React.FC = () => {
                                 <button
                                     key={status}
                                     onClick={() => setOptOutForm({ ...optOutForm, status })}
-                                    className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-300 hover:bg-indigo-100/50'}`}
+                                    className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-300 hover:bg-indigo-100/50'}`}
                                 >
                                     {status}
                                 </button>
@@ -439,7 +439,7 @@ const MedicalReports: React.FC = () => {
                             placeholder="e.g. Flu, Ankle Sprain"
                             value={optOutForm.reason}
                             onChange={(e) => setOptOutForm({ ...optOutForm, reason: e.target.value })}
-                            className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium"
+                            className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium"
                         />
                     </div>
 
@@ -449,7 +449,7 @@ const MedicalReports: React.FC = () => {
                             placeholder="Additional context..."
                             value={optOutForm.notes}
                             onChange={(e) => setOptOutForm({ ...optOutForm, notes: e.target.value })}
-                            className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 placeholder:font-medium h-32 resize-none"
+                            className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-32 resize-none"
                         />
                     </div>
 
@@ -457,7 +457,7 @@ const MedicalReports: React.FC = () => {
                         {editingOptOutId && (
                             <button
                                 onClick={() => { setEditingOptOutId(null); setOptOutForm({ targetId: '', status: 'Available', reason: '', notes: '' }); setReportMode('analytics'); }}
-                                className="flex-1 py-5 bg-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
+                                className="flex-1 py-5 bg-slate-200 text-slate-600 dark:text-[#CBD5E1] rounded-xl font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
                             >
                                 Cancel
                             </button>
@@ -505,7 +505,7 @@ const MedicalReports: React.FC = () => {
                             <StethoscopeIcon size={20} />
                         </div>
                         <div>
-                            <h4 className="text-lg font-semibold text-slate-900">Medical Hub</h4>
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Medical Hub</h4>
                             <p className="text-[10px] text-slate-500 uppercase tracking-wide">Intelligence & Availability</p>
                         </div>
                     </div>
@@ -514,7 +514,7 @@ const MedicalReports: React.FC = () => {
                         <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                             <button
                                 onClick={() => { setMedicalModalMode('upload'); setIsMedicalModalOpen(true); }}
-                                className="px-4 py-2.5 bg-white text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all flex items-center gap-2 border border-slate-200"
+                                className="px-4 py-2.5 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 rounded-xl text-[10px] font-semibold uppercase tracking-wide shadow-sm hover:bg-indigo-50 dark:hover:bg-indigo-600 transition-all flex items-center gap-2 border border-slate-200"
                             >
                                 <UploadCloudIcon size={14} /> Upload Doc
                             </button>
@@ -552,12 +552,12 @@ const MedicalReports: React.FC = () => {
                 {/* TIMELINE */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                        <ActivityIcon size={200} className="text-slate-900" />
+                        <ActivityIcon size={200} className="text-slate-900 dark:text-[#E2E8F0]" />
                     </div>
 
                     <div className="flex items-center justify-between mb-6">
-                        <h5 className="text-sm font-semibold text-slate-600">Medical Timeline</h5>
-                        <div className="px-3 py-1.5 bg-slate-100 rounded-full text-[9px] font-semibold text-slate-600">
+                        <h5 className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">Medical Timeline</h5>
+                        <div className="px-3 py-1.5 bg-slate-100 rounded-full text-[9px] font-semibold text-slate-600 dark:text-[#CBD5E1]">
                             {timeline.length} Records
                         </div>
                     </div>
@@ -581,7 +581,7 @@ const MedicalReports: React.FC = () => {
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
-                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest ${entry.timelineType === 'medical' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : entry.status === 'Modified' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')
+                                            <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg tracking-widest ${entry.timelineType === 'medical' ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600' : (entry.status === 'Available' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : entry.status === 'Modified' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')
                                                 }`}>
                                                 {entry.timelineType === 'medical' ? (entry.type === 'upload' ? 'DOCUMENT' : 'LOG') : entry.status}
                                             </span>
@@ -599,7 +599,7 @@ const MedicalReports: React.FC = () => {
                                                     e.stopPropagation();
                                                     entry.timelineType === 'medical' ? handleEditReport(entry) : handleEditOptOut(entry);
                                                 }}
-                                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all"
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-all"
                                                 title="Edit"
                                             >
                                                 <PencilIcon size={13} />
@@ -609,7 +609,7 @@ const MedicalReports: React.FC = () => {
                                                     e.stopPropagation();
                                                     entry.timelineType === 'medical' ? handleDeleteReport(entry.id) : handleDeleteOptOut(entry);
                                                 }}
-                                                className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 transition-all"
+                                                className="p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all"
                                                 title="Delete"
                                             >
                                                 <Trash2Icon size={13} />
@@ -617,7 +617,7 @@ const MedicalReports: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <h6 className="text-base font-semibold text-slate-900 group-hover/item:text-indigo-900 transition-colors">{entry.title}</h6>
+                                    <h6 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover/item:text-indigo-900 transition-colors">{entry.title}</h6>
 
                                     {entry.description && (
                                         <p className="text-sm font-medium text-slate-400 mt-3 leading-relaxed max-w-xl line-clamp-2">

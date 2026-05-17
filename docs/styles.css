@@ -34,6 +34,45 @@ body {
     scrollbar-width: none;
 }
 
+/* ── Custom scrollbar ────────────────────────────────────────────────────── */
+
+/* Firefox */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 #F1F5F9;
+}
+.dark .custom-scrollbar {
+    scrollbar-color: #4338CA #0A1628;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #0A1628;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4338CA;
+    border-radius: 9999px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6366F1;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {

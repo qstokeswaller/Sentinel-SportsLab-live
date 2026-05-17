@@ -59,7 +59,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
 
     const sourceBadge = (key: string) => {
         const s = sourceConfig(key);
-        return s ? `${s.color} ${s.textColor}` : 'bg-slate-100 text-slate-600';
+        return s ? `${s.color} ${s.textColor}` : 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
     };
 
     const sourceLabel = (key: string) => {
@@ -70,7 +70,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</h4>
+                <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">{label}</h4>
                 <button
                     onClick={() => setOpen(!open)}
                     className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 transition-all"
@@ -83,13 +83,13 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
             {linked.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {linked.map(l => (
-                        <div key={l.id} className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm group">
+                        <div key={l.id} className="flex items-center gap-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 shadow-sm group">
                             <div className={`w-5 h-5 rounded flex items-center justify-center ${sourceBadge(l.source)}`}>
                                 {sourceIcon(l.source)}
                             </div>
                             <div className="min-w-0">
-                                <span className="text-xs font-semibold text-slate-800 block truncate max-w-[180px]">{l.title}</span>
-                                <span className="text-[9px] text-slate-400">{sourceLabel(l.source)}{l.meta ? ` · ${l.meta}` : ''}</span>
+                                <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] block truncate max-w-[180px]">{l.title}</span>
+                                <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{sourceLabel(l.source)}{l.meta ? ` · ${l.meta}` : ''}</span>
                             </div>
                             <button onClick={() => removeSession(l.id)} className="p-0.5 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
                                 <XIcon size={12} />
@@ -111,14 +111,14 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
 
             {/* Picker dropdown */}
             {open && (
-                <div className="bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-md overflow-hidden animate-in slide-in-from-top-2 duration-200">
                     {/* Source tabs */}
-                    <div className="flex border-b border-slate-100">
+                    <div className="flex border-b border-slate-100 dark:border-[#243A58]">
                         {sources.map(s => (
                             <button
                                 key={s.key}
                                 onClick={() => { setActiveSource(s.key); setSearch(''); }}
-                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 text-indigo-600 dark:text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600'}`}
                             >
                                 {s.icon}
                                 {s.label}
@@ -127,13 +127,13 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                     </div>
 
                     {/* Search */}
-                    <div className="p-2.5 border-b border-slate-100">
+                    <div className="p-2.5 border-b border-slate-100 dark:border-[#243A58]">
                         <input
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder={`Search ${activeSrc?.label || ''}...`}
-                            className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-500/10"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-300 focus:ring-1 focus:ring-indigo-500/10"
                             autoFocus
                         />
                     </div>
@@ -155,8 +155,8 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                                     {activeSrc?.icon}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <span className="text-xs font-medium text-slate-800 block truncate">{item.title}</span>
-                                    {item.meta && <span className="text-[10px] text-slate-400">{item.meta}</span>}
+                                    <span className="text-xs font-medium text-slate-800 dark:text-[#E2E8F0] block truncate">{item.title}</span>
+                                    {item.meta && <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{item.meta}</span>}
                                 </div>
                                 <PlusIcon size={12} className="text-slate-300 shrink-0" />
                             </button>
@@ -165,7 +165,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
 
                     {/* Close */}
                     <div className="border-t border-slate-100 p-2 flex justify-end">
-                        <button onClick={() => setOpen(false)} className="text-[10px] font-medium text-slate-400 hover:text-slate-600 transition-all px-2 py-1">
+                        <button onClick={() => setOpen(false)} className="text-[10px] font-medium text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-all px-2 py-1">
                             Done
                         </button>
                     </div>

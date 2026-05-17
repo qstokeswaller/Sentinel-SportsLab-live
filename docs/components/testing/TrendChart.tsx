@@ -109,7 +109,7 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
             >
                 <div className="flex items-center gap-2">
                     <TrendingUpIcon size={14} className="text-slate-400" />
-                    <h3 className="text-sm font-semibold text-slate-700">Trend</h3>
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Trend</h3>
                     {trend && (
                         <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
                             trend.direction === 'up' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'
@@ -200,7 +200,7 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                             ].map(s => (
                                 <div key={s.label} className="text-center">
                                     <div className="text-[10px] text-slate-400 uppercase tracking-wide">{s.label}</div>
-                                    <div className="text-sm font-bold text-slate-800">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
                                         {s.value}{metricInfo?.unit ? <span className="text-[10px] text-slate-400 ml-0.5">{metricInfo.unit}</span> : ''}
                                     </div>
                                 </div>

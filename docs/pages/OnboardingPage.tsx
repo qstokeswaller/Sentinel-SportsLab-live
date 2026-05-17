@@ -94,7 +94,7 @@ const OnboardingPage: React.FC = () => {
 
         <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-7 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1">How are you using Sentinel SportsLab?</h2>
-          <p className="text-sm text-slate-500 dark:text-[#94A3B8] mb-6">This determines how your data is organised.</p>
+          <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mb-6">This determines how your data is organised.</p>
 
           <div className="grid grid-cols-2 gap-3 mb-5">
             {/* Individual */}
@@ -108,7 +108,7 @@ const OnboardingPage: React.FC = () => {
             >
               <div className="text-xl mb-2.5">🏃</div>
               <p className="text-slate-900 dark:text-[#E2E8F0] font-semibold text-sm mb-1">Individual Coach</p>
-              <p className="text-slate-500 dark:text-[#94A3B8] text-xs leading-relaxed">
+              <p className="text-slate-500 dark:text-[#CBD5E1] text-xs leading-relaxed">
                 Personal coaching practice. Manage your own athletes directly.
               </p>
             </button>
@@ -124,7 +124,7 @@ const OnboardingPage: React.FC = () => {
             >
               <div className="text-xl mb-2.5">🏟️</div>
               <p className="text-slate-900 dark:text-[#E2E8F0] font-semibold text-sm mb-1">Club / Organisation</p>
-              <p className="text-slate-500 dark:text-[#94A3B8] text-xs leading-relaxed">
+              <p className="text-slate-500 dark:text-[#CBD5E1] text-xs leading-relaxed">
                 Multi-coach setup. Invite staff and manage multiple squads.
               </p>
             </button>

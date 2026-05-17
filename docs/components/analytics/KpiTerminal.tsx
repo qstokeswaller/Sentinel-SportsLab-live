@@ -48,7 +48,7 @@ export const KpiTerminal = ({ kpiData, selectedAthlete }) => {
                 const isStable = Math.abs(slope) < 0.1;
 
                 return (
-                    <div key={kpi.id} className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md group">
+                    <div key={kpi.id} className="bg-white dark:bg-[#132338] p-8 rounded-xl border border-slate-100 dark:border-[#1A2D48] shadow-sm transition-all hover:shadow-md group">
                         <div className="flex justify-between items-start mb-6">
                             <div className={`p-3 rounded-xl ${isStable ? 'bg-slate-50 text-slate-400' : isPositiveTrend ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-500' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-500'}`}>
                                 {isStable ? <MinusIcon size={20} /> : isPositiveTrend ? <TrendingUpIcon size={20} /> : <TrendingDownIcon size={20} />}
@@ -59,7 +59,7 @@ export const KpiTerminal = ({ kpiData, selectedAthlete }) => {
                         <div className="space-y-1">
                             <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{kpi.label}</div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-semibold text-slate-900">{kpi.value}</span>
+                                <span className="text-3xl font-semibold text-slate-900 dark:text-[#E2E8F0]">{kpi.value}</span>
                                 <span className="text-[10px] font-semibold text-slate-400">{kpi.unit}</span>
                             </div>
                         </div>

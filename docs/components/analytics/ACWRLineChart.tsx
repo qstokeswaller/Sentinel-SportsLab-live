@@ -107,7 +107,7 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
     if (!ratioHistory || ratioHistory.length < 2) {
         return (
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 text-center">
-                <p className="text-xs text-slate-400 dark:text-[#64748B]">Gathering data — not enough yet for accuracy (need 7+ training days)</p>
+                <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Gathering data — not enough yet for accuracy (need 7+ training days)</p>
             </div>
         );
     }
@@ -244,12 +244,12 @@ const ACWRLineChart: React.FC<ACWRLineChartProps> = ({
             {/* Header */}
             {title && (
                 <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-[11px] font-semibold text-slate-600 dark:text-[#94A3B8] uppercase tracking-wider">{title}</h4>
+                    <h4 className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">{title}</h4>
                 </div>
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mb-3 text-[10px] text-slate-500 dark:text-[#64748B] flex-wrap">
+            <div className="flex items-center gap-4 mb-3 text-[10px] text-slate-500 dark:text-[#CBD5E1] flex-wrap">
                 <span className="flex items-center gap-1.5">
                     <svg width="16" height="3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke="#334155" strokeWidth="2" strokeLinecap="round" /></svg>
                     ACWR Ratio

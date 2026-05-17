@@ -42,10 +42,10 @@ interface SmartCsvMapperProps {
 
 // Accent color presets (Tailwind classes)
 const ACCENT = {
-    indigo: { bg: 'bg-indigo-600', bgLight: 'bg-indigo-50', bgHover: 'hover:bg-indigo-700', text: 'text-indigo-600', border: 'border-indigo-200 dark:border-indigo-800/50', ring: 'ring-indigo-500' },
+    indigo: { bg: 'bg-indigo-600', bgLight: 'bg-indigo-50', bgHover: 'hover:bg-indigo-500', text: 'text-indigo-600', border: 'border-indigo-200 dark:border-indigo-800/50', ring: 'ring-indigo-500' },
     rose:   { bg: 'bg-rose-600',   bgLight: 'bg-rose-50',   bgHover: 'hover:bg-rose-700',   text: 'text-rose-600',   border: 'border-rose-200 dark:border-rose-900/50',   ring: 'ring-rose-500' },
     orange: { bg: 'bg-orange-500', bgLight: 'bg-orange-50', bgHover: 'hover:bg-orange-600', text: 'text-orange-600', border: 'border-orange-200', ring: 'ring-orange-500' },
-    emerald:{ bg: 'bg-emerald-600',bgLight: 'bg-emerald-50',bgHover: 'hover:bg-emerald-700',text: 'text-emerald-600',border: 'border-emerald-200 dark:border-emerald-800/50',ring: 'ring-emerald-500' },
+    emerald:{ bg: 'bg-emerald-600',bgLight: 'bg-emerald-50',bgHover: 'hover:bg-emerald-500',text: 'text-emerald-600',border: 'border-emerald-200 dark:border-emerald-800/50',ring: 'ring-emerald-500' },
 };
 
 const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
@@ -131,7 +131,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                 <SparklesIcon size={18} />
                             </div>
                             <div>
-                                <h3 className="text-base font-bold text-slate-900">Smart CSV Import</h3>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0]">Smart CSV Import</h3>
                                 <p className="text-xs text-slate-500 mt-0.5">{schema.name}</p>
                             </div>
                         </div>
@@ -144,11 +144,11 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                     <div className="mt-3 flex items-center gap-4 text-[11px]">
                         <div className="flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                            <span className="text-slate-600">Auto-matched <strong>{autoMatchCount}</strong> of <strong>{csvHeaders.length}</strong> columns</span>
+                            <span className="text-slate-600 dark:text-[#CBD5E1]">Auto-matched <strong>{autoMatchCount}</strong> of <strong>{csvHeaders.length}</strong> columns</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <span className={`w-2 h-2 rounded-full ${mappedCount > 0 ? 'bg-indigo-400' : 'bg-slate-300'}`} />
-                            <span className="text-slate-600"><strong>{mappedCount}</strong> of <strong>{totalFields}</strong> fields mapped</span>
+                            <span className="text-slate-600 dark:text-[#CBD5E1]"><strong>{mappedCount}</strong> of <strong>{totalFields}</strong> fields mapped</span>
                         </div>
                         {requiredMissing.length > 0 && (
                             <div className="flex items-center gap-1.5">
@@ -173,7 +173,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                 <div key={group} className="border border-slate-200 rounded-xl overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 bg-slate-50/80">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-semibold text-slate-700">{group}</span>
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{group}</span>
                                             {hasRequiredMissing && <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" />}
                                         </div>
                                         <span className="text-[10px] font-bold text-slate-400">{groupMapped}/{fields.length}</span>
@@ -195,7 +195,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                                 {/* Field label */}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className="text-xs font-medium text-slate-700 truncate">{field.label}</span>
+                                                        <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1] truncate">{field.label}</span>
                                                         {field.required && <span className="text-[9px] font-bold text-rose-500 uppercase">req</span>}
                                                     </div>
                                                     {field.description && <p className="text-[10px] text-slate-400 truncate">{field.description}</p>}
@@ -246,7 +246,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                     <div className="px-4 pb-4">
                         <button
                             onClick={() => setShowPreview(!showPreview)}
-                            className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors mb-2"
+                            className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] transition-colors mb-2"
                         >
                             {showPreview ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
                             Data Preview ({Math.min(3, csvRows.length)} of {csvRows.length} rows)
@@ -260,7 +260,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                             <tr className="bg-slate-50">
                                                 {/* Show only mapped fields in preview */}
                                                 {schema.fields.filter(f => mapping[f.id]).map(f => (
-                                                    <th key={f.id} className="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap border-b border-slate-100">
+                                                    <th key={f.id} className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap border-b border-slate-100">
                                                         {f.label}
                                                         <span className="block text-[9px] font-normal text-slate-400">{mapping[f.id]}</span>
                                                     </th>
@@ -271,7 +271,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                             {previewRows.map((row, i) => (
                                                 <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
                                                     {schema.fields.filter(f => mapping[f.id]).map(f => (
-                                                        <td key={f.id} className="px-3 py-1.5 text-slate-700 whitespace-nowrap">
+                                                        <td key={f.id} className="px-3 py-1.5 text-slate-700 dark:text-[#CBD5E1] whitespace-nowrap">
                                                             {row[mapping[f.id]] || <span className="text-slate-300">—</span>}
                                                         </td>
                                                     ))}
@@ -293,7 +293,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 dark:text-[#E2E8F0] dark:hover:text-[#E2E8F0] transition-colors"
                         >
                             Cancel
                         </button>

@@ -62,7 +62,7 @@ const renderCell = (key: string, val: any) => {
             if (isNaN(n) || n === 0) return DASH;
             const cls = n > 1.5 ? 'bg-rose-600 text-white'
                 : n > 1.3 ? 'bg-rose-100 text-rose-700'
-                : n < 0.8 ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700'
+                : n < 0.8 ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700'
                 : 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
             const label = n > 1.5 ? `${n.toFixed(2)} ⚠` : n.toFixed(2);
             return <Chip label={label} cls={cls} />;
@@ -76,10 +76,10 @@ const renderCell = (key: string, val: any) => {
         }
 
         case 'hamstring':
-            return <span className="text-slate-700 text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
+            return <span className="text-slate-700 dark:text-[#CBD5E1] text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
 
         case 'oneRM':
-            return <span className="text-slate-700 text-xs font-semibold">{val} kg</span>;
+            return <span className="text-slate-700 dark:text-[#CBD5E1] text-xs font-semibold">{val} kg</span>;
 
         case 'dsi': {
             const cls = parseFloat(val) > 1.0 ? 'bg-rose-100 text-rose-700'
@@ -89,10 +89,10 @@ const renderCell = (key: string, val: any) => {
         }
 
         case 'dsiCategory':
-            return <span className="text-slate-600 text-xs font-bold">{val}</span>;
+            return <span className="text-slate-600 dark:text-[#CBD5E1] text-xs font-bold">{val}</span>;
 
         case 'rsi':
-            return <span className="text-slate-700 text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
+            return <span className="text-slate-700 dark:text-[#CBD5E1] text-xs font-semibold">{parseFloat(val).toFixed(2)}</span>;
 
         case 'hamstringDate':
         case 'oneRMDate':
@@ -103,7 +103,7 @@ const renderCell = (key: string, val: any) => {
         }
 
         default:
-            return <span className="text-slate-600 text-xs font-bold">{val}</span>;
+            return <span className="text-slate-600 dark:text-[#CBD5E1] text-xs font-bold">{val}</span>;
     }
 };
 
@@ -225,12 +225,12 @@ export const DataHub = () => {
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-6">
 
             {/* Header row */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
                 <div>
-                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900">Athlete Data Hub</h3>
+                    <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Athlete Data Hub</h3>
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
                         {filtered.length} athletes · {visibleCols.length + 1} columns visible
                     </p>
@@ -263,26 +263,26 @@ export const DataHub = () => {
                     <div className="relative">
                         <button
                             onClick={() => setShowColPanel(p => !p)}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors"
                         >
                             <ColumnsIcon size={13} /> Columns
                         </button>
 
                         {showColPanel && (
-                            <div className="absolute right-0 top-11 z-50 bg-white border border-slate-100 rounded-xl shadow-2xl p-4 w-56 space-y-1.5">
+                            <div className="absolute right-0 top-11 z-50 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl shadow-2xl p-4 w-56 space-y-1.5">
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Toggle Columns</span>
-                                    <button onClick={() => setShowColPanel(false)}><X size={14} className="text-slate-400 hover:text-slate-700" /></button>
+                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Toggle Columns</span>
+                                    <button onClick={() => setShowColPanel(false)}><X size={14} className="text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]" /></button>
                                 </div>
                                 {COLUMN_DEFS.map(col => (
                                     <label key={col.key} className="flex items-center gap-3 cursor-pointer group py-0.5">
                                         <div
                                             onClick={() => setColVis(v => ({ ...v, [col.key]: !v[col.key] }))}
-                                            className={`w-4 h-4 rounded flex items-center justify-center border-2 shrink-0 transition-all ${colVis[col.key] ? 'bg-slate-900 border-slate-900' : 'border-slate-200'}`}
+                                            className={`w-4 h-4 rounded flex items-center justify-center border-2 shrink-0 transition-all ${colVis[col.key] ? 'bg-indigo-600 border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500' : 'border-slate-200 dark:border-[#243A58]'}`}
                                         >
                                             {colVis[col.key] && <div className="w-2 h-2 bg-white rounded-sm" />}
                                         </div>
-                                        <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900">{col.label}</span>
+                                        <span className="text-[11px] font-bold text-slate-600 dark:text-[#CBD5E1] group-hover:text-slate-900 dark:group-hover:text-[#E2E8F0]">{col.label}</span>
                                     </label>
                                 ))}
                             </div>
@@ -342,8 +342,8 @@ export const DataHub = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filtered.length > 0 ? filtered.map((row, i) => (
                                 <tr key={row.id || i} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group">
-                                    <td className="p-4 whitespace-nowrap sticky left-0 bg-white group-hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors z-10 border-r border-slate-100">
-                                        <span className="text-sm font-semibold text-slate-900">{row.name}</span>
+                                    <td className="p-4 whitespace-nowrap sticky left-0 bg-white dark:bg-[#132338] group-hover:bg-slate-50 dark:group-hover:bg-[#1A2D48] transition-colors z-10 border-r border-slate-100 dark:border-[#1A2D48]">
+                                        <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{row.name}</span>
                                     </td>
                                     {visibleCols.map(col => (
                                         <td key={col.key} className="p-4 whitespace-nowrap">
@@ -371,7 +371,7 @@ export const DataHub = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
                 <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-wide w-full">ACWR Legend</p>
                 {[
-                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700' },
+                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700' },
                     { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' },
                     { label: '1.3–1.5 — Caution',   cls: 'bg-rose-100 text-rose-700' },
                     { label: '> 1.5 — Danger',       cls: 'bg-rose-600 text-white' },

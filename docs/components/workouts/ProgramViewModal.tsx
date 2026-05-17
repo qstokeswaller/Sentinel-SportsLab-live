@@ -58,7 +58,7 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between shrink-0">
           <div className="space-y-1.5">
-            <h2 className="text-lg font-semibold text-slate-900 leading-none">{program.name}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-none">{program.name}</h2>
             <div className="flex items-center gap-3 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
                 <CalendarIcon size={11} />
@@ -150,7 +150,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
             className={`px-4 py-2 text-xs font-medium whitespace-nowrap transition-all border-b-2 -mb-px flex items-center gap-1.5 ${
               activeDay === i
                 ? d.is_rest_day ? 'border-slate-400 text-slate-500' : 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-400 hover:text-slate-700'
+                : 'border-transparent text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1]'
             }`}
           >
             {d.name ?? `Day ${d.day_number}`}
@@ -170,7 +170,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
                 <MoonIcon size={24} className="text-slate-400" />
               </div>
               <div>
-                <p className="text-base font-semibold text-slate-600">Rest Day</p>
+                <p className="text-base font-semibold text-slate-600 dark:text-[#CBD5E1]">Rest Day</p>
                 <p className="text-xs text-slate-400 mt-1">Recovery and rest are as important as training.</p>
               </div>
               {day.instructions && (
@@ -180,7 +180,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
           ) : (
             <>
               {day.instructions && (
-                <div className="bg-slate-50 rounded-lg px-4 py-3 text-sm text-slate-600 border border-slate-200">
+                <div className="bg-slate-50 rounded-lg px-4 py-3 text-sm text-slate-600 dark:text-[#CBD5E1] border border-slate-200">
                   {day.instructions}
                 </div>
               )}
@@ -246,7 +246,7 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
           {letter}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-slate-800">{exerciseName}</div>
+          <div className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0]">{exerciseName}</div>
           {hasMeta && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
               {row.sets && <span>Sets: <span className="font-medium text-indigo-600 dark:text-indigo-300">{row.sets}</span></span>}
@@ -258,10 +258,10 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
                 </span>
               )}
               {(row.rest_min > 0 || row.rest_sec > 0) && (
-                <span>Rest: <span className="text-slate-600">{row.rest_min}m {row.rest_sec}s</span></span>
+                <span>Rest: <span className="text-slate-600 dark:text-[#CBD5E1]">{row.rest_min}m {row.rest_sec}s</span></span>
               )}
-              {row.rir && <span>RIR: <span className="text-slate-600">{row.rir}</span></span>}
-              {row.rpe && <span>RPE: <span className="text-slate-600">{row.rpe}</span></span>}
+              {row.rir && <span>RIR: <span className="text-slate-600 dark:text-[#CBD5E1]">{row.rir}</span></span>}
+              {row.rpe && <span>RPE: <span className="text-slate-600 dark:text-[#CBD5E1]">{row.rpe}</span></span>}
             </div>
           )}
         </div>
@@ -276,15 +276,15 @@ const ExerciseViewRow = ({ row, letter, exerciseMap, exerciseFullMap, exerciseNa
           {(bodyParts.length > 0 || categories.length > 0) && (
             <div className="flex flex-wrap gap-1.5">
               {bodyParts.map((bp: string) => (
-                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[9px] font-medium">{bp}</span>
+                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-medium">{bp}</span>
               ))}
               {categories.map((cat: string) => (
-                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-medium">{cat}</span>
+                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-medium">{cat}</span>
               ))}
             </div>
           )}
           {row.notes && <p className="text-xs text-slate-500 italic">{row.notes}</p>}
-          {desc && <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>}
+          {desc && <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{desc}</p>}
           {videoUrl && (
             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
                className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 transition-colors">

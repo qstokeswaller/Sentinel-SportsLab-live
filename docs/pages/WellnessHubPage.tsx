@@ -1,11 +1,12 @@
 // @ts-nocheck
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import {
     ClipboardListIcon, StethoscopeIcon, ShieldAlertIcon, ArrowLeftIcon, ActivityIcon,
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
     UploadIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ShieldIcon, TableIcon,
-    RotateCcwIcon, XCircleIcon, Trash2Icon, PencilIcon, CheckIcon,
+    RotateCcwIcon, XCircleIcon, Trash2Icon, PencilIcon, CheckIcon, ChevronDownIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -39,13 +40,24 @@ const getInitials = (name: string) => name?.split(' ').map(n => n[0]).join('').s
 const ACWRMonitoringHub: React.FC = () => {
     const { teams, loadRecords, setLoadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, setAcwrExclusions, acwrRecalcAnchors, setAcwrRecalcAnchors, showToast, isLoading } = useAppState();
     const [selectedTeamId, setSelectedTeamId] = useState<string>('');
-    const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete' | 'history'>('roster');
+    const [acwrView, setAcwrView] = useState<'roster' | 'log' | 'athlete' | 'history' | 'full_table'>('roster');
+    const [reportOpen, setReportOpen] = useState<null | 'squad_summary' | 'at_risk' | 'risk_report'>(null);
+    const [reportPeriodDays, setReportPeriodDays] = useState<7 | 14 | 28 | 90>(28);
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
     const [interventionAthlete, setInterventionAthlete] = useState<any>(null);
     const [isInterventionOpen, setIsInterventionOpen] = useState(false);
     // Exclude dropdown: tracks which player's exclude menu is open
     const [excludeMenuOpenId, setExcludeMenuOpenId] = useState<string | null>(null);
+    const [excludeMenuPos, setExcludeMenuPos] = useState<{top: number; left: number} | null>(null);
+    useEffect(() => {
+        if (!excludeMenuOpenId) return;
+        const close = () => { setExcludeMenuOpenId(null); setExcludeMenuPos(null); };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [excludeMenuOpenId]);
     const [drilldownFilter, setDrilldownFilter] = useState<'7d' | '28d' | '90d' | 'all' | 'custom'>('28d');
+    const [rosterTab, setRosterTab] = useState<'all' | 'at_risk' | 'underloaded' | 'optimal'>('all');
+    const [viewDate, setViewDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
     const [drilldownFrom, setDrilldownFrom] = useState<string>(() => {
         const d = new Date(); d.setDate(d.getDate() - 29); return d.toISOString().split('T')[0];
     });
@@ -269,9 +281,17 @@ const ACWRMonitoringHub: React.FC = () => {
         return Math.floor((Date.now() - d.getTime()) / 86400000);
     };
 
+    const realTodayStr = new Date().toISOString().split('T')[0];
+    const isHistoricalView = viewDate !== realTodayStr;
+
+    // Records filtered to viewDate — everything downstream uses this so historical snapshots work correctly
+    const viewFilteredRecords = useMemo(() =>
+        (loadRecords || []).filter(r => (r.date || '').split('T')[0] <= viewDate),
+    [loadRecords, viewDate]);
+
     // Calculate ACWR + risk for every player
     const rosterData = useMemo(() => {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = viewDate;
         return uniquePlayers.map(player => {
             const excluded = isExcluded(player.id);
             const returning = isReturningFromInjury(player.id);
@@ -296,6 +316,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
                 recalcAnchorDate: rfAnchor,
+                referenceDate: viewDate,
             };
 
             // If excluded, use frozen values instead of calculating
@@ -307,11 +328,11 @@ const ACWRMonitoringHub: React.FC = () => {
                     acuteHistory: [], chronicHistory: [], ratioHistory: [],
                 };
             } else {
-                acwrResult = ACWR_UTILS.calculateAthleteACWR(loadRecords || [], player.id, options);
+                acwrResult = ACWR_UTILS.calculateAthleteACWR(viewFilteredRecords, player.id, options);
             }
 
             const status = excluded
-                ? { label: 'Excluded', color: 'text-slate-400 dark:text-[#64748B]', bg: 'bg-slate-100 dark:bg-[#1A2D48]', status: 'excluded' }
+                ? { label: 'Excluded', color: 'text-slate-400 dark:text-[#CBD5E1]', bg: 'bg-slate-100 dark:bg-[#1A2D48]', status: 'excluded' }
                 : ACWR_UTILS.getRatioStatus(acwrResult.ratio);
             const reasons = excluded ? [] : ACWR_UTILS.getAthleteRiskReasoning(acwrResult, wellnessData, loadRecords, player.id);
 
@@ -347,7 +368,7 @@ const ACWRMonitoringHub: React.FC = () => {
 
             const spark = acwrResult.ratioHistory?.slice(-14) || [];
 
-            const athleteRecords = (loadRecords || []).filter(r =>
+            const athleteRecords = viewFilteredRecords.filter(r =>
                 (r.athleteId === player.id || r.athlete_id === player.id) && r.metric_type === teamMetricType
             );
             const lastSession = athleteRecords.length > 0
@@ -359,6 +380,20 @@ const ACWRMonitoringHub: React.FC = () => {
                 ? Math.floor((new Date(todayStr + 'T00:00:00').getTime() - new Date(lastSession + 'T00:00:00').getTime()) / 86400000)
                 : 0;
 
+            // Monotony + Strain from last 7 days of loads
+            const last7: number[] = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(todayStr + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i);
+                const dayStr = d.toISOString().split('T')[0];
+                const rec = athleteRecords.find((r: any) => r.date === dayStr);
+                last7.push(rec ? Number(rec.value) : 0);
+            }
+            const weekLoad = last7.reduce((s, v) => s + v, 0);
+            const meanLoad = weekLoad / 7;
+            const sd = Math.sqrt(last7.reduce((s, v) => s + Math.pow(v - meanLoad, 2), 0) / 7);
+            const monotony = sd > 0 ? parseFloat((meanLoad / sd).toFixed(1)) : 0;
+            const strain = Math.round(weekLoad * monotony);
+
             return {
                 ...player,
                 acwrResult, ratio: acwrResult.ratio, acute: acwrResult.acute, chronic: acwrResult.chronic,
@@ -366,6 +401,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 teamName: player.teamName || selectedTeam?.name || '',
                 settings: options,
                 excluded, returning, exclusion, daysSinceExcluded, noDataDays,
+                monotony, strain,
             };
         }).sort((a, b) => {
             if (a.excluded && !b.excluded) return 1;
@@ -379,7 +415,7 @@ const ACWRMonitoringHub: React.FC = () => {
             if (dB !== dA) return dB.localeCompare(dA);
             return b.ratio - a.ratio;
         });
-    }, [uniquePlayers, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, acwrRecalcAnchors, selectedTeam, teamMetricType]);
+    }, [uniquePlayers, viewFilteredRecords, viewDate, loadRecords, wellnessData, bodyHeatmapData, acwrSettings, acwrExclusions, acwrRecalcAnchors, selectedTeam, teamMetricType]);
 
     // ACWR trendline — team average or individual client EWMA
     const teamTrendline = useMemo(() => {
@@ -393,7 +429,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 chronicN: settings.chronicWindow || 28,
                 freezeRestDays: settings.freezeRestDays !== false,
             };
-            return ACWR_UTILS.calculateAthleteACWR(loadRecords || [], privateClientId, options);
+            return ACWR_UTILS.calculateAthleteACWR(viewFilteredRecords, privateClientId, { ...options, referenceDate: viewDate });
         }
         if (!selectedTeam || !teamSettings?.enabled) return null;
         // Team average: exclude injured athletes
@@ -404,9 +440,10 @@ const ACWRMonitoringHub: React.FC = () => {
             acuteN: teamSettings.acuteWindow || 7,
             chronicN: teamSettings.chronicWindow || 28,
             freezeRestDays: teamSettings.freezeRestDays !== false,
+            referenceDate: viewDate,
         };
-        return ACWR_UTILS.calculateTeamACWR(loadRecords || [], playerIds, options);
-    }, [selectedTeamId, selectedTeam, loadRecords, teamSettings, acwrExclusions, isPrivateClientSelected, privateClientId, acwrSettings, teamMetricType]);
+        return ACWR_UTILS.calculateTeamACWR(viewFilteredRecords, playerIds, options);
+    }, [selectedTeamId, selectedTeam, viewFilteredRecords, viewDate, loadRecords, teamSettings, acwrExclusions, isPrivateClientSelected, privateClientId, acwrSettings, teamMetricType]);
 
     // ── Load History computed data ──────────────────────────────────────
     const weekDays = useMemo(() => {
@@ -447,6 +484,39 @@ const ACWRMonitoringHub: React.FC = () => {
             phases: (teamTrendline.phases || []).slice(s, e),
         };
     }, [teamTrendline, historyChartFrom, historyChartTo]);
+
+    // Filtered roster by tab
+    const filteredRoster = useMemo(() => {
+        if (rosterTab === 'at_risk') return rosterData.filter(p => !p.excluded && p.ratio > 1.0);
+        if (rosterTab === 'underloaded') return rosterData.filter(p => !p.excluded && p.ratio > 0 && p.ratio < 0.70);
+        if (rosterTab === 'optimal') return rosterData.filter(p => !p.excluded && p.ratio >= 0.70 && p.ratio <= 1.0);
+        return rosterData;
+    }, [rosterData, rosterTab]);
+
+    // ACWR zone distribution counts
+    const distributionCounts = useMemo(() => {
+        const active = rosterData.filter(r => !r.excluded && r.ratio > 0);
+        return {
+            highRisk: active.filter(r => r.ratio > 1.30).length,
+            elevated: active.filter(r => r.ratio > 1.00 && r.ratio <= 1.30).length,
+            optimal: active.filter(r => r.ratio >= 0.70 && r.ratio <= 1.00).length,
+            underloaded: active.filter(r => r.ratio < 0.70).length,
+            total: active.length,
+        };
+    }, [rosterData]);
+
+    const loadUnit = (ACWR_METRIC_TYPES as any)[teamMetricType]?.unit || 'AU';
+
+    // Data compliance: % of active athletes with load recorded in last 7 days of viewDate window
+    const dataCompliance = useMemo(() => {
+        const cutoff = new Date(viewDate + 'T00:00:00'); cutoff.setDate(cutoff.getDate() - 7);
+        const cutoffStr = cutoff.toISOString().split('T')[0];
+        const active = rosterData.filter(r => !r.excluded);
+        if (active.length === 0) return 0;
+        const hasData = active.filter(p => p.lastSession && p.lastSession >= cutoffStr).length;
+        return Math.round((hasData / active.length) * 100);
+    }, [rosterData, viewDate]);
+
 
     const goWeekBack = () => setHistoryWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() - 7); return d; });
     const goWeekForward = () => setHistoryWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() + 7); return d; });
@@ -573,16 +643,36 @@ const ACWRMonitoringHub: React.FC = () => {
         showToast?.(`Imported ${batch.length} training load records${skipMsg}`);
     };
 
-    // Mini sparkline (pixel heights — percentage heights don't work in flex containers)
-    const MiniSparkline = ({ data, heightPx = 24 }: { data: number[]; heightPx?: number }) => {
-        if (data.length < 2) return <span className="text-[10px] text-slate-300 dark:text-[#475569] italic">No trend</span>;
-        const max = Math.max(...data, 1.5);
+    // Last-4-days mini bar chart with load values
+    const MiniBars = ({ athleteId }: { athleteId: string }) => {
+        const refDate = new Date(viewDate + 'T12:00:00Z');
+        const days: string[] = [];
+        for (let i = 3; i >= 0; i--) {
+            const d = new Date(refDate); d.setUTCDate(d.getUTCDate() - i);
+            days.push(d.toISOString().split('T')[0]);
+        }
+        const values = days.map(day => {
+            const rec = viewFilteredRecords.find((r: any) =>
+                (r.athlete_id === athleteId || r.athleteId === athleteId) &&
+                r.date === day && r.metric_type === teamMetricType
+            );
+            return rec ? Number(rec.value) : 0;
+        });
+        const max = Math.max(...values, 1);
+        const hasAny = values.some(v => v > 0);
+        if (!hasAny) return <span className="text-[9px] text-slate-300 dark:text-[#475569] italic">No data</span>;
         return (
-            <div className="flex items-end gap-[1px]" style={{ height: `${heightPx}px` }}>
-                {data.map((val, i) => {
-                    const h = Math.max((val / max) * heightPx, 2);
-                    const color = val > 1.5 ? 'bg-rose-400' : val > 1.3 ? 'bg-amber-400' : val >= 0.8 ? 'bg-emerald-400' : val > 0 ? 'bg-sky-400' : 'bg-slate-200 dark:bg-[#243A58]';
-                    return <div key={i} className={`flex-1 rounded-sm ${color}`} style={{ height: `${h}px` }} />;
+            <div className="flex items-end gap-1" style={{ height: '36px' }}>
+                {values.map((val, i) => {
+                    const barH = val > 0 ? Math.max((val / max) * 24, 6) : 3;
+                    const bg = val === 0 ? 'bg-slate-100 dark:bg-[#243A58]'
+                        : val > 600 ? 'bg-rose-400' : val > 400 ? 'bg-amber-400' : 'bg-emerald-400';
+                    return (
+                        <div key={i} className="flex flex-col items-center justify-end gap-0.5 flex-1" style={{ height: '36px' }}>
+                            {val > 0 && <span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] leading-none">{val}</span>}
+                            <div className={`w-full rounded-sm ${bg}`} style={{ height: `${barH}px` }} />
+                        </div>
+                    );
                 })}
             </div>
         );
@@ -621,7 +711,7 @@ const ACWRMonitoringHub: React.FC = () => {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
             <div className="bg-white dark:bg-[#132338] rounded-xl shadow-2xl p-6 w-80 max-w-[90vw]" onClick={e => e.stopPropagation()}>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1">Delete load record?</h3>
-                <p className="text-xs text-slate-500 dark:text-[#94A3B8] mb-3">
+                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mb-3">
                     <span className="font-medium text-slate-700 dark:text-[#E2E8F0]">{deleteConfirm.playerName}</span>
                     {' · '}
                     {new Date(deleteConfirm.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -645,7 +735,7 @@ const ACWRMonitoringHub: React.FC = () => {
     if (acwrView === 'log') {
         return (
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
                 <TrainingLoadEntry teamId={selectedTeamId} onSaved={() => { setAcwrView('roster'); }} />
@@ -672,7 +762,7 @@ const ACWRMonitoringHub: React.FC = () => {
         return (
             <>
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => { setAcwrView('roster'); setSelectedAthleteId(null); }} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
+                <button onClick={() => { setAcwrView('roster'); setSelectedAthleteId(null); }} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
 
@@ -684,7 +774,7 @@ const ACWRMonitoringHub: React.FC = () => {
                         </div>
                         <div className="flex-1">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{playerData.name}</h3>
-                            <p className="text-xs text-slate-500 dark:text-[#94A3B8]">{playerData.position || 'Athlete'} · {playerData.teamName} · {methodLabel}</p>
+                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">{playerData.position || 'Athlete'} · {playerData.teamName} · {methodLabel}</p>
                         </div>
                         <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${status.bg} ${status.color}`}>
                             {status.label} — {acwrResult.ratio.toFixed(2)}
@@ -695,15 +785,15 @@ const ACWRMonitoringHub: React.FC = () => {
                 {/* ACWR Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">ACWR Ratio</div>
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">ACWR Ratio</div>
                         <div className={`text-3xl font-bold ${status.color}`}>{acwrResult.ratio.toFixed(2)}</div>
                     </div>
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Acute ({playerSettings.acuteN}d)</div>
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Acute ({playerSettings.acuteN}d)</div>
                         <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrResult.acute}</div>
                     </div>
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 space-y-1">
-                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Chronic ({playerSettings.chronicN}d)</div>
+                        <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Chronic ({playerSettings.chronicN}d)</div>
                         <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrResult.chronic}</div>
                     </div>
                     <div className="bg-slate-900 rounded-xl shadow-sm p-4 space-y-1">
@@ -729,25 +819,25 @@ const ACWRMonitoringHub: React.FC = () => {
                                 setDrilldownFrom(from);
                                 setDrilldownTo(to);
                             }} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] hover:bg-slate-200'
+                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
                             }`}>{label}</button>
                         ))}
                     </div>
                     <div className="w-px h-5 bg-slate-200 dark:bg-[#243A58]" />
                     {/* Custom date pickers */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#94A3B8]">
-                        <span className="text-slate-400 dark:text-[#64748B]">From</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#CBD5E1]">
+                        <span className="text-slate-400 dark:text-[#CBD5E1]">From</span>
                         <input type="date" value={drilldownFrom}
                             onChange={e => { setDrilldownFrom(e.target.value); setDrilldownFilter('custom'); }}
                             className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
                         />
-                        <span className="text-slate-400 dark:text-[#64748B]">to</span>
+                        <span className="text-slate-400 dark:text-[#CBD5E1]">to</span>
                         <input type="date" value={drilldownTo}
                             onChange={e => { setDrilldownTo(e.target.value); setDrilldownFilter('custom'); }}
                             className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
                         />
                     </div>
-                    <div className="ml-auto text-[10px] text-slate-400 dark:text-[#64748B]">
+                    <div className="ml-auto text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                         {dailyData.length} day{dailyData.length !== 1 ? 's' : ''}
                     </div>
                 </div>
@@ -760,7 +850,7 @@ const ACWRMonitoringHub: React.FC = () => {
                     const allChronic = acwrResult.chronicHistory || [];
                     const indices = allDates.map((d, i) => i).filter(i => allDates[i] >= drilldownFrom && allDates[i] <= drilldownTo);
                     if (indices.length < 2) return (
-                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 text-center text-xs text-slate-400 dark:text-[#64748B]">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 text-center text-xs text-slate-400 dark:text-[#CBD5E1]">
                             Not enough data in selected range for a chart.
                         </div>
                     );
@@ -785,13 +875,13 @@ const ACWRMonitoringHub: React.FC = () => {
                 <div className={`bg-white dark:bg-[#132338] rounded-xl border shadow-sm overflow-hidden ${editMode ? 'border-amber-300' : 'border-slate-200 dark:border-[#243A58]'}`}>
                     {/* Column headers */}
                     <div className={`flex items-center gap-4 px-5 py-2.5 border-b ${editMode ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide flex-1">Date</span>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-24">Load</span>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-16">ACWR</span>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide w-20">Status</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide flex-1">Date</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-24">Load</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-16">ACWR</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-20">Status</span>
                         <button
                             onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
                         >
                             {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                         </button>
@@ -802,11 +892,11 @@ const ACWRMonitoringHub: React.FC = () => {
                         </div>
                     )}
                     {dailyData.length === 0 ? (
-                        <div className="px-5 py-8 text-center text-sm text-slate-400 dark:text-[#64748B]">No data in selected range.</div>
+                        <div className="px-5 py-8 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">No data in selected range.</div>
                     ) : (
                         <div className="divide-y divide-slate-50">
                             {dailyData.map((day, i) => (
-                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 dark:bg-[#0F1C30]/40 text-slate-400 dark:text-[#64748B]' : 'hover:bg-slate-50/60 dark:bg-[#132338]/40'}`}>
+                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 dark:bg-[#0F1C30]/40 text-slate-400 dark:text-[#CBD5E1]' : 'hover:bg-slate-50/60 dark:bg-[#132338]/40'}`}>
                                     <span className="font-medium text-slate-700 dark:text-[#E2E8F0] flex-1">
                                         {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}
                                     </span>
@@ -820,7 +910,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                             {!day.isRestDay && day.recordId ? (
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setDeleteConfirm({ id: day.recordId, playerName: uniquePlayers.find(p => p.id === selectedAthleteId)?.name || 'Athlete', date: day.date }); }}
-                                                    className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors"
+                                                    className="p-1 rounded hover:bg-rose-50 dark:hover:bg-[#1A2D48] text-slate-300 dark:text-[#475569] hover:text-rose-500 transition-colors"
                                                     title="Delete this day's record"
                                                 >
                                                     <Trash2Icon size={13} />
@@ -837,11 +927,11 @@ const ACWRMonitoringHub: React.FC = () => {
                 {/* Risk Analysis */}
                 {reasons.length > 0 && (
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-3">
-                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Risk Analysis</h4>
+                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Risk Analysis</h4>
                         {reasons.map((reason, idx) => {
-                            const sev = reason.severity === 'critical' ? { bg: 'bg-rose-50', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700', badge: 'bg-rose-100 text-rose-600' }
-                                      : reason.severity === 'warning' ? { bg: 'bg-amber-50', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-600' }
-                                      : { bg: 'bg-sky-50', border: 'border-sky-200 dark:border-sky-900/50', text: 'text-sky-700', badge: 'bg-sky-100 text-sky-600' };
+                            const sev = reason.severity === 'critical' ? { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-700 dark:text-rose-400', badge: 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' }
+                                      : reason.severity === 'warning' ? { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800/50', text: 'text-amber-700 dark:text-amber-400', badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' }
+                                      : { bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-200 dark:border-sky-900/50', text: 'text-sky-700 dark:text-sky-400', badge: 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400' };
                             return (
                                 <div key={idx} className={`${sev.bg} ${sev.border} border rounded-xl p-3.5`}>
                                     <div className="flex items-center gap-2 mb-1">
@@ -868,22 +958,22 @@ const ACWRMonitoringHub: React.FC = () => {
         return (
             <>
             <div className="space-y-4 animate-in fade-in duration-200">
-                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 transition-colors">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors">
                     <ArrowLeftIcon size={14} /> Back to Roster
                 </button>
 
                 {/* Team ACWR chart with date range picker */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] flex flex-wrap items-center gap-3 justify-between">
-                        <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Team ACWR — Custom Range</h4>
+                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Team ACWR — Custom Range</h4>
                         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-[#CBD5E1]">
-                            <span className="text-slate-400 dark:text-[#64748B]">From</span>
+                            <span className="text-slate-400 dark:text-[#CBD5E1]">From</span>
                             <input
                                 type="date" value={historyChartFrom}
                                 onChange={e => setHistoryChartFrom(e.target.value)}
                                 className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
                             />
-                            <span className="text-slate-400 dark:text-[#64748B]">to</span>
+                            <span className="text-slate-400 dark:text-[#CBD5E1]">to</span>
                             <input
                                 type="date" value={historyChartTo}
                                 onChange={e => setHistoryChartTo(e.target.value)}
@@ -904,7 +994,7 @@ const ACWRMonitoringHub: React.FC = () => {
                             title={`${selectedTeam?.name || 'Team'} — ACWR ${historyChartFrom} → ${historyChartTo}`}
                         />
                     ) : (
-                        <div className="p-10 text-center text-sm text-slate-400 dark:text-[#64748B]">No team ACWR data in selected range.</div>
+                        <div className="p-10 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">No team ACWR data in selected range.</div>
                     )}
                 </div>
 
@@ -913,17 +1003,17 @@ const ACWRMonitoringHub: React.FC = () => {
                     {/* Week nav header */}
                     <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] flex flex-wrap items-center gap-3 justify-between">
                         <div className="flex items-center gap-2">
-                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] transition-colors">
+                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
                                 <ChevronLeftIcon size={14} />
                             </button>
                             <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[160px] text-center">
                                 {fmtShort(weekDays[0])} — {fmtShort(weekDays[6])}
                             </span>
-                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] transition-colors">
+                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
                                 <ChevronRightIcon size={14} />
                             </button>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#94A3B8]">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#CBD5E1]">
                             <span>Jump to week:</span>
                             <input
                                 type="date"
@@ -938,14 +1028,14 @@ const ACWRMonitoringHub: React.FC = () => {
                                 className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
                             />
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#64748B] ml-auto">
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-auto">
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/35" /> Low</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-300" /> Medium</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-amber-300" /> High</span>
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-rose-300" /> Peak</span>
                             <button
                                 onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
                             >
                                 {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                             </button>
@@ -963,21 +1053,21 @@ const ACWRMonitoringHub: React.FC = () => {
                         <table className={`w-full text-xs ${editMode ? 'min-w-[800px]' : 'min-w-[720px]'}`}>
                             <thead>
                                 <tr className={`border-b ${editMode ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
-                                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-36">Athlete</th>
+                                    <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] w-36">Athlete</th>
                                     {weekDays.map(d => (
-                                        <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 dark:text-[#64748B] w-20">
+                                        <th key={d} className="text-center px-1 py-2.5 font-medium text-slate-400 dark:text-[#CBD5E1] w-20">
                                             <div>{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })}</div>
                                             <div className="text-[10px] text-slate-300 dark:text-[#475569]">{new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                                         </th>
                                     ))}
-                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-16">Total</th>
-                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#94A3B8] w-16">ACWR</th>
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Total</th>
+                                    <th className="text-center px-2 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">ACWR</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {uniquePlayers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={10} className="px-4 py-8 text-center text-slate-400 dark:text-[#64748B] text-sm">No athletes in this team.</td>
+                                        <td colSpan={10} className="px-4 py-8 text-center text-slate-400 dark:text-[#CBD5E1] text-sm">No athletes in this team.</td>
                                     </tr>
                                 ) : uniquePlayers.map(player => {
                                     const playerRoster = rosterData.find(r => r.id === player.id);
@@ -1015,11 +1105,11 @@ const ACWRMonitoringHub: React.FC = () => {
                                             <td className="px-4 py-2">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                                        playerRoster?.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600'
+                                                        playerRoster?.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600'
                                                         : weekAcwr > 1.5 ? 'bg-rose-100 text-rose-700'
                                                         : weekAcwr > 1.3 ? 'bg-amber-100 text-amber-700'
                                                         : weekAcwr > 0 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
-                                                        : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8]'
+                                                        : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'
                                                     }`}>{getInitials(player.name)}</div>
                                                     <span className="font-medium text-slate-800 dark:text-[#E2E8F0] text-xs truncate max-w-[90px]">{player.name}</span>
                                                 </div>
@@ -1028,7 +1118,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                                 const v = load?.value ?? null;
                                                 const intensity = (v || 0) / weekMaxLoad;
                                                 const bg = v === null ? '' :
-                                                    load?.isRest ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B]' :
+                                                    load?.isRest ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]' :
                                                     intensity > 0.8 ? 'bg-rose-200 text-rose-800' :
                                                     intensity > 0.6 ? 'bg-amber-200 text-amber-800' :
                                                     intensity > 0.3 ? 'bg-emerald-200 text-emerald-800' :
@@ -1056,7 +1146,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                             })}
                                             <td className="px-2 py-2 text-center">
                                                 <span className="font-bold text-slate-700 dark:text-[#E2E8F0] text-xs">{weekTotal > 0 ? weekTotal : '—'}</span>
-                                                {weekTotal > 0 && <div className="text-[9px] text-slate-400 dark:text-[#64748B]">{metricUnit}</div>}
+                                                {weekTotal > 0 && <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{metricUnit}</div>}
                                             </td>
                                             <td className="px-2 py-2 text-center">
                                                 {acwrStatus ? (
@@ -1082,13 +1172,371 @@ const ACWRMonitoringHub: React.FC = () => {
     }
 
     // ── Main Roster View (default) ──────────────────────────────────────
+
+    // SVG Donut for ACWR distribution
+    const ACWRDonut = () => {
+        const R = 42; const cx = 56; const cy = 56; const stroke = 14;
+        const circ = 2 * Math.PI * R;
+        const { highRisk, elevated, optimal, underloaded, total } = distributionCounts;
+        const segments = [
+            { count: highRisk, color: '#f87171' },
+            { count: elevated, color: '#fbbf24' },
+            { count: optimal, color: '#34d399' },
+            { count: underloaded, color: '#38bdf8' },
+        ];
+        let offset = 0;
+        const arcs = segments.map(seg => {
+            const frac = total > 0 ? seg.count / total : 0;
+            const dash = frac * circ;
+            const arc = { dash, offset, color: seg.color };
+            offset += dash;
+            return arc;
+        });
+        return (
+            <svg width="112" height="112" viewBox="0 0 112 112">
+                <circle cx={cx} cy={cy} r={R} fill="none" stroke="#e2e8f0" strokeWidth={stroke} className="dark:stroke-[#243A58]" />
+                {total === 0 ? (
+                    <circle cx={cx} cy={cy} r={R} fill="none" stroke="#e2e8f0" strokeWidth={stroke} className="dark:stroke-[#243A58]" />
+                ) : arcs.map((arc, i) => arc.dash > 0 && (
+                    <circle key={i} cx={cx} cy={cy} r={R} fill="none"
+                        stroke={arc.color} strokeWidth={stroke}
+                        strokeDasharray={`${arc.dash} ${circ - arc.dash}`}
+                        strokeDashoffset={-arc.offset + circ / 4}
+                        strokeLinecap="butt"
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }}
+                    />
+                ))}
+                <text x={cx} y={cy - 4} textAnchor="middle" className="fill-slate-900 dark:fill-[#E2E8F0]" style={{ fontSize: 18, fontWeight: 700, fill: 'currentColor' }}>{total}</text>
+                <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active</text>
+            </svg>
+        );
+    };
+
+    // ── Report Modal ───────────────────────────────────────────────────
+    const ReportModal = () => {
+        if (!reportOpen) return null;
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - reportPeriodDays);
+        const cutoffStr = cutoff.toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const atRisk = rosterData.filter(p => !p.excluded && p.ratio > 1.0);
+        const underloaded = rosterData.filter(p => !p.excluded && p.ratio > 0 && p.ratio < 0.70);
+
+        return (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-8 px-4" onClick={() => setReportOpen(null)}>
+                <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
+                        <div>
+                            <h2 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0]">
+                                {reportOpen === 'squad_summary' ? 'Squad Load Summary' : reportOpen === 'at_risk' ? 'At-Risk Athletes' : 'Risk Report'}
+                            </h2>
+                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">{selectedTeam?.name || 'Team'} · Last {reportPeriodDays} days</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1 bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-0.5">
+                                {([7, 14, 28, 90] as const).map(d => (
+                                    <button key={d} onClick={() => setReportPeriodDays(d)}
+                                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${reportPeriodDays === d ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                                        {d}D
+                                    </button>
+                                ))}
+                            </div>
+                            <button onClick={() => setReportOpen(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] transition-colors">✕</button>
+                        </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="overflow-y-auto flex-1 p-6 space-y-4">
+                        {reportOpen === 'squad_summary' && (
+                            <>
+                                {/* Team ACWR trend in period */}
+                                {teamTrendline && teamTrendline.ratioHistory?.length > 2 && (() => {
+                                    const allDates = teamTrendline.dates || [];
+                                    const indices = allDates.map((d: string, i: number) => i).filter((i: number) => allDates[i] >= cutoffStr && allDates[i] <= todayStr);
+                                    if (indices.length < 2) return null;
+                                    const s = indices[0], e = indices[indices.length - 1] + 1;
+                                    return (
+                                        <ACWRLineChart
+                                            dates={allDates.slice(s, e)}
+                                            ratioHistory={(teamTrendline.ratioHistory || []).slice(s, e)}
+                                            acuteHistory={(teamTrendline.acuteHistory || []).slice(s, e)}
+                                            chronicHistory={(teamTrendline.chronicHistory || []).slice(s, e)}
+                                            phases={(teamTrendline.phases || []).slice(s, e)}
+                                            restDays={teamTrendline.restDays}
+                                            height={160}
+                                            title={`Team Average ACWR — Last ${reportPeriodDays} days`}
+                                        />
+                                    );
+                                })()}
+                                {/* Per-athlete summary table */}
+                                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
+                                    <table className="w-full text-xs">
+                                        <thead className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48]">
+                                            <tr>
+                                                <th className="text-left px-4 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Athlete</th>
+                                                <th className="text-center px-3 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">ACWR</th>
+                                                <th className="text-center px-3 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Acute (AU)</th>
+                                                <th className="text-center px-3 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Chronic (AU)</th>
+                                                <th className="text-center px-3 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Monotony</th>
+                                                <th className="text-center px-3 py-2.5 font-semibold text-slate-500 dark:text-[#CBD5E1]">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
+                                            {rosterData.filter(p => !p.excluded).map(p => (
+                                                <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                    <td className="px-4 py-2.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[9px] font-bold ${p.ratio > 1.30 ? 'bg-rose-100 text-rose-700' : p.ratio > 1.00 ? 'bg-amber-100 text-amber-700' : p.ratio >= 0.70 ? 'bg-emerald-100 text-emerald-700' : p.ratio > 0 ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 dark:bg-[#243A58] text-slate-500 dark:text-[#CBD5E1]'}`}>{getInitials(p.name)}</div>
+                                                            <span className="font-medium text-slate-800 dark:text-[#E2E8F0]">{p.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className={`px-3 py-2.5 text-center font-bold ${p.status.color}`}>{p.ratio > 0 ? p.ratio.toFixed(2) : '—'}</td>
+                                                    <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{p.acute > 0 ? `${Math.round(p.acute)} ${loadUnit}` : '—'}</td>
+                                                    <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{p.chronic > 0 ? `${Math.round(p.chronic)} ${loadUnit}` : '—'}</td>
+                                                    <td className="px-3 py-2.5 text-center text-slate-600 dark:text-[#CBD5E1]">{p.monotony > 0 ? p.monotony : '—'}</td>
+                                                    <td className="px-3 py-2.5 text-center">
+                                                        {p.ratio > 0 ? <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${p.status.bg} ${p.status.color}`}>{p.status.label}</span> : <span className="text-slate-300 dark:text-[#475569]">—</span>}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+
+                        {(reportOpen === 'at_risk' || reportOpen === 'risk_report') && (
+                            <>
+                                {atRisk.length === 0 && (reportOpen === 'at_risk') && (
+                                    <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">No athletes currently at risk (ACWR &gt; 1.00).</div>
+                                )}
+                                {atRisk.length > 0 && (
+                                    <div className="space-y-2">
+                                        <h3 className="text-xs font-semibold text-rose-500 uppercase tracking-wide">At Risk (ACWR &gt; 1.00) — {atRisk.length} athletes</h3>
+                                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
+                                            <table className="w-full text-xs">
+                                                <thead className="bg-rose-50 dark:bg-rose-900/20 border-b border-rose-100 dark:border-rose-800/40">
+                                                    <tr>
+                                                        <th className="text-left px-4 py-2.5 font-semibold text-rose-600">Athlete</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-rose-600">ACWR</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-rose-600">Acute AU</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-rose-600">Chronic AU</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-rose-600">Strain</th>
+                                                        <th className="text-left px-3 py-2.5 font-semibold text-rose-600">Recommendation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
+                                                    {atRisk.map(p => (
+                                                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                            <td className="px-4 py-2.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[9px] font-bold ${p.ratio > 1.30 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>{getInitials(p.name)}</div>
+                                                                    <span className="font-medium text-slate-800 dark:text-[#E2E8F0]">{p.name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className={`px-3 py-2.5 text-center font-bold ${p.status.color}`}>{p.ratio.toFixed(2)}</td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{Math.round(p.acute)} {loadUnit}</td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{Math.round(p.chronic)} {loadUnit}</td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-600 dark:text-[#CBD5E1]">{p.strain || '—'}</td>
+                                                            <td className="px-3 py-2.5 text-slate-600 dark:text-[#CBD5E1]">{p.ratio > 1.30 ? 'Reduce volume 30–50%, prioritise recovery' : 'Monitor closely, reduce high-intensity sessions'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                                {reportOpen === 'risk_report' && underloaded.length > 0 && (
+                                    <div className="space-y-2 mt-4">
+                                        <h3 className="text-xs font-semibold text-sky-500 uppercase tracking-wide">Underloaded (ACWR &lt; 0.70) — {underloaded.length} athletes</h3>
+                                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
+                                            <table className="w-full text-xs">
+                                                <thead className="bg-sky-50 dark:bg-sky-900/20 border-b border-sky-100 dark:border-sky-900/40">
+                                                    <tr>
+                                                        <th className="text-left px-4 py-2.5 font-semibold text-sky-600">Athlete</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-sky-600">ACWR</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-sky-600">Acute AU</th>
+                                                        <th className="text-center px-3 py-2.5 font-semibold text-sky-600">Chronic AU</th>
+                                                        <th className="text-left px-3 py-2.5 font-semibold text-sky-600">Recommendation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
+                                                    {underloaded.map(p => (
+                                                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                                            <td className="px-4 py-2.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-6 h-6 rounded-md bg-sky-100 text-sky-700 flex items-center justify-center text-[9px] font-bold">{getInitials(p.name)}</div>
+                                                                    <span className="font-medium text-slate-800 dark:text-[#E2E8F0]">{p.name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className={`px-3 py-2.5 text-center font-bold ${p.status.color}`}>{p.ratio.toFixed(2)}</td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{Math.round(p.acute)} {loadUnit}</td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{Math.round(p.chronic)} {loadUnit}</td>
+                                                            <td className="px-3 py-2.5 text-slate-600 dark:text-[#CBD5E1]">Gradually increase weekly volume toward optimal zone (0.70–1.00)</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // ── Full Table View ────────────────────────────────────────────────
+    if (acwrView === 'full_table') {
+        return (
+            <>
+            <div className="space-y-4 animate-in fade-in duration-200">
+                <button onClick={() => setAcwrView('roster')} className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors">
+                    <ArrowLeftIcon size={14} /> Back to Overview
+                </button>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Full Squad ACWR Table — {selectedTeam?.name || 'Team'}{isHistoricalView ? ` · Snapshot: ${viewDate}` : ''}</h3>
+
+                {/* Top two cards: distribution + trend */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
+                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide mb-4">ACWR Distribution</h4>
+                        <div className="flex items-center gap-6">
+                            <ACWRDonut />
+                            <div className="flex-1 space-y-2">
+                                {[
+                                    { label: 'High Risk', count: distributionCounts.highRisk, range: '> 1.30', color: 'bg-rose-400', text: 'text-rose-600' },
+                                    { label: 'Elevated', count: distributionCounts.elevated, range: '1.00–1.30', color: 'bg-amber-400', text: 'text-amber-600' },
+                                    { label: 'Optimal', count: distributionCounts.optimal, range: '0.70–1.00', color: 'bg-emerald-400', text: 'text-emerald-600' },
+                                    { label: 'Underloaded', count: distributionCounts.underloaded, range: '< 0.70', color: 'bg-sky-400', text: 'text-sky-600' },
+                                ].map(z => (
+                                    <div key={z.label} className="flex items-center gap-2">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${z.color}`} />
+                                        <span className="text-xs text-slate-600 dark:text-[#CBD5E1] flex-1">{z.label}</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{z.range}</span>
+                                        <span className={`text-sm font-bold ${z.text} w-6 text-right`}>{z.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {teamTrendline && teamTrendline.ratioHistory?.length > 2 ? (
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                            <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
+                                <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">ACWR Trend — Team Average</h4>
+                                <div className={`text-sm font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>{teamTrendline.ratio.toFixed(2)}</div>
+                            </div>
+                            <ACWRLineChart
+                                dates={(teamTrendline.dates || []).slice(-28)}
+                                ratioHistory={(teamTrendline.ratioHistory || []).slice(-28)}
+                                acuteHistory={(teamTrendline.acuteHistory || []).slice(-28)}
+                                chronicHistory={(teamTrendline.chronicHistory || []).slice(-28)}
+                                phases={(teamTrendline.phases || []).slice(-28)}
+                                restDays={teamTrendline.restDays}
+                                height={170}
+                                title=""
+                            />
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-8 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">No trend data yet.</div>
+                    )}
+                </div>
+
+                {/* Full scrollable athlete table */}
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs min-w-[900px]">
+                            <thead className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48] sticky top-0">
+                                <tr>
+                                    <th className="text-left px-4 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-40">Athlete</th>
+                                    <th className="text-left px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Pos</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-20">ACWR</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-24">Status</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-24">Trend (4d)</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-28">Chronic (28D)</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-28">Acute (7D)</th>
+                                    <th className="text-center px-3 py-3 font-semibold text-slate-500 dark:text-[#CBD5E1] w-28">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
+                                {rosterData.map(player => (
+                                    <tr key={player.id}
+                                        className="hover:bg-slate-50 dark:hover:bg-[#1A2D48] cursor-pointer transition-colors"
+                                        onClick={() => { setSelectedAthleteId(player.id); setAcwrView('athlete'); }}
+                                    >
+                                        <td className="px-4 py-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${player.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600' : player.ratio > 1.30 ? 'bg-rose-100 text-rose-700' : player.ratio > 1.00 ? 'bg-amber-100 text-amber-700' : player.ratio >= 0.70 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : player.ratio > 0 ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'}`}>{getInitials(player.name)}</div>
+                                                <span className="font-medium text-slate-800 dark:text-[#E2E8F0] truncate max-w-[90px]">{player.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-slate-500 dark:text-[#CBD5E1]">{player.position || '—'}</td>
+                                        <td className={`px-3 py-2.5 text-center font-bold ${player.status.color}`}>
+                                            {player.excluded ? '—' : player.ratio > 0 ? player.ratio.toFixed(2) : '—'}
+                                        </td>
+                                        <td className="px-3 py-2.5 text-center">
+                                            {player.ratio > 0 && !player.excluded ? (
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${player.status.bg} ${player.status.color}`}>{player.status.label}</span>
+                                            ) : <span className="text-slate-300 dark:text-[#475569] text-[10px]">{player.excluded ? (player.exclusion?.excludeType === 'injured' ? 'Injured' : 'Excluded') : '—'}</span>}
+                                        </td>
+                                        <td className="px-3 py-2.5"><MiniBars athleteId={player.id} /></td>
+                                        <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{player.chronic > 0 ? `${Math.round(player.chronic)} ${loadUnit}` : '—'}</td>
+                                        <td className="px-3 py-2.5 text-center text-slate-700 dark:text-[#E2E8F0]">{player.acute > 0 ? `${Math.round(player.acute)} ${loadUnit}` : '—'}</td>
+                                        <td className="px-3 py-2.5 text-center" onClick={e => e.stopPropagation()}>
+                                            <div className="flex items-center justify-center gap-1">
+                                                {player.excluded ? (
+                                                    <>
+                                                        <button title="Return from Injury — resets ACWR to gathering phase" onClick={() => handleExclude(player.id, 'return', player.name)} className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 transition-colors">
+                                                            <RotateCcwIcon size={10} /> Return
+                                                        </button>
+                                                        <button title="Remove exclusion entirely" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
+                                                            <XCircleIcon size={13} />
+                                                        </button>
+                                                    </>
+                                                ) : player.returning ? (
+                                                    <>
+                                                        <span className="text-[9px] font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-full">↩ Returning</span>
+                                                        <button title="Clear return status" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
+                                                            <XCircleIcon size={13} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button title="Mark as Injured — freezes EWMA" onClick={() => handleExclude(player.id, 'injured', player.name)} className="p-1 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-colors opacity-0 group-hover:opacity-100">
+                                                            <AlertTriangleIcon size={13} />
+                                                        </button>
+                                                        <button title="Non-injury exclusion (travel, suspension)" onClick={() => handleExclude(player.id, 'non_injury', player.name)} className="p-1 rounded-md text-slate-300 dark:text-[#475569] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors opacity-0 group-hover:opacity-100">
+                                                            <XCircleIcon size={13} />
+                                                        </button>
+                                                        <button title="Open Intervention plan" onClick={() => { setInterventionAthlete(player); setIsInterventionOpen(true); }} className="p-1 rounded-md text-slate-300 dark:text-[#475569] hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors opacity-0 group-hover:opacity-100">
+                                                            <ActivityIcon size={13} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <ReportModal />
+            </>
+        );
+    }
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* Loading state */}
             {isLoading && (
                 <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-8 text-center">
                     <ActivityIcon size={28} className="mx-auto text-slate-300 dark:text-[#475569] animate-pulse mb-2" />
-                    <p className="text-sm text-slate-500 dark:text-[#94A3B8]">Loading ACWR data...</p>
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">Loading ACWR data...</p>
                 </div>
             )}
 
@@ -1129,11 +1577,11 @@ const ACWRMonitoringHub: React.FC = () => {
                         <button onClick={() => setAcwrView('history')} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 text-slate-700 dark:text-[#E2E8F0] text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <TableIcon size={14} /> Load History
                         </button>
-                        <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+                        <button data-tour="acwr-log-button" onClick={() => setAcwrView('log')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <PlusIcon size={14} /> Log Training Load
                         </button>
                         <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm px-3 py-1.5">
-                            <label className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide whitespace-nowrap">Import Date</label>
+                            <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide whitespace-nowrap">Import Date</label>
                             <input
                                 type="date"
                                 value={acwrImportDateOverride}
@@ -1148,39 +1596,54 @@ const ACWRMonitoringHub: React.FC = () => {
                         <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFileSelect} />
                     </div>
 
-                    {/* Team EWMA trendline — line chart */}
-                    {teamTrendline && teamTrendline.ratioHistory?.length > 2 && (
-                        <div className="relative">
-                            {/* Prominent ACWR value badge top-right */}
-                            <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
-                                <div className="text-right">
-                                    <div className="text-[9px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Current ACWR</div>
-                                    <div className={`text-2xl font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>
-                                        {teamTrendline.ratio.toFixed(2)}
-                                    </div>
-                                </div>
-                                <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).bg} ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>
-                                    {ACWR_UTILS.getRatioStatus(teamTrendline.ratio).label}
-                                </div>
-                            </div>
-                            <ACWRLineChart
-                                dates={(teamTrendline.dates || []).slice(-30)}
-                                ratioHistory={(teamTrendline.ratioHistory || []).slice(-30)}
-                                acuteHistory={(teamTrendline.acuteHistory || []).slice(-30)}
-                                chronicHistory={(teamTrendline.chronicHistory || []).slice(-30)}
-                                phases={(teamTrendline.phases || []).slice(-30)}
-                                restDays={teamTrendline.restDays}
-                                height={230}
-                                title={isPrivateClientSelected
-                                    ? `ACWR — ${enabledPrivateClients.find(p => p.id === privateClientId)?.name || 'Client'} (${ACWR_METRIC_TYPES[acwrSettings[selectedTeamId]?.method]?.label || 'sRPE'})`
-                                    : `Team Average ACWR — ${selectedTeam?.name} (${ACWR_METRIC_TYPES[teamSettings?.method]?.label || 'sRPE'})`
-                                }
-                            />
+                    {/* ── 6 Summary Cards ── */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {/* Team ACWR */}
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 flex flex-col gap-1">
+                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Team ACWR</div>
+                            {teamTrendline && teamTrendline.ratio > 0 ? (
+                                <>
+                                    <div className={`text-2xl font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>{teamTrendline.ratio.toFixed(2)}</div>
+                                    <div className={`text-[10px] font-semibold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>{ACWR_UTILS.getRatioStatus(teamTrendline.ratio).label}</div>
+                                </>
+                            ) : (
+                                <div className="text-2xl font-bold text-slate-300 dark:text-[#475569]">—</div>
+                            )}
                         </div>
-                    )}
+                        {/* Chronic Load */}
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 flex flex-col gap-1">
+                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Chronic Load</div>
+                            <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{teamTrendline && teamTrendline.chronic > 0 ? Math.round(teamTrendline.chronic) : '—'}</div>
+                            {teamTrendline && teamTrendline.chronic > 0 && <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">AU (28d EWMA)</div>}
+                        </div>
+                        {/* Acute Load */}
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 flex flex-col gap-1">
+                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Acute Load</div>
+                            <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{teamTrendline && teamTrendline.acute > 0 ? Math.round(teamTrendline.acute) : '—'}</div>
+                            {teamTrendline && teamTrendline.acute > 0 && <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">AU (7d EWMA)</div>}
+                        </div>
+                        {/* At Risk */}
+                        <div className={`rounded-xl border shadow-sm px-4 py-3 flex flex-col gap-1 ${distributionCounts.highRisk > 0 ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58]'}`}>
+                            <div className={`text-[10px] font-semibold uppercase tracking-wide ${distributionCounts.highRisk > 0 ? 'text-rose-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>At Risk</div>
+                            <div className={`text-2xl font-bold ${distributionCounts.highRisk > 0 ? 'text-rose-600' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>{distributionCounts.highRisk + distributionCounts.elevated}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">ACWR &gt; 1.00</div>
+                        </div>
+                        {/* Underloaded */}
+                        <div className={`rounded-xl border shadow-sm px-4 py-3 flex flex-col gap-1 ${distributionCounts.underloaded > 0 ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58]'}`}>
+                            <div className={`text-[10px] font-semibold uppercase tracking-wide ${distributionCounts.underloaded > 0 ? 'text-sky-500' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Underloaded</div>
+                            <div className={`text-2xl font-bold ${distributionCounts.underloaded > 0 ? 'text-sky-600' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>{distributionCounts.underloaded}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">ACWR &lt; 0.70</div>
+                        </div>
+                        {/* Data Compliance */}
+                        <div className={`rounded-xl border shadow-sm px-4 py-3 flex flex-col gap-1 ${dataCompliance < 70 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58]'}`}>
+                            <div className={`text-[10px] font-semibold uppercase tracking-wide ${dataCompliance < 70 ? 'text-amber-500' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Data Compliance</div>
+                            <div className={`text-2xl font-bold ${dataCompliance < 70 ? 'text-amber-600' : 'text-emerald-600'}`}>{dataCompliance}%</div>
+                            <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Logged last 7d</div>
+                        </div>
+                    </div>
 
-                    {/* Gap warning banner */}
-                    {teamTrendline?.gapStatus === 'prompt' && (
+                    {/* Gap warning banner — hidden when viewing historical snapshots */}
+                    {!isHistoricalView && teamTrendline?.gapStatus === 'prompt' && (
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-4 py-3 flex items-start gap-3">
                             <AlertTriangleIcon size={16} className="text-amber-500 mt-0.5 shrink-0" />
                             <div className="flex-1 min-w-0">
@@ -1189,249 +1652,351 @@ const ACWRMonitoringHub: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    {teamTrendline?.gapStatus === 'auto_reset' && (
+                    {!isHistoricalView && teamTrendline?.gapStatus === 'auto_reset' && (
                         <div className="bg-slate-100 dark:bg-[#1A2D48] border border-slate-300 dark:border-[#243A58] rounded-xl px-4 py-3 flex items-start gap-3">
-                            <AlertTriangleIcon size={16} className="text-slate-500 dark:text-[#94A3B8] mt-0.5 shrink-0" />
+                            <AlertTriangleIcon size={16} className="text-slate-500 dark:text-[#CBD5E1] mt-0.5 shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">ACWR reset — no data for {teamTrendline.gapDays} days.</p>
-                                <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] mt-0.5">Formula restarted automatically. Log new training data to begin building ACWR again.</p>
+                                <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5">Formula restarted automatically. Log new training data to begin building ACWR again.</p>
                             </div>
                         </div>
                     )}
 
-                    {/* Summary strip */}
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3">
-                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Total</div>
-                            <div className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">{summary.total}</div>
-                        </div>
-                        <div className="bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 px-4 py-3">
-                            <div className="text-[10px] font-semibold text-rose-400 uppercase tracking-wide">Critical</div>
-                            <div className="text-2xl font-bold text-rose-600">{summary.critical}</div>
-                        </div>
-                        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/50 px-4 py-3">
-                            <div className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Warning</div>
-                            <div className="text-2xl font-bold text-amber-600">{summary.warning}</div>
-                        </div>
-                        <div className="bg-emerald-50 dark:bg-emerald-900/25 rounded-xl border border-emerald-200 dark:border-emerald-800/50 px-4 py-3">
-                            <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide">Clear</div>
-                            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{summary.clear}</div>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58] px-4 py-3">
-                            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#64748B] uppercase tracking-wide">No Data</div>
-                            <div className="text-2xl font-bold text-slate-400 dark:text-[#64748B]">{summary.noData}</div>
-                        </div>
-                        {summary.excluded > 0 && (
-                            <div className="bg-slate-100 dark:bg-[#1A2D48] rounded-xl border border-slate-300 dark:border-[#243A58] px-4 py-3">
-                                <div className="text-[10px] font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Injured</div>
-                                <div className="text-2xl font-bold text-slate-500 dark:text-[#94A3B8]">{summary.excluded}</div>
-                            </div>
-                        )}
-                    </div>
+                    {/* ── Two-column: Left (table + bottom) + Right sidebar ── */}
+                    <div className="flex gap-4 items-start">
 
-                    {/* Athlete roster table */}
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-semibold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wide">Athlete Roster — ACWR Status</h4>
-                                <div className="hidden sm:flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#64748B]">
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> &lt;0.8 Underexposed</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 0.8–1.3 Optimal</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 1.31–1.5 Caution</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> &gt;1.5 Danger</span>
+                        {/* LEFT — Squad table + bottom section */}
+                        <div className="flex-1 min-w-0 space-y-3">
+
+                            {/* Tabs + date picker */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex gap-1 bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-0.5">
+                                    {([['all', 'All Status'], ['at_risk', 'At Risk'], ['underloaded', 'Underloaded'], ['optimal', 'Optimal']] as const).map(([key, label]) => (
+                                        <button key={key} onClick={() => setRosterTab(key)}
+                                            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${rosterTab === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
+                                            {label}
+                                            {key !== 'all' && (
+                                                <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                                                    key === 'at_risk' ? (distributionCounts.highRisk + distributionCounts.elevated > 0 ? 'bg-rose-100 text-rose-600' : 'bg-slate-200 text-slate-500 dark:bg-[#243A58] dark:text-[#CBD5E1]')
+                                                    : key === 'underloaded' ? (distributionCounts.underloaded > 0 ? 'bg-sky-100 text-sky-600' : 'bg-slate-200 text-slate-500 dark:bg-[#243A58] dark:text-[#CBD5E1]')
+                                                    : 'bg-emerald-100 text-emerald-600'
+                                                }`}>
+                                                    {key === 'at_risk' ? distributionCounts.highRisk + distributionCounts.elevated
+                                                     : key === 'underloaded' ? distributionCounts.underloaded
+                                                     : distributionCounts.optimal}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                {/* Date picker — snapshot view */}
+                                <div className="ml-auto flex items-center gap-1.5">
+                                    {isHistoricalView && (
+                                        <button onClick={() => setViewDate(realTodayStr)} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 transition-colors">
+                                            <RotateCcwIcon size={9} /> Today
+                                        </button>
+                                    )}
+                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${isHistoricalView ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1]'}`}>
+                                        <ChevronLeftIcon size={11} className="text-slate-400 cursor-pointer hover:text-slate-700 dark:text-[#CBD5E1]" onClick={() => { const d = new Date(viewDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); setViewDate(d.toISOString().split('T')[0]); }} />
+                                        <input type="date" value={viewDate} max={realTodayStr}
+                                            onChange={e => e.target.value && setViewDate(e.target.value)}
+                                            className="bg-transparent border-none outline-none text-xs cursor-pointer w-[88px]" />
+                                        <ChevronRightIcon size={11} className={`cursor-pointer transition-colors ${viewDate >= realTodayStr ? 'text-slate-200 dark:text-[#243A58] cursor-not-allowed' : 'text-slate-400 hover:text-slate-700'}`}
+                                            onClick={() => { if (viewDate < realTodayStr) { const d = new Date(viewDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); setViewDate(d.toISOString().split('T')[0]); } }} />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
-                            {rosterData.length === 0 ? (
-                                <div className="p-8 text-center">
-                                    <UsersIcon size={28} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
-                                    <p className="text-sm text-slate-500 dark:text-[#94A3B8]">No athletes with ACWR monitoring enabled.</p>
-                                </div>
-                            ) : (
-                                rosterData.map(player => {
-                                    const riskBorder = player.excluded ? 'border-l-4 border-l-indigo-400 bg-indigo-50/30 dark:bg-indigo-900/15'
-                                                     : player.ratio > 1.5 ? 'border-l-4 border-l-rose-500 bg-rose-50/30 dark:bg-rose-900/15'
-                                                     : player.ratio > 1.3 ? 'border-l-4 border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/15'
-                                                     : player.ratio > 0 && player.ratio < 0.8 ? 'border-l-4 border-l-sky-400 bg-sky-50/30 dark:bg-sky-900/15'
-                                                     : 'border-l-4 border-l-transparent';
-                                    const initialsStyle = player.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600'
-                                                        : player.ratio > 1.5 ? 'bg-rose-100 text-rose-700'
-                                                        : player.ratio > 1.3 ? 'bg-amber-100 text-amber-700'
-                                                        : player.ratio > 0 && player.ratio < 0.8 ? 'bg-sky-100 text-sky-700'
+                            {/* Squad ACWR table — compact, scrollable */}
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <div className="max-h-[420px] overflow-y-auto">
+                                    <table className="w-full text-xs min-w-[480px]">
+                                        <thead className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48] sticky top-0 z-10">
+                                            <tr>
+                                                <th className="text-left px-2 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-24">Athlete</th>
+                                                <th className="text-left px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-8">Pos</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-12">ACWR</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Status</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Trend</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Chronic</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-16">Acute</th>
+                                                <th className="text-center px-1 py-2 font-semibold text-slate-500 dark:text-[#CBD5E1] w-24">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
+                                    {filteredRoster.length === 0 ? (
+                                        <tr><td colSpan={8} className="px-4 py-8 text-center">
+                                            <UsersIcon size={24} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
+                                            <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">{rosterTab === 'all' ? 'No athletes with ACWR monitoring enabled.' : `No athletes in ${rosterTab.replace('_', ' ')} zone.`}</p>
+                                        </td></tr>
+                                    ) : (
+                                        filteredRoster.map(player => {
+                                    const initialsStyle = player.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600'
+                                                        : player.ratio > 1.30 ? 'bg-rose-100 text-rose-700'
+                                                        : player.ratio > 1.00 ? 'bg-amber-100 text-amber-700'
+                                                        : player.ratio >= 0.70 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
+                                                        : player.ratio > 0 ? 'bg-sky-100 text-sky-700'
                                                         : 'bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1]';
                                     return (
-                                        <div key={player.id}
-                                            className={`flex items-center gap-4 px-5 py-3 hover:bg-slate-50/80 dark:hover:bg-[#1A2D48]/60 transition-colors cursor-pointer group ${riskBorder}`}
+                                        <tr key={player.id}
+                                            className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]/70 cursor-pointer transition-colors group"
                                             onClick={() => { setSelectedAthleteId(player.id); setAcwrView('athlete'); }}
                                         >
-                                            {/* Initials */}
-                                            <div className="relative shrink-0">
-                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold ${initialsStyle}`}>
-                                                    {getInitials(player.name)}
+                                            {/* Athlete */}
+                                            <td className="px-2 py-1.5">
+                                                <div className="flex items-center gap-1">
+                                                    <div className={`relative w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold shrink-0 ${initialsStyle}`}>
+                                                        {getInitials(player.name)}
+                                                        {player.riskLevel === 'Critical' && <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-white bg-rose-500" />}
+                                                        {player.riskLevel === 'Warning' && <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-white bg-amber-400" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <span className="font-medium text-slate-800 dark:text-[#E2E8F0] group-hover:text-indigo-600 transition-colors truncate max-w-[68px] block text-[11px]">{player.name}</span>
+                                                        {!player.excluded && player.noDataDays > 1 && (
+                                                            <span className="text-[8px] text-slate-400 dark:text-[#CBD5E1] leading-none">Last: {player.noDataDays}d ago</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                {player.riskLevel !== 'Clear' && player.riskLevel !== 'Excluded' && (
-                                                    <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${player.riskLevel === 'Critical' ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                )}
-                                            </div>
-                                            {/* Name */}
-                                            <div className="min-w-[130px]">
-                                                <h4 className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</h4>
-                                            </div>
+                                            </td>
+                                            {/* Position */}
+                                            <td className="px-1 py-1.5 text-[11px] text-slate-500 dark:text-[#CBD5E1]">{player.position || '—'}</td>
                                             {/* ACWR */}
-                                            <div className="w-16 text-center shrink-0">
+                                            <td className={`px-1 py-1.5 text-center font-bold ${player.status.color}`}>
+                                                {player.excluded ? '—' : player.acwrResult?.gatheringPhase ? '...' : player.ratio > 0 ? player.ratio.toFixed(2) : '—'}
+                                            </td>
+                                            {/* Status badge */}
+                                            <td className="px-1 py-1.5 text-center">
                                                 {player.excluded ? (
-                                                    <>
-                                                        <div className="text-lg font-bold text-indigo-400">—</div>
-                                                        <div className="text-[9px] font-semibold text-indigo-500">
-                                                            {player.exclusion?.excludeType === 'non_injury' ? 'Excluded' : 'Injured'}
-                                                        </div>
-                                                    </>
-                                                ) : player.acwrResult?.gapStatus === 'auto_reset' ? (
-                                                    <>
-                                                        <div className="text-lg font-bold text-slate-300 dark:text-[#475569]">—</div>
-                                                        <div className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Stale</div>
-                                                    </>
+                                                    <span className="px-1 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]">{player.exclusion?.excludeType === 'injured' ? 'Injured' : 'Excluded'}</span>
                                                 ) : player.acwrResult?.gatheringPhase ? (
-                                                    <>
-                                                        <div className="text-lg font-bold text-slate-400 dark:text-[#64748B]">...</div>
-                                                        <div className="text-[9px] font-semibold text-slate-400 dark:text-[#64748B]">Gathering</div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className={`text-lg font-bold ${player.status.color}`}>{player.ratio > 0 ? player.ratio.toFixed(2) : '—'}</div>
-                                                        <div className={`text-[9px] font-semibold ${player.status.color}`}>{player.status.label}</div>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {/* Acute / Chronic */}
-                                            <div className="hidden lg:flex items-center gap-3 text-center shrink-0">
-                                                <div className="w-12">
-                                                    <div className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0]">{player.acute || '—'}</div>
-                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Acute</div>
+                                                    <span className="px-1 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-[#1A2D48] text-slate-400">Gathering</span>
+                                                ) : player.ratio > 0 ? (
+                                                    <span className={`px-1 py-0.5 rounded-full text-[9px] font-bold ${player.status.bg} ${player.status.color}`}>{player.status.label}</span>
+                                                ) : <span className="text-slate-300 dark:text-[#475569]">—</span>}
+                                            </td>
+                                            {/* Trend mini bars */}
+                                            <td className="px-1 py-1.5"><MiniBars athleteId={player.id} /></td>
+                                            {/* Chronic */}
+                                            <td className="px-1 py-1.5 text-center text-[11px] text-slate-700 dark:text-[#E2E8F0]">{player.chronic > 0 ? `${Math.round(player.chronic)} ${loadUnit}` : '—'}</td>
+                                            {/* Acute */}
+                                            <td className="px-1 py-1.5 text-center text-[11px] text-slate-700 dark:text-[#E2E8F0]">{player.acute > 0 ? `${Math.round(player.acute)} ${loadUnit}` : '—'}</td>
+                                            {/* Actions — status dropdown pill + action buttons */}
+                                            <td className="px-2 py-1.5" onClick={e => e.stopPropagation()}>
+                                                <div className="flex items-center justify-center gap-1">
+                                                    {/* Status dropdown pill — dropdown rendered via portal to escape overflow containers */}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (excludeMenuOpenId === player.id) {
+                                                                setExcludeMenuOpenId(null); setExcludeMenuPos(null);
+                                                            } else {
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                setExcludeMenuPos({ top: rect.bottom + 4, left: rect.left });
+                                                                setExcludeMenuOpenId(player.id);
+                                                            }
+                                                        }}
+                                                        className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold border transition-colors cursor-pointer shrink-0 ${
+                                                            player.excluded && player.exclusion?.excludeType === 'injured'
+                                                                ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/50 hover:bg-rose-200 dark:hover:bg-rose-900/50'
+                                                                : player.excluded
+                                                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                                                                : player.returning
+                                                                ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/50 hover:bg-violet-200 dark:hover:bg-violet-900/50'
+                                                                : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                                                        }`}
+                                                    >
+                                                        {player.excluded && player.exclusion?.excludeType === 'injured'
+                                                            ? '🏥 Injured'
+                                                            : player.excluded
+                                                            ? '⛔ Excluded'
+                                                            : player.returning
+                                                            ? '↩ Returning'
+                                                            : '● Active'}
+                                                        <ChevronDownIcon size={8} className="ml-0.5 opacity-60" />
+                                                    </button>
                                                 </div>
-                                                <div className="w-12">
-                                                    <div className="text-xs font-bold text-slate-900 dark:text-[#E2E8F0]">{player.chronic || '—'}</div>
-                                                    <div className="text-[9px] text-slate-400 dark:text-[#64748B]">Chronic</div>
-                                                </div>
-                                            </div>
-                                            {/* Centre zone: sparkline + flags (fills the middle) */}
-                                            <div className="flex-1 flex items-center justify-center gap-3 min-w-0">
-                                                <div className="hidden md:block w-24 shrink-0">
-                                                    <MiniSparkline data={player.spark} />
-                                                </div>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {player.flags.map((flag, idx) => {
-                                                        const fc = flag === 'ACWR Normal' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
-                                                                 : flag.includes('Critical') || flag.includes('Pain') ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-200 dark:border-rose-900/50'
-                                                                 : flag.includes('Injured') || flag.includes('Excluded') ? 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 border-indigo-200 dark:border-indigo-800/50'
-                                                                 : flag.includes('Return from Injury') ? 'bg-violet-50 text-violet-600 border-violet-200 dark:border-violet-800/50'
-                                                                 : flag.includes('Elevated') || flag.includes('Stress') || flag.includes('Sleep') ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 dark:border-amber-800/50'
-                                                                 : flag.includes('Fatigue') || flag.includes('Energy') ? 'bg-orange-50 text-orange-600 border-orange-200'
-                                                                 : 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 border-sky-200 dark:border-sky-900/50';
-                                                        return <span key={idx} className={`px-1.5 py-0.5 rounded border text-[9px] font-medium ${fc}`}>{flag}</span>;
-                                                    })}
-                                                </div>
-                                            </div>
-                                            {/* Right side: date/indicator + buttons */}
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                {/* Date / status indicator */}
-                                                <div className="hidden xl:block text-right w-20">
-                                                    {player.excluded ? (
-                                                        // Time since excluded — amber after 7 days
-                                                        <div className={`text-[10px] font-semibold ${player.daysSinceExcluded > 7 ? 'text-amber-500' : 'text-slate-400 dark:text-[#64748B]'}`}>
-                                                            {player.exclusion?.excludeType === 'injured' ? 'Injured' : 'Excluded'}
-                                                            {' · '}{player.daysSinceExcluded}d
-                                                        </div>
-                                                    ) : player.returning ? (
-                                                        <div className="text-[10px] font-semibold text-violet-500">
-                                                            Return · Day {daysSinceReturn(player.id)}
-                                                        </div>
-                                                    ) : player.noDataDays >= 3 ? (
-                                                        // Passive "no data" nudge
-                                                        <div className={`text-[10px] font-semibold ${player.noDataDays >= 7 ? 'text-amber-400' : 'text-slate-300 dark:text-[#475569]'}`}>
-                                                            No data {player.noDataDays}d
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-[10px] text-slate-400 dark:text-[#64748B]">
-                                                            {player.lastSession
-                                                                ? new Date(player.lastSession + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-                                                                : '—'}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Exclude controls */}
-                                                <div className="relative flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                                                    {player.excluded ? (
-                                                        // Excluded state: Return from Injury (injured only) + Remove
-                                                        <>
-                                                            {player.exclusion?.excludeType === 'injured' && (
-                                                                <button
-                                                                    onClick={() => handleExclude(player.id, 'return', player.name)}
-                                                                    className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-violet-600 text-white border-violet-600 hover:bg-violet-700 transition-colors"
-                                                                    title="Reset ACWR and start gathering phase"
-                                                                >
-                                                                    <RotateCcwIcon size={9} /> Return
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() => handleExclude(player.id, 'remove', player.name)}
-                                                                className="flex items-center gap-1 px-2 py-1.5 text-[10px] font-medium rounded-full border bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#94A3B8] border-slate-200 dark:border-[#243A58] hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 hover:text-rose-500 hover:border-rose-200 dark:border-rose-800/50 transition-colors"
-                                                                title="Remove exclusion entirely"
-                                                            >
-                                                                <XCircleIcon size={9} /> Remove
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        // Active state: Exclude dropdown (Injured / Non-Injury)
-                                                        <>
-                                                            <button
-                                                                onClick={() => setExcludeMenuOpenId(prev => prev === player.id ? null : player.id)}
-                                                                className="px-2.5 py-1.5 text-[10px] font-medium rounded-full transition-colors border bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#64748B] border-slate-200 dark:border-[#243A58] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-600"
-                                                            >Exclude ▾</button>
-                                                            {excludeMenuOpenId === player.id && (
-                                                                <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg py-1 w-52">
-                                                                    <button
-                                                                        onClick={() => handleExclude(player.id, 'injured', player.name)}
-                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-[#E2E8F0] hover:bg-rose-50 dark:hover:bg-rose-900/25 dark:bg-rose-900/20 hover:text-rose-700 dark:text-rose-400 flex flex-col gap-0.5"
-                                                                    >
-                                                                        <span className="font-semibold">Injured</span>
-                                                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">Freeze EWMA — use Return to reset ACWR on comeback</span>
-                                                                    </button>
-                                                                    <div className="border-t border-slate-100 dark:border-[#1A2D48] my-0.5" />
-                                                                    <button
-                                                                        onClick={() => handleExclude(player.id, 'non_injury', player.name)}
-                                                                        className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-[#E2E8F0] hover:bg-sky-50 dark:bg-sky-900/20 hover:text-sky-700 dark:text-sky-400 flex flex-col gap-0.5"
-                                                                    >
-                                                                        <span className="font-semibold">Exclude (Non-Injury)</span>
-                                                                        <span className="text-[10px] text-slate-400 dark:text-[#64748B]">Travel, suspension, personal leave</span>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-
-                                                {/* Intervene */}
-                                                {!player.excluded && player.riskLevel !== 'Clear' ? (
-                                                    <button onClick={(e) => { e.stopPropagation(); setInterventionAthlete(player); setIsInterventionOpen(true); }}
-                                                        className={`px-3 py-1.5 text-white text-[10px] font-medium rounded-full transition-colors ${player.riskLevel === 'Critical' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-500 hover:bg-amber-600'}`}
-                                                    >Intervene</button>
-                                                ) : !player.excluded ? (
-                                                    <ChevronRightIcon size={14} className="text-slate-300 dark:text-[#475569]" />
-                                                ) : null}
-                                            </div>
-                                        </div>
+                                            </td>
+                                        </tr>
                                     );
                                 })
                             )}
-                        </div>
-                    </div>
+                                        </tbody>
+                                    </table>
+                                    </div>{/* end scrollable */}
+                                </div>{/* end overflow-x */}
+
+                                {/* View full table footer */}
+                                <div className="px-4 py-2.5 border-t border-slate-100 dark:border-[#1A2D48] flex justify-end">
+                                    <button onClick={() => setAcwrView('full_table')}
+                                        className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                                        View full ACWR report <ChevronRightIcon size={12} />
+                                    </button>
+                                </div>
+                            </div>{/* end squad table card */}
+
+                            {/* ── Bottom row: Load Suggestions + Reports side by side ── */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                                {/* Load Management Suggestions — always 3 fixed categories */}
+                                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                                    <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
+                                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Load Management Suggestions</h4>
+                                        <button onClick={() => { setRosterTab('all'); }} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium">View all recommendations →</button>
+                                    </div>
+                                    <div className="p-3 space-y-2">
+                                        {/* Always-visible: Reduce High Intensity */}
+                                        <div className={`rounded-lg border p-3 ${distributionCounts.highRisk > 0 ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
+                                            <div className="flex items-start gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${distributionCounts.highRisk > 0 ? 'bg-rose-500' : 'bg-slate-300 dark:bg-[#475569]'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                        <p className={`text-xs font-semibold ${distributionCounts.highRisk > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Reduce High Intensity</p>
+                                                        {distributionCounts.highRisk > 0 && <button onClick={e => { e.stopPropagation(); setRosterTab('at_risk'); }} className="text-[10px] text-rose-500 hover:text-rose-700 font-medium whitespace-nowrap">View athletes →</button>}
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                                        {distributionCounts.highRisk > 0 ? `Consider reducing sprint volume by 15–20% for ${distributionCounts.highRisk} athlete${distributionCounts.highRisk > 1 ? 's' : ''}.` : 'No athletes currently in High Risk zone.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Always-visible: Monitor Closely */}
+                                        <div className={`rounded-lg border p-3 ${distributionCounts.elevated > 0 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
+                                            <div className="flex items-start gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${distributionCounts.elevated > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-[#475569]'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                        <p className={`text-xs font-semibold ${distributionCounts.elevated > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Monitor Closely</p>
+                                                        {distributionCounts.elevated > 0 && <button onClick={e => { e.stopPropagation(); setRosterTab('at_risk'); }} className="text-[10px] text-amber-500 hover:text-amber-700 font-medium whitespace-nowrap">View athletes →</button>}
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                                        {distributionCounts.elevated > 0 ? `${distributionCounts.elevated} athlete${distributionCounts.elevated > 1 ? 's' : ''} in elevated range — monitor response to load.` : 'No athletes in Elevated zone.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Always-visible: Potential to Increase */}
+                                        <div className={`rounded-lg border p-3 ${distributionCounts.underloaded > 0 ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-900/50' : 'bg-slate-50 dark:bg-[#0F1C30] border-slate-100 dark:border-[#1A2D48]'}`}>
+                                            <div className="flex items-start gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${distributionCounts.underloaded > 0 ? 'bg-sky-500' : 'bg-slate-300 dark:bg-[#475569]'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                        <p className={`text-xs font-semibold ${distributionCounts.underloaded > 0 ? 'text-sky-700 dark:text-sky-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Potential to Increase</p>
+                                                        {distributionCounts.underloaded > 0 && <button onClick={e => { e.stopPropagation(); setRosterTab('underloaded'); }} className="text-[10px] text-sky-500 hover:text-sky-700 font-medium whitespace-nowrap">View athletes →</button>}
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                                        {distributionCounts.underloaded > 0 ? `${distributionCounts.underloaded} underloaded athlete${distributionCounts.underloaded > 1 ? 's' : ''} may tolerate increased load.` : 'No athletes currently underloaded.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Reports */}
+                                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                                    <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
+                                        <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Reporting</h4>
+                                        <button onClick={() => setAcwrView('full_table')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium">View all reports →</button>
+                                    </div>
+                                    <div className="p-3 grid grid-cols-2 gap-2">
+                                        {[
+                                            { key: 'squad_summary', title: 'Load Summary', desc: 'Team & individual summary', icon: ActivityIcon, color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500' },
+                                            { key: 'at_risk', title: 'ACWR Report', desc: 'Detailed ACWR analysis', icon: TrendingUpIcon, color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500' },
+                                            { key: 'risk_report', title: 'Risk Report', desc: 'At risk & underloaded', icon: AlertTriangleIcon, color: 'bg-rose-100 dark:bg-rose-900/30 text-rose-500' },
+                                            { key: null, title: 'Custom Report', desc: 'Build your own report', icon: TableIcon, color: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400' },
+                                        ].map((r, i) => (
+                                            <button key={i}
+                                                onClick={() => r.key ? setReportOpen(r.key as any) : setAcwrView('full_table')}
+                                                className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-700 bg-slate-50 dark:bg-[#0F1C30] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-left transition-all group">
+                                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${r.color} group-hover:bg-indigo-600 group-hover:text-white transition-all`}>
+                                                    <r.icon size={12} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[11px] font-semibold text-slate-800 dark:text-[#E2E8F0] leading-tight">{r.title}</p>
+                                                    <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] leading-tight">{r.desc}</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                            </div>{/* end bottom row */}
+
+                        </div>{/* end left column */}
+
+                        {/* RIGHT — Distribution + Trend (wider) */}
+                        <div className="w-[460px] shrink-0 space-y-3 hidden lg:block">
+
+                            {/* ACWR Distribution donut */}
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4">
+                                <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide mb-3">ACWR Distribution</h4>
+                                <div className="flex items-center gap-3">
+                                    <ACWRDonut />
+                                    <div className="flex-1 space-y-1.5">
+                                        {[
+                                            { label: 'High Risk', count: distributionCounts.highRisk, range: '> 1.30', color: 'bg-rose-400', text: 'text-rose-600' },
+                                            { label: 'Elevated', count: distributionCounts.elevated, range: '1.00–1.30', color: 'bg-amber-400', text: 'text-amber-600' },
+                                            { label: 'Optimal', count: distributionCounts.optimal, range: '0.70–1.00', color: 'bg-emerald-400', text: 'text-emerald-600' },
+                                            { label: 'Underloaded', count: distributionCounts.underloaded, range: '< 0.70', color: 'bg-sky-400', text: 'text-sky-600' },
+                                        ].map(z => (
+                                            <div key={z.label} className="flex items-center gap-1.5">
+                                                <div className={`w-2 h-2 rounded-full shrink-0 ${z.color}`} />
+                                                <span className="text-[10px] text-slate-600 dark:text-[#CBD5E1] flex-1 leading-none">{z.label} <span className="text-slate-400 dark:text-[#CBD5E1]">({z.range})</span></span>
+                                                <span className={`text-xs font-bold ${z.text}`}>{z.count}</span>
+                                            </div>
+                                        ))}
+                                        {summary.excluded > 0 && (
+                                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
+                                                <div className="w-2 h-2 rounded-full shrink-0 bg-slate-400" />
+                                                <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1] flex-1">Excluded</span>
+                                                <span className="text-xs font-bold text-slate-500 dark:text-[#CBD5E1]">{summary.excluded}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Alert summary */}
+                                {(distributionCounts.highRisk + distributionCounts.elevated) > 0 && (
+                                    <div className="mt-3 bg-rose-50 dark:bg-rose-900/15 rounded-lg px-3 py-2 text-[10px] text-rose-700 dark:text-rose-400">
+                                        {distributionCounts.highRisk + distributionCounts.elevated} athlete{distributionCounts.highRisk + distributionCounts.elevated > 1 ? 's' : ''} at risk of overload — consider load management strategies this week.
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ACWR Trend — always shown, uses periodDays for window */}
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                                <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
+                                    <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">ACWR Trend (Team Average)</h4>
+                                    {teamTrendline && teamTrendline.ratio > 0 && (
+                                        <div className={`text-xs font-bold ${ACWR_UTILS.getRatioStatus(teamTrendline.ratio).color}`}>{teamTrendline.ratio.toFixed(2)}</div>
+                                    )}
+                                </div>
+                                {teamTrendline && teamTrendline.ratioHistory?.length > 2 ? (
+                                    <ACWRLineChart
+                                        dates={(teamTrendline.dates || []).slice(-28)}
+                                        ratioHistory={(teamTrendline.ratioHistory || []).slice(-28)}
+                                        acuteHistory={(teamTrendline.acuteHistory || []).slice(-28)}
+                                        chronicHistory={(teamTrendline.chronicHistory || []).slice(-28)}
+                                        phases={(teamTrendline.phases || []).slice(-28)}
+                                        restDays={teamTrendline.restDays}
+                                        height={240}
+                                        title=""
+                                    />
+                                ) : (
+                                    <div className="p-6 text-center text-xs text-slate-400 dark:text-[#CBD5E1]">Log at least 7 days of training data to see the team trend.</div>
+                                )}
+                                <div className="px-4 py-2 border-t border-slate-100 dark:border-[#1A2D48] flex justify-end">
+                                    <button onClick={() => setAcwrView('history')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium">View trend analysis →</button>
+                                </div>
+                            </div>
+
+                        </div>{/* end right column */}
+
+                    </div>{/* end two-column layout */}
 
                 </>
             )}
+            <ReportModal />
 
             <InterventionModal
                 athlete={interventionAthlete}
@@ -1459,6 +2024,53 @@ const ACWRMonitoringHub: React.FC = () => {
                 allAthletes={teams.flatMap(t => (t.players || []).map(p => ({ id: p.id, name: p.name })))}
                 teams={teams}
             />
+
+            {/* Status dropdown portal — escapes overflow-hidden/auto table containers */}
+            {excludeMenuOpenId && excludeMenuPos && (() => {
+                const menuPlayer = rosterData.find(p => p.id === excludeMenuOpenId);
+                if (!menuPlayer) return null;
+                return ReactDOM.createPortal(
+                    <div
+                        onMouseDown={e => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
+                        style={{ position: 'fixed', top: excludeMenuPos.top, left: excludeMenuPos.left, zIndex: 9999 }}
+                        className="bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-lg shadow-xl py-1 min-w-[160px]"
+                    >
+                        {menuPlayer.excluded ? (
+                            <>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'return', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2">
+                                    <RotateCcwIcon size={11} /> Return from Injury
+                                </button>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'remove', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#243A58] flex items-center gap-2">
+                                    <XCircleIcon size={11} /> Remove Exclusion
+                                </button>
+                            </>
+                        ) : menuPlayer.returning ? (
+                            <>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'remove', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#243A58] flex items-center gap-2">
+                                    <XCircleIcon size={11} /> Clear Return Status
+                                </button>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'injured', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] flex items-center gap-2">
+                                    <AlertTriangleIcon size={11} /> Mark Injured
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'injured', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] flex items-center gap-2">
+                                    <AlertTriangleIcon size={11} /> Mark Injured
+                                </button>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'non_injury', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2">
+                                    <XCircleIcon size={11} /> Non-Injury Exclusion
+                                </button>
+                                <button onClick={() => { handleExclude(menuPlayer.id, 'rest', menuPlayer.name); setExcludeMenuOpenId(null); setExcludeMenuPos(null); }} className="w-full text-left px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#243A58] flex items-center gap-2">
+                                    <ActivityIcon size={11} /> Mark Rest Day
+                                </button>
+                            </>
+                        )}
+                    </div>,
+                    document.body
+                );
+            })()}
         </div>
     );
 };
@@ -1481,11 +2093,11 @@ export const WellnessHubPage: React.FC = () => {
             <div className="space-y-5 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#94A3B8] hover:text-slate-900 hover:border-slate-300 transition-all">
+                        <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 hover:border-slate-300 transition-all">
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-400 dark:text-[#64748B] uppercase tracking-wide">Wellness Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Wellness Hub</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeSection}</h2>
                         </div>
                     </div>
@@ -1494,7 +2106,7 @@ export const WellnessHubPage: React.FC = () => {
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
                             <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading {activeSection.toLowerCase()}...</span>
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {activeSection.toLowerCase()}...</span>
                         </div>
                     )}
                     {activeSection === 'Questionnaire Data' && <WellnessHub initialTeamId={urlTeamId} />}
@@ -1511,7 +2123,7 @@ export const WellnessHubPage: React.FC = () => {
         <div className="space-y-5 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness Hub</h2>
-                <p className="text-sm text-slate-500 dark:text-[#94A3B8] mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
+                <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
             </div>
             {isLoading ? (
                 <div className="space-y-4">
@@ -1529,7 +2141,7 @@ export const WellnessHubPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-center py-3">
                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                        <span className="text-xs font-medium text-slate-400 dark:text-[#64748B]">Loading wellness data...</span>
+                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading wellness data...</span>
                     </div>
                 </div>
             ) : (
@@ -1539,18 +2151,19 @@ export const WellnessHubPage: React.FC = () => {
                             className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                         >
                             <div className="flex items-start gap-4 h-full">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/25 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                     <section.icon size={20} />
                                 </div>
                                 <div className="flex flex-col justify-center h-full">
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] mb-1 leading-tight">{section.title}</h3>
-                                    <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed">{section.desc}</p>
+                                    <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{section.desc}</p>
                                 </div>
                             </div>
                         </button>
                     ))}
                 </div>
             )}
+
         </div>
     );
 };

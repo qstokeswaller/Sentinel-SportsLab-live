@@ -14,7 +14,7 @@ import {
 const WORKOUTS_SUB_NAV = [
     { path: '/workouts',           label: 'Overview' },
     { path: '/workouts/programs',  label: 'Programs' },
-    { path: '/workouts/sessions',  label: 'Sessions' },
+    { path: '/workouts/sessions',  label: 'Packets' },
     { path: '/workouts/sheets',    label: 'Sheets' },
     { path: '/workouts/history',   label: 'History' },
 ];
@@ -94,17 +94,17 @@ export const Sidebar = () => {
                 {showLabels && (
                     <div className="flex flex-col min-w-0">
                         <span className="font-bold text-sm text-slate-900 dark:text-[#E2E8F0] leading-tight">
-                            Sentinel <span className="text-indigo-600 dark:text-indigo-300 dark:text-indigo-400">SportsLab</span>
+                            Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">Athlete Monitoring</span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] leading-tight">& Performance Intelligence</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] leading-tight">Athlete Monitoring</span>
+                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] leading-tight">& Performance Intelligence</span>
                     </div>
                 )}
                 {/* Mobile: close button in logo row */}
                 {isMobile && (
                     <button
                         onClick={() => setIsMobileDrawerOpen(false)}
-                        className="ml-auto p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0] transition-colors"
+                        className="ml-auto p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0] transition-colors"
                         aria-label="Close menu"
                     >
                         <XIcon size={18} />
@@ -150,8 +150,8 @@ export const Sidebar = () => {
                                                     onClick={() => { navigate(sub.path); if (isMobile) setIsMobileDrawerOpen(false); }}
                                                     className={`w-full text-left py-1.5 px-2.5 rounded-md text-[11px] font-medium transition-colors ${
                                                         subActive
-                                                            ? 'text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/25'
-                                                            : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
+                                                            ? 'text-indigo-700 dark:text-white bg-indigo-50 dark:bg-indigo-600'
+                                                            : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                                     }`}
                                                 >
                                                     {sub.label}
@@ -169,8 +169,8 @@ export const Sidebar = () => {
             {/* Bottom: User + Settings + Collapse */}
             <div className="border-t border-slate-100 dark:border-[#243A58] shrink-0">
                 <div className={`flex items-center gap-2.5 px-3 py-3 border-b border-slate-100 dark:border-[#243A58] ${!showLabels ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 dark:text-indigo-400">{userInitial}</span>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300">{userInitial}</span>
                     </div>
                     {showLabels && (
                         <p className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1] truncate flex-1 min-w-0">{displayName}</p>
@@ -181,7 +181,7 @@ export const Sidebar = () => {
                     <button
                         onClick={() => { navigate('/settings'); if (isMobile) setIsMobileDrawerOpen(false); }}
                         title="Settings"
-                        className={`w-full flex items-center gap-3 rounded-lg py-2 text-slate-400 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#94A3B8] transition-colors
+                        className={`w-full flex items-center gap-3 rounded-lg py-2 text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#94A3B8] transition-colors
                             ${isMobile ? 'min-h-[44px]' : ''}
                             ${!showLabels ? 'justify-center px-0' : 'px-2'}`}
                     >
@@ -194,7 +194,7 @@ export const Sidebar = () => {
                         <button
                             onClick={() => setIsSidebarCollapsed(!collapsed)}
                             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                            className={`w-full flex items-center rounded-lg py-2 text-slate-300 dark:text-[#1A2D48] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-500 dark:hover:text-[#64748B] transition-colors
+                            className={`w-full flex items-center rounded-lg py-2 text-slate-300 dark:text-[#475569] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-500 dark:hover:text-[#94A3B8] transition-colors
                                 ${!showLabels ? 'justify-center px-0' : 'justify-end px-2'}`}
                         >
                             {collapsed ? <ChevronRightIcon size={14} /> : <ChevronLeftIcon size={14} />}

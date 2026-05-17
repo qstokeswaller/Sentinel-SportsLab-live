@@ -96,6 +96,7 @@ export const ACWR_UTILS = {
                     recalcAnchorDate,   // string — ignore all records before this date
                     additionalRestDays, // Set<string> — coach-marked rest/freeze days
                     minDataDays = 7,    // minimum data days before ratio is reliable
+                    referenceDate,      // string — treat this date as "today" for gap detection
                 } = options;
 
                 const EMPTY = (extra = {}) => ({
@@ -127,9 +128,9 @@ export const ACWR_UTILS = {
                 let gapDays = 0;
                 if (lastDataDate) {
                     const [ly, lm, ld] = lastDataDate.split('-').map(Number);
-                    const today = new Date();
+                    const today = referenceDate ? new Date(referenceDate + 'T00:00:00') : new Date();
                     const last = new Date(ly, lm - 1, ld);
-                    gapDays = Math.max(0, Math.floor((today - last) / 86400000));
+                    gapDays = Math.max(0, Math.floor((today.getTime() - last.getTime()) / 86400000));
                 }
                 let gapStatus = 'none';
                 if (gapDays >= 14) gapStatus = 'auto_reset';
@@ -196,7 +197,7 @@ export const ACWR_UTILS = {
              * Calculates team aggregate ACWR (mean of all athletes' daily loads)
              */
             calculateTeamACWR: (records, athleteIds, options = {}) => {
-                const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false, recalcAnchorDate, minDataDays = 7 } = options;
+                const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false, recalcAnchorDate, minDataDays = 7, referenceDate } = options;
 
                 // Build per-athlete daily load maps + collect rest days
                 let filtered = metricType ? records.filter(r => r.metric_type === metricType) : records;
@@ -262,7 +263,7 @@ export const ACWR_UTILS = {
                 }));
                 const result = ACWR_UTILS.calculateAthleteACWR(
                     teamRecords, '__team__',
-                    { metricType: metricType || 'srpe', acuteN, chronicN, freezeRestDays, minDataDays }
+                    { metricType: metricType || 'srpe', acuteN, chronicN, freezeRestDays, minDataDays, referenceDate }
                 );
                 return result;
             },

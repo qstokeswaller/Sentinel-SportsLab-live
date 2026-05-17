@@ -22,7 +22,7 @@ const ImportResolverModal = () => {
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in">
             <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900">Import Resolution</h3>
+                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Import Resolution</h3>
                     <button onClick={() => setIsImportResolverOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors">
                         <XIcon size={20} />
                     </button>
@@ -40,7 +40,7 @@ const ImportResolverModal = () => {
                         <tbody className="divide-y divide-slate-100">
                             {importStaging.map((item, idx) => (
                                 <tr key={item.id} className={item.status === 'conflict' ? 'bg-orange-50/50' : ''}>
-                                    <td className="p-4 font-bold text-slate-900">{item.originalName}</td>
+                                    <td className="p-4 font-bold text-slate-900 dark:text-[#E2E8F0]">{item.originalName}</td>
                                     <td className="p-4 text-slate-500">
                                         <span className="font-mono bg-slate-100 px-1 py-0.5 rounded mr-2 uppercase text-[10px]">{item.data.type}</span>
                                         <span className="font-bold">{item.data.value}</span> {item.data.type === 'map' && 'W'}
@@ -83,7 +83,7 @@ const ImportResolverModal = () => {
                 </div>
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                     <button onClick={() => setIsImportResolverOpen(false)} className="px-6 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] uppercase tracking-wider text-xs transition-colors">Cancel</button>
-                    <button onClick={handleCommitImport} disabled={importStaging.length === 0} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold uppercase tracking-wide text-xs shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Commit Import</button>
+                    <button onClick={handleCommitImport} disabled={importStaging.length === 0} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold uppercase tracking-wide text-xs shadow-lg hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Commit Import</button>
                 </div>
             </div>
         </div>

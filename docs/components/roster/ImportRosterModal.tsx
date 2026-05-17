@@ -203,7 +203,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             <FileSpreadsheet size={16} />
                         </div>
                         <div>
-                            <h3 className="text-base font-semibold text-slate-900">Import Roster</h3>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Import Roster</h3>
                             <p className="text-xs text-slate-500">
                                 {step === 'upload'  && 'Upload a CSV or Excel file'}
                                 {step === 'map'     && `Map columns — ${rows.length} rows detected`}
@@ -253,7 +253,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 onChange={e => { if (e.target.files?.[0]) parseFile(e.target.files[0]); }}
                             />
                             <Upload size={36} className="mx-auto mb-3 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-                            <p className="font-semibold text-slate-700 mb-1">Drop your file here or click to browse</p>
+                            <p className="font-semibold text-slate-700 dark:text-[#CBD5E1] mb-1">Drop your file here or click to browse</p>
                             <p className="text-sm text-slate-400">Supports CSV, Excel (.xlsx, .xls)</p>
                             <p className="text-xs text-slate-300 mt-3">Only a <span className="font-semibold text-slate-400">Name column is required</span> — all other columns are optional</p>
                         </div>
@@ -264,7 +264,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                         <div className="space-y-4">
                             <p className="text-sm text-slate-500">
                                 We've auto-suggested a field for each column. Check the matches and adjust anything that's wrong.
-                                <span className="font-semibold text-slate-700"> At least one Name column must be mapped.</span>
+                                <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]"> At least one Name column must be mapped.</span>
                             </p>
 
                             <div className="border border-slate-100 rounded-xl overflow-hidden">
@@ -283,7 +283,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                             <div key={h} className={`grid grid-cols-[1fr_1fr_1fr] gap-0 px-4 py-2.5 items-center ${isNameField ? 'bg-emerald-50/50' : ''}`}>
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     {isNameField && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
-                                                    <span className="text-sm font-medium text-slate-700 truncate">{h}</span>
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-[#CBD5E1] truncate">{h}</span>
                                                 </div>
                                                 <span className="text-xs text-slate-400 truncate pr-3">{sample || '—'}</span>
                                                 <CustomSelect
@@ -304,7 +304,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
 
                             {/* Team assignment */}
                             <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-                                <label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1] flex items-center gap-1.5">
                                     <Users size={12} /> Assign all imported athletes to
                                 </label>
                                 <CustomSelect
@@ -332,8 +332,8 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                     {step === 'preview' && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <p className="text-sm text-slate-600">
-                                    <span className="font-semibold text-slate-900">{previewRows.length} athletes</span> will be created
+                                <p className="text-sm text-slate-600 dark:text-[#CBD5E1]">
+                                    <span className="font-semibold text-slate-900 dark:text-[#E2E8F0]">{previewRows.length} athletes</span> will be created
                                     {teamId && <span> in <span className="font-semibold">{realTeams.find(t => t.id === teamId)?.name}</span></span>}
                                     {skippedCount > 0 && <span className="text-amber-600 ml-2">· {skippedCount} rows skipped (no name)</span>}
                                 </p>
@@ -349,7 +349,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
                                     {previewRows.map((r, i) => (
                                         <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr] px-4 py-2 text-sm">
-                                            <span className="font-medium text-slate-800 truncate">{r.name}</span>
+                                            <span className="font-medium text-slate-800 dark:text-[#E2E8F0] truncate">{r.name}</span>
                                             <span className="text-slate-500">{r.age || '—'}</span>
                                             <span className="text-slate-500 truncate">{r.sport || '—'}</span>
                                             <span className="text-slate-500 truncate">{r.position || '—'}</span>
@@ -367,7 +367,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 <CheckCircle2 size={36} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-slate-900">{results.ok} athlete{results.ok !== 1 ? 's' : ''} imported</h4>
+                                <h4 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{results.ok} athlete{results.ok !== 1 ? 's' : ''} imported</h4>
                                 {results.skipped > 0 && (
                                     <p className="text-sm text-amber-600 mt-1">{results.skipped} rows skipped — no name found</p>
                                 )}
@@ -393,12 +393,12 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                     </button>
                     <div className="flex gap-2">
                         {step === 'map' && (
-                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
                         {step === 'preview' && (
-                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
@@ -406,7 +406,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             <button
                                 onClick={() => setStep('preview')}
                                 disabled={!hasNameMapping}
-                                className="px-5 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-40 flex items-center gap-2"
+                                className="px-5 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-500 transition-colors disabled:opacity-40 flex items-center gap-2"
                             >
                                 Preview <ChevronRight size={14} />
                             </button>
@@ -415,7 +415,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             <button
                                 onClick={handleImport}
                                 disabled={importing || previewRows.length === 0}
-                                className="px-5 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-40 flex items-center gap-2"
+                                className="px-5 py-2 bg-emerald-600 text-white rounded-full text-sm font-medium hover:bg-emerald-500 transition-colors disabled:opacity-40 flex items-center gap-2"
                             >
                                 {importing ? 'Importing…' : `Import ${previewRows.length} Athletes`}
                             </button>

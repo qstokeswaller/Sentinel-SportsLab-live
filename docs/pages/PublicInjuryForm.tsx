@@ -47,7 +47,7 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
 );
 
 const Label = ({ children }) => (
-    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block">{children}</label>
+    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1 block">{children}</label>
 );
 
 // ─── Steps: 0=athlete, 1=body map, 2=classification, 3=clinical, 4=management, 5=notes, 6=review ──
@@ -255,7 +255,7 @@ const PublicInjuryForm = () => {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
-                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} className="text-cyan-600" />}
+                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} handled inline />}
                                     </div>
                                 </button>
                             ))}
@@ -273,7 +273,7 @@ const PublicInjuryForm = () => {
                                     {selectedAthlete.name?.[0]?.toUpperCase() || '?'}
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600">Injury report for</p>
+                                    <p handled inline>Injury report for</p>
                                     <p className="font-black text-slate-900 text-lg leading-tight">{selectedAthlete.name}</p>
                                 </div>
                             </div>
@@ -494,7 +494,7 @@ const PublicInjuryForm = () => {
                         </button>
                     ) : (
                         <button onClick={handleSubmit} disabled={submitting || form.areas.length === 0}
-                            className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2">
+                            className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all disabled:opacity-30 flex items-center justify-center gap-2">
                             {submitting ? 'Submitting...' : <><Send size={16} /> Submit Report</>}
                         </button>
                     )}

@@ -61,7 +61,7 @@ const LandingPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate('/login')} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-3 py-2">Log in</button>
-                        <button onClick={() => navigate('/login')} className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">Get Started</button>
+                        <button onClick={() => navigate('/login')} className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">Get Started</button>
                     </div>
                 </div>
             </nav>
@@ -98,7 +98,7 @@ const LandingPage: React.FC = () => {
                             </p>
                             <div className="mt-8 flex flex-wrap items-center gap-4">
                                 <button onClick={() => navigate('/login')}
-                                    className="group flex items-center gap-2 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-xl shadow-indigo-200/50 transition-all hover:shadow-2xl hover:shadow-indigo-300/50 active:scale-[0.98]">
+                                    className="group flex items-center gap-2 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-xl shadow-indigo-200/50 transition-all hover:shadow-2xl hover:shadow-indigo-300/50 active:scale-[0.98]">
                                     Start Free Trial <ArrowRightIcon size={16} className="group-hover:translate-x-1 transition-transform" />
                                 </button>
                                 <a href="#features" className="flex items-center gap-2 px-6 py-3.5 text-slate-600 font-medium hover:text-slate-900 transition-colors">
@@ -125,7 +125,7 @@ const LandingPage: React.FC = () => {
                                     {/* Mock dashboard content */}
                                     <div className="space-y-3">
                                         <div className="grid grid-cols-4 gap-2">
-                                            {[{ label: 'Athletes', val: '42', color: 'bg-indigo-50 dark:bg-indigo-900/25 text-indigo-600' }, { label: 'Available', val: '38', color: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600' }, { label: 'Modified', val: '3', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' }, { label: 'Flagged', val: '2', color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600' }].map((c, i) => (
+                                            {[{ label: 'Athletes', val: '42', color: 'bg-indigo-50 dark:bg-indigo-600 text-indigo-600' }, { label: 'Available', val: '38', color: 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600' }, { label: 'Modified', val: '3', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' }, { label: 'Flagged', val: '2', color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600' }].map((c, i) => (
                                                 <div key={i} className={`${c.color} rounded-lg px-3 py-2 text-center`}>
                                                     <div className="text-lg font-bold">{c.val}</div>
                                                     <div className="text-[8px] font-semibold uppercase tracking-wide opacity-60">{c.label}</div>
@@ -142,7 +142,7 @@ const LandingPage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <div className="flex-1 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg p-2.5">
+                                            <div className="flex-1 bg-indigo-50 dark:bg-indigo-600 rounded-lg p-2.5">
                                                 <div className="text-[8px] font-semibold text-indigo-400 uppercase">Readiness</div>
                                                 <div className="text-xl font-bold text-indigo-600 dark:text-indigo-300">82<span className="text-xs">/100</span></div>
                                             </div>
@@ -287,7 +287,7 @@ const LandingPage: React.FC = () => {
                                     <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-300 mt-0.5 shrink-0" />{f}</li>
                                 ))}
                             </ul>
-                            <button onClick={() => navigate('/login')} className="w-full py-2.5 bg-white text-indigo-600 dark:text-indigo-300 font-semibold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all text-sm">Start Free Trial</button>
+                            <button onClick={() => navigate('/login')} className="w-full py-2.5 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 font-semibold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-600 transition-all text-sm">Start Free Trial</button>
                         </div>
 
                         {/* Elite */}
@@ -332,7 +332,7 @@ const LandingPage: React.FC = () => {
                         Join sport scientists and S&C coaches using research-backed tools to monitor, test, and optimise athlete performance.
                     </p>
                     <button onClick={() => navigate('/login')}
-                        className="mt-8 px-8 py-4 bg-white text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-xl hover:shadow-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 transition-all active:scale-[0.98] text-base">
+                        className="mt-8 px-8 py-4 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-xl hover:shadow-2xl hover:bg-indigo-50 dark:hover:bg-indigo-600 transition-all active:scale-[0.98] text-base">
                         Start Your Free Trial
                     </button>
                 </div>

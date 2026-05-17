@@ -11,7 +11,7 @@ import {
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
   MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
-  ActivityIcon, TagIcon, CheckIcon, LinkIcon, XIcon, SunIcon, MoonIcon, MonitorIcon,
+  ActivityIcon, TagIcon, CheckIcon, LinkIcon, XIcon, SunIcon, MoonIcon, MonitorIcon, CalendarIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
@@ -52,9 +52,9 @@ const CollapsibleSection = ({ id, icon: Icon, title, subtitle, defaultOpen = tru
         {Icon && <Icon size={15} className="text-indigo-500 dark:text-indigo-400 shrink-0" />}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{title}</h3>
-          {subtitle && <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{subtitle}</p>}
         </div>
-        <div className={`text-slate-400 dark:text-[#94A3B8] transition-transform ${isOpen ? '' : '-rotate-90'}`}>
+        <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isOpen ? '' : '-rotate-90'}`}>
           <ChevronDownIcon size={16} />
         </div>
       </button>
@@ -69,19 +69,19 @@ const UnsavedChangesModal = ({ isOpen, onSave, onDiscard, onCancel }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-[#132338] rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
             <AlertTriangleIcon size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">Unsaved Changes</h3>
-            <p className="text-xs text-slate-400">You have unsaved changes that will be lost.</p>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Unsaved Changes</h3>
+            <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">You have unsaved changes that will be lost.</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">Discard</button>
-          <button onClick={onSave} className="flex-1 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Save & Continue</button>
+          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">Discard</button>
+          <button onClick={onSave} className="flex-1 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors">Save & Continue</button>
         </div>
       </div>
     </div>
@@ -118,11 +118,11 @@ const GpsColumnRenameModal: React.FC<{
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[82vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[82vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Column Display Names — {profile.teamName}</h2>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Column Display Names — {profile.teamName}</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">{visible.length} columns · CSV import name (left) → how it appears in GPS Hub (right)</p>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 transition-colors">
@@ -145,7 +145,7 @@ const GpsColumnRenameModal: React.FC<{
                 value={drafts[m.csvColumn] ?? ''}
                 onChange={e => setDrafts(prev => ({ ...prev, [m.csvColumn]: e.target.value }))}
                 placeholder={m.csvColumn}
-                className="flex-1 text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors bg-slate-50 text-slate-900"
+                className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors bg-slate-50 dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0]"
               />
             </div>
           ))}
@@ -155,8 +155,8 @@ const GpsColumnRenameModal: React.FC<{
         <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#132338]/40">
           <p className="text-[10px] text-slate-400">Changes apply immediately in GPS Hub after saving.</p>
           <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
-            <button onClick={handleSave} className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Save Names</button>
+            <button onClick={onClose} className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#243A58] rounded-lg transition-colors">Cancel</button>
+            <button onClick={handleSave} className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors">Save Names</button>
           </div>
         </div>
       </div>
@@ -170,10 +170,17 @@ const GpsColumnRenameModal: React.FC<{
 
 function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; toggleDarkMode: () => void }) {
   const [pending, setPending] = React.useState<boolean>(isDarkMode);
-  const isDirty = pending !== isDarkMode;
+  const [calendarDefault, setCalendarDefault] = React.useState<'week' | 'month'>(() => (localStorage.getItem('dash_calendar_view') as 'week' | 'month') || 'week');
+  const [savedCalendar, setSavedCalendar] = React.useState<'week' | 'month'>(() => (localStorage.getItem('dash_calendar_view') as 'week' | 'month') || 'week');
+
+  const isDirty = pending !== isDarkMode || calendarDefault !== savedCalendar;
 
   function save() {
-    if (isDirty) toggleDarkMode();
+    if (pending !== isDarkMode) toggleDarkMode();
+    if (calendarDefault !== savedCalendar) {
+      localStorage.setItem('dash_calendar_view', calendarDefault);
+      setSavedCalendar(calendarDefault);
+    }
   }
 
   return (
@@ -191,7 +198,7 @@ function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; to
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Theme</h3>
-              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Switch between light and dark mode. Preference is saved per device.</p>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Switch between light and dark mode. Preference is saved per device.</p>
             </div>
           </div>
         </div>
@@ -215,7 +222,7 @@ function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; to
                 <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Light</span>
                 {!pending && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Clean, high-contrast for indoor use</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Clean, high-contrast for indoor use</p>
             </button>
 
             {/* Dark card */}
@@ -235,24 +242,54 @@ function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; to
                 <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Dark</span>
                 {pending && <CheckIcon size={13} className="ml-auto text-indigo-500" />}
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Navy dark — better in bright conditions</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Navy dark — better in bright conditions</p>
             </button>
           </div>
 
-          {/* Save row */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-[#243A58]">
-            <p className="text-xs text-slate-400 dark:text-[#94A3B8]">
-              {isDirty ? 'Unsaved changes' : 'Saved to this device'}
-            </p>
-            <button
-              onClick={save}
-              disabled={!isDirty}
-              className="px-5 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Save
-            </button>
+        </div>
+      </div>
+
+      {/* Calendar Default View */}
+      <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#1A2D48] flex items-center justify-center shrink-0">
+              <CalendarIcon size={16} className="text-indigo-500 dark:text-indigo-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Dashboard Calendar Default</h3>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Choose which view opens by default on the Dashboard calendar.</p>
+            </div>
           </div>
         </div>
+        <div className="px-5 py-4">
+          <div className="flex gap-2">
+            {(['week', 'month'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setCalendarDefault(v)}
+                className={`flex-1 py-2.5 rounded-lg border text-xs font-semibold transition-all ${calendarDefault === v ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700'}`}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)} View
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-2">Takes effect on next page load.</p>
+        </div>
+      </div>
+
+      {/* Single save row for all appearance settings */}
+      <div className="flex items-center justify-between py-3 px-1">
+        <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">
+          {isDirty ? 'Unsaved changes' : 'All changes saved'}
+        </p>
+        <button
+          onClick={save}
+          disabled={!isDirty}
+          className="px-5 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Save Appearance
+        </button>
       </div>
     </>
   );
@@ -440,7 +477,7 @@ const SettingsPage: React.FC = () => {
                 <button key={val} type="button"
                   onClick={() => updateSettings(key, { acuteWindow: val === '7_28' ? 7 : 3, chronicWindow: val === '7_28' ? 28 : 21 })}
                   className={`flex-1 text-xs font-medium py-2 rounded-lg border transition-all ${
-                    s.acuteWindow === (val === '7_28' ? 7 : 3) ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
+                    s.acuteWindow === (val === '7_28' ? 7 : 3) ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'
                   }`}>{lbl}</button>
               ))}
             </div>
@@ -453,7 +490,7 @@ const SettingsPage: React.FC = () => {
                   onClick={() => updateSettings(key, { freezeRestDays: val === 'freeze' })}
                   className={`flex-1 text-xs font-medium py-2 rounded-lg border transition-all ${
                     (s.freezeRestDays && val === 'freeze') || (!s.freezeRestDays && val === 'decay')
-                      ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'
+                      ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'
                   }`}>{lbl}</button>
               ))}
             </div>
@@ -485,7 +522,7 @@ const SettingsPage: React.FC = () => {
                   setAcwrRecalcAnchors(prev => { const n = { ...prev }; delete n[key]; return n; });
                   showToast?.('Recalculation anchor cleared — using all data');
                 }}
-                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/25 transition-colors"
+                className="px-3 py-2 text-xs text-rose-600 border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-colors"
               >Clear</button>
             )}
           </div>
@@ -539,14 +576,14 @@ const SettingsPage: React.FC = () => {
               <button key={tab.id} data-tour={`settings-${tab.id}`} onClick={() => handleTabSwitch(tab.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-900/25 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/50 dark:border-indigo-700/50 text-indigo-700'
+                    ? 'bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-600 text-indigo-700 dark:text-white'
                     : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border border-transparent'
                 }`}
               >
-                <tab.icon size={16} className={isActive ? 'text-indigo-600 dark:text-indigo-300 dark:text-indigo-400' : 'text-slate-400 dark:text-[#94A3B8]'} />
+                <tab.icon size={16} className={isActive ? 'text-indigo-600 dark:text-white' : 'text-slate-400 dark:text-[#CBD5E1]'} />
                 <div className="flex-1 min-w-0">
-                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700 dark:text-indigo-400 dark:text-indigo-300' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{tab.label}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] block truncate">{tab.desc}</span>
+                  <span className={`text-sm font-medium block ${isActive ? 'text-indigo-700 dark:text-white' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{tab.label}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] block truncate">{tab.desc}</span>
                 </div>
                 {isActive && <ChevronRightIcon size={12} className="text-indigo-400 shrink-0" />}
               </button>
@@ -568,7 +605,7 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Feature Settings</h2>
-              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Configure platform features for your teams and athletes.</p>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Configure platform features for your teams and athletes.</p>
             </div>
 
             {/* ACWR Section */}
@@ -603,11 +640,11 @@ const SettingsPage: React.FC = () => {
                         <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 bg-indigo-100 dark:bg-indigo-900/35 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold">
+                              <div className="w-7 h-7 bg-indigo-100 dark:bg-indigo-600 rounded-lg flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold">
                                 {team.name?.slice(0, 2).toUpperCase()}
                               </div>
                               <div>
-                                <span className="text-sm font-semibold text-slate-900">{team.name}</span>
+                                <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{team.name}</span>
                                 <span className="text-[10px] text-slate-400 ml-2">{(team.players || []).length} athletes</span>
                               </div>
                             </div>
@@ -641,10 +678,10 @@ const SettingsPage: React.FC = () => {
                           <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 text-[10px] font-bold">
+                                <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 dark:text-[#CBD5E1] text-[10px] font-bold">
                                   {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                 </div>
-                                <span className="text-sm font-medium text-slate-900">{athlete.name}</span>
+                                <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0]">{athlete.name}</span>
                               </div>
                               <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${s.enabled ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
@@ -666,7 +703,7 @@ const SettingsPage: React.FC = () => {
 
               <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
                 className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors mt-4 ${
-                  acwrDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                 }`}>
                 <SaveIcon size={14} />
                 {acwrDirty ? 'Save ACWR Settings' : 'No changes'}
@@ -695,7 +732,7 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
-                    acwrDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}>
                   <SaveIcon size={14} />
                   {acwrDirty ? 'Save Settings' : 'No changes'}
@@ -725,7 +762,7 @@ const SettingsPage: React.FC = () => {
                     <ActivityIcon size={16} className={isPolarConnected ? 'text-emerald-600' : 'text-slate-400'} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">Polar AccessLink</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Polar AccessLink</p>
                     {isPolarConnected ? (
                       <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                         <CheckIcon size={10} />
@@ -739,7 +776,7 @@ const SettingsPage: React.FC = () => {
                     {isPolarConnected ? (
                       <button
                         onClick={handleDisconnectPolar}
-                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 dark:hover:bg-rose-900/25 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:border-rose-800/50 transition-all"
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-rose-50 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:border-rose-800/50 transition-all"
                       >
                         Disconnect
                       </button>
@@ -747,13 +784,13 @@ const SettingsPage: React.FC = () => {
                       <>
                         <button
                           onClick={() => handleConnectPolar('team_pro')}
-                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all whitespace-nowrap"
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all whitespace-nowrap"
                         >
                           Team Pro
                         </button>
                         <button
                           onClick={() => handleConnectPolar('individual')}
-                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 border border-slate-200 transition-all whitespace-nowrap"
+                          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] border border-slate-200 transition-all whitespace-nowrap"
                         >
                           Individual
                         </button>
@@ -789,11 +826,11 @@ const SettingsPage: React.FC = () => {
                             onClick={() => profile && setGpsPreviewProfile(profile)}
                             className={`flex items-center gap-4 px-4 py-3.5 ${profile ? 'hover:bg-emerald-50/40 cursor-pointer' : ''} rounded-t-xl transition-all`}
                           >
-                            <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/35 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 text-[10px] font-bold shrink-0">
+                            <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-600 rounded-lg flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold shrink-0">
                               {team.name?.slice(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-slate-900">{team.name}</p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{team.name}</p>
                               {profile ? (
                                 <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                                   <CheckIcon size={10} />
@@ -818,8 +855,8 @@ const SettingsPage: React.FC = () => {
                                 onClick={() => setGpsConfigTarget({ teamId: team.id, teamName: team.name })}
                                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                                   profile
-                                    ? 'bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                    ? 'bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1]'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                                 }`}
                               >
                                 {profile ? 'Reconfigure' : 'Configure'}
@@ -848,8 +885,8 @@ const SettingsPage: React.FC = () => {
                                       opt.disabled
                                         ? 'opacity-40 cursor-not-allowed border-slate-200 bg-slate-50'
                                         : selected
-                                          ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/25 text-indigo-700'
-                                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                                          ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-600 text-indigo-700'
+                                          : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48] hover:border-slate-300 dark:hover:border-[#2D4A6A] hover:bg-slate-50 dark:hover:bg-[#243A58] text-slate-700 dark:text-[#CBD5E1]'
                                     }`}
                                   >
                                     <span className="text-xs font-semibold">{opt.label}</span>
@@ -929,7 +966,7 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Account</h2>
-              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Your profile, organisation and session management.</p>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Your profile, organisation and session management.</p>
             </div>
 
             {/* Profile Section */}
@@ -965,7 +1002,7 @@ const SettingsPage: React.FC = () => {
                 {profileError && <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
                 <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
-                    profileDirty ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    profileDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}>
                   <SaveIcon size={14} />
                   {profileSaving ? 'Saving...' : profileDirty ? 'Save Profile' : 'No changes'}
@@ -976,16 +1013,16 @@ const SettingsPage: React.FC = () => {
             {/* Security — always visible, not collapsible */}
             <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/35 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-300 dark:text-indigo-400 text-sm font-bold">
+                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-600 rounded-xl flex items-center justify-center text-indigo-600 dark:text-white text-sm font-bold">
                   {(user?.user_metadata?.full_name || user?.email || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0]">{user?.user_metadata?.full_name || 'User'}</p>
-                  <p className="text-xs text-slate-400 dark:text-[#94A3B8]">{user?.email}</p>
+                  <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">{user?.email}</p>
                 </div>
               </div>
               <button onClick={signOut}
-                className="w-full flex items-center justify-center gap-2 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 dark:border-rose-800/50">
+                className="w-full flex items-center justify-center gap-2 bg-rose-50 dark:bg-rose-600 hover:bg-rose-100 dark:hover:bg-rose-500 text-rose-600 dark:text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors border border-rose-200 dark:border-rose-500/50">
                 <LogOutIcon size={14} /> Sign out
               </button>
             </div>
@@ -997,12 +1034,12 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Walkthrough</h2>
-              <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Page-by-page guided tours of the platform. Start, resume, or reset tours for each section.</p>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Page-by-page guided tours of the platform. Start, resume, or reset tours for each section.</p>
             </div>
 
             {/* Page Tours */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide px-1">Page Tours</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide px-1">Page Tours</h3>
               {PAGE_TOURS.map(tour => {
                 const status = tourState?.[tour.pageId] || 'pending';
                 const isCompleted = status === 'completed';
@@ -1019,8 +1056,8 @@ const SettingsPage: React.FC = () => {
                           <CircleIcon size={18} className="text-slate-300 dark:text-[#1A2D48] shrink-0" />
                         )}
                         <div>
-                          <span className={`text-sm font-medium ${isCompleted ? 'text-emerald-700 dark:text-emerald-400 dark:text-emerald-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{tour.pageName}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] ml-2">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}</span>
+                          <span className={`text-sm font-medium ${isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{tour.pageName}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-2">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}</span>
                           {isSkipped && <span className="text-[10px] text-amber-500 font-medium ml-2">Skipped</span>}
                         </div>
                       </div>
@@ -1045,7 +1082,7 @@ const SettingsPage: React.FC = () => {
                             StorageService.saveTourState(updated);
                             navigate(tour.route);
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors"
                         >
                           <PlayIcon size={12} /> {isCompleted ? 'Restart' : isSkipped ? 'Resume' : 'Start Tour'}
                         </button>
@@ -1066,7 +1103,7 @@ const SettingsPage: React.FC = () => {
                               <CircleIcon size={14} className="text-slate-200 shrink-0" />
                             )}
                             <div>
-                              <span className={`text-xs font-medium ${wfCompleted ? 'text-emerald-600' : 'text-slate-600'}`}>{wf.name}</span>
+                              <span className={`text-xs font-medium ${wfCompleted ? 'text-emerald-600' : 'text-slate-600 dark:text-[#CBD5E1]'}`}>{wf.name}</span>
                               <span className="text-[9px] text-slate-300 ml-1.5">{wf.steps.length} step{wf.steps.length !== 1 ? 's' : ''}</span>
                               {wfSkipped && <span className="text-[9px] text-amber-400 font-medium ml-1.5">Skipped</span>}
                             </div>
@@ -1079,7 +1116,7 @@ const SettingsPage: React.FC = () => {
                               showToast?.(`${wf.name} reset`);
                               navigate(PAGE_TOURS.find(p => p.pageId === wf.parentPageId)?.route || '/');
                             }}
-                            className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:bg-indigo-900/25 text-slate-500 hover:text-indigo-600 dark:text-indigo-300 rounded-md text-[10px] font-medium transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-slate-500 hover:text-indigo-600 dark:text-white rounded-md text-[10px] font-medium transition-colors"
                           >
                             <RotateCcwIcon size={10} /> Reset
                           </button>
@@ -1195,7 +1232,7 @@ const TestingHubSettings: React.FC<{
               </button>
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(cat.id)}>
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium ${noneVisible ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{cat.name}</span>
+                  <span className={`text-sm font-medium ${noneVisible ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{cat.name}</span>
                   <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
                     allVisible ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600' : noneVisible ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
                   }`}>{visibleCount}/{tests.length}</span>
@@ -1213,7 +1250,7 @@ const TestingHubSettings: React.FC<{
                   const visible = isTestVisible(test.id);
                   return (
                     <div key={test.id} className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition-all ${visible ? '' : 'opacity-50'}`}>
-                      <span className={`text-xs font-medium ${visible ? 'text-slate-700' : 'text-slate-400'}`}>{test.name}</span>
+                      <span className={`text-xs font-medium ${visible ? 'text-slate-700 dark:text-[#CBD5E1]' : 'text-slate-400'}`}>{test.name}</span>
                       <button onClick={() => toggleTest(test.id)}
                         className={`w-9 h-5 rounded-full transition-all relative ${visible ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                         <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${visible ? 'left-4' : 'left-0.5'}`} />

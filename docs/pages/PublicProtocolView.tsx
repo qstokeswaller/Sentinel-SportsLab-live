@@ -266,7 +266,7 @@ const PublicProtocolView: React.FC = () => {
             {/* Header bar */}
             <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/25 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                         <FileText size={16} className="text-indigo-500" />
                     </div>
                     <div>
