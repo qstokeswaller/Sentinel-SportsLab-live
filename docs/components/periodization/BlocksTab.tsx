@@ -167,10 +167,19 @@ export const BlocksTab = ({ plan }) => {
     }, [weeks]);
 
     const WEEK_W    = 38;
+    const showToday     = ganttDates.start && today >= ganttDates.start && today <= ganttDates.end;
+    const todayWeekIdx_ = showToday ? Math.floor(daysBetween(ganttDates.start, today) / 7) : -1;
+    const todayWeekLeft = todayWeekIdx_ * WEEK_W;
     const ganttW    = Math.max(640, weeks.length * WEEK_W);
     const totalDays = Math.max(1, daysBetween(ganttDates.start, ganttDates.end));
     const pxLeft    = d => Math.max(0, daysBetween(ganttDates.start, d) / totalDays * ganttW);
-    const pxWidth   = (s, e) => Math.max(4, daysBetween(s, e || s) / totalDays * ganttW);
+    const pxWidth   = (s, e) => Math.max(4, (daysBetween(s, e || s) + 1) / totalDays * ganttW);
+    const weekRect = (startDate, endDate) => {
+        if (!startDate) return null;
+        const sWk = Math.floor(daysBetween(ganttDates.start, startDate) / 7);
+        const eWk = endDate ? Math.floor(daysBetween(ganttDates.start, endDate) / 7) : sWk;
+        return { left: sWk * WEEK_W, width: Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W) };
+    };
 
     const selectedBlock = allBlocks.find(b => `${b.phaseId}:${b.id}` === selectedKey);
 
@@ -216,48 +225,64 @@ export const BlocksTab = ({ plan }) => {
                     </div>
                     <div className="flex">
                         <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
-                            <div style={{ height: '35px' }} />
-                            <div className="flex items-center" style={{ height: '20px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
+                            <div style={{ height: '32px' }} />
+                            <div className="flex items-center" style={{ height: '20px' }}>
+                                <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Phases</span>
                             </div>
-                            <div className="flex items-center" style={{ height: '24px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
+                            <div className="flex items-center" style={{ height: '24px' }}>
+                                <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center" style={{ height: '14px' }}>
-                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
+                                    <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Events</span>
                                 </div>
                             )}
                         </div>
                         <div className="overflow-x-auto flex-1">
                         <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3">
 
-                            {/* Month labels */}
-                            <div className="relative mb-0.5" style={{ height: '13px' }}>
+                            {/* Month labels — bordered + nowrap */}
+                            <div className="relative mb-0.5" style={{ height: '14px' }}>
                                 {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
-                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                    <div key={i}
+                                        className="absolute text-[9px] font-bold text-slate-600 dark:text-[#E2E8F0] uppercase tracking-wide whitespace-nowrap overflow-hidden border-r-2 border-slate-300 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/60 flex items-center justify-center"
+                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px', height: '14px' }}>
                                         {mg.label}
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Week numbers */}
-                            <div className="relative mb-2" style={{ height: '12px' }}>
-                                {weeks.map((w, i) => (
-                                    <div key={i} className="absolute text-[8px] text-slate-300 dark:text-[#475569] text-center"
-                                        style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
-                                        W{w.weekNum}
-                                    </div>
-                                ))}
+                            {/* Week numbers — today column highlight */}
+                            <div className="relative" style={{ height: "16px" }}>
+                                {showToday && (
+                                    <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0"
+                                        style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                )}
+                                {weeks.map((w, i) => {
+                                    const isToday = showToday && i === todayWeekIdx_;
+                                    return (
+                                        <div key={i}
+                                            className={`absolute text-[8px] text-center z-10 ${isToday ? 'text-rose-500 font-semibold' : 'text-slate-300 dark:text-[#475569]'}`}
+                                            style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
+                                            W{w.weekNum}
+                                        </div>
+                                    );
+                                })}
                             </div>
 
+                            {/* Phase + Block + Event rows — wrapped for full-height today line */}
+                            <div className="relative">
+                                {showToday && (
+                                    <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0"
+                                        style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                )}
                             {/* Phase bars (reference row) */}
-                            <div className="relative mb-1.5" style={{ height: '20px' }}>
+                            <div className="relative" style={{ height: '20px' }}>
                                 {plan.phases.map(ph => {
                                     if (!ph.startDate) return null;
-                                    const l = pxLeft(ph.startDate);
-                                    const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    const rect = weekRect(ph.startDate, ph.endDate);
+                                    const l = rect.left;
+                                    const w = rect.width;
                                     return (
                                         <div key={ph.id} title={ph.name}
                                             className="absolute h-full rounded flex items-center px-2 overflow-hidden"
@@ -268,13 +293,14 @@ export const BlocksTab = ({ plan }) => {
                                 })}
                             </div>
 
-                            {/* Block bars — clickable */}
-                            <div className="relative mb-1.5" style={{ height: '24px' }}>
+                            {/* Block bars — back-to-back with phase row */}
+                            <div className="relative" style={{ height: '24px' }}>
                                 {allBlocks.map(b => {
                                     if (!b.startDate) return null;
                                     const key  = `${b.phaseId}:${b.id}`;
-                                    const l    = pxLeft(b.startDate);
-                                    const w    = b.endDate ? pxWidth(b.startDate, b.endDate) : 50;
+                                    const rect = weekRect(b.startDate, b.endDate);
+                                    const l    = rect.left;
+                                    const w    = rect.width;
                                     const isSel = key === selectedKey;
                                     return (
                                         <button key={key}
@@ -295,14 +321,9 @@ export const BlocksTab = ({ plan }) => {
                                         </button>
                                     );
                                 })}
-                                {/* Today line */}
-                                {today >= ganttDates.start && today <= ganttDates.end && (
-                                    <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 rounded-full"
-                                        style={{ left: pxLeft(today) + 'px' }} />
-                                )}
                             </div>
 
-                            {/* Event bars */}
+                            {/* Event bars — directly under blocks */}
                             {(plan.events || []).length > 0 && (
                                 <div className="relative" style={{ height: '14px' }}>
                                     {(plan.events || []).map(ev => {
@@ -322,6 +343,12 @@ export const BlocksTab = ({ plan }) => {
                                     })}
                                 </div>
                             )}
+                            {/* Full-height today line */}
+                            {showToday && (
+                                <div className="absolute top-0 bottom-0 w-0.5 bg-rose-400/60 dark:bg-rose-400/50 z-10 pointer-events-none rounded-full"
+                                    style={{ left: pxLeft(today) + 'px' }} />
+                            )}
+                            </div>
 
                         </div>
                         </div>

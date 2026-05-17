@@ -173,10 +173,45 @@ export const BLOCK_COLOR_PRESETS = [
     '#06b6d4', '#ec4899', '#84cc16', '#f59e0b', '#6366f1',
 ];
 
-/** Default modality presets for quick-add */
-export const DEFAULT_MODALITY_PRESETS = [
+/** Standard (industry-built-in) training modalities — never deleted, only toggled per-plan */
+export const STANDARD_MODALITIES = [
     'Strength', 'Plyometrics', 'Speed', 'Conditioning', 'Loaded Power',
-];
+] as const;
+
+/** Backwards-compat alias — same value, used in older imports */
+export const DEFAULT_MODALITY_PRESETS = STANDARD_MODALITIES as readonly string[];
+
+/** Returns true if a modality name is one of the built-in standard ones */
+export const isStandardModality = (m: string): boolean =>
+    (STANDARD_MODALITIES as readonly string[]).includes(m);
+
+/** Industry-standard intensity / volume level presets per standard modality.
+ *  Used by the Timeline tab dropdowns to constrain valid values. Each list ends with
+ *  an implicit "Custom…" escape hatch in the UI for unusual prescriptions. */
+export const MODALITY_LEVEL_PRESETS: Record<string, string[]> = {
+    'Strength':     ['None', 'Maintenance', 'Submax', 'Maximal', 'Max Integration', 'Individual'],
+    'Plyometrics':  ['None', 'Intro', 'Limited', 'Moderate', 'High', 'Peak'],
+    'Speed':        ['None', 'Intro', 'Limited', 'Balanced', 'High', 'Peak'],
+    'Conditioning': ['None', 'Low', 'Moderate', 'High', 'Sport Specific'],
+    'Loaded Power': ['None', 'Intro', 'Limited', 'Moderate', 'High', 'Peak'],
+};
+
+/** Returns the preset levels for a modality, or empty array if it's custom (no presets) */
+export const getModalityLevels = (m: string): string[] => MODALITY_LEVEL_PRESETS[m] || [];
+
+/** Industry-standard short descriptors for each standard modality — shown on hover */
+export const MODALITY_DESCRIPTIONS: Record<string, string> = {
+    'Strength':     'Maximal force production',
+    'Plyometrics':  'Stretch-shortening cycle / reactive strength',
+    'Speed':        'Maximum velocity and acceleration',
+    'Conditioning': 'Aerobic + anaerobic energy systems',
+    'Loaded Power': 'Force × velocity under load',
+};
+
+/** Returns the descriptor for a modality. Falls back to plan-level customDescriptions for custom modalities. */
+export const getModalityDescription = (m: string, customDescriptions?: Record<string, string>): string => {
+    return MODALITY_DESCRIPTIONS[m] || customDescriptions?.[m] || '';
+};
 
 // ── Target metric catalogue ────────────────────────────────────────────────────
 

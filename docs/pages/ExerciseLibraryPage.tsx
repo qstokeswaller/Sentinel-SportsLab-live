@@ -625,7 +625,7 @@ export const ExerciseLibraryPage = () => {
                 </div>
             </div>
 
-            <div className="w-[320px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
+            <div className="w-[400px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
                 {selectedExercise ? (
                     <ExerciseDetailPanel
                         exercise={selectedExercise}

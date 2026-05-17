@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useRef, useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import {
     Trophy, FlaskConical, Target, Zap, Dumbbell, Wind, Footprints,
     TrendingUp, TrendingDown, Plus, ChevronRight, Star,
@@ -11,6 +12,7 @@ import {
     dateToWeekIndex, weekIndexToDate, calculateTotalWeeks,
     getMonthLabels, calculateWeeklyVolume, calculateWeeklyIntensity,
     calculatePeakingIndex, formatDateShort, EVENT_TYPE_COLORS, EVENT_TYPE_LABELS,
+    isStandardModality, getModalityLevels,
 } from '../../utils/periodizationUtils';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
@@ -168,6 +170,7 @@ export const TimelineView = ({ plan }) => {
     const [editingMetric, setEditingMetric]     = useState(null);
     const [hoveredMetric, setHoveredMetric]     = useState(null);
     const [showHelp, setShowHelp]               = useState(false);
+    const [showPeakingInfo, setShowPeakingInfo] = useState(false);
 
     // ── All useMemo / derived values MUST come before any conditional returns ──
     const totalWeeks  = calculateTotalWeeks(plan);
@@ -328,48 +331,96 @@ export const TimelineView = ({ plan }) => {
                                 {hasOverride && !isEditing && (
                                     <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full z-10" style={{ backgroundColor: color }} />
                                 )}
-                                {/* Inline edit input */}
+                                {/* Inline stepper editor */}
                                 {isEditing && (
-                                    <input autoFocus
-                                        className="absolute inset-1 text-xs text-center bg-white rounded-md focus:outline-none z-20 font-semibold"
+                                    <div className="absolute inset-1 flex items-center justify-center gap-0.5 bg-white dark:bg-[#1A2D48] rounded-md z-20"
                                         style={{ border: `2px solid ${color}` }}
-                                        value={editingMetric.value}
-                                        placeholder="0–10"
-                                        onChange={e => setEditingMetric({ ...editingMetric, value: e.target.value })}
-                                        onBlur={saveMetricOverride}
-                                        onKeyDown={e => { if (e.key === 'Enter') saveMetricOverride(); if (e.key === 'Escape') setEditingMetric(null); }}
-                                    />
-                                )}
-                                {/* Tooltip — renders above, z-50 so it overlaps rows above */}
-                                {isHovered && !isEditing && info && (
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none" style={{ minWidth: '180px' }}>
-                                        <div className="bg-slate-900 text-white rounded-xl px-3 py-2.5 shadow-2xl border border-slate-700">
-                                            <div className="flex items-center gap-1.5 mb-1.5">
-                                                <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">{LABELS[type]}</span>
-                                                <span className="text-[9px] text-slate-500">·</span>
-                                                <span className="text-[9px] text-slate-400">
-                                                    Wk {weekIdx + 1} · {MONTHS_SHORT[wkDate.getMonth()]} {wkDate.getDate()}
-                                                </span>
-                                                {info.isOverride && (
-                                                    <span className="ml-auto px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px] font-semibold">OVERRIDE</span>
-                                                )}
-                                            </div>
-                                            <div className="text-xl font-bold mb-1" style={{ color }}>
-                                                {info.val !== null ? `${info.val}/10` : '—'}
-                                            </div>
-                                            <div className="text-[9px] text-slate-400 leading-snug">{info.detail}</div>
-                                            {type !== 'peaking' && (
-                                                <div className="text-[8px] text-indigo-300 mt-2 pt-1.5 border-t border-slate-700">
-                                                    Click to {info.val !== null ? 'override · leave blank to reset auto' : 'set value manually'}
-                                                </div>
-                                            )}
-                                        </div>
-                                        {/* Caret */}
-                                        <div className="flex justify-center overflow-hidden h-2">
-                                            <div className="w-3 h-3 bg-slate-900 rotate-45 -translate-y-1.5 border-r border-b border-slate-700" />
-                                        </div>
+                                        onClick={e => e.stopPropagation()}>
+                                        <button
+                                            onClick={() => {
+                                                const num = parseFloat(editingMetric.value);
+                                                const cur = isNaN(num) ? 5 : num;
+                                                const next = Math.max(0, Math.min(10, Math.round(cur) - 1));
+                                                setEditingMetric({ ...editingMetric, value: String(next) });
+                                            }}
+                                            className="text-slate-500 hover:text-slate-800 dark:text-[#CBD5E1] dark:hover:text-[#E2E8F0] px-1 leading-none">−</button>
+                                        <input
+                                            className="w-6 text-xs text-center bg-transparent text-slate-900 dark:text-[#E2E8F0] focus:outline-none font-semibold"
+                                            value={editingMetric.value}
+                                            placeholder="—"
+                                            onChange={e => {
+                                                const v = e.target.value.replace(/[^0-9]/g, '');
+                                                setEditingMetric({ ...editingMetric, value: v });
+                                            }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    const num = parseFloat(editingMetric.value);
+                                                    const cur = isNaN(num) ? 5 : num;
+                                                    setEditingMetric({ ...editingMetric, value: String(Math.min(10, Math.round(cur) + 1)) });
+                                                } else if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    const num = parseFloat(editingMetric.value);
+                                                    const cur = isNaN(num) ? 5 : num;
+                                                    setEditingMetric({ ...editingMetric, value: String(Math.max(0, Math.round(cur) - 1)) });
+                                                } else if (e.key === 'Enter') saveMetricOverride();
+                                                else if (e.key === 'Escape') setEditingMetric(null);
+                                            }}
+                                            autoFocus
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const num = parseFloat(editingMetric.value);
+                                                const cur = isNaN(num) ? 5 : num;
+                                                const next = Math.max(0, Math.min(10, Math.round(cur) + 1));
+                                                setEditingMetric({ ...editingMetric, value: String(next) });
+                                            }}
+                                            className="text-slate-500 hover:text-slate-800 dark:text-[#CBD5E1] dark:hover:text-[#E2E8F0] px-1 leading-none">+</button>
+                                        <button
+                                            onClick={saveMetricOverride}
+                                            className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-indigo-600 text-white text-[8px] font-bold flex items-center justify-center shadow-md hover:bg-indigo-500"
+                                            title="Save">✓</button>
                                     </div>
                                 )}
+                                {/* Tooltip — edge-aware positioning to avoid clipping by scrollable parent */}
+                                {isHovered && !isEditing && info && (() => {
+                                    const isLeftEdge  = weekIdx < 2;
+                                    const isRightEdge = weekIdx > totalWeeks - 3;
+                                    const horizClass = isLeftEdge
+                                        ? 'left-0 translate-x-0'
+                                        : isRightEdge
+                                            ? 'right-0 translate-x-0'
+                                            : 'left-1/2 -translate-x-1/2';
+                                    return (
+                                        <div className={`absolute bottom-full ${horizClass} mb-2 z-50 pointer-events-none`} style={{ width: '200px' }}>
+                                            <div className="bg-slate-900 text-white rounded-xl px-3 py-2.5 shadow-2xl border border-slate-700">
+                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">{LABELS[type]}</span>
+                                                    <span className="text-[9px] text-slate-500">·</span>
+                                                    <span className="text-[9px] text-slate-400">
+                                                        Wk {weekIdx + 1} · {MONTHS_SHORT[wkDate.getMonth()]} {wkDate.getDate()}
+                                                    </span>
+                                                    {info.isOverride && (
+                                                        <span className="ml-auto px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px] font-semibold">OVERRIDE</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xl font-bold mb-1" style={{ color }}>
+                                                    {info.val !== null ? `${info.val}/10` : '—'}
+                                                </div>
+                                                <div className="text-[9px] text-slate-400 leading-snug">{info.detail}</div>
+                                                {type !== 'peaking' && (
+                                                    <div className="text-[8px] text-indigo-300 mt-2 pt-1.5 border-t border-slate-700">
+                                                        Click to {info.val !== null ? 'override · leave blank to reset auto' : 'set value manually'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Caret — also edge-aware */}
+                                            <div className={`flex overflow-hidden h-2 ${isLeftEdge ? 'justify-start pl-3' : isRightEdge ? 'justify-end pr-3' : 'justify-center'}`}>
+                                                <div className="w-3 h-3 bg-slate-900 rotate-45 -translate-y-1.5 border-r border-b border-slate-700" />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         );
                     })}
@@ -477,11 +528,15 @@ export const TimelineView = ({ plan }) => {
                     {/* Separator */}
                     <div className="h-px bg-slate-300" />
 
-                    {/* Modality labels */}
+                    {/* Modality labels — hover for quality descriptor */}
                     {modalities.map(mod => {
                         const Icon = MODALITY_ICON_MAP[mod] || Star;
+                        const desc = getModalityDescription(mod, plan.modalityDescriptions);
                         return (
-                            <div key={mod} className="border-b border-slate-100 flex items-center gap-2 px-3" style={{ height: `${H_MOD}px` }}>
+                            <div key={mod}
+                                className="border-b border-slate-100 flex items-center gap-2 px-3"
+                                style={{ height: `${H_MOD}px` }}
+                                title={desc ? `${mod} — ${desc}` : mod}>
                                 <Icon size={12} className="text-slate-400 shrink-0" />
                                 <span className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] truncate">{mod}</span>
                             </div>
@@ -518,12 +573,51 @@ export const TimelineView = ({ plan }) => {
                     </div>
 
                     {/* Peaking label */}
-                    <div className="border-b border-slate-100 flex items-center gap-1.5 px-3" style={{ height: `${H_SPARK}px` }}>
+                    <div className="border-b border-slate-100 flex items-center gap-1.5 px-3 relative" style={{ height: `${H_SPARK}px` }}>
                         <Target size={12} className="text-violet-400 shrink-0" />
-                        <div className="min-w-0">
-                            <div className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Peaking</div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1">
+                                <span className="text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Peaking</span>
+                                <button onClick={() => setShowPeakingInfo(v => !v)}
+                                    className="text-slate-300 hover:text-indigo-500 dark:text-[#475569] dark:hover:text-indigo-400 transition-colors"
+                                    title="What is Peaking?">
+                                    <HelpCircle size={10} />
+                                </button>
+                            </div>
                             <div className="text-[9px] text-slate-300 leading-none mt-0.5">derived</div>
                         </div>
+                        {showPeakingInfo && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setShowPeakingInfo(false)} />
+                                <div className="absolute left-full top-0 ml-2 w-80 bg-white dark:bg-[#1A2D48] rounded-xl shadow-2xl border border-slate-200 dark:border-[#243A58] p-4 z-40">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <Target size={14} className="text-violet-500" />
+                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Peaking Index</h4>
+                                        </div>
+                                        <button onClick={() => setShowPeakingInfo(false)} className="text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1] dark:hover:text-[#E2E8F0]">×</button>
+                                    </div>
+                                    <p className="text-[11px] text-slate-700 dark:text-[#CBD5E1] leading-relaxed mb-2">
+                                        A 0–10 planning heuristic showing how "fresh and sharp" the athlete should be each week.
+                                    </p>
+                                    <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-lg p-2 mb-2 font-mono text-[10px] text-slate-700 dark:text-[#CBD5E1]">
+                                        Peaking = Intensity − Volume + 5
+                                    </div>
+                                    <p className="text-[11px] text-slate-700 dark:text-[#CBD5E1] leading-relaxed mb-2">
+                                        From classical <em>Matveyev / Bompa periodization</em>: as competition approaches, training volume drops while intensity rises. This inversion is what the formula captures.
+                                    </p>
+                                    <ul className="text-[10px] text-slate-700 dark:text-[#CBD5E1] leading-relaxed space-y-1 mb-2">
+                                        <li><strong className="text-violet-600 dark:text-violet-400">8–10</strong> · Taper / compete — fresh, ready for max output</li>
+                                        <li><strong className="text-violet-600 dark:text-violet-400">5–7</strong> · Realization / sharpening — neural development</li>
+                                        <li><strong className="text-violet-600 dark:text-violet-400">3–5</strong> · General prep — balanced training</li>
+                                        <li><strong className="text-violet-600 dark:text-violet-400">0–2</strong> · Accumulation — high-volume building, fatigue expected</li>
+                                    </ul>
+                                    <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] leading-relaxed italic">
+                                        Note: this is a planning-level visualization, not a physiological measurement. Modern alternatives include TSB (CTL−ATL), Banister's Fitness-Fatigue model, and ACWR.
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -636,13 +730,47 @@ export const TimelineView = ({ plan }) => {
                                             className="absolute top-1 bottom-1 rounded-md border border-slate-200/60 flex items-center justify-center cursor-pointer hover:bg-indigo-50/40 transition-colors"
                                             style={{ left: `${left}px`, width: `${width}px`, backgroundColor: val ? `${block.color}12` : 'transparent' }}>
                                             {isEditing ? (
-                                                <input autoFocus
-                                                    className="w-full h-full text-[9px] text-center bg-white border-2 border-indigo-400 rounded px-1 focus:outline-none"
-                                                    value={editingModality.value}
-                                                    onChange={e => setEditingModality({ ...editingModality, value: e.target.value })}
-                                                    onBlur={saveModality}
-                                                    onKeyDown={e => { if (e.key === 'Enter') saveModality(); if (e.key === 'Escape') setEditingModality(null); }}
-                                                />
+                                                (() => {
+                                                    const levels = getModalityLevels(mod);
+                                                    const isStd = isStandardModality(mod);
+                                                    const isCustomMode = editingModality.value === '__CUSTOM__';
+                                                    // Custom-text mode: text input (for custom modalities OR standard-with-Custom override)
+                                                    if (!isStd || isCustomMode) {
+                                                        return (
+                                                            <input autoFocus
+                                                                className="w-full h-full text-[9px] text-center bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] border-2 border-indigo-400 rounded px-1 focus:outline-none"
+                                                                value={isCustomMode ? '' : editingModality.value}
+                                                                onChange={e => setEditingModality({ ...editingModality, value: e.target.value })}
+                                                                onBlur={saveModality}
+                                                                onKeyDown={e => { if (e.key === 'Enter') saveModality(); if (e.key === 'Escape') setEditingModality(null); }}
+                                                            />
+                                                        );
+                                                    }
+                                                    // Standard modality: preset dropdown with Custom… escape
+                                                    return (
+                                                        <div className="w-full h-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                                                            <CustomSelect
+                                                                value={levels.includes(editingModality.value) || editingModality.value === '' ? editingModality.value : '__CUSTOM__'}
+                                                                onChange={e => {
+                                                                    if (e.target.value === '__CUSTOM__') {
+                                                                        setEditingModality({ ...editingModality, value: '__CUSTOM__' });
+                                                                    } else {
+                                                                        handleUpdateBlockModality(editingModality.phaseId, editingModality.blockId, editingModality.modality, e.target.value);
+                                                                        setEditingModality(null);
+                                                                    }
+                                                                }}
+                                                                variant="form"
+                                                                size="xs"
+                                                                className="w-full h-full"
+                                                                placeholder="—"
+                                                            >
+                                                                <option value="">—</option>
+                                                                {levels.map(lv => <option key={lv} value={lv}>{lv}</option>)}
+                                                                <option value="__CUSTOM__">Custom…</option>
+                                                            </CustomSelect>
+                                                        </div>
+                                                    );
+                                                })()
                                             ) : (
                                                 <span className="text-[9px] font-semibold text-slate-600 dark:text-[#CBD5E1] truncate px-1.5">{val || '—'}</span>
                                             )}

@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target, ChevronRight } from 'lucide-react';
-import { formatDateShort, DEFAULT_MODALITY_PRESETS, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
+import { formatDateShort, STANDARD_MODALITIES, isStandardModality, getModalityDescription, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
 
 function daysBetween(a, b) {
     if (!a || !b) return 0;
@@ -60,6 +60,7 @@ function GanttPopup({ popup, onClose }) {
 export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     const { handleUpdatePlan, setIsPlanPhaseModalOpen, setEditingPlanPhase } = useAppState();
     const [newModality, setNewModality] = useState('');
+    const [newModalityDesc, setNewModalityDesc] = useState('');
     const [editingModalities, setEditingModalities] = useState(false);
 
     const [popup, setPopup] = useState(null);
@@ -109,7 +110,18 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     const ganttW    = Math.max(640, weeks.length * WEEK_W);
     const totalDays = Math.max(1, daysBetween(ganttDates.start, ganttDates.end));
     const pxLeft    = d => Math.max(0, daysBetween(ganttDates.start, d) / totalDays * ganttW);
-    const pxWidth   = (s, e) => Math.max(4, daysBetween(s, e || s) / totalDays * ganttW);
+    const pxWidth   = (s, e) => Math.max(4, (daysBetween(s, e || s) + 1) / totalDays * ganttW);
+    // Week-aligned rect — phases/blocks extend to end of containing week (matches Timeline tab behavior)
+    const weekRect = (startDate, endDate) => {
+        if (!startDate) return null;
+        const sWk = Math.floor(daysBetween(ganttDates.start, startDate) / 7);
+        const eWk = endDate ? Math.floor(daysBetween(ganttDates.start, endDate) / 7) : sWk;
+        return { left: sWk * WEEK_W, width: Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W) };
+    };
+
+    const showToday    = ganttDates.start && today >= ganttDates.start && today <= ganttDates.end;
+    const todayWeekIdx = showToday ? Math.floor(daysBetween(ganttDates.start, today) / 7) : -1;
+    const todayWeekLeft = todayWeekIdx * WEEK_W;
 
     const getTargetName = () => {
         if (plan.targetType === 'Team') return teams.find(t => t.id === plan.targetId)?.name || 'Unknown Team';
@@ -121,12 +133,29 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
         if (!m) return;
         const current = plan.modalities || [];
         if (current.includes(m)) return;
-        handleUpdatePlan(plan.id, { modalities: [...current, m] });
-        if (!preset) setNewModality('');
+        const update: any = { modalities: [...current, m] };
+        // If custom (no preset) and a description was provided, persist it
+        if (!preset && newModalityDesc.trim()) {
+            update.modalityDescriptions = {
+                ...(plan.modalityDescriptions || {}),
+                [m]: newModalityDesc.trim(),
+            };
+        }
+        handleUpdatePlan(plan.id, update);
+        if (!preset) {
+            setNewModality('');
+            setNewModalityDesc('');
+        }
     };
 
     const removeModality = (mod) => {
-        handleUpdatePlan(plan.id, { modalities: (plan.modalities || []).filter(m => m !== mod) });
+        const updated: any = { modalities: (plan.modalities || []).filter(m => m !== mod) };
+        // Also remove its description if it was a custom one
+        if (plan.modalityDescriptions?.[mod]) {
+            const { [mod]: _, ...rest } = plan.modalityDescriptions;
+            updated.modalityDescriptions = rest;
+        }
+        handleUpdatePlan(plan.id, updated);
     };
 
     const STATS = [
@@ -190,7 +219,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
 
                 {/* Modalities */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5">
                             <Layers size={14} className="text-slate-400" />
                             <span className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1]">Training Modalities</span>
@@ -200,40 +229,86 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                             {editingModalities ? 'Done' : 'Edit'}
                         </button>
                     </div>
+                    {editingModalities && (
+                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mb-3 leading-snug">
+                            Deselecting removes from Timeline. Standard modalities can be re-added; custom ones are deleted permanently.
+                        </p>
+                    )}
+                    {!editingModalities && (plan.modalities || []).length > 0 && <div className="mb-3" />}
 
                     <div className="flex flex-wrap gap-1.5 mb-3 min-h-[24px]">
                         {(plan.modalities || []).length === 0 && (
                             <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] italic">No modalities set</span>
                         )}
-                        {(plan.modalities || []).map(mod => (
-                            <span key={mod} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58]">
-                                {mod}
-                                {editingModalities && (
-                                    <button onClick={() => removeModality(mod)} className="hover:text-red-500 transition-colors"><X size={9} /></button>
-                                )}
-                            </span>
-                        ))}
+                        {(plan.modalities || []).map(mod => {
+                            const isStandard = isStandardModality(mod);
+                            const desc = getModalityDescription(mod, plan.modalityDescriptions);
+                            const tooltip = desc
+                                ? `${mod} — ${desc}${isStandard ? '' : ' (custom)'}`
+                                : (isStandard ? 'Standard modality' : 'Custom modality');
+                            return (
+                                <span key={mod}
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                                        isStandard
+                                            ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30'
+                                            : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#E2E8F0] border-slate-200 dark:border-[#243A58]'
+                                    }`}
+                                    title={tooltip}>
+                                    {mod}
+                                    {editingModalities && (
+                                        <button onClick={() => removeModality(mod)}
+                                            className="hover:text-red-500 transition-colors"
+                                            title={isStandard ? 'Hide from this plan (can be re-added)' : 'Delete custom modality'}>
+                                            <X size={9} />
+                                        </button>
+                                    )}
+                                </span>
+                            );
+                        })}
                     </div>
 
                     {editingModalities && (
                         <>
-                            <div className="flex gap-1.5 mb-2">
-                                <input
-                                    className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0]"
-                                    placeholder="Add modality..."
-                                    value={newModality}
-                                    onChange={e => setNewModality(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && addModality()}
-                                />
-                                <button onClick={() => addModality()} className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-xs font-medium">Add</button>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                                {DEFAULT_MODALITY_PRESETS.filter(p => !(plan.modalities || []).includes(p)).map(preset => (
-                                    <button key={preset} onClick={() => addModality(preset)}
-                                        className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 dark:border-[#243A58] text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors">
-                                        + {preset}
-                                    </button>
-                                ))}
+                            {/* Re-add standard modalities */}
+                            {STANDARD_MODALITIES.filter(p => !(plan.modalities || []).includes(p)).length > 0 && (
+                                <div className="mb-2">
+                                    <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-1">Standard</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {STANDARD_MODALITIES.filter(p => !(plan.modalities || []).includes(p)).map(preset => (
+                                            <button key={preset} onClick={() => addModality(preset)}
+                                                className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-indigo-300 dark:border-indigo-500/40 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors">
+                                                + {preset}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Add custom modality */}
+                            <div className="mt-3">
+                                <p className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-1">Custom</p>
+                                <div className="flex flex-col gap-1.5">
+                                    <input
+                                        className="w-full text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569]"
+                                        placeholder="Name — e.g. Mobility, Tactical..."
+                                        value={newModality}
+                                        onChange={e => setNewModality(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addModality()}
+                                    />
+                                    <div className="flex gap-1.5">
+                                        <input
+                                            className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-indigo-300 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569]"
+                                            placeholder="Quality descriptor (optional) — e.g. Range of motion"
+                                            value={newModalityDesc}
+                                            onChange={e => setNewModalityDesc(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && addModality()}
+                                        />
+                                        <button onClick={() => addModality()} className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-xs font-medium">Add</button>
+                                    </div>
+                                </div>
+                                <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-1 leading-snug">
+                                    Custom modalities use free-text levels in Timeline. The descriptor shows on hover.
+                                </p>
                             </div>
                         </>
                     )}
@@ -251,45 +326,61 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                     </div>
                     <div className="flex">
                         <div className="shrink-0 w-16 border-r border-slate-100 dark:border-[#243A58] py-3 flex flex-col items-end pr-3">
-                            <div style={{ height: '39px' }} />
-                            <div className="flex items-center" style={{ height: '24px', marginBottom: '8px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Phases</span>
+                            <div style={{ height: '32px' }} />
+                            <div className="flex items-center" style={{ height: '24px' }}>
+                                <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Phases</span>
                             </div>
-                            <div className="flex items-center" style={{ height: '20px', marginBottom: '6px' }}>
-                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Blocks</span>
+                            <div className="flex items-center" style={{ height: '20px' }}>
+                                <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Blocks</span>
                             </div>
                             {(plan.events || []).length > 0 && (
                                 <div className="flex items-center" style={{ height: '14px' }}>
-                                    <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1]">Events</span>
+                                    <span className="text-[9px] font-semibold text-slate-700 dark:text-[#E2E8F0]">Events</span>
                                 </div>
                             )}
                         </div>
                         <div className="overflow-x-auto flex-1">
                         <div style={{ width: ganttW + 32 + 'px' }} className="px-4 py-3">
-                            {/* Month labels */}
-                            <div className="relative mb-0.5" style={{ height: '13px' }}>
+                            {/* Month labels — bordered + nowrap (matches Timeline tab) */}
+                            <div className="relative mb-0.5" style={{ height: '14px' }}>
                                 {monthGroups.map((mg, i) => (
-                                    <div key={i} className="absolute text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide"
-                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                    <div key={i}
+                                        className="absolute text-[9px] font-bold text-slate-600 dark:text-[#E2E8F0] uppercase tracking-wide whitespace-nowrap overflow-hidden border-r-2 border-slate-300 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/60 flex items-center justify-center"
+                                        style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px', height: '14px' }}>
                                         {mg.label}
                                     </div>
                                 ))}
                             </div>
-                            {/* Week numbers */}
-                            <div className="relative mb-3" style={{ height: '12px' }}>
-                                {weeks.map((w, i) => (
-                                    <div key={i} className="absolute text-[8px] text-slate-300 dark:text-[#475569] text-center"
-                                        style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
-                                        W{w.weekNum}
-                                    </div>
-                                ))}
+                            {/* Week numbers — today column highlight */}
+                            <div className="relative" style={{ height: "16px" }}>
+                                {showToday && (
+                                    <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0"
+                                        style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                )}
+                                {weeks.map((w, i) => {
+                                    const isToday = showToday && i === todayWeekIdx;
+                                    return (
+                                        <div key={i}
+                                            className={`absolute text-[8px] text-center z-10 ${isToday ? 'text-rose-500 font-semibold' : 'text-slate-300 dark:text-[#475569]'}`}
+                                            style={{ left: i * WEEK_W + 'px', width: WEEK_W + 'px' }}>
+                                            W{w.weekNum}
+                                        </div>
+                                    );
+                                })}
                             </div>
+                            {/* Phase + Block + Events rows — wrapped for full-height today line */}
+                            <div className="relative">
+                                {showToday && (
+                                    <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0"
+                                        style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                )}
                             {/* Phase bars */}
-                            <div className="relative mb-2" style={{ height: '24px' }}>
+                            <div className="relative" style={{ height: '24px' }}>
                                 {plan.phases.map(ph => {
                                     if (!ph.startDate) return null;
-                                    const l = pxLeft(ph.startDate);
-                                    const w = ph.endDate ? pxWidth(ph.startDate, ph.endDate) : 60;
+                                    const rect = weekRect(ph.startDate, ph.endDate);
+                                    const l = rect.left;
+                                    const w = rect.width;
                                     const isOpen = popup?.id === ph.id;
                                     return (
                                         <button key={ph.id}
@@ -307,12 +398,13 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                     );
                                 })}
                             </div>
-                            {/* Block bars */}
-                            <div className="relative mb-1.5" style={{ height: '20px' }}>
+                            {/* Block bars — back-to-back with phase row (no gap) */}
+                            <div className="relative" style={{ height: '20px' }}>
                                 {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color, phaseName: ph.name }))).map(b => {
                                     if (!b.startDate) return null;
-                                    const l = pxLeft(b.startDate);
-                                    const w = b.endDate ? pxWidth(b.startDate, b.endDate) : 40;
+                                    const rect = weekRect(b.startDate, b.endDate);
+                                    const l = rect.left;
+                                    const w = rect.width;
                                     const color = b.color || b.phaseColor || '#6366f1';
                                     const isOpen = popup?.id === b.id;
                                     return (
@@ -331,13 +423,8 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                         </button>
                                     );
                                 })}
-                                {/* Today line */}
-                                {today >= ganttDates.start && today <= ganttDates.end && (
-                                    <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10 rounded-full"
-                                        style={{ left: pxLeft(today) + 'px' }} />
-                                )}
                             </div>
-                            {/* Event bars */}
+                            {/* Event bars — directly under blocks (no gap) */}
                             {(plan.events || []).length > 0 && (
                                 <div className="relative" style={{ height: '14px' }}>
                                     {(plan.events || []).map(ev => {
@@ -364,6 +451,12 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                     })}
                                 </div>
                             )}
+                            {/* Full-height today line — spans phase + block + events */}
+                            {showToday && (
+                                <div className="absolute top-0 bottom-0 w-0.5 bg-rose-400/60 dark:bg-rose-400/50 z-10 pointer-events-none rounded-full"
+                                    style={{ left: pxLeft(today) + 'px' }} />
+                            )}
+                            </div>
                         </div>
                         </div>
                     </div>

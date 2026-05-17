@@ -313,6 +313,9 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
     const WEEK_W        = 38;
     const ganttW        = Math.max(640, allWeeks.length * WEEK_W);
     const totalDaysPlan = Math.max(1, daysBetween(ganttStart, ganttEnd));
+    const showToday     = today >= ganttStart && today <= ganttEnd;
+    const todayWeekIdx_ = showToday ? Math.floor(daysBetween(ganttStart, today) / 7) : -1;
+    const todayWeekLeft = todayWeekIdx_ * WEEK_W;
 
     useEffect(() => {
         if (ganttRef.current && currentNavIdx >= 0) {
@@ -522,18 +525,23 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                         <div ref={ganttRef} className="flex-1 overflow-x-auto">
                             <div style={{ width: ganttW + 16 + 'px' }} className="px-2 pt-3 pb-2.5">
 
-                                {/* Month labels */}
-                                <div className="relative mb-0.5" style={{ height: '13px' }}>
+                                {/* Month labels — bordered + nowrap (fixes Jul 2026 overflow) */}
+                                <div className="relative mb-0.5" style={{ height: '14px' }}>
                                     {monthGroups.map((mg, i) => (
-                                        <div key={i} className="absolute text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide"
-                                            style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px' }}>
+                                        <div key={i}
+                                            className="absolute text-[9px] font-bold text-slate-600 dark:text-[#E2E8F0] uppercase tracking-wide whitespace-nowrap overflow-hidden border-r-2 border-slate-300 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/60 flex items-center justify-center"
+                                            style={{ left: mg.startIdx * WEEK_W + 'px', width: mg.count * WEEK_W + 'px', height: '14px' }}>
                                             {mg.label}
                                         </div>
                                     ))}
                                 </div>
 
                                 {/* Clickable week buttons — ALL plan weeks */}
-                                <div className="relative mb-2" style={{ height: '20px' }}>
+                                <div className="relative mb-1.5" style={{ height: '20px' }}>
+                                    {showToday && (
+                                        <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0 rounded"
+                                            style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                    )}
                                     {allWeeks.map((w, i) => {
                                         const isActive  = w.date === currentWeekStart;
                                         const inSelBlock = selBlock?.startDate && selBlock?.endDate
@@ -563,13 +571,22 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     })}
                                 </div>
 
+                                {/* Phase + Block + Event rows — wrapped for full-height today line */}
+                                <div className="relative">
+                                    {showToday && (
+                                        <div className="absolute top-0 bottom-0 bg-rose-50 dark:bg-rose-900/15 pointer-events-none z-0"
+                                            style={{ left: todayWeekLeft + 'px', width: WEEK_W + 'px' }} />
+                                    )}
                                 {/* Phase bars */}
-                                <div className="relative mb-1" style={{ height: '18px' }}>
+                                <div className="relative" style={{ height: '18px' }}>
                                     {plan.phases.map(ph => {
                                         if (!ph.startDate) return null;
                                         const isSel = ph.id === selPhaseId;
-                                        const lPx = daysBetween(ganttStart, ph.startDate) / totalDaysPlan * ganttW;
-                                        const wPx = ph.endDate ? Math.max(20, daysBetween(ph.startDate, ph.endDate) / totalDaysPlan * ganttW) : 40;
+                                        // Week-aligned to match Timeline tab — phases extend to end of containing week
+                                        const sWk = Math.floor(daysBetween(ganttStart, ph.startDate) / 7);
+                                        const eWk = ph.endDate ? Math.floor(daysBetween(ganttStart, ph.endDate) / 7) : sWk;
+                                        const lPx = sWk * WEEK_W;
+                                        const wPx = Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W);
                                         return (
                                             <button key={ph.id}
                                                 onClick={() => jumpToPhase(ph)}
@@ -592,8 +609,10 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                         if (!b.startDate) return null;
                                         const isSel = b.id === selBlockId;
                                         const bColor = b.color || b.phaseColor;
-                                        const lPx = daysBetween(ganttStart, b.startDate) / totalDaysPlan * ganttW;
-                                        const wPx = b.endDate ? Math.max(20, daysBetween(b.startDate, b.endDate) / totalDaysPlan * ganttW) : 32;
+                                        const sWk = Math.floor(daysBetween(ganttStart, b.startDate) / 7);
+                                        const eWk = b.endDate ? Math.floor(daysBetween(ganttStart, b.endDate) / 7) : sWk;
+                                        const lPx = sWk * WEEK_W;
+                                        const wPx = Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W);
                                         return (
                                             <button key={b.id}
                                                 onClick={() => jumpToBlock(b.phaseId, b)}
@@ -612,15 +631,11 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                             </button>
                                         );
                                     })}
-                                    {today >= ganttStart && today <= ganttEnd && (
-                                        <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-10"
-                                            style={{ left: daysBetween(ganttStart, today) / totalDaysPlan * ganttW + 'px' }} />
-                                    )}
                                 </div>
 
-                                {/* Events row */}
+                                {/* Events row — directly under blocks */}
                                 {(plan.events || []).length > 0 && (
-                                    <div className="relative mt-1" style={{ height: '14px' }}>
+                                    <div className="relative" style={{ height: '14px' }}>
                                         {(plan.events || []).map(e => {
                                             const color = e.color || EVENT_TYPE_COLORS[e.type] || '#6366f1';
                                             const lPx = daysBetween(ganttStart, e.date) / totalDaysPlan * ganttW;
@@ -638,6 +653,12 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                         })}
                                     </div>
                                 )}
+                                {/* Full-height today line — spans phase + block + events */}
+                                {showToday && (
+                                    <div className="absolute top-0 bottom-0 w-0.5 bg-rose-400/60 dark:bg-rose-400/50 z-10 pointer-events-none rounded-full"
+                                        style={{ left: daysBetween(ganttStart, today) / totalDaysPlan * ganttW + 'px' }} />
+                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
