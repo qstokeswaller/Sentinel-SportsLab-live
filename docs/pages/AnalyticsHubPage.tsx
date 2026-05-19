@@ -213,7 +213,7 @@ export const AnalyticsHubPage = () => {
                                 </div>
                             )}
                             <div className="flex items-start gap-4 h-full">
-                                <div className={`w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 ${selectedAnalyticsAthleteId ? 'group-hover:bg-indigo-600 group-hover:text-white' : ''} flex items-center justify-center transition-all shrink-0`}>
+                                <div className={`w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 ${selectedAnalyticsAthleteId ? 'group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white' : ''} flex items-center justify-center transition-all shrink-0`}>
                                     <mod.icon size={20} />
                                 </div>
                                 <div className="flex flex-col justify-center h-full">

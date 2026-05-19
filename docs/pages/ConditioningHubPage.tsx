@@ -761,7 +761,7 @@ ${sectionsHtml}
                         onClick={() => setActiveConditioningModule('wattbike')}
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
-                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center text-indigo-600 dark:text-white group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/15 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white transition-all">
                             <ActivityIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Wattbike Hub</h3>
@@ -769,9 +769,9 @@ ${sectionsHtml}
                     </div>
                     <div
                         onClick={() => setActiveConditioningModule('conditioning')}
-                        className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-cyan-200 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
+                        className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-cyan-200 dark:border-cyan-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
-                        <div className="w-10 h-10 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+                        <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-500/15 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300 group-hover:bg-cyan-600 group-hover:text-white dark:group-hover:bg-cyan-500 dark:group-hover:text-white transition-all">
                             <TimerIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Sessions</h3>
@@ -781,7 +781,7 @@ ${sectionsHtml}
                         onClick={() => setActiveConditioningModule('mechanics')}
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-emerald-200 dark:border-emerald-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
-                        <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/25 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                        <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/15 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white dark:group-hover:bg-emerald-500 dark:group-hover:text-white transition-all">
                             <FootprintsIcon size={20} />
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Running Mechanics</h3>

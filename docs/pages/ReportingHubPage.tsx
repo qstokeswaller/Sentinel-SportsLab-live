@@ -3671,10 +3671,10 @@ export const ReportingHubPage = () => {
                     <button
                         key={i}
                         onClick={() => setActiveReport(report.title)}
-                        className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-600 transition-all group flex flex-col text-left h-[150px]"
+                        className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                     >
                         <div className="flex items-start gap-4 h-full">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                 <report.icon size={20} />
                             </div>
                             <div className="flex flex-col justify-center h-full">

@@ -342,22 +342,22 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
     if (step === 'upload') {
         return (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-                <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-center hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-indigo-300 transition-all cursor-pointer relative">
+                <div className="p-8 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-slate-50 dark:bg-[#0F1C30] text-center hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all cursor-pointer relative">
                     <input type="file" accept=".csv" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                    <div className="flex flex-col items-center gap-3 text-slate-400">
-                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-600 flex items-center justify-center text-indigo-500">
+                    <div className="flex flex-col items-center gap-3 text-slate-400 dark:text-[#CBD5E1]">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 flex items-center justify-center text-indigo-500 dark:text-indigo-300">
                             <SparklesIcon size={24} />
                         </div>
                         <div>
-                            <span className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1] block">Smart CSV Import</span>
-                            <span className="text-xs text-slate-400">Drop a CSV file — we'll detect the test type automatically</span>
+                            <span className="text-sm font-semibold text-slate-600 dark:text-[#E2E8F0] block">Smart CSV Import</span>
+                            <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">Drop a CSV file — we'll detect the test type automatically</span>
                         </div>
                     </div>
                 </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500 space-y-2">
-                    <p className="font-semibold text-slate-600 dark:text-[#CBD5E1]">How it works</p>
+                <div className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl text-xs text-slate-500 dark:text-[#CBD5E1] space-y-2">
+                    <p className="font-semibold text-slate-600 dark:text-[#E2E8F0]">How it works</p>
                     <p>Upload any test data CSV. The system reads the column headers, matches them against all {ALL_TESTS.length} supported test types, and suggests the best match. You confirm, adjust if needed, and import.</p>
-                    <p className="text-slate-400">Supports: sprint times, jump tests, force plate data, 1RM records, agility tests, body composition, and more.</p>
+                    <p className="text-slate-400 dark:text-[#94A3B8]">Supports: sprint times, jump tests, force plate data, 1RM records, agility tests, body composition, and more.</p>
                 </div>
             </div>
         );
