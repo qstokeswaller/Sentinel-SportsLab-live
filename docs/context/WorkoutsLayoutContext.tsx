@@ -134,15 +134,14 @@ export const WorkoutsLayoutProvider = ({
     const createHandlerRef = useRef<(() => void) | null>(null);
 
     // Reset transient per-tab state when switching tabs so the shell starts clean.
-    // NOTE: `overviewRows` and `sidebarExtra` are NOT cleared here on purpose. Each page
-    // sets them via a useLayoutEffect and clears them via its cleanup. If we cleared them
-    // here too, the parent effect would fire AFTER the child's setup (React runs child
-    // effects before parent effects) and wipe out the just-populated values — causing the
-    // tiles to never appear on first mount.
+    // NOTE: `overviewRows`, `sidebarExtra`, AND `createHandlerRef` are NOT cleared here
+    // on purpose. Each page sets them via a useLayoutEffect / useEffect and clears them
+    // via its cleanup. If we cleared them here too, this parent effect would fire AFTER
+    // the child's setup (React runs child effects before parent effects) and wipe out
+    // the just-registered values — making the tiles invisible and the Create button no-op.
     useEffect(() => {
         setSearchInternal('');
         setHideShell(false);
-        createHandlerRef.current = null;
     }, [activeTab]);
 
     const setSearch = useCallback((v: string) => setSearchInternal(v), []);

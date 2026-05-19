@@ -1040,22 +1040,17 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/60 dark:bg-[#132338]/40">
                         {/* Session Info Card — collapsible. Default = slim 1-row bar. Expanded = full editor. */}
                         <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl">
-                          {/* Slim header bar — whole bar toggles the collapse; the title input stops propagation so typing works */}
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => setDetailsExpanded(v => !v)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailsExpanded(v => !v); } }}
-                            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1A2D48]/50 rounded-xl transition-colors"
-                          >
+                          {/* Slim header bar — only the Details/Collapse button toggles the section.
+                              The title input stays a regular text field; making the whole bar a toggle
+                              caused click-bubble fights where the button's click + the parent's click
+                              cancelled each other out, leaving the section stuck open. */}
+                          <div className="flex items-center gap-2 px-3 py-2">
                             <ClockIcon size={11} className={isAssigning ? 'text-emerald-500' : 'text-indigo-500'} />
                             <input
                                 type="text"
                                 placeholder="Workout title..."
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                onClick={e => e.stopPropagation()}
-                                onKeyDown={e => e.stopPropagation()}
                                 className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] outline-none placeholder:text-slate-400 dark:placeholder:text-[#475569]"
                             />
                             {/* Inline summary pills — read-only at-a-glance */}

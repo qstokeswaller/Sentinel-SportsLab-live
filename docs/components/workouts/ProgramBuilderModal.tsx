@@ -894,14 +894,10 @@ export const ProgramBuilderModal = ({
 
             {/* Setup card — collapsible (matches Packets `Details` UX). Slim summary always visible, full form on expand. */}
             <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl">
-              {/* Whole bar toggles collapse — there's no input here, so no stopPropagation needed */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setSetupExpanded(v => !v)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSetupExpanded(v => !v); } }}
-                className="flex items-center gap-2 px-4 py-2.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1A2D48]/50 rounded-xl transition-colors"
-              >
+              {/* Only the Details/Collapse button toggles. Making the whole bar a toggle
+                  + the inner button also a toggle caused click-bubble fights where the two
+                  cancelled each other out, so the button became inert. */}
+              <div className="flex items-center gap-2 px-4 py-2.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-[#E2E8F0]">Program Setup</span>
                 {!setupExpanded && (
                   <div className="hidden md:flex items-center gap-1.5 ml-2 min-w-0">
