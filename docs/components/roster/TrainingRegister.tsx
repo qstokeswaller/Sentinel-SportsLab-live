@@ -127,19 +127,19 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
 
     const loadColour = (load: string) => {
         switch (load) {
-            case 'High': return 'bg-rose-100 text-rose-700';
-            case 'Medium': return 'bg-amber-100 text-amber-700';
-            case 'Low': return 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
+            case 'High': return 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300';
+            case 'Medium': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+            case 'Low': return 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-300';
             default: return 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]';
         }
     };
 
     const statusColour = (status: string) => {
         switch (status) {
-            case 'Completed': return 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
-            case 'Missed': return 'bg-rose-100 text-rose-700';
-            case 'Modified': return 'bg-amber-100 text-amber-700';
-            default: return 'bg-sky-100 text-sky-700';
+            case 'Completed': return 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-300';
+            case 'Missed': return 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300';
+            case 'Modified': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+            default: return 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300';
         }
     };
 
@@ -237,8 +237,8 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                                                     onClick={() => toggleAthlete(player.id)}
                                                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
                                                         isAbsent
-                                                            ? 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] opacity-50'
-                                                            : 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-600 shadow-sm'
+                                                            ? 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#1A2D48] opacity-80 dark:opacity-100'
+                                                            : 'border-indigo-200 dark:border-indigo-500/40 bg-indigo-50 dark:bg-indigo-500/15 shadow-sm'
                                                     }`}
                                                 >
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -250,7 +250,7 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                                                     </div>
                                                     <span className={`text-sm font-medium truncate ${
                                                         isAbsent
-                                                            ? 'text-slate-400 dark:text-[#CBD5E1] line-through'
+                                                            ? 'text-slate-500 dark:text-[#94A3B8] line-through'
                                                             : 'text-slate-900 dark:text-[#E2E8F0]'
                                                     }`}>
                                                         {player.name}

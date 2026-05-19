@@ -108,27 +108,27 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                 className="flex items-center justify-between w-full text-left"
             >
                 <div className="flex items-center gap-2">
-                    <TrendingUpIcon size={14} className="text-slate-400" />
+                    <TrendingUpIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Trend</h3>
                     {trend && (
-                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                            trend.direction === 'up' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600'
-                            : trend.direction === 'down' ? 'bg-red-50 text-red-600'
-                            : 'bg-slate-50 text-slate-500'
+                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full border ${
+                            trend.direction === 'up' ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
+                            : trend.direction === 'down' ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                            : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
                         }`}>
                             {trend.direction === 'up' ? '+' : ''}{trend.pct}%
                         </span>
                     )}
                 </div>
-                {expanded ? <ChevronUpIcon size={14} className="text-slate-400" /> : <ChevronDownIcon size={14} className="text-slate-400" />}
+                {expanded ? <ChevronUpIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" /> : <ChevronDownIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />}
             </button>
 
             {expanded && (
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-3">
                     {/* Metric selector */}
                     {plottableMetrics.length > 1 && (
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400">Metric:</span>
+                            <span className="text-xs text-slate-400 dark:text-[#94A3B8]">Metric:</span>
                             <CustomSelect
                                 variant="filter"
                                 size="xs"
@@ -145,9 +145,9 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                     )}
 
                     {loading ? (
-                        <div className="text-xs text-slate-400 py-8 text-center">Loading trend data...</div>
+                        <div className="text-xs text-slate-400 dark:text-[#94A3B8] py-8 text-center">Loading trend data...</div>
                     ) : chartData.length < 2 ? (
-                        <div className="text-xs text-slate-400 py-8 text-center">Need at least 2 results to show trend</div>
+                        <div className="text-xs text-slate-400 dark:text-[#94A3B8] py-8 text-center">Need at least 2 results to show trend</div>
                     ) : (
                         <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -191,7 +191,7 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
 
                     {/* Summary stats */}
                     {chartData.length >= 2 && (
-                        <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100">
+                        <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-[#1A2D48]">
                             {[
                                 { label: 'First', value: chartData[0]?.value },
                                 { label: 'Latest', value: chartData[chartData.length - 1]?.value },
@@ -199,9 +199,9 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                                 { label: 'Avg', value: +(chartData.reduce((s, d) => s + d.value, 0) / chartData.length).toFixed(1) },
                             ].map(s => (
                                 <div key={s.label} className="text-center">
-                                    <div className="text-[10px] text-slate-400 uppercase tracking-wide">{s.label}</div>
+                                    <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">{s.label}</div>
                                     <div className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
-                                        {s.value}{metricInfo?.unit ? <span className="text-[10px] text-slate-400 ml-0.5">{metricInfo.unit}</span> : ''}
+                                        {s.value}{metricInfo?.unit ? <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] ml-0.5">{metricInfo.unit}</span> : ''}
                                     </div>
                                 </div>
                             ))}

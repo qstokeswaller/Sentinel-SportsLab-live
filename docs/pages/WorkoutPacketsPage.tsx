@@ -1010,6 +1010,17 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 sheetConfig={weightroomSheetConfig}
                                 targetType={targetType}
                                 targetId={targetId}
+                                // Provenance carried into the Sheets library row when "Save copy" is checked.
+                                // Names are resolved here so deleting the target later doesn't break the saved display.
+                                sourceContext={{
+                                    packetName: title.trim() || 'Untitled Packet',
+                                    sessionDate: date || undefined,
+                                    targetType,
+                                    targetId,
+                                    targetName: targetType === 'Team'
+                                        ? (teams.find(t => t.id === targetId)?.name || undefined)
+                                        : (allPlayers.find(p => p.id === targetId)?.name || undefined),
+                                }}
                                 onSave={(config) => {
                                     setWeightroomSheetConfig(config);
                                     setShowWeightroomSheet(false);

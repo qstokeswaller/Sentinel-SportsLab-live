@@ -190,21 +190,21 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
     };
 
     // ── Styles ────────────────────────────────────────────────────────────
-    const SELECT = "bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400 transition-colors";
+    const SELECT = "bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400 transition-colors";
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[88vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-2xl max-h-[88vh] shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col">
 
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
                             <FileSpreadsheet size={16} />
                         </div>
                         <div>
                             <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Import Roster</h3>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">
                                 {step === 'upload'  && 'Upload a CSV or Excel file'}
                                 {step === 'map'     && `Map columns — ${rows.length} rows detected`}
                                 {step === 'preview' && `Preview — ${previewRows.length} athletes ready`}
@@ -212,7 +212,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-colors">
                         <X size={18} />
                     </button>
                 </div>
@@ -222,13 +222,13 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                     <div className="px-5 pt-3 pb-1 flex items-center gap-2 shrink-0">
                         {(['upload', 'map', 'preview'] as Step[]).map((s, i) => (
                             <React.Fragment key={s}>
-                                <div className={`flex items-center gap-1.5 text-xs font-medium ${step === s ? 'text-emerald-700' : i < ['upload','map','preview'].indexOf(step) ? 'text-slate-400' : 'text-slate-300'}`}>
-                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step === s ? 'bg-emerald-600 text-white' : i < ['upload','map','preview'].indexOf(step) ? 'bg-slate-300 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                <div className={`flex items-center gap-1.5 text-xs font-medium ${step === s ? 'text-emerald-700 dark:text-emerald-300' : i < ['upload','map','preview'].indexOf(step) ? 'text-slate-400 dark:text-[#CBD5E1]' : 'text-slate-300 dark:text-[#94A3B8]'}`}>
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step === s ? 'bg-emerald-600 text-white' : i < ['upload','map','preview'].indexOf(step) ? 'bg-slate-300 dark:bg-[#243A58] text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]'}`}>
                                         {i + 1}
                                     </div>
                                     <span className="hidden sm:inline capitalize">{s === 'map' ? 'Map columns' : s === 'upload' ? 'Upload' : 'Preview'}</span>
                                 </div>
-                                {i < 2 && <div className="flex-1 h-px bg-slate-100 max-w-[40px]" />}
+                                {i < 2 && <div className="flex-1 h-px bg-slate-100 dark:bg-[#243A58] max-w-[40px]" />}
                             </React.Fragment>
                         ))}
                     </div>
@@ -240,7 +240,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                     {/* ── STEP 1: Upload ── */}
                     {step === 'upload' && (
                         <div
-                            className="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group"
+                            className="border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl p-10 text-center hover:border-emerald-400 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all cursor-pointer group"
                             onDragOver={e => e.preventDefault()}
                             onDrop={handleDrop}
                             onClick={() => fileRef.current?.click()}
@@ -252,40 +252,40 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 className="hidden"
                                 onChange={e => { if (e.target.files?.[0]) parseFile(e.target.files[0]); }}
                             />
-                            <Upload size={36} className="mx-auto mb-3 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-                            <p className="font-semibold text-slate-700 dark:text-[#CBD5E1] mb-1">Drop your file here or click to browse</p>
-                            <p className="text-sm text-slate-400">Supports CSV, Excel (.xlsx, .xls)</p>
-                            <p className="text-xs text-slate-300 mt-3">Only a <span className="font-semibold text-slate-400">Name column is required</span> — all other columns are optional</p>
+                            <Upload size={36} className="mx-auto mb-3 text-slate-300 dark:text-[#CBD5E1] group-hover:text-emerald-500 transition-colors" />
+                            <p className="font-semibold text-slate-700 dark:text-[#E2E8F0] mb-1">Drop your file here or click to browse</p>
+                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">Supports CSV, Excel (.xlsx, .xls)</p>
+                            <p className="text-xs text-slate-300 dark:text-[#94A3B8] mt-3">Only a <span className="font-semibold text-slate-400 dark:text-[#CBD5E1]">Name column is required</span> — all other columns are optional</p>
                         </div>
                     )}
 
                     {/* ── STEP 2: Map columns ── */}
                     {step === 'map' && (
                         <div className="space-y-4">
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">
                                 We've auto-suggested a field for each column. Check the matches and adjust anything that's wrong.
-                                <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]"> At least one Name column must be mapped.</span>
+                                <span className="font-semibold text-slate-700 dark:text-[#E2E8F0]"> At least one Name column must be mapped.</span>
                             </p>
 
-                            <div className="border border-slate-100 rounded-xl overflow-hidden">
+                            <div className="border border-slate-100 dark:border-[#243A58] rounded-xl overflow-hidden">
                                 {/* Column header row */}
-                                <div className="grid grid-cols-[1fr_1fr_1fr] gap-0 bg-slate-50 px-4 py-2 border-b border-slate-100">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Column in file</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sample data</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Maps to</span>
+                                <div className="grid grid-cols-[1fr_1fr_1fr] gap-0 bg-slate-50 dark:bg-[#0F1C30] px-4 py-2 border-b border-slate-100 dark:border-[#243A58]">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Column in file</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Sample data</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Maps to</span>
                                 </div>
-                                <div className="divide-y divide-slate-50">
+                                <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                                     {headers.map(h => {
                                         const sample = rows.slice(0, 3).map(r => r[h]).filter(Boolean).join(', ');
                                         const mapped = mapping[h];
                                         const isNameField = mapped === 'name' || mapped === 'first_name' || mapped === 'last_name';
                                         return (
-                                            <div key={h} className={`grid grid-cols-[1fr_1fr_1fr] gap-0 px-4 py-2.5 items-center ${isNameField ? 'bg-emerald-50/50' : ''}`}>
+                                            <div key={h} className={`grid grid-cols-[1fr_1fr_1fr] gap-0 px-4 py-2.5 items-center ${isNameField ? 'bg-emerald-50/50 dark:bg-emerald-900/15' : ''}`}>
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     {isNameField && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
-                                                    <span className="text-sm font-medium text-slate-700 dark:text-[#CBD5E1] truncate">{h}</span>
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-[#E2E8F0] truncate">{h}</span>
                                                 </div>
-                                                <span className="text-xs text-slate-400 truncate pr-3">{sample || '—'}</span>
+                                                <span className="text-xs text-slate-400 dark:text-[#CBD5E1] truncate pr-3">{sample || '—'}</span>
                                                 <CustomSelect
                                                     variant="form"
                                                     size="xs"
@@ -303,8 +303,8 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             </div>
 
                             {/* Team assignment */}
-                            <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-                                <label className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1] flex items-center gap-1.5">
+                            <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-xl p-4 space-y-2 border border-transparent dark:border-[#243A58]">
+                                <label className="text-xs font-semibold text-slate-600 dark:text-[#E2E8F0] flex items-center gap-1.5">
                                     <Users size={12} /> Assign all imported athletes to
                                 </label>
                                 <CustomSelect
@@ -316,11 +316,11 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                     <option value="">Individual (no team)</option>
                                     {realTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </CustomSelect>
-                                <p className="text-[11px] text-slate-400">You can move athletes to different teams from the roster after import.</p>
+                                <p className="text-[11px] text-slate-400 dark:text-[#94A3B8]">You can move athletes to different teams from the roster after import.</p>
                             </div>
 
                             {!hasNameMapping && (
-                                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-4 py-3 text-sm text-amber-800 font-medium">
+                                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 font-medium">
                                     <AlertTriangle size={15} className="shrink-0" />
                                     No name column mapped. Set at least one column to Full Name, First Name, or Last Name to continue.
                                 </div>
@@ -335,24 +335,24 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                 <p className="text-sm text-slate-600 dark:text-[#CBD5E1]">
                                     <span className="font-semibold text-slate-900 dark:text-[#E2E8F0]">{previewRows.length} athletes</span> will be created
                                     {teamId && <span> in <span className="font-semibold">{realTeams.find(t => t.id === teamId)?.name}</span></span>}
-                                    {skippedCount > 0 && <span className="text-amber-600 ml-2">· {skippedCount} rows skipped (no name)</span>}
+                                    {skippedCount > 0 && <span className="text-amber-600 dark:text-amber-300 ml-2">· {skippedCount} rows skipped (no name)</span>}
                                 </p>
                             </div>
 
-                            <div className="border border-slate-100 rounded-xl overflow-hidden">
-                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] bg-slate-50 px-4 py-2 border-b border-slate-100">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Name</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Age</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sport</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Position</span>
+                            <div className="border border-slate-100 dark:border-[#243A58] rounded-xl overflow-hidden">
+                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] bg-slate-50 dark:bg-[#0F1C30] px-4 py-2 border-b border-slate-100 dark:border-[#243A58]">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Name</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Age</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Sport</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1]">Position</span>
                                 </div>
-                                <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
+                                <div className="divide-y divide-slate-50 dark:divide-[#1A2D48] max-h-72 overflow-y-auto">
                                     {previewRows.map((r, i) => (
                                         <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr] px-4 py-2 text-sm">
                                             <span className="font-medium text-slate-800 dark:text-[#E2E8F0] truncate">{r.name}</span>
-                                            <span className="text-slate-500">{r.age || '—'}</span>
-                                            <span className="text-slate-500 truncate">{r.sport || '—'}</span>
-                                            <span className="text-slate-500 truncate">{r.position || '—'}</span>
+                                            <span className="text-slate-500 dark:text-[#CBD5E1]">{r.age || '—'}</span>
+                                            <span className="text-slate-500 dark:text-[#CBD5E1] truncate">{r.sport || '—'}</span>
+                                            <span className="text-slate-500 dark:text-[#CBD5E1] truncate">{r.position || '—'}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -369,7 +369,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                             <div>
                                 <h4 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{results.ok} athlete{results.ok !== 1 ? 's' : ''} imported</h4>
                                 {results.skipped > 0 && (
-                                    <p className="text-sm text-amber-600 mt-1">{results.skipped} rows skipped — no name found</p>
+                                    <p className="text-sm text-amber-600 dark:text-amber-300 mt-1">{results.skipped} rows skipped — no name found</p>
                                 )}
                             </div>
                             {results.failed.length > 0 && (
@@ -377,7 +377,7 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                                     <p className="text-sm font-semibold text-rose-700 dark:text-rose-400 mb-2 flex items-center gap-1.5">
                                         <AlertTriangle size={14} /> {results.failed.length} failed to save
                                     </p>
-                                    <ul className="text-xs text-rose-600 space-y-0.5">
+                                    <ul className="text-xs text-rose-600 dark:text-rose-300 space-y-0.5">
                                         {results.failed.map((n, i) => <li key={i}>{n}</li>)}
                                     </ul>
                                 </div>
@@ -387,18 +387,18 @@ export const ImportRosterModal: React.FC<Props> = ({ onClose }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-4 border-t border-slate-100 bg-white flex justify-between items-center shrink-0">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-[#243A58] bg-white dark:bg-[#132338] flex justify-between items-center shrink-0">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         {step === 'done' ? 'Close' : 'Cancel'}
                     </button>
                     <div className="flex gap-2">
                         {step === 'map' && (
-                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep('upload')} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
                         {step === 'preview' && (
-                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep('map')} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}

@@ -35,10 +35,10 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
   const displayCalcs = (test.calculations || []).filter(c => calculated[c.key] != null).slice(0, 3);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 hover:shadow-sm transition-shadow">
+    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-3 hover:shadow-sm transition-shadow">
       {/* Header: date + athlete */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-[#CBD5E1]">
           <span className="flex items-center gap-1"><CalendarIcon size={12} />{date}</span>
           {athleteName && <span className="flex items-center gap-1"><UserIcon size={12} />{athleteName}</span>}
           {record.athlete_id && (() => {
@@ -50,7 +50,7 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
         {onDelete && (
           <button
             onClick={() => onDelete(record.id)}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"
+            className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"
           >
             <Trash2Icon size={14} />
           </button>
@@ -60,20 +60,20 @@ export const TestResultCard: React.FC<Props> = ({ test, record, athleteName, ath
       {/* Metric values */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {displayFields.map(f => (
-          <div key={f.key} className="bg-slate-50 rounded-lg px-2.5 py-2">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wide truncate">{f.label}</div>
+          <div key={f.key} className="bg-slate-50 dark:bg-[#0F1C30] border border-transparent dark:border-[#243A58] rounded-lg px-2.5 py-2">
+            <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide truncate">{f.label}</div>
             <div className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">
               {metrics[f.key]}
-              {f.unit && <span className="text-[10px] text-slate-400 ml-0.5">{f.unit}</span>}
+              {f.unit && <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] ml-0.5">{f.unit}</span>}
             </div>
           </div>
         ))}
         {displayCalcs.map(c => (
-          <div key={c.key} className="bg-indigo-50 dark:bg-indigo-600 rounded-lg px-2.5 py-2">
-            <div className="text-[10px] text-indigo-400 uppercase tracking-wide truncate">{c.label}</div>
-            <div className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
+          <div key={c.key} className="bg-indigo-50 dark:bg-indigo-500/15 border border-transparent dark:border-indigo-500/30 rounded-lg px-2.5 py-2">
+            <div className="text-[10px] text-indigo-400 dark:text-indigo-300 uppercase tracking-wide truncate">{c.label}</div>
+            <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
               {calculated[c.key]}
-              {c.unit && <span className="text-[10px] text-indigo-400 ml-0.5">{c.unit}</span>}
+              {c.unit && <span className="text-[10px] text-indigo-400 dark:text-indigo-300 ml-0.5">{c.unit}</span>}
             </div>
           </div>
         ))}

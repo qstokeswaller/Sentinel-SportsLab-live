@@ -154,18 +154,18 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
     }, [selectedTest, rows, displayFields]);
 
     const NORM_COLORS: Record<string, string> = {
-        emerald: 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
-        sky: 'bg-sky-100 text-sky-700',
-        teal: 'bg-teal-100 text-teal-700',
-        amber: 'bg-amber-100 text-amber-700',
-        orange: 'bg-orange-100 text-orange-700',
-        red: 'bg-red-100 text-red-700',
+        emerald: 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
+        sky: 'bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30',
+        teal: 'bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/30',
+        amber: 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
+        orange: 'bg-orange-50 dark:bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+        red: 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30',
     };
 
     return (
         <div className="space-y-4">
             {/* Selection controls */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4">
+            <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">Team</label>
@@ -193,13 +193,13 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
 
             {/* Results table */}
             {selectedTeamId && selectedTestId && selectedTest && (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                     {/* Toolbar */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
                         <div className="flex items-center gap-2">
-                            <UsersIcon size={14} className="text-slate-400" />
+                            <UsersIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />
                             <span className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedTest.name}</span>
-                            <span className="text-xs text-slate-400">— {selectedTeam?.name}</span>
+                            <span className="text-xs text-slate-400 dark:text-[#94A3B8]">— {selectedTeam?.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
@@ -218,25 +218,25 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                     </div>
 
                     {loading ? (
-                        <div className="text-center py-8 text-sm text-slate-400">Loading comparison data...</div>
+                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#94A3B8]">Loading comparison data...</div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-100">
-                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide sticky left-0 bg-slate-50 z-10">
+                                    <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48]">
+                                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide sticky left-0 bg-slate-50 dark:bg-[#0F1C30] z-10">
                                             Athlete
                                         </th>
-                                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+                                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Date</th>
                                         {displayFields.map(f => (
                                             <th
                                                 key={f.key}
                                                 onClick={() => toggleSort(f.key)}
-                                                className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 dark:text-[#CBD5E1] select-none"
+                                                className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 dark:hover:text-[#E2E8F0] select-none"
                                             >
                                                 <span className="flex items-center gap-1">
                                                     {f.label}
-                                                    {f.unit && <span className="text-slate-400 normal-case">({f.unit})</span>}
+                                                    {f.unit && <span className="text-slate-400 dark:text-[#94A3B8] normal-case">({f.unit})</span>}
                                                     {sortField === f.key && (
                                                         sortDir === 'asc' ? <ArrowUpIcon size={10} /> : <ArrowDownIcon size={10} />
                                                     )}
@@ -244,38 +244,38 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                             </th>
                                         ))}
                                         {selectedTest.norms && (
-                                            <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Classification</th>
+                                            <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Classification</th>
                                         )}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.map(row => (
-                                        <tr key={row.player.id} className="border-b border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
-                                            <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-[#E2E8F0] sticky left-0 bg-white z-10 whitespace-nowrap">
+                                        <tr key={row.player.id} className="border-b border-slate-50 dark:border-[#1A2D48] hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]">
+                                            <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-[#E2E8F0] sticky left-0 bg-white dark:bg-[#132338] z-10 whitespace-nowrap">
                                                 {row.player.name}
                                             </td>
-                                            <td className="px-3 py-2.5 text-slate-500 text-xs whitespace-nowrap">
-                                                {row.date || <span className="text-slate-300">No data</span>}
+                                            <td className="px-3 py-2.5 text-slate-500 dark:text-[#CBD5E1] text-xs whitespace-nowrap">
+                                                {row.date || <span className="text-slate-300 dark:text-[#475569]">No data</span>}
                                             </td>
                                             {displayFields.map(f => (
                                                 <td key={f.key} className="px-3 py-2.5 tabular-nums">
                                                     {row.allValues[f.key] != null ? (
-                                                        <span className={f.isCalc ? 'font-semibold text-indigo-600' : 'text-slate-800 dark:text-[#E2E8F0]'}>
+                                                        <span className={f.isCalc ? 'font-semibold text-indigo-600 dark:text-indigo-300' : 'text-slate-800 dark:text-[#E2E8F0]'}>
                                                             {row.allValues[f.key]}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-slate-300">—</span>
+                                                        <span className="text-slate-300 dark:text-[#475569]">—</span>
                                                     )}
                                                 </td>
                                             ))}
                                             {selectedTest.norms && (
                                                 <td className="px-3 py-2.5">
                                                     {row.normLabel ? (
-                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${NORM_COLORS[row.normColor] || 'bg-slate-100 text-slate-500'}`}>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${NORM_COLORS[row.normColor] || 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58]'}`}>
                                                             {row.normLabel}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-slate-300">—</span>
+                                                        <span className="text-slate-300 dark:text-[#475569]">—</span>
                                                     )}
                                                 </td>
                                             )}
@@ -283,7 +283,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                     ))}
                                     {rows.length === 0 && (
                                         <tr>
-                                            <td colSpan={99} className="text-center py-8 text-sm text-slate-400">
+                                            <td colSpan={99} className="text-center py-8 text-sm text-slate-400 dark:text-[#94A3B8]">
                                                 No athletes in this team
                                             </td>
                                         </tr>
@@ -295,9 +295,9 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
 
                     {/* Summary row */}
                     {rows.filter(r => r.hasData).length > 0 && (
-                        <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
+                        <div className="px-4 py-3 border-t border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#0F1C30]">
                             <div className="flex flex-wrap gap-4 text-xs">
-                                <span className="text-slate-400">
+                                <span className="text-slate-400 dark:text-[#94A3B8]">
                                     {rows.filter(r => r.hasData).length}/{rows.length} athletes tested
                                 </span>
                                 {selectedTest.norms && (() => {
@@ -305,7 +305,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                     const counts: Record<string, number> = {};
                                     classified.forEach(r => { counts[r.normLabel] = (counts[r.normLabel] || 0) + 1; });
                                     return Object.entries(counts).map(([label, count]) => (
-                                        <span key={label} className="text-slate-500">
+                                        <span key={label} className="text-slate-500 dark:text-[#CBD5E1]">
                                             {label}: <span className="font-semibold">{count}</span>
                                         </span>
                                     ));
@@ -318,7 +318,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
 
             {/* Empty state */}
             {(!selectedTeamId || !selectedTestId) && (
-                <div className="text-center py-12 text-sm text-slate-400">
+                <div className="text-center py-12 text-sm text-slate-400 dark:text-[#94A3B8]">
                     Select a team, category, and test above to compare athletes.
                 </div>
             )}

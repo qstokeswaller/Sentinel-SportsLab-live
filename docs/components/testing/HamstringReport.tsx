@@ -43,20 +43,20 @@ export const HamstringReport: React.FC = () => {
     // ─── MAIN RENDER ────────────────────────────────────────────────
     return (
         <div className="space-y-10 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm gap-4">
+            <div className="flex flex-col md:flex-row items-center justify-between bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-sm">
                         <ActivityIcon size={20} />
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Hamstring Intelligence</h3>
-                        <p className="text-xs text-orange-500 uppercase tracking-wide mt-0.5">Nordic Force & Asymmetry Analysis</p>
+                        <p className="text-xs text-orange-500 dark:text-orange-300 uppercase tracking-wide mt-0.5">Nordic Force & Asymmetry Analysis</p>
                     </div>
                 </div>
-                <div className="flex bg-slate-100 p-1.5 rounded-xl">
+                <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1.5 rounded-xl">
                     {['Analysis', 'Assessment', 'Import'].map(tab => (
                         <button key={tab} onClick={() => setHamstringReportTab(tab)}
-                            className={`px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>
+                            className={`px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all ${hamstringReportTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                             {tab}
                         </button>
                     ))}
@@ -124,20 +124,20 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
     const hasAnyFilter = hamAnalysisTeamFilter || hamstringReportSelectedAthlete !== 'All' || hamDateFilterStart || hamDateFilterEnd;
     const clearAllFilters = () => { setHamAnalysisTeamFilter(''); setHamstringReportSelectedAthlete('All'); setHamDateFilterStart(''); setHamDateFilterEnd(''); };
     const handlePrint = () => { window.print(); };
-    const selectCls = 'bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-orange-300 shadow-sm appearance-none cursor-pointer transition-all hover:bg-slate-50';
+    const selectCls = 'bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-2 text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-orange-300 shadow-sm appearance-none cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-[#1A2D48]';
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Filter bar */}
             <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 print:hidden">
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-                        <CalendarIcon size={13} className="text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 shadow-sm">
+                        <CalendarIcon size={13} className="text-slate-400 dark:text-[#94A3B8] shrink-0" />
                         <input type="date" value={hamDateFilterStart} onChange={(e) => setHamDateFilterStart(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
-                        <span className="text-slate-300 font-bold text-xs">—</span>
+                        <span className="text-slate-300 dark:text-[#475569] font-bold text-xs">—</span>
                         <input type="date" value={hamDateFilterEnd} onChange={(e) => setHamDateFilterEnd(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
                         {(hamDateFilterStart || hamDateFilterEnd) && (
-                            <button onClick={() => { setHamDateFilterStart(''); setHamDateFilterEnd(''); }} className="ml-1 text-slate-300 hover:text-rose-500 transition-colors"><XIcon size={12} /></button>
+                            <button onClick={() => { setHamDateFilterStart(''); setHamDateFilterEnd(''); }} className="ml-1 text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-300 transition-colors"><XIcon size={12} /></button>
                         )}
                     </div>
                     <CustomSelect value={hamAnalysisTeamFilter} onChange={(e) => { setHamAnalysisTeamFilter(e.target.value); setHamstringReportSelectedAthlete('All'); }} variant="filter" size="xs" placeholder="All Teams">
@@ -156,78 +156,78 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                         }
                     </CustomSelect>
                     {hasAnyFilter && (
-                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-700 hover:bg-rose-100 rounded-xl transition-all">
+                        <button onClick={clearAllFilters} className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-200 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/25 rounded-xl transition-all">
                             <XIcon size={12} /> Clear filters
                         </button>
                     )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     {recentDeletions.length > 0 && isHamstringEditMode && (
-                        <button onClick={handleUndoDelete} className="px-4 py-2.5 rounded-xl border bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 transition-all shadow-sm text-[10px] font-semibold uppercase tracking-wide flex items-center gap-2">
+                        <button onClick={handleUndoDelete} className="px-4 py-2.5 rounded-xl border bg-orange-50 dark:bg-orange-500/15 border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-500/25 transition-all shadow-sm text-[10px] font-semibold uppercase tracking-wide flex items-center gap-2">
                             <UndoIcon size={16} /> Undo
                         </button>
                     )}
                     <button onClick={() => setIsHamstringEditMode(!isHamstringEditMode)}
-                        className={`p-2.5 rounded-xl border transition-all ${isHamstringEditMode ? 'bg-orange-600 border-orange-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:border-orange-300 hover:text-orange-500'}`}>
+                        className={`p-2.5 rounded-xl border transition-all ${isHamstringEditMode ? 'bg-orange-600 border-orange-600 text-white shadow-lg' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-orange-300 hover:text-orange-500 dark:hover:text-orange-300'}`}>
                         <FileEditIcon size={18} />
                     </button>
-                    <button onClick={handlePrint} className="p-2.5 rounded-xl border bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-all shadow-sm"><PrinterIcon size={18} /></button>
+                    <button onClick={handlePrint} className="p-2.5 rounded-xl border bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-300 transition-all shadow-sm"><PrinterIcon size={18} /></button>
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
-                    <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Total Reports</span>
+                <div className="bg-white dark:bg-[#132338] px-5 py-5 rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                    <span className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide">Total Reports</span>
                     <div className="text-2xl font-bold text-slate-800 dark:text-[#E2E8F0]">{filteredEntries.length}</div>
                 </div>
-                <div className="bg-white px-5 py-5 rounded-xl border border-rose-100 dark:border-rose-900/40 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
-                    <span className="text-[9px] font-semibold uppercase text-rose-400 tracking-wide">High Risk</span>
-                    <div className="text-2xl font-bold text-rose-500">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
+                <div className="bg-white dark:bg-[#132338] px-5 py-5 rounded-xl border border-rose-100 dark:border-rose-500/30 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                    <span className="text-[9px] font-semibold uppercase text-rose-400 dark:text-rose-300 tracking-wide">High Risk</span>
+                    <div className="text-2xl font-bold text-rose-500 dark:text-rose-300">{filteredEntries.filter(e => { const rs = parseFloat(e.relativeStrength || 0); return rs > 0 && rs < 3.37; }).length}</div>
                 </div>
-                <div className="bg-white px-5 py-5 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-1">
-                    <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Avg Asymmetry</span>
+                <div className="bg-white dark:bg-[#132338] px-5 py-5 rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm flex flex-col items-center justify-center text-center space-y-1">
+                    <span className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide">Avg Asymmetry</span>
                     <div className="text-2xl font-bold text-slate-800 dark:text-[#E2E8F0]">{avgAsymmetry}<span className="text-lg ml-0.5">%</span></div>
                 </div>
             </div>
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse hamstring-analysis-table">
                         <thead>
-                            <tr className="bg-slate-50/50 dark:bg-[#132338]/40 border-b border-slate-100 italic">
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Date</th>
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Athlete</th>
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Avg Force (N)</th>
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Rel. Strength (N/kg)</th>
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-center">Asymmetry (%)</th>
-                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 tracking-wide text-right">Risk</th>
-                                {isHamstringEditMode && <th className="px-4 py-3 text-[9px] font-semibold uppercase text-rose-400 tracking-wide text-center print:hidden">Delete</th>}
+                            <tr className="bg-slate-50/50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48] italic">
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide">Date</th>
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide">Athlete</th>
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide text-center">Avg Force (N)</th>
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide text-center">Rel. Strength (N/kg)</th>
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide text-center">Asymmetry (%)</th>
+                                <th className="px-4 py-3 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide text-right">Risk</th>
+                                {isHamstringEditMode && <th className="px-4 py-3 text-[9px] font-semibold uppercase text-rose-400 dark:text-rose-300 tracking-wide text-center print:hidden">Delete</th>}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                             {filteredEntries.map((entry, idx) => {
                                 const asym = parseFloat(entry.asymmetry || 0);
                                 const rs = parseFloat(entry.relativeStrength || 0);
                                 // Average force: split mode = (L+R)/2, average mode = entered value directly
                                 const avgForceValue = entry.avgForce ? parseFloat(entry.avgForce).toFixed(0)
                                     : (entry.mode === 'split' ? ((parseFloat(entry.left || 0) + parseFloat(entry.right || 0)) / 2).toFixed(0) : parseFloat(entry.aggregate || entry.value || 0).toFixed(0));
-                                let riskColor = 'bg-emerald-500', riskLabel = 'Low', riskText = 'text-emerald-500', riskBg = 'bg-emerald-50';
-                                if (rs > 0 && rs < 3.37) { riskColor = 'bg-rose-500'; riskLabel = 'High'; riskText = 'text-rose-500'; riskBg = 'bg-rose-50'; }
-                                else if (rs >= 3.37 && rs < 4.47) { riskColor = 'bg-orange-500'; riskLabel = 'Moderate'; riskText = 'text-orange-500'; riskBg = 'bg-orange-50'; }
+                                let riskColor = 'bg-emerald-500', riskLabel = 'Low', riskText = 'text-emerald-700 dark:text-emerald-300', riskBg = 'bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30';
+                                if (rs > 0 && rs < 3.37) { riskColor = 'bg-rose-500'; riskLabel = 'High'; riskText = 'text-rose-700 dark:text-rose-300'; riskBg = 'bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30'; }
+                                else if (rs >= 3.37 && rs < 4.47) { riskColor = 'bg-orange-500'; riskLabel = 'Moderate'; riskText = 'text-orange-700 dark:text-orange-300'; riskBg = 'bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/30'; }
                                 return (
                                     <tr key={entry.id || idx} onClick={() => !isHamstringEditMode && setInspectHamEntry(entry)}
-                                        className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30 dark:bg-[#0F1C30]/30' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40 cursor-pointer'}`}>
+                                        className={`transition-colors group ${isHamstringEditMode ? 'cursor-default bg-slate-50/30 dark:bg-[#0F1C30]/60' : 'hover:bg-slate-50/50 dark:hover:bg-[#1A2D48] cursor-pointer'}`}>
                                         <td className="px-4 py-3"><div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{entry.date.slice(0, 10)}</div></td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-[10px]">{entry.athleteName.split(' ').map(n => n[0]).join('')}</div>
+                                                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-300 font-bold text-[10px]">{entry.athleteName.split(' ').map(n => n[0]).join('')}</div>
                                                 <div className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{entry.athleteName}</div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-center"><div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{avgForceValue} <span className="text-[9px] text-slate-300">N</span></div></td>
+                                        <td className="px-4 py-3 text-center"><div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{avgForceValue} <span className="text-[9px] text-slate-300 dark:text-[#475569]">N</span></div></td>
                                         <td className="px-4 py-3 text-center"><div className={`text-sm font-semibold ${riskText}`}>{rs} <span className="text-[9px] opacity-70">N/kg</span></div></td>
                                         <td className="px-4 py-3 text-center">
                                             {entry.mode === 'split' ? (
-                                                <div className={`text-sm font-semibold ${asym > 15 ? 'text-rose-500' : asym > 10 ? 'text-orange-500' : 'text-emerald-500'}`}>{asym}%</div>
-                                            ) : (<div className="text-[9px] font-medium text-slate-300 italic">N/A</div>)}
+                                                <div className={`text-sm font-semibold ${asym > 15 ? 'text-rose-500 dark:text-rose-300' : asym > 10 ? 'text-orange-500 dark:text-orange-300' : 'text-emerald-500 dark:text-emerald-300'}`}>{asym}%</div>
+                                            ) : (<div className="text-[9px] font-medium text-slate-300 dark:text-[#475569] italic">N/A</div>)}
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end items-center gap-2">
@@ -238,7 +238,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                         {isHamstringEditMode && (
                                             <td className="px-4 py-4 text-center print:hidden">
                                                 <button onClick={(e) => { e.stopPropagation(); if (confirm(`Delete record for ${entry.athleteName} on ${entry.date}?`)) { handleDeleteMetric(entry.athleteId, entry.id); } }}
-                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 dark:hover:text-rose-400 rounded-lg transition-all"><Trash2Icon size={16} /></button>
+                                                    className="p-2 text-rose-400 dark:text-rose-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 dark:hover:text-rose-400 rounded-lg transition-all"><Trash2Icon size={16} /></button>
                                             </td>
                                         )}
                                     </tr>
@@ -250,7 +250,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
             </div>
             {inspectHamEntry && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
+                    <div className="bg-white dark:bg-[#132338] w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
                         <div className="bg-slate-900 px-10 py-8 text-white relative">
                             <button onClick={() => setInspectHamEntry(null)} className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"><XIcon size={24} /></button>
                             <div className="flex items-center gap-4 mb-2">
@@ -263,9 +263,9 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                         </div>
                         <div className="p-10 space-y-8">
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Bodyweight</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.weight}kg</span></div>
-                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Rel. Strength</span><span className="text-sm font-semibold text-rose-500">{inspectHamEntry.relativeStrength}</span></div>
-                                <div className="bg-white border border-slate-100 rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 tracking-wide mb-1">Asymmetry</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.asymmetry || '0'}%</span></div>
+                                <div className="bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide mb-1">Bodyweight</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.weight}kg</span></div>
+                                <div className="bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide mb-1">Rel. Strength</span><span className="text-sm font-semibold text-rose-500 dark:text-rose-300">{inspectHamEntry.relativeStrength}</span></div>
+                                <div className="bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide mb-1">Asymmetry</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.asymmetry || '0'}%</span></div>
                             </div>
                             <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-semibold uppercase tracking-wide text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
                         </div>
@@ -331,14 +331,14 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
             const asym = Math.max(l, r) > 0 ? Math.abs(l - r) / Math.max(l, r) * 100 : 0;
             const rel = bw > 0 ? avg / bw : 0;
             const risk = rel > 0 ? (rel < 3.37 ? 'High' : rel < 4.47 ? 'Mod' : 'Low') : null;
-            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : 'text-slate-300';
+            const riskColor = risk === 'High' ? 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30' : risk === 'Mod' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30' : risk === 'Low' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30' : 'text-slate-300 dark:text-[#475569]';
             return { avg, asym: asym.toFixed(1), rel: rel.toFixed(2), risk, riskColor, ready: l > 0 && r > 0 };
         } else {
             if (!agg) return null;
             // agg is already the average force — use directly for relative strength
             const rel = bw > 0 ? agg / bw : 0;
             const risk = rel > 0 ? (rel < 3.37 ? 'High' : rel < 4.47 ? 'Mod' : 'Low') : null;
-            const riskColor = risk === 'High' ? 'text-rose-500 bg-rose-50' : risk === 'Mod' ? 'text-amber-500 bg-amber-50' : risk === 'Low' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50' : 'text-slate-300';
+            const riskColor = risk === 'High' ? 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30' : risk === 'Mod' ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30' : risk === 'Low' ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30' : 'text-slate-300 dark:text-[#475569]';
             return { avg: agg, asym: null, rel: rel.toFixed(2), risk, riskColor, ready: agg > 0 };
         }
     };
@@ -366,16 +366,16 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
     const readyUnsaved = teamPlayers.filter(p => calcRow(teamRowData[p.id], teamBatchMode)?.ready && !savedRows.has(p.id));
     const saveAllReady = () => { readyUnsaved.forEach(p => saveRow(p)); };
     const inputCls = (disabled) =>
-        `w-full text-center bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-orange-300 transition-all${disabled ? ' bg-slate-50 text-slate-400 cursor-not-allowed' : ''}`;
-    const dropdownCls = 'w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-orange-300 transition-all cursor-pointer appearance-none';
+        `w-full text-center bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-2 py-1.5 text-xs font-medium outline-none focus:border-orange-300 transition-all${disabled ? ' bg-slate-50 dark:bg-[#132338] text-slate-400 dark:text-[#475569] cursor-not-allowed' : ''}`;
+    const dropdownCls = 'w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-orange-300 transition-all cursor-pointer appearance-none';
 
     return (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Mode toggle + dropdowns */}
-            <div className="bg-slate-50/50 dark:bg-[#132338]/40 px-6 py-5 border-b border-slate-100 space-y-4">
-                <div className="flex bg-white border border-slate-200 p-1 rounded-xl w-fit shadow-sm">
-                    <button onClick={() => setHamEntryMode('individual')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'individual' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Individual</button>
-                    <button onClick={() => setHamEntryMode('team')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'team' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Team Batch</button>
+            <div className="bg-slate-50/50 dark:bg-[#0F1C30] px-6 py-5 border-b border-slate-100 dark:border-[#1A2D48] space-y-4">
+                <div className="flex bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] p-1 rounded-xl w-fit shadow-sm">
+                    <button onClick={() => setHamEntryMode('individual')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'individual' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Individual</button>
+                    <button onClick={() => setHamEntryMode('team')} className={`px-5 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamEntryMode === 'team' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Team Batch</button>
                 </div>
                 {hamEntryMode === 'individual' && (
                     <div>
@@ -391,7 +391,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                 {hamEntryMode === 'team' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-[9px] font-semibold uppercase text-slate-500 tracking-wide block mb-1.5">Select Team</label>
+                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1.5">Select Team</label>
                             <CustomSelect value={hamSelectedTeamId} onChange={(e) => { setHamSelectedTeamId(e.target.value); setHamTeamAthleteFilter(''); setSavedRows(new Set()); setTeamRowData({}); }} variant="form" size="xs" placeholder="— Choose team —">
                                 <option value="">— Choose team —</option>
                                 {teams.filter(t => (t.players || []).length > 0).map(t => (<option key={t.id} value={t.id}>{t.name} ({t.players.length})</option>))}
@@ -399,7 +399,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                         </div>
                         {selectedTeam && (
                             <div>
-                                <label className="text-[9px] font-semibold uppercase text-slate-500 tracking-wide block mb-1.5">Athlete Filter <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+                                <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1.5">Athlete Filter <span className="text-slate-400 dark:text-[#94A3B8] normal-case font-normal">(optional)</span></label>
                                 <CustomSelect value={hamTeamAthleteFilter} onChange={(e) => setHamTeamAthleteFilter(e.target.value)} variant="form" size="xs" placeholder="All athletes">
                                     <option value="">All athletes ({allTeamPlayers.length})</option>
                                     {allTeamPlayers.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
@@ -414,33 +414,33 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                 {/* Individual form */}
                 {hamEntryMode === 'individual' && (
                     <div className="space-y-4">
-                        <div className="flex bg-slate-100 p-1 rounded-xl">
-                            <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Split (L/R)</button>
-                            <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Average</button>
+                        <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-xl">
+                            <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamAssessmentMode === 'split' ? 'bg-white dark:bg-[#132338] text-orange-500 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Split (L/R)</button>
+                            <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white dark:bg-[#132338] text-orange-500 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Average</button>
                         </div>
                         {hamAssessmentMode === 'split' ? (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Left Peak (N)</label>
-                                    <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} placeholder="e.g. 340" className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
+                                    <label className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1">Left Peak (N)</label>
+                                    <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} placeholder="e.g. 340" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Right Peak (N)</label>
-                                    <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} placeholder="e.g. 320" className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
+                                    <label className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1">Right Peak (N)</label>
+                                    <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} placeholder="e.g. 320" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
                                 </div>
                             </div>
                         ) : (
                             <div>
-                                <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Average Force (N)</label>
-                                <input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} placeholder="e.g. 330" className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
+                                <label className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1">Average Force (N)</label>
+                                <input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} placeholder="e.g. 330" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
                             </div>
                         )}
                         <div>
-                            <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Bodyweight (kg)</label>
-                            <input type="number" value={hamBodyWeight || defaultWeight} onChange={(e) => setHamBodyWeight(e.target.value)} placeholder="e.g. 85" className="w-full bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
+                            <label className="text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1">Bodyweight (kg)</label>
+                            <input type="number" value={hamBodyWeight || defaultWeight} onChange={(e) => setHamBodyWeight(e.target.value)} placeholder="e.g. 85" className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] px-3 py-2.5 rounded-xl text-sm font-semibold outline-none focus:border-orange-300" />
                         </div>
                         <button onClick={handleSaveIndividual} disabled={!hamAthleteId}
-                            className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium shadow-sm transition-all active:scale-[0.98]">
+                            className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 dark:disabled:bg-[#1A2D48] disabled:text-slate-400 dark:disabled:text-[#475569] disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium shadow-sm transition-all active:scale-[0.98]">
                             {hamAthleteId ? 'Save Assessment' : 'Select an athlete above first'}
                         </button>
                     </div>
@@ -448,53 +448,53 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
 
                 {/* Team batch: no team selected */}
                 {hamEntryMode === 'team' && !selectedTeam && (
-                    <div className="py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-wide">Select a team above to begin batch entry</div>
+                    <div className="py-12 text-center text-slate-400 dark:text-[#94A3B8] text-xs font-bold uppercase tracking-wide">Select a team above to begin batch entry</div>
                 )}
 
                 {/* Team batch table */}
                 {hamEntryMode === 'team' && selectedTeam && (
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
-                                <button onClick={() => setTeamBatchMode('split')} className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${teamBatchMode === 'split' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Split (L/R)</button>
-                                <button onClick={() => setTeamBatchMode('aggregate')} className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${teamBatchMode === 'aggregate' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Average</button>
+                            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-xl">
+                                <button onClick={() => setTeamBatchMode('split')} className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${teamBatchMode === 'split' ? 'bg-white dark:bg-[#132338] text-orange-500 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Split (L/R)</button>
+                                <button onClick={() => setTeamBatchMode('aggregate')} className={`px-4 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${teamBatchMode === 'aggregate' ? 'bg-white dark:bg-[#132338] text-orange-500 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>Average</button>
                             </div>
-                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                                <CalendarIcon size={13} className="text-slate-400" />
+                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2">
+                                <CalendarIcon size={13} className="text-slate-400 dark:text-[#94A3B8]" />
                                 <input type="date" value={teamBatchDate} onChange={(e) => setTeamBatchDate(e.target.value)} className="text-xs font-bold outline-none bg-transparent text-slate-700 dark:text-[#CBD5E1]" />
                             </div>
                             <div className="ml-auto flex items-center gap-3">
-                                <span className="text-[10px] font-medium text-slate-400">{savedRows.size}/{allTeamPlayers.length} saved</span>
+                                <span className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8]">{savedRows.size}/{allTeamPlayers.length} saved</span>
                                 {readyUnsaved.length > 0 && (
                                     <button onClick={saveAllReady} className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-medium shadow-sm transition-all active:scale-95">Save All ({readyUnsaved.length})</button>
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                            <div className="w-7 h-7 bg-orange-50 rounded-lg flex items-center justify-center shrink-0"><UsersIcon size={14} className="text-orange-500" /></div>
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                            <div className="w-7 h-7 bg-orange-50 dark:bg-orange-500/15 rounded-lg flex items-center justify-center shrink-0"><UsersIcon size={14} className="text-orange-500 dark:text-orange-300" /></div>
                             <span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{selectedTeam.name}</span>
                             {hamTeamAthleteFilter
-                                ? <span className="text-[9px] font-medium text-orange-500 bg-orange-50 px-2 py-0.5 rounded-lg">Filtered: 1 athlete</span>
-                                : <span className="text-[9px] font-medium text-slate-400">{allTeamPlayers.length} athletes</span>
+                                ? <span className="text-[9px] font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/30 px-2 py-0.5 rounded-lg">Filtered: 1 athlete</span>
+                                : <span className="text-[9px] font-medium text-slate-400 dark:text-[#94A3B8]">{allTeamPlayers.length} athletes</span>
                             }
                             {hamTeamAthleteFilter && (
-                                <button onClick={() => setHamTeamAthleteFilter('')} className="ml-auto text-[9px] font-medium text-orange-400 hover:text-orange-600 flex items-center gap-1"><XIcon size={11} /> Show all</button>
+                                <button onClick={() => setHamTeamAthleteFilter('')} className="ml-auto text-[9px] font-medium text-orange-500 dark:text-orange-300 hover:text-orange-600 dark:hover:text-orange-200 flex items-center gap-1"><XIcon size={11} /> Show all</button>
                             )}
                         </div>
-                        <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
+                        <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm">
                             <table className="w-full text-xs border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-100">
-                                        <th className="text-left px-4 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 w-44 sticky left-0 bg-slate-50">Athlete</th>
+                                    <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48]">
+                                        <th className="text-left px-4 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] w-44 sticky left-0 bg-slate-50 dark:bg-[#0F1C30]">Athlete</th>
                                         {teamBatchMode === 'split' ? (
-                                            <><th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[90px]">Left (N)</th>
-                                            <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[90px]">Right (N)</th></>
-                                        ) : (<th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[110px]">Avg Force (N)</th>)}
-                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[80px]">BW (kg)</th>
-                                        {teamBatchMode === 'split' && (<th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[70px]">Asym %</th>)}
-                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[70px]">Rel. Str</th>
-                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center min-w-[60px]">Risk</th>
-                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 text-center w-14">Save</th>
+                                            <><th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[90px]">Left (N)</th>
+                                            <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[90px]">Right (N)</th></>
+                                        ) : (<th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[110px]">Avg Force (N)</th>)}
+                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[80px]">BW (kg)</th>
+                                        {teamBatchMode === 'split' && (<th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[70px]">Asym %</th>)}
+                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[70px]">Rel. Str</th>
+                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center min-w-[60px]">Risk</th>
+                                        <th className="px-3 py-3 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] text-center w-14">Save</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -502,12 +502,12 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                                         const row = teamRowData[player.id] || {};
                                         const res = calcRow(row, teamBatchMode);
                                         const isSaved = savedRows.has(player.id);
-                                        const rowBg = isSaved ? 'bg-emerald-50/50' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40 dark:bg-[#0F1C30]/40';
+                                        const rowBg = isSaved ? 'bg-emerald-50/50 dark:bg-emerald-500/10' : idx % 2 === 0 ? 'bg-white dark:bg-[#132338]' : 'bg-slate-50/40 dark:bg-[#0F1C30]';
                                         return (
-                                            <tr key={player.id} className={`border-b border-slate-50 transition-colors hover:bg-rose-50/20 ${rowBg}`}>
+                                            <tr key={player.id} className={`border-b border-slate-50 dark:border-[#1A2D48] transition-colors hover:bg-rose-50/20 dark:hover:bg-[#1A2D48] ${rowBg}`}>
                                                 <td className={`px-4 py-2.5 sticky left-0 ${rowBg}`}>
                                                     <div className="flex items-center gap-2">
-                                                        {isSaved ? <CheckCircleIcon size={12} className="text-emerald-500 shrink-0" /> : <div className="w-3 h-3 rounded-full border-2 border-slate-200 shrink-0" />}
+                                                        {isSaved ? <CheckCircleIcon size={12} className="text-emerald-500 dark:text-emerald-400 shrink-0" /> : <div className="w-3 h-3 rounded-full border-2 border-slate-200 dark:border-[#243A58] shrink-0" />}
                                                         <span className="font-bold text-slate-800 dark:text-[#E2E8F0] truncate max-w-[130px]">{player.name}</span>
                                                     </div>
                                                 </td>
@@ -517,16 +517,16 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                                                 ) : (<td className="px-2 py-1.5"><input type="number" value={row.aggregate || ''} onChange={(e) => updateRow(player.id, 'aggregate', e.target.value)} placeholder="—" disabled={isSaved} className={inputCls(isSaved)} /></td>)}
                                                 <td className="px-2 py-1.5"><input type="number" value={row.bw || ''} onChange={(e) => updateRow(player.id, 'bw', e.target.value)} placeholder="—" disabled={isSaved} className={inputCls(isSaved)} /></td>
                                                 {teamBatchMode === 'split' && (
-                                                    <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold ${parseFloat(res?.asym) > 15 ? 'text-rose-500' : res?.asym ? 'text-slate-700 dark:text-[#CBD5E1]' : 'text-slate-300'}`}>{res?.asym ? `${res.asym}%` : '—'}</span></td>
+                                                    <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold ${parseFloat(res?.asym) > 15 ? 'text-rose-500 dark:text-rose-300' : res?.asym ? 'text-slate-700 dark:text-[#CBD5E1]' : 'text-slate-300 dark:text-[#475569]'}`}>{res?.asym ? `${res.asym}%` : '—'}</span></td>
                                                 )}
                                                 <td className="px-3 py-2.5 text-center"><span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{res?.rel && parseFloat(res.rel) > 0 ? res.rel : '—'}</span></td>
                                                 <td className="px-3 py-2.5 text-center">
-                                                    {res?.risk ? <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-lg uppercase tracking-wider ${res.riskColor}`}>{res.risk}</span> : <span className="text-slate-300 text-xs">—</span>}
+                                                    {res?.risk ? <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-lg uppercase tracking-wider ${res.riskColor}`}>{res.risk}</span> : <span className="text-slate-300 dark:text-[#475569] text-xs">—</span>}
                                                 </td>
                                                 <td className="px-2 py-1.5 text-center">
-                                                    {isSaved ? (<CheckCircleIcon size={18} className="text-emerald-500 mx-auto" />) : (
+                                                    {isSaved ? (<CheckCircleIcon size={18} className="text-emerald-500 dark:text-emerald-400 mx-auto" />) : (
                                                         <button onClick={() => saveRow(player)} disabled={!res?.ready} title={res?.ready ? 'Save' : 'Enter force values first'}
-                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all active:scale-90 ${res?.ready ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm cursor-pointer' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}>
+                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all active:scale-90 ${res?.ready ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm cursor-pointer' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-300 dark:text-[#475569] cursor-not-allowed'}`}>
                                                             <SaveIcon size={13} />
                                                         </button>
                                                     )}
@@ -678,11 +678,11 @@ const ImportTab = ({ teams, setTeams, showToast, setHamstringReportTab, handleSa
     };
 
     return (
-        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center space-y-4">
-            <div className="mx-auto w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500"><FileTextIcon size={22} /></div>
+        <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm text-center space-y-4">
+            <div className="mx-auto w-12 h-12 bg-orange-50 dark:bg-orange-500/15 border border-transparent dark:border-orange-500/30 rounded-xl flex items-center justify-center text-orange-500 dark:text-orange-300"><FileTextIcon size={22} /></div>
             <div>
                 <h4 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Import CSV Data</h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1 max-w-sm mx-auto">
                     Supports single-value, multi-attempt, and summary (peak/average) NordBord formats.
                 </p>
             </div>

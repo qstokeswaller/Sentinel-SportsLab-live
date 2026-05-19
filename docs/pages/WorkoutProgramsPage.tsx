@@ -1,19 +1,17 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useAppState } from '../context/AppStateContext';
+import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { useWorkoutPrograms, useDeleteProgram, useProgramWithDays } from '../hooks/useWorkoutPrograms';
-import { DatabaseService } from '../services/databaseService';
 import { ProgramBuilderModal } from '../components/workouts/ProgramBuilderModal';
 import { ProgramViewModal } from '../components/workouts/ProgramViewModal';
 import { ProgramAssignModal } from '../components/workouts/ProgramAssignModal';
-import { WorkoutsTabsBar } from './WorkoutsPage';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
-    LayersIcon, PlusIcon, SearchIcon, GridIcon, ListIcon,
+    LayersIcon, PlusIcon,
     PencilIcon, Trash2Icon, EyeIcon, Share2Icon, MoreVerticalIcon,
     CalendarPlus as CalendarPlusIcon,
 } from 'lucide-react';
@@ -63,15 +61,16 @@ const ProgramMenu = ({ onEdit, onDelete }) => {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export const WorkoutProgramsPage = () => {
-    const navigate = useNavigate();
     const { showToast, scheduledSessions } = useAppState();
+    // search + view live in the Workouts shell layout (persistent across tab switches).
+    // We register our "Create" handler with the shell so its Create Program button can fire it.
+    const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
 
-    const [view, setView] = useState<'grid' | 'list'>('list');
-    const [search, setSearch] = useState('');
     // Tabs:
     //  - 'templates' (formerly 'active'): every saved program — they're all reusable templates regardless of assignment
     //  - 'assigned'  (formerly 'archived'): only programs that have at least one scheduled session referencing them
     const [activeTab, setActiveTab] = useState<'templates' | 'assigned'>('templates');
+    const [assignedTargetFilter, setAssignedTargetFilter] = useState<'all' | 'Team' | 'Individual'>('all');
     const [viewingProgram, setViewingProgram] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
@@ -86,6 +85,8 @@ export const WorkoutProgramsPage = () => {
     const deleteProgram = useDeleteProgram();
 
     // A program is "Assigned" if at least one scheduled_session references it via program_id.
+    // assignedProgramIds (unfiltered) drives the tab count; assignedProgramIdsFiltered
+    // respects the Team/Individual pill filter and is used to filter the list itself.
     const assignedProgramIds = useMemo(() => {
         const ids = new Set<string>();
         for (const s of scheduledSessions || []) {
@@ -94,6 +95,18 @@ export const WorkoutProgramsPage = () => {
         }
         return ids;
     }, [scheduledSessions]);
+
+    const assignedProgramIdsFiltered = useMemo(() => {
+        const ids = new Set<string>();
+        for (const s of scheduledSessions || []) {
+            const pid = (s as any).program_id || (s as any).programId;
+            if (!pid) continue;
+            const ttype = (s as any).target_type || (s as any).targetType || 'Individual';
+            if (assignedTargetFilter !== 'all' && ttype !== assignedTargetFilter) continue;
+            ids.add(pid);
+        }
+        return ids;
+    }, [scheduledSessions, assignedTargetFilter]);
 
     // ── Sidebar stats ──────────────────────────────────────────────────────
     // Phase distribution is driven by the new `training_phase` enum (not free-text tags),
@@ -118,9 +131,9 @@ export const WorkoutProgramsPage = () => {
     // Apply the active tab filter on top of search. Templates = all programs; Assigned = only those with scheduled sessions.
     const filteredPrograms = useMemo(
         () => activeTab === 'assigned'
-            ? programSearch.results.filter(p => assignedProgramIds.has(p.id))
+            ? programSearch.results.filter(p => assignedProgramIdsFiltered.has(p.id))
             : programSearch.results,
-        [programSearch.results, activeTab, assignedProgramIds]
+        [programSearch.results, activeTab, assignedProgramIdsFiltered]
     );
 
     const handleDelete = async (id: string) => {
@@ -140,6 +153,65 @@ export const WorkoutProgramsPage = () => {
         setIsProgramBuilderOpen(true);
     };
 
+    // Wire the shell's "Create Program" button to open a fresh builder
+    useEffect(() => {
+        return registerCreate(() => {
+            setEditingProgramBasic(null);
+            setEditingProgramId(null);
+            setIsProgramBuilderOpen(true);
+        });
+    }, [registerCreate]);
+
+    // When the builder takes over, hide the shell header so it has the full canvas
+    useEffect(() => {
+        setHideShell(isProgramBuilderOpen);
+    }, [isProgramBuilderOpen, setHideShell]);
+
+    // Push Overview rows to the shell's top-right tile.
+    // useLayoutEffect (not useEffect) so the populated rows land in the FIRST paint —
+    // otherwise the tile is missing for one frame on first navigation to this page.
+    // Cleanup clears the rows on unmount so the next tab doesn't see stale Programs data.
+    useLayoutEffect(() => {
+        setOverviewRows([
+            { label: 'Total Programs', value: sidebarStats.total },
+            { label: 'Drafts', value: sidebarStats.drafts, hint: 'No start date set' },
+        ]);
+        return () => setOverviewRows([]);
+    }, [sidebarStats.total, sidebarStats.drafts, setOverviewRows]);
+
+    // Push Phase Distribution as the sidebar extra (rendered below Overview)
+    const sidebarExtraNode = useMemo(() => {
+        if (sidebarStats.phaseDistribution.length === 0) return null;
+        return (
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Phase Distribution</span>
+                </div>
+                <div className="px-4 py-3 space-y-2.5">
+                    {sidebarStats.phaseDistribution.map(([phase, count]) => (
+                        <div key={phase}>
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{phase}</span>
+                                <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{count}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full"
+                                    style={{ width: `${Math.round((count / sidebarStats.total) * 100)}%` }}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }, [sidebarStats.phaseDistribution, sidebarStats.total]);
+
+    useLayoutEffect(() => {
+        setSidebarExtra(sidebarExtraNode);
+        return () => setSidebarExtra(null);
+    }, [sidebarExtraNode, setSidebarExtra]);
+
     // When the builder is open, render IT instead of the list so the sidebar nav stays visible
     // and we don't end up with a full-screen overlay that hides everything else.
     if (isProgramBuilderOpen) {
@@ -154,76 +226,56 @@ export const WorkoutProgramsPage = () => {
 
     return (
         <>
-            <div className="flex gap-5 animate-in fade-in duration-300">
-                {/* Main content */}
-                <div className="flex-1 min-w-0 space-y-4">
+            <div className="space-y-4">
 
-                {/* Header */}
-                <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                            <LayersIcon size={16} className="text-white" />
+                {/* "Did you mean…" suggestion strip (search lives in the persistent shell header above) */}
+                {programSearch.hasFuzzyResults && programSearch.suggestions.length > 0 && (
+                    <DidYouMeanBanner suggestions={programSearch.suggestions} onSelect={name => setSearch(name)} />
+                )}
+
+                {/* Sub-tabs: Templates / Assigned + (when Assigned) Team/Individual filter */}
+                <div className="bg-white dark:bg-[#132338] px-5 pt-2 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                    <div className="flex items-end gap-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
+                        <div className="flex gap-0 flex-1">
+                            {[
+                                { key: 'templates', label: 'Templates', count: programs.length },
+                                { key: 'assigned',  label: 'Assigned',  count: assignedProgramIds.size },
+                            ].map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key as any)}
+                                    className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                                        activeTab === tab.key
+                                            ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
+                                    }`}
+                                >
+                                    {tab.label}
+                                    {tab.count > 0 && (
+                                        <span className="ml-1.5 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-full text-[9px] font-bold">
+                                            {tab.count}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Workout Programs</h2>
-                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">Build, manage and periodize long-term training programs.</p>
-                        </div>
-                        {/* Workouts top-level tabs — embedded in the header so title + tabs share one bar */}
-                        <WorkoutsTabsBar />
-                        <div className="flex items-center gap-2 shrink-0">
-                            <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
-                                <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`} title="List view"><ListIcon size={13} /></button>
-                                <button onClick={() => setView('grid')} className={`p-1.5 rounded-md transition-all ${view === 'grid' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`} title="Grid view"><GridIcon size={13} /></button>
+                        {activeTab === 'assigned' && (
+                            <div className="flex items-center gap-0.5 mb-1.5 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                                {(['all', 'Team', 'Individual'] as const).map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setAssignedTargetFilter(opt)}
+                                        className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${
+                                            assignedTargetFilter === opt
+                                                ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm'
+                                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
+                                        }`}
+                                    >
+                                        {opt === 'all' ? 'All' : opt + 's'}
+                                    </button>
+                                ))}
                             </div>
-                            <button
-                                onClick={() => { setEditingProgramBasic(null); setEditingProgramId(null); setIsProgramBuilderOpen(true); }}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-all"
-                            >
-                                <PlusIcon size={13} /> Create Program
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="relative mt-3">
-                        <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
-                        <input
-                            type="text"
-                            placeholder="Search programs..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm text-slate-800 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-colors placeholder:text-slate-400 dark:placeholder:text-[#475569]"
-                        />
-                    </div>
-                    {programSearch.hasFuzzyResults && programSearch.suggestions.length > 0 && (
-                        <div className="mt-2">
-                            <DidYouMeanBanner suggestions={programSearch.suggestions} onSelect={name => setSearch(name)} />
-                        </div>
-                    )}
-
-                    {/* Tabs */}
-                    <div className="flex gap-0 mt-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
-                        {[
-                            { key: 'templates', label: 'Templates', count: programs.length },
-                            { key: 'assigned',  label: 'Assigned',  count: assignedProgramIds.size },
-                        ].map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key as any)}
-                                className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
-                                    activeTab === tab.key
-                                        ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                                        : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
-                                }`}
-                            >
-                                {tab.label}
-                                {tab.count > 0 && (
-                                    <span className="ml-1.5 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-full text-[9px] font-bold">
-                                        {tab.count}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                        )}
                     </div>
                 </div>
 
@@ -331,56 +383,7 @@ export const WorkoutProgramsPage = () => {
                     </div>
                 )}
 
-                </div>{/* end main content */}
-
-                {/* Right sidebar */}
-                <div className="w-64 shrink-0 space-y-4">
-
-                    {/* Overview */}
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Overview</span>
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
-                            {[
-                                { label: 'Total Programs', value: sidebarStats.total },
-                                { label: 'Drafts', value: sidebarStats.drafts, hint: 'No start date set' },
-                            ].map(row => (
-                                <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
-                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]" title={row.hint}>{row.label}</span>
-                                    <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.value}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Phase Distribution — driven by training_phase enum, not free-text tags */}
-                    {sidebarStats.phaseDistribution.length > 0 && (
-                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Phase Distribution</span>
-                            </div>
-                            <div className="px-4 py-3 space-y-2.5">
-                                {sidebarStats.phaseDistribution.map(([phase, count]) => (
-                                    <div key={phase}>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{phase}</span>
-                                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{count}</span>
-                                        </div>
-                                        <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full"
-                                                style={{ width: `${Math.round((count / sidebarStats.total) * 100)}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-            </div>{/* end flex */}
+            </div>{/* end main content */}
 
             {/* Builder renders inline (see early-return above) when isProgramBuilderOpen so the sidebar stays visible */}
             <ProgramViewModal

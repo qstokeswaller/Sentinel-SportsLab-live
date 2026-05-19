@@ -307,7 +307,7 @@ export const RosterPage = () => {
                                             {preview.map(p => (
                                                 <div
                                                     key={p.id}
-                                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 border-2 border-white flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold shrink-0"
+                                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 border-2 border-white dark:border-[#132338] flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold shrink-0"
                                                     title={p.name}
                                                 >
                                                     {p.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -453,13 +453,13 @@ export const RosterPage = () => {
                                     <Trash2Icon size={13} />
                                 </button>
 
-                                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-lg font-bold ring-2 ring-white shadow">
+                                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-lg font-bold ring-2 ring-white dark:ring-[#132338] shadow">
                                     {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                 </div>
 
                                 <div className="text-center min-w-0 w-full">
                                     <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</div>
-                                    <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide truncate mt-0.5">
+                                    <div className="text-[10px] font-medium text-slate-700 dark:text-[#CBD5E1] uppercase tracking-wide truncate mt-0.5">
                                         {player.sport || player.position || 'Athlete'}
                                     </div>
                                 </div>

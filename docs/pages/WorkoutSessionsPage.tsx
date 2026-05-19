@@ -1,18 +1,18 @@
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
+import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { DatabaseService } from '../services/databaseService';
 import { TemplateViewModal } from '../components/workouts/TemplateViewModal';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
-import { WorkoutsTabsBar } from './WorkoutsPage';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
-    PackageIcon, SearchIcon, PlusIcon, PencilIcon, Trash2Icon,
-    EyeIcon, GridIcon, ListIcon, CalendarPlusIcon, Share2Icon,
-    ClipboardListIcon, ArrowLeftIcon,
+    PackageIcon, PlusIcon, PencilIcon, Trash2Icon,
+    EyeIcon, CalendarPlusIcon, Share2Icon,
+    ArrowLeftIcon,
 } from 'lucide-react';
 
 function timeAgo(iso: string) {
@@ -44,25 +44,31 @@ export const WorkoutSessionsPage = () => {
         workoutTemplates, setWorkoutTemplates, isLoading, showToast,
         scheduledSessions, teams, resolveTargetName,
     } = useAppState();
+    // search + view live in the Workouts shell layout (persistent across tab switches).
+    const { search, setSearch, view, registerCreate, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
 
-    const [view, setView] = useState<'grid' | 'list'>('grid');
-    const [search, setSearch] = useState('');
     // Tabs mirror Programs: Templates = all saved; Assigned = templates with at least one scheduled session
     const [activeTab, setActiveTab] = useState<'templates' | 'assigned'>('templates');
+    // Within the Assigned tab — narrow by target type
+    const [assignedTargetFilter, setAssignedTargetFilter] = useState<'all' | 'Team' | 'Individual'>('all');
     const [viewingTemplate, setViewingTemplate] = useState(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [shareTarget, setShareTarget] = useState<{ type: 'template'; id: string; name: string } | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
 
-    // Templates that are referenced by at least one scheduled session
+    // Templates that are referenced by at least one scheduled session.
+    // When the assigned-tab filter is active, restrict to sessions whose target_type matches.
     const assignedTemplateIds = useMemo(() => {
         const ids = new Set<string>();
         for (const s of scheduledSessions || []) {
             const tid = (s as any).workout_template_id || (s as any).workoutTemplateId;
-            if (tid) ids.add(tid);
+            if (!tid) continue;
+            const ttype = (s as any).target_type || (s as any).targetType;
+            if (assignedTargetFilter !== 'all' && ttype !== assignedTargetFilter) continue;
+            ids.add(tid);
         }
         return ids;
-    }, [scheduledSessions]);
+    }, [scheduledSessions, assignedTargetFilter]);
 
     const { results: searchedTemplates, hasFuzzyResults, suggestions } = useMemo(
         () => fuzzySearch(workoutTemplates, search, (t) => [t.name, t.trainingPhase || '', t.load || ''].join(' '), (t) => t.name),
@@ -101,16 +107,20 @@ export const WorkoutSessionsPage = () => {
             return d >= monday && d <= sunday;
         }).length;
 
-        // Most assigned (target name → count)
+        // Most assigned (target name → count). Drops entries whose target_id no longer
+        // resolves to a real athlete/team — otherwise stale sessions show raw UUIDs.
         const targetCounts: Record<string, { name: string; count: number; type: string }> = {};
+        const looksLikeUuid = (v: string) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
         for (const s of allSessions) {
             const tid = s.target_id || s.targetId;
             const ttype = s.target_type || s.targetType || 'Individual';
             if (!tid) continue;
+            const resolved = resolveTargetName ? resolveTargetName(tid, ttype) : tid;
+            // Skip if name is empty, equal to the raw id, or still UUID-shaped (athlete/team deleted)
+            if (!resolved || resolved === tid || looksLikeUuid(resolved)) continue;
             const key = `${ttype}:${tid}`;
             if (!targetCounts[key]) {
-                const name = resolveTargetName ? resolveTargetName(tid, ttype) : tid;
-                targetCounts[key] = { name, count: 0, type: ttype };
+                targetCounts[key] = { name: resolved, count: 0, type: ttype };
             }
             targetCounts[key].count += 1;
         }
@@ -130,6 +140,84 @@ export const WorkoutSessionsPage = () => {
     const handleEdit = (tpl) => {
         navigate('/workouts/packets', { state: { editTemplate: tpl, returnTo: '/workouts/sessions' } });
     };
+
+    // Wire the shell's "Create Packet" button — opens the dedicated builder route.
+    // assignCtx is forwarded so the builder can finish the deep-link flow from the Planner.
+    useEffect(() => {
+        return registerCreate(() => {
+            navigate('/workouts/packets', assignCtx ? { state: { assignToPlanSession: assignCtx } } : undefined);
+        });
+    }, [registerCreate, navigate, assignCtx]);
+
+    // Push Overview rows to the shell's top-right tile.
+    // Standardized to Total + Drafts (matches Programs / Sheets) — "This Week" was removed.
+    // useLayoutEffect so the rows land in the first paint (not one frame late on initial nav).
+    useLayoutEffect(() => {
+        setOverviewRows([
+            { label: 'Total Packets', value: sidebarStats.total },
+            { label: 'Drafts', value: sidebarStats.drafts, hint: 'Saved but never scheduled' },
+        ]);
+        return () => setOverviewRows([]);
+    }, [sidebarStats.total, sidebarStats.drafts, setOverviewRows]);
+
+    // Push Most Assigned + Phase Distribution into the sidebar (below Overview)
+    const sidebarExtraNode = useMemo(() => {
+        const hasAssigned = sidebarStats.mostAssigned.length > 0;
+        const hasPhases = sidebarStats.phaseDistribution.length > 0;
+        if (!hasAssigned && !hasPhases) return null;
+        return (
+            <>
+                {hasAssigned && (
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Most Assigned To</span>
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                            {sidebarStats.mostAssigned.map((entry, i) => (
+                                <div key={`${entry.type}-${entry.name}-${i}`} className="flex items-center justify-between px-4 py-2.5 gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] truncate">{entry.name}</div>
+                                        <div className="text-[9px] uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] mt-0.5">{entry.type}</div>
+                                    </div>
+                                    <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                                        {entry.count}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {hasPhases && (
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Phase Distribution</span>
+                        </div>
+                        <div className="px-4 py-3 space-y-2.5">
+                            {sidebarStats.phaseDistribution.map(([phase, count]) => (
+                                <div key={phase}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{phase}</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{count}</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full"
+                                            style={{ width: `${Math.round((count / sidebarStats.total) * 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
+        );
+    }, [sidebarStats.mostAssigned, sidebarStats.phaseDistribution, sidebarStats.total]);
+
+    useLayoutEffect(() => {
+        setSidebarExtra(sidebarExtraNode);
+        return () => setSidebarExtra(null);
+    }, [sidebarExtraNode, setSidebarExtra]);
 
     const handleDeleteConfirmed = async () => {
         if (!confirmDelete) return;
@@ -151,8 +239,7 @@ export const WorkoutSessionsPage = () => {
 
     return (
         <>
-            <div className="flex gap-5 animate-in fade-in duration-300">
-              <div className="flex-1 min-w-0 space-y-4">
+            <div className="space-y-4">
                 {/* Assign-mode banner */}
                 {assignCtx && (
                     <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/40 rounded-xl">
@@ -172,104 +259,57 @@ export const WorkoutSessionsPage = () => {
                     </div>
                 )}
 
-                {/* Header */}
-                <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-3 shrink-0">
-                            <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                                <PackageIcon size={18} className="text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Packets</h2>
-                                <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">Saved workout packets — assign & schedule to athletes</p>
-                            </div>
-                        </div>
-                        {/* Workouts top-level tabs — embedded in the header to share one bar with the title */}
-                        <WorkoutsTabsBar />
+                {/* "Did you mean…" suggestion strip (search lives in the persistent shell header above) */}
+                {hasFuzzyResults && suggestions.length > 0 && (
+                    <DidYouMeanBanner suggestions={suggestions} onSelect={(name) => setSearch(name)} />
+                )}
 
-                        {/* Centered search */}
-                        <div className="flex-1 flex justify-center px-4">
-                            <div className="relative w-full max-w-md">
-                                <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
-                                <input
-                                    type="text"
-                                    placeholder="Search packets..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm text-slate-800 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-colors"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Controls */}
-                        <div className="flex items-center gap-2 shrink-0">
-                            <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-0.5 gap-0.5">
+                {/* Sub-tabs: Templates / Assigned + (when Assigned) Team/Individual filter */}
+                <div className="bg-white dark:bg-[#132338] px-5 pt-2 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                    <div className="flex items-end gap-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
+                        <div className="flex gap-0 flex-1">
+                            {[
+                                { key: 'templates', label: 'Templates', count: workoutTemplates.length },
+                                { key: 'assigned',  label: 'Assigned',  count: assignedTemplateIds.size },
+                            ].map(tab => (
                                 <button
-                                    onClick={() => setView('grid')}
-                                    className={`p-1.5 rounded-md transition-colors ${view === 'grid' ? 'bg-white dark:bg-[#243A58] text-slate-700 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#CBD5E1]'}`}
-                                    title="Grid view"
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key as any)}
+                                    className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                                        activeTab === tab.key
+                                            ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                                            : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
+                                    }`}
                                 >
-                                    <GridIcon size={14} />
+                                    {tab.label}
+                                    {tab.count > 0 && (
+                                        <span className="ml-1.5 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 rounded-full text-[9px] font-bold">
+                                            {tab.count}
+                                        </span>
+                                    )}
                                 </button>
-                                <button
-                                    onClick={() => setView('list')}
-                                    className={`p-1.5 rounded-md transition-colors ${view === 'list' ? 'bg-white dark:bg-[#243A58] text-slate-700 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#CBD5E1]'}`}
-                                    title="List view"
-                                >
-                                    <ListIcon size={14} />
-                                </button>
+                            ))}
+                        </div>
+                        {activeTab === 'assigned' && (
+                            <div className="flex items-center gap-0.5 mb-1.5 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                                {(['all', 'Team', 'Individual'] as const).map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setAssignedTargetFilter(opt)}
+                                        className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${
+                                            assignedTargetFilter === opt
+                                                ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm'
+                                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
+                                        }`}
+                                    >
+                                        {opt === 'all' ? 'All' : opt + 's'}
+                                    </button>
+                                ))}
                             </div>
-                            <button
-                                onClick={() => navigate('/workouts/packets', assignCtx ? { state: { assignToPlanSession: assignCtx } } : undefined)}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
-                            >
-                                <PlusIcon size={14} /> New Packet
-                            </button>
-                        </div>
-                    </div>
-
-                    {hasFuzzyResults && suggestions.length > 0 && (
-                        <div className="mt-3">
-                            <DidYouMeanBanner suggestions={suggestions} onSelect={(name) => setSearch(name)} />
-                        </div>
-                    )}
-
-                    {/* Templates / Assigned tabs */}
-                    <div className="flex gap-0 mt-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
-                        {[
-                            { key: 'templates', label: 'Templates', count: workoutTemplates.length },
-                            { key: 'assigned',  label: 'Assigned',  count: assignedTemplateIds.size },
-                        ].map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key as any)}
-                                className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
-                                    activeTab === tab.key
-                                        ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
-                                        : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
-                                }`}
-                            >
-                                {tab.label}
-                                {tab.count > 0 && (
-                                    <span className="ml-1.5 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 rounded-full text-[9px] font-bold">
-                                        {tab.count}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                        )}
                     </div>
                 </div>
 
-                {/* Count bar */}
-                <div className="flex items-center justify-between px-1">
-                    <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">
-                        {filteredTemplates.length} packet{filteredTemplates.length !== 1 ? 's' : ''}
-                        {search ? ` matching "${search}"` : ' saved'}
-                    </p>
-                    {hasFuzzyResults && (
-                        <p className="text-[10px] text-slate-300 dark:text-[#475569] italic">Showing closest matches</p>
-                    )}
-                </div>
 
                 {/* Content */}
                 {isLoading && workoutTemplates.length === 0 ? (
@@ -478,76 +518,6 @@ export const WorkoutSessionsPage = () => {
                         </table>
                     </div>
                 )}
-              </div>{/* end main content */}
-
-              {/* Right sidebar */}
-              <div className="w-64 shrink-0 space-y-4">
-                {/* Overview */}
-                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Overview</span>
-                    </div>
-                    <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
-                        {[
-                            { label: 'Total Packets', value: sidebarStats.total },
-                            { label: 'Drafts', value: sidebarStats.drafts, hint: 'Saved but never scheduled' },
-                            { label: 'This Week', value: sidebarStats.thisWeek, hint: 'Scheduled sessions this week' },
-                        ].map(row => (
-                            <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
-                                <span className="text-xs text-slate-500 dark:text-[#CBD5E1]" title={row.hint}>{row.label}</span>
-                                <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.value}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Most Assigned To */}
-                {sidebarStats.mostAssigned.length > 0 && (
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Most Assigned To</span>
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
-                            {sidebarStats.mostAssigned.map((entry, i) => (
-                                <div key={`${entry.type}-${entry.name}-${i}`} className="flex items-center justify-between px-4 py-2.5 gap-2">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] truncate">{entry.name}</div>
-                                        <div className="text-[9px] uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] mt-0.5">{entry.type}</div>
-                                    </div>
-                                    <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                                        {entry.count}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Phase Distribution */}
-                {sidebarStats.phaseDistribution.length > 0 && (
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Phase Distribution</span>
-                        </div>
-                        <div className="px-4 py-3 space-y-2.5">
-                            {sidebarStats.phaseDistribution.map(([phase, count]) => (
-                                <div key={phase}>
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{phase}</span>
-                                        <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{count}</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full"
-                                            style={{ width: `${Math.round((count / sidebarStats.total) * 100)}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-              </div>
             </div>
 
             {/* Modals */}

@@ -225,10 +225,10 @@ const IndividualizedThresholds: React.FC = () => {
     try { if (acwrEnabled) currentAcwr = calculateACWR(selectedAthleteId); } catch {}
 
     const zoneColor = (acwr: number, t: ThresholdResult) => {
-        if (acwr < t.lowerThreshold) return 'text-sky-600';
-        if (acwr <= t.upperThreshold) return 'text-emerald-600';
-        if (acwr <= t.upperThreshold + 0.2) return 'text-amber-600';
-        return 'text-rose-600';
+        if (acwr < t.lowerThreshold) return 'text-sky-600 dark:text-sky-300';
+        if (acwr <= t.upperThreshold) return 'text-emerald-600 dark:text-emerald-300';
+        if (acwr <= t.upperThreshold + 0.2) return 'text-amber-600 dark:text-amber-300';
+        return 'text-rose-600 dark:text-rose-300';
     };
 
     const zoneBg = (acwr: number, t: ThresholdResult) => {
@@ -250,12 +250,12 @@ const IndividualizedThresholds: React.FC = () => {
             {/* Header */}
             <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-500 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-500/15 text-violet-500 dark:text-violet-300 flex items-center justify-center">
                         <ShieldIcon size={18} />
                     </div>
                     <div>
                         <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Individualized Load Thresholds</h3>
-                        <p className="text-[10px] text-slate-400">Personal safe training bands based on historical load, wellness, and injury data</p>
+                        <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">Personal safe training bands based on historical load, wellness, and injury data</p>
                     </div>
                 </div>
 
@@ -276,17 +276,17 @@ const IndividualizedThresholds: React.FC = () => {
 
             {/* No athlete selected */}
             {!selectedAthleteId && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-                    <UserIcon size={24} className="mx-auto text-slate-300 mb-2" />
-                    <p className="text-sm text-slate-400">Select an athlete to view their personalized load thresholds</p>
+                <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-8 text-center">
+                    <UserIcon size={24} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">Select an athlete to view their personalized load thresholds</p>
                 </div>
             )}
 
             {/* ACWR not enabled */}
             {selectedAthleteId && !acwrEnabled && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-5 text-center">
-                    <AlertTriangleIcon size={20} className="mx-auto text-amber-500 mb-2" />
-                    <p className="text-sm text-amber-700 dark:text-amber-400">ACWR monitoring is not enabled for this athlete's team. Enable it in Settings → Feature Settings.</p>
+                <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-800/50 rounded-xl p-5 text-center">
+                    <AlertTriangleIcon size={20} className="mx-auto text-amber-500 dark:text-amber-300 mb-2" />
+                    <p className="text-sm text-amber-700 dark:text-amber-300">ACWR monitoring is not enabled for this athlete's team. Enable it in Settings → Feature Settings.</p>
                 </div>
             )}
 
@@ -298,15 +298,15 @@ const IndividualizedThresholds: React.FC = () => {
                         <div className={`rounded-xl border p-5 ${zoneBg(currentAcwr, thresholds)}`}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Current ACWR</div>
+                                    <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Current ACWR</div>
                                     <div className={`text-3xl font-bold ${zoneColor(currentAcwr, thresholds)}`}>{currentAcwr}</div>
                                     <div className={`text-xs font-semibold mt-1 ${zoneColor(currentAcwr, thresholds)}`}>{zoneLabel(currentAcwr, thresholds)}</div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Personal Band</div>
-                                    <div className="text-lg font-bold text-slate-700 dark:text-[#CBD5E1]">{thresholds.lowerThreshold.toFixed(1)} — {thresholds.upperThreshold.toFixed(1)}</div>
+                                    <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Personal Band</div>
+                                    <div className="text-lg font-bold text-slate-700 dark:text-[#E2E8F0]">{thresholds.lowerThreshold.toFixed(1)} — {thresholds.upperThreshold.toFixed(1)}</div>
                                     <div className={`text-[10px] font-semibold uppercase mt-1 ${
-                                        thresholds.confidence === 'high' ? 'text-emerald-600' : thresholds.confidence === 'moderate' ? 'text-amber-600' : 'text-slate-400'
+                                        thresholds.confidence === 'high' ? 'text-emerald-600 dark:text-emerald-300' : thresholds.confidence === 'moderate' ? 'text-amber-600 dark:text-amber-300' : 'text-slate-400 dark:text-[#94A3B8]'
                                     }`}>
                                         Confidence: {thresholds.confidence}
                                     </div>
@@ -317,39 +317,39 @@ const IndividualizedThresholds: React.FC = () => {
 
                     {/* Threshold visualization bar */}
                     <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Personal ACWR Zones</div>
-                        <div className="relative h-8 rounded-full overflow-hidden bg-slate-100 mb-2">
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">Personal ACWR Zones</div>
+                        <div className="relative h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-[#0F1C30] mb-2">
                             {/* Underexposed zone */}
-                            <div className="absolute h-full bg-sky-200" style={{ left: 0, width: `${(thresholds.lowerThreshold / 2.0) * 100}%` }} />
+                            <div className="absolute h-full bg-sky-200 dark:bg-sky-500/40" style={{ left: 0, width: `${(thresholds.lowerThreshold / 2.0) * 100}%` }} />
                             {/* Sweet spot */}
-                            <div className="absolute h-full bg-emerald-200" style={{ left: `${(thresholds.lowerThreshold / 2.0) * 100}%`, width: `${((thresholds.upperThreshold - thresholds.lowerThreshold) / 2.0) * 100}%` }} />
+                            <div className="absolute h-full bg-emerald-200 dark:bg-emerald-500/40" style={{ left: `${(thresholds.lowerThreshold / 2.0) * 100}%`, width: `${((thresholds.upperThreshold - thresholds.lowerThreshold) / 2.0) * 100}%` }} />
                             {/* Caution zone */}
-                            <div className="absolute h-full bg-amber-200" style={{ left: `${(thresholds.upperThreshold / 2.0) * 100}%`, width: `${(0.2 / 2.0) * 100}%` }} />
+                            <div className="absolute h-full bg-amber-200 dark:bg-amber-500/40" style={{ left: `${(thresholds.upperThreshold / 2.0) * 100}%`, width: `${(0.2 / 2.0) * 100}%` }} />
                             {/* Danger zone */}
-                            <div className="absolute h-full bg-rose-200" style={{ left: `${((thresholds.upperThreshold + 0.2) / 2.0) * 100}%`, right: 0 }} />
+                            <div className="absolute h-full bg-rose-200 dark:bg-rose-500/40" style={{ left: `${((thresholds.upperThreshold + 0.2) / 2.0) * 100}%`, right: 0 }} />
                             {/* Current marker */}
                             {currentAcwr != null && (
-                                <div className="absolute top-0 h-full w-0.5 bg-slate-900 z-10" style={{ left: `${Math.min(100, (currentAcwr / 2.0) * 100)}%` }}>
-                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-slate-700 dark:text-[#CBD5E1] bg-white px-1 rounded shadow-sm">{currentAcwr}</div>
+                                <div className="absolute top-0 h-full w-0.5 bg-slate-900 dark:bg-[#E2E8F0] z-10" style={{ left: `${Math.min(100, (currentAcwr / 2.0) * 100)}%` }}>
+                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-slate-700 dark:text-[#E2E8F0] bg-white dark:bg-[#1A2D48] px-1 rounded shadow-sm">{currentAcwr}</div>
                                 </div>
                             )}
                             {/* Population default markers (dashed) */}
-                            <div className="absolute top-0 h-full w-px border-l border-dashed border-slate-400 opacity-40" style={{ left: `${(POP_LOWER / 2.0) * 100}%` }} />
-                            <div className="absolute top-0 h-full w-px border-l border-dashed border-slate-400 opacity-40" style={{ left: `${(POP_UPPER / 2.0) * 100}%` }} />
+                            <div className="absolute top-0 h-full w-px border-l border-dashed border-slate-400 dark:border-[#94A3B8] opacity-40" style={{ left: `${(POP_LOWER / 2.0) * 100}%` }} />
+                            <div className="absolute top-0 h-full w-px border-l border-dashed border-slate-400 dark:border-[#94A3B8] opacity-40" style={{ left: `${(POP_UPPER / 2.0) * 100}%` }} />
                         </div>
-                        <div className="flex justify-between text-[9px] text-slate-400">
+                        <div className="flex justify-between text-[9px] text-slate-500 dark:text-[#CBD5E1]">
                             <span>0</span>
                             <span>{thresholds.lowerThreshold.toFixed(1)}</span>
                             <span>{thresholds.upperThreshold.toFixed(1)}</span>
                             <span>2.0</span>
                         </div>
                         {thresholds.isPersonalized && (
-                            <p className="text-[10px] text-slate-400 mt-2 italic">
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] mt-2 italic">
                                 Dashed lines show population defaults (0.8–1.3). Solid zones are personalized from {thresholds.weeksOfData} weeks of data and {thresholds.negativeEvents} negative event{thresholds.negativeEvents !== 1 ? 's' : ''}.
                             </p>
                         )}
                         {!thresholds.isPersonalized && (
-                            <p className="text-[10px] text-slate-400 mt-2 italic">
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] mt-2 italic">
                                 Using population defaults. {thresholds.weeksOfData < 8 ? `Need ${8 - thresholds.weeksOfData} more weeks of data for personalization.` : 'No negative events detected yet — thresholds will personalize as data accumulates.'}
                             </p>
                         )}
@@ -357,35 +357,35 @@ const IndividualizedThresholds: React.FC = () => {
 
                     {/* Comparison to population */}
                     <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 shadow-sm">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">vs. Population Defaults</div>
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">vs. Population Defaults</div>
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-slate-50 rounded-lg p-3 text-center">
-                                <div className="text-[9px] text-slate-400 mb-1">Population Upper</div>
-                                <div className="text-lg font-bold text-slate-600 dark:text-[#CBD5E1]">{POP_UPPER}</div>
+                            <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 text-center">
+                                <div className="text-[9px] text-slate-500 dark:text-[#CBD5E1] mb-1">Population Upper</div>
+                                <div className="text-lg font-bold text-slate-600 dark:text-[#E2E8F0]">{POP_UPPER}</div>
                             </div>
-                            <div className="bg-violet-50 rounded-lg p-3 text-center border border-violet-200 dark:border-violet-800/50">
-                                <div className="text-[9px] text-violet-500 mb-1">Personal Upper</div>
-                                <div className="text-lg font-bold text-violet-700">{thresholds.upperThreshold.toFixed(2)}</div>
+                            <div className="bg-violet-50 dark:bg-violet-500/15 rounded-lg p-3 text-center border border-violet-200 dark:border-violet-800/50">
+                                <div className="text-[9px] text-violet-500 dark:text-violet-300 mb-1">Personal Upper</div>
+                                <div className="text-lg font-bold text-violet-700 dark:text-violet-300">{thresholds.upperThreshold.toFixed(2)}</div>
                             </div>
-                            <div className="bg-slate-50 rounded-lg p-3 text-center">
-                                <div className="text-[9px] text-slate-400 mb-1">Difference</div>
-                                <div className={`text-lg font-bold ${thresholds.upperThreshold > POP_UPPER ? 'text-emerald-600' : thresholds.upperThreshold < POP_UPPER ? 'text-amber-600' : 'text-slate-600 dark:text-[#CBD5E1]'}`}>
+                            <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 text-center">
+                                <div className="text-[9px] text-slate-500 dark:text-[#CBD5E1] mb-1">Difference</div>
+                                <div className={`text-lg font-bold ${thresholds.upperThreshold > POP_UPPER ? 'text-emerald-600 dark:text-emerald-300' : thresholds.upperThreshold < POP_UPPER ? 'text-amber-600 dark:text-amber-300' : 'text-slate-600 dark:text-[#E2E8F0]'}`}>
                                     {thresholds.upperThreshold > POP_UPPER ? '+' : ''}{(thresholds.upperThreshold - POP_UPPER).toFixed(2)}
                                 </div>
                             </div>
                         </div>
                         {thresholds.upperThreshold > POP_UPPER && (
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3">This athlete tolerates higher loads than the population average — indicative of a well-conditioned training base (Blanch & Gabbett, 2016).</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-300 mt-3">This athlete tolerates higher loads than the population average — indicative of a well-conditioned training base (Blanch & Gabbett, 2016).</p>
                         )}
                         {thresholds.upperThreshold < POP_UPPER && thresholds.isPersonalized && (
-                            <p className="text-xs text-amber-600 mt-3">This athlete's threshold is below the population average — they may be more susceptible to load spikes. Consider conservative load progression.</p>
+                            <p className="text-xs text-amber-600 dark:text-amber-300 mt-3">This athlete's threshold is below the population average — they may be more susceptible to load spikes. Consider conservative load progression.</p>
                         )}
                     </div>
 
                     {/* Data summary */}
-                    <div className="bg-slate-800 text-white rounded-xl p-5">
-                        <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide mb-2">Methodology</div>
-                        <p className="text-xs text-slate-300 leading-relaxed">
+                    <div className="bg-slate-800 dark:bg-[#0F1C30] border border-transparent dark:border-[#243A58] text-white dark:text-[#E2E8F0] rounded-xl p-5">
+                        <div className="text-[10px] font-semibold text-emerald-400 dark:text-emerald-300 uppercase tracking-wide mb-2">Methodology</div>
+                        <p className="text-xs text-slate-300 dark:text-[#CBD5E1] leading-relaxed">
                             Personal thresholds are calculated from {thresholds.weeksOfData} weeks of load data, wellness responses, and injury records.
                             Negative events (injuries or sustained wellness drops ≥3 days below personal mean - 1.5 SD) are mapped against ACWR bins.
                             The upper threshold is the ACWR where negative event incidence exceeds 15%.
@@ -393,7 +393,7 @@ const IndividualizedThresholds: React.FC = () => {
                             {thresholds.confidence === 'moderate' && ' Moderate confidence — threshold is emerging but may shift as more data accumulates.'}
                             {thresholds.confidence === 'high' && ' High confidence — ≥16 weeks of data with ≥3 negative events provide reliable personalization.'}
                         </p>
-                        <div className="flex flex-wrap gap-3 text-[10px] mt-3">
+                        <div className="flex flex-wrap gap-3 text-[10px] mt-3 text-slate-200 dark:text-[#CBD5E1]">
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-400" /> Underexposed</span>
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-400" /> Personal Sweet Spot</span>
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> Approaching Limit</span>

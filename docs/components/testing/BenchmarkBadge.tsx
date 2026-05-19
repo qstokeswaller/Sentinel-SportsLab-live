@@ -63,10 +63,10 @@ export const BenchmarkBadge: React.FC<BenchmarkBadgeProps> = ({ testType, value,
 
     if (percentile < 0) return null; // not enough data
 
-    const color = percentile >= 75 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50'
-        : percentile >= 50 ? 'text-sky-600 bg-sky-50'
-        : percentile >= 25 ? 'text-amber-600 bg-amber-50'
-        : 'text-rose-600 bg-rose-50';
+    const color = percentile >= 75 ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30'
+        : percentile >= 50 ? 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/15 border border-sky-200 dark:border-sky-500/30'
+        : percentile >= 25 ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30'
+        : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30';
 
     return (
         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold ${color}`} title={`${percentile}th percentile across ${count} athletes with ${testType} data`}>
@@ -106,8 +106,8 @@ export const BenchmarkSummary: React.FC<{ testType: string; athleteId: string; l
     const currentIdx = data.findIndex(d => d.id === athleteId);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">
+        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 shadow-sm">
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide mb-3">
                 Roster Ranking — {data.length} athletes
             </div>
             <div className="space-y-1">
@@ -116,14 +116,14 @@ export const BenchmarkSummary: React.FC<{ testType: string; athleteId: string; l
                     const rank = i + 1;
                     return (
                         <div key={entry.id} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs ${
-                            isCurrent ? 'bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 font-semibold' : i % 2 === 0 ? 'bg-slate-50' : ''
+                            isCurrent ? 'bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 font-semibold' : i % 2 === 0 ? 'bg-slate-50 dark:bg-[#0F1C30]' : ''
                         }`}>
                             <div className="flex items-center gap-2">
-                                <span className={`w-5 text-center text-[10px] font-bold ${rank <= 3 ? 'text-amber-500' : 'text-slate-400'}`}>{rank}</span>
-                                <span className={isCurrent ? 'text-indigo-700' : 'text-slate-700 dark:text-[#CBD5E1]'}>{entry.name}</span>
-                                <span className="text-[9px] text-slate-300">{entry.team}</span>
+                                <span className={`w-5 text-center text-[10px] font-bold ${rank <= 3 ? 'text-amber-500 dark:text-amber-300' : 'text-slate-400 dark:text-[#94A3B8]'}`}>{rank}</span>
+                                <span className={isCurrent ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-[#CBD5E1]'}>{entry.name}</span>
+                                <span className="text-[9px] text-slate-300 dark:text-[#475569]">{entry.team}</span>
                             </div>
-                            <span className={isCurrent ? 'text-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1]'}>{entry.value}</span>
+                            <span className={isCurrent ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-600 dark:text-[#CBD5E1]'}>{entry.value}</span>
                         </div>
                     );
                 })}

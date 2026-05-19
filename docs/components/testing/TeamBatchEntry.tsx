@@ -134,7 +134,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
     return (
         <div className="space-y-4">
             {/* Team + date selection */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4">
+            <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
@@ -166,7 +166,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                             type="date"
                             value={date}
                             onChange={e => onDateChange?.(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -174,35 +174,35 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
 
             {/* VBT Tab Toggle (for barbell tests) */}
             {hasVbt && selectedTeamId && (
-                <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Mode:</span>
-                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
+                <div className="flex items-center gap-3 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3">
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Mode:</span>
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
                         <button
                             onClick={() => { setBatchTab('standard'); setRowData({}); setSavedRows(new Set()); }}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${batchTab === 'standard' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${batchTab === 'standard' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                         >
                             1RM Test
                         </button>
                         <button
                             onClick={() => { setBatchTab('vbt'); setRowData({}); setSavedRows(new Set()); }}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${batchTab === 'vbt' ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${batchTab === 'vbt' ? 'bg-white dark:bg-[#132338] text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                         >
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                             VBT Tracking
                         </button>
                     </div>
                     {batchTab === 'vbt' && (
-                        <span className="text-[10px] text-indigo-500 ml-2">Enter bar velocity from your encoder — system estimates intensity and 1RM</span>
+                        <span className="text-[10px] text-indigo-500 dark:text-indigo-300 ml-2">Enter bar velocity from your encoder — system estimates intensity and 1RM</span>
                     )}
                 </div>
             )}
 
             {/* Batch table */}
             {selectedTeamId && teamPlayers.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                     {/* Toolbar */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
-                        <span className="text-xs text-slate-500">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
+                        <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">
                             {savedRows.size}/{teamPlayers.length} saved
                         </span>
                         <button
@@ -211,7 +211,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all
                                 ${readyCount > 0 && !saving
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm'
-                                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] cursor-not-allowed'
                                 }`}
                         >
                             <SaveIcon size={14} />
@@ -223,20 +223,20 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide sticky left-0 bg-slate-50 z-10">Athlete</th>
+                                <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48]">
+                                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide sticky left-0 bg-slate-50 dark:bg-[#0F1C30] z-10">Athlete</th>
                                     {tableFields.map(f => (
-                                        <th key={f.key} className="text-left px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                                        <th key={f.key} className="text-left px-3 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide whitespace-nowrap">
                                             {f.label}
-                                            {f.unit && <span className="text-slate-400 ml-0.5 normal-case">({f.unit})</span>}
+                                            {f.unit && <span className="text-slate-400 dark:text-[#94A3B8] ml-0.5 normal-case">({f.unit})</span>}
                                         </th>
                                     ))}
                                     {test.calculations?.slice(0, 2).map(c => (
-                                        <th key={c.key} className="text-left px-3 py-2 text-xs font-semibold text-indigo-500 uppercase tracking-wide whitespace-nowrap">
+                                        <th key={c.key} className="text-left px-3 py-2 text-xs font-semibold text-indigo-500 dark:text-indigo-300 uppercase tracking-wide whitespace-nowrap">
                                             {c.label}
                                         </th>
                                     ))}
-                                    <th className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide w-20"></th>
+                                    <th className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide w-20"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -247,12 +247,12 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                     return (
                                         <tr
                                             key={player.id}
-                                            className={`border-b border-slate-50 transition-colors ${isSaved ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
+                                            className={`border-b border-slate-50 dark:border-[#1A2D48] transition-colors ${isSaved ? 'bg-emerald-50/50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}
                                         >
                                             <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-[#E2E8F0] sticky left-0 bg-inherit z-10 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
-                                                    {isSaved && <CheckCircleIcon size={14} className="text-emerald-500 shrink-0" />}
-                                                    <span className={isSaved ? 'text-emerald-700' : ''}>{player.name}</span>
+                                                    {isSaved && <CheckCircleIcon size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />}
+                                                    <span className={isSaved ? 'text-emerald-700 dark:text-emerald-300' : ''}>{player.name}</span>
                                                 </div>
                                             </td>
                                             {tableFields.map(f => (
@@ -279,7 +279,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                                                     className={`w-7 h-7 rounded text-xs font-bold border transition-all
                                                                         ${(rowData[player.id] || {})[f.key] === pv
                                                                             ? 'bg-indigo-500 text-white border-indigo-500'
-                                                                            : 'bg-white text-slate-500 border-slate-200'
+                                                                            : 'bg-white dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
                                                                         } ${isSaved ? 'opacity-50' : ''}`}
                                                                 >
                                                                     {pv}
@@ -295,7 +295,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                                             step={f.step || (f.type === 'time_seconds' ? 0.01 : 1)}
                                                             min={f.min}
                                                             max={f.max}
-                                                            className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm tabular-nums disabled:bg-slate-50 disabled:text-slate-400 focus:ring-1 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+                                                            className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm tabular-nums disabled:bg-slate-50 dark:disabled:bg-[#132338] disabled:text-slate-400 dark:disabled:text-[#475569] focus:ring-1 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
                                                         />
                                                     )}
                                                 </td>
@@ -303,7 +303,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                             {test.calculations?.slice(0, 2).map(c => (
                                                 <td key={c.key} className="px-3 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-300 tabular-nums">
                                                     {calculated[c.key] != null ? calculated[c.key] : '—'}
-                                                    {c.unit && calculated[c.key] != null && <span className="text-indigo-400 text-xs ml-0.5">{c.unit}</span>}
+                                                    {c.unit && calculated[c.key] != null && <span className="text-indigo-400 dark:text-indigo-300 text-xs ml-0.5">{c.unit}</span>}
                                                 </td>
                                             ))}
                                             <td className="px-3 py-1.5 text-right">
@@ -316,7 +316,7 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
                                                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
                                                             ${ready
                                                                 ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-                                                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] cursor-not-allowed'
                                                             }`}
                                                     >
                                                         Save
@@ -334,13 +334,13 @@ export const TeamBatchEntry: React.FC<Props> = ({ test, date, onDateChange, onSa
 
             {/* Empty state */}
             {selectedTeamId && teamPlayers.length === 0 && (
-                <div className="text-center py-8 text-sm text-slate-400">
-                    <AlertCircleIcon size={20} className="mx-auto mb-2 text-slate-300" />
+                <div className="text-center py-8 text-sm text-slate-400 dark:text-[#94A3B8]">
+                    <AlertCircleIcon size={20} className="mx-auto mb-2 text-slate-300 dark:text-[#475569]" />
                     No athletes found in this team.
                 </div>
             )}
             {!selectedTeamId && (
-                <div className="text-center py-8 text-sm text-slate-400">
+                <div className="text-center py-8 text-sm text-slate-400 dark:text-[#94A3B8]">
                     Select a team above to begin batch entry.
                 </div>
             )}

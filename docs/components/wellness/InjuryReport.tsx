@@ -65,7 +65,7 @@ const PillRow = ({ options, value, onChange, colorMap }) => (
                     key={val}
                     type="button"
                     onClick={() => onChange(isActive ? undefined : val)}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600 dark:text-[#CBD5E1]'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-slate-100 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                 >
                     {label}
                 </button>
@@ -83,7 +83,7 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
                     key={opt}
                     type="button"
                     onClick={() => onChange(toggleMulti(value, opt))}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-600 dark:text-[#CBD5E1]'}`}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                 >
                     {opt}
                 </button>
@@ -93,12 +93,12 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
 );
 
 const Label = ({ children }) => (
-    <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1 block">{children}</label>
+    <label className="text-[9px] font-black uppercase text-slate-500 dark:text-[#CBD5E1] tracking-widest pl-1 mb-1 block">{children}</label>
 );
 
 const SectionCard = ({ title, children }) => (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
-        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1] border-b border-slate-100 pb-3">{title}</h5>
+    <div className="bg-white dark:bg-[#132338] p-6 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-5">
+        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0] border-b border-slate-100 dark:border-[#1A2D48] pb-3">{title}</h5>
         {children}
     </div>
 );
@@ -221,39 +221,39 @@ const InjuryReportComponent = () => {
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
             {/* ACTION BAR */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white">
+                    <div className="w-10 h-10 bg-slate-800 dark:bg-[#1A2D48] rounded-xl flex items-center justify-center text-white">
                         <ShieldAlertIcon size={20} />
                     </div>
                     <div>
                         <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Injury Report</h4>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wide">Injury Tracking & Return to Play</p>
+                        <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Injury Tracking & Return to Play</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {/* Tab toggle */}
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                         <button
                             onClick={() => setActiveTab('new')}
-                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'new' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'new' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                         >
                             <PlusIcon size={12} /> New Report
                         </button>
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'history' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all flex items-center gap-1.5 ${activeTab === 'history' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                         >
                             <HistoryIcon size={12} /> History ({filteredReports.length})
                         </button>
                     </div>
 
-                    <div className="h-10 w-[1px] bg-slate-200" />
+                    <div className="h-10 w-[1px] bg-slate-200 dark:bg-[#243A58]" />
 
                     {/* Filter */}
                     <div className="relative">
-                        <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wide absolute -top-5 left-2">Filter</label>
+                        <label className="text-[9px] font-medium text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide absolute -top-5 left-2">Filter</label>
                         <CustomSelect
                             variant="filter"
                             size="xs"
@@ -308,14 +308,14 @@ const InjuryReportComponent = () => {
 
                         {/* Share Link Panel — shown when athlete is selected */}
                         {form.athleteId && form.teamId && (
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-lg flex items-center justify-center">
-                                        <Link2Icon size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                    <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 rounded-lg flex items-center justify-center">
+                                        <Link2Icon size={16} className="text-emerald-600 dark:text-emerald-300" />
                                     </div>
                                     <div>
-                                        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Share with Physio</h5>
-                                        <p className="text-[9px] text-slate-400 uppercase tracking-wide font-medium">No login required</p>
+                                        <h5 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">Share with Physio</h5>
+                                        <p className="text-[9px] text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide font-medium">No login required</p>
                                     </div>
                                 </div>
                                 {(() => {
@@ -329,17 +329,17 @@ const InjuryReportComponent = () => {
                                     };
                                     return (
                                         <div className="space-y-3">
-                                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center gap-2">
-                                                <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{shareLink}</p>
+                                            <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl p-3 flex items-center gap-2">
+                                                <p className="text-[10px] font-mono text-slate-500 dark:text-[#CBD5E1] truncate flex-1">{shareLink}</p>
                                                 <button onClick={() => handleCopy(shareLink)}
-                                                    className={`p-1.5 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}
+                                                    className={`p-1.5 rounded-lg border transition-all shrink-0 ${copied ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-300' : 'bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-200 dark:hover:border-[#364E6E]'}`}
                                                 >
                                                     {copied ? <CheckCircle2Icon size={13} /> : <CopyIcon size={13} />}
                                                 </button>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => handleCopy(shareLink)}
-                                                    className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-1.5">
+                                                    className="flex-1 py-2.5 bg-slate-900 dark:bg-[#1A2D48] text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black dark:hover:bg-[#243A58] transition-all flex items-center justify-center gap-1.5">
                                                     <CopyIcon size={12} /> {copied ? 'Copied!' : 'Copy Link'}
                                                 </button>
                                                 <a href={waUrl} target="_blank" rel="noopener noreferrer"
@@ -347,7 +347,7 @@ const InjuryReportComponent = () => {
                                                     <Share2Icon size={12} /> WhatsApp
                                                 </a>
                                             </div>
-                                            <button onClick={() => handleCopy(teamLink)} className="w-full text-[9px] font-medium text-slate-400 hover:text-indigo-500 transition-colors text-center">
+                                            <button onClick={() => handleCopy(teamLink)} className="w-full text-[9px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors text-center">
                                                 Or copy team link (physio selects athlete)
                                             </button>
                                         </div>
@@ -409,7 +409,7 @@ const InjuryReportComponent = () => {
                                     type="date"
                                     value={form.dateOfInjury}
                                     onChange={e => { patch({ dateOfInjury: e.target.value }); clearError('dateOfInjury'); }}
-                                    className={`w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100' : 'border-transparent focus:border-indigo-500'}`}
+                                    className={`w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100 dark:ring-red-500/20' : 'border-transparent dark:border-[#243A58] focus:border-indigo-500'}`}
                                 />
                                 {validationErrors.dateOfInjury && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.dateOfInjury}</p>}
                             </div>
@@ -420,7 +420,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Describe how the injury occurred..."
                                     value={form.mechanism}
                                     onChange={e => patch({ mechanism: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-24 resize-none"
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-[#475569] h-24 resize-none"
                                 />
                             </div>
 
@@ -434,7 +434,7 @@ const InjuryReportComponent = () => {
                                             onClick={() => patch({ painLevel: form.painLevel === i ? undefined : i })}
                                             className={`w-9 h-9 rounded-lg text-xs font-black transition-all ${form.painLevel === i
                                                 ? (i <= 3 ? 'bg-emerald-500 text-white shadow-md' : i <= 6 ? 'bg-amber-500 text-white shadow-md' : 'bg-red-600 text-white shadow-md')
-                                                : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                : 'bg-slate-100 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48]'}`}
                                         >
                                             {i}
                                         </button>
@@ -510,7 +510,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Rehabilitation protocol, exercises, restrictions..."
                                     value={form.treatmentRecommendations}
                                     onChange={e => patch({ treatmentRecommendations: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-24 resize-none"
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-[#475569] h-24 resize-none"
                                 />
                             </div>
 
@@ -521,7 +521,7 @@ const InjuryReportComponent = () => {
                                         type="date"
                                         value={form.followUpDate}
                                         onChange={e => patch({ followUpDate: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0]"
+                                        className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0]"
                                     />
                                 </div>
                                 <div>
@@ -531,7 +531,7 @@ const InjuryReportComponent = () => {
                                         placeholder="e.g. 2-3 weeks"
                                         value={form.expectedTimeOut}
                                         onChange={e => patch({ expectedTimeOut: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium"
+                                        className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-[#475569]"
                                     />
                                 </div>
                             </div>
@@ -549,7 +549,7 @@ const InjuryReportComponent = () => {
                                                 type="button"
                                                 onClick={() => patch({ returnToPlayPhase: isActive ? undefined : phase })}
                                                 className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'rounded-l-xl' : ''} ${i === RTP_PHASES.length - 1 ? 'rounded-r-xl' : ''}
-                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : isPast ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-500 dark:text-indigo-300' : 'bg-slate-100 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48]'}`}
                                             >
                                                 {phase.split(' - ')[1] || phase}
                                             </button>
@@ -567,7 +567,7 @@ const InjuryReportComponent = () => {
                                     placeholder="Clinical observations, prognosis, additional notes..."
                                     value={form.comments}
                                     onChange={e => patch({ comments: e.target.value })}
-                                    className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-32 resize-none"
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-[#475569] h-32 resize-none"
                                 />
                             </div>
                         </SectionCard>
@@ -579,7 +579,7 @@ const InjuryReportComponent = () => {
                             {(form.attachmentUrls || []).length > 0 && (
                                 <div className="grid grid-cols-3 gap-3">
                                     {form.attachmentUrls.map((url, i) => (
-                                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 h-28">
+                                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] h-28">
                                             <img src={url} alt="" className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -597,7 +597,7 @@ const InjuryReportComponent = () => {
                                 type="button"
                                 onClick={() => fileRef.current?.click()}
                                 disabled={uploading}
-                                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-500 dark:hover:text-indigo-300 transition-all flex items-center justify-center gap-2"
                             >
                                 {uploading ? <><Loader2Icon size={14} className="animate-spin" /> Uploading...</> : <><UploadCloudIcon size={14} /> Upload Scan or Image</>}
                             </button>
@@ -605,14 +605,14 @@ const InjuryReportComponent = () => {
 
                         {/* Save */}
                         {Object.keys(validationErrors).length > 0 && (
-                            <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-3 flex items-center gap-2">
-                                <ShieldAlertIcon size={14} className="text-red-500 shrink-0" />
-                                <p className="text-red-600 text-[10px] font-semibold">Please fill in the required fields highlighted in red above</p>
+                            <div className="bg-red-50 dark:bg-rose-500/15 border border-red-200 dark:border-rose-500/30 rounded-xl px-4 py-3 flex items-center gap-2">
+                                <ShieldAlertIcon size={14} className="text-red-500 dark:text-rose-300 shrink-0" />
+                                <p className="text-red-600 dark:text-rose-300 text-[10px] font-semibold">Please fill in the required fields highlighted in red above</p>
                             </div>
                         )}
                         <button
                             onClick={handleSave}
-                            className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all"
+                            className="w-full py-5 bg-slate-900 dark:bg-[#1A2D48] text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black dark:hover:bg-[#243A58] transition-all"
                         >
                             {editingId ? 'Update Injury Report' : 'Save Injury Report'}
                         </button>
@@ -621,20 +621,20 @@ const InjuryReportComponent = () => {
                     {/* RIGHT — Body Map (sticky) */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-5 space-y-5" ref={sectionRefs.bodyMap}>
-                            <div className={`bg-white p-6 rounded-xl border shadow-sm space-y-4 ${validationErrors.bodyMap ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'}`}>
-                                <h5 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1] border-b border-slate-100 pb-3">Body Map — Injury Location <span className="text-red-400">*</span></h5>
-                                {validationErrors.bodyMap && <p className="text-red-500 text-[10px] font-semibold pl-1">{validationErrors.bodyMap}</p>}
+                            <div className={`bg-white dark:bg-[#132338] p-6 rounded-xl border shadow-sm space-y-4 ${validationErrors.bodyMap ? 'border-red-400 ring-2 ring-red-100 dark:ring-red-500/20' : 'border-slate-200 dark:border-[#243A58]'}`}>
+                                <h5 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0] border-b border-slate-100 dark:border-[#1A2D48] pb-3">Body Map — Injury Location <span className="text-red-400">*</span></h5>
+                                {validationErrors.bodyMap && <p className="text-red-500 dark:text-rose-300 text-[10px] font-semibold pl-1">{validationErrors.bodyMap}</p>}
                                 <BodyMapSelector
                                     value={form.areas}
                                     onChange={areas => { patch({ areas }); clearError('bodyMap'); }}
                                 />
                                 {form.areas.length > 0 && (
-                                    <div className="space-y-2 pt-3 border-t border-slate-100">
-                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Selected Areas</p>
+                                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-[#1A2D48]">
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Selected Areas</p>
                                         {form.areas.map(a => (
                                             <div key={a.area} className="flex items-center justify-between text-xs">
-                                                <span className="font-semibold text-slate-700 dark:text-[#CBD5E1] capitalize">{a.area.replace(/_/g, ' ')}</span>
-                                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${a.severity === 3 ? 'bg-red-100 text-red-600' : a.severity === 2 ? 'bg-orange-100 text-orange-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                <span className="font-semibold text-slate-700 dark:text-[#E2E8F0] capitalize">{a.area.replace(/_/g, ' ')}</span>
+                                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${a.severity === 3 ? 'bg-red-100 dark:bg-rose-500/15 text-red-600 dark:text-rose-300 border border-transparent dark:border-rose-500/30' : a.severity === 2 ? 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-transparent dark:border-orange-500/30' : 'bg-yellow-100 dark:bg-amber-500/15 text-yellow-600 dark:text-amber-300 border border-transparent dark:border-amber-500/30'}`}>
                                                     {a.severity === 3 ? 'Severe' : a.severity === 2 ? 'Moderate' : 'Mild'}
                                                 </span>
                                             </div>
@@ -649,24 +649,24 @@ const InjuryReportComponent = () => {
 
             {/* ═══ HISTORY TAB ═══ */}
             {activeTab === 'history' && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-xs">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Athlete</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Area</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Type</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Severity</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">RTP Phase</th>
-                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                                <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Date</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Athlete</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Area</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Type</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Severity</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Status</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">RTP Phase</th>
+                                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredReports.map(report => (
-                                    <tr key={report.id} className="border-b border-slate-100 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
+                                    <tr key={report.id} className="border-b border-slate-100 dark:border-[#1A2D48] hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 transition-colors">
                                         <td className="px-4 py-3.5 font-semibold text-slate-700 dark:text-[#CBD5E1] whitespace-nowrap">
                                             {new Date(report.dateOfInjury).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </td>
@@ -677,25 +677,25 @@ const InjuryReportComponent = () => {
                                         <td className="px-4 py-3.5 text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap">{report.classification || '—'}</td>
                                         <td className="px-4 py-3.5">
                                             {report.severityGrade ? (
-                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.severityGrade === 3 ? 'bg-red-100 text-red-600' : report.severityGrade === 2 ? 'bg-orange-100 text-orange-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.severityGrade === 3 ? 'bg-red-100 dark:bg-rose-500/15 text-red-600 dark:text-rose-300 border border-transparent dark:border-rose-500/30' : report.severityGrade === 2 ? 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-transparent dark:border-orange-500/30' : 'bg-yellow-100 dark:bg-amber-500/15 text-yellow-600 dark:text-amber-300 border border-transparent dark:border-amber-500/30'}`}>
                                                     Grade {report.severityGrade}
                                                 </span>
                                             ) : '—'}
                                         </td>
                                         <td className="px-4 py-3.5">
                                             {report.currentStatus ? (
-                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.currentStatus === 'Full Training' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' : report.currentStatus === 'Modified Training' ? 'bg-amber-100 text-amber-600' : report.currentStatus === 'Rehab Only' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
+                                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-widest ${report.currentStatus === 'Full Training' ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-transparent dark:border-emerald-500/30' : report.currentStatus === 'Modified Training' ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-transparent dark:border-amber-500/30' : report.currentStatus === 'Rehab Only' ? 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-transparent dark:border-orange-500/30' : 'bg-red-100 dark:bg-rose-500/15 text-red-600 dark:text-rose-300 border border-transparent dark:border-rose-500/30'}`}>
                                                     {report.currentStatus}
                                                 </span>
                                             ) : '—'}
                                         </td>
-                                        <td className="px-4 py-3.5 text-slate-500 text-[10px] whitespace-nowrap">{report.returnToPlayPhase || '—'}</td>
+                                        <td className="px-4 py-3.5 text-slate-500 dark:text-[#CBD5E1] text-[10px] whitespace-nowrap">{report.returnToPlayPhase || '—'}</td>
                                         <td className="px-4 py-3.5">
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 text-indigo-500 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-white transition-all" title="Edit">
+                                                <button onClick={() => handleEdit(report)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1A2D48] text-indigo-500 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:hover:text-indigo-200 transition-all" title="Edit">
                                                     <PencilIcon size={13} />
                                                 </button>
-                                                <button onClick={() => handleDelete(report.id)} className="p-1.5 rounded-lg bg-slate-100 text-red-400 hover:bg-red-50 hover:text-red-600 transition-all" title="Delete">
+                                                <button onClick={() => handleDelete(report.id)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1A2D48] text-red-400 dark:text-rose-300 hover:bg-red-50 dark:hover:bg-rose-500/15 hover:text-red-600 dark:hover:text-rose-200 transition-all" title="Delete">
                                                     <Trash2Icon size={13} />
                                                 </button>
                                             </div>
@@ -708,9 +708,9 @@ const InjuryReportComponent = () => {
 
                     {filteredReports.length === 0 && (
                         <div className="py-20 text-center">
-                            <ShieldAlertIcon size={40} className="mx-auto text-slate-200 mb-3" />
-                            <p className="text-sm font-semibold text-slate-400">No injury reports found</p>
-                            <p className="text-xs text-slate-300 mt-1">Create a new report or adjust filters</p>
+                            <ShieldAlertIcon size={40} className="mx-auto text-slate-200 dark:text-[#475569] mb-3" />
+                            <p className="text-sm font-semibold text-slate-500 dark:text-[#CBD5E1]">No injury reports found</p>
+                            <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1">Create a new report or adjust filters</p>
                         </div>
                     )}
                 </div>

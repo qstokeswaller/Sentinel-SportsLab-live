@@ -3,6 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Provenance metadata for a sheet that originated from a packet/session.
+ * NULL for standalone sheets created directly via the Sheets page.
+ */
+export interface SheetSourceContext {
+    packetId: string;
+    packetName: string;
+    sessionDate?: string | null;   // ISO date — when the sheet was generated for
+    targetType?: 'Team' | 'Individual' | null;
+    targetId?: string | null;
+    targetName?: string | null;    // denormalized so display survives target deletion
+}
+
 export interface WeightroomSheet {
     id: string;
     user_id: string;
@@ -12,6 +25,7 @@ export interface WeightroomSheet {
     ws_columns: { id: string; label: string; exerciseId: string; percentage: number }[];
     team_id: string | null;
     notes: string | null;
+    source_context: SheetSourceContext | null;
     created_at: string;
     updated_at: string;
 }

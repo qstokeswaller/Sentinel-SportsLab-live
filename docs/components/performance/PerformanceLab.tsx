@@ -299,16 +299,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[800] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 border-t border-t-indigo-600">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col animate-in zoom-in-95 border-t border-t-indigo-600">
+                <div className="p-6 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between bg-white dark:bg-[#132338] shrink-0">
                     <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
                         <FlaskConicalIcon size={24} className="text-indigo-600 dark:text-indigo-300" />
                         Performance Lab
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors"><XIcon size={20} /></button>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={20} /></button>
                 </div>
 
-                <div className="flex border-b border-slate-100 px-6 gap-6 overflow-x-auto no-scrollbar shrink-0">
+                <div className="flex border-b border-slate-100 dark:border-[#243A58] px-6 gap-6 overflow-x-auto no-scrollbar shrink-0">
                     {[
                         { id: '1rm', label: '1RM Calc' },
                         { id: 'dsi', label: 'DSI Profiler' },
@@ -317,7 +317,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         { id: 'hamstring', label: 'Nordic Force' },
                         { id: 'import', label: 'Data Import' }
                     ].map(tab => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 text-xs font-semibold uppercase tracking-wide border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-indigo-500'}`}>
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 text-xs font-semibold uppercase tracking-wide border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id ? 'border-indigo-600 text-indigo-600 dark:text-indigo-300' : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 dark:hover:text-indigo-300'}`}>
                             {tab.label}
                         </button>
                     ))}
@@ -328,19 +328,19 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Weight (kg/lbs)</label>
-                                    <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="100" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Weight (kg/lbs)</label>
+                                    <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="100" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Reps</label>
-                                    <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="5" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Reps</label>
+                                    <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="5" />
                                 </div>
                             </div>
-                            <div className="bg-slate-900 rounded-xl p-6 text-white text-center">
+                            <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center">
                                 <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wide block mb-1">Estimated 1RM</span>
                                 <div className="text-5xl font-semibold tracking-tighter">{oneRepMax}</div>
                             </div>
-                            <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-100">
+                            <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-100 dark:border-[#243A58]">
                                 <CustomSelect
                                     variant="form"
                                     size="xs"
@@ -372,11 +372,11 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
                     {activeTab === 'dsi' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 rounded-xl text-xs text-indigo-900 leading-relaxed">
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl text-xs text-indigo-900 dark:text-indigo-300 leading-relaxed">
                                 <strong className="block uppercase tracking-wide mb-1 text-indigo-600 dark:text-indigo-300">Dynamic Strength Index</strong>
                                 <p className="mb-3">Measures the difference between an athlete's ballistic peak force (e.g. CMJ) and isometric peak force (e.g. IMTP).</p>
                                 <div className="flex gap-2 items-center">
-                                    <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-400 shrink-0">Presets:</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-400 dark:text-indigo-300 shrink-0">Presets:</span>
                                     <CustomSelect
                                         variant="filter"
                                         size="xs"
@@ -396,16 +396,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Peak Force: Ballistic (N)</label>
-                                    <input type="number" value={dsiBallistic} onChange={(e) => setDsiBallistic(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-cyan-500/20" placeholder="e.g. 1800" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Peak Force: Ballistic (N)</label>
+                                    <input type="number" value={dsiBallistic} onChange={(e) => setDsiBallistic(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-cyan-500/20" placeholder="e.g. 1800" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Peak Force: Isometric (N)</label>
-                                    <input type="number" value={dsiIsometric} onChange={(e) => setDsiIsometric(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 3200" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Peak Force: Isometric (N)</label>
+                                    <input type="number" value={dsiIsometric} onChange={(e) => setDsiIsometric(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 3200" />
                                 </div>
                             </div>
                             {dsiScore && (
-                                <div className="bg-slate-900 rounded-xl p-6 text-white text-center space-y-4">
+                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Index Score</span>
@@ -421,7 +421,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                     </div>
                                 </div>
                             )}
-                            <div className="pt-4 border-t border-slate-100 space-y-3">
+                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
                                 <CustomSelect
                                     variant="form"
                                     size="xs"
@@ -439,27 +439,27 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
                     {activeTab === 'rsi' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 rounded-xl text-xs text-emerald-900 leading-relaxed">
-                                <strong className="block uppercase tracking-wide mb-1 text-emerald-600 dark:text-emerald-400">Reactive Strength Index</strong>
+                            <div className="p-4 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 rounded-xl text-xs text-emerald-900 dark:text-emerald-300 leading-relaxed">
+                                <strong className="block uppercase tracking-wide mb-1 text-emerald-600 dark:text-emerald-300">Reactive Strength Index</strong>
                                 <p>Commonly measured via a 10-to-5 jump or drop jump. Calculation: Jump Height (m) / Contact Time (s).</p>
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Jump Height (m)</label>
-                                    <input type="number" step="0.01" value={rsiHeight} onChange={(e) => setRsiHeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.35" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Jump Height (m)</label>
+                                    <input type="number" step="0.01" value={rsiHeight} onChange={(e) => setRsiHeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.35" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Contact Time (s)</label>
-                                    <input type="number" step="0.001" value={rsiContactTime} onChange={(e) => setRsiContactTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.18" />
+                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Contact Time (s)</label>
+                                    <input type="number" step="0.001" value={rsiContactTime} onChange={(e) => setRsiContactTime(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.18" />
                                 </div>
                             </div>
                             {rsiScore && (
-                                <div className="bg-slate-900 rounded-xl p-6 text-white text-center space-y-2">
+                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center space-y-2">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">RSI Score</span>
                                     <div className="text-6xl font-semibold tracking-tighter text-emerald-400">{rsiScore}</div>
                                 </div>
                             )}
-                            <div className="pt-4 border-t border-slate-100 space-y-3">
+                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
                                 <CustomSelect
                                     variant="form"
                                     size="xs"
@@ -481,53 +481,53 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         const targetWatts = watts * (pct / 100);
                         return (
                             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 pb-2">
-                                <div className="p-4 bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 rounded-xl">
+                                <div className="p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl">
                                     <p className="text-[10px] font-semibold uppercase text-indigo-600 dark:text-indigo-300 tracking-wide">Wattbike MAP Calculator</p>
-                                    <p className="text-[10px] font-medium text-indigo-400 mt-0.5">Convert your MAP into RPM targets for specific Fan settings.</p>
+                                    <p className="text-[10px] font-medium text-indigo-400 dark:text-indigo-300 mt-0.5">Convert your MAP into RPM targets for specific Fan settings.</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">MAP Watts</label>
+                                        <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block">MAP Watts</label>
                                         <input
                                             type="number"
                                             value={mapWatts}
                                             onChange={(e) => setMapWatts(e.target.value)}
                                             placeholder="e.g. 300"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">Target %</label>
+                                        <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block">Target %</label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="200"
                                             value={targetPct}
                                             onChange={(e) => setTargetPct(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="flex bg-slate-100 p-1 rounded-xl">
+                                <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
                                     {['Trainer', 'Pro'].map(m => (
                                         <button
                                             key={m}
                                             onClick={() => setBikeModel(m)}
-                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}
                                         >
                                             {m}
                                         </button>
                                     ))}
                                 </div>
 
-                                <div className="bg-slate-900 rounded-xl p-5 grid grid-cols-5 gap-3">
+                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-5 grid grid-cols-5 gap-3">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(fan => {
                                         const rpm = watts > 0 ? calculateRpmForFan(targetWatts, fan, bikeModel) : '< 40';
                                         return (
                                             <div key={fan} className="text-center space-y-1">
-                                                <div className="text-[8px] font-semibold text-slate-500 uppercase tracking-wide">Fan {fan}</div>
+                                                <div className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Fan {fan}</div>
                                                 <div className="text-sm font-semibold text-indigo-400">{rpm}</div>
                                             </div>
                                         );
@@ -539,71 +539,71 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
                     {activeTab === 'hamstring' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
-                                <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Split (L/R)</button>
-                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>Average</button>
+                            <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
+                                <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white dark:bg-[#1A2D48] text-orange-600 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Split (L/R)</button>
+                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white dark:bg-[#1A2D48] text-orange-600 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Average</button>
                             </div>
                             {hamAssessmentMode === 'split' ? (
                                 <div className="space-y-6">
-                                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl text-xs text-orange-900 leading-relaxed">
-                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 text-[10px]">Nordic Split Assessment</strong>
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/30 rounded-xl text-xs text-orange-900 dark:text-orange-300 leading-relaxed">
+                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 dark:text-orange-300 text-[10px]">Nordic Split Assessment</strong>
                                         <p>Input peak force for each leg and body weight to calculate relative strength and asymmetry.</p>
                                     </div>
                                     <div className="grid grid-cols-3 gap-4">
                                         <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Left (N)</label>
-                                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="350" />
+                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Left (N)</label>
+                                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="350" />
                                         </div>
                                         <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Right (N)</label>
-                                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="340" />
+                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Right (N)</label>
+                                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="340" />
                                         </div>
                                         <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">BW (kg)</label>
-                                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="85" />
+                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">BW (kg)</label>
+                                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="85" />
                                         </div>
                                     </div>
                                     {hamResults && (
-                                        <div className="bg-slate-900 rounded-xl p-5 text-white space-y-4">
+                                        <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-5 text-white space-y-4">
                                             <div className="grid grid-cols-3 gap-2 text-center">
-                                                <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Avg Force</span><div className="text-xl font-semibold">{Math.round(hamResults.avg)}N</div></div>
-                                                <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Asymmetry</span><div className={`text-xl font-semibold ${hamResults.color}`}>{hamResults.asymmetry}%</div></div>
-                                                <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Rel. Str</span><div className="text-xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'}</div></div>
+                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Avg Force</span><div className="text-xl font-semibold">{Math.round(hamResults.avg)}N</div></div>
+                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Asymmetry</span><div className={`text-xl font-semibold ${hamResults.color}`}>{hamResults.asymmetry}%</div></div>
+                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Rel. Str</span><div className="text-xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'}</div></div>
                                             </div>
-                                            <div className="pt-3 border-t border-slate-800 text-center"><div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div></div>
+                                            <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center"><div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div></div>
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl text-xs text-orange-900 leading-relaxed">
-                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 text-[10px]">Nordic Average Assessment</strong>
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/30 rounded-xl text-xs text-orange-900 dark:text-orange-300 leading-relaxed">
+                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 dark:text-orange-300 text-[10px]">Nordic Average Assessment</strong>
                                         <p>Input average force across both limbs and body weight to calculate relative strength.</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
+                                        <div><label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
+                                        <div><label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
                                     </div>
                                     {hamResults && (
-                                        <div className="bg-slate-900 rounded-xl p-6 text-white space-y-4">
+                                        <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white space-y-4">
                                             <div className="grid grid-cols-2 gap-4 text-center">
                                                 <div>
-                                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Avg Force</span>
+                                                    <span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Avg Force</span>
                                                     <div className="text-2xl font-semibold">{Math.round(hamResults.avg)}N</div>
                                                 </div>
                                                 <div>
-                                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Rel. Strength</span>
+                                                    <span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Rel. Strength</span>
                                                     <div className="text-2xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'} <span className="text-sm">N/kg</span></div>
                                                 </div>
                                             </div>
-                                            <div className="pt-3 border-t border-slate-800 text-center">
+                                            <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center">
                                                 <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             )}
-                            <div className="pt-4 border-t border-slate-100 space-y-3">
+                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
                                 <CustomSelect
                                     variant="form"
                                     size="xs"

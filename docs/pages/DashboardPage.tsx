@@ -774,7 +774,7 @@ export const DashboardPage = () => {
                             </div>
 
                             {/* Squad Readiness */}
-                            <div className={`bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2 ${
+                            <div className={`bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-2 ${
                                 !noSquadSelected && dashboardStats.readinessColor === 'emerald'
                                     ? 'dark:bg-gradient-to-br dark:from-emerald-950/90 dark:to-[#132338] dark:border-emerald-800/50'
                                     : !noSquadSelected && dashboardStats.readinessColor === 'amber'
@@ -837,7 +837,7 @@ export const DashboardPage = () => {
                                         <div className="p-2.5 space-y-1.5 flex-1">
                                             {[1, 2, 3].map(i => (
                                                 <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50 dark:bg-[#132338]/40">
-                                                    <div className="w-7 h-7 rounded-md bg-slate-100 animate-pulse" />
+                                                    <div className="w-7 h-7 rounded-md bg-slate-100 dark:bg-[#1A2D48] animate-pulse" />
                                                     <div className="flex-1 h-3 bg-slate-100 rounded animate-pulse" />
                                                     <div className="w-8 h-4 bg-slate-100 rounded animate-pulse" />
                                                 </div>
@@ -899,11 +899,11 @@ export const DashboardPage = () => {
 
                                         {heatmapTeamFilter === 'prompt' ? (
                                             <div className="py-10 text-center">
-                                                <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-2.5">
-                                                    <UsersIcon size={16} className="text-slate-400" />
+                                                <div className="w-9 h-9 bg-slate-100 dark:bg-[#1A2D48] rounded-xl flex items-center justify-center mx-auto mb-2.5">
+                                                    <UsersIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" />
                                                 </div>
-                                                <p className="text-sm font-medium text-slate-500">Select a team to display</p>
-                                                <p className="text-xs text-slate-400 mt-0.5">Use the dropdown above to load wellness data</p>
+                                                <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">Select a team to display</p>
+                                                <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-0.5">Use the dropdown above to load wellness data</p>
                                             </div>
                                         ) : (() => {
                                             const { mostRecentDate, daysSince, metricAvgs, flagged, total, responseCount, availableCount, modifiedCount, unavailableCount } = wellnessSummary;
@@ -926,16 +926,16 @@ export const DashboardPage = () => {
                                                 <>
                                                     {/* Stale data warning */}
                                                     {isStale && (
-                                                        <div className="bg-amber-50 border border-amber-100 dark:border-amber-800/40 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                        <div className="bg-amber-50 dark:bg-amber-500/15 border border-amber-100 dark:border-amber-500/30 rounded-lg px-3 py-1.5 flex items-center gap-2">
                                                             <AlertTriangleIcon size={12} className="text-amber-500 shrink-0" />
-                                                            <p className="text-xs text-amber-700 dark:text-amber-400">
+                                                            <p className="text-xs text-amber-700 dark:text-amber-300">
                                                                 Last data collected on <strong>{formattedDate}</strong> — may be outdated
                                                             </p>
                                                         </div>
                                                     )}
 
                                                     {responseCount === 0 ? (
-                                                        <div className="py-8 text-center text-slate-400">
+                                                        <div className="py-8 text-center text-slate-400 dark:text-[#94A3B8]">
                                                             <p className="text-sm font-medium">No wellness responses yet</p>
                                                             <p className="text-xs mt-1">Responses will appear once athletes complete their check-ins.</p>
                                                         </div>
@@ -944,9 +944,9 @@ export const DashboardPage = () => {
                                                             {/* Stat chips row: date + response counts */}
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {formattedDate && (
-                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-600 border-emerald-100 dark:border-emerald-800/40'}`}>
+                                                                    <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border ${isStale ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-100 dark:border-amber-500/30' : 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-100 dark:border-emerald-500/30'}`}>
                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isStale ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-                                                                        <span className={`text-[10px] font-semibold ${isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                                                        <span className={`text-[10px] font-semibold ${isStale ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
                                                                             {formattedDate}
                                                                             {!isStale && daysSince === 0 && <span className="ml-1 opacity-70">· Today</span>}
                                                                             {!isStale && daysSince === 1 && <span className="ml-1 opacity-70">· Yesterday</span>}
@@ -954,25 +954,25 @@ export const DashboardPage = () => {
                                                                         </span>
                                                                     </div>
                                                                 )}
-                                                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
+                                                                <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#1A2D48] border border-slate-100 dark:border-[#243A58] rounded-lg px-2.5 py-1.5">
                                                                     <span className="text-xs font-bold text-slate-700 dark:text-[#CBD5E1]">{responseCount}</span>
-                                                                    <span className="text-[10px] text-slate-400">responses</span>
+                                                                    <span className="text-[10px] text-slate-400 dark:text-[#94A3B8]">responses</span>
                                                                 </div>
                                                                 {[
-                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-600 border-emerald-100 dark:border-emerald-800/40' },
-                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-100 dark:border-amber-800/40' },
-                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600',    bg: 'bg-rose-50 border-rose-100 dark:border-rose-900/40' },
+                                                                    { dot: 'bg-emerald-500', val: availableCount,   label: 'avail',   color: 'text-emerald-600 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-100 dark:border-emerald-500/30' },
+                                                                    { dot: 'bg-amber-400',   val: modifiedCount,    label: 'mod',     color: 'text-amber-600 dark:text-amber-300',     bg: 'bg-amber-50 dark:bg-amber-500/15 border-amber-100 dark:border-amber-500/30' },
+                                                                    { dot: 'bg-rose-500',    val: unavailableCount, label: 'unavail', color: 'text-rose-600 dark:text-rose-300',       bg: 'bg-rose-50 dark:bg-rose-500/15 border-rose-100 dark:border-rose-500/30' },
                                                                 ].map(({ dot, val, label, color, bg }) => (
                                                                     <div key={label} className={`flex items-center gap-1 border rounded-lg px-2.5 py-1.5 ${bg}`}>
                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
                                                                         <span className={`text-xs font-bold ${color}`}>{val}</span>
-                                                                        <span className="text-[10px] text-slate-500">{label}</span>
+                                                                        <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
 
                                                             {/* Availability bar */}
-                                                            <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-100">
+                                                            <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-100 dark:bg-[#0F1C30]">
                                                                 <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${pctAvail}%` }} />
                                                                 <div className="bg-amber-400 transition-all duration-700" style={{ width: `${pctMod}%` }} />
                                                                 <div className="bg-rose-500 transition-all duration-700" style={{ width: `${pctUnavail}%` }} />
@@ -989,7 +989,7 @@ export const DashboardPage = () => {
                                                                     <div className="space-y-2">
                                                                         {metricAvgs.map(m => (
                                                                             <div key={m.key} className="flex items-center gap-2">
-                                                                                <span className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
+                                                                                <span className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide w-[4.5rem] shrink-0">{m.label}</span>
                                                                                 <div className="flex-1 h-1.5 bg-slate-200 dark:bg-[#243A58] rounded-full overflow-hidden">
                                                                                     {m.avg !== null && (
                                                                                         <div className="h-full rounded-full transition-all duration-700"
@@ -1010,13 +1010,13 @@ export const DashboardPage = () => {
                                                                         <AlertTriangleIcon size={11} className="text-rose-500" />
                                                                         <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">Priority Alerts</span>
                                                                         {flagged.length > 0 && (
-                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 dark:border-rose-900/40 rounded px-1 py-0.5">{flagged.length} flagged</span>
+                                                                            <span className="ml-auto text-[9px] font-bold text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/15 border border-rose-100 dark:border-rose-500/30 rounded px-1 py-0.5">{flagged.length} flagged</span>
                                                                         )}
                                                                     </div>
                                                                     {flagged.length === 0 ? (
                                                                         <div className="flex flex-col items-center justify-center py-3 text-center">
                                                                             <CheckCircle2Icon size={18} className="text-emerald-400 mb-1" />
-                                                                            <p className="text-xs font-medium text-slate-500">All clear</p>
+                                                                            <p className="text-xs font-medium text-slate-500 dark:text-[#CBD5E1]">All clear</p>
                                                                         </div>
                                                                     ) : (
                                                                         <div className="space-y-1.5">
@@ -1025,14 +1025,14 @@ export const DashboardPage = () => {
                                                                                     ? player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
                                                                                     : '??';
                                                                                 return (
-                                                                                    <div key={aid} className="flex items-center gap-2 bg-white dark:bg-[#132338] rounded-lg px-2 py-1.5 border border-slate-100 dark:border-[#243A58]">
+                                                                                    <div key={aid} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 border ${isCritical ? 'bg-white dark:bg-[#132338] border-slate-100 dark:border-rose-500/30' : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-amber-500/30'}`}>
                                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-[8px] font-bold shrink-0">
+                                                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 ${isCritical ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'}`}>
                                                                                             {initials}
                                                                                         </div>
                                                                                         <div className="flex-1 min-w-0">
                                                                                             <p className="text-[10px] font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{player?.name || 'Unknown'}</p>
-                                                                                            <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wide leading-tight">{reason}</p>
+                                                                                            <p className={`text-[9px] font-bold uppercase tracking-wide leading-tight ${isCritical ? 'text-rose-500 dark:text-rose-300' : 'text-amber-500 dark:text-amber-300'}`}>{reason}</p>
                                                                                         </div>
                                                                                     </div>
                                                                                 );
@@ -1040,7 +1040,7 @@ export const DashboardPage = () => {
                                                                             {hiddenCount > 0 && (
                                                                                 <Link
                                                                                     to={wellnessLink}
-                                                                                    className="flex items-center justify-center py-1.5 border border-dashed border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 rounded-lg text-[9px] font-semibold text-rose-500 hover:text-rose-700 dark:text-rose-400 hover:border-rose-300 transition-colors"
+                                                                                    className="flex items-center justify-center py-1.5 border border-dashed border-rose-200 dark:border-rose-500/30 rounded-lg text-[9px] font-semibold text-rose-500 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 hover:border-rose-300 dark:hover:border-rose-500/50 transition-colors"
                                                                                 >
                                                                                     + {hiddenCount} more flagged athlete{hiddenCount > 1 ? 's' : ''}
                                                                                 </Link>
@@ -1800,12 +1800,12 @@ export const DashboardPage = () => {
                                         {/* Assign To */}
                                         <div>
                                             <label className={LABEL}>Assign To</label>
-                                            <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit mb-2">
+                                            <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] w-fit mb-2">
                                                 {(['none', 'team', 'individual'] as const).map(opt => (
                                                     <button
                                                         key={opt}
                                                         onClick={() => setEditingEvent({ ...editingEvent, assigned_to_type: opt === 'none' ? null : opt, assigned_to_id: null })}
-                                                        className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${(opt === 'none' ? !editingEvent.assigned_to_type : editingEvent.assigned_to_type === opt) ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                                                        className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${(opt === 'none' ? !editingEvent.assigned_to_type : editingEvent.assigned_to_type === opt) ? 'bg-slate-900 dark:bg-indigo-600 text-white' : 'bg-white dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}
                                                     >
                                                         {opt === 'team' && <UsersIcon size={12} />}
                                                         {opt === 'individual' && <UserIcon size={12} />}
@@ -1918,11 +1918,11 @@ export const DashboardPage = () => {
                     {editingSession && (() => {
                         const PHASES = ['Strength', 'Power', 'Hypertrophy', 'Endurance', 'Speed', 'Recovery', 'Testing', 'Pre-Season', 'In-Season', 'Off-Season'];
                         const LOADS = ['Low', 'Medium', 'High'];
-                        const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
+                        const INPUT = 'w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
                         const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
                         return (
-                            <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingSession(null)}>
-                                <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                            <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4" onClick={() => setEditingSession(null)}>
+                                <div className="bg-white dark:bg-[#132338] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-md animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                                         <div className="flex items-center gap-3">

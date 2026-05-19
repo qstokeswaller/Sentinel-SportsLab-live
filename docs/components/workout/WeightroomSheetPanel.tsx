@@ -1,6 +1,7 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { useCreateSheet, useUpdateSheet } from '../../hooks/useWeightroomSheets';
 import { WEIGHTROOM_1RM_EXERCISES } from '../../utils/constants';
 import { buildMaxLookup, getSheetCellValue, matchWorkoutExercisesTo1RM, printSheet } from '../../utils/weightroomUtils';
 import {
@@ -12,11 +13,26 @@ import {
     Sparkles as SparklesIcon,
 } from 'lucide-react';
 
-const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targetId, onSave, onRemove, onClose }) => {
-    const { teams, maxHistory } = useAppState();
+const WeightroomSheetPanel = ({
+    workoutExercises, sheetConfig, targetType, targetId, onSave, onRemove, onClose,
+    // Provenance for the Sheets library — packet name / session date / target name.
+    // When provided + `saveToLibrary` is true on Attach, the inline packet config
+    // is also persisted as a standalone library row tagged with this source_context.
+    sourceContext,
+}) => {
+    const { teams, maxHistory, showToast } = useAppState();
+    const createSheet = useCreateSheet();
+    const updateSheet = useUpdateSheet();
 
     const [columns, setColumns] = useState(sheetConfig?.columns || []);
     const [orientation, setOrientation] = useState(sheetConfig?.orientation || 'portrait');
+    // Default ON when we have provenance to write — keeps the library populated
+    // automatically. The packet builder is the only caller passing sourceContext today,
+    // so this defaults to off (no library write) in any other context.
+    const [saveToLibrary, setSaveToLibrary] = useState(!!sourceContext);
+    // Track the library row we already created during THIS panel session, so
+    // edit-and-reattach updates the same row instead of inserting duplicates.
+    const libraryIdRef = useRef<string | null>(sheetConfig?.libraryId ?? null);
 
     // Auto-suggest on first open (no existing config)
     useEffect(() => {
@@ -65,9 +81,40 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
         setColumns(prev => prev.map(c => c.id === id && (!c.percentage || c.percentage === '') ? { ...c, percentage: 100 } : c));
     };
 
-    const handleAttach = () => {
+    const handleAttach = async () => {
         if (columns.length === 0) return;
-        onSave({ columns, orientation });
+        let libraryId = libraryIdRef.current;
+
+        // Mirror the inline config into the Sheets library when provenance is present
+        // and the user opted in. First attach creates a new row; subsequent attaches
+        // update the row already created in this panel session.
+        if (saveToLibrary && sourceContext) {
+            try {
+                const libraryPayload = {
+                    name: sourceContext.packetName?.trim() || 'Untitled Sheet',
+                    ws_mode: 'advanced' as const,
+                    ws_orientation: orientation,
+                    ws_columns: columns,
+                    team_id: sourceContext.targetType === 'Team' ? (sourceContext.targetId || null) : null,
+                    notes: null,
+                    source_context: sourceContext,
+                };
+                if (libraryId) {
+                    await updateSheet.mutateAsync({ id: libraryId, ...libraryPayload });
+                } else {
+                    const created = await createSheet.mutateAsync(libraryPayload);
+                    libraryId = created.id;
+                    libraryIdRef.current = libraryId;
+                    showToast?.('Sheet saved to library', 'success');
+                }
+            } catch (e: any) {
+                showToast?.(e?.message || 'Failed to save sheet to library', 'error');
+            }
+        }
+
+        // libraryId is threaded back into the inline config so re-opening the panel
+        // (or the packet's auto-save / reload cycle) can keep updating the same row.
+        onSave({ columns, orientation, libraryId: libraryId ?? undefined });
     };
 
     const handlePrint = () => {
@@ -229,7 +276,20 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
                             </button>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                        {sourceContext && (
+                            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={saveToLibrary}
+                                    onChange={(e) => setSaveToLibrary(e.target.checked)}
+                                    className="w-3.5 h-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0"
+                                />
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1]">
+                                    Save copy to Sheets library
+                                </span>
+                            </label>
+                        )}
                         {sheetConfig && (
                             <button onClick={onRemove} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-[10px] font-semibold transition-all">
                                 Remove Sheet
@@ -240,7 +300,7 @@ const WeightroomSheetPanel = ({ workoutExercises, sheetConfig, targetType, targe
                         </button>
                         <button
                             onClick={handleAttach}
-                            disabled={columns.length === 0}
+                            disabled={columns.length === 0 || createSheet.isPending || updateSheet.isPending}
                             className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-40 transition-all"
                         >
                             <CheckIcon size={12} /> {sheetConfig ? 'Update Sheet' : 'Attach Sheet'}

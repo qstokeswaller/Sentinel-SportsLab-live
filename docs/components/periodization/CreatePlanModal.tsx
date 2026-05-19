@@ -9,10 +9,10 @@ const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[
 const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
 
 const STATUS_OPTIONS = [
-    { key: 'draft',    label: 'Draft',    cls: 'border-slate-300 text-slate-600 bg-slate-50 dark:bg-[#1A2D48] dark:text-[#CBD5E1]' },
-    { key: 'upcoming', label: 'Upcoming', cls: 'border-blue-300 text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' },
-    { key: 'active',   label: 'Active',   cls: 'border-green-300 text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' },
-    { key: 'at_risk',  label: 'At Risk',  cls: 'border-red-300 text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' },
+    { key: 'draft',    label: 'Draft',    cls: 'border-slate-300 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] bg-slate-50 dark:bg-[#1A2D48]' },
+    { key: 'upcoming', label: 'Upcoming', cls: 'border-blue-300 dark:border-blue-500/40 text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/15' },
+    { key: 'active',   label: 'Active',   cls: 'border-green-300 dark:border-green-500/40 text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-500/15' },
+    { key: 'at_risk',  label: 'At Risk',  cls: 'border-red-300 dark:border-red-500/40 text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-500/15' },
 ];
 
 export const CreatePlanModal = () => {

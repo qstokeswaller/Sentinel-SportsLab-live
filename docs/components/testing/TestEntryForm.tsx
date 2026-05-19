@@ -98,16 +98,16 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
     <div className="space-y-5">
       {/* VBT Tab Toggle (only for barbell tests with VBT support) */}
       {hasVbt && (
-        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg w-fit">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg w-fit">
           <button
             onClick={() => setActiveTab('standard')}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === 'standard' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === 'standard' ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
           >
             1RM Test
           </button>
           <button
             onClick={() => setActiveTab('vbt')}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'vbt' ? 'bg-white text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === 'vbt' ? 'bg-white dark:bg-[#1A2D48] text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             VBT Tracking
@@ -132,9 +132,9 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
       {/* VBT form fields */}
       {activeTab === 'vbt' && hasVbt && (
         <div className="space-y-4">
-          <div className="bg-indigo-50/50 border border-indigo-100 dark:border-indigo-800/40 rounded-xl p-4">
+          <div className="bg-indigo-50/50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/30 rounded-xl p-4">
             <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide mb-1">Velocity-Based Training</div>
-            <p className="text-xs text-indigo-500/70">Enter the bar velocity from your encoder or sensor. The system will estimate intensity and 1RM from the load-velocity relationship.</p>
+            <p className="text-xs text-indigo-500/70 dark:text-indigo-300/80">Enter the bar velocity from your encoder or sensor. The system will estimate intensity and 1RM from the load-velocity relationship.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(test.vbtFields || []).map(field => (
@@ -151,7 +151,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
 
       {/* VBT calculated metrics */}
       {activeTab === 'vbt' && test.vbtCalculations && test.vbtCalculations.length > 0 && (
-        <div className="bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-4 space-y-2">
+        <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide mb-2">
             <CalculatorIcon size={14} />
             VBT Metrics
@@ -161,19 +161,19 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
               const val = vbtCalculated[calc.key];
               const isZone = calc.key === 'vbt_zone';
               const zoneColor = isZone ? (
-                val === 'Speed-Strength' ? 'text-sky-600' :
-                val === 'Power' ? 'text-indigo-600' :
-                val === 'Strength-Speed' ? 'text-amber-600' :
-                val === 'Max Strength' ? 'text-orange-600' :
-                val === 'Near 1RM' ? 'text-rose-600' : 'text-slate-900 dark:text-[#E2E8F0]'
+                val === 'Speed-Strength' ? 'text-sky-600 dark:text-sky-300' :
+                val === 'Power' ? 'text-indigo-600 dark:text-indigo-300' :
+                val === 'Strength-Speed' ? 'text-amber-600 dark:text-amber-300' :
+                val === 'Max Strength' ? 'text-orange-600 dark:text-orange-300' :
+                val === 'Near 1RM' ? 'text-rose-600 dark:text-rose-300' : 'text-slate-900 dark:text-[#E2E8F0]'
               ) : 'text-slate-900 dark:text-[#E2E8F0]';
               return (
-                <div key={calc.key} className="bg-white rounded-lg border border-indigo-100 dark:border-indigo-800/40 p-3">
-                  <div className="text-[10px] text-indigo-400 uppercase tracking-wide">{calc.label}</div>
+                <div key={calc.key} className="bg-white dark:bg-[#1A2D48] rounded-lg border border-indigo-100 dark:border-indigo-500/30 p-3">
+                  <div className="text-[10px] text-indigo-400 dark:text-indigo-300 uppercase tracking-wide">{calc.label}</div>
                   <div className={`text-lg font-bold ${zoneColor}`}>
                     {val != null ? val : '—'}
                     {calc.unit && val != null && !isZone && (
-                      <span className="text-xs text-indigo-300 ml-1">{calc.unit}</span>
+                      <span className="text-xs text-indigo-300 dark:text-indigo-300/70 ml-1">{calc.unit}</span>
                     )}
                   </div>
                 </div>
@@ -185,19 +185,19 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
 
       {/* Standard calculated metrics */}
       {activeTab === 'standard' && test.calculations && test.calculations.length > 0 && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+        <div className="bg-slate-50 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">
             <CalculatorIcon size={14} />
             Calculated Metrics
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {test.calculations.map(calc => (
-              <div key={calc.key} className="bg-white rounded-lg border border-slate-100 p-3">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide">{calc.label}</div>
+              <div key={calc.key} className="bg-white dark:bg-[#0F1C30] rounded-lg border border-slate-100 dark:border-[#243A58] p-3">
+                <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">{calc.label}</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">
                   {calculated[calc.key] != null ? calculated[calc.key] : '—'}
                   {calc.unit && calculated[calc.key] != null && (
-                    <span className="text-xs text-slate-400 ml-1">{calc.unit}</span>
+                    <span className="text-xs text-slate-400 dark:text-[#94A3B8] ml-1">{calc.unit}</span>
                   )}
                 </div>
               </div>
@@ -208,8 +208,8 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
 
       {/* Normative comparison (standard tab only) */}
       {activeTab === 'standard' && test.norms && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4">
+          <div className="text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-3">
             Normative Classification
           </div>
           <NormativeBar
@@ -223,16 +223,16 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
       {/* Attachment upload (PDF / document) */}
       <div className="flex items-center gap-3">
         {attachedFile ? (
-          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 rounded-lg">
-            <FileTextIcon size={14} className="text-indigo-500 shrink-0" />
-            <span className="text-xs font-medium text-indigo-700 dark:text-indigo-400 truncate max-w-[200px]">{attachedFile.name}</span>
-            <span className="text-[10px] text-indigo-400">{(attachedFile.size / 1024).toFixed(0)}KB</span>
-            <button onClick={() => setAttachedFile(null)} className="p-0.5 text-indigo-300 hover:text-rose-500 transition-colors">
+          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-lg">
+            <FileTextIcon size={14} className="text-indigo-500 dark:text-indigo-300 shrink-0" />
+            <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 truncate max-w-[200px]">{attachedFile.name}</span>
+            <span className="text-[10px] text-indigo-400 dark:text-indigo-300/70">{(attachedFile.size / 1024).toFixed(0)}KB</span>
+            <button onClick={() => setAttachedFile(null)} className="p-0.5 text-indigo-300 dark:text-indigo-300/70 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
               <XIcon size={12} />
             </button>
           </div>
         ) : (
-          <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all cursor-pointer">
+          <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs font-medium text-slate-500 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">
             <PaperclipIcon size={13} />
             Attach Report (PDF)
             <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) setAttachedFile(e.target.files[0]); e.target.value = ''; }} className="hidden" />
@@ -250,7 +250,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
             ${saved
               ? 'bg-emerald-500 text-white'
               : !athleteId || !requiredFieldsFilled
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#94A3B8] cursor-not-allowed'
                 : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm'
             }`}
         >
@@ -258,7 +258,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
           {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Assessment'}
         </button>
         {!athleteId && (
-          <span className="text-xs text-slate-400">Select an athlete first</span>
+          <span className="text-xs text-slate-400 dark:text-[#94A3B8]">Select an athlete first</span>
         )}
       </div>
     </div>
@@ -278,7 +278,7 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
     <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
       {field.label}
       {field.required && <span className="text-red-400 ml-0.5">*</span>}
-      {field.unit && <span className="text-slate-400 ml-1">({field.unit})</span>}
+      {field.unit && <span className="text-slate-400 dark:text-[#94A3B8] ml-1">({field.unit})</span>}
     </label>
   );
 
@@ -296,9 +296,9 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
             max={field.max}
             step={field.step || (field.type === 'time_seconds' ? 0.01 : 1)}
             placeholder={field.placeholder}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all"
+            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-500 outline-none transition-all"
           />
-          {field.helpText && <p className="text-[10px] text-slate-400 mt-1">{field.helpText}</p>}
+          {field.helpText && <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-1">{field.helpText}</p>}
         </div>
       );
 
@@ -329,14 +329,14 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
                     ? pv === 0 ? 'bg-red-500 text-white border-red-500'
                     : pv === 3 ? 'bg-emerald-500 text-white border-emerald-500'
                     : 'bg-indigo-500 text-white border-indigo-500'
-                    : 'bg-white text-slate-600 dark:text-[#CBD5E1] border-slate-200 hover:border-slate-300'
+                    : 'bg-white dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E]'
                   }`}
               >
                 {pv}
               </button>
             ))}
           </div>
-          {field.helpText && <p className="text-[10px] text-slate-400 mt-1">{field.helpText}</p>}
+          {field.helpText && <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-1">{field.helpText}</p>}
         </div>
       );
 
@@ -354,7 +354,7 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
                     ? opt === 'Pass'
                       ? 'bg-emerald-500 text-white border-emerald-500'
                       : 'bg-red-500 text-white border-red-500'
-                    : 'bg-white text-slate-600 dark:text-[#CBD5E1] border-slate-200 hover:border-slate-300'
+                    : 'bg-white dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E]'
                   }`}
               >
                 {opt}
@@ -372,7 +372,7 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
             value={value ?? ''}
             onChange={e => onChange(e.target.value || null)}
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all resize-none"
+            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-500 outline-none transition-all resize-none"
           />
         </div>
       );
@@ -385,7 +385,7 @@ const FieldRenderer: React.FC<FieldProps> = ({ field, value, onChange }) => {
             type="text"
             value={value ?? ''}
             onChange={e => onChange(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all"
+            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-500 outline-none transition-all"
           />
         </div>
       );

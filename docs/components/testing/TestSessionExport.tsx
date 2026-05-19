@@ -122,7 +122,7 @@ export const TestSessionExport: React.FC = () => {
     return (
         <div className="space-y-4">
             {/* Controls */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4">
+            <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
@@ -132,7 +132,7 @@ export const TestSessionExport: React.FC = () => {
                             type="date"
                             value={dateStart}
                             onChange={e => { setDateStart(e.target.value); setLoaded(false); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
                         />
                     </div>
                     <div>
@@ -143,7 +143,7 @@ export const TestSessionExport: React.FC = () => {
                             type="date"
                             value={dateEnd}
                             onChange={e => { setDateEnd(e.target.value); setLoaded(false); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
                         />
                     </div>
                     <div>
@@ -174,10 +174,10 @@ export const TestSessionExport: React.FC = () => {
 
             {/* Results summary + export buttons */}
             {loaded && (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
                         <div className="flex items-center gap-2">
-                            <FileTextIcon size={14} className="text-slate-400" />
+                            <FileTextIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />
                             <span className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">
                                 {results.length} assessments across {groupedByTest.length} tests
                             </span>
@@ -209,11 +209,11 @@ export const TestSessionExport: React.FC = () => {
 
                     {/* Grouped results */}
                     {groupedByTest.length === 0 ? (
-                        <div className="text-center py-8 text-sm text-slate-400">
+                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#94A3B8]">
                             No assessments found for this date range.
                         </div>
                     ) : (
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                             {groupedByTest.map(group => {
                                 if (!group.test) return null;
                                 const fields = group.test.fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 6);
@@ -222,21 +222,21 @@ export const TestSessionExport: React.FC = () => {
                                     <div key={group.test.id} className="px-4 py-3">
                                         <div className="flex items-center justify-between mb-2">
                                             <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{group.test.name}</h4>
-                                            <span className="text-xs text-slate-400">{group.entries.length} entries</span>
+                                            <span className="text-xs text-slate-400 dark:text-[#94A3B8]">{group.entries.length} entries</span>
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-xs">
                                                 <thead>
                                                     <tr className="text-left">
-                                                        <th className="px-2 py-1 text-slate-500 font-semibold uppercase tracking-wide">Athlete</th>
-                                                        <th className="px-2 py-1 text-slate-500 font-semibold uppercase tracking-wide">Date</th>
+                                                        <th className="px-2 py-1 text-slate-500 dark:text-[#CBD5E1] font-semibold uppercase tracking-wide">Athlete</th>
+                                                        <th className="px-2 py-1 text-slate-500 dark:text-[#CBD5E1] font-semibold uppercase tracking-wide">Date</th>
                                                         {fields.map(f => (
-                                                            <th key={f.key} className="px-2 py-1 text-slate-500 font-semibold uppercase tracking-wide whitespace-nowrap">
+                                                            <th key={f.key} className="px-2 py-1 text-slate-500 dark:text-[#CBD5E1] font-semibold uppercase tracking-wide whitespace-nowrap">
                                                                 {f.label}
                                                             </th>
                                                         ))}
                                                         {calcs.map(c => (
-                                                            <th key={c.key} className="px-2 py-1 text-indigo-500 font-semibold uppercase tracking-wide whitespace-nowrap">
+                                                            <th key={c.key} className="px-2 py-1 text-indigo-500 dark:text-indigo-300 font-semibold uppercase tracking-wide whitespace-nowrap">
                                                                 {c.label}
                                                             </th>
                                                         ))}
@@ -248,17 +248,17 @@ export const TestSessionExport: React.FC = () => {
                                                         const calculated: Record<string, any> = {};
                                                         for (const calc of calcs) { calculated[calc.key] = calc.formula(m); }
                                                         return (
-                                                            <tr key={entry.id} className="border-t border-slate-50">
+                                                            <tr key={entry.id} className="border-t border-slate-50 dark:border-[#1A2D48]">
                                                                 <td className="px-2 py-1.5 font-medium text-slate-800 dark:text-[#E2E8F0] whitespace-nowrap">{getAthleteName(entry.athlete_id)}</td>
-                                                                <td className="px-2 py-1.5 text-slate-500">{entry.date}</td>
+                                                                <td className="px-2 py-1.5 text-slate-500 dark:text-[#CBD5E1]">{entry.date}</td>
                                                                 {fields.map(f => (
                                                                     <td key={f.key} className="px-2 py-1.5 tabular-nums text-slate-700 dark:text-[#CBD5E1]">
-                                                                        {m[f.key] ?? <span className="text-slate-300">—</span>}
+                                                                        {m[f.key] ?? <span className="text-slate-300 dark:text-[#475569]">—</span>}
                                                                     </td>
                                                                 ))}
                                                                 {calcs.map(c => (
                                                                     <td key={c.key} className="px-2 py-1.5 tabular-nums font-semibold text-indigo-600 dark:text-indigo-300">
-                                                                        {calculated[c.key] ?? <span className="text-slate-300">—</span>}
+                                                                        {calculated[c.key] ?? <span className="text-slate-300 dark:text-[#475569]">—</span>}
                                                                     </td>
                                                                 ))}
                                                             </tr>

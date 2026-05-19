@@ -30,8 +30,8 @@ const PRESET_COLORS = [
     '#ec4899', '#8b5cf6', '#ef4444', '#64748b',
 ];
 
-const INPUT = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
-const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
+const INPUT = 'w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
+const LABEL = 'text-xs font-medium text-slate-700 dark:text-[#CBD5E1] block mb-1.5';
 
 // ── Component ────────────────────────────────────────────────────────────
 
@@ -233,17 +233,17 @@ const AddEventModal = () => {
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-[#132338] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#243A58]">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                             <CalendarPlusIcon size={16} />
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Add a New Event</h2>
-                            <p className="text-[10px] text-slate-400 mt-0.5">Schedule an appointment, meeting, or note</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Schedule an appointment, meeting, or note</p>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -280,22 +280,22 @@ const AddEventModal = () => {
 
                         {/* Inline custom type form */}
                         {showCustomTypeForm && (
-                            <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 animate-in slide-in-from-top-2 duration-150">
+                            <div className="mt-2 p-3 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg space-y-2 animate-in slide-in-from-top-2 duration-150">
                                 <input
                                     type="text"
                                     value={newTypeLabel}
                                     onChange={e => setNewTypeLabel(e.target.value)}
                                     placeholder="Type name, e.g. Travel, Clinic..."
-                                    className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-400 text-slate-900 dark:text-[#E2E8F0]"
+                                    className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-400 text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569]"
                                     autoFocus
                                 />
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-slate-400 font-medium">Color:</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-[#CBD5E1] font-medium">Color:</span>
                                     {PRESET_COLORS.map(c => (
                                         <button
                                             key={c}
                                             onClick={() => setNewTypeColor(c)}
-                                            className={`w-5 h-5 rounded-full border-2 transition-all ${newTypeColor === c ? 'border-slate-900 scale-110' : 'border-transparent'}`}
+                                            className={`w-5 h-5 rounded-full border-2 transition-all ${newTypeColor === c ? 'border-slate-900 dark:border-white scale-110' : 'border-transparent'}`}
                                             style={{ backgroundColor: c }}
                                         />
                                     ))}
@@ -304,7 +304,7 @@ const AddEventModal = () => {
                                     <button onClick={handleAddCustomType} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-colors">
                                         Save Type
                                     </button>
-                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">
+                                    <button onClick={() => setShowCustomTypeForm(false)} className="px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
                                         Cancel
                                     </button>
                                 </div>
@@ -320,7 +320,7 @@ const AddEventModal = () => {
                                 <button
                                     key={c}
                                     onClick={() => setColor(c)}
-                                    className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${color === c ? 'border-slate-900 scale-110' : 'border-slate-200 hover:border-slate-400'}`}
+                                    className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${color === c ? 'border-slate-900 dark:border-white scale-110' : 'border-slate-200 dark:border-[#243A58] hover:border-slate-400 dark:hover:border-[#475569]'}`}
                                     style={{ backgroundColor: c }}
                                 >
                                     {color === c && <CheckIcon size={12} className="text-white" />}
@@ -345,7 +345,7 @@ const AddEventModal = () => {
                     <div>
                         <label className={LABEL}>Location</label>
                         <div className="relative">
-                            <MapPinIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <MapPinIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#475569]" />
                             <input
                                 type="text"
                                 value={location}
@@ -359,12 +359,12 @@ const AddEventModal = () => {
                     {/* Assign To */}
                     <div>
                         <label className={LABEL}>Assign To</label>
-                        <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit mb-2">
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] w-fit mb-2">
                             {(['none', 'team', 'individual'] as const).map(opt => (
                                 <button
                                     key={opt}
                                     onClick={() => { setAssignType(opt); setAssignId(''); setAssignTeamFilter(''); }}
-                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
+                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                                 >
                                     {opt === 'team' && <UsersIcon size={12} />}
                                     {opt === 'individual' && <UserIcon size={12} />}
@@ -443,7 +443,7 @@ const AddEventModal = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setAllDay(!allDay)}
-                            className={`w-10 h-5 rounded-full transition-colors relative ${allDay ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                            className={`w-10 h-5 rounded-full transition-colors relative ${allDay ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#243A58]'}`}
                         >
                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
@@ -453,16 +453,16 @@ const AddEventModal = () => {
                     {/* Schedule Mode Toggle */}
                     <div>
                         <label className={LABEL}>Schedule</label>
-                        <div className="flex rounded-lg overflow-hidden border border-slate-200 w-fit">
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] w-fit">
                             <button
                                 onClick={() => setScheduleMode('range')}
-                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'range' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'range' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                             >
                                 <CalendarIcon size={12} /> Date Range
                             </button>
                             <button
                                 onClick={() => setScheduleMode('dates')}
-                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'dates' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${scheduleMode === 'dates' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
                             >
                                 <RepeatIcon size={12} /> Specific Dates
                             </button>
@@ -528,10 +528,10 @@ const AddEventModal = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-[10px] text-slate-400 text-center py-2">No dates selected yet. Pick dates above to add them.</p>
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] text-center py-2">No dates selected yet. Pick dates above to add them.</p>
                             )}
 
-                            <p className="text-[10px] text-slate-400">
+                            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8]">
                                 Each date creates a separate event that can be edited or deleted individually.
                             </p>
                         </div>
@@ -542,7 +542,7 @@ const AddEventModal = () => {
                             <div>
                                 <label className={LABEL}>Start Time</label>
                                 <div className="relative">
-                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#475569]" />
                                     <input
                                         type="time"
                                         value={startTime}
@@ -554,7 +554,7 @@ const AddEventModal = () => {
                             <div>
                                 <label className={LABEL}>End Time</label>
                                 <div className="relative">
-                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#475569]" />
                                     <input
                                         type="time"
                                         value={endTime}
@@ -568,10 +568,10 @@ const AddEventModal = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
+                <div className="flex gap-3 px-6 py-4 border-t border-slate-100 dark:border-[#243A58]">
                     <button
                         onClick={handleClose}
-                        className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                        className="flex-1 py-2.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors"
                     >
                         Cancel
                     </button>

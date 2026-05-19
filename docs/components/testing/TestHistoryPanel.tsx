@@ -66,18 +66,18 @@ export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName
                 className="flex items-center justify-between w-full text-left"
             >
                 <div className="flex items-center gap-2">
-                    <ClockIcon size={14} className="text-slate-400" />
+                    <ClockIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">
                         History ({results.length})
                     </h3>
                 </div>
-                {expanded ? <ChevronUpIcon size={14} className="text-slate-400" /> : <ChevronDownIcon size={14} className="text-slate-400" />}
+                {expanded ? <ChevronUpIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" /> : <ChevronDownIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />}
             </button>
 
             {expanded && (
                 <>
                     {loading ? (
-                        <div className="text-xs text-slate-400 py-4 text-center">Loading history...</div>
+                        <div className="text-xs text-slate-400 dark:text-[#94A3B8] py-4 text-center">Loading history...</div>
                     ) : (
                         <div className="space-y-2">
                             {displayed.map(record => (
@@ -96,7 +96,7 @@ export const TestHistoryPanel: React.FC<Props> = ({ test, athleteId, athleteName
                     {hasMore && (
                         <button
                             onClick={() => setLimit(prev => prev + 10)}
-                            className="w-full text-xs text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 py-2 font-medium transition-colors"
+                            className="w-full text-xs text-indigo-500 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 py-2 font-medium transition-colors"
                         >
                             Show more ({results.length - limit} remaining)
                         </button>

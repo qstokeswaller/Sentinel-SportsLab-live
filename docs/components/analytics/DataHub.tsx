@@ -38,7 +38,7 @@ const formatDate = (val: string | undefined) => {
     return new Date(val).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
 };
 
-const DASH = <span className="text-slate-300 text-xs font-bold">—</span>;
+const DASH = <span className="text-slate-300 dark:text-[#94A3B8] text-xs font-bold">—</span>;
 
 const renderCell = (key: string, val: any) => {
     if (val === null || val === undefined) return DASH;
@@ -46,32 +46,32 @@ const renderCell = (key: string, val: any) => {
     switch (key) {
         case 'injuryStatus':
             return val === 'Injured'
-                ? <span className="flex items-center gap-1.5 text-rose-600 font-semibold text-[11px]"><ShieldAlert size={13} /> Injured</span>
+                ? <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-semibold text-[11px]"><ShieldAlert size={13} /> Injured</span>
                 : <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]"><Shield size={13} /> Clear</span>;
 
         case 'availability':
             const avMap: Record<string, string> = {
-                available:   'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
-                modified:    'bg-amber-100 text-amber-700',
-                unavailable: 'bg-rose-100 text-rose-700',
+                available:   'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+                modified:    'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                unavailable: 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300',
             };
-            return <Chip label={val} cls={avMap[val] || 'bg-slate-100 text-slate-500'} />;
+            return <Chip label={val} cls={avMap[val] || 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'} />;
 
         case 'acwr': {
             const n = parseFloat(val);
             if (isNaN(n) || n === 0) return DASH;
-            const cls = n > 1.5 ? 'bg-rose-600 text-white'
-                : n > 1.3 ? 'bg-rose-100 text-rose-700'
-                : n < 0.8 ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700'
-                : 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
+            const cls = n > 1.5 ? 'bg-rose-600 dark:bg-rose-500 text-white'
+                : n > 1.3 ? 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                : n < 0.8 ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
+                : 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';
             const label = n > 1.5 ? `${n.toFixed(2)} ⚠` : n.toFixed(2);
             return <Chip label={label} cls={cls} />;
         }
 
         case 'lastRPE': {
-            const cls = val >= 9 ? 'bg-rose-100 text-rose-700'
-                : val >= 7 ? 'bg-amber-100 text-amber-700'
-                : 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700';
+            const cls = val >= 9 ? 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                : val >= 7 ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                : 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';
             return <Chip label={`RPE ${val}`} cls={cls} />;
         }
 
@@ -82,9 +82,9 @@ const renderCell = (key: string, val: any) => {
             return <span className="text-slate-700 dark:text-[#CBD5E1] text-xs font-semibold">{val} kg</span>;
 
         case 'dsi': {
-            const cls = parseFloat(val) > 1.0 ? 'bg-rose-100 text-rose-700'
-                : parseFloat(val) >= 0.8 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
-                : 'bg-amber-100 text-amber-700';
+            const cls = parseFloat(val) > 1.0 ? 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                : parseFloat(val) >= 0.8 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300';
             return <Chip label={val} cls={cls} />;
         }
 
@@ -99,7 +99,7 @@ const renderCell = (key: string, val: any) => {
         case 'rsiDate':
         case 'lastCheckin': {
             const d = formatDate(val);
-            return d ? <span className="text-slate-500 text-xs font-bold">{d}</span> : DASH;
+            return d ? <span className="text-slate-500 dark:text-[#CBD5E1] text-xs font-bold">{d}</span> : DASH;
         }
 
         default:
@@ -231,7 +231,7 @@ export const DataHub = () => {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
                 <div>
                     <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Athlete Data Hub</h3>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">
+                    <p className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide mt-0.5">
                         {filtered.length} athletes · {visibleCols.length + 1} columns visible
                     </p>
                 </div>
@@ -239,13 +239,13 @@ export const DataHub = () => {
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Search */}
                     <div className="relative">
-                        <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#94A3B8]" />
                         <input
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search athletes..."
-                            className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold outline-none focus:border-slate-300 w-44"
+                            className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl text-[11px] font-bold text-slate-700 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:border-slate-300 dark:focus:border-[#3B5478] w-44"
                         />
                     </div>
 
@@ -263,7 +263,7 @@ export const DataHub = () => {
                     <div className="relative">
                         <button
                             onClick={() => setShowColPanel(p => !p)}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-[#1A2D48] border border-transparent dark:border-[#243A58] rounded-xl text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors"
                         >
                             <ColumnsIcon size={13} /> Columns
                         </button>
@@ -292,7 +292,7 @@ export const DataHub = () => {
                     {/* Export */}
                     <button
                         onClick={handleExportCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 rounded-xl text-[11px] font-semibold text-white uppercase shadow-lg shadow-slate-200 hover:bg-black transition-all active:scale-95"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-indigo-600 rounded-xl text-[11px] font-semibold text-white uppercase shadow-sm hover:bg-black dark:hover:bg-indigo-500 transition-all active:scale-95"
                     >
                         <DownloadIcon size={13} /> Export CSV
                     </button>
@@ -300,9 +300,9 @@ export const DataHub = () => {
             </div>
 
             {/* Table wrapper — scroll progress indicator on top edge */}
-            <div className="rounded-[1.5rem] border border-slate-100 overflow-hidden">
+            <div className="rounded-[1.5rem] border border-slate-100 dark:border-[#243A58] overflow-hidden">
                 {/* Horizontal scroll progress line */}
-                <div className="h-1 w-full bg-slate-100 relative">
+                <div className="h-1 w-full bg-slate-100 dark:bg-[#0F1C30] relative">
                     <div
                         className="h-full bg-cyan-500 transition-all duration-75 ease-linear rounded-full"
                         style={{ width: `${scrollPct}%` }}
@@ -317,16 +317,16 @@ export const DataHub = () => {
                 >
                     <table className="w-full text-left border-collapse min-w-[900px]">
                         <thead>
-                            <tr className="bg-slate-900 text-white">
+                            <tr className="bg-slate-900 dark:bg-[#0F1C30] text-white dark:text-[#CBD5E1]">
                                 {/* Athlete — always first, sticky */}
-                                <th className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] whitespace-nowrap sticky left-0 bg-slate-900 z-10">
+                                <th className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] whitespace-nowrap sticky left-0 bg-slate-900 dark:bg-[#0F1C30] z-10">
                                     Athlete
                                 </th>
                                 {visibleCols.map(col => (
                                     <th
                                         key={col.key}
                                         onClick={() => handleSort(col.key)}
-                                        className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] cursor-pointer select-none whitespace-nowrap hover:bg-slate-800 transition-colors"
+                                        className="p-4 text-[9px] font-semibold uppercase tracking-[0.15em] cursor-pointer select-none whitespace-nowrap hover:bg-slate-800 dark:hover:bg-[#1A2D48] transition-colors"
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
@@ -339,7 +339,7 @@ export const DataHub = () => {
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                             {filtered.length > 0 ? filtered.map((row, i) => (
                                 <tr key={row.id || i} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group">
                                     <td className="p-4 whitespace-nowrap sticky left-0 bg-white dark:bg-[#132338] group-hover:bg-slate-50 dark:group-hover:bg-[#1A2D48] transition-colors z-10 border-r border-slate-100 dark:border-[#1A2D48]">
@@ -354,7 +354,7 @@ export const DataHub = () => {
                             )) : (
                                 <tr>
                                     <td colSpan={1 + visibleCols.length} className="p-16 text-center">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                        <p className="text-xs font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">
                                             {allRows.length === 0
                                                 ? 'No athletes found. Add athletes via the Squads page.'
                                                 : 'No results match your search or filter.'}
@@ -369,12 +369,12 @@ export const DataHub = () => {
 
             {/* Legend */}
             <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
-                <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-wide w-full">ACWR Legend</p>
+                <p className="text-[10px] font-semibold text-slate-300 dark:text-[#94A3B8] uppercase tracking-wide w-full">ACWR Legend</p>
                 {[
-                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700' },
-                    { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' },
-                    { label: '1.3–1.5 — Caution',   cls: 'bg-rose-100 text-rose-700' },
-                    { label: '> 1.5 — Danger',       cls: 'bg-rose-600 text-white' },
+                    { label: '< 0.8 — Detraining',  cls: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' },
+                    { label: '0.8–1.3 — Optimal',   cls: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
+                    { label: '1.3–1.5 — Caution',   cls: 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300' },
+                    { label: '> 1.5 — Danger',       cls: 'bg-rose-600 dark:bg-rose-500 text-white' },
                 ].map(l => (
                     <span key={l.label} className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase ${l.cls}`}>{l.label}</span>
                 ))}

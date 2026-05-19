@@ -224,12 +224,12 @@ const AddAthleteModal = () => {
         if (ok) setStep(1); // only go back to step 1 if save succeeded
     };
 
-    const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+    const INPUT = "w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
     const LABEL = "text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5";
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg max-h-[90vh] shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg max-h-[90vh] shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col">
 
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between bg-white dark:bg-[#132338] shrink-0">
@@ -251,13 +251,13 @@ const AddAthleteModal = () => {
 
                 {/* Mode toggle */}
                 <div className="px-5 pt-4">
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                    <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] p-0.5 rounded-lg">
                         <button onClick={() => { setAddAthleteMode('athlete'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:bg-[#1A2D48]'}`}>
                             Athlete
                         </button>
                         <button onClick={() => { setAddAthleteMode('team'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:bg-[#1A2D48]'}`}>
                             Team
                         </button>
                     </div>
@@ -360,7 +360,7 @@ const AddAthleteModal = () => {
                     </button>
                     <div className="flex gap-2">
                         {addAthleteMode === 'athlete' && step === 2 && (
-                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                            <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-sm text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 Back
                             </button>
                         )}
@@ -603,7 +603,7 @@ table { width: 100%; border-collapse: collapse; }
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-6xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-6xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between shrink-0 bg-white dark:bg-[#132338]">
                     <div className="flex items-center gap-3">
@@ -664,7 +664,7 @@ table { width: 100%; border-collapse: collapse; }
                     <div className="p-5 flex gap-5 items-start">
                         {/* Left: Live Preview */}
                         <div className="flex-1 min-w-0">
-                            <div className="border border-dashed border-slate-200 rounded-xl bg-white p-5">
+                            <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-5">
                                 <div className="flex items-center justify-between mb-4">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                         Live Print Preview ({wsOrientation})
@@ -740,7 +740,7 @@ table { width: 100%; border-collapse: collapse; }
                             </div>
 
                             {/* Active Columns */}
-                            <div className="border border-slate-200 rounded-xl bg-white p-4 space-y-3">
+                            <div className="border border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-4 space-y-3">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
                                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto no-scrollbar">
                                     {wsColumns.map((col, i) => (
@@ -755,7 +755,7 @@ table { width: 100%; border-collapse: collapse; }
                                                     value={col.label}
                                                     onChange={(e) => updateColumn(col.id, 'label', e.target.value)}
                                                     placeholder={`Exercise ${i + 1}`}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
+                                                    className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2.5 py-1.5 text-xs text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:border-slate-400 transition-colors"
                                                 />
                                             )}
                                             {wsMode === 'advanced' && (
@@ -777,7 +777,7 @@ table { width: 100%; border-collapse: collapse; }
                                                             value={col.percentage}
                                                             onChange={(e) => updateColumn(col.id, 'percentage', Number(e.target.value) || 100)}
                                                             min={1} max={200}
-                                                            className="w-16 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-xs outline-none text-center focus:border-slate-400"
+                                                            className="w-16 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none text-center focus:border-slate-400"
                                                         />
                                                         <span className="text-[10px] text-slate-400 font-medium">% of 1RM</span>
                                                     </div>
@@ -809,15 +809,15 @@ const AddSessionModal = () => {
 
     if (!isAddSessionModalOpen) return null;
 
-    const INPUT = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
+    const INPUT = "w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
     const LABEL = "text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5";
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-lg shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col">
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between shrink-0 bg-white dark:bg-[#132338]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-slate-100 text-slate-900 dark:text-[#E2E8F0] rounded-lg flex items-center justify-center shrink-0"><CalendarDaysIcon size={16} /></div>
+                        <div className="w-9 h-9 bg-slate-100 dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] rounded-lg flex items-center justify-center shrink-0"><CalendarDaysIcon size={16} /></div>
                         <div>
                             <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">New Session</h3>
                             <p className="text-xs text-slate-500">Quick schedule</p>
@@ -882,12 +882,12 @@ const AddSessionModal = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className={LABEL}>Target Type</label>
-                                    <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                                    <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] p-0.5 rounded-lg">
                                         {['Team', 'Individual'].map(t => (
                                             <button
                                                 key={t}
                                                 onClick={() => setNewSession({ ...newSession, targetType: t, targetId: '' })}
-                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${newSession.targetType === t ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400'}`}
+                                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${newSession.targetType === t ? 'bg-white dark:bg-[#1A2D48] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:bg-white dark:hover:bg-[#1A2D48]'}`}
                                             >
                                                 {t}
                                             </button>
@@ -920,7 +920,7 @@ const AddSessionModal = () => {
                                             onClick={() => setNewSession({ ...newSession, load: l })}
                                             className={`py-2.5 rounded-lg border-2 text-xs font-medium transition-all ${newSession.load === l
                                                 ? (l === 'High' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-400 text-rose-600' : l === 'Medium' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400 text-amber-600' : 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-400 text-emerald-600')
-                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                                                : 'bg-white dark:bg-[#1A2D48] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-slate-300 dark:hover:border-[#364E6E]'
                                                 }`}
                                         >
                                             {l}
@@ -938,7 +938,7 @@ const AddSessionModal = () => {
                                     <input
                                         type="text"
                                         placeholder="Search library..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                                        className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg pl-9 pr-3 py-2.5 text-xs text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
                                         value={addSessionSearch}
                                         onChange={(e) => setAddSessionSearch(e.target.value)}
                                     />
@@ -986,7 +986,7 @@ const AddSessionModal = () => {
                                                                 : [...newSession.exercises, { id: ex.id, name: ex.name, sets: 3, reps: '10', weight: '-', rpe: 8, notes: '' }];
                                                             setNewSession({ ...newSession, exercises: newExList });
                                                         }}
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700' : 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200'}`}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58]'}`}
                                                     >
                                                         {isSelected ? 'Selected' : 'Add'}
                                                     </button>
@@ -1033,7 +1033,7 @@ const AddSessionModal = () => {
                     )}
                 </div>
                 <div className="px-5 py-4 border-t border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] flex gap-3">
-                    <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
+                    <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
                     <button
                         onClick={handleAddSession}
                         className="flex-1 py-2.5 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors"
@@ -1091,7 +1091,7 @@ const SessionModal = () => {
 
     return (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-md shadow-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-md shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1111,7 +1111,7 @@ const SessionModal = () => {
                     {/* Meta row */}
                     <div className="flex items-center gap-2 flex-wrap">
                         {viewingSession.time && (
-                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 dark:text-[#CBD5E1] rounded-md text-xs font-medium">{viewingSession.time}</span>
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-md text-xs font-medium">{viewingSession.time}</span>
                         )}
                         <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${loadColor}`}>{viewingSession.load} Load</span>
                         {viewingSession.trainingPhase && (
@@ -1123,19 +1123,19 @@ const SessionModal = () => {
                     </div>
 
                     {/* Info grid */}
-                    <div className="bg-slate-50 rounded-lg border border-slate-100 p-4 space-y-3">
+                    <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-lg border border-slate-100 dark:border-[#243A58] p-4 space-y-3">
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400 font-medium">Athlete / Team</span>
                             <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{targetName}</span>
                         </div>
-                        <div className="h-px bg-slate-200" />
+                        <div className="h-px bg-slate-200 dark:bg-[#243A58]" />
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400 font-medium">Date</span>
                             <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{dateStr}</span>
                         </div>
                         {viewingSession.time && (
                             <>
-                                <div className="h-px bg-slate-200" />
+                                <div className="h-px bg-slate-200 dark:bg-[#243A58]" />
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs text-slate-400 font-medium">Start Time</span>
                                     <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{viewingSession.time}</span>
@@ -1144,7 +1144,7 @@ const SessionModal = () => {
                         )}
                         {viewingSession.plannedDuration && (
                             <>
-                                <div className="h-px bg-slate-200" />
+                                <div className="h-px bg-slate-200 dark:bg-[#243A58]" />
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs text-slate-400 font-medium">Duration</span>
                                     <span className="text-sm text-slate-700 dark:text-[#CBD5E1]">{viewingSession.actual_duration || viewingSession.plannedDuration} mins</span>
@@ -1153,7 +1153,7 @@ const SessionModal = () => {
                         )}
                         {viewingSession.notes && (
                             <>
-                                <div className="h-px bg-slate-200" />
+                                <div className="h-px bg-slate-200 dark:bg-[#243A58]" />
                                 <div>
                                     <span className="text-xs text-slate-400 font-medium block mb-1">Notes</span>
                                     <p className="text-sm text-slate-600 dark:text-[#CBD5E1]">{viewingSession.notes}</p>
@@ -1189,15 +1189,15 @@ const SessionModal = () => {
                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Linked Sessions</span>
                             <div className="flex flex-wrap gap-2">
                                 {linkedSessions.map(l => {
-                                    const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
-                                        : l.source === 'conditioning' ? 'bg-amber-100 text-amber-700'
-                                        : l.source === 'workout-template' ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700'
-                                        : 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
+                                    const srcColor = l.source === 'wattbike' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400'
+                                        : l.source === 'conditioning' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                        : l.source === 'workout-template' ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-white'
+                                        : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]';
                                     const srcIcon = l.source === 'wattbike' ? <ActivityIcon size={10} />
                                         : l.source === 'conditioning' ? <TimerIcon size={10} />
                                         : <DumbbellIcon size={10} />;
                                     return (
-                                        <div key={l.id} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                        <div key={l.id} className="flex items-center gap-1.5 bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5">
                                             <div className={`w-4 h-4 rounded flex items-center justify-center ${srcColor}`}>{srcIcon}</div>
                                             <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1]">{l.title}</span>
                                             {l.meta && <span className="text-[10px] text-slate-400">· {l.meta}</span>}
@@ -1210,9 +1210,9 @@ const SessionModal = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-colors">Close</button>
+                        <button onClick={() => setViewingSession(null)} className="px-4 py-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">Close</button>
                         <button onClick={handleDeleteAndClose} className="flex items-center gap-1.5 px-3 py-2 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg text-sm font-medium transition-colors">
                             <Trash2Icon size={14} /> Delete
                         </button>
@@ -1306,21 +1306,21 @@ const AthleteProfileModal = () => {
     const bmi = p.height_cm && p.weight_kg ? (p.weight_kg / ((p.height_cm / 100) ** 2)).toFixed(1) : null;
 
     const NoData = ({ text = 'No current data' }) => (
-        <p className="text-xs text-slate-300 italic py-1">{text}</p>
+        <p className="text-xs text-slate-300 dark:text-[#94A3B8] italic py-1">{text}</p>
     );
 
     // ── Helpers ──
     const Stat = ({ label, value, unit = '' }) => (
-        <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
-            <div className="text-[10px] font-medium text-slate-400">{label}</div>
-            <div className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] mt-0.5">{value != null ? `${value}${unit}` : <span className="text-slate-300">—</span>}</div>
+        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-2.5 border border-slate-100 dark:border-[#243A58]">
+            <div className="text-[10px] font-medium text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">{label}</div>
+            <div className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] mt-0.5">{value != null ? `${value}${unit}` : <span className="text-slate-300 dark:text-[#94A3B8]">—</span>}</div>
         </div>
     );
 
     const SectionHeader = ({ icon: Icon, label }) => (
         <div className="flex items-center gap-2 mb-2">
-            {Icon && <Icon size={12} className="text-slate-400" />}
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{label}</span>
+            {Icon && <Icon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />}
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">{label}</span>
         </div>
     );
 
@@ -1352,10 +1352,10 @@ const AthleteProfileModal = () => {
 
     return (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-2xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 overflow-hidden flex flex-col text-slate-900 dark:text-[#E2E8F0]">
+            <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full lg:max-w-2xl h-full lg:h-auto lg:max-h-[90vh] shadow-xl border-0 lg:border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col text-slate-900 dark:text-[#E2E8F0]">
 
                 {/* ── Header ── */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm shrink-0">
                             {initials}
@@ -1363,32 +1363,32 @@ const AthleteProfileModal = () => {
                         <div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{p.name}</h2>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                {playerTeam && <span className="text-[10px] text-slate-400">{playerTeam.name}</span>}
-                                {p.sport && <span className="text-[10px] text-slate-400">· {p.sport}</span>}
+                                {playerTeam && <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{playerTeam.name}</span>}
+                                {p.sport && <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">· {p.sport}</span>}
                                 {p.position && <span className="text-[10px] bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white font-medium px-1.5 py-0.5 rounded-full">{p.position}</span>}
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>
 
                 {/* ── Status bar (only shows if data exists) ── */}
                 {(acwrValue != null || currentInjuries.length > 0 || latestWellness) && (
-                    <div className="px-5 py-2.5 border-b border-slate-100 flex items-center gap-2 flex-wrap bg-slate-50/50 dark:bg-[#132338]/40">
+                    <div className="px-5 py-2.5 border-b border-slate-100 dark:border-[#243A58] flex items-center gap-2 flex-wrap bg-slate-50/50 dark:bg-[#0F1C30]/40">
                         {acwrValue != null && (
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${acwrColor}`}>
                                 ACWR {acwrValue} · {acwrZone}
                             </span>
                         )}
                         {currentInjuries.length > 0 && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-900/20 text-rose-600">
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
                                 {currentInjuries.length} Active Injur{currentInjuries.length > 1 ? 'ies' : 'y'}
                             </span>
                         )}
                         {latestWellness && (
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-200 bg-white text-slate-500">
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1]">
                                 Wellness: {latestWellness.date || latestWellness.session_date || '—'}
                             </span>
                         )}
@@ -1461,10 +1461,10 @@ const AthleteProfileModal = () => {
                         {testResults.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {testResults.map((m, i) => (
-                                    <div key={i} className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
-                                        <div className="text-[10px] font-medium text-slate-400 capitalize">{formatTestName(m)}</div>
+                                    <div key={i} className="bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-2.5 border border-slate-100 dark:border-[#243A58]">
+                                        <div className="text-[10px] font-medium text-slate-400 dark:text-[#CBD5E1] capitalize">{formatTestName(m)}</div>
                                         <div className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] mt-0.5">{formatTestValue(m)}</div>
-                                        <div className="text-[9px] text-slate-300 mt-0.5">{m.date?.slice(0, 10)}</div>
+                                        <div className="text-[9px] text-slate-300 dark:text-[#94A3B8] mt-0.5">{m.date?.slice(0, 10)}</div>
                                     </div>
                                 ))}
                             </div>
@@ -1483,8 +1483,8 @@ const AthleteProfileModal = () => {
                                     </div>
                                 )}
                                 {p.notes && (
-                                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                        <div className="text-[10px] font-medium text-slate-400 mb-1">Notes</div>
+                                    <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-lg p-3 border border-slate-100 dark:border-[#243A58]">
+                                        <div className="text-[10px] font-medium text-slate-400 dark:text-[#CBD5E1] mb-1">Notes</div>
                                         <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{p.notes}</p>
                                     </div>
                                 )}
@@ -1517,7 +1517,7 @@ const ACWRDetailModal = () => {
                             <div className={`px-3 py-1.5 rounded-lg ${status.bgColor} border ${status.color.replace('text-', 'border-')}`}>
                                 <span className={`text-sm font-semibold ${status.color}`}>{status.status}</span>
                             </div>
-                            <button onClick={() => setAcwrDetailAthlete(null)} className="w-9 h-9 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg flex items-center justify-center transition-colors">
+                            <button onClick={() => setAcwrDetailAthlete(null)} className="w-9 h-9 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] rounded-lg flex items-center justify-center transition-colors">
                                 <XIcon size={16} />
                             </button>
                         </div>
@@ -1526,16 +1526,16 @@ const ACWRDetailModal = () => {
 
                 <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar">
                     <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <span className="text-xs font-medium text-slate-500 block mb-1.5">Current ACWR</span>
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                            <span className="text-xs font-medium text-slate-500 dark:text-[#CBD5E1] block mb-1.5">Current ACWR</span>
                             <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">1.12</span>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <span className="text-xs font-medium text-slate-500 block mb-1.5">Acute Load (7d)</span>
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                            <span className="text-xs font-medium text-slate-500 dark:text-[#CBD5E1] block mb-1.5">Acute Load (7d)</span>
                             <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">420</span>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <span className="text-xs font-medium text-slate-500 block mb-1.5">Chronic Load (28d)</span>
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                            <span className="text-xs font-medium text-slate-500 dark:text-[#CBD5E1] block mb-1.5">Chronic Load (28d)</span>
                             <span className="text-2xl font-bold text-slate-900 dark:text-[#E2E8F0]">375</span>
                         </div>
                     </div>
@@ -1545,9 +1545,9 @@ const ACWRDetailModal = () => {
                         <p className="text-sm text-slate-700 dark:text-[#CBD5E1]">{status.risk} — Athlete is in the sweet spot for adaptation and performance gains.</p>
                     </div>
 
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h4 className="text-sm font-medium text-slate-500 mb-3">Load Progression (Last 28 Days)</h4>
-                        <div className="h-44 flex items-center justify-center text-slate-300 text-sm italic">
+                    <div className="bg-slate-50 dark:bg-[#0F1C30] p-4 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                        <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1] mb-3">Load Progression (Last 28 Days)</h4>
+                        <div className="h-44 flex items-center justify-center text-slate-300 dark:text-[#94A3B8] text-sm italic">
                             Terminal processing telemetry...
                         </div>
                     </div>
