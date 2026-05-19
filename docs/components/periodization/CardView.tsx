@@ -240,7 +240,7 @@ export const CardView = ({ plan }) => {
                                             ) : (
                                                 <button onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate('/workouts/sessions', { state: { assignToPlanSession: { sessionId: session.id, date: dateStr, weekId: week.id, blockId: block.id, phaseId: phase.id, planId: plan.id } } });
+                                                    navigate('/workouts/packets', { state: { assignToPlanSession: { sessionId: session.id, date: dateStr, weekId: week.id, blockId: block.id, phaseId: phase.id, planId: plan.id } } });
                                                 }}
                                                     className="mt-auto flex items-center gap-1 text-[10px] text-slate-400 hover:text-indigo-500 font-medium transition-colors">
                                                     <LinkIcon size={9} /> Assign Workout

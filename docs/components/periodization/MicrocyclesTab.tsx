@@ -925,7 +925,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                                     const tpl = (workoutTemplates || []).find(t => t.id === session.workoutTemplateId);
                                                                     navigate('/workouts/packets', { state: { editTemplate: tpl ? { ...tpl } : { id: session.workoutTemplateId }, returnTo: '/periodization', returnToMicrocycles: { phaseId: selPhaseId, blockId: selBlockId, weekStart: currentWeekStart, selectedDate: dateStr } } });
                                                                 } else {
-                                                                    navigate('/workouts/sessions', { state: { assignToPlanSession: buildAssignCtx(session, dateStr) } });
+                                                                    navigate('/workouts/packets', { state: { assignToPlanSession: buildAssignCtx(session, dateStr) } });
                                                                 }
                                                             }}
                                                             className="flex items-center gap-0.5 text-[7px] text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 dark:hover:text-indigo-400 font-medium mt-1 transition-colors">
@@ -1085,7 +1085,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                         ) : (
                                                             <div className="mt-3">
                                                                 <button
-                                                                    onClick={() => navigate('/workouts/sessions', { state: { assignToPlanSession: buildAssignCtx({ id: session.id }, selectedDate) } })}
+                                                                    onClick={() => navigate('/workouts/packets', { state: { assignToPlanSession: buildAssignCtx({ id: session.id }, selectedDate) } })}
                                                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-semibold transition-colors shadow-sm">
                                                                     <Plus size={11} /> Assign Workout Packet
                                                                 </button>

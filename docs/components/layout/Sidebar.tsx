@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -10,14 +10,6 @@ import {
     ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, ChevronLeftIcon, ChevronRightIcon,
     SettingsIcon, HeartPulseIcon, ClipboardListIcon, XIcon
 } from 'lucide-react';
-
-const WORKOUTS_SUB_NAV = [
-    { path: '/workouts',           label: 'Overview' },
-    { path: '/workouts/programs',  label: 'Programs' },
-    { path: '/workouts/sessions',  label: 'Packets' },
-    { path: '/workouts/sheets',    label: 'Sheets' },
-    { path: '/workouts/history',   label: 'History' },
-];
 
 const NAV_ITEMS = [
     { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon },
@@ -35,7 +27,6 @@ const NAV_ITEMS = [
 
 export const Sidebar = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const { user } = useAuth();
     const isMobile = useIsMobile();
     const {
@@ -117,50 +108,24 @@ export const Sidebar = () => {
                 <div className="space-y-0.5">
                     {NAV_ITEMS.map(item => {
                         const isActive = activeTab === item.id;
-                        const hasSubNav = item.id === 'workouts';
                         return (
-                            <div key={item.id}>
-                                <button
-                                    onClick={() => handleNavClick(item)}
-                                    title={!showLabels ? item.label : ''}
-                                    className={`w-full flex items-center gap-3 rounded-lg transition-colors
-                                        ${isMobile ? 'min-h-[44px]' : ''}
-                                        ${!showLabels ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'}
-                                        ${isActive
-                                            ? 'bg-indigo-600 text-white'
-                                            : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
-                                        }`}
-                                >
-                                    <item.icon size={18} className="shrink-0" />
-                                    {showLabels && (
-                                        <span className="text-sm font-medium truncate">{item.label}</span>
-                                    )}
-                                </button>
-
-                                {/* Workouts sub-nav — shown when active and expanded */}
-                                {hasSubNav && isActive && showLabels && (
-                                    <div className="ml-3 mt-0.5 mb-1 border-l-2 border-indigo-300/40 dark:border-indigo-700/50 pl-3 space-y-0.5">
-                                        {WORKOUTS_SUB_NAV.map(sub => {
-                                            const subActive = sub.path === '/workouts'
-                                                ? location.pathname === '/workouts'
-                                                : location.pathname.startsWith(sub.path);
-                                            return (
-                                                <button
-                                                    key={sub.path}
-                                                    onClick={() => { navigate(sub.path); if (isMobile) setIsMobileDrawerOpen(false); }}
-                                                    className={`w-full text-left py-1.5 px-2.5 rounded-md text-[11px] font-medium transition-colors ${
-                                                        subActive
-                                                            ? 'text-indigo-700 dark:text-white bg-indigo-50 dark:bg-indigo-600'
-                                                            : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
-                                                    }`}
-                                                >
-                                                    {sub.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                            <button
+                                key={item.id}
+                                onClick={() => handleNavClick(item)}
+                                title={!showLabels ? item.label : ''}
+                                className={`w-full flex items-center gap-3 rounded-lg transition-colors
+                                    ${isMobile ? 'min-h-[44px]' : ''}
+                                    ${!showLabels ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'}
+                                    ${isActive
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
+                                    }`}
+                            >
+                                <item.icon size={18} className="shrink-0" />
+                                {showLabels && (
+                                    <span className="text-sm font-medium truncate">{item.label}</span>
                                 )}
-                            </div>
+                            </button>
                         );
                     })}
                 </div>

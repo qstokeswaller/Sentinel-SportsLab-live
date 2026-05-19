@@ -6,6 +6,8 @@ import { useWorkoutPrograms, useDeleteProgram, useProgramWithDays } from '../hoo
 import { DatabaseService } from '../services/databaseService';
 import { ProgramBuilderModal } from '../components/workouts/ProgramBuilderModal';
 import { ProgramViewModal } from '../components/workouts/ProgramViewModal';
+import { ProgramAssignModal } from '../components/workouts/ProgramAssignModal';
+import { WorkoutsTabsBar } from './WorkoutsPage';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 import { fuzzySearch } from '../utils/fuzzySearch';
@@ -13,6 +15,7 @@ import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
     LayersIcon, PlusIcon, SearchIcon, GridIcon, ListIcon,
     PencilIcon, Trash2Icon, EyeIcon, Share2Icon, MoreVerticalIcon,
+    CalendarPlus as CalendarPlusIcon,
 } from 'lucide-react';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -65,7 +68,10 @@ export const WorkoutProgramsPage = () => {
 
     const [view, setView] = useState<'grid' | 'list'>('list');
     const [search, setSearch] = useState('');
-    const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+    // Tabs:
+    //  - 'templates' (formerly 'active'): every saved program — they're all reusable templates regardless of assignment
+    //  - 'assigned'  (formerly 'archived'): only programs that have at least one scheduled session referencing them
+    const [activeTab, setActiveTab] = useState<'templates' | 'assigned'>('templates');
     const [viewingProgram, setViewingProgram] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
@@ -74,32 +80,48 @@ export const WorkoutProgramsPage = () => {
     const { data: editingFullProgram } = useProgramWithDays(editingProgramId);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [shareTarget, setShareTarget] = useState<{ type: 'program'; id: string; name: string } | null>(null);
+    const [assignTarget, setAssignTarget] = useState<{ id: string; name: string; training_phase?: string | null } | null>(null);
 
     const { data: programs = [], isLoading } = useWorkoutPrograms();
     const deleteProgram = useDeleteProgram();
 
+    // A program is "Assigned" if at least one scheduled_session references it via program_id.
+    const assignedProgramIds = useMemo(() => {
+        const ids = new Set<string>();
+        for (const s of scheduledSessions || []) {
+            const pid = (s as any).program_id || (s as any).programId;
+            if (pid) ids.add(pid);
+        }
+        return ids;
+    }, [scheduledSessions]);
+
     // ── Sidebar stats ──────────────────────────────────────────────────────
+    // Phase distribution is driven by the new `training_phase` enum (not free-text tags),
+    // so the count is always clean — no duplicate "Off-Season" vs "Off Season" buckets.
+    // Drafts = programs without a `start_date` set (saved but not yet scheduled to start).
     const sidebarStats = useMemo(() => {
         const total = programs.length;
-        // Tag distribution
-        const tagCounts: Record<string, number> = {};
+        const drafts = programs.filter(p => !p.start_date).length;
+        const phaseCounts: Record<string, number> = {};
         for (const p of programs) {
-            for (const t of (p.tags ?? [])) {
-                tagCounts[t] = (tagCounts[t] || 0) + 1;
-            }
+            const phase = p.training_phase || 'Unassigned';
+            phaseCounts[phase] = (phaseCounts[phase] || 0) + 1;
         }
-        const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        // Sessions linked to programs (sessions that have a training_phase matching program tags)
-        const allSessions = scheduledSessions || [];
-        const completedCount = allSessions.filter(s => s.status === 'Completed').length;
-        return { total, topTags, completedCount, totalSessions: allSessions.length };
-    }, [programs, scheduledSessions]);
+        const phaseDistribution = Object.entries(phaseCounts).sort((a, b) => b[1] - a[1]);
+        return { total, drafts, phaseDistribution };
+    }, [programs]);
 
     const programSearch = useMemo(
         () => fuzzySearch(programs, search, p => [p.name, p.overview || '', ...(p.tags ?? [])].join(' '), p => p.name),
         [programs, search]
     );
-    const filteredPrograms = programSearch.results;
+    // Apply the active tab filter on top of search. Templates = all programs; Assigned = only those with scheduled sessions.
+    const filteredPrograms = useMemo(
+        () => activeTab === 'assigned'
+            ? programSearch.results.filter(p => assignedProgramIds.has(p.id))
+            : programSearch.results,
+        [programSearch.results, activeTab, assignedProgramIds]
+    );
 
     const handleDelete = async (id: string) => {
         const name = programs.find(p => p.id === id)?.name;
@@ -118,6 +140,18 @@ export const WorkoutProgramsPage = () => {
         setIsProgramBuilderOpen(true);
     };
 
+    // When the builder is open, render IT instead of the list so the sidebar nav stays visible
+    // and we don't end up with a full-screen overlay that hides everything else.
+    if (isProgramBuilderOpen) {
+        return (
+            <ProgramBuilderModal
+                isOpen={isProgramBuilderOpen}
+                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgramId(null); setEditingProgramBasic(null); }}
+                editingProgram={editingFullProgram ?? editingProgramBasic}
+            />
+        );
+    }
+
     return (
         <>
             <div className="flex gap-5 animate-in fade-in duration-300">
@@ -132,8 +166,10 @@ export const WorkoutProgramsPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Workout Programs</h2>
-                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Build, manage and periodize long-term training programs.</p>
+                            <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">Build, manage and periodize long-term training programs.</p>
                         </div>
+                        {/* Workouts top-level tabs — embedded in the header so title + tabs share one bar */}
+                        <WorkoutsTabsBar />
                         <div className="flex items-center gap-2 shrink-0">
                             <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 <button onClick={() => setView('list')} className={`p-1.5 rounded-md transition-all ${view === 'list' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`} title="List view"><ListIcon size={13} /></button>
@@ -168,8 +204,8 @@ export const WorkoutProgramsPage = () => {
                     {/* Tabs */}
                     <div className="flex gap-0 mt-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
                         {[
-                            { key: 'active', label: 'Active Programs' },
-                            { key: 'archived', label: 'Archived' },
+                            { key: 'templates', label: 'Templates', count: programs.length },
+                            { key: 'assigned',  label: 'Assigned',  count: assignedProgramIds.size },
                         ].map(tab => (
                             <button
                                 key={tab.key}
@@ -177,13 +213,13 @@ export const WorkoutProgramsPage = () => {
                                 className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
                                     activeTab === tab.key
                                         ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                                        : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#94A3B8]'
+                                        : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
                                 }`}
                             >
                                 {tab.label}
-                                {tab.key === 'active' && programs.length > 0 && (
-                                    <span className="ml-1.5 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-[9px] font-bold">
-                                        {programs.length}
+                                {tab.count > 0 && (
+                                    <span className="ml-1.5 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded-full text-[9px] font-bold">
+                                        {tab.count}
                                     </span>
                                 )}
                             </button>
@@ -191,14 +227,8 @@ export const WorkoutProgramsPage = () => {
                     </div>
                 </div>
 
-                {/* Archived placeholder or active content */}
-                {activeTab === 'archived' ? (
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] py-16 flex flex-col items-center gap-2 shadow-sm">
-                        <LayersIcon size={28} className="text-slate-200 dark:text-[#243A58]" />
-                        <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">No archived programs</p>
-                        <p className="text-xs text-slate-300 dark:text-[#475569]">Archived programs will appear here</p>
-                    </div>
-                ) : isLoading ? (
+                {/* Tab content — both Templates and Assigned share the same card/list rendering. Empty state on Assigned is special-cased below. */}
+                {isLoading ? (
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-12 flex flex-col items-center gap-3">
                         <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
                         <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">Loading programs...</span>
@@ -206,11 +236,20 @@ export const WorkoutProgramsPage = () => {
                 ) : filteredPrograms.length === 0 ? (
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] py-16 flex flex-col items-center text-slate-300 dark:text-[#475569] gap-2">
                         <LayersIcon size={32} className="opacity-40" />
-                        <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">{search ? `No programs matching "${search}"` : 'No programs yet'}</p>
-                        {!search && (
+                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1]">
+                            {search
+                                ? `No programs matching "${search}"`
+                                : activeTab === 'assigned'
+                                    ? 'No programs assigned yet'
+                                    : 'No programs yet'}
+                        </p>
+                        {!search && activeTab === 'templates' && (
                             <button onClick={() => setIsProgramBuilderOpen(true)} className="mt-3 px-4 py-2 bg-indigo-50 dark:bg-[#1A2D48] hover:bg-indigo-100 dark:hover:bg-indigo-500/15 text-indigo-700 dark:text-white rounded-lg text-xs font-semibold transition-all">
                                 <PlusIcon size={12} className="inline mr-1" /> Create Program
                             </button>
+                        )}
+                        {!search && activeTab === 'assigned' && (
+                            <p className="text-xs text-slate-400 dark:text-[#94A3B8]">Assign a template from the Templates tab to see it here</p>
                         )}
                     </div>
                 ) : view === 'grid' ? (
@@ -231,6 +270,11 @@ export const WorkoutProgramsPage = () => {
                                 </div>
                                 {p.overview && <p className="text-xs text-slate-400 dark:text-[#CBD5E1] leading-relaxed mb-3">{p.overview}</p>}
                                 <div className="flex gap-2 mt-auto">
+                                    <button
+                                        onClick={() => setAssignTarget({ id: p.id, name: p.name, training_phase: (p as any).training_phase })}
+                                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-semibold transition-all shadow-sm">
+                                        <CalendarPlusIcon size={11} /> Assign
+                                    </button>
                                     <button onClick={() => { setViewingProgram(p); setIsViewModalOpen(true); }} className="flex-1 py-2 bg-slate-50 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 border border-slate-200 dark:border-indigo-600 text-slate-600 dark:text-white rounded-lg text-[10px] font-semibold transition-all">
                                         View
                                     </button>
@@ -268,6 +312,12 @@ export const WorkoutProgramsPage = () => {
                                         </td>
                                         <td className="px-5 py-3.5">
                                             <div className="flex items-center justify-end gap-1.5">
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); setAssignTarget({ id: p.id, name: p.name, training_phase: (p as any).training_phase }); }}
+                                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-semibold transition-all shadow-sm"
+                                                    title="Assign to athlete/team">
+                                                    <CalendarPlusIcon size={11} /> Assign
+                                                </button>
                                                 <button onClick={e => { e.stopPropagation(); setShareTarget({ type: 'program', id: p.id, name: p.name }); }} className="p-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 text-slate-400 dark:text-white border border-slate-200 dark:border-indigo-600 transition-all"><Share2Icon size={13} /></button>
                                                 <button onClick={e => { e.stopPropagation(); openEdit(p); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"><PencilIcon size={13} /></button>
                                                 <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(p.id); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 dark:hover:text-rose-400 hover:bg-red-50 dark:hover:bg-[#1A2D48] transition-all"><Trash2Icon size={13} /></button>
@@ -286,38 +336,35 @@ export const WorkoutProgramsPage = () => {
                 {/* Right sidebar */}
                 <div className="w-64 shrink-0 space-y-4">
 
-                    {/* Program Overview */}
+                    {/* Overview */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Program Overview</span>
-                            <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">All Active Programs</div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Overview</span>
                         </div>
                         <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                             {[
                                 { label: 'Total Programs', value: sidebarStats.total },
-                                { label: 'Total Sessions', value: sidebarStats.totalSessions },
-                                { label: 'Sessions Completed', value: sidebarStats.completedCount },
-                                { label: 'Completion Rate', value: sidebarStats.totalSessions > 0 ? `${Math.round((sidebarStats.completedCount / sidebarStats.totalSessions) * 100)}%` : '—' },
+                                { label: 'Drafts', value: sidebarStats.drafts, hint: 'No start date set' },
                             ].map(row => (
                                 <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
-                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{row.label}</span>
+                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]" title={row.hint}>{row.label}</span>
                                     <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{row.value}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Tag Distribution */}
-                    {sidebarStats.topTags.length > 0 && (
+                    {/* Phase Distribution — driven by training_phase enum, not free-text tags */}
+                    {sidebarStats.phaseDistribution.length > 0 && (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                             <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Goal Distribution</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Phase Distribution</span>
                             </div>
                             <div className="px-4 py-3 space-y-2.5">
-                                {sidebarStats.topTags.map(([tag, count]) => (
-                                    <div key={tag}>
+                                {sidebarStats.phaseDistribution.map(([phase, count]) => (
+                                    <div key={phase}>
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{tag}</span>
+                                            <span className="text-xs text-slate-600 dark:text-[#CBD5E1]">{phase}</span>
                                             <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{count}</span>
                                         </div>
                                         <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full overflow-hidden">
@@ -331,23 +378,11 @@ export const WorkoutProgramsPage = () => {
                             </div>
                         </div>
                     )}
-
-                    {/* Quick action */}
-                    <button
-                        onClick={() => { setEditingProgramBasic(null); setEditingProgramId(null); setIsProgramBuilderOpen(true); }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-all shadow-sm"
-                    >
-                        <PlusIcon size={13} /> Create New Program
-                    </button>
                 </div>
 
             </div>{/* end flex */}
 
-            <ProgramBuilderModal
-                isOpen={isProgramBuilderOpen}
-                onClose={() => { setIsProgramBuilderOpen(false); setEditingProgramId(null); setEditingProgramBasic(null); }}
-                editingProgram={editingFullProgram ?? editingProgramBasic}
-            />
+            {/* Builder renders inline (see early-return above) when isProgramBuilderOpen so the sidebar stays visible */}
             <ProgramViewModal
                 program={viewingProgram}
                 isOpen={isViewModalOpen}
@@ -368,6 +403,11 @@ export const WorkoutProgramsPage = () => {
                     onClose={() => setShareTarget(null)}
                 />
             )}
+            <ProgramAssignModal
+                program={assignTarget}
+                isOpen={!!assignTarget}
+                onClose={() => setAssignTarget(null)}
+            />
         </>
     );
 };

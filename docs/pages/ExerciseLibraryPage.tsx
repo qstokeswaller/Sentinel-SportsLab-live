@@ -299,6 +299,8 @@ export const ExerciseLibraryPage = () => {
     const [filterMovement, setFilterMovement] = useState('All');
     const [filterEquipment, setFilterEquipment] = useState('All');
     const [filterForceType, setFilterForceType] = useState('All');
+    // Filter the exercise list by a saved collection (null = no filter)
+    const [filterCollectionId, setFilterCollectionId] = useState<string | null>(null);
     const [showMoreFilters, setShowMoreFilters] = useState(false);
 
     // ── My Library sub-state ──────────────────────────────────────────────
@@ -362,21 +364,30 @@ export const ExerciseLibraryPage = () => {
     const hasFuzzyResults = exerciseData?.hasFuzzyResults ?? false;
     const suggestions = exerciseData?.suggestions ?? [];
 
+    // Pre-compute the active collection's exercise ID set so the filter is O(1) per row
+    const filterCollectionSet = useMemo(() => {
+        if (!filterCollectionId) return null;
+        const col = collections.find(c => c.id === filterCollectionId);
+        return col ? new Set(col.exercise_ids) : null;
+    }, [filterCollectionId, collections]);
+
     const filteredExercises = useMemo(() => {
         let list = dbExercises;
         if (filterMovement !== 'All') list = list.filter(ex => ex.options?.movementPattern === filterMovement);
         if (filterEquipment !== 'All') list = list.filter(ex => ex.equipment?.includes(filterEquipment));
         if (filterForceType !== 'All') list = list.filter(ex => ex.options?.forceType === filterForceType);
+        if (filterCollectionSet) list = list.filter(ex => filterCollectionSet.has(ex.id));
         return list;
-    }, [dbExercises, filterMovement, filterEquipment, filterForceType]);
+    }, [dbExercises, filterMovement, filterEquipment, filterForceType, filterCollectionSet]);
 
     const hasActiveFilters = selectedCategory !== 'All' || selectedClassification !== 'All' || selectedMuscleGroup !== 'All'
-        || filterMovement !== 'All' || filterEquipment !== 'All' || filterForceType !== 'All' || alphabetLetter !== 'All';
+        || filterMovement !== 'All' || filterEquipment !== 'All' || filterForceType !== 'All' || alphabetLetter !== 'All'
+        || filterCollectionId !== null;
 
     const clearAllFilters = () => {
         setSelectedCategory('All'); setSelectedClassification('All'); setSelectedMuscleGroup('All');
         setFilterMovement('All'); setFilterEquipment('All'); setFilterForceType('All');
-        setAlphabetLetter('All'); setLibraryPage(1);
+        setAlphabetLetter('All'); setFilterCollectionId(null); setLibraryPage(1);
     };
 
     // ── Personal library exercises ────────────────────────────────────────
@@ -486,6 +497,8 @@ export const ExerciseLibraryPage = () => {
             difficulty: ex.options?.difficulty || '',
             videoUrl: ex.video_url || '',
             description: ex.description || '',
+            safetyCues: ex.safety_cues || '',
+            images: Array.isArray(ex.images) ? ex.images : [],
             tags: Array.isArray(ex.tags) ? ex.tags : [],
         });
         setIsEditLiftModalOpen(true);
@@ -543,6 +556,11 @@ export const ExerciseLibraryPage = () => {
                             <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
                                 <option value="All">All</option>
                                 {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
+                            </CustomSelect>
+                            {/* Filter by saved collection — the exercises list narrows to just that collection's members */}
+                            <CustomSelect value={filterCollectionId ?? ''} onChange={e => { setFilterCollectionId(e.target.value || null); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Collection">
+                                <option value="">All</option>
+                                {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </CustomSelect>
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
@@ -993,7 +1011,7 @@ export const ExerciseLibraryPage = () => {
                                         posture: 'Unsorted', grip: 'Unsorted',
                                         mechanics: 'Unsorted', execution: 'Unsorted', primaryEquipment: 'Unsorted',
                                         movementPattern: 'Unsorted', forceType: 'Unsorted', cnsDemand: '', difficulty: '',
-                                        videoUrl: '', description: '', tags: [],
+                                        videoUrl: '', description: '', safetyCues: '', images: [], tags: [],
                                     });
                                     setIsEditLiftModalOpen(true);
                                 }}>

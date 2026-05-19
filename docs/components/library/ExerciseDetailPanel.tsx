@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
     XIcon, StarIcon, PlusIcon, PlayCircleIcon, DumbbellIcon,
-    ChevronDownIcon, CheckIcon, EyeIcon,
+    ChevronDownIcon, CheckIcon, EyeIcon, AlertTriangleIcon,
 } from 'lucide-react';
 import type { ExerciseCollection } from '../../hooks/useCollections';
 
@@ -189,22 +189,10 @@ function ExerciseViewModal({
             onClick={e => { if (e.target === e.currentTarget) onClose(); }}
         >
             <div className="bg-white dark:bg-[#132338] rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-slate-200 dark:border-[#243A58] shadow-2xl">
-                {/* Header */}
+                {/* Header — title only, tags moved below */}
                 <div className="px-6 py-5 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
                     <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{exercise.name}</h2>
-                            <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                {tags.map(t => (
-                                    <span key={t} className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${tagStyle(t, exercise)}`}>
-                                        {t}
-                                    </span>
-                                ))}
-                                {classification && classification !== 'Unsorted' && !tags.some((t: string) => t.toLowerCase() === classification.toLowerCase()) && (
-                                    <ClassBadge value={classification} />
-                                )}
-                            </div>
-                        </div>
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight min-w-0">{exercise.name}</h2>
                         <button
                             onClick={onClose}
                             className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
@@ -214,18 +202,91 @@ function ExerciseViewModal({
                     </div>
                 </div>
 
-                {/* Body */}
+                {/* Body — order: images → information → safety → tags → details → related */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="p-6 grid grid-cols-2 gap-8">
-                        {/* Left: Details */}
+                    <div className="p-6 space-y-6">
+
+                        {/* Images — only renders if at least one image OR video exists */}
+                        {(() => {
+                            const imgs = (exercise.images || []).filter(Boolean).slice(0, 4);
+                            const hasVideo = !!exercise.video_url;
+                            if (imgs.length === 0 && !hasVideo) return null;
+                            return (
+                                <div>
+                                    {imgs.length === 1 && (
+                                        <div className="aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                            <img src={imgs[0]} alt={exercise.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    {imgs.length > 1 && (
+                                        <div className={`grid gap-2 ${imgs.length === 2 ? 'grid-cols-2' : imgs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                                            {imgs.map((src, i) => (
+                                                <div key={i} className="aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                                    <img src={src} alt={`${exercise.name} ${i + 1}`} className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {hasVideo && (
+                                        <a
+                                            href={exercise.video_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={`${imgs.length > 0 ? 'mt-3' : ''} flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors w-fit`}
+                                        >
+                                            <PlayCircleIcon size={14} className="shrink-0" />
+                                            <span className="text-xs font-medium">Watch Video</span>
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
+                        {/* Information / Description */}
+                        {exercise.description && (
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-2">Information</p>
+                                <p className="text-sm text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{exercise.description}</p>
+                            </div>
+                        )}
+
+                        {/* Safety & Cues */}
+                        {exercise.safety_cues && (
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-2 flex items-center gap-1.5">
+                                    <AlertTriangleIcon size={11} className="text-amber-500" />
+                                    Safety &amp; Cues
+                                </p>
+                                <p className="text-sm text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{exercise.safety_cues}</p>
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        {(tags.length > 0 || (classification && classification !== 'Unsorted')) && (
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-2">Tags</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {tags.map(t => (
+                                        <span key={t} className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${tagStyle(t, exercise)}`}>
+                                            {t}
+                                        </span>
+                                    ))}
+                                    {classification && classification !== 'Unsorted' && !tags.some((t: string) => t.toLowerCase() === classification.toLowerCase()) && (
+                                        <ClassBadge value={classification} />
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Details — 2-column grid */}
                         <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-3">Details</p>
-                            <div className="space-y-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-3">Details</p>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
                                 {detailRows.map(row => {
                                     if (!row.value) return null;
                                     return (
                                         <div key={row.label} className="flex items-center justify-between gap-3">
-                                            <span className="text-xs text-slate-400 dark:text-[#CBD5E1] shrink-0">{row.label}</span>
+                                            <span className="text-xs text-slate-500 dark:text-[#CBD5E1] shrink-0">{row.label}</span>
                                             {row.badge ? (
                                                 <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium border ${row.badge}`}>
                                                     {row.value}
@@ -239,30 +300,6 @@ function ExerciseViewModal({
                                     );
                                 })}
                             </div>
-                        </div>
-
-                        {/* Right: Description + Video */}
-                        <div className="space-y-5">
-                            {exercise.video_url && (
-                                <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-2">Video</p>
-                                    <a
-                                        href={exercise.video_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
-                                    >
-                                        <PlayCircleIcon size={16} className="shrink-0" />
-                                        <span className="text-sm font-medium">Watch Exercise Video</span>
-                                    </a>
-                                </div>
-                            )}
-                            {exercise.description && (
-                                <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-2">Overview</p>
-                                    <p className="text-sm text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{exercise.description}</p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -379,53 +416,92 @@ export function ExerciseDetailPanel({
                         <XIcon size={14} />
                     </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                    {tags.map(t => (
-                        <span key={t} className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${tagStyle(t, exercise)}`}>
-                            {t}
-                        </span>
-                    ))}
-                    {classification && classification !== 'Unsorted' && !tags.some((t: string) => t.toLowerCase() === classification.toLowerCase()) && (
-                        <ClassBadge value={classification} />
-                    )}
-                </div>
             </div>
 
-            {/* Scrollable body */}
+            {/* Scrollable body — order: images → description → safety → tags → details → related */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {/* Video link — compact inline row, no block */}
-                {exercise?.video_url && (
-                    <div className="px-4 pt-3 pb-1 flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] shrink-0">Video</span>
-                        <a
-                            href={exercise.video_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors truncate"
-                        >
-                            <PlayCircleIcon size={12} className="shrink-0" />
-                            Watch Video
-                        </a>
-                    </div>
-                )}
 
-                {/* Overview */}
+                {/* Images — only renders if at least one image OR a video exists */}
+                {(() => {
+                    const imgs = (exercise?.images || []).filter(Boolean).slice(0, 4);
+                    const hasVideo = !!exercise?.video_url;
+                    if (imgs.length === 0 && !hasVideo) return null;
+                    return (
+                        <div className="px-4 pt-3 pb-3">
+                            {imgs.length === 1 && (
+                                <div className="aspect-video rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                    <img src={imgs[0]} alt={exercise.name} className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            {imgs.length > 1 && (
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {imgs.map((src, i) => (
+                                        <div key={i} className="aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                            <img src={src} alt={`${exercise.name} ${i + 1}`} className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {hasVideo && (
+                                <a
+                                    href={exercise.video_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`${imgs.length > 0 ? 'mt-2' : ''} flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors`}
+                                >
+                                    <PlayCircleIcon size={12} className="shrink-0" />
+                                    Watch Video
+                                </a>
+                            )}
+                        </div>
+                    );
+                })()}
+
+                {/* Description (Information) */}
                 {exercise?.description && (
                     <div className="px-4 pb-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-1.5">Overview</p>
-                        <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{exercise.description}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-1.5">Information</p>
+                        <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{exercise.description}</p>
                     </div>
                 )}
 
-                {/* Details */}
+                {/* Safety & Cues */}
+                {exercise?.safety_cues && (
+                    <div className="px-4 pb-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-1.5 flex items-center gap-1.5">
+                            <AlertTriangleIcon size={11} className="text-amber-500" />
+                            Safety &amp; Cues
+                        </p>
+                        <p className="text-xs text-slate-700 dark:text-[#CBD5E1] leading-relaxed">{exercise.safety_cues}</p>
+                    </div>
+                )}
+
+                {/* Tags */}
+                {(tags.length > 0 || (classification && classification !== 'Unsorted')) && (
+                    <div className="px-4 pb-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-1.5">Tags</p>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {tags.map(t => (
+                                <span key={t} className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${tagStyle(t, exercise)}`}>
+                                    {t}
+                                </span>
+                            ))}
+                            {classification && classification !== 'Unsorted' && !tags.some((t: string) => t.toLowerCase() === classification.toLowerCase()) && (
+                                <ClassBadge value={classification} />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Details / metadata */}
                 <div className="px-4 pb-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-[#CBD5E1] mb-2">Details</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-700 dark:text-[#E2E8F0] mb-2">Details</p>
                     <div className="space-y-2">
                         {detailRows.map(row => {
                             if (!row.value) return null;
                             return (
                                 <div key={row.label} className="flex items-center justify-between gap-2">
-                                    <span className="text-[11px] text-slate-400 dark:text-[#CBD5E1] shrink-0">{row.label}</span>
+                                    <span className="text-[11px] text-slate-500 dark:text-[#CBD5E1] shrink-0">{row.label}</span>
                                     {row.badge ? (
                                         <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-medium border ${row.badge}`}>
                                             {row.value}

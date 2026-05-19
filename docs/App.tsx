@@ -430,7 +430,7 @@ const App = () => {
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                 <TopBar />
                 <main className="flex-1 overflow-y-auto no-scrollbar relative pb-4">
-                    <div className="max-w-[1600px] mx-auto px-3 lg:px-4 py-3 lg:py-4">
+                    <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 lg:py-5">
                     <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
                     <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -438,11 +438,11 @@ const App = () => {
                         <Route path="/periodization" element={<PeriodizationPage />} />
                         <Route path="/clients" element={<RosterPage />} />
                         <Route path="/workouts" element={<WorkoutsPage />} />
-                        <Route path="/workouts/programs" element={<WorkoutProgramsPage />} />
-                        <Route path="/workouts/sessions" element={<WorkoutSessionsPage />} />
+                        <Route path="/workouts/programs" element={<WorkoutsPage />} />
+                        <Route path="/workouts/sessions" element={<WorkoutsPage />} />
+                        <Route path="/workouts/sheets" element={<WorkoutsPage />} />
+                        <Route path="/workouts/weightroom-sheets" element={<WorkoutsPage />} />
                         <Route path="/workouts/packets" element={<WorkoutPacketsPage />} />
-                        <Route path="/workouts/sheets" element={<WeightroomSheetsPage />} />
-                        <Route path="/workouts/weightroom-sheets" element={<WeightroomSheetsPage />} />
                         <Route path="/workouts/history" element={<WorkoutHistoryPage />} />
                         <Route path="/library" element={<ExerciseLibraryPage />} />
                         <Route path="/conditioning" element={<ConditioningHubPage />} />

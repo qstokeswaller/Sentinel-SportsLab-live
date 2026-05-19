@@ -11,6 +11,8 @@ export interface WorkoutProgram {
   overview: string | null;
   tags: string[];
   track_tonnage: boolean;
+  start_date: string | null;
+  training_phase: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,9 +22,14 @@ export interface WorkoutDay {
   program_id: string;
   user_id: string;
   day_number: number;
+  // 1-indexed week this day belongs to. Allows variable-size weeks (1-7 days per week).
+  week_number: number | null;
   name: string | null;
   instructions: string | null;
   is_rest_day: boolean;
+  section_meta: Record<string, { label: string; color: string }> | null;
+  section_order: string[] | null;
+  linked_sessions: any[] | null;
   created_at: string;
 }
 
@@ -44,6 +51,8 @@ export interface WorkoutDayExercise {
   notes: string | null;
   weight: string | null;
   athlete_weight_overrides: Record<string, string> | null;
+  intensities: { unit: string; value: string }[] | null;
+  display_fields: string[] | null;
   created_at: string;
 }
 
@@ -138,7 +147,7 @@ export function useProgramWithDays(programId: string | null) {
 export function useCreateProgram() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; overview?: string; tags?: string[]; track_tonnage?: boolean }) => {
+    mutationFn: async (payload: { name: string; overview?: string; tags?: string[]; track_tonnage?: boolean; start_date?: string | null; training_phase?: string | null }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
@@ -194,12 +203,18 @@ export function useDeleteProgram() {
 
 export interface SaveDayPayload {
   day_number: number;
+  // 1-indexed week — lets weeks have 1-7 days each instead of always padding to 7.
+  week_number?: number;
   name: string;
   instructions: string;
   is_rest_day?: boolean;
+  // Per-day section layout (Packets-style). Persisted in workout_days.section_meta + section_order.
+  section_meta?: Record<string, { label: string; color: string }>;
+  section_order?: string[];
+  linked_sessions?: any[];
   exercises: {
     exercise_id: string;
-    section: 'warmup' | 'workout' | 'cooldown';
+    section: string;  // dynamic section IDs ('warmup' | 'workout' | 'cooldown' | custom_xyz)
     order_index: number;
     sets: string;
     reps: string;
@@ -207,11 +222,13 @@ export interface SaveDayPayload {
     rest_sec: number;
     rir: string;
     rpe: string;
-    intensity: string;
+    intensity: string | null;
     tempo: string;
     notes: string;
     weight: string;
     athlete_weight_overrides?: Record<string, string>;
+    intensities?: { unit: string; value: string }[];
+    display_fields?: string[];
   }[];
 }
 
@@ -240,7 +257,7 @@ export function useSaveProgramFull() {
         .eq('program_id', programId);
       if (delErr) throw delErr;
 
-      // 2. Insert days
+      // 2. Insert days (with per-day section layout + linked sessions)
       if (days.length === 0) return;
       const { data: insertedDays, error: dayErr } = await supabase
         .from('workout_days')
@@ -249,9 +266,13 @@ export function useSaveProgramFull() {
             program_id: programId,
             user_id: userId,
             day_number: d.day_number,
+            week_number: d.week_number ?? Math.max(1, Math.ceil(d.day_number / 7)),
             name: d.name,
             instructions: d.instructions,
             is_rest_day: d.is_rest_day ?? false,
+            section_meta: d.section_meta ?? null,
+            section_order: d.section_order ?? null,
+            linked_sessions: d.linked_sessions ?? null,
           }))
         )
         .select();

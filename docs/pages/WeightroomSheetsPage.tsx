@@ -6,11 +6,20 @@ import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
 import { buildMaxLookup, getSheetCellValue, roundTo2_5 } from '../utils/weightroomUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import {
+    useWeightroomSheets, useCreateSheet, useUpdateSheet, useDeleteSheet,
+    type WeightroomSheet,
+} from '../hooks/useWeightroomSheets';
+import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
+import { WorkoutsTabsBar } from './WorkoutsPage';
+import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
     Plus as PlusIcon,
     Trash2 as Trash2Icon,
     X as XIcon,
+    Save as SaveIcon,
+    Pencil as PencilIcon,
+    Search as SearchIcon,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -22,20 +31,52 @@ const WS_MODES = [
     { id: 'empty-header', label: 'Empty Header' },
 ];
 
+const tempColumnId = () => 'c' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+
+const defaultColumns = () => [
+    { id: 'c1', label: 'Exercise 1', exerciseId: '', percentage: 100 },
+    { id: 'c2', label: 'Exercise 2', exerciseId: '', percentage: 100 },
+    { id: 'c3', label: 'Exercise 3', exerciseId: '', percentage: 100 },
+];
+
 // ── Page Component ───────────────────────────────────────────────────────────
 
 export const WeightroomSheetsPage = () => {
     const navigate = useNavigate();
-    const { teams, exercises, maxHistory, isLoading } = useAppState();
+    const { teams, exercises, maxHistory, isLoading, scheduledSessions, showToast } = useAppState();
+    const { data: savedSheets = [] } = useWeightroomSheets();
+    const createSheet = useCreateSheet();
+    const updateSheet = useUpdateSheet();
+    const deleteSheet = useDeleteSheet();
 
+    // ── Mode + currently-loaded sheet ──────────────────────────────────────
+    // 'list' = saved sheets table; 'builder' = active build/edit UI
+    const [mode, setMode] = useState<'list' | 'builder'>('list');
+    const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
+    const [sheetName, setSheetName] = useState('');
+    const [search, setSearch] = useState('');
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+    // ── Builder state ──────────────────────────────────────────────────────
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
     const [wsMode, setWsMode] = useState('blank');
-    const [wsColumns, setWsColumns] = useState([
-        { id: 'c1', label: 'Exercise 1', exerciseId: '', percentage: 100 },
-        { id: 'c2', label: 'Exercise 2', exerciseId: '', percentage: 100 },
-        { id: 'c3', label: 'Exercise 3', exerciseId: '', percentage: 100 },
-    ]);
+    const [wsColumns, setWsColumns] = useState(defaultColumns);
     const [wsOrientation, setWsOrientation] = useState('portrait');
+
+    // Derived: drafts = sheets created but never used in a packet (heuristic: not referenced by scheduled session's weightroom attach)
+    // For simplicity here: a sheet is a draft if it was created in the last 7 days AND name still contains 'Untitled' or 'Draft'.
+    // Wire this later when sessions persist a sheet reference; for now report blanks as drafts.
+    const sidebarStats = useMemo(() => {
+        const total = savedSheets.length;
+        const drafts = savedSheets.filter(s => !s.name || s.name.toLowerCase().startsWith('untitled')).length;
+        return { total, drafts };
+    }, [savedSheets]);
+
+    const filteredSheets = useMemo(() => {
+        if (!search.trim()) return savedSheets;
+        const q = search.toLowerCase();
+        return savedSheets.filter(s => s.name.toLowerCase().includes(q));
+    }, [savedSheets, search]);
 
     const athletes = useMemo(() => {
         const list = wrSelectedTeam === 'All'
@@ -51,9 +92,70 @@ export const WeightroomSheetsPage = () => {
         []
     );
 
+    // ── Mode transitions ─────────────────────────────────────────────────
+    const openNewSheet = () => {
+        setEditingSheetId(null);
+        setSheetName('');
+        setWrSelectedTeam('All');
+        setWsMode('blank');
+        setWsColumns(defaultColumns());
+        setWsOrientation('portrait');
+        setMode('builder');
+    };
+
+    const openExistingSheet = (s: WeightroomSheet) => {
+        setEditingSheetId(s.id);
+        setSheetName(s.name || '');
+        setWrSelectedTeam(s.team_id || 'All');
+        setWsMode(s.ws_mode || 'blank');
+        setWsColumns((s.ws_columns?.length ? s.ws_columns : defaultColumns()));
+        setWsOrientation(s.ws_orientation || 'portrait');
+        setMode('builder');
+    };
+
+    const handleSaveSheet = async () => {
+        if (!sheetName.trim()) { showToast('Sheet name is required', 'error'); return; }
+        const payload = {
+            name: sheetName.trim(),
+            ws_mode: wsMode,
+            ws_orientation: wsOrientation,
+            ws_columns: wsColumns,
+            team_id: wrSelectedTeam === 'All' ? null : wrSelectedTeam,
+            notes: null,
+        };
+        try {
+            if (editingSheetId) {
+                await updateSheet.mutateAsync({ id: editingSheetId, ...payload });
+                showToast(`"${sheetName}" updated`, 'success');
+            } else {
+                const created = await createSheet.mutateAsync(payload);
+                setEditingSheetId(created.id);
+                showToast(`"${sheetName}" saved`, 'success');
+            }
+        } catch (e: any) {
+            showToast(e.message || 'Save failed', 'error');
+        }
+    };
+
+    const handleDeleteSheet = async () => {
+        if (!confirmDeleteId) return;
+        try {
+            await deleteSheet.mutateAsync(confirmDeleteId);
+            showToast('Sheet deleted', 'success');
+            if (editingSheetId === confirmDeleteId) {
+                setMode('list');
+                setEditingSheetId(null);
+            }
+        } catch {
+            showToast('Failed to delete sheet', 'error');
+        }
+        setConfirmDeleteId(null);
+    };
+
+    // ── Column helpers ───────────────────────────────────────────────────
     const addColumn = () => {
         const n = wsColumns.length + 1;
-        setWsColumns(prev => [...prev, { id: 'c' + Date.now(), label: `Exercise ${n}`, exerciseId: '', percentage: 100 }]);
+        setWsColumns(prev => [...prev, { id: tempColumnId(), label: `Exercise ${n}`, exerciseId: '', percentage: 100 }]);
     };
 
     const removeColumn = (id) => {
@@ -100,7 +202,7 @@ export const WeightroomSheetsPage = () => {
             `<tr><td style="${tdNameStyle}">${r.name}</td>${r.cells.map(c => `<td style="${tdStyle}">${c}</td>`).join('')}</tr>`
         ).join('');
 
-        const html = `<!DOCTYPE html><html><head><title>Weightroom Sheet</title>
+        const html = `<!DOCTYPE html><html><head><title>${sheetName || 'Weightroom Sheet'}</title>
 <style>
 @page { size: ${wsOrientation}; margin: 15mm; }
 body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #1e293b; }
@@ -109,7 +211,7 @@ h1 { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacin
 table { width: 100%; border-collapse: collapse; }
 @media print { button { display: none; } }
 </style></head><body>
-<h1>Weight Training - Record Sheet</h1>
+<h1>${sheetName || 'Weight Training - Record Sheet'}</h1>
 <hr class="divider" />
 <table>${headerRow}${bodyRows}</table>
 </body></html>`;
@@ -118,23 +220,184 @@ table { width: 100%; border-collapse: collapse; }
         if (w) { w.document.write(html); w.document.close(); w.print(); }
     };
 
+    // ── List view ──────────────────────────────────────────────────────
+    if (mode === 'list') {
+        return (
+            <>
+                <div className="flex gap-5 animate-in fade-in duration-300">
+                    <div className="flex-1 min-w-0 space-y-4">
+                        {/* Header */}
+                        <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <div className="w-9 h-9 bg-slate-900 dark:bg-slate-700 rounded-lg flex items-center justify-center shrink-0">
+                                        <PrinterIcon size={18} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Sheets</h2>
+                                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">Saved weightroom sheets — load, print and reuse with any squad</p>
+                                    </div>
+                                </div>
+                                {/* Workouts top-level tabs */}
+                                <WorkoutsTabsBar />
+                                {/* Search */}
+                                <div className="flex-1 flex justify-center px-4">
+                                    <div className="relative w-full max-w-md">
+                                        <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search sheets..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm text-slate-800 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#475569] outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-500/10 transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                        onClick={openNewSheet}
+                                        className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
+                                    >
+                                        <PlusIcon size={14} /> New Sheet
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Count bar */}
+                        <div className="flex items-center justify-between px-1">
+                            <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">
+                                {filteredSheets.length} sheet{filteredSheets.length !== 1 ? 's' : ''}
+                                {search ? ` matching "${search}"` : ' saved'}
+                            </p>
+                        </div>
+
+                        {/* List */}
+                        {filteredSheets.length === 0 ? (
+                            <div className="py-20 text-center">
+                                <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <PrinterIcon size={24} className="text-teal-400 dark:text-teal-500" />
+                                </div>
+                                <p className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">
+                                    {search ? `No sheets matching "${search}"` : 'No sheets saved yet'}
+                                </p>
+                                {!search && (
+                                    <>
+                                        <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-1 mb-4">Build your first weightroom sheet to reuse it across squads</p>
+                                        <button
+                                            onClick={openNewSheet}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold transition-all"
+                                        >
+                                            <PlusIcon size={13} /> Build Your First Sheet
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden shadow-sm">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Sheet</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Mode</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Columns</th>
+                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                                        {filteredSheets.map(s => (
+                                            <tr key={s.id} className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors cursor-pointer" onClick={() => openExistingSheet(s)}>
+                                                <td className="px-5 py-3.5">
+                                                    <div className="font-medium text-slate-800 dark:text-[#E2E8F0] text-sm group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{s.name}</div>
+                                                    {s.team_id && (
+                                                        <div className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                                                            Squad: {teams.find(t => t.id === s.team_id)?.name || s.team_id}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1] rounded-md text-[10px] font-medium uppercase">
+                                                        {s.ws_mode}
+                                                    </span>
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{(s.ws_columns || []).length} columns</span>
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <button onClick={e => { e.stopPropagation(); openExistingSheet(s); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"><PencilIcon size={13} /></button>
+                                                        <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(s.id); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 dark:hover:text-rose-400 hover:bg-red-50 dark:hover:bg-[#1A2D48] transition-all"><Trash2Icon size={13} /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right sidebar */}
+                    <div className="w-64 shrink-0 space-y-4">
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                            <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Overview</span>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                                <div className="flex items-center justify-between px-4 py-2.5">
+                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">Total Sheets</span>
+                                    <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{sidebarStats.total}</span>
+                                </div>
+                                <div className="flex items-center justify-between px-4 py-2.5">
+                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]" title="Sheets named Untitled (unnamed drafts)">Drafts</span>
+                                    <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{sidebarStats.drafts}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <ConfirmDeleteModal
+                    isOpen={!!confirmDeleteId}
+                    title="Delete Sheet"
+                    message="This will permanently delete this saved sheet."
+                    onConfirm={handleDeleteSheet}
+                    onCancel={() => setConfirmDeleteId(null)}
+                />
+            </>
+        );
+    }
+
+    // ── Builder view (existing builder, with name input + Save) ─────────
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
             {/* Header */}
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/workouts')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all" title="Back to Workouts">
+                        <button onClick={() => setMode('list')} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all" title="Back to saved sheets">
                             <ArrowLeftIcon size={18} />
                         </button>
-                        <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0">
+                        <div className="w-9 h-9 bg-slate-900 dark:bg-slate-700 rounded-lg flex items-center justify-center text-white shrink-0">
                             <PrinterIcon size={16} />
                         </div>
-                        <div>
-                            <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h2>
-                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Generate daily prescribed load sheets for your squads</p>
+                        <div className="min-w-0">
+                            <input
+                                type="text"
+                                value={sheetName}
+                                onChange={(e) => setSheetName(e.target.value)}
+                                placeholder="Sheet name (e.g. Squad A — Hypertrophy)"
+                                className="w-full bg-transparent border-0 border-b border-transparent focus:border-slate-300 dark:focus:border-[#243A58] text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none transition-colors"
+                            />
+                            <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{editingSheetId ? 'Editing saved sheet' : 'New sheet — not yet saved'}</p>
                         </div>
                     </div>
+                    <button
+                        onClick={handleSaveSheet}
+                        disabled={!sheetName.trim() || createSheet.isPending || updateSheet.isPending}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <SaveIcon size={13} /> {editingSheetId ? 'Save Changes' : 'Save Sheet'}
+                    </button>
                 </div>
             </div>
 
@@ -160,8 +423,8 @@ table { width: 100%; border-collapse: collapse; }
                                     onClick={() => setWsMode(m.id)}
                                     className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
                                         wsMode === m.id
-                                            ? 'bg-slate-900 text-white border-slate-900'
-                                            : 'bg-white dark:bg-[#132338] text-slate-400 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 hover:text-slate-600'
+                                            ? 'bg-slate-900 dark:bg-teal-600 text-white border-slate-900 dark:border-teal-600'
+                                            : 'bg-white dark:bg-[#132338] text-slate-400 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E] hover:text-slate-600 dark:hover:text-[#E2E8F0]'
                                     }`}
                                 >
                                     {m.label}
@@ -188,7 +451,7 @@ table { width: 100%; border-collapse: collapse; }
                 {/* Left: Live Preview */}
                 <div className="flex-1 min-w-0">
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                        <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-5">
+                        <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#0F1C30] p-5">
                             <div className="flex items-center justify-between mb-4">
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">
                                     Live Print Preview ({wsOrientation})
@@ -199,9 +462,9 @@ table { width: 100%; border-collapse: collapse; }
                             </div>
 
                             <h2 className="text-sm font-black text-slate-900 dark:text-[#E2E8F0] uppercase tracking-widest text-center mb-1">
-                                Weight Training - Record Sheet
+                                {sheetName || 'Weight Training - Record Sheet'}
                             </h2>
-                            <div className="w-40 h-0.5 bg-slate-900 mx-auto mb-4" />
+                            <div className="w-40 h-0.5 bg-slate-900 dark:bg-[#E2E8F0] mx-auto mb-4" />
 
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-xs">
@@ -242,7 +505,7 @@ table { width: 100%; border-collapse: collapse; }
                                                 <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 dark:border-[#243A58] whitespace-nowrap">{a.name}</td>
                                                 {wsColumns.map(col => (
                                                     <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] text-center min-w-[80px]">
-                                                        {getCellValue(col, a) || <span className="text-slate-200">&nbsp;</span>}
+                                                        {getCellValue(col, a) || <span className="text-slate-200 dark:text-[#475569]">&nbsp;</span>}
                                                     </td>
                                                 ))}
                                             </tr>
@@ -257,7 +520,7 @@ table { width: 100%; border-collapse: collapse; }
                 {/* Right Sidebar */}
                 <div className="w-64 shrink-0 space-y-4">
                     {/* Sheet Ready Card */}
-                    <div className="bg-teal-700 rounded-xl p-5 text-white space-y-4">
+                    <div className="bg-teal-700 dark:bg-teal-700/80 rounded-xl p-5 text-white space-y-4">
                         <div className="flex items-center gap-2.5">
                             <PrinterIcon size={22} />
                             <span className="text-sm font-black uppercase tracking-widest">Sheet Ready</span>
@@ -277,7 +540,7 @@ table { width: 100%; border-collapse: collapse; }
                         </div>
                         <button
                             onClick={handlePrint}
-                            className="w-full py-3 bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
+                            className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
                         >
                             <PrinterIcon size={14} /> Print Sheet
                         </button>
@@ -288,10 +551,10 @@ table { width: 100%; border-collapse: collapse; }
                         <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
                         <div className="space-y-2.5 max-h-[400px] overflow-y-auto no-scrollbar">
                             {wsColumns.map((col, i) => (
-                                <div key={col.id} className="border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 space-y-2">
+                                <div key={col.id} className="border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 space-y-2 bg-slate-50/40 dark:bg-[#0F1C30]/40">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Column {i + 1}</span>
-                                        <button onClick={() => removeColumn(col.id)} className="text-slate-300 dark:text-[#475569] hover:text-red-400 transition-colors"><Trash2Icon size={13} /></button>
+                                        <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest">Column {i + 1}</span>
+                                        <button onClick={() => removeColumn(col.id)} className="text-slate-300 dark:text-[#475569] hover:text-red-400 dark:hover:text-rose-400 transition-colors"><Trash2Icon size={13} /></button>
                                     </div>
                                     {wsMode !== 'empty-header' && (
                                         <input
@@ -299,7 +562,7 @@ table { width: 100%; border-collapse: collapse; }
                                             value={col.label}
                                             onChange={(e) => updateColumn(col.id, 'label', e.target.value)}
                                             placeholder={`Exercise ${i + 1}`}
-                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-slate-400 transition-colors"
+                                            className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2.5 py-1.5 text-xs text-slate-800 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:border-slate-400 dark:focus:border-[#364E6E] transition-colors"
                                         />
                                     )}
                                     {wsMode === 'advanced' && (
@@ -322,7 +585,7 @@ table { width: 100%; border-collapse: collapse; }
                                                     value={col.percentage}
                                                     onChange={(e) => updateColumn(col.id, 'percentage', Number(e.target.value) || 100)}
                                                     min={1} max={200}
-                                                    className="w-16 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs outline-none text-center focus:border-slate-400"
+                                                    className="w-16 bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2 py-1.5 text-xs text-slate-800 dark:text-[#E2E8F0] outline-none text-center focus:border-slate-400 dark:focus:border-[#364E6E]"
                                                 />
                                                 <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] font-medium">% of 1RM</span>
                                             </div>

@@ -6,12 +6,17 @@ import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { supabase } from '../../lib/supabase';
 
-type Section = 'warmup' | 'workout' | 'cooldown';
+type Section = string; // dynamic — supports custom colored sections
 
-const SECTION_LABELS: Record<Section, string> = {
+const DEFAULT_SECTION_LABELS: Record<string, string> = {
   warmup: 'Warm Up',
   workout: 'Workout',
   cooldown: 'Cool Down',
+};
+const DEFAULT_SECTION_COLORS: Record<string, string> = {
+  warmup: '#f59e0b',
+  workout: '#6366f1',
+  cooldown: '#0ea5e9',
 };
 
 function formatDate(iso: string) {
@@ -71,7 +76,11 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
   if (!isOpen || !template) return null;
 
   const sections = template.sections || {};
-  const totalExercises = (sections.warmup?.length || 0) + (sections.workout?.length || 0) + (sections.cooldown?.length || 0);
+  // Use the persisted dynamic section layout if present; fall back to the legacy 3-section enum.
+  const persistedMeta = template.sectionMeta as Record<string, { label: string; color: string }> | undefined;
+  const persistedOrder = template.sectionOrder as string[] | undefined;
+  const sectionOrder = (persistedOrder && persistedOrder.length > 0) ? persistedOrder : ['warmup', 'workout', 'cooldown'];
+  const totalExercises = sectionOrder.reduce((sum, sec) => sum + ((sections[sec] || []).length || 0), 0);
 
   const handleDelete = () => {
     onDelete?.(template.id);
@@ -79,13 +88,13 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
   };
 
   return (
-    <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
+    <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-start justify-between shrink-0">
           <div className="space-y-1.5">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-none">{template.name}</h2>
-            <div className="flex items-center gap-3 text-xs text-slate-400">
+            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-[#CBD5E1]">
               <span className="flex items-center gap-1.5">
                 <CalendarIcon size={11} />
                 {formatDate(template.createdAt || template.created_at)}
@@ -97,28 +106,28 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
             </div>
             <div className="flex items-center gap-2 mt-1">
               {template.trainingPhase && (
-                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-semibold">{template.trainingPhase || template.training_phase}</span>
+                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-semibold">{template.trainingPhase || template.training_phase}</span>
               )}
               {template.load && (
-                <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-semibold">{template.load} Load</span>
+                <span className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded text-[9px] font-semibold">{template.load} Load</span>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2 ml-4 shrink-0">
-            <button onClick={() => setShowShare(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
+            <button onClick={() => setShowShare(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
               <Share2Icon size={13} /> Share
             </button>
             {onEdit && (
-              <button onClick={() => { onEdit(template); onClose(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
+              <button onClick={() => { onEdit(template); onClose(); }} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
                 <PencilIcon size={13} /> Edit
               </button>
             )}
             {onDelete && (
-              <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-red-500 rounded-lg text-xs font-medium transition-colors">
+              <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-red-50 dark:hover:bg-red-500/15 text-red-500 dark:text-rose-400 rounded-lg text-xs font-medium transition-colors">
                 <Trash2Icon size={13} /> Delete
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>
@@ -126,15 +135,21 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-          {(['warmup', 'workout', 'cooldown'] as Section[]).map((sec) => {
+          {sectionOrder.map((sec: string) => {
             const exercises = sections[sec] || [];
             if (exercises.length === 0) return null;
+            const meta = persistedMeta?.[sec];
+            const label = meta?.label || DEFAULT_SECTION_LABELS[sec] || sec;
+            const color = meta?.color || DEFAULT_SECTION_COLORS[sec] || '#6366f1';
             return (
               <div key={sec} className="space-y-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{SECTION_LABELS[sec]}</h4>
-                  <div className="flex-1 h-px bg-slate-100" />
-                  <span className="text-[10px] text-slate-300 font-medium">{exercises.length} exercises</span>
+                {/* Colored section header row */}
+                <div
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg mb-2"
+                  style={{ backgroundColor: `${color}1A`, borderLeft: `3px solid ${color}` }}>
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <h4 className="text-xs font-bold uppercase tracking-wide" style={{ color }}>{label}</h4>
+                  <span className="ml-auto text-[10px] font-medium" style={{ color }}>{exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'}</span>
                 </div>
                 {exercises.map((ex: any, idx: number) => {
                   const exKey = ex.id || `${sec}_${idx}`;
@@ -153,24 +168,24 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                   const hasDetail = true;
                   const isExpanded = expandedEx === exKey;
                   return (
-                    <div key={exKey} className="bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors overflow-hidden">
+                    <div key={exKey} className="bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] rounded-lg hover:border-slate-300 dark:hover:border-[#364E6E] transition-colors overflow-hidden">
                       {/* Banner — clickable to expand details */}
                       <button
                         onClick={() => hasDetail ? setExpandedEx(isExpanded ? null : exKey) : null}
                         className={`w-full text-left px-4 py-3 flex items-start gap-3 ${hasDetail ? 'cursor-pointer' : 'cursor-default'}`}
                       >
-                        <span className="w-6 h-6 bg-slate-800 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
+                        <span className="w-6 h-6 bg-slate-800 dark:bg-indigo-600 text-white rounded-md flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0]">{name}</div>
                           {hasMeta && (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-[#CBD5E1] mt-1">
                               {ex.sets && <span>Sets: <span className="font-medium text-indigo-600 dark:text-indigo-300">{ex.sets}</span></span>}
                               {ex.reps && <span>Reps: <span className="font-medium text-indigo-600 dark:text-indigo-300">{ex.reps}</span></span>}
                               {ex.weight && (
                                 <span className="flex items-center gap-0.5">
-                                  <Weight size={10} className="text-indigo-500" />
+                                  <Weight size={10} className="text-indigo-500 dark:text-indigo-300" />
                                   <span className="font-medium text-indigo-600 dark:text-indigo-300">{ex.weight} kg</span>
                                 </span>
                               )}
@@ -180,7 +195,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                           )}
                         </div>
                         {hasDetail && (
-                          <span className={`text-slate-300 shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                          <span className={`text-slate-300 dark:text-[#475569] shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
                             <ExternalLink size={12} className={isExpanded ? 'hidden' : ''} />
                             <XIcon size={12} className={isExpanded ? '' : 'hidden'} />
                           </span>
@@ -188,28 +203,28 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                       </button>
                       {/* Detail area — only shown when expanded */}
                       {isExpanded && (
-                        <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] border-t border-slate-100 dark:border-[#243A58] space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                           {(bodyParts.length > 0 || categories.length > 0) && (
                             <div className="flex flex-wrap gap-1.5">
                               {bodyParts.map((bp: string) => (
-                                <span key={bp} className="px-2 py-0.5 bg-slate-200 text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-medium">{bp}</span>
+                                <span key={bp} className="px-2 py-0.5 bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-medium">{bp}</span>
                               ))}
                               {categories.map((cat: string) => (
-                                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded text-[9px] font-medium">{cat}</span>
+                                <span key={cat} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 rounded text-[9px] font-medium">{cat}</span>
                               ))}
                             </div>
                           )}
-                          {ex.notes && <p className="text-xs text-slate-500 italic">{ex.notes}</p>}
+                          {ex.notes && <p className="text-xs text-slate-500 dark:text-[#CBD5E1] italic">{ex.notes}</p>}
                           {desc && <p className="text-xs text-slate-600 dark:text-[#CBD5E1] leading-relaxed">{desc}</p>}
                           {videoUrl && (
                             <a href={videoUrl} target="_blank" rel="noopener noreferrer"
-                               className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:text-indigo-400 transition-colors">
+                               className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-700 dark:hover:text-indigo-200 transition-colors">
                               <ExternalLink size={10} />
                               Video Reference
                             </a>
                           )}
                           {!desc && !videoUrl && !ex.notes && bodyParts.length === 0 && categories.length === 0 && (
-                            <p className="text-[10px] text-slate-400 italic">No additional information available for this exercise.</p>
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] italic">No additional information available for this exercise.</p>
                           )}
                         </div>
                       )}
@@ -221,7 +236,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
           })}
 
           {totalExercises === 0 && (
-            <div className="py-10 text-center text-sm text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
+            <div className="py-10 text-center text-sm text-slate-500 dark:text-[#CBD5E1] border-2 border-dashed border-slate-100 dark:border-[#243A58] rounded-xl">
               No exercises in this workout
             </div>
           )}

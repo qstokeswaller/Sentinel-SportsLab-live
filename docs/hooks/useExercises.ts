@@ -14,6 +14,8 @@ export interface Exercise {
   video_url: string | null;
   tracking_type: string | null;
   tags: string[] | null;
+  images: string[] | null;        // up to 4 public URLs from exercise-images bucket
+  safety_cues: string | null;     // safety warnings + coaching cues (renamed from VCP "Cautions")
   options: {
     posture?: string | null;
     grip?: string | null;
