@@ -1,10 +1,10 @@
 // @ts-nocheck
-import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
-import { buildMaxLookup, getSheetCellValue, roundTo2_5 } from '../utils/weightroomUtils';
+import { buildMaxLookup, getSheetCellValue, roundTo2_5, printSheet } from '../utils/weightroomUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import {
     useWeightroomSheets, useCreateSheet, useUpdateSheet, useDeleteSheet,
@@ -19,6 +19,10 @@ import {
     Save as SaveIcon,
     Pencil as PencilIcon,
     Link2 as LinkIcon,
+    ChevronRight as ChevronRightIcon,
+    Eye as EyeIcon,
+    SlidersHorizontal as SlidersHorizontalIcon,
+    X as XIcon,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -71,6 +75,14 @@ export const WeightroomSheetsPage = () => {
     const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
     const [sheetName, setSheetName] = useState('');
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    // Selected sheet drives the right-rail descriptor (Library-style master-detail).
+    const [selectedSheet, setSelectedSheet] = useState<WeightroomSheet | null>(null);
+    // Popover filters — Mode + Target + Source. 'All' on each axis = no constraint.
+    const [modeFilter, setModeFilter] = useState<string>('All');
+    const [targetFilter, setTargetFilter] = useState<string>('All');   // 'All' | team_id | '__BLANK__' | '__STANDALONE__'
+    const [sourceFilter, setSourceFilter] = useState<'All' | 'Standalone' | 'FromPacket'>('All');
+    const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
+    const filterPopoverRef = useRef<HTMLDivElement | null>(null);
     // search + view live in the Workouts shell layout (persistent across tab switches).
     // The shell's "Create Sheet" button opens our local builder via registerCreate.
     const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
@@ -91,10 +103,63 @@ export const WeightroomSheetsPage = () => {
     }, [savedSheets]);
 
     const filteredSheets = useMemo(() => {
-        if (!search.trim()) return savedSheets;
-        const q = search.toLowerCase();
-        return savedSheets.filter(s => s.name.toLowerCase().includes(q));
-    }, [savedSheets, search]);
+        let list = savedSheets;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            list = list.filter(s => s.name.toLowerCase().includes(q));
+        }
+        if (modeFilter !== 'All') list = list.filter(s => s.ws_mode === modeFilter);
+        if (targetFilter !== 'All') {
+            list = list.filter(s => {
+                if (targetFilter === '__BLANK__') return s.team_id === BLANK_TEAM_ID;
+                if (targetFilter === '__STANDALONE__') return s.team_id == null || s.team_id === '';
+                return s.team_id === targetFilter;
+            });
+        }
+        if (sourceFilter !== 'All') {
+            list = list.filter(s => {
+                if (sourceFilter === 'Standalone') return !s.source_context;
+                if (sourceFilter === 'FromPacket') return !!s.source_context;
+                return true;
+            });
+        }
+        return list;
+    }, [savedSheets, search, modeFilter, targetFilter, sourceFilter]);
+
+    // Build a unique team list from the sheets themselves so the dropdown only shows teams in use
+    const sheetTeamOptions = useMemo(() => {
+        const seen: Record<string, string> = {};
+        savedSheets.forEach(s => {
+            if (!s.team_id || s.team_id === BLANK_TEAM_ID) return;
+            if (seen[s.team_id]) return;
+            seen[s.team_id] = teams.find((t: any) => t.id === s.team_id)?.name || s.team_id;
+        });
+        return Object.entries(seen)
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [savedSheets, teams]);
+
+    const activeFilterCount =
+        (modeFilter !== 'All' ? 1 : 0) +
+        (targetFilter !== 'All' ? 1 : 0) +
+        (sourceFilter !== 'All' ? 1 : 0);
+
+    const clearAllFilters = () => {
+        setModeFilter('All');
+        setTargetFilter('All');
+        setSourceFilter('All');
+    };
+
+    useEffect(() => {
+        if (!filterPopoverOpen) return;
+        const onDocClick = (e: MouseEvent) => {
+            if (filterPopoverRef.current && !filterPopoverRef.current.contains(e.target as Node)) {
+                setFilterPopoverOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', onDocClick);
+        return () => document.removeEventListener('mousedown', onDocClick);
+    }, [filterPopoverOpen]);
 
     const athletes = useMemo(() => {
         // Blank/handwritten sheet — render a fixed number of empty rows for hand-filling
@@ -145,13 +210,6 @@ export const WeightroomSheetsPage = () => {
         return () => setOverviewRows([]);
     }, [sidebarStats.total, sidebarStats.drafts, setOverviewRows]);
 
-    // Sheets has no extra sidebar cards today — explicitly clear the slot so any
-    // sidebarExtra left behind by a previous tab doesn't bleed through.
-    useLayoutEffect(() => {
-        setSidebarExtra(null);
-        return () => setSidebarExtra(null);
-    }, [setSidebarExtra]);
-
     const openExistingSheet = (s: WeightroomSheet) => {
         setEditingSheetId(s.id);
         setSheetName(s.name || '');
@@ -161,6 +219,130 @@ export const WeightroomSheetsPage = () => {
         setWsOrientation(s.ws_orientation || 'portrait');
         setMode('builder');
     };
+
+    // Opens the saved sheet in a print-preview window (read-only "View" experience).
+    // Builds the athlete list from the sheet's team_id so the cells render with the
+    // correct 1RM math without entering the builder.
+    const previewSheet = useCallback((s: WeightroomSheet) => {
+        let athletes: { id: string; name: string }[] = [];
+        if (s.team_id === BLANK_TEAM_ID) {
+            athletes = Array.from({ length: BLANK_ROW_COUNT }, (_, i) => ({ id: `__blank_${i}`, name: '' }));
+        } else if (!s.team_id) {
+            athletes = teams.flatMap((t: any) => t.players || []);
+        } else {
+            athletes = teams.find((t: any) => t.id === s.team_id)?.players || [];
+        }
+        athletes = [...athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        printSheet(
+            { columns: s.ws_columns || [], orientation: (s.ws_orientation as 'portrait' | 'landscape') || 'portrait' },
+            athletes,
+            maxLookup,
+            s.name || 'Weightroom Sheet'
+        );
+    }, [teams, maxLookup]);
+
+    // Right-rail descriptor — empty state when nothing selected, full breakdown
+    // (columns + 1RM %, target, source provenance) when a row is picked.
+    const sidebarExtraNode = useMemo<React.ReactNode>(() => {
+        if (!selectedSheet) {
+            return (
+                <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    <div className="px-4 py-8 text-center">
+                        <PrinterIcon size={28} className="mx-auto mb-2 text-slate-300 dark:text-[#475569]" />
+                        <div className="text-xs font-semibold text-slate-500 dark:text-[#CBD5E1]">No sheet selected</div>
+                        <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-1 leading-relaxed">Click a sheet on the left to see its columns and metadata.</div>
+                    </div>
+                </div>
+            );
+        }
+        const s = selectedSheet;
+        const targetLabel = s.team_id === BLANK_TEAM_ID
+            ? 'No names (handwritten)'
+            : s.team_id
+                ? (teams.find(t => t.id === s.team_id)?.name || s.team_id)
+                : 'All Teams';
+        const sourceLine = formatSourceLine(s.source_context);
+        const cols = s.ws_columns || [];
+        return (
+            <div className="relative bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+                {/* Subtle delete */}
+                <button
+                    onClick={() => setConfirmDeleteId(s.id)}
+                    className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
+                    title="Delete sheet"
+                >
+                    <Trash2Icon size={12} />
+                </button>
+
+                {/* Header */}
+                <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
+                    <div className="flex items-center gap-1.5 pr-7">
+                        {s.source_context && <LinkIcon size={12} className="shrink-0 text-teal-500 dark:text-teal-400" />}
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight truncate">{s.name || 'Untitled'}</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 uppercase">
+                            {s.ws_mode}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]">
+                            {targetLabel}
+                        </span>
+                    </div>
+                    {sourceLine && (
+                        <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-2 truncate" title={s.source_context?.packetName}>
+                            From: {sourceLine}
+                        </div>
+                    )}
+                    {(s.created_at || s.updated_at) && (
+                        <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-1.5">
+                            {cols.length} column{cols.length !== 1 ? 's' : ''} · {s.ws_orientation}
+                        </div>
+                    )}
+                </div>
+
+                {/* Column list with % of 1RM */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] mb-2">Columns</div>
+                    {cols.length === 0 ? (
+                        <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] italic text-center py-4">No columns configured</div>
+                    ) : (
+                        <div className="space-y-1.5">
+                            {cols.map((col: any, idx: number) => (
+                                <div key={col.id || idx} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">
+                                    <span className="text-[11px] text-slate-700 dark:text-[#E2E8F0] truncate">{col.label || col.exerciseId || `Exercise ${idx + 1}`}</span>
+                                    {col.percentage !== undefined && col.percentage !== null && (
+                                        <span className="shrink-0 text-[10px] font-semibold text-teal-700 dark:text-teal-400">{col.percentage}%</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer — Edit (opens builder) + View (opens print preview) */}
+                <div className="border-t border-slate-100 dark:border-[#1A2D48] p-2.5 flex items-center gap-1.5 shrink-0 bg-slate-50/40 dark:bg-[#0F1C30]/40">
+                    <button
+                        onClick={() => openExistingSheet(s)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[11px] font-semibold transition-all shadow-sm"
+                    >
+                        <PencilIcon size={12} /> Edit Sheet
+                    </button>
+                    <button
+                        onClick={() => previewSheet(s)}
+                        className="px-2.5 py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-sky-400 dark:hover:border-sky-500/60 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/15 transition-all"
+                        title="View / print preview"
+                    >
+                        <EyeIcon size={13} />
+                    </button>
+                </div>
+            </div>
+        );
+    }, [selectedSheet, teams, previewSheet]);
+
+    useLayoutEffect(() => {
+        setSidebarExtra(sidebarExtraNode);
+        return () => setSidebarExtra(null);
+    }, [sidebarExtraNode, setSidebarExtra]);
 
     const handleSaveSheet = async () => {
         if (!sheetName.trim()) { showToast('Sheet name is required', 'error'); return; }
@@ -273,10 +455,82 @@ table { width: 100%; border-collapse: collapse; }
     if (mode === 'list') {
         return (
             <>
-                <div className="space-y-4">
-                        {/* List */}
+                <div className="flex-1 min-h-0 flex flex-col gap-4">
+                    {/* Filter button — Sheets has no sub-tab strip, so this lives in its own thin row above the list */}
+                    <div className="flex items-center justify-end shrink-0 relative" ref={filterPopoverRef}>
+                        <button
+                            onClick={() => setFilterPopoverOpen(v => !v)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                filterPopoverOpen || activeFilterCount > 0
+                                    ? 'bg-teal-50 dark:bg-teal-500/15 border-teal-300 dark:border-teal-500/50 text-teal-700 dark:text-teal-300'
+                                    : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-slate-300 dark:hover:border-[#364E6E]'
+                            }`}
+                        >
+                            <SlidersHorizontalIcon size={12} />
+                            Filter
+                            {activeFilterCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-full bg-teal-600 text-white text-[9px] font-bold leading-none">{activeFilterCount}</span>
+                            )}
+                        </button>
+
+                        {filterPopoverOpen && (
+                            <div className="absolute top-full right-0 mt-1.5 w-80 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-30 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
+                                    <div className="flex items-center gap-2">
+                                        {activeFilterCount > 0 && (
+                                            <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Clear all</button>
+                                        )}
+                                        <button onClick={() => setFilterPopoverOpen(false)} className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                                            <XIcon size={12} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <CustomSelect value={modeFilter} onChange={(e: any) => setModeFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Mode">
+                                        <option value="All">All modes</option>
+                                        {WS_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                                    </CustomSelect>
+                                </div>
+                                <div>
+                                    <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
+                                        <option value="All">Any target</option>
+                                        <option value="__STANDALONE__">All Teams (standalone)</option>
+                                        <option value="__BLANK__">No names (handwritten)</option>
+                                        {sheetTeamOptions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                    </CustomSelect>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Source</label>
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {([
+                                            { v: 'All', label: 'All' },
+                                            { v: 'Standalone', label: 'Standalone' },
+                                            { v: 'FromPacket', label: 'From packet' },
+                                        ] as const).map(opt => (
+                                            <button
+                                                key={opt.v}
+                                                onClick={() => setSourceFilter(opt.v as any)}
+                                                className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                                    sourceFilter === opt.v
+                                                        ? 'bg-teal-600 text-white shadow-sm'
+                                                        : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Persistent list container — fills available height, scrolls internally. */}
+                    <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
+                        <div className="overflow-y-auto flex-1 custom-scrollbar">
                         {filteredSheets.length === 0 ? (
-                            <div className="py-20 text-center">
+                            <div className="py-20 px-5 text-center">
                                 <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                     <PrinterIcon size={24} className="text-teal-400 dark:text-teal-500" />
                                 </div>
@@ -296,30 +550,29 @@ table { width: 100%; border-collapse: collapse; }
                                 )}
                             </div>
                         ) : view === 'grid' ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredSheets.map(s => (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
+                                {filteredSheets.map(s => {
+                                    const isSelected = selectedSheet?.id === s.id;
+                                    return (
                                     <div
                                         key={s.id}
-                                        className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 hover:shadow-md hover:border-slate-300 dark:hover:border-[#364E6E] transition-all group cursor-pointer flex flex-col"
-                                        onClick={() => openExistingSheet(s)}
+                                        className={`bg-white dark:bg-[#132338] rounded-xl border p-4 hover:shadow-md transition-all group cursor-pointer flex flex-col ${
+                                            isSelected
+                                                ? 'border-teal-400 dark:border-teal-500/60 ring-2 ring-teal-500/15'
+                                                : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E]'
+                                        }`}
+                                        onClick={() => setSelectedSheet(s)}
                                     >
-                                        <div className="flex items-start justify-between mb-2 gap-2">
-                                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                                {s.source_context && (
-                                                    <LinkIcon size={11} className="shrink-0 text-teal-500 dark:text-teal-400" />
-                                                )}
-                                                <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{s.name || 'Untitled'}</h4>
-                                            </div>
-                                            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={e => { e.stopPropagation(); openExistingSheet(s); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg transition-all" title="Edit"><PencilIcon size={12} /></button>
-                                                <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(s.id); }} className="p-1 text-slate-300 dark:text-[#475569] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-[#1A2D48] rounded-lg transition-all" title="Delete"><Trash2Icon size={12} /></button>
-                                            </div>
+                                        <div className="flex items-center gap-1.5 min-w-0 mb-2">
+                                            {s.source_context && (
+                                                <LinkIcon size={11} className="shrink-0 text-teal-500 dark:text-teal-400" />
+                                            )}
+                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{s.name || 'Untitled'}</h4>
                                         </div>
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1] rounded text-[9px] font-medium uppercase">
                                                 {s.ws_mode}
                                             </span>
-                                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{(s.ws_columns || []).length} cols</span>
                                         </div>
                                         <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-2 truncate">
                                             {s.team_id === BLANK_TEAM_ID
@@ -328,76 +581,69 @@ table { width: 100%; border-collapse: collapse; }
                                                     ? (teams.find(t => t.id === s.team_id)?.name || s.team_id)
                                                     : 'All Teams'}
                                         </div>
-                                        {formatSourceLine(s.source_context) && (
-                                            <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-1 truncate" title={s.source_context?.packetName}>
-                                                From: {formatSourceLine(s.source_context)}
-                                            </div>
-                                        )}
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
-                            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden shadow-sm">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
+                            <table className="w-full text-left">
+                                    <thead className="sticky top-0 bg-slate-50 dark:bg-[#0F1C30] z-10">
+                                        <tr className="border-b border-slate-200 dark:border-[#243A58]">
                                             <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Sheet</th>
                                             <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Target</th>
                                             <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Mode</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Columns</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] text-right">Actions</th>
+                                            <th className="px-3 py-3 w-8" />
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                                         {filteredSheets.map(s => {
-                                            const sourceLine = formatSourceLine(s.source_context);
+                                            const isSelected = selectedSheet?.id === s.id;
                                             const targetLabel = s.team_id === BLANK_TEAM_ID
                                                 ? 'No names (handwritten)'
                                                 : s.team_id
                                                     ? (teams.find(t => t.id === s.team_id)?.name || s.team_id)
                                                     : 'All Teams';
                                             return (
-                                            <tr key={s.id} className="group hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors cursor-pointer" onClick={() => openExistingSheet(s)}>
+                                            <tr
+                                                key={s.id}
+                                                className={`group transition-colors cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-teal-50/60 dark:bg-teal-500/10'
+                                                        : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
+                                                }`}
+                                                onClick={() => setSelectedSheet(s)}
+                                            >
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
                                                         {s.source_context && (
                                                             <LinkIcon size={12} className="shrink-0 text-teal-500 dark:text-teal-400" />
                                                         )}
-                                                        <div className="font-medium text-slate-800 dark:text-[#E2E8F0] text-sm group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{s.name}</div>
+                                                        <div className={`font-medium text-sm transition-colors ${
+                                                            isSelected
+                                                                ? 'text-teal-700 dark:text-teal-400'
+                                                                : 'text-slate-800 dark:text-[#E2E8F0] group-hover:text-teal-700 dark:group-hover:text-teal-400'
+                                                        }`}>{s.name}</div>
                                                     </div>
-                                                    {sourceLine && (
-                                                        <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-0.5 truncate max-w-xs" title={s.source_context?.packetName}>
-                                                            From: {sourceLine}
-                                                        </div>
-                                                    )}
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <span className="text-xs text-slate-600 dark:text-[#E2E8F0]">{targetLabel}</span>
-                                                    {s.source_context?.targetName && s.source_context.targetName !== targetLabel && (
-                                                        <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">{s.source_context.targetName}</div>
-                                                    )}
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1] rounded-md text-[10px] font-medium uppercase">
                                                         {s.ws_mode}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{(s.ws_columns || []).length} columns</span>
-                                                </td>
-                                                <td className="px-5 py-3.5">
-                                                    <div className="flex items-center justify-end gap-1.5">
-                                                        <button onClick={e => { e.stopPropagation(); openExistingSheet(s); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"><PencilIcon size={13} /></button>
-                                                        <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(s.id); }} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 dark:hover:text-rose-400 hover:bg-red-50 dark:hover:bg-[#1A2D48] transition-all"><Trash2Icon size={13} /></button>
-                                                    </div>
+                                                <td className="px-3 py-3.5 text-right">
+                                                    <ChevronRightIcon size={14} className="inline text-slate-300 dark:text-[#475569] group-hover:text-slate-500 dark:group-hover:text-[#CBD5E1] group-hover:translate-x-0.5 transition-all" />
                                                 </td>
                                             </tr>
                                             );
                                         })}
                                     </tbody>
                                 </table>
-                            </div>
                         )}
+                        </div>{/* end scroll area */}
+                    </div>{/* end persistent list container */}
                 </div>
                 <ConfirmDeleteModal
                     isOpen={!!confirmDeleteId}

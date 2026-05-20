@@ -78,6 +78,32 @@ export function useWorkoutPrograms() {
   });
 }
 
+/**
+ * Returns a `program_id → max(week_number)` map so the Programs page can filter by duration
+ * without loading every day for every program. Single SELECT — cheap.
+ */
+export function useProgramWeekCounts() {
+  return useQuery({
+    queryKey: ['workout-program-week-counts'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workout_days')
+        .select('program_id, week_number');
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((d: any) => {
+        if (!d.program_id) return;
+        const w = d.week_number || 1;
+        if (!map[d.program_id] || map[d.program_id] < w) {
+          map[d.program_id] = w;
+        }
+      });
+      return map;
+    },
+  });
+}
+
 /** Fetch a single program with all its days and exercises. */
 export function useProgramWithDays(programId: string | null) {
   return useQuery({

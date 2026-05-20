@@ -29,6 +29,90 @@ body {
     display: none;
 }
 
+/* Native date / time picker indicators — Chrome paints them black by default
+   which is invisible on the dark canvas. Invert in dark mode and brighten the
+   hover state. Applied globally because every dark page hits the same issue. */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator,
+.dark input[type="week"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    opacity: 0.7;
+    cursor: pointer;
+}
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="time"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="month"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="week"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* ── Global scrollbar (design-system default) ──────────────────────────────
+   Applies to ALL scrollable elements site-wide so any new overflow area picks
+   up the SportsLab look automatically. Pages no longer need to opt in via
+   `custom-scrollbar`; that class is kept as an explicit override but isn't
+   required for dark-mode parity. Use `.no-scrollbar` to suppress. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+}
+.dark * {
+    scrollbar-color: #4338CA transparent;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #4338CA;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6366F1;
+}
+
+/* Slim, theme-aware scrollbar — used inside the Workouts descriptor's body so
+   the scroll affordance reads as part of the dark surface (not a bright OS bar). */
+.sentinel-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.sentinel-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sentinel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.35);
+    border-radius: 999px;
+}
+.sentinel-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.55);
+}
+.dark .sentinel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.22);
+}
+.dark .sentinel-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
+}
+/* Firefox */
+.sentinel-scroll {
+    scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+    scrollbar-width: thin;
+}
+.dark .sentinel-scroll {
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+}
+
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     SearchIcon, PlusIcon, GridIcon, ListIcon,
@@ -182,26 +182,32 @@ const Shell = () => {
     // prevents React from unmounting/remounting the page component when a page enters
     // its fullscreen builder (e.g., Sheets / Programs builders), which previously caused
     // the page to lose its local state and oscillate between modes (the flicker bug).
+    // Library-style fixed-viewport layout: the shell occupies the available main-area height
+    // and never overflows the page. Internal scrolling happens INSIDE the list (left) and INSIDE
+    // the descriptor's body (right) — so the user never has to scroll the whole page.
+    // Matches the ExerciseLibraryPage outer wrapper exactly so the list bottoms align across pages.
     return (
-        <div className="animate-in fade-in duration-300 space-y-4">
+        <div className="animate-in fade-in duration-300 h-[calc(100vh-40px)] flex flex-col gap-4">
             {/* Top row — header (left) + Overview tile (right), height-matched via `items-stretch` */}
-            <div className={hideShell ? 'hidden' : 'flex items-stretch gap-5'}>
+            <div className={hideShell ? 'hidden' : 'flex items-stretch gap-5 shrink-0'}>
                 <div className="flex-1 min-w-0">
                     <ShellHeader />
                 </div>
-                <div className="w-64 shrink-0 flex">
+                <div className="w-80 shrink-0 flex">
                     {overviewRows.length > 0 && <OverviewTile rows={overviewRows} />}
                 </div>
             </div>
 
-            {/* Body row — page main content (left) + sidebar extras (right) */}
-            <div className="flex gap-5">
-                <div className="flex-1 min-w-0">
+            {/* Body row — page main content (left) + sidebar extras (right).
+                Both columns share the same row height (via items-stretch on the row + min-h-0
+                so flex children can shrink). Internal scrolling lives inside each column. */}
+            <div className="flex items-stretch gap-5 flex-1 min-h-0">
+                <div className="flex-1 min-w-0 min-h-0 flex flex-col">
                     {activeTab === 'programs' && <WorkoutProgramsPage />}
                     {activeTab === 'packets'  && <WorkoutSessionsPage />}
                     {activeTab === 'sheets'   && <WeightroomSheetsPage />}
                 </div>
-                <div className={hideShell ? 'hidden' : 'w-64 shrink-0 space-y-4'}>
+                <div className={hideShell ? 'hidden' : 'w-80 shrink-0 min-h-0 flex flex-col gap-4'}>
                     {sidebarExtra}
                 </div>
             </div>
@@ -212,6 +218,11 @@ const Shell = () => {
 export const WorkoutsPage = () => {
     const location = useLocation();
     const activeTab = pathToTab(location.pathname);
+    // Remember which Workouts tab the user was on most recently so deep builders (Packets, etc.)
+    // can fall back to the right tab when a navigation didn't pass an explicit returnTo.
+    useEffect(() => {
+        try { sessionStorage.setItem('sentinel:lastWorkoutsTab', location.pathname); } catch {}
+    }, [location.pathname]);
     return (
         <WorkoutsLayoutProvider activeTab={activeTab}>
             <Shell />

@@ -66,35 +66,35 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 // Presets + INTENSITY_UNITS now live in components/workouts/exerciseRowShared.tsx
 
 const VOLUME_COLORS: Record<string, string> = {
-    'Upper Body': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
-    'Lower Body': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700',
-    'Core': 'bg-amber-100 text-amber-700',
-    'Full Body': 'bg-purple-100 text-purple-700',
-    'Plyometric': 'bg-orange-100 text-orange-700',
-    'Olympic Weightlifting': 'bg-rose-100 text-rose-700',
-    'Powerlifting': 'bg-red-100 text-red-700',
-    'Mobility': 'bg-teal-100 text-teal-700',
-    'Bodybuilding': 'bg-sky-100 text-sky-700',
-    'Calisthenics': 'bg-violet-100 text-violet-700',
+    'Upper Body': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
+    'Lower Body': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    'Core': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    'Full Body': 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
+    'Plyometric': 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+    'Olympic Weightlifting': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+    'Powerlifting': 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+    'Mobility': 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
+    'Bodybuilding': 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+    'Calisthenics': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
 };
 
 const BODY_PART_COLORS: Record<string, string> = {
-    'Chest': 'bg-rose-100 text-rose-700',
-    'Back': 'bg-sky-100 text-sky-700',
-    'Shoulders': 'bg-amber-100 text-amber-700',
-    'Biceps': 'bg-cyan-100 text-cyan-700',
-    'Triceps': 'bg-violet-100 text-violet-700',
-    'Quadriceps': 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700',
-    'Hamstrings': 'bg-lime-100 text-lime-700',
-    'Glutes': 'bg-pink-100 text-pink-700',
-    'Calves': 'bg-teal-100 text-teal-700',
-    'Abdominals': 'bg-orange-100 text-orange-700',
-    'Forearms': 'bg-stone-100 text-stone-600',
-    'Trapezius': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
-    'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
-    'Adductors': 'bg-blue-100 text-blue-700',
-    'Abductors': 'bg-purple-100 text-purple-700',
-    'Shins': 'bg-green-100 text-green-700',
+    'Chest': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+    'Back': 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+    'Shoulders': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    'Biceps': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300',
+    'Triceps': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+    'Quadriceps': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    'Hamstrings': 'bg-lime-100 text-lime-700 dark:bg-lime-500/15 dark:text-lime-300',
+    'Glutes': 'bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
+    'Calves': 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
+    'Abdominals': 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+    'Forearms': 'bg-stone-100 text-stone-600 dark:bg-stone-500/15 dark:text-stone-300',
+    'Trapezius': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
+    'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-300',
+    'Adductors': 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+    'Abductors': 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
+    'Shins': 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300',
 };
 
 const tempId = () => `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -171,7 +171,11 @@ export const WorkoutPacketsPage = () => {
 
     const editingTemplateId = routerState?.editTemplate?.id || null;
     const assignCtx = routerState?.assignToPlanSession || null;
-    const returnTo = assignCtx ? '/periodization' : (routerState?.returnTo || '/workouts');
+    // Fallback chain for back-navigation: explicit returnTo → last Workouts tab the user was on → safe default.
+    // This is what fixes the long-standing bug where the back button always landed on Programs even when the
+    // user originally came from the Packets or Sheets tab.
+    const lastWorkoutsTab = (typeof window !== 'undefined' && window.sessionStorage?.getItem('sentinel:lastWorkoutsTab')) || '/workouts/sessions';
+    const returnTo = assignCtx ? '/periodization' : (routerState?.returnTo || lastWorkoutsTab);
 
     // ── Session info state ─────────────────────────────────────────────────
     const [title, setTitle] = useState('');
@@ -192,6 +196,7 @@ export const WorkoutPacketsPage = () => {
     const [exSearch, setExSearch] = useState('');
     const [exCategory, setExCategory] = useState('All');
     const [exLetter, setExLetter] = useState('');
+    const [alphabetExpanded, setAlphabetExpanded] = useState(false);
     const [exPage, setExPage] = useState(1);
 
     const [scheduling, setScheduling] = useState(false);
@@ -216,6 +221,17 @@ export const WorkoutPacketsPage = () => {
     const [editSectionId, setEditSectionId] = useState<string | null>(null);
     const [draggedExId, setDraggedExId] = useState<string | null>(null);
     const [dropOverSection, setDropOverSection] = useState<string | null>(null);
+    // Row drop indicator: which row is being hovered over and whether the drop will go before/after
+    const [rowDropTarget, setRowDropTarget] = useState<{ tempId: string; pos: 'before' | 'after' } | null>(null);
+    // Linked Sessions section can collapse to a thin bar so the main exercise area gets more room
+    const [linkedSessionsExpanded, setLinkedSessionsExpanded] = useState(false);
+    // Per-row collapse state: stores the tempIds of rows that should render header-only
+    const [collapsedRows, setCollapsedRows] = useState<Set<string>>(new Set());
+    const toggleRowCollapsed = (tempId: string) => setCollapsedRows(prev => {
+        const next = new Set(prev);
+        if (next.has(tempId)) next.delete(tempId); else next.add(tempId);
+        return next;
+    });
 
     const isDefaultSection = (sec: string) => sec === 'warmup' || sec === 'workout' || sec === 'cooldown';
 
@@ -309,15 +325,27 @@ export const WorkoutPacketsPage = () => {
         setTrainingPhase(tpl.trainingPhase || tpl.training_phase || 'Strength');
         setLoad(tpl.load || 'Medium');
         const sd = tpl.sections || {};
-        // Restore section meta + order if persisted (custom sections), else fall back to defaults
-        const restoredMeta = (tpl.sectionMeta && typeof tpl.sectionMeta === 'object')
-            ? tpl.sectionMeta
-            : { warmup: { label: 'Warm-Up', color: '#f59e0b' }, workout: { label: 'Main', color: '#6366f1' }, cooldown: { label: 'Cool-Down', color: '#0ea5e9' } };
-        const restoredOrder = Array.isArray(tpl.sectionOrder) && tpl.sectionOrder.length > 0
-            ? tpl.sectionOrder
-            : ['warmup', 'workout', 'cooldown'];
+        // Pull persisted meta from the reserved `_meta` key inside sections first
+        // (that's where buildTemplatePayload puts it so it survives the workout_templates
+        // single-column schema). Fall back to top-level fields for in-memory copies
+        // and to canonical defaults for the very oldest rows.
+        const persistedMeta = (sd && typeof sd._meta === 'object') ? sd._meta : null;
+        const restoredMeta = (persistedMeta?.sectionMeta && typeof persistedMeta.sectionMeta === 'object')
+            ? persistedMeta.sectionMeta
+            : (tpl.sectionMeta && typeof tpl.sectionMeta === 'object')
+                ? tpl.sectionMeta
+                : { warmup: { label: 'Warm-Up', color: '#f59e0b' }, workout: { label: 'Main', color: '#6366f1' }, cooldown: { label: 'Cool-Down', color: '#0ea5e9' } };
+        const restoredOrder = Array.isArray(persistedMeta?.sectionOrder) && persistedMeta.sectionOrder.length > 0
+            ? persistedMeta.sectionOrder
+            : Array.isArray(tpl.sectionOrder) && tpl.sectionOrder.length > 0
+                ? tpl.sectionOrder
+                : ['warmup', 'workout', 'cooldown'];
+        const restoredLinked = Array.isArray(persistedMeta?.linkedSessions)
+            ? persistedMeta.linkedSessions
+            : Array.isArray(tpl.linkedSessions) ? tpl.linkedSessions : [];
         setSectionMeta(restoredMeta);
         setSectionOrder(restoredOrder);
+        setLinkedSessions(restoredLinked);
         // Build sections map for every key in order (incl. customs)
         const nextSections: Record<string, ExRow[]> = {};
         for (const sec of restoredOrder) {
@@ -346,15 +374,26 @@ export const WorkoutPacketsPage = () => {
         // Load sections from template shape (sections or exercises-as-sections)
         const sectionData = src.sections || (src.exercises && !Array.isArray(src.exercises) && src.exercises.warmup !== undefined ? src.exercises : null);
         if (sectionData) {
-            // Restore section meta + order if persisted (custom sections), else fall back to defaults
-            const restoredMeta = (src.sectionMeta && typeof src.sectionMeta === 'object')
-                ? src.sectionMeta
-                : { warmup: { label: 'Warm-Up', color: '#f59e0b' }, workout: { label: 'Main', color: '#6366f1' }, cooldown: { label: 'Cool-Down', color: '#0ea5e9' } };
-            const restoredOrder = Array.isArray(src.sectionOrder) && src.sectionOrder.length > 0
-                ? src.sectionOrder
-                : ['warmup', 'workout', 'cooldown'];
+            // Restore section meta + order + linked sessions, preferring the reserved
+            // _meta key embedded inside sections (survives the DB single-column schema),
+            // then top-level legacy fields, then canonical defaults.
+            const persistedMeta = (sectionData._meta && typeof sectionData._meta === 'object') ? sectionData._meta : null;
+            const restoredMeta = (persistedMeta?.sectionMeta && typeof persistedMeta.sectionMeta === 'object')
+                ? persistedMeta.sectionMeta
+                : (src.sectionMeta && typeof src.sectionMeta === 'object')
+                    ? src.sectionMeta
+                    : { warmup: { label: 'Warm-Up', color: '#f59e0b' }, workout: { label: 'Main', color: '#6366f1' }, cooldown: { label: 'Cool-Down', color: '#0ea5e9' } };
+            const restoredOrder = Array.isArray(persistedMeta?.sectionOrder) && persistedMeta.sectionOrder.length > 0
+                ? persistedMeta.sectionOrder
+                : Array.isArray(src.sectionOrder) && src.sectionOrder.length > 0
+                    ? src.sectionOrder
+                    : ['warmup', 'workout', 'cooldown'];
+            const restoredLinked = Array.isArray(persistedMeta?.linkedSessions)
+                ? persistedMeta.linkedSessions
+                : Array.isArray(src.linkedSessions || src.linked_sessions) ? (src.linkedSessions || src.linked_sessions) : null;
             setSectionMeta(restoredMeta);
             setSectionOrder(restoredOrder);
+            if (restoredLinked) setLinkedSessions(restoredLinked);
             const nextSections: Record<string, ExRow[]> = {};
             for (const sec of restoredOrder) {
                 nextSections[sec] = (sectionData[sec] || []).map(normalizeRow);
@@ -599,17 +638,53 @@ export const WorkoutPacketsPage = () => {
         }));
     };
 
+    // Move a row from one position to another within the same section, or across sections.
+    // Used by per-row drag-and-drop to reorder. Position is the index in the destination
+    // section AFTER the source has been removed (callers can pass any int — clamped here).
+    const moveRow = (fromSec: string, fromTempId: string, toSec: string, toIndex: number) => {
+        setSections(prev => {
+            const fromArr = prev[fromSec] || [];
+            const row = fromArr.find(r => r.tempId === fromTempId);
+            if (!row) return prev;
+            const fromIdx = fromArr.findIndex(r => r.tempId === fromTempId);
+            const filteredFrom = fromArr.filter(r => r.tempId !== fromTempId);
+            if (fromSec === toSec) {
+                // Re-insert into same section; adjust insert index if it was after the removed row
+                const insertAt = Math.max(0, Math.min(filteredFrom.length, toIndex > fromIdx ? toIndex - 1 : toIndex));
+                const next = [...filteredFrom];
+                next.splice(insertAt, 0, row);
+                return { ...prev, [fromSec]: next };
+            }
+            const toArr = [...(prev[toSec] || [])];
+            const insertAt = Math.max(0, Math.min(toArr.length, toIndex));
+            toArr.splice(insertAt, 0, row);
+            return { ...prev, [fromSec]: filteredFrom, [toSec]: toArr };
+        });
+    };
+
     // ── Build template payload ──────────────────────────────────────────────
     // Serializes every section in sectionOrder (incl. customs) and persists
-    // sectionMeta + sectionOrder so the editor can reconstruct the exact layout
-    // on next load. Built-in warmup/workout/cooldown keys remain present even
-    // when empty, so older readers see the familiar shape.
+    // sectionMeta + sectionOrder + linkedSessions inside the `sections` JSONB
+    // under the reserved key `_meta`. The workout_templates table only has the
+    // single `sections` column, so without this embedding the custom section
+    // colours/labels and the linked-sessions list would be silently dropped on
+    // save — and the share view / PDF would render them as anonymous grey
+    // blocks. Built-in warmup/workout/cooldown keys remain present even when
+    // empty so older readers (and the legacy share view) still see the
+    // familiar shape.
     const buildTemplatePayload = () => {
         const serializedSections: Record<string, any> = {};
         for (const sec of sectionOrder) {
             serializedSections[sec] = (sections[sec] || []).map(serializeRow);
         }
         if (weightroomSheetConfig) serializedSections.weightroomSheet = weightroomSheetConfig;
+        // Reserved meta key — not an array, so it's safely ignored by any code
+        // that iterates sections looking for exercise lists.
+        serializedSections._meta = {
+            sectionMeta,
+            sectionOrder,
+            linkedSessions,
+        };
         return {
             name: title.trim(),
             trainingPhase,
@@ -815,7 +890,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
     // Renders inside the main app layout (NOT as a full-screen overlay), so the
     // sidebar nav stays visible for consistency with every other workflow page.
     return (
-        <div className="flex flex-col h-[calc(100vh-7rem)] bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-40px)] bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
             <div className="flex-1 flex overflow-hidden">
 
                 {/* ── LEFT: Main Panel ───────────────────────────────────── */}
@@ -827,7 +902,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all" title="Back">
                                 <ArrowLeftIcon size={18} />
                             </button>
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAssigning ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-600">
                                 <PackageIcon size={14} className="text-white" />
                             </div>
                             <div>
@@ -973,7 +1048,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         onChange={e => setLibrarySearch(e.target.value)}
                                         autoFocus
                                     />
-                                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto custom-scrollbar pr-1">
                                         {workoutTemplates
                                             .filter(t => !librarySearch || t.name?.toLowerCase().includes(librarySearch.toLowerCase()))
                                             .map(tpl => {
@@ -1037,7 +1112,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     )}
 
                     {/* Scrollable content — tightened spacing */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/60 dark:bg-[#132338]/40">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 bg-slate-50/60 dark:bg-[#132338]/40 flex flex-col gap-2 min-h-0">
                         {/* Session Info Card — collapsible. Default = slim 1-row bar. Expanded = full editor. */}
                         <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl">
                           {/* Slim header bar — only the Details/Collapse button toggles the section.
@@ -1134,7 +1209,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <label className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wider mb-0.5 block">Target Type</label>
                                         <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                             {['Team', 'Individual'].map(tt => (
-                                                <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white dark:bg-[#1A2D48] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
+                                                <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                                     {tt}
                                                 </button>
                                             ))}
@@ -1159,7 +1234,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         </div>
 
                         {/* Workout Builder */}
-                        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
+                        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden flex-1 flex flex-col min-h-[280px]">
                             {/* Section tabs — colored, renameable, with add/remove */}
                             <div className="flex border-b border-slate-100 dark:border-[#243A58] items-stretch">
                                 {sectionOrder.map(sec => {
@@ -1246,7 +1321,11 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <div className="flex flex-wrap gap-1.5 items-center">
                                             <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Body Part</span>
                                             {Object.entries(packetVolume.byBodyPart).sort((a, b) => b[1] - a[1]).map(([part, sets]) => {
-                                                const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
+                                                // Case-insensitive lookup so user-created sections like "core" (lowercase) still get the
+                                                // canonical color. Fallback uses dark-mode-aware slate tokens so unmapped pills don't
+                                                // light up bright white on the dark canvas.
+                                                const titleCased = part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : '';
+                                                const color = BODY_PART_COLORS[part] ?? BODY_PART_COLORS[titleCased] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300';
                                                 return (
                                                     <span key={part} className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold ${color}`}>
                                                         {part} {sets}
@@ -1259,7 +1338,8 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <div className="flex flex-wrap gap-1.5 items-center">
                                             <span className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Region</span>
                                             {Object.entries(packetVolume.byRegion).sort((a, b) => b[1] - a[1]).map(([region, sets]) => {
-                                                const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
+                                                const titleCasedRegion = region ? region.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
+                                                const color = VOLUME_COLORS[region] ?? VOLUME_COLORS[titleCasedRegion] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300';
                                                 return (
                                                     <span key={region} className={`px-2.5 py-0.5 rounded-full text-[9px] font-semibold uppercase ${color}`}>
                                                         {region} {sets}
@@ -1271,14 +1351,30 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 </div>
                             )}
 
-                            {/* Exercise rows — drop zone for drag-from-picker */}
+                            {/* Exercise rows — drop zone for drag-from-picker.
+                                Auto-scrolls when the cursor is near the top/bottom edge so the user can
+                                always reach the position they want to drop to inside a tall list. */}
                             <div
-                                className={`p-4 space-y-3 min-h-[200px] transition-colors ${dropOverSection === activeSection ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
+                                className={`p-4 space-y-3 flex-1 min-h-[200px] overflow-y-auto custom-scrollbar transition-colors ${dropOverSection === activeSection ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
                                 onDragOver={(e) => {
-                                    if (e.dataTransfer.types.includes('text/plain')) {
-                                        e.preventDefault();
-                                        e.dataTransfer.dropEffect = 'copy';
-                                        if (dropOverSection !== activeSection) setDropOverSection(activeSection);
+                                    if (!e.dataTransfer.types.includes('text/plain')) return;
+                                    e.preventDefault();
+                                    // Respect the drag source's effectAllowed — a row drag uses 'move' and the picker uses 'copy'.
+                                    // Setting an incompatible dropEffect (e.g. 'copy' for a 'move' source) makes the browser
+                                    // silently reject the drop and show the "not allowed" cursor, which is what was breaking
+                                    // row-to-row reordering after we added the parent auto-scroll handler.
+                                    const eff = e.dataTransfer.effectAllowed;
+                                    e.dataTransfer.dropEffect = (eff === 'move' || eff === 'all' || eff === 'copyMove' || eff === 'linkMove') ? 'move' : 'copy';
+                                    if (dropOverSection !== activeSection) setDropOverSection(activeSection);
+                                    // Auto-scroll edges — kicks in when the cursor is within 60px of either edge
+                                    const el = e.currentTarget as HTMLElement;
+                                    const rect = el.getBoundingClientRect();
+                                    const edge = 60;
+                                    const speed = 14;
+                                    if (e.clientY - rect.top < edge && el.scrollTop > 0) {
+                                        el.scrollTop = Math.max(0, el.scrollTop - speed);
+                                    } else if (rect.bottom - e.clientY < edge && el.scrollTop + el.clientHeight < el.scrollHeight) {
+                                        el.scrollTop = Math.min(el.scrollHeight, el.scrollTop + speed);
                                     }
                                 }}
                                 onDragLeave={(e) => {
@@ -1334,6 +1430,8 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         const showNotes   = visible.includes('notes');
                                         const intensities = row.intensities || [];
                                         const visibleIntensityCount = [showInt1, showInt2, showInt3].filter(Boolean).length;
+                                        const isDropBefore = rowDropTarget?.tempId === row.tempId && rowDropTarget?.pos === 'before';
+                                        const isDropAfter = rowDropTarget?.tempId === row.tempId && rowDropTarget?.pos === 'after';
                                         return (
                                             <div
                                                 key={row.tempId}
@@ -1342,89 +1440,121 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                     e.dataTransfer.setData('text/plain', `row:${activeSection}:${row.tempId}`);
                                                     e.dataTransfer.effectAllowed = 'move';
                                                 }}
-                                                className="bg-slate-50/50 dark:bg-[#1A2D48]/60 border border-slate-100 dark:border-[#243A58] rounded-xl p-3 hover:border-slate-200 dark:hover:border-[#364E6E] transition-all"
+                                                onDragEnd={() => setRowDropTarget(null)}
+                                                onDragOver={(e) => {
+                                                    if (!e.dataTransfer.types.includes('text/plain')) return;
+                                                    e.preventDefault();
+                                                    e.dataTransfer.dropEffect = 'move';
+                                                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                                    const pos: 'before' | 'after' = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                                                    if (rowDropTarget?.tempId !== row.tempId || rowDropTarget?.pos !== pos) {
+                                                        setRowDropTarget({ tempId: row.tempId, pos });
+                                                    }
+                                                    // Let the parent drop zone also receive the dragover so it can auto-scroll the list.
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
+                                                        if (rowDropTarget?.tempId === row.tempId) setRowDropTarget(null);
+                                                    }
+                                                }}
+                                                onDrop={(e) => {
+                                                    const data = e.dataTransfer.getData('text/plain') || '';
+                                                    const target = rowDropTarget?.tempId === row.tempId ? rowDropTarget : { tempId: row.tempId, pos: 'after' as const };
+                                                    const baseIdx = (sections[activeSection] || []).findIndex(r => r.tempId === row.tempId);
+                                                    if (baseIdx < 0) { setRowDropTarget(null); return; }
+                                                    const insertIdx = target.pos === 'before' ? baseIdx : baseIdx + 1;
+                                                    // Picker drop on a specific row — insert at the indicated position instead of appending at the end.
+                                                    if (data.startsWith('picker:')) {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        const exId = data.slice('picker:'.length);
+                                                        const ex = displayExercises.find((x: any) => x.id === exId);
+                                                        if (ex && !(sections[activeSection] || []).some(r => r.exerciseId === ex.id)) {
+                                                            setSections(prev => {
+                                                                const arr = [...(prev[activeSection] || [])];
+                                                                arr.splice(Math.max(0, Math.min(arr.length, insertIdx)), 0, emptyRow(ex));
+                                                                return { ...prev, [activeSection]: arr };
+                                                            });
+                                                        }
+                                                        setRowDropTarget(null);
+                                                        setDropOverSection(null);
+                                                        return;
+                                                    }
+                                                    if (!data.startsWith('row:')) return;
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    const [, fromSec, rowTempId] = data.split(':');
+                                                    if (!fromSec || !rowTempId || rowTempId === row.tempId) {
+                                                        setRowDropTarget(null);
+                                                        return;
+                                                    }
+                                                    moveRow(fromSec, rowTempId, activeSection, insertIdx);
+                                                    setRowDropTarget(null);
+                                                    setDropOverSection(null);
+                                                }}
+                                                className={`relative bg-slate-50/50 dark:bg-[#1A2D48]/60 border border-slate-100 dark:border-[#243A58] rounded-xl p-2.5 hover:border-slate-200 dark:hover:border-[#364E6E] transition-all ${isDropBefore ? 'before:absolute before:-top-0.5 before:left-2 before:right-2 before:h-1 before:rounded-full before:bg-indigo-500' : ''} ${isDropAfter ? 'after:absolute after:-bottom-0.5 after:left-2 after:right-2 after:h-1 after:rounded-full after:bg-indigo-500' : ''}`}
                                             >
-                                                {/* Header row: drag handle + number + name + (1RM badge) + display options + delete */}
-                                                <div className="flex items-center justify-between mb-3 gap-2">
+                                                {/* Header row: drag handle + number + name + (1RM badge) + collapse + display options + delete */}
+                                                <div className={`flex items-center justify-between gap-2 ${collapsedRows.has(row.tempId) ? 'mb-0' : 'mb-2'}`}>
                                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                                         <GripVerticalIcon size={12} className="text-slate-300 dark:text-[#475569] cursor-grab shrink-0" />
-                                                        <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</span>
+                                                        <span className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</span>
                                                         <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate">{row.exerciseName}</span>
                                                         {weightroomSheetConfig?.columns?.some(c => c.exerciseId && (row.exerciseName === c.exerciseId || row.exerciseName.toLowerCase().includes(c.exerciseId.toLowerCase()))) && (
-                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-800/50 text-[8px] font-bold text-indigo-600 dark:text-white uppercase tracking-wide shrink-0">
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-[8px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wide shrink-0">
                                                                 <LinkIcon size={8} /> 1RM
+                                                            </span>
+                                                        )}
+                                                        {/* Collapsed-only summary so the user sees the prescription at a glance */}
+                                                        {collapsedRows.has(row.tempId) && (
+                                                            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] truncate">
+                                                                {[row.sets && `${row.sets}×${row.reps || '—'}`, row.rest, (intensities[0]?.value && `${intensities[0].value}${intensities[0].unit ? ' ' + intensities[0].unit : ''}`)].filter(Boolean).join(' · ')}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-0.5 shrink-0">
                                                         <button
+                                                            onClick={() => toggleRowCollapsed(row.tempId)}
+                                                            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-md transition-all"
+                                                            title={collapsedRows.has(row.tempId) ? 'Expand' : 'Collapse'}>
+                                                            <ChevronDownIcon size={12} className={`transition-transform ${collapsedRows.has(row.tempId) ? '-rotate-90' : ''}`} />
+                                                        </button>
+                                                        <button
                                                             onClick={() => setDisplayOptionsRow({ section: activeSection, tempId: row.tempId })}
-                                                            className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg transition-all"
+                                                            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-md transition-all"
                                                             title="Display options">
                                                             <Settings2Icon size={12} />
                                                         </button>
                                                         <button
                                                             onClick={() => removeRow(activeSection, row.tempId)}
-                                                            className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-all"
+                                                            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-md transition-all"
                                                             title="Remove exercise">
                                                             <Trash2Icon size={12} />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                {/* Sets / Reps / Rest / Tempo — 4-col dropdowns */}
-                                                {(showSets || showReps || showRest || showTempo) && (
-                                                    <div className="grid grid-cols-4 gap-2 mb-2">
+                                                {/* Sets / Reps / Rest / Tempo — prefix-label dropdowns, single line */}
+                                                {!collapsedRows.has(row.tempId) && (showSets || showReps || showRest || showTempo) && (
+                                                    <div className="grid grid-cols-4 gap-1.5 mb-1.5">
                                                         {showSets && (
-                                                            <div>
-                                                                <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Sets</label>
-                                                                <PresetSelect
-                                                                    value={row.sets}
-                                                                    onChange={v => updateRow(activeSection, row.tempId, 'sets', v)}
-                                                                    presets={SETS_PRESETS}
-                                                                    placeholder="—"
-                                                                />
-                                                            </div>
+                                                            <PresetSelect prefixLabel="Sets" size="xs" value={row.sets} onChange={v => updateRow(activeSection, row.tempId, 'sets', v)} presets={SETS_PRESETS} placeholder="—" />
                                                         )}
                                                         {showReps && (
-                                                            <div>
-                                                                <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Reps</label>
-                                                                <PresetSelect
-                                                                    value={row.reps}
-                                                                    onChange={v => updateRow(activeSection, row.tempId, 'reps', v)}
-                                                                    presets={REPS_PRESETS}
-                                                                    placeholder="—"
-                                                                />
-                                                            </div>
+                                                            <PresetSelect prefixLabel="Reps" size="xs" value={row.reps} onChange={v => updateRow(activeSection, row.tempId, 'reps', v)} presets={REPS_PRESETS} placeholder="—" />
                                                         )}
                                                         {showRest && (
-                                                            <div>
-                                                                <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Rest</label>
-                                                                <PresetSelect
-                                                                    value={row.rest}
-                                                                    onChange={v => updateRow(activeSection, row.tempId, 'rest', v)}
-                                                                    presets={REST_PRESETS}
-                                                                    placeholder="—"
-                                                                />
-                                                            </div>
+                                                            <PresetSelect prefixLabel="Rest" size="xs" value={row.rest} onChange={v => updateRow(activeSection, row.tempId, 'rest', v)} presets={REST_PRESETS} placeholder="—" />
                                                         )}
                                                         {showTempo && (
-                                                            <div>
-                                                                <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Tempo</label>
-                                                                <PresetSelect
-                                                                    value={row.tempo}
-                                                                    onChange={v => updateRow(activeSection, row.tempId, 'tempo', v)}
-                                                                    presets={TEMPO_PRESETS}
-                                                                    placeholder="—"
-                                                                />
-                                                            </div>
+                                                            <PresetSelect prefixLabel="Tempo" size="xs" value={row.tempo} onChange={v => updateRow(activeSection, row.tempId, 'tempo', v)} presets={TEMPO_PRESETS} placeholder="—" />
                                                         )}
                                                     </div>
                                                 )}
 
                                                 {/* Intensity pills row */}
-                                                {visibleIntensityCount > 0 && (
-                                                    <div className="flex items-center gap-2 mb-2">
+                                                {!collapsedRows.has(row.tempId) && visibleIntensityCount > 0 && (
+                                                    <div className="flex items-center gap-1.5 mb-1.5">
                                                         {[0, 1, 2].map(i => {
                                                             const allowed = (i === 0 && showInt1) || (i === 1 && showInt2) || (i === 2 && showInt3);
                                                             if (!allowed) return null;
@@ -1439,14 +1569,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                                             next.push({ unit: i === 0 ? 'kg' : i === 1 ? 'RPE' : '%1RM', value: '' });
                                                                             updateRow(activeSection, row.tempId, 'intensities', next as any);
                                                                         }}
-                                                                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-dashed border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 transition-colors text-[10px] font-semibold">
+                                                                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 transition-colors text-[10px] font-semibold">
                                                                         <PlusIcon size={10} /> Intensity {i + 1}
                                                                     </button>
                                                                 );
                                                             }
                                                             return (
                                                                 <div key={i} className="flex-1 min-w-0">
-                                                                    <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Intensity {i + 1}</label>
                                                                     <IntensityPillEditor
                                                                         pill={pill}
                                                                         onChange={next => {
@@ -1466,18 +1595,15 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                     </div>
                                                 )}
 
-                                                {/* Notes */}
-                                                {showNotes && (
-                                                    <div>
-                                                        <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Notes</label>
-                                                        <input
-                                                            type="text"
-                                                            value={row.notes}
-                                                            onChange={e => updateRow(activeSection, row.tempId, 'notes', e.target.value)}
-                                                            placeholder="Coaching notes, scaling, partner pairing..."
-                                                            className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 placeholder:text-slate-300 dark:placeholder:text-[#475569]"
-                                                        />
-                                                    </div>
+                                                {/* Notes — compact single input, no separate label */}
+                                                {!collapsedRows.has(row.tempId) && showNotes && (
+                                                    <input
+                                                        type="text"
+                                                        value={row.notes}
+                                                        onChange={e => updateRow(activeSection, row.tempId, 'notes', e.target.value)}
+                                                        placeholder="Notes — scaling, coaching cues, partner pairing…"
+                                                        className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 placeholder:text-slate-300 dark:placeholder:text-[#475569]"
+                                                    />
                                                 )}
                                             </div>
                                         );
@@ -1487,31 +1613,50 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         </div>
                     </div>
 
-                    {/* ── Linked Sessions ────────────────────────────── */}
-                    <div className="px-5 py-4 border-t border-slate-100">
-                        <LinkedSessionsPicker
-                            linked={linkedSessions}
-                            onChange={setLinkedSessions}
-                            label="Linked Sessions"
-                            sources={[
-                                {
-                                    key: 'wattbike',
-                                    label: 'Wattbike',
-                                    icon: <ActivityIcon size={12} />,
-                                    color: 'bg-emerald-100',
-                                    textColor: 'text-emerald-700',
-                                    items: (wattbikeSessions || []).map(s => ({ id: s.id, title: s.title || s.name, meta: s.mapType || s.type })),
-                                },
-                                {
-                                    key: 'conditioning',
-                                    label: 'Conditioning',
-                                    icon: <TimerIcon size={12} />,
-                                    color: 'bg-orange-100',
-                                    textColor: 'text-orange-700',
-                                    items: (conditioningSessions || []).map(s => ({ id: s.id, title: s.title, meta: s.energySystem })),
-                                },
-                            ]}
-                        />
+                    {/* ── Linked Sessions (collapsible) ────────────────── */}
+                    <div className="border-t border-slate-100 dark:border-[#243A58] shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setLinkedSessionsExpanded(v => !v)}
+                            className="w-full flex items-center gap-2 px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A2D48]/40 transition-colors text-left"
+                        >
+                            <ActivityIcon size={12} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">Linked Sessions</span>
+                            {linkedSessions.length > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">{linkedSessions.length}</span>
+                            )}
+                            <span className="ml-auto text-[9px] text-slate-400 dark:text-[#CBD5E1]">
+                                {linkedSessionsExpanded ? 'Hide' : 'Show'}
+                            </span>
+                            <ChevronDownIcon size={12} className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${linkedSessionsExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {linkedSessionsExpanded && (
+                            <div className="px-5 pb-4 pt-1">
+                                <LinkedSessionsPicker
+                                    linked={linkedSessions}
+                                    onChange={setLinkedSessions}
+                                    label="Linked Sessions"
+                                    sources={[
+                                        {
+                                            key: 'wattbike',
+                                            label: 'Wattbike',
+                                            icon: <ActivityIcon size={12} />,
+                                            color: 'bg-emerald-100',
+                                            textColor: 'text-emerald-700',
+                                            items: (wattbikeSessions || []).map(s => ({ id: s.id, title: s.title || s.name, meta: s.mapType || s.type })),
+                                        },
+                                        {
+                                            key: 'conditioning',
+                                            label: 'Conditioning',
+                                            icon: <TimerIcon size={12} />,
+                                            color: 'bg-orange-100',
+                                            textColor: 'text-orange-700',
+                                            items: (conditioningSessions || []).map(s => ({ id: s.id, title: s.title, meta: s.energySystem })),
+                                        },
+                                    ]}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1659,32 +1804,60 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             {EXERCISE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                         </CustomSelect>
                         <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Browse A-Z</span>
-                                {exLetter && (
-                                    <button onClick={() => setExLetter('')} className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Clear</button>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                                <button
-                                    onClick={() => { setExLetter(''); setExSearch(''); }}
-                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
-                                >&#10005;</button>
-                                {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
+                            <button
+                                onClick={() => setAlphabetExpanded(v => !v)}
+                                className="w-full flex items-center justify-between mb-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                            >
+                                <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] flex items-center gap-1">
+                                    Browse A-Z {exLetter && <span className="text-indigo-500 dark:text-indigo-300">· {exLetter}</span>}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                    {exLetter && (
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); setExLetter(''); }}
+                                            className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 uppercase tracking-wide cursor-pointer"
+                                        >Clear</span>
+                                    )}
+                                    <ChevronDownIcon size={12} className={`text-slate-500 dark:text-[#CBD5E1] transition-transform ${alphabetExpanded ? 'rotate-180' : ''}`} />
+                                </div>
+                            </button>
+                            {alphabetExpanded && (
+                                <div className="flex flex-wrap gap-1 animate-in fade-in duration-150 pt-1">
                                     <button
-                                        key={l}
-                                        onClick={() => { if (exLetter === l) setExLetter(''); else { setExLetter(l); setExSearch(''); } }}
-                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
-                                    >{l}</button>
-                                ))}
-                            </div>
+                                        onClick={() => { setExLetter(''); setExSearch(''); }}
+                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-[#CBD5E1]'}`}
+                                    >&#10005;</button>
+                                    {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
+                                        <button
+                                            key={l}
+                                            onClick={() => { if (exLetter === l) setExLetter(''); else { setExLetter(l); setExSearch(''); } }}
+                                            className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-[#CBD5E1]'}`}
+                                        >{l}</button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-200 rounded-lg px-3 py-1.5">
-                            Adding to: <strong className="dark:text-white">{sectionMeta[activeSection]?.label || SECTION_LABELS[activeSection] || activeSection}</strong>
-                        </div>
+                        {(() => {
+                            const meta = sectionMeta[activeSection];
+                            const defaults: Record<string, string> = { warmup: '#f59e0b', workout: '#6366f1', cooldown: '#0ea5e9' };
+                            const color = meta?.color || defaults[activeSection] || '#6366f1';
+                            const label = meta?.label || SECTION_LABELS[activeSection] || activeSection;
+                            return (
+                                <div
+                                    className="rounded-xl px-3 py-2 border flex items-center gap-2"
+                                    style={{ backgroundColor: `${color}26`, borderColor: `${color}80` }}
+                                >
+                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                    <div className="flex-1 min-w-0 leading-tight">
+                                        <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color }}>Adding to: </span>
+                                        <strong className="text-[10px] font-bold uppercase tracking-wide text-slate-900 dark:text-white">{label}</strong>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-3 space-y-1">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
                         {exLoading ? (
                             <div className="py-12 flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] text-xs">Loading...</div>
                         ) : displayExercises.length === 0 ? (
@@ -1698,6 +1871,8 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 return (
                                     <div
                                         key={ex.id}
+                                        role="button"
+                                        tabIndex={already ? -1 : 0}
                                         draggable={!already}
                                         onDragStart={(e) => {
                                             if (already) { e.preventDefault(); return; }
@@ -1706,35 +1881,31 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             e.dataTransfer.effectAllowed = 'copy';
                                         }}
                                         onDragEnd={() => setDraggedExId(null)}
-                                        className={`group w-full px-2.5 py-2 rounded-xl border transition-all flex items-center gap-2.5 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 cursor-grab active:cursor-grabbing'} ${draggedExId === ex.id ? 'opacity-50' : ''}`}
+                                        onClick={() => !already && addExercise(ex)}
+                                        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !already) { e.preventDefault(); addExercise(ex); } }}
+                                        className={`group w-full px-2.5 py-2 rounded-xl border transition-all flex items-center gap-2.5 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 cursor-default' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 cursor-grab active:cursor-grabbing'} ${draggedExId === ex.id ? 'opacity-50' : ''}`}
                                     >
-                                        {/* Click body: add the exercise (or no-op when already added) */}
-                                        <button
-                                            type="button"
-                                            onClick={() => !already && addExercise(ex)}
-                                            disabled={already}
-                                            className="flex-1 flex items-center gap-2.5 min-w-0 text-left disabled:cursor-default"
-                                        >
-                                            {/* Thumbnail — only renders if exercise has an image */}
-                                            {thumb && (
-                                                <div className="w-10 h-10 rounded-md overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] shrink-0">
-                                                    <img src={thumb} alt={ex.name} className="w-full h-full object-cover" loading="lazy" />
-                                                </div>
+                                        {/* Thumbnail — only renders if exercise has an image */}
+                                        {thumb && (
+                                            <div className="w-10 h-10 rounded-md overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] shrink-0 pointer-events-none">
+                                                <img src={thumb} alt={ex.name} className="w-full h-full object-cover" loading="lazy" draggable={false} />
+                                            </div>
+                                        )}
+                                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 pointer-events-none ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-[#243A58] text-slate-500 dark:text-[#CBD5E1]'}`}>
+                                            {already ? <span className="text-[8px]">&#10003;</span> : <PlusIcon size={10} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0 pointer-events-none">
+                                            <div className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] leading-tight truncate">{ex.name}</div>
+                                            {ex.categories?.[0] && (
+                                                <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">{ex.categories[0]}</div>
                                             )}
-                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-[#243A58] text-slate-500 dark:text-[#CBD5E1]'}`}>
-                                                {already ? <span className="text-[8px]">&#10003;</span> : <PlusIcon size={10} />}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] leading-tight truncate">{ex.name}</div>
-                                                {ex.categories?.[0] && (
-                                                    <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">{ex.categories[0]}</div>
-                                                )}
-                                            </div>
-                                        </button>
+                                        </div>
                                         {/* Info (i) button — opens exercise info modal */}
                                         <button
                                             type="button"
                                             onClick={(e) => { e.stopPropagation(); setInfoExercise(ex); }}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            draggable={false}
                                             className="shrink-0 p-1.5 rounded-md text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                                             title="Exercise details">
                                             <InfoIcon size={13} />
@@ -1746,13 +1917,17 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     </div>
 
                     {(exData?.totalPages || 0) > 1 && (
-                        <div className="px-4 py-3 border-t border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
-                            <button onClick={() => setExPage(p => Math.max(1, p - 1))} disabled={exPage <= 1} className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
-                                <ChevronLeftIcon size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
+                        <div className="border-t border-slate-200 dark:border-[#243A58] flex items-center justify-center gap-2 py-1.5 shrink-0">
+                            <button onClick={() => setExPage(p => Math.max(1, p - 1))} disabled={exPage <= 1}
+                                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                                <ChevronLeftIcon size={12} />
                             </button>
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-[#CBD5E1]">{exPage} / {exData?.totalPages}</span>
-                            <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
-                                <ChevronRightIcon size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1]">
+                                Page <span className="text-indigo-600 dark:text-indigo-300 font-semibold">{exPage}</span> of {exData?.totalPages}
+                            </span>
+                            <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)}
+                                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                                <ChevronRightIcon size={12} />
                             </button>
                         </div>
                     )}

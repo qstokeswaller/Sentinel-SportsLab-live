@@ -703,7 +703,7 @@ const SettingsPage: React.FC = () => {
 
               <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
                 className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors mt-4 ${
-                  acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] cursor-not-allowed'
                 }`}>
                 <SaveIcon size={14} />
                 {acwrDirty ? 'Save ACWR Settings' : 'No changes'}
@@ -732,7 +732,7 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <button type="button" onClick={handleSaveAcwr} disabled={!acwrDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
-                    acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    acwrDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] cursor-not-allowed'
                   }`}>
                   <SaveIcon size={14} />
                   {acwrDirty ? 'Save Settings' : 'No changes'}
@@ -1002,7 +1002,7 @@ const SettingsPage: React.FC = () => {
                 {profileError && <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
                 <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
                   className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
-                    profileDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    profileDirty ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] cursor-not-allowed'
                   }`}>
                   <SaveIcon size={14} />
                   {profileSaving ? 'Saving...' : profileDirty ? 'Save Profile' : 'No changes'}

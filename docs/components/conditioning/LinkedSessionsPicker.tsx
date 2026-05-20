@@ -102,7 +102,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
             {linked.length === 0 && !open && (
                 <div
                     onClick={() => setOpen(true)}
-                    className="py-6 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1.5 text-slate-400 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all"
+                    className="py-6 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl flex flex-col items-center justify-center gap-1.5 text-slate-400 dark:text-[#475569] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48]/40 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
                 >
                     <PlusIcon size={16} />
                     <p className="text-[10px] font-medium">Attach sessions from other modules to create mixed workouts</p>

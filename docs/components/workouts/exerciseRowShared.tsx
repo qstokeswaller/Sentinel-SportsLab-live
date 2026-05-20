@@ -56,21 +56,29 @@ export const PresetSelect: React.FC<{
     presets: string[];
     placeholder?: string;
     className?: string;
-}> = ({ value, onChange, presets, placeholder = '—', className = '' }) => {
+    /** Optional prefix label (e.g. "Sets") shown inside the select to remove the need for an outer label */
+    prefixLabel?: string;
+    size?: 'xs' | 'sm' | 'md';
+}> = ({ value, onChange, presets, placeholder = '—', className = '', prefixLabel, size = 'sm' }) => {
     const [customMode, setCustomMode] = useState(false);
     const isCustom = customMode || (value && !presets.includes(value));
     if (isCustom) {
         return (
-            <input
-                type="text"
-                value={value === '__CUSTOM__' ? '' : value}
-                placeholder={placeholder}
-                autoFocus={customMode}
-                onChange={e => onChange(e.target.value)}
-                onBlur={() => setCustomMode(false)}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') (e.target as HTMLInputElement).blur(); }}
-                className={`w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 placeholder:text-slate-300 dark:placeholder:text-[#475569] ${className}`}
-            />
+            <div className={`flex items-stretch rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] overflow-hidden focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20 ${className}`}>
+                {prefixLabel && (
+                    <span className="shrink-0 px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] bg-slate-50/60 dark:bg-[#132338]/60 border-r border-slate-200 dark:border-[#243A58] flex items-center">{prefixLabel}</span>
+                )}
+                <input
+                    type="text"
+                    value={value === '__CUSTOM__' ? '' : value}
+                    placeholder={placeholder}
+                    autoFocus={customMode}
+                    onChange={e => onChange(e.target.value)}
+                    onBlur={() => setCustomMode(false)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') (e.target as HTMLInputElement).blur(); }}
+                    className="flex-1 min-w-0 bg-transparent px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none placeholder:text-slate-300 dark:placeholder:text-[#475569]"
+                />
+            </div>
         );
     }
     return (
@@ -85,8 +93,9 @@ export const PresetSelect: React.FC<{
                 }
             }}
             variant="form"
-            size="sm"
+            size={size}
             placeholder={placeholder}
+            prefixLabel={prefixLabel}
             className={className}
         >
             <option value="">{placeholder}</option>
@@ -105,12 +114,12 @@ export const IntensityPillEditor: React.FC<{
     canRemove: boolean;
 }> = ({ pill, onChange, onRemove, canRemove }) => {
     return (
-        <div className="flex items-stretch rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] overflow-hidden">
-            <div className="w-20 shrink-0 border-r border-slate-200 dark:border-[#243A58]">
+        <div className="group flex items-stretch rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] overflow-hidden focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+            <div className="w-16 shrink-0 border-r border-slate-200 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#132338]/60">
                 <CustomSelect
                     value={pill.unit}
                     onChange={(e: any) => onChange({ ...pill, unit: e.target.value })}
-                    variant="form"
+                    variant="inline"
                     size="xs"
                     placeholder="unit"
                 >
@@ -122,12 +131,12 @@ export const IntensityPillEditor: React.FC<{
                 value={pill.value}
                 onChange={e => onChange({ ...pill, value: e.target.value })}
                 placeholder="—"
-                className="flex-1 min-w-0 bg-transparent px-2 py-2 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none placeholder:text-slate-300 dark:placeholder:text-[#475569]"
+                className="flex-1 min-w-0 bg-transparent px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none placeholder:text-slate-300 dark:placeholder:text-[#475569]"
             />
             {canRemove && (
                 <button
                     onClick={onRemove}
-                    className="shrink-0 px-1.5 text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors"
+                    className="shrink-0 px-1.5 text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                     title="Remove">
                     <span className="text-[14px] leading-none">×</span>
                 </button>

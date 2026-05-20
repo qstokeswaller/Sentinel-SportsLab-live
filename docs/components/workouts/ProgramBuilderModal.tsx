@@ -11,7 +11,9 @@ import {
   X as XIcon,
   Share2 as Share2Icon,
   CalendarPlus as CalendarPlusIcon,
+  Info as InfoIcon,
 } from 'lucide-react';
+import { ExerciseInfoModal } from '../library/ExerciseInfoModal';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
 import { useExerciseMap } from '../../hooks/useExerciseMap';
@@ -83,35 +85,35 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const TRAINING_PHASES = ['Strength', 'Power', 'Hypertrophy', 'Speed', 'Conditioning', 'Recovery', 'Technical', 'GPP'];
 
 const VOLUME_COLORS: Record<string, string> = {
-  'Upper Body': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
-  'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
-  'Core': 'bg-amber-100 text-amber-700',
-  'Full Body': 'bg-purple-100 text-purple-700',
-  'Plyometric': 'bg-orange-100 text-orange-700',
-  'Olympic Weightlifting': 'bg-rose-100 text-rose-700',
-  'Powerlifting': 'bg-red-100 text-red-700',
-  'Mobility': 'bg-teal-100 text-teal-700',
-  'Bodybuilding': 'bg-sky-100 text-sky-700',
-  'Calisthenics': 'bg-violet-100 text-violet-700',
+  'Upper Body': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
+  'Lower Body': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+  'Core': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  'Full Body': 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
+  'Plyometric': 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+  'Olympic Weightlifting': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+  'Powerlifting': 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+  'Mobility': 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
+  'Bodybuilding': 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+  'Calisthenics': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
 };
 
 const BODY_PART_COLORS: Record<string, string> = {
-  'Chest': 'bg-rose-100 text-rose-700',
-  'Back': 'bg-sky-100 text-sky-700',
-  'Shoulders': 'bg-amber-100 text-amber-700',
-  'Biceps': 'bg-cyan-100 text-cyan-700',
-  'Triceps': 'bg-violet-100 text-violet-700',
-  'Quadriceps': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
-  'Hamstrings': 'bg-lime-100 text-lime-700',
-  'Glutes': 'bg-pink-100 text-pink-700',
-  'Calves': 'bg-teal-100 text-teal-700',
-  'Abdominals': 'bg-orange-100 text-orange-700',
-  'Forearms': 'bg-stone-100 text-stone-600',
-  'Trapezius': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
-  'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700',
-  'Adductors': 'bg-blue-100 text-blue-700',
-  'Abductors': 'bg-purple-100 text-purple-700',
-  'Shins': 'bg-green-100 text-green-700',
+  'Chest': 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
+  'Back': 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+  'Shoulders': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  'Biceps': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300',
+  'Triceps': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+  'Quadriceps': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+  'Hamstrings': 'bg-lime-100 text-lime-700 dark:bg-lime-500/15 dark:text-lime-300',
+  'Glutes': 'bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
+  'Calves': 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
+  'Abdominals': 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+  'Forearms': 'bg-stone-100 text-stone-600 dark:bg-stone-500/15 dark:text-stone-300',
+  'Trapezius': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
+  'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-300',
+  'Adductors': 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+  'Abductors': 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
+  'Shins': 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300',
 };
 
 const EXERCISE_CATEGORIES = [
@@ -176,7 +178,7 @@ function computeVolume(day: LocalDay): { byRegion: Record<string, number>; byBod
 // ── Exercise Row — Packets-style (Sets/Reps/Rest/Tempo dropdowns + intensity pills + display options) ──
 
 const ExRow = ({
-  row, letter, onChange, onRemove, onOpenDisplayOptions, dayIdx, sec,
+  row, letter, onChange, onRemove, onOpenDisplayOptions, dayIdx, sec, onReorderDrop, onPickerDrop, collapsed, onToggleCollapsed,
 }: {
   row: LocalExRow;
   letter: string;
@@ -186,6 +188,13 @@ const ExRow = ({
   // Source coordinates so the row can be dragged to another section/day
   dayIdx: number;
   sec: string;
+  // Called when another row is dropped onto this one — handles in-place reorder
+  onReorderDrop: (fromDayIdx: number, fromSec: string, fromTempId: string, dropPos: 'before' | 'after') => void;
+  // Called when an exercise from the picker is dropped on this row — insert before/after
+  onPickerDrop: (exerciseId: string, dropPos: 'before' | 'after') => void;
+  // Collapse-to-header mode for compact display when there are many exercises
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) => {
   const visible = row.displayFields || DEFAULT_DISPLAY_FIELDS;
   const showSets    = visible.includes('sets');
@@ -198,6 +207,7 @@ const ExRow = ({
   const showNotes   = visible.includes('notes');
   const intensities = row.intensities || [];
   const visibleIntensityCount = [showInt1, showInt2, showInt3].filter(Boolean).length;
+  const [dropPos, setDropPos] = useState<'before' | 'after' | null>(null);
 
   const upd = (patch: Partial<LocalExRow>) => onChange({ ...row, ...patch });
 
@@ -208,64 +218,91 @@ const ExRow = ({
         e.dataTransfer.setData('text/plain', `row:${dayIdx}:${sec}:${row.tempId}`);
         e.dataTransfer.effectAllowed = 'move';
       }}
-      className="bg-slate-50/50 dark:bg-[#1A2D48]/60 border border-slate-100 dark:border-[#243A58] rounded-xl p-3 hover:border-slate-200 dark:hover:border-[#364E6E] transition-all"
+      onDragEnd={() => setDropPos(null)}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes('text/plain')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const next: 'before' | 'after' = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+        if (next !== dropPos) setDropPos(next);
+      }}
+      onDragLeave={(e) => {
+        if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) setDropPos(null);
+      }}
+      onDrop={(e) => {
+        const data = e.dataTransfer.getData('text/plain') || '';
+        const pos = dropPos || 'after';
+        if (data.startsWith('picker:')) {
+          e.preventDefault();
+          e.stopPropagation();
+          onPickerDrop(data.slice('picker:'.length), pos);
+          setDropPos(null);
+          return;
+        }
+        if (!data.startsWith('row:')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const [, fromDayIdxStr, fromSec, fromTempId] = data.split(':');
+        const fromDayIdx = parseInt(fromDayIdxStr, 10);
+        if (Number.isNaN(fromDayIdx) || !fromSec || !fromTempId || fromTempId === row.tempId) {
+          setDropPos(null);
+          return;
+        }
+        onReorderDrop(fromDayIdx, fromSec, fromTempId, pos);
+        setDropPos(null);
+      }}
+      className={`relative bg-slate-50/50 dark:bg-[#1A2D48]/60 border border-slate-100 dark:border-[#243A58] rounded-xl p-2.5 hover:border-slate-200 dark:hover:border-[#364E6E] transition-all ${dropPos === 'before' ? 'before:absolute before:-top-0.5 before:left-2 before:right-2 before:h-1 before:rounded-full before:bg-indigo-500' : ''} ${dropPos === 'after' ? 'after:absolute after:-bottom-0.5 after:left-2 after:right-2 after:h-1 after:rounded-full after:bg-indigo-500' : ''}`}
     >
-      {/* Header — drag handle + number + name + display options + delete */}
-      <div className="flex items-center justify-between mb-3 gap-2">
+      {/* Header — drag handle + number + name + display options + collapse + delete */}
+      <div className={`flex items-center justify-between gap-2 ${collapsed ? 'mb-0' : 'mb-2'}`}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <GripVerticalIcon size={12} className="text-slate-300 dark:text-[#475569] cursor-grab shrink-0" />
-          <span className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{letter}</span>
+          <span className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{letter}</span>
           <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] truncate">{row.exerciseName}</span>
+          {/* Collapsed-only summary so the user sees the prescription without expanding */}
+          {collapsed && (
+            <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] truncate">
+              {[row.sets && `${row.sets}×${row.reps || '—'}`, row.rest, (intensities[0]?.value && `${intensities[0].value}${intensities[0].unit ? ' ' + intensities[0].unit : ''}`)].filter(Boolean).join(' · ')}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
           <button
+            onClick={onToggleCollapsed}
+            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-md transition-all"
+            title={collapsed ? 'Expand' : 'Collapse'}>
+            <ChevronDownIcon size={12} className={`transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          </button>
+          <button
             onClick={onOpenDisplayOptions}
-            className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg transition-all"
+            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-md transition-all"
             title="Display options">
             <Settings2Icon size={12} />
           </button>
           <button
             onClick={onRemove}
-            className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-all"
+            className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-md transition-all"
             title="Remove exercise">
             <Trash2Icon size={12} />
           </button>
         </div>
       </div>
 
-      {/* Sets / Reps / Rest / Tempo — 4-col dropdowns */}
-      {(showSets || showReps || showRest || showTempo) && (
-        <div className="grid grid-cols-4 gap-2 mb-2">
-          {showSets && (
-            <div>
-              <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Sets</label>
-              <PresetSelect value={row.sets} onChange={v => upd({ sets: v })} presets={SETS_PRESETS} placeholder="—" />
-            </div>
-          )}
-          {showReps && (
-            <div>
-              <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Reps</label>
-              <PresetSelect value={row.reps} onChange={v => upd({ reps: v })} presets={REPS_PRESETS} placeholder="—" />
-            </div>
-          )}
-          {showRest && (
-            <div>
-              <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Rest</label>
-              <PresetSelect value={row.rest} onChange={v => upd({ rest: v })} presets={REST_PRESETS} placeholder="—" />
-            </div>
-          )}
-          {showTempo && (
-            <div>
-              <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Tempo</label>
-              <PresetSelect value={row.tempo} onChange={v => upd({ tempo: v })} presets={TEMPO_PRESETS} placeholder="—" />
-            </div>
-          )}
+      {/* Sets / Reps / Rest / Tempo — prefix labels keep this row to a single line */}
+      {!collapsed && (showSets || showReps || showRest || showTempo) && (
+        <div className="grid grid-cols-4 gap-1.5 mb-1.5">
+          {showSets && <PresetSelect prefixLabel="Sets" size="xs" value={row.sets} onChange={v => upd({ sets: v })} presets={SETS_PRESETS} placeholder="—" />}
+          {showReps && <PresetSelect prefixLabel="Reps" size="xs" value={row.reps} onChange={v => upd({ reps: v })} presets={REPS_PRESETS} placeholder="—" />}
+          {showRest && <PresetSelect prefixLabel="Rest" size="xs" value={row.rest} onChange={v => upd({ rest: v })} presets={REST_PRESETS} placeholder="—" />}
+          {showTempo && <PresetSelect prefixLabel="Tempo" size="xs" value={row.tempo} onChange={v => upd({ tempo: v })} presets={TEMPO_PRESETS} placeholder="—" />}
         </div>
       )}
 
-      {/* Intensity pills — up to 3 stacked */}
-      {visibleIntensityCount > 0 && (
-        <div className="flex items-center gap-2 mb-2">
+      {/* Intensity pills — up to 3 stacked, no per-pill label */}
+      {!collapsed && visibleIntensityCount > 0 && (
+        <div className="flex items-center gap-1.5 mb-1.5">
           {[0, 1, 2].map(i => {
             const allowed = (i === 0 && showInt1) || (i === 1 && showInt2) || (i === 2 && showInt3);
             if (!allowed) return null;
@@ -280,14 +317,13 @@ const ExRow = ({
                     next.push({ unit: i === 0 ? 'kg' : i === 1 ? 'RPE' : '%1RM', value: '' });
                     upd({ intensities: next });
                   }}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-dashed border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 transition-colors text-[10px] font-semibold">
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-500 transition-colors text-[10px] font-semibold">
                   <PlusIcon size={10} /> Intensity {i + 1}
                 </button>
               );
             }
             return (
               <div key={i} className="flex-1 min-w-0">
-                <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Intensity {i + 1}</label>
                 <IntensityPillEditor
                   pill={pill}
                   onChange={next => {
@@ -307,18 +343,15 @@ const ExRow = ({
         </div>
       )}
 
-      {/* Notes */}
-      {showNotes && (
-        <div>
-          <label className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Notes</label>
-          <input
-            type="text"
-            value={row.notes}
-            onChange={e => upd({ notes: e.target.value })}
-            placeholder="Coaching notes, scaling, partner pairing..."
-            className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 placeholder:text-slate-300 dark:placeholder:text-[#475569]"
-          />
-        </div>
+      {/* Notes — single compact input (no separate label) */}
+      {!collapsed && showNotes && (
+        <input
+          type="text"
+          value={row.notes}
+          onChange={e => upd({ notes: e.target.value })}
+          placeholder="Notes — scaling, coaching cues, partner pairing…"
+          className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 placeholder:text-slate-300 dark:placeholder:text-[#475569]"
+        />
       )}
     </div>
   );
@@ -352,6 +385,13 @@ export const ProgramBuilderModal = ({
   // Days (flat array — grouped visually into weeks of 7)
   const [days, setDays]               = useState<LocalDay[]>(() => Array.from({ length: DAYS_PER_WEEK }, (_, i) => newDay(i + 1, 0)));
   const [activeDayIdx, setActiveDayIdx] = useState(0);
+  // Per-row collapse state — collapsed rows render header-only to save vertical space
+  const [collapsedRows, setCollapsedRows] = useState<Set<string>>(new Set());
+  const toggleRowCollapsed = (tempId: string) => setCollapsedRows(prev => {
+    const next = new Set(prev);
+    if (next.has(tempId)) next.delete(tempId); else next.add(tempId);
+    return next;
+  });
   // Active week tab (0-indexed). Replaces the stacked-weeks layout — only the active week renders.
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   // Drag-over hint for the Rest tile drop target
@@ -394,6 +434,8 @@ export const ProgramBuilderModal = ({
   const [exCategory, setExCategory] = useState('All');
   const [exLetter, setExLetter]     = useState('');   // '' = no letter filter
   const [exPage, setExPage]         = useState(1);
+  const [alphabetExpanded, setAlphabetExpanded] = useState(false);
+  const [infoExercise, setInfoExercise] = useState<any | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
@@ -832,7 +874,7 @@ export const ProgramBuilderModal = ({
   return (
     // Renders inside the main app layout (NOT a full-screen overlay) so the
     // sidebar nav stays visible for consistency with every other workflow page.
-    <div className="flex items-stretch bg-white dark:bg-[#0A1628] animate-in fade-in duration-200 rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden h-[calc(100vh-7rem)]">
+    <div className="flex items-stretch bg-white dark:bg-[#0A1628] animate-in fade-in duration-200 rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden h-[calc(100vh-40px)]">
 
       {/* ── Main Panel ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -889,7 +931,7 @@ export const ProgramBuilderModal = ({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
 
             {/* Setup card — collapsible (matches Packets `Details` UX). Slim summary always visible, full form on expand. */}
@@ -1184,7 +1226,7 @@ export const ProgramBuilderModal = ({
                             {days.length > 1 && (
                               <button
                                 onClick={() => removeDay(globalIdx)}
-                                className="p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all border border-slate-200"
+                                className="p-2 rounded-lg text-slate-300 dark:text-[#CBD5E1] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all border border-slate-200 dark:border-[#243A58] hover:border-red-200 dark:hover:border-red-500/40"
                                 title="Remove this day"
                               >
                                 <Trash2Icon size={13} />
@@ -1217,7 +1259,9 @@ export const ProgramBuilderModal = ({
                                 <div className="flex flex-wrap gap-1.5 items-center">
                                   <span className="text-[8px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Body Part</span>
                                   {Object.entries(dayVolume.byBodyPart).sort((a, b) => b[1] - a[1]).map(([part, sets]) => {
-                                    const color = BODY_PART_COLORS[part] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
+                                    // Case-insensitive lookup with dark-mode-aware fallback so user-created sections (e.g. lowercase "core") still render correctly.
+                                    const titleCased = part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : '';
+                                    const color = BODY_PART_COLORS[part] ?? BODY_PART_COLORS[titleCased] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300';
                                     return (
                                       <span key={part} className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${color}`}>
                                         {part} {sets}
@@ -1230,7 +1274,8 @@ export const ProgramBuilderModal = ({
                                 <div className="flex flex-wrap gap-1.5 items-center">
                                   <span className="text-[8px] font-semibold uppercase text-slate-400 tracking-wide mr-1">Region</span>
                                   {Object.entries(dayVolume.byRegion).sort((a, b) => b[1] - a[1]).map(([region, sets]) => {
-                                    const color = VOLUME_COLORS[region] ?? 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]';
+                                    const titleCasedRegion = region ? region.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
+                                    const color = VOLUME_COLORS[region] ?? VOLUME_COLORS[titleCasedRegion] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300';
                                     return (
                                       <span key={region} className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase ${color}`}>
                                         {region} {sets}
@@ -1326,13 +1371,26 @@ export const ProgramBuilderModal = ({
                                 const isDropTarget = exerciseDropTarget?.dayIdx === globalIdx && exerciseDropTarget?.sec === sec;
                                 return (
                                   <div
-                                    className={`p-3 space-y-3 min-h-[120px] transition-colors ${isDropTarget ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
+                                    className={`p-3 space-y-3 min-h-[120px] max-h-[60vh] overflow-y-auto transition-colors ${isDropTarget ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
                                     onDragOver={(e) => {
                                       const types = e.dataTransfer.types;
                                       if (!types.includes('text/plain')) return;
                                       e.preventDefault();
-                                      e.dataTransfer.dropEffect = types.includes('text/plain') ? 'copy' : 'move';
+                                      // Respect the drag source's effectAllowed — picker drags are 'copy', row drags are 'move'.
+                                      // Forcing 'copy' on a 'move' source makes the browser silently reject the drop.
+                                      const eff = e.dataTransfer.effectAllowed;
+                                      e.dataTransfer.dropEffect = (eff === 'move' || eff === 'all' || eff === 'copyMove' || eff === 'linkMove') ? 'move' : 'copy';
                                       if (!isDropTarget) setExerciseDropTarget({ dayIdx: globalIdx, sec });
+                                      // Auto-scroll edges so the user can reach any row in a tall list while dragging
+                                      const el = e.currentTarget as HTMLElement;
+                                      const rect = el.getBoundingClientRect();
+                                      const edge = 60;
+                                      const speed = 14;
+                                      if (e.clientY - rect.top < edge && el.scrollTop > 0) {
+                                        el.scrollTop = Math.max(0, el.scrollTop - speed);
+                                      } else if (rect.bottom - e.clientY < edge && el.scrollTop + el.clientHeight < el.scrollHeight) {
+                                        el.scrollTop = Math.min(el.scrollHeight, el.scrollTop + speed);
+                                      }
                                     }}
                                     onDragLeave={(e) => {
                                       if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
@@ -1405,9 +1463,67 @@ export const ProgramBuilderModal = ({
                                         letter={String(idx + 1)}
                                         dayIdx={globalIdx}
                                         sec={sec}
+                                        collapsed={collapsedRows.has(row.tempId)}
+                                        onToggleCollapsed={() => toggleRowCollapsed(row.tempId)}
                                         onChange={(updated) => setDays(prev => prev.map((d, di) => di === globalIdx ? { ...d, sections: { ...d.sections, [sec]: d.sections[sec].map(r => r.tempId === row.tempId ? updated : r) } } : d))}
                                         onRemove={() => setDays(prev => prev.map((d, di) => di === globalIdx ? { ...d, sections: { ...d.sections, [sec]: d.sections[sec].filter(r => r.tempId !== row.tempId) } } : d))}
                                         onOpenDisplayOptions={() => setDisplayOptionsRow({ dayIdx: globalIdx, sec, tempId: row.tempId })}
+                                        onPickerDrop={(exId, pos) => {
+                                          const ex = searchResults.find((x: any) => x.id === exId);
+                                          if (!ex) return;
+                                          setDays(prev => prev.map((d, di) => {
+                                            if (di !== globalIdx) return d;
+                                            const arr = [...(d.sections[sec] || [])];
+                                            if (arr.some(r => r.exerciseId === ex.id)) return d;
+                                            const baseIdx = arr.findIndex(r => r.tempId === row.tempId);
+                                            if (baseIdx < 0) return d;
+                                            const insertAt = pos === 'before' ? baseIdx : baseIdx + 1;
+                                            arr.splice(insertAt, 0, emptyRow(ex));
+                                            return { ...d, sections: { ...d.sections, [sec]: arr }, activeSection: sec };
+                                          }));
+                                          setActiveDayIdx(globalIdx);
+                                        }}
+                                        onReorderDrop={(fromDayIdx, fromSec, fromTempId, dropPos) => {
+                                          setDays(prev => {
+                                            const fromDay = prev[fromDayIdx];
+                                            if (!fromDay) return prev;
+                                            const movingRow = (fromDay.sections[fromSec] || []).find(r => r.tempId === fromTempId);
+                                            if (!movingRow) return prev;
+                                            const targetIdx = (prev[globalIdx]?.sections[sec] || []).findIndex(r => r.tempId === row.tempId);
+                                            if (targetIdx < 0) return prev;
+                                            const insertAt = dropPos === 'before' ? targetIdx : targetIdx + 1;
+                                            // Same day + same section — reorder
+                                            if (fromDayIdx === globalIdx && fromSec === sec) {
+                                              return prev.map((d, di) => {
+                                                if (di !== globalIdx) return d;
+                                                const arr = (d.sections[sec] || []).filter(r => r.tempId !== fromTempId);
+                                                const fromOrigIdx = (d.sections[sec] || []).findIndex(r => r.tempId === fromTempId);
+                                                const adjustedInsert = Math.max(0, Math.min(arr.length, insertAt > fromOrigIdx ? insertAt - 1 : insertAt));
+                                                arr.splice(adjustedInsert, 0, movingRow);
+                                                return { ...d, sections: { ...d.sections, [sec]: arr } };
+                                              });
+                                            }
+                                            // Cross-section / cross-day move
+                                            return prev.map((d, di) => {
+                                              if (di === fromDayIdx && di === globalIdx) {
+                                                // Same day, different sections
+                                                const fromArr = (d.sections[fromSec] || []).filter(r => r.tempId !== fromTempId);
+                                                const toArr = [...(d.sections[sec] || [])];
+                                                toArr.splice(Math.max(0, Math.min(toArr.length, insertAt)), 0, movingRow);
+                                                return { ...d, sections: { ...d.sections, [fromSec]: fromArr, [sec]: toArr }, activeSection: sec };
+                                              }
+                                              if (di === fromDayIdx) {
+                                                return { ...d, sections: { ...d.sections, [fromSec]: (d.sections[fromSec] || []).filter(r => r.tempId !== fromTempId) } };
+                                              }
+                                              if (di === globalIdx) {
+                                                const toArr = [...(d.sections[sec] || [])];
+                                                toArr.splice(Math.max(0, Math.min(toArr.length, insertAt)), 0, movingRow);
+                                                return { ...d, sections: { ...d.sections, [sec]: toArr }, activeSection: sec };
+                                              }
+                                              return d;
+                                            });
+                                          });
+                                        }}
                                       />
                                     ))}
                                   </div>
@@ -1538,65 +1654,91 @@ export const ProgramBuilderModal = ({
             ))}
           </CustomSelect>
 
-          {/* A–Z letter browser */}
+          {/* A–Z letter browser (collapsible) */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Browse A–Z</span>
-              {exLetter && (
+            <button
+              type="button"
+              onClick={() => setAlphabetExpanded(v => !v)}
+              className="w-full flex items-center justify-between mb-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+            >
+              <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] flex items-center gap-1">
+                Browse A–Z {exLetter && <span className="text-indigo-500 dark:text-indigo-300">· {exLetter}</span>}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {exLetter && (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); setExLetter(''); }}
+                    className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 uppercase tracking-wide cursor-pointer"
+                  >Clear</span>
+                )}
+                <ChevronDownIcon size={12} className={`text-slate-500 dark:text-[#CBD5E1] transition-transform ${alphabetExpanded ? 'rotate-180' : ''}`} />
+              </div>
+            </button>
+            {alphabetExpanded && (
+              <div className="flex flex-wrap gap-1 animate-in fade-in duration-150 pt-1">
                 <button
-                  onClick={() => setExLetter('')}
-                  className="text-[9px] font-bold text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 uppercase tracking-wide"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              <button
-                onClick={() => { setExLetter(''); setExSearch(''); }}
-                className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
-                  !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'
-                }`}
-              >
-                ✕
-              </button>
-              {LETTERS.map((l) => (
-                <button
-                  key={l}
-                  onClick={() => {
-                    if (exLetter === l) { setExLetter(''); }
-                    else { setExLetter(l); setExSearch(''); }
-                  }}
+                  onClick={() => { setExLetter(''); setExSearch(''); }}
                   className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
-                    exLetter === l
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'
+                    !exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-[#CBD5E1]'
                   }`}
                 >
-                  {l}
+                  ✕
                 </button>
-              ))}
-            </div>
+                {LETTERS.map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => {
+                      if (exLetter === l) { setExLetter(''); }
+                      else { setExLetter(l); setExSearch(''); }
+                    }}
+                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${
+                      exLetter === l
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700 dark:text-[#CBD5E1]'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Adding to indicator — reads from the active day's active section */}
-          <div className="bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl px-3 py-2">
-            <span className="text-[9px] font-semibold uppercase text-indigo-500 dark:text-indigo-300 tracking-wide">Adding to: </span>
-            <span className="text-[9px] font-semibold uppercase text-indigo-700 dark:text-white tracking-wide">
-              {activeDay?.sectionMeta?.[activeDay?.activeSection]?.label || activeDay?.activeSection || ''}
-            </span>
-            <span className="text-[9px] text-indigo-500 dark:text-indigo-300 ml-1">
-              — {activeDay?.name ?? ''}
-            </span>
-          </div>
+          {/* Adding to indicator — colored to match the active section so the user instantly
+              sees which section's exercises they're about to add to. */}
+          {(() => {
+            const sec = activeDay?.activeSection;
+            const meta = activeDay?.sectionMeta?.[sec];
+            // Default section colors (mirror DEFAULT_SECTION_COLORS used elsewhere)
+            const defaults: Record<string, string> = { warmup: '#f59e0b', workout: '#6366f1', cooldown: '#0ea5e9' };
+            const color = meta?.color || defaults[sec] || '#6366f1';
+            return (
+              <div
+                className="rounded-xl px-3 py-2 border flex items-center gap-2"
+                style={{ backgroundColor: `${color}26`, borderColor: `${color}80` }}
+              >
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <div className="flex-1 min-w-0 leading-tight">
+                  <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color }}>Adding to: </span>
+                  <strong className="text-[10px] font-bold uppercase tracking-wide text-slate-900 dark:text-white">
+                    {meta?.label || sec || ''}
+                  </strong>
+                  <span className="text-[9px] ml-1 text-slate-600 dark:text-slate-300">
+                    — {activeDay?.name ?? ''}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Exercise list + pagination */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
             {/* Rest Day tile — pinned at top, draggable onto any day header to mark as rest */}
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setData('text/plain', 'rest');
@@ -1605,39 +1747,37 @@ export const ProgramBuilderModal = ({
               }}
               onDragEnd={() => setIsDraggingRest(false)}
               onClick={() => {
-                // Click-to-apply: marks the active day as rest (only if not already rest)
-                if (!days[clampedActiveDayIdx]?.isRestDay) {
-                  applyRestDay(clampedActiveDayIdx);
-                }
+                if (!days[clampedActiveDayIdx]?.isRestDay) applyRestDay(clampedActiveDayIdx);
               }}
-              className="w-full text-left px-4 py-3 border-b border-slate-200 bg-slate-50 hover:bg-slate-100 dark:bg-[#1A2D48]/40 dark:hover:bg-[#1A2D48] transition-colors group flex items-center gap-3 cursor-grab active:cursor-grabbing"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!days[clampedActiveDayIdx]?.isRestDay) applyRestDay(clampedActiveDayIdx); } }}
+              className="group w-full px-2.5 py-2 rounded-xl border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#1A2D48]/40 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-all flex items-center gap-2.5 cursor-grab active:cursor-grabbing"
               title="Drag onto a day, or click to mark the active day as rest"
             >
-              <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-md bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] flex items-center justify-center shrink-0 pointer-events-none">
                 <MoonIcon size={15} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-slate-700 dark:text-[#E2E8F0] leading-tight">Rest Day</div>
-                <div className="text-[9px] font-medium text-slate-400 mt-0.5">Drag onto any day · or click for active</div>
+              <div className="flex-1 min-w-0 pointer-events-none">
+                <div className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] leading-tight truncate">Rest Day</div>
+                <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">Drag onto any day · or click for active</div>
               </div>
-            </button>
+            </div>
             {exLoading ? (
-              <div className="p-6 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">Loading...</div>
+              <div className="py-12 flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] text-xs">Loading...</div>
             ) : searchResults.length === 0 ? (
-              <div className="p-6 text-center text-[10px] font-bold text-slate-300 tracking-wide">
-                {pickerSource === 'mine' ? <><div className="uppercase">No exercises in your library</div><div className="text-[9px] font-medium normal-case mt-1">Star exercises from the Exercise Library page</div></> : <span className="uppercase">No exercises found</span>}
+              <div className="py-12 flex flex-col items-center justify-center text-slate-400 dark:text-[#CBD5E1] text-xs gap-1">
+                {pickerSource === 'mine' ? <><span>No exercises in your library</span><span className="text-[9px]">Star exercises from the Exercise Library page</span></> : 'No exercises found'}
               </div>
             ) : (
               searchResults.map((ex) => {
-                // Already-added check uses the ACTIVE day's active section (matches picker indicator)
                 const activeSecOnActiveDay = activeDay?.activeSection;
                 const already = !!activeDay && !!activeSecOnActiveDay
                   && (activeDay.sections[activeSecOnActiveDay] || []).some((r: any) => r.exerciseId === ex.id);
+                const thumb = (ex.images || []).filter(Boolean)[0];
                 return (
                   <div
                     key={ex.id}
                     role="button"
-                    tabIndex={0}
+                    tabIndex={already ? -1 : 0}
                     draggable={!already}
                     onDragStart={(e) => {
                       if (already) { e.preventDefault(); return; }
@@ -1648,52 +1788,68 @@ export const ProgramBuilderModal = ({
                     onDragEnd={() => setDraggedExId(null)}
                     onClick={() => !already && addExercise(ex)}
                     onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !already) { e.preventDefault(); addExercise(ex); } }}
-                    className={`w-full text-left px-4 py-3 border-b border-slate-100 dark:border-[#243A58] transition-colors group flex items-start gap-3 ${already ? 'bg-emerald-50/60 dark:bg-emerald-500/10 cursor-default' : 'hover:bg-indigo-50 dark:hover:bg-indigo-500/15 cursor-grab active:cursor-grabbing'} ${draggedExId === ex.id ? 'opacity-50' : ''}`}
+                    className={`group w-full px-2.5 py-2 rounded-xl border transition-all flex items-center gap-2.5 ${already ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 cursor-default' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 cursor-grab active:cursor-grabbing'} ${draggedExId === ex.id ? 'opacity-50' : ''}`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-xs font-bold leading-tight truncate ${already ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-[#E2E8F0] group-hover:text-indigo-800 dark:group-hover:text-indigo-300'}`}>
-                        {ex.name}
+                    {thumb && (
+                      <div className="w-10 h-10 rounded-md overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] shrink-0 pointer-events-none">
+                        <img src={thumb} alt={ex.name} className="w-full h-full object-cover" loading="lazy" draggable={false} />
                       </div>
+                    )}
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 pointer-events-none ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-[#243A58] text-slate-500 dark:text-[#CBD5E1]'}`}>
+                      {already ? <span className="text-[8px]">&#10003;</span> : <PlusIcon size={10} />}
+                    </div>
+                    <div className="flex-1 min-w-0 pointer-events-none">
+                      <div className={`text-[11px] font-semibold leading-tight truncate ${already ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{ex.name}</div>
                       {ex.categories?.[0] && (
-                        <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">
-                          {ex.categories[0]}
-                        </div>
+                        <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">{ex.categories[0]}</div>
                       )}
                     </div>
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-all mt-0.5 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-[#243A58] text-slate-400 dark:text-[#CBD5E1] group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                      {already ? <span className="text-[9px]">&#10003;</span> : <PlusIcon size={12} />}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setInfoExercise(ex); }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      draggable={false}
+                      className="shrink-0 p-1.5 rounded-md text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      title="Exercise details">
+                      <InfoIcon size={13} />
+                    </button>
                   </div>
                 );
               })
             )}
           </div>
 
-          {/* Pagination */}
+          {/* Pagination — matches the Library compact style */}
           {totalPages > 1 && (
-            <div className="shrink-0 border-t border-slate-100 dark:border-[#243A58] px-3 py-2.5 flex items-center justify-between bg-white dark:bg-[#132338]">
+            <div className="shrink-0 border-t border-slate-100 dark:border-[#243A58] flex items-center justify-center gap-2 py-1.5 bg-white dark:bg-[#132338]">
               <button
                 onClick={() => setExPage((p) => Math.max(1, p - 1))}
                 disabled={exPage === 1 || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
               >
-                <ChevronLeftIcon size={11} /> Prev
+                <ChevronLeftIcon size={12} />
               </button>
-              <div className="text-center">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1]">{exPage} / {totalPages}</div>
-                <div className="text-[8px] text-slate-300 dark:text-[#475569] font-semibold">{totalCount} total</div>
-              </div>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1]">
+                Page <span className="text-indigo-600 dark:text-indigo-300 font-semibold">{exPage}</span> of {totalPages}
+              </span>
               <button
                 onClick={() => setExPage((p) => Math.min(totalPages, p + 1))}
                 disabled={exPage === totalPages || exLoading}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
               >
-                Next <ChevronRightIcon size={11} />
+                <ChevronRightIcon size={12} />
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Exercise info modal — opens when "i" button is clicked on a right-panel exercise card */}
+      <ExerciseInfoModal
+        exercise={infoExercise}
+        isOpen={!!infoExercise}
+        onClose={() => setInfoExercise(null)}
+      />
 
       {/* Share popover — wired to the Share button in the top bar */}
       {shareTarget && (

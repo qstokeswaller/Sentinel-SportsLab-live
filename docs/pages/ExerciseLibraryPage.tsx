@@ -557,11 +557,7 @@ export const ExerciseLibraryPage = () => {
                                 <option value="All">All</option>
                                 {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
                             </CustomSelect>
-                            {/* Filter by saved collection — the exercises list narrows to just that collection's members */}
-                            <CustomSelect value={filterCollectionId ?? ''} onChange={e => { setFilterCollectionId(e.target.value || null); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Collection">
-                                <option value="">All</option>
-                                {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </CustomSelect>
+                            {/* Collection filter removed from Exercises tab — collections are browsed from My Library. */}
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
                                 className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
@@ -670,61 +666,85 @@ export const ExerciseLibraryPage = () => {
         if (activeCollection) {
             const c = getColColor(activeCollection.color);
             return (
-                <div className="flex flex-col flex-1 min-h-0 gap-2">
-                    {/* Breadcrumb + collection header */}
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 shrink-0">
-                        <button onClick={() => setActiveCollectionId(null)}
-                            className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 font-medium transition-colors mb-2">
-                            <ArrowLeftIcon size={13} /> Back to My Library
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-lg ${c.dot} flex items-center justify-center shrink-0`}>
-                                <FolderIcon size={16} className="text-white" />
+                <div className="flex gap-3 flex-1 min-h-0">
+                    {/* Left column — header + exercise table */}
+                    <div className="flex flex-col flex-1 min-w-0 min-h-0 gap-2">
+                        {/* Breadcrumb + collection header */}
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 shrink-0">
+                            <button onClick={() => { setActiveCollectionId(null); setSelectedExercise(null); }}
+                                className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 font-medium transition-colors mb-2">
+                                <ArrowLeftIcon size={13} /> Back to My Library
+                            </button>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-lg ${c.dot} flex items-center justify-center shrink-0`}>
+                                    <FolderIcon size={16} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className={`text-sm font-semibold ${c.text}`}>{activeCollection.name}</h3>
+                                    {activeCollection.description && (
+                                        <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 leading-snug">{activeCollection.description}</p>
+                                    )}
+                                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                                        {activeCollection.exercise_ids.length} exercise{activeCollection.exercise_ids.length !== 1 ? 's' : ''}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className={`text-sm font-semibold ${c.text}`}>{activeCollection.name}</h3>
-                                {activeCollection.description && (
-                                    <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 leading-snug">{activeCollection.description}</p>
-                                )}
-                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
-                                    {activeCollection.exercise_ids.length} exercise{activeCollection.exercise_ids.length !== 1 ? 's' : ''}
-                                </p>
+                        </div>
+
+                        {/* Collection exercises table */}
+                        <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
+                            <div className="overflow-y-auto flex-1 custom-scrollbar">
+                                <table className="w-full text-left border-collapse">
+                                    <ExerciseTableHeader />
+                                    <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48] bg-white dark:bg-[#132338]">
+                                        {collectionExercises.length === 0 ? (
+                                            <tr><td colSpan={6} className="py-12 text-center">
+                                                <FolderIcon size={24} className="text-slate-200 dark:text-[#243A58] mx-auto mb-2" />
+                                                <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">This collection is empty</p>
+                                                <p className="text-[11px] text-slate-300 dark:text-[#475569] mt-1">Go back and use "Add to Collection" to populate it</p>
+                                            </td></tr>
+                                        ) : collectionExercises.map(ex => (
+                                            <ExerciseRow
+                                                key={ex.id}
+                                                ex={ex}
+                                                {...rowProps(ex)}
+                                                onRemoveFromCollection={() => {
+                                                    // Removes from collection only — exercise stays in My Library
+                                                    removeExerciseFromCollection.mutate(
+                                                        { collectionId: activeCollection.id, exerciseId: ex.id },
+                                                        { onSuccess: () => {
+                                                            setCollectionExercises(prev => prev.filter(e => e.id !== ex.id));
+                                                            // Clear the descriptor if the removed exercise was selected
+                                                            if (selectedExercise?.id === ex.id) setSelectedExercise(null);
+                                                            showToast('Removed from collection', 'info');
+                                                        }}
+                                                    );
+                                                }}
+                                            />
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
-                    {/* Collection exercises table */}
-                    <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
-                        <div className="overflow-y-auto flex-1 custom-scrollbar">
-                            <table className="w-full text-left border-collapse">
-                                <ExerciseTableHeader />
-                                <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48] bg-white dark:bg-[#132338]">
-                                    {collectionExercises.length === 0 ? (
-                                        <tr><td colSpan={6} className="py-12 text-center">
-                                            <FolderIcon size={24} className="text-slate-200 dark:text-[#243A58] mx-auto mb-2" />
-                                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">This collection is empty</p>
-                                            <p className="text-[11px] text-slate-300 dark:text-[#475569] mt-1">Go back and use "Add to Collection" to populate it</p>
-                                        </td></tr>
-                                    ) : collectionExercises.map(ex => (
-                                        <ExerciseRow
-                                            key={ex.id}
-                                            ex={ex}
-                                            {...rowProps(ex)}
-                                            onRemoveFromCollection={() => {
-                                                // Removes from collection only — exercise stays in My Library
-                                                removeExerciseFromCollection.mutate(
-                                                    { collectionId: activeCollection.id, exerciseId: ex.id },
-                                                    { onSuccess: () => {
-                                                        setCollectionExercises(prev => prev.filter(e => e.id !== ex.id));
-                                                        showToast('Removed from collection', 'info');
-                                                    }}
-                                                );
-                                            }}
-                                        />
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    {/* Right column — exercise descriptor (same component as Exercises tab) */}
+                    <div className="w-[400px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
+                        {selectedExercise ? (
+                            <ExerciseDetailPanel
+                                exercise={selectedExercise}
+                                onClose={() => setSelectedExercise(null)}
+                                onAddToLibrary={handleTogglePersonal}
+                                isInLibrary={isInPersonalLibrary}
+                                collections={collections}
+                                isInCollection={isInCollection}
+                                onAddToCollection={handleAddToCollection}
+                                onSelectRelated={ex => setSelectedExercise(ex)}
+                                onEdit={openEditModal}
+                            />
+                        ) : (
+                            <ExerciseDetailEmptyState />
+                        )}
                     </div>
                 </div>
             );
@@ -744,12 +764,22 @@ export const ExerciseLibraryPage = () => {
                                     <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] text-[9px]">{collections.length}</span>
                                 )}
                             </span>
-                            <button
-                                onClick={() => setShowNewCollectionModal(true)}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-all"
-                            >
-                                <FolderPlusIcon size={10} /> New
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                                {!bulkSelectMode && (personalExerciseIds || []).length > 0 && (
+                                    <button
+                                        onClick={() => setBulkSelectMode(true)}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold text-indigo-600 dark:text-white bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-500 transition-all"
+                                    >
+                                        <CheckIcon size={10} /> Add to Collection
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setShowNewCollectionModal(true)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-all"
+                                >
+                                    <FolderPlusIcon size={10} /> New
+                                </button>
+                            </div>
                         </div>
                         {collections.length === 0 ? (
                             <p className="text-[11px] text-slate-300 dark:text-[#475569] py-1">No collections yet — create one to organise your exercises.</p>
@@ -815,14 +845,7 @@ export const ExerciseLibraryPage = () => {
                                     <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[9px] font-bold">{(personalExerciseIds || []).length}</span>
                                 )}
                             </h3>
-                            {!bulkSelectMode && (personalExerciseIds || []).length > 0 && (
-                                <button
-                                    onClick={() => setBulkSelectMode(true)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-indigo-600 dark:text-white bg-indigo-50 dark:bg-indigo-600 border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all"
-                                >
-                                    <CheckIcon size={11} /> Add to Collection
-                                </button>
-                            )}
+                            {/* Add to Collection trigger now lives next to the New Collection button in the strip above */}
                         </div>
 
                         {/* Bulk action bar — sits above table so dropdown opens downward with room */}
@@ -865,7 +888,7 @@ export const ExerciseLibraryPage = () => {
                                 <StarIcon size={28} className="text-slate-200 dark:text-[#243A58]" />
                                 <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">Your library is empty</p>
                                 <p className="text-xs text-slate-300 dark:text-[#475569]">Star exercises from the Exercises tab</p>
-                                <button onClick={() => setLibraryViewMode('exercises')} className="mt-1 px-4 py-2 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-all">
+                                <button onClick={() => setLibraryViewMode('exercises')} className="mt-1 px-4 py-2 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-lg text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-500 transition-all">
                                     Browse Exercises
                                 </button>
                             </div>
@@ -898,17 +921,17 @@ export const ExerciseLibraryPage = () => {
                     </div>
                 </div>
 
-                {/* Right sidebar */}
-                <div className="w-[220px] shrink-0 flex flex-col gap-2">
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3">
-                        <div className="flex items-center gap-2 mb-2.5">
+                {/* Right sidebar — Smart Suggestions stretches to fill so Quick Actions sits flush with the bottom */}
+                <div className="w-[220px] shrink-0 flex flex-col gap-2 min-h-0">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3 flex-1 flex flex-col min-h-0">
+                        <div className="flex items-center gap-2 mb-2.5 shrink-0">
                             <ClockIcon size={11} className="text-amber-500" />
                             <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Smart Suggestions</h3>
                         </div>
                         {recentNotInPersonal.length === 0 ? (
                             <p className="text-[11px] text-slate-300 dark:text-[#475569] text-center py-3">Recently used exercises will appear here</p>
                         ) : (
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5">
                                 {recentNotInPersonal.map(ex => (
                                     <div key={ex.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">
                                         <div className="min-w-0 flex-1">
@@ -919,7 +942,7 @@ export const ExerciseLibraryPage = () => {
                                         </div>
                                         <button
                                             onClick={() => { addToPersonalLibrary(ex.id); showToast(`Added ${ex.name}`, 'success'); }}
-                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 transition-all shrink-0"
+                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white text-[10px] font-semibold border border-indigo-100 dark:border-indigo-800/40 hover:bg-indigo-100 dark:hover:bg-indigo-500 transition-all shrink-0"
                                         >
                                             <PlusIcon size={10} /> Add
                                         </button>
@@ -929,7 +952,7 @@ export const ExerciseLibraryPage = () => {
                         )}
                     </div>
 
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3 shrink-0">
                         <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] mb-2.5">Quick Actions</h3>
                         <div className="space-y-1.5">
                             <button

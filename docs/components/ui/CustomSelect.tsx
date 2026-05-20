@@ -21,9 +21,10 @@ export interface CustomSelectProps {
     className?: string;
     disabled?: boolean;
     placeholder?: string;
-    /** 'form'   — full-width card/input style (default)
-     *  'filter' — compact pill for toolbars & filter bars */
-    variant?: 'form' | 'filter';
+    /** 'form'     — full-width card/input style (default)
+     *  'filter'   — compact pill for toolbars & filter bars
+     *  'inline'   — borderless / transparent, for use inside an already-styled container (e.g. IntensityPillEditor) */
+    variant?: 'form' | 'filter' | 'inline';
     /** 'xs' = text-xs tight padding  'sm' = text-xs normal  'md' = text-sm (default) */
     size?: 'xs' | 'sm' | 'md';
     /** Leading icon element rendered before the label */
@@ -133,27 +134,50 @@ interface DropdownProps {
 
 function Dropdown({ triggerRef, items, value, focusedValue, onSelect, onClose, size }: DropdownProps) {
     const panelRef  = useRef<HTMLDivElement>(null);
-    const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden' });
+    const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden', position: 'fixed', zIndex: 9999 });
 
     const textSize = size === 'md' ? 'text-sm' : 'text-xs';
 
+    // Position the panel anchored to the trigger. Run on mount, and re-run after the
+    // panel actually mounts so panelH reflects the real height (not the 280px fallback
+    // used on the first pass). Also re-position on scroll/resize so the menu doesn't
+    // detach when the user scrolls the parent.
     useLayoutEffect(() => {
-        if (!triggerRef.current) return;
-        const r = triggerRef.current.getBoundingClientRect();
-        const panelH = panelRef.current?.offsetHeight ?? 280;
-        const gap = 4;
-        const viewH = window.innerHeight;
-        const openUp = r.bottom + panelH + gap > viewH - 8 && r.top > panelH + gap;
-        setStyle({
-            position: 'fixed',
-            left:  r.left,
-            width: Math.max(r.width, 160),
-            ...(openUp
-                ? { bottom: viewH - r.top + gap }
-                : { top: r.bottom + gap }),
-            zIndex: 9999,
-            visibility: 'visible',
-        });
+        let raf = 0;
+        const position = () => {
+            if (!triggerRef.current) return;
+            const r = triggerRef.current.getBoundingClientRect();
+            const panelH = panelRef.current?.offsetHeight ?? 280;
+            const gap = 4;
+            const viewH = window.innerHeight;
+            const spaceBelow = viewH - r.bottom - 8;
+            const spaceAbove = r.top - 8;
+            const openUp = panelH > spaceBelow && spaceAbove > spaceBelow;
+            const maxHeight = Math.max(120, Math.min(panelH, openUp ? spaceAbove - gap : spaceBelow - gap));
+            setStyle({
+                position: 'fixed',
+                left: r.left,
+                width: Math.max(r.width, 160),
+                maxHeight,
+                ...(openUp
+                    ? { bottom: Math.max(8, viewH - r.top + gap) }
+                    : { top: Math.max(8, r.bottom + gap) }),
+                zIndex: 9999,
+                visibility: 'visible',
+            });
+        };
+        // First pass with fallback panelH, then a second pass once the panel has mounted
+        position();
+        raf = requestAnimationFrame(position);
+        const onResize = () => position();
+        const onScroll = () => position();
+        window.addEventListener('resize', onResize);
+        window.addEventListener('scroll', onScroll, true);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('resize', onResize);
+            window.removeEventListener('scroll', onScroll, true);
+        };
     }, []);
 
     // Close on outside click
@@ -173,9 +197,9 @@ function Dropdown({ triggerRef, items, value, focusedValue, onSelect, onClose, s
             ref={panelRef}
             role="listbox"
             style={style}
-            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col"
         >
-            <div className="max-h-[268px] overflow-y-auto py-1.5 space-y-px">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar py-1.5 space-y-px">
                 {items.map((item, i) =>
                     isGroup(item) ? (
                         <div key={i}>
@@ -282,21 +306,26 @@ export function CustomSelect({
     }[size];
 
     // Trigger class
-    const base = `flex items-center gap-2 rounded-lg border transition-all outline-none ${S.pad} ${S.text} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`;
+    const base = `flex items-center gap-2 transition-all outline-none ${S.pad} ${S.text} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`;
 
-    const formCls = `w-full ${base} ${
+    const formCls = `w-full ${base} rounded-lg border ${
         isOpen
             ? 'border-indigo-400 ring-2 ring-indigo-500/20 bg-white dark:bg-[#132338]'
             : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] hover:border-slate-300 dark:hover:border-[#475569]'
     } ${className}`;
 
-    const filterCls = `${base} ${
+    const filterCls = `${base} rounded-lg border ${
         isOpen
             ? 'border-indigo-400 ring-2 ring-indigo-500/20 bg-slate-50 dark:bg-[#0F1C30]'
             : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] hover:border-slate-300 dark:hover:border-[#475569]'
     } ${className}`;
 
-    const triggerCls = variant === 'filter' ? filterCls : formCls;
+    // Inline (borderless) — for use INSIDE an already-styled container so we don't get nested borders/bg.
+    const inlineCls = `w-full ${base} bg-transparent border-0 ${
+        isOpen ? 'text-indigo-600 dark:text-indigo-300' : 'hover:bg-slate-100/60 dark:hover:bg-[#1A2D48]/60'
+    } ${className}`;
+
+    const triggerCls = variant === 'filter' ? filterCls : variant === 'inline' ? inlineCls : formCls;
 
     const labelColor = selectedLabel
         ? 'text-slate-800 dark:text-[#E2E8F0]'
