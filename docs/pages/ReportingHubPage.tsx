@@ -264,6 +264,7 @@ export const ReportingHubPage = () => {
         acwrExclusions,
         isLoading,
         polarIntegration, gpsDataSources,
+        plannedTonnageLog,
     } = useAppState();
 
     // --- Local state for GPS Data report ---
@@ -896,43 +897,43 @@ export const ReportingHubPage = () => {
     // ─── Tracking Hub: Exercise Map for body-part resolution ────
     const { exerciseFullMap } = useExerciseMap();
 
-    // ─── Tracking Hub: Real Data Fetch ────
-    const [completedSessions, setCompletedSessions] = useState<any[]>([]);
-    useEffect(() => {
-        DatabaseService.fetchCompletedSessionResults()
-            .then(setCompletedSessions)
-            .catch((err) => console.error('Failed to fetch completed sessions:', err));
-    }, [scheduledSessions]);
-
-    // Flatten real completed sessions into tonnage rows
+    // ─── Tracking Hub: Tonnage from planned_tonnage_log ────
+    // New tracking model: tonnage is computed at packet/program SCHEDULE time
+    // and written to planned_tonnage_log. The Tracking Hub reads from there
+    // directly — no per-session aggregation, no actual_results join needed.
+    // Each log row already carries a pre-aggregated by_body_part split, so
+    // body-part / region breakdowns later in this page work without changes.
     const realTonnageData = useMemo(() => {
         const allPlayers = teams.flatMap(t => t.players);
         const playerMap: Record<string, string> = {};
         for (const p of allPlayers) playerMap[p.id] = p.name;
 
-        const rows: { date: string; athleteId: string; athleteName: string; exerciseId: string; exercise: string; sets: number; reps: number; weight: number; tonnage: number }[] = [];
-        for (const session of completedSessions) {
-            if (!session.actual_results || session.track_tonnage === false) continue;
-            const date = session.date;
-            for (const [athleteId, exercises] of Object.entries(session.actual_results as Record<string, any[]>)) {
-                const athleteName = playerMap[athleteId] || 'Unknown';
-                for (const ex of (exercises || [])) {
-                    rows.push({
-                        date,
-                        athleteId,
-                        athleteName,
-                        exerciseId: ex.exerciseId || '',
-                        exercise: ex.exerciseName || 'Unknown',
-                        sets: ex.sets || 0,
-                        reps: ex.reps || 0,
-                        weight: ex.weight || 0,
-                        tonnage: ex.tonnage || (ex.sets * ex.reps * ex.weight) || 0,
-                    });
-                }
+        const rows: { date: string; athleteId: string; athleteName: string; exerciseId: string; exercise: string; sets: number; reps: number; weight: number; tonnage: number; byBodyPart: Record<string, number> }[] = [];
+        for (const r of (plannedTonnageLog || [])) {
+            const athleteName = playerMap[r.athlete_id] || 'Unknown';
+            // Synthesize one tonnage "row" per body-part bucket so downstream
+            // aggregation (which keys by exerciseId / body parts) still works.
+            const byBp: Record<string, number> = r.by_body_part || {};
+            const keys = Object.keys(byBp).length > 0 ? Object.keys(byBp) : ['_unassigned'];
+            for (const bp of keys) {
+                const t = byBp[bp] ?? r.total_tonnage;
+                rows.push({
+                    date: r.date,
+                    athleteId: r.athlete_id,
+                    athleteName,
+                    exerciseId: '',
+                    // Use the body-part label as the "exercise" so the existing
+                    // exerciseFullMap-based grouping in trackingLoadData still
+                    // produces sensible per-region splits.
+                    exercise: bp === '_unassigned' ? 'Unassigned' : bp,
+                    sets: 0, reps: 0, weight: 0,
+                    tonnage: Math.round(t),
+                    byBodyPart: { [bp]: t },
+                });
             }
         }
         return rows;
-    }, [completedSessions, teams]);
+    }, [plannedTonnageLog, teams]);
 
     // All athletes across all teams (including Private Clients synthetic team)
     const allTrackingAthletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
@@ -1101,45 +1102,37 @@ export const ReportingHubPage = () => {
 
         const filtered = TONNAGE_DATA.filter(d => playerIds.has(d.athleteId) && d.date >= start && d.date <= end);
 
-        // Aggregate tonnage and sets by body part
+        // Aggregate tonnage and sets by body part.
+        // With the new tracking model each row carries a pre-aggregated `byBodyPart`
+        // object (computed at packet/program schedule time and persisted in
+        // planned_tonnage_log). We just sum it up; no exerciseFullMap lookup needed.
+        // Exercises that had no tagged body parts arrive under the `_unassigned` key
+        // and roll into Full Body so general tonnage stays accounted for.
         const byBodyPart: Record<string, { tonnage: number; sets: number; exercises: Set<string> }> = {};
         const byRegion: Record<string, { tonnage: number; sets: number }> = {};
         let totalTonnage = 0;
         let totalSets = 0;
 
         for (const row of filtered) {
-            totalTonnage += row.tonnage;
-            totalSets += row.sets;
-
-            // Resolve body parts from exercise map
-            const exInfo = exerciseFullMap[row.exerciseId];
-            const bodyParts = exInfo?.body_parts || [];
-
-            if (bodyParts.length === 0) {
-                // Fallback: tag as 'Unsorted'
-                if (!byBodyPart['Unsorted']) byBodyPart['Unsorted'] = { tonnage: 0, sets: 0, exercises: new Set() };
-                byBodyPart['Unsorted'].tonnage += row.tonnage;
-                byBodyPart['Unsorted'].sets += row.sets;
-                byBodyPart['Unsorted'].exercises.add(row.exercise);
-
-                if (!byRegion['Full Body']) byRegion['Full Body'] = { tonnage: 0, sets: 0 };
-                byRegion['Full Body'].tonnage += row.tonnage;
-                byRegion['Full Body'].sets += row.sets;
-            } else {
-                // Split tonnage evenly across body parts (if exercise targets multiple)
-                const share = row.tonnage / bodyParts.length;
-                const setShare = row.sets / bodyParts.length;
-                for (const bp of bodyParts) {
-                    if (!byBodyPart[bp]) byBodyPart[bp] = { tonnage: 0, sets: 0, exercises: new Set() };
-                    byBodyPart[bp].tonnage += share;
-                    byBodyPart[bp].sets += setShare;
-                    byBodyPart[bp].exercises.add(row.exercise);
-
-                    const region = BODY_PART_TO_REGION[bp] || 'Full Body';
-                    if (!byRegion[region]) byRegion[region] = { tonnage: 0, sets: 0 };
-                    byRegion[region].tonnage += share;
-                    byRegion[region].sets += setShare;
+            const rowByBp: Record<string, number> = (row as any).byBodyPart || {};
+            for (const [bp, v] of Object.entries(rowByBp)) {
+                const ton = Number(v) || 0;
+                if (ton <= 0) continue;
+                totalTonnage += ton;
+                if (bp === '_unassigned' || bp === 'Unassigned') {
+                    if (!byBodyPart['Unsorted']) byBodyPart['Unsorted'] = { tonnage: 0, sets: 0, exercises: new Set() };
+                    byBodyPart['Unsorted'].tonnage += ton;
+                    byBodyPart['Unsorted'].exercises.add(row.exercise || 'Unsorted');
+                    if (!byRegion['Full Body']) byRegion['Full Body'] = { tonnage: 0, sets: 0 };
+                    byRegion['Full Body'].tonnage += ton;
+                    continue;
                 }
+                if (!byBodyPart[bp]) byBodyPart[bp] = { tonnage: 0, sets: 0, exercises: new Set() };
+                byBodyPart[bp].tonnage += ton;
+                byBodyPart[bp].exercises.add(row.exercise || bp);
+                const region = BODY_PART_TO_REGION[bp] || 'Full Body';
+                if (!byRegion[region]) byRegion[region] = { tonnage: 0, sets: 0 };
+                byRegion[region].tonnage += ton;
             }
         }
 
@@ -1496,7 +1489,9 @@ export const ReportingHubPage = () => {
     };
 
     const renderDataHub = () => {
-        return <DataHub />;
+        // Pass the back action through so DataHub can render its own consolidated
+        // banner (which absorbs the parent's "REPORTING HUB / Data Hub" breadcrumb).
+        return <DataHub onBack={() => { setActiveReport(null); setReportMode('analytics'); }} />;
     };
 
     const renderReadinessHub = () => {
@@ -1604,11 +1599,16 @@ export const ReportingHubPage = () => {
     };
 
     // REPORT 1: Activity Report
+    // Note: the per-session completion flow was removed; every scheduled session
+    // is auto-tracked. "sessions" now counts sessions whose date has already
+    // passed (i.e. effectively "delivered") so the metric stays useful without
+    // depending on a manual coach action.
     const renderActivityReport = () => {
+        const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
         const activityStats = {
-            sessions: scheduledSessions.filter(s => s.status === 'Completed').length,
+            sessions: scheduledSessions.filter(s => s.date && s.date <= todayStr).length,
             planned: scheduledSessions.length,
-            duration: scheduledSessions.reduce((acc, s) => acc + (s.actualDuration || 0), 0),
+            duration: scheduledSessions.reduce((acc, s) => acc + (s.actualDuration || s.plannedDuration || 0), 0),
             load: loadRecords.reduce((acc, l) => acc + (l.plannedLoad * 10), 0) // Mock calculation
         };
 
@@ -3049,10 +3049,10 @@ export const ReportingHubPage = () => {
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Squad / Athlete filter */}
                                 <CustomSelect value={gpsFilterTarget} onChange={e => setGpsFilterTarget(e.target.value)} variant="filter" size="xs">
-                                    <option>All Athletes</option>
-                                    <optgroup label="Squads">{teams.filter(t => t.id !== 't_private').map(t => <option key={t.id}>{t.name}</option>)}</optgroup>
+                                    <option value="All Athletes">All Athletes</option>
+                                    <optgroup label="Squads">{teams.filter(t => t.id !== 't_private').map(t => <option key={t.id} value={t.name}>{t.name}</option>)}</optgroup>
                                     <optgroup label="Individual Athletes">
-                                        {teams.flatMap(t => t.players).sort((a,b) => a.name.localeCompare(b.name)).map(p => <option key={p.id}>{p.name}</option>)}
+                                        {teams.flatMap(t => t.players).sort((a,b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                                     </optgroup>
                                 </CustomSelect>
 
@@ -3621,6 +3621,17 @@ export const ReportingHubPage = () => {
 
     // Main Reporting Hub View Switcher
     if (activeReport) {
+        // Data Hub owns its own consolidated banner (back button + title + filters +
+        // actions) so we skip the parent breadcrumb header and the outer spacing to
+        // give it the full viewport height. Other reports keep the standard shell.
+        const isDataHubReport = activeReport === 'Data Hub';
+        if (isDataHubReport) {
+            return (
+                <div className="animate-in fade-in duration-300">
+                    {renderDataHub()}
+                </div>
+            );
+        }
         return (
             <div className="space-y-5 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
@@ -3648,7 +3659,6 @@ export const ReportingHubPage = () => {
                     {activeReport === 'Heart Rate Metrics' && renderHeartRateMetricsReport()}
                     {activeReport === 'Tracking Hub' && renderTrackingHub()}
                     {activeReport === 'GPS Data' && renderGPSDataReport()}
-                    {activeReport === 'Data Hub' && renderDataHub()}
                 </div>
             </div>
         );

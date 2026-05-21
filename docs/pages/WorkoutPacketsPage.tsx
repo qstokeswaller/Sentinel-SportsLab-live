@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useSmartSearch } from '../hooks/useSmartSearch';
 import { useExerciseMap } from '../hooks/useExerciseMap';
+import { computePlannedTonnage } from '../utils/plannedTonnage';
 import { DatabaseService } from '../services/databaseService';
 import {
     ArrowLeft as ArrowLeftIcon,
@@ -152,6 +153,7 @@ export const WorkoutPacketsPage = () => {
         maxHistory, scheduledSessions,
         wattbikeSessions, conditioningSessions,
         personalExerciseIds,
+        setPlannedTonnageLog,
     } = useAppState();
 
     // ── Incoming edit state via router ───────────────────────────────────
@@ -771,7 +773,41 @@ export const WorkoutPacketsPage = () => {
                     setWorkoutTemplates(prev => [{ id: localId, ...tplPayload, createdAt: new Date().toISOString() }, ...prev]);
                 }
             }
-            await scheduleWorkoutSession(payload);
+            const savedSession = await scheduleWorkoutSession(payload);
+
+            // ── Write planned tonnage rows ───────────────────────────────────
+            // New tracking model: compute per-athlete tonnage from the packet
+            // prescription at schedule time and persist to planned_tonnage_log.
+            // Coaches no longer mark sessions complete — this is the canonical
+            // source for Tracking Hub and Data Hub tonnage.
+            try {
+                if (trackTonnage && savedSession?.id) {
+                    const targetAthletes = targetType === 'Team'
+                        ? (teams.find(t => t.id === targetId)?.players || [])
+                        : allPlayers.filter(p => p.id === targetId);
+                    // Flatten every section's rows — tonnage doesn't care which section
+                    const allRows = sectionOrder.flatMap(sec => (sections[sec] || []).map(attachOverrides));
+                    const perAthlete = computePlannedTonnage(allRows as any, targetAthletes as any, exerciseFullMap);
+                    if (perAthlete.length > 0) {
+                        const rowsToInsert = perAthlete.map(p => ({
+                            athlete_id: p.athleteId,
+                            date,
+                            source_type: 'packet' as const,
+                            source_id: savedSession.id,
+                            program_day_id: null,
+                            total_tonnage: p.total,
+                            by_body_part: p.byBodyPart,
+                        }));
+                        await DatabaseService.insertPlannedTonnageRows(rowsToInsert);
+                        // Optimistic local update so Tracking Hub / Data Hub see it instantly
+                        setPlannedTonnageLog?.((prev: any[]) => [...rowsToInsert.map(r => ({ ...r, created_at: new Date().toISOString() })), ...prev]);
+                    }
+                }
+            } catch (tonnageErr) {
+                console.error('Planned tonnage write failed (non-fatal):', tonnageErr);
+                // Don't block schedule — tonnage tracking is enhancement data
+            }
+
             navigate(returnTo);
         } catch (err) {
             // toast already shown
@@ -1175,7 +1211,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 <div>
                                     <label className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wider mb-0.5 block">Phase</label>
                                     <CustomSelect value={trainingPhase} onChange={e => setTrainingPhase(e.target.value)} variant="form" size="xs">
-                                        {TRAINING_PHASES.map(p => <option key={p}>{p}</option>)}
+                                        {TRAINING_PHASES.map(p => <option key={p} value={p}>{p}</option>)}
                                     </CustomSelect>
                                 </div>
                                 <div>
@@ -1734,14 +1770,14 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">No sessions this week</p>
                                     ) : (
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-bold text-slate-800 dark:text-[#E2E8F0]">{thisWeekSessions.length} session{thisWeekSessions.length !== 1 ? 's' : ''}</span>
-                                            <span className="text-[9px] text-slate-500 dark:text-[#CBD5E1]">{thisWeekSessions.filter(s => s.status === 'Completed').length} done</span>
+                                            <span className="text-xs font-bold text-slate-800 dark:text-[#E2E8F0]">{thisWeekSessions.length} scheduled</span>
+                                            <span className="text-[9px] text-slate-500 dark:text-[#CBD5E1]">auto-tracked</span>
                                         </div>
                                     )}
                                     {thisWeekSessions.length > 0 && (
                                         <div className="mt-1.5 flex flex-wrap gap-1">
                                             {thisWeekSessions.slice(0, 3).map(s => (
-                                                <span key={s.id} className={`text-[8px] px-1.5 py-0.5 rounded font-medium ${s.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-[#243A58] text-slate-500 dark:text-[#CBD5E1]'}`}>
+                                                <span key={s.id} className="text-[8px] px-1.5 py-0.5 rounded font-medium bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
                                                     {new Date(s.date).toLocaleDateString('en-US', { weekday: 'short' })} · {s.load || 'Med'}
                                                 </span>
                                             ))}
@@ -1801,7 +1837,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             </div>
                         )}
                         <CustomSelect value={exCategory} onChange={e => setExCategory(e.target.value)} variant="form" size="xs">
-                            {EXERCISE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                            {EXERCISE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </CustomSelect>
                         <div>
                             <button

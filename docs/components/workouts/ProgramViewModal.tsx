@@ -6,6 +6,8 @@ import { useProgramWithDays, useDeleteProgram, type WorkoutProgram } from '../..
 import { ProgramBuilderModal } from './ProgramBuilderModal';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
+import { useAppState } from '../../context/AppStateContext';
+import { todayLocalDate } from '../../utils/syncTonnage';
 import { Button } from '@/components/ui/button';
 
 type Section = string; // dynamic — drops the warmup/workout/cooldown enum
@@ -39,10 +41,16 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
 
   const { data: fullProgram, isLoading } = useProgramWithDays(isOpen ? program?.id ?? null : null);
   const deleteProgram = useDeleteProgram();
+  const { setPlannedTonnageLog } = useAppState();
 
   const handleDelete = async () => {
     if (!program) return;
+    const today = todayLocalDate();
     await deleteProgram.mutateAsync(program.id);
+    // Optimistic local prune so Tracking Hub / Data Hub stop showing this
+    // program's future tonnage immediately (matches what the DB-side delete
+    // inside useDeleteProgram has already done).
+    setPlannedTonnageLog?.((prev: any[]) => prev.filter(r => !(r.source_id === program.id && r.date > today)));
     onClose();
   };
 

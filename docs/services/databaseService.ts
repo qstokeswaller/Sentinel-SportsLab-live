@@ -789,6 +789,77 @@ export const DatabaseService = {
         return data as any;
     },
 
+    // --- PLANNED TONNAGE LOG ---
+    // Written on packet/program schedule, read by Tracking Hub + Data Hub.
+    async insertPlannedTonnageRows(rows: Array<{
+        athlete_id: string;
+        date: string;
+        source_type: 'packet' | 'program';
+        source_id: string;
+        program_day_id?: string | null;
+        total_tonnage: number;
+        by_body_part: Record<string, number>;
+    }>): Promise<void> {
+        if (!rows || rows.length === 0) return;
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) throw new Error('Not authenticated');
+        const payload = rows.map(r => ({ ...r, user_id: userId }));
+        const { error } = await (supabase as any)
+            .from('planned_tonnage_log')
+            .insert(payload);
+        if (error) throw error;
+    },
+
+    async deletePlannedTonnageForSource(sourceId: string): Promise<void> {
+        const { error } = await (supabase as any)
+            .rpc('delete_planned_tonnage_for_source', { p_source_id: sourceId });
+        if (error) throw error;
+    },
+
+    /**
+     * Delete only FUTURE-dated tonnage rows for a source. Used on edit/delete
+     * flows so historical (already-occurred) tonnage stays preserved as a
+     * record — matches the user's "if its done before the assigned date" rule.
+     * Cutoff is exclusive: rows with date > cutoff are removed, rows on cutoff
+     * or earlier are kept. Pass today's local YYYY-MM-DD as cutoff.
+     */
+    async deleteFutureTonnageForSource(sourceId: string, cutoffDate: string): Promise<void> {
+        const { error } = await (supabase as any)
+            .from('planned_tonnage_log')
+            .delete()
+            .eq('source_id', sourceId)
+            .gt('date', cutoffDate);
+        if (error) throw error;
+    },
+
+    async fetchPlannedTonnage(dateFrom?: string, dateTo?: string): Promise<any[]> {
+        // Returns this user's full planned tonnage history (limited to a sensible window).
+        // Athletes filter happens client-side; one query per coach is fine at this scale.
+        let q = (supabase as any).from('planned_tonnage_log').select('*');
+        if (dateFrom) q = q.gte('date', dateFrom);
+        if (dateTo)   q = q.lte('date', dateTo);
+        q = q.order('date', { ascending: false }).limit(10000);
+        const { data, error } = await q;
+        if (error) { console.error('fetchPlannedTonnage error:', error); return []; }
+        return data || [];
+    },
+
+    // --- DATA HUB SNAPSHOTS (shareable read-only views) ---
+    async createDataHubSnapshot(name: string, payload: any): Promise<string> {
+        const db = supabase as any;
+        const { data, error } = await db.rpc('create_data_hub_snapshot', { p_name: name, p_data: payload });
+        if (error) throw error;
+        return data as string;
+    },
+
+    async getDataHubSnapshot(id: string): Promise<any | null> {
+        const db = supabase as any;
+        const { data, error } = await db.rpc('get_data_hub_snapshot', { p_id: id });
+        if (error) throw error;
+        return data ?? null;
+    },
+
     // --- TRAINING ATTENDANCE ---
 
     async fetchAttendanceByTeam(teamId: string) {

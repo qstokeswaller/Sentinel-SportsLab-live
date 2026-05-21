@@ -6,6 +6,9 @@ import { CalendarPlus as CalendarPlusIcon, XIcon } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { useAppState } from '../../context/AppStateContext';
 import { useProgramWithDays } from '../../hooks/useWorkoutPrograms';
+import { useExerciseMap } from '../../hooks/useExerciseMap';
+import { computePlannedTonnage } from '../../utils/plannedTonnage';
+import { DatabaseService } from '../../services/databaseService';
 
 interface ProgramAssignModalProps {
     program: { id: string; name: string; training_phase?: string | null } | null;
@@ -14,8 +17,9 @@ interface ProgramAssignModalProps {
 }
 
 export const ProgramAssignModal: React.FC<ProgramAssignModalProps> = ({ program, isOpen, onClose }) => {
-    const { teams, scheduleWorkoutSession, showToast } = useAppState();
+    const { teams, scheduleWorkoutSession, showToast, setPlannedTonnageLog } = useAppState();
     const { data: fullProgram, isLoading } = useProgramWithDays(isOpen ? program?.id ?? null : null);
+    const { exerciseFullMap } = useExerciseMap();
 
     const [targetType, setTargetType] = useState<'Team' | 'Individual'>('Team');
     const [targetId, setTargetId] = useState('');
@@ -51,7 +55,7 @@ export const ProgramAssignModal: React.FC<ProgramAssignModalProps> = ({ program,
             const endDateStr = endDate.toISOString().split('T')[0];
             const totalWeeks = Math.ceil(totalDays / 7);
 
-            await scheduleWorkoutSession({
+            const savedSession = await scheduleWorkoutSession({
                 title: program.name,
                 date: startDate,
                 time,
@@ -74,6 +78,55 @@ export const ProgramAssignModal: React.FC<ProgramAssignModalProps> = ({ program,
                 },
                 exercises: {}, // intentionally empty — calendar popup reads from the linked program
             });
+
+            // ── Materialize planned tonnage per (athlete × non-rest day) ─────
+            // Calendar still shows ONE entry for the program (clean UX), but
+            // tonnage tracking needs per-day granularity so Tracking Hub / Data
+            // Hub can chart progression. We compute each non-rest day's tonnage
+            // and stamp the date as startDate + dayOffset.
+            try {
+                if ((fullProgram as any)?.track_tonnage !== false) {
+                    const targetAthletes = targetType === 'Team'
+                        ? (teams.find(t => t.id === targetId)?.players || [])
+                        : allPlayers.filter(p => p.id === targetId);
+                    const rows: Array<any> = [];
+                    (fullProgram.days || []).forEach((d: any) => {
+                        if (d.is_rest_day || !d.exercises || d.exercises.length === 0) return;
+                        // Day's date = start + (day_number - 1). Use day_number 1-based.
+                        const offset = Math.max(0, (d.day_number || 1) - 1);
+                        const dDate = new Date(start);
+                        dDate.setDate(start.getDate() + offset);
+                        const dateStr = dDate.toISOString().split('T')[0];
+                        // Map DB row shape (snake_case) → tonnage helper expectations
+                        const prescriptionRows = (d.exercises || []).map((ex: any) => ({
+                            exerciseId: ex.exercise_id,
+                            exerciseName: ex.exercise_name,
+                            sets: ex.sets,
+                            reps: ex.reps,
+                            weight: ex.weight,
+                        }));
+                        const perAthlete = computePlannedTonnage(prescriptionRows, targetAthletes as any, exerciseFullMap);
+                        for (const p of perAthlete) {
+                            rows.push({
+                                athlete_id: p.athleteId,
+                                date: dateStr,
+                                source_type: 'program' as const,
+                                source_id: program.id,
+                                program_day_id: d.id || null,
+                                total_tonnage: p.total,
+                                by_body_part: p.byBodyPart,
+                            });
+                        }
+                    });
+                    if (rows.length > 0) {
+                        await DatabaseService.insertPlannedTonnageRows(rows);
+                        // Optimistic local update so Tracking Hub / Data Hub see new rows instantly
+                        setPlannedTonnageLog?.((prev: any[]) => [...rows.map(r => ({ ...r, created_at: new Date().toISOString() })), ...prev]);
+                    }
+                }
+            } catch (tonnageErr) {
+                console.error('Program planned tonnage write failed (non-fatal):', tonnageErr);
+            }
 
             showToast(`"${program.name}" scheduled — runs ${totalWeeks} week${totalWeeks !== 1 ? 's' : ''}`, 'success');
             onClose();

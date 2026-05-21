@@ -54,7 +54,7 @@ function formatDate(iso: string) {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export const WorkoutProgramsPage = () => {
-    const { showToast, scheduledSessions, resolveTargetName } = useAppState();
+    const { showToast, scheduledSessions, resolveTargetName, setPlannedTonnageLog } = useAppState();
     // Pull the memoized id→name map (NOT resolveExerciseName, which isn't memoized in the hook
     // and would invalidate the descriptor's useMemo every render → infinite loop).
     const { exerciseMap } = useExerciseMap();
@@ -244,6 +244,11 @@ export const WorkoutProgramsPage = () => {
         const name = programs.find(p => p.id === id)?.name;
         try {
             await deleteProgram.mutateAsync(id);
+            // Optimistic prune of future tonnage rows for this program — DB-side
+            // delete inside useDeleteProgram already happened; this keeps state in sync.
+            const d = new Date();
+            const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            setPlannedTonnageLog?.((prev: any[]) => prev.filter(r => !(r.source_id === id && r.date > today)));
             showToast(name ? `"${name}" deleted` : 'Program deleted', 'success');
         } catch {
             showToast('Failed to delete program', 'error');

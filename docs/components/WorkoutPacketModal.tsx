@@ -424,7 +424,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Phase</label>
                                             <CustomSelect value={trainingPhase} onChange={e => setTrainingPhase(e.target.value)} variant="form" size="xs">
-                                                {TRAINING_PHASES.map(p => <option key={p}>{p}</option>)}
+                                                {TRAINING_PHASES.map(p => <option key={p} value={p}>{p}</option>)}
                                             </CustomSelect>
                                         </div>
                                         <div>
@@ -580,7 +580,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         )}
                         {/* Category */}
                         <CustomSelect value={exCategory} onChange={e => setExCategory(e.target.value)} variant="form" size="xs">
-                            {EXERCISE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                            {EXERCISE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </CustomSelect>
                         {/* A–Z letter browser */}
                         <div>

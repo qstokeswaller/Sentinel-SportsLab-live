@@ -48,6 +48,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/workout/') || path.startsWith('/wellness-form') ||
         path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
+        path.startsWith('/data-hub/snapshot') ||
         path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
         path === '/';
 
@@ -654,6 +655,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // --- WELLNESS HUB V2 STATE ---
     const [wellnessTemplates, setWellnessTemplates] = useState<any[]>([]);
     const [wellnessResponses, setWellnessResponses] = useState<any[]>([]);
+    // Planned tonnage log — written on packet/program schedule (new tracking model).
+    // Used by Tracking Hub and Data Hub for all tonnage reporting.
+    const [plannedTonnageLog, setPlannedTonnageLog] = useState<any[]>([]);
     const [wellnessSelectedTeamId, setWellnessSelectedTeamId] = useState<string>('all');
     const [wellnessDateRange, setWellnessDateRange] = useState<string>('today');
 
@@ -1563,6 +1567,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 }]);
             }
             showToast("Workout scheduled successfully", "success");
+            // Return the saved session so callers can write planned tonnage rows
+            // referencing its id.
+            return savedSession;
         } catch (err) {
             console.error("Error scheduling workout:", err);
             showToast("Failed to schedule workout", "error");
@@ -1602,8 +1609,29 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const handleDeleteSession = async (sessionId) => {
         try {
             setIsLoading(true);
+            // Capture pre-delete shape so we know if this was a program assignment.
+            // For packet sessions the tonnage source_id = session.id; for programs it = program_id.
+            const sessionBeingDeleted = scheduledSessions.find(s => s.id === sessionId);
             await DatabaseService.deleteSession(sessionId);
             setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
+
+            // Drop future-dated tonnage rows belonging to this session/program. Past
+            // rows stay frozen as a historical record (per the "before the assigned
+            // date" rule). Errors here are non-fatal — the session is already gone.
+            try {
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const isProgram = sessionBeingDeleted?.session_type === 'program' || !!sessionBeingDeleted?.program_id;
+                const sourceId = isProgram ? sessionBeingDeleted?.program_id : sessionId;
+                if (sourceId) {
+                    await DatabaseService.deleteFutureTonnageForSource(sourceId, todayStr);
+                    // Optimistic local prune
+                    setPlannedTonnageLog((prev: any[]) => prev.filter(r => !(r.source_id === sourceId && r.date > todayStr)));
+                }
+            } catch (tonnageErr) {
+                console.warn('Tonnage cleanup on session delete failed (non-fatal):', tonnageErr);
+            }
+
             showToast("Session deleted", "success");
         } catch (err) {
             console.error("Error deleting session:", err);
@@ -2042,7 +2070,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const path = window.location.pathname;
         if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
             path.startsWith('/wellness-form') || path.startsWith('/injury-form') ||
-            path.startsWith('/workout/') || path.startsWith('/protocol/')) {
+            path.startsWith('/workout/') || path.startsWith('/protocol/') ||
+            path.startsWith('/data-hub/snapshot')) {
             setIsLoading(false);
             return;
         }
@@ -2361,6 +2390,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (savedPolar && Object.keys(savedPolar).length > 0) setPolarIntegration(savedPolar);
             if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
             setWellnessResponses(wrRecords || []);
+
+            // Planned tonnage log — pulled into state so Tracking Hub + Data Hub
+            // can read tonnage without a per-render fetch. Last 365 days.
+            try {
+                const from = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
+                const tonnageRows = await DatabaseService.fetchPlannedTonnage(from);
+                setPlannedTonnageLog(tonnageRows || []);
+            } catch (e) {
+                console.warn('Planned tonnage fetch failed (non-fatal):', e);
+            }
 
             // If we got here, the try block succeeded
             dataLoadedRef.current = true;
@@ -2778,6 +2817,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setWellnessTemplates,
         wellnessResponses,
         setWellnessResponses,
+        plannedTonnageLog,
+        setPlannedTonnageLog,
         wellnessSelectedTeamId,
         setWellnessSelectedTeamId,
         wellnessDateRange,

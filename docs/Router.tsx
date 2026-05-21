@@ -10,6 +10,7 @@ import FifaWeeklyWellnessForm from './pages/FifaWeeklyWellnessForm';
 import PublicInjuryForm from './pages/PublicInjuryForm';
 import PublicWorkoutView from './pages/PublicWorkoutView';
 import PublicProtocolView from './pages/PublicProtocolView';
+import PublicDataHubView from './pages/PublicDataHubView';
 import LandingPage from './pages/LandingPage';
 import PolarCallbackPage from './pages/PolarCallbackPage';
 
@@ -50,6 +51,7 @@ const AppRouter: React.FC = () => {
       <Route path="/injury-form/:teamId/:athleteId" element={<PublicInjuryForm />} />
       <Route path="/workout/:workoutType/:workoutId" element={<PublicWorkoutView />} />
       <Route path="/protocol/:protocolId" element={<PublicProtocolView />} />
+      <Route path="/data-hub/snapshot/:snapshotId" element={<PublicDataHubView />} />
 
       {/* POLAR OAUTH CALLBACK — public route, handles redirect from Polar */}
       <Route path="/polar/callback" element={<PolarCallbackPage />} />

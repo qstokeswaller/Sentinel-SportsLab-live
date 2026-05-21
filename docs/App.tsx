@@ -23,7 +23,6 @@ const WellnessHubPage    = lazy(() => import('./pages/WellnessHubPage').then(m =
 const SettingsPage       = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.default })));
 const WorkoutPacketsPage = lazy(() => import('./pages/WorkoutPacketsPage').then(m => ({ default: m.WorkoutPacketsPage })));
 const WeightroomSheetsPage = lazy(() => import('./pages/WeightroomSheetsPage').then(m => ({ default: m.WeightroomSheetsPage })));
-const WorkoutHistoryPage  = lazy(() => import('./pages/WorkoutHistoryPage').then(m => ({ default: m.WorkoutHistoryPage })));
 const WorkoutProgramsPage = lazy(() => import('./pages/WorkoutProgramsPage').then(m => ({ default: m.WorkoutProgramsPage })));
 const WorkoutSessionsPage = lazy(() => import('./pages/WorkoutSessionsPage').then(m => ({ default: m.WorkoutSessionsPage })));
 const TestingHubPage      = lazy(() => import('./pages/TestingHubPage').then(m => ({ default: m.TestingHubPage })));
@@ -419,7 +418,6 @@ const App = () => {
             import('./pages/ExerciseLibraryPage');
             import('./pages/PeriodizationPage');
             import('./pages/WeightroomSheetsPage');
-            import('./pages/WorkoutHistoryPage');
         }, 2000); // wait 2s so initial render + data load isn't competing with chunk fetches
         return () => clearTimeout(t);
     }, []);
@@ -443,7 +441,6 @@ const App = () => {
                         <Route path="/workouts/sheets" element={<WorkoutsPage />} />
                         <Route path="/workouts/weightroom-sheets" element={<WorkoutsPage />} />
                         <Route path="/workouts/packets" element={<WorkoutPacketsPage />} />
-                        <Route path="/workouts/history" element={<WorkoutHistoryPage />} />
                         <Route path="/library" element={<ExerciseLibraryPage />} />
                         <Route path="/conditioning" element={<ConditioningHubPage />} />
                         <Route path="/analytics" element={<AnalyticsHubPage />} />
@@ -951,8 +948,8 @@ const AddSessionModal = () => {
                                     prefixIcon={<FilterIcon size={13} />}
                                     minWidth="112px"
                                 >
-                                    <option>All</option>
-                                    {exerciseCategories.map(c => <option key={c}>{c}</option>)}
+                                    <option value="All">All</option>
+                                    {exerciseCategories.map(c => <option key={c} value={c}>{c}</option>)}
                                 </CustomSelect>
                             </div>
 
@@ -1117,9 +1114,7 @@ const SessionModal = () => {
                         {viewingSession.trainingPhase && (
                             <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-md text-xs font-semibold">{viewingSession.trainingPhase}</span>
                         )}
-                        {viewingSession.status === 'Completed' && (
-                            <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-semibold">Completed</span>
-                        )}
+                        {/* "Completed" badge removed — sessions are auto-tracked on schedule. */}
                     </div>
 
                     {/* Info grid */}

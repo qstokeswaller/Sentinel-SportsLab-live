@@ -205,23 +205,10 @@ export const DashboardPage = () => {
     const toggleReportCollapsed = () => setIsReportCollapsed(v => { const next = !v; localStorage.setItem('dash_report_collapsed', next ? '1' : '0'); return next; });
     const toggleHeatmapCollapsed = () => setIsHeatmapCollapsed(v => { const next = !v; localStorage.setItem('dash_heatmap_collapsed', next ? '1' : '0'); return next; });
     const [activeSessionPopover, setActiveSessionPopover] = React.useState(null); // { id, session }
-    const [completingSession, setCompletingSession] = React.useState(null);
     const [confirmDeleteItem, setConfirmDeleteItem] = React.useState<{ type: 'session' | 'event'; id: string; name: string } | null>(null);
-
-
-    const handleCompleteSession = async (sessionId, actualResults, actualRpe) => {
-        try {
-            await DatabaseService.completeSession(sessionId, actualResults, actualRpe);
-            setScheduledSessions(prev => prev.map(s =>
-                s.id === sessionId ? { ...s, status: 'Completed', actual_results: actualResults, actual_rpe: actualRpe } : s
-            ));
-            showToast('Session completed');
-        } catch (err) {
-            showToast(err.message || 'Failed to complete session');
-        } finally {
-            setCompletingSession(null);
-        }
-    };
+    // Note: the "Complete Session" inline popover + handler used to live here.
+    // Removed when we migrated to plan-time tonnage tracking (no more post-session
+    // completion flow). Tonnage is now captured at packet/program schedule time.
 
     const resolveSessionAthletes = (session) => {
         if (session?.targetType === 'Individual') {
@@ -1475,14 +1462,7 @@ export const DashboardPage = () => {
                                                                                 >
                                                                                     <EyeIcon size={10} /> View
                                                                                 </button>
-                                                                                {session.status !== 'Completed' && (
-                                                                                    <button
-                                                                                        onClick={() => { setCompletingSession(session); setActiveSessionPopover(null); }}
-                                                                                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-600 dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-500 dark:bg-emerald-600 rounded transition-colors"
-                                                                                    >
-                                                                                        <CheckCircle2Icon size={10} /> Complete
-                                                                                    </button>
-                                                                                )}
+                                                                                {/* "Complete" button removed: tonnage is now tracked at schedule time. */}
                                                                                 <button
                                                                                     onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
                                                                                     className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
@@ -2013,44 +1993,7 @@ export const DashboardPage = () => {
                         wellnessData={wellnessData || []}
                         acwrOptions={selectedInterventionAthlete ? getAthleteAcwrOptions(selectedInterventionAthlete.id) : {}}
                     />
-                    {/* Quick Complete Session Modal */}
-                    {completingSession && (
-                        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                            <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden">
-                                <div className="px-5 py-3.5 bg-emerald-700 flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-white">
-                                        <CheckCircle2Icon size={16} />
-                                        <span className="text-xs font-bold uppercase tracking-wide">Complete Session</span>
-                                    </div>
-                                    <button onClick={() => setCompletingSession(null)} className="text-emerald-200 hover:text-white">
-                                        <XIcon size={16} />
-                                    </button>
-                                </div>
-                                <div className="p-5 space-y-4">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{completingSession.title || 'Untitled Session'}</h3>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">
-                                            {new Date(completingSession.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                                            {completingSession.time ? ` at ${completingSession.time}` : ''}
-                                            {' · '}{resolveTargetName(completingSession.targetId, completingSession.targetType)}
-                                        </p>
-                                    </div>
-                                    <p className="text-xs text-slate-500">Mark this session as completed?</p>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setCompletingSession(null)}
-                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-xl text-xs font-semibold transition-colors">
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={() => handleCompleteSession(completingSession.id, {}, null)}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-colors">
-                                            <CheckCircle2Icon size={14} /> Complete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* (Complete Session popover removed — plan-time tonnage tracking replaces it.) */}
                     <ConfirmDeleteModal
                         isOpen={!!confirmDeleteItem}
                         title={confirmDeleteItem?.type === 'session' ? 'Delete Session' : 'Delete Event'}

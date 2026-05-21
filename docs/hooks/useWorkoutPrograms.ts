@@ -210,7 +210,10 @@ export function useUpdateProgram() {
   });
 }
 
-/** Delete a program (cascade deletes days + exercises). */
+/** Delete a program (cascade deletes days + exercises).
+ *  Also clears any future-dated planned_tonnage_log rows for this program so
+ *  Tracking Hub / Data Hub stop showing tonnage from a program that no longer
+ *  exists. Past-dated rows are preserved so historical totals stay accurate. */
 export function useDeleteProgram() {
   const qc = useQueryClient();
   return useMutation({
@@ -220,6 +223,18 @@ export function useDeleteProgram() {
         .delete()
         .eq('id', programId);
       if (error) throw error;
+      // Best-effort future tonnage cleanup
+      try {
+        const d = new Date();
+        const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        await (supabase as any)
+          .from('planned_tonnage_log')
+          .delete()
+          .eq('source_id', programId)
+          .gt('date', today);
+      } catch (e) {
+        console.warn('Future tonnage cleanup on program delete failed (non-fatal):', e);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workout-programs'] }),
   });

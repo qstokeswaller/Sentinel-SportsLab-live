@@ -18,6 +18,8 @@ import { useSmartSearch } from '../../hooks/useSmartSearch';
 
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { useAppState } from '../../context/AppStateContext';
+import { DatabaseService } from '../../services/databaseService';
+import { buildFutureProgramTonnageRows, todayLocalDate } from '../../utils/syncTonnage';
 import { CustomSelect } from '../ui/CustomSelect';
 import { LinkedSessionsPicker, LinkedSession } from '../conditioning/LinkedSessionsPicker';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
@@ -370,7 +372,11 @@ export const ProgramBuilderModal = ({
   onClose,
   editingProgram = null,
 }: ProgramBuilderModalProps) => {
-  const { wattbikeSessions, conditioningSessions, personalExerciseIds, showToast } = useAppState();
+  const {
+    wattbikeSessions, conditioningSessions, personalExerciseIds, showToast,
+    scheduledSessions, teams, setPlannedTonnageLog,
+  } = useAppState();
+  const { exerciseFullMap } = useExerciseMap();
 
   // Program meta
   const [programName, setProgramName]         = useState('');
@@ -443,7 +449,7 @@ export const ProgramBuilderModal = ({
   const createProgram = useCreateProgram();
   const updateProgram = useUpdateProgram();
   const saveFull      = useSaveProgramFull();
-  const { exerciseFullMap } = useExerciseMap();
+  // exerciseFullMap is hoisted above the body destructure; no second call needed here.
 
   // Reset page when any filter changes
   useEffect(() => { setExPage(1); }, [exSearch, exCategory, exLetter]);
@@ -825,6 +831,75 @@ export const ProgramBuilderModal = ({
       }));
 
       await saveFull.mutateAsync({ programId, days: dayPayloads });
+
+      // ── Resync future tonnage for any existing program assignments ───────
+      // When the coach edits a program that's already been assigned, the
+      // previously-materialized future tonnage rows are stale. Walk every
+      // scheduled session that targets this program, recompute the future
+      // days from the new structure, and replace the future rows in the log.
+      // Past-dated rows are preserved as historical record.
+      if (editingProgram) {
+        try {
+          const assignments = (scheduledSessions || []).filter(
+            (s: any) => (s.session_type === 'program' || s.sessionType === 'program') && (s.program_id === programId || s.programId === programId)
+          );
+          // Re-shape the local builder state into the same "fullProgram" shape
+          // that ProgramAssignModal consumes, so the helper sees the latest edits.
+          const fullProgramShape = {
+            track_tonnage: trackTonnage,
+            days: days.map((d, i) => ({
+              id: d.id,
+              day_number: i + 1,
+              is_rest_day: !!d.isRestDay,
+              exercises: d.isRestDay ? [] : d.sectionOrder.flatMap(sec =>
+                (d.sections[sec] || []).map((r: any) => ({
+                  exercise_id: r.exerciseId,
+                  exercise_name: r.exerciseName,
+                  sets: r.sets,
+                  reps: r.reps,
+                  weight: r.intensities?.find((p: any) => p.unit === 'kg')?.value ?? r.weight ?? '',
+                }))
+              ),
+            })),
+          };
+          // Compute new rows across ALL assignments FIRST, then do a single
+          // delete + insert. Previously each loop iteration deleted future rows
+          // for the program (clearing the prior iteration's freshly-inserted
+          // rows) — multi-assignment programs would end up with only the last
+          // assignment's rows persisted.
+          const allNewRows: any[] = [];
+          for (const sess of assignments) {
+            const sessStartDate = sess.date;
+            if (!sessStartDate) continue;
+            const targetType = sess.target_type || sess.targetType;
+            const targetId = sess.target_id || sess.targetId;
+            const targetAthletes = targetType === 'Team'
+              ? (teams.find((t: any) => t.id === targetId)?.players || [])
+              : teams.flatMap((t: any) => t.players || []).filter((p: any) => p.id === targetId);
+            const rows = buildFutureProgramTonnageRows({
+              programId,
+              fullProgram: fullProgramShape,
+              startDate: sessStartDate,
+              athletes: targetAthletes,
+              exerciseFullMap,
+            });
+            allNewRows.push(...rows);
+          }
+          await DatabaseService.deleteFutureTonnageForSource(programId, todayLocalDate());
+          if (allNewRows.length > 0) {
+            await DatabaseService.insertPlannedTonnageRows(allNewRows);
+          }
+          // Optimistic local prune + prepend
+          setPlannedTonnageLog?.((prev: any[]) => {
+            const t = todayLocalDate();
+            const kept = prev.filter(r => !(r.source_id === programId && r.date > t));
+            return [...allNewRows.map(r => ({ ...r, created_at: new Date().toISOString() })), ...kept];
+          });
+        } catch (resyncErr) {
+          console.warn('Program tonnage resync failed (non-fatal):', resyncErr);
+        }
+      }
+
       showToast(editingProgram ? `"${programName}" updated` : `"${programName}" created`, 'success');
       onClose();
     } catch (e: any) {

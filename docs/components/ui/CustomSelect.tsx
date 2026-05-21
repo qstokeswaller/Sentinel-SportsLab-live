@@ -49,6 +49,11 @@ function parseChildren(children: React.ReactNode) {
     const items: Item[]  = [];
     const labelMap: Record<string, string> = {};
 
+    // Native <select> uses the option's text content as the value when `value` is
+    // omitted (HTML spec). CustomSelect mirrors that fallback so call-sites that
+    // forget the value= prop don't silently collapse every option to "" — that bug
+    // hid in DataHub for a while because all options share value "" and selecting
+    // any team blanked the filter.
     Children.forEach(children, child => {
         if (!isValidElement(child)) return;
         const el = child as React.ReactElement<any>;
@@ -59,17 +64,17 @@ function parseChildren(children: React.ReactNode) {
                 if (!isValidElement(opt)) return;
                 const o = opt as React.ReactElement<any>;
                 if (o.type !== 'option') return;
-                const val = String(o.props.value ?? '');
-                const lbl = childrenToText(o.props.children) || val;
-                group.items.push({ value: val, label: lbl, disabled: !!o.props.disabled });
-                labelMap[val] = lbl;
+                const lbl = childrenToText(o.props.children);
+                const val = o.props.value != null ? String(o.props.value) : lbl;
+                group.items.push({ value: val, label: lbl || val, disabled: !!o.props.disabled });
+                labelMap[val] = lbl || val;
             });
             items.push(group);
         } else if (el.type === 'option') {
-            const val = String(el.props.value ?? '');
-            const lbl = childrenToText(el.props.children) || val;
-            items.push({ value: val, label: lbl, disabled: !!el.props.disabled });
-            labelMap[val] = lbl;
+            const lbl = childrenToText(el.props.children);
+            const val = el.props.value != null ? String(el.props.value) : lbl;
+            items.push({ value: val, label: lbl || val, disabled: !!el.props.disabled });
+            labelMap[val] = lbl || val;
         }
     });
 
