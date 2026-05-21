@@ -7,6 +7,7 @@ import {
     UsersIcon, AlertTriangleIcon, TrendingUpIcon,
     UploadIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ShieldIcon, TableIcon,
     RotateCcwIcon, XCircleIcon, Trash2Icon, PencilIcon, CheckIcon, ChevronDownIcon,
+    HeartPulseIcon,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import WellnessHub from '../components/performance/WellnessHub';
@@ -14,6 +15,8 @@ import MedicalReports from '../components/wellness/MedicalReports';
 import InjuryReport from '../components/wellness/InjuryReport';
 import TrainingLoadEntry from '../components/analytics/TrainingLoadEntry';
 import InterventionModal from '../components/analytics/InterventionModal';
+import { AthleteAvatar } from '../components/roster/AthleteAvatar';
+import HeartRateMetricsReport from '../components/wellness/HeartRateMetricsReport';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../utils/constants';
 import { DatabaseService } from '../services/databaseService';
 import ACWRLineChart from '../components/analytics/ACWRLineChart';
@@ -31,6 +34,7 @@ const SECTIONS = [
     { title: 'Injury Report',      desc: 'Injury tracking, body map analysis & return-to-play',        icon: ShieldAlertIcon },
     { title: 'ACWR Monitoring',    desc: 'Track acute:chronic workload ratios to prevent overtraining and optimise load', icon: ActivityIcon },
     { title: 'Load Thresholds',   desc: 'Individualized ACWR thresholds — personal safe training bands per athlete', icon: ShieldIcon },
+    { title: 'Heart Rate Metrics', desc: 'Session intensity, peaks & zone distribution from HR monitor imports', icon: HeartPulseIcon },
 ];
 
 // Helper: get initials from a name
@@ -769,9 +773,14 @@ const ACWRMonitoringHub: React.FC = () => {
                 {/* Athlete header */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-200 dark:bg-[#243A58] rounded-xl flex items-center justify-center text-lg font-bold text-slate-600 dark:text-[#CBD5E1]">
-                            {getInitials(playerData.name)}
-                        </div>
+                        <AthleteAvatar
+                            player={playerData}
+                            size="md"
+                            shape="rounded-xl"
+                            className="w-12 h-12"
+                            fallbackClass="bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1]"
+                            fallbackTextSize="text-lg"
+                        />
                         <div className="flex-1">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">{playerData.name}</h3>
                             <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">{playerData.position || 'Athlete'} · {playerData.teamName} · {methodLabel}</p>
@@ -2114,6 +2123,7 @@ export const WellnessHubPage: React.FC = () => {
                     {activeSection === 'Injury Report' && <InjuryReport />}
                     {activeSection === 'ACWR Monitoring' && <ACWRMonitoringHub />}
                     {activeSection === 'Load Thresholds' && <IndividualizedThresholds />}
+                    {activeSection === 'Heart Rate Metrics' && <HeartRateMetricsReport />}
                 </div>
             </div>
         );
@@ -2148,10 +2158,10 @@ export const WellnessHubPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {SECTIONS.map((section, i) => (
                         <button key={i} onClick={() => setActiveSection(section.title)}
-                            className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
+                            className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                         >
                             <div className="flex items-start gap-4 h-full">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-600 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-all shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white flex items-center justify-center transition-all shrink-0">
                                     <section.icon size={20} />
                                 </div>
                                 <div className="flex flex-col justify-center h-full">

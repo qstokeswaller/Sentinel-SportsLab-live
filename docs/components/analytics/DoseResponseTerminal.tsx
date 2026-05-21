@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
@@ -232,9 +233,14 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                 <div key={a.athlete.id} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden shadow-sm">
                     <div className="px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold">
-                                {a.athlete.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                            </div>
+                            <AthleteAvatar
+                                player={a.athlete}
+                                size="xs"
+                                shape="rounded-lg"
+                                className="w-7 h-7"
+                                fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-white"
+                                fallbackTextSize="text-[10px]"
+                            />
                             <div>
                                 <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{a.athlete.name}</span>
                                 <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-2">{a.athlete.teamName}</span>

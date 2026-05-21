@@ -58,7 +58,7 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
-    async createAthlete(athleteData: { name: string; team_id?: string; gender?: string; age?: number; height_cm?: number; weight_kg?: number; sport?: string; position?: string; goals?: string; notes?: string }) {
+    async createAthlete(athleteData: { name: string; team_id?: string; gender?: string; age?: number; height_cm?: number; weight_kg?: number; sport?: string; position?: string; goals?: string; notes?: string; image_url?: string }) {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');
 
@@ -72,6 +72,94 @@ export const DatabaseService = {
             .single();
         if (error) throw error;
         return data;
+    },
+
+    async updateAthlete(athleteId: string, updates: Partial<{ name: string; team_id: string | null; gender: string; age: number; height_cm: number; weight_kg: number; sport: string; position: string; goals: string; notes: string; image_url: string | null }>) {
+        const { data, error } = await supabase
+            .from('athletes')
+            .update(updates)
+            .eq('id', athleteId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    // --- ATHLETE SHARE LINKS ---
+    async createAthleteShare(payload: {
+        athleteId: string;
+        athleteName: string;
+        mode: 'snapshot' | 'live';
+        snapshotData?: any;
+        expiresAt?: string | null;
+    }) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('User not authenticated');
+
+        const { data, error } = await supabase
+            .from('athlete_share_sessions')
+            .insert({
+                user_id: userData.user.id,
+                athlete_id: payload.athleteId,
+                athlete_name: payload.athleteName,
+                mode: payload.mode,
+                snapshot_data: payload.snapshotData ?? null,
+                expires_at: payload.expiresAt ?? null,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async listAthleteShares(athleteId: string) {
+        const { data, error } = await supabase
+            .from('athlete_share_sessions')
+            .select('id, mode, expires_at, created_at')
+            .eq('athlete_id', athleteId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async fetchAthleteShare(shareId: string) {
+        const { data, error } = await supabase
+            .from('athlete_share_sessions')
+            .select('*')
+            .eq('id', shareId)
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteAthleteShare(shareId: string) {
+        const { error } = await supabase
+            .from('athlete_share_sessions')
+            .delete()
+            .eq('id', shareId);
+        if (error) throw error;
+    },
+
+    async uploadAthleteAvatar(file: File): Promise<string> {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('User not authenticated');
+
+        if (file.size > 5 * 1024 * 1024) throw new Error('Image must be under 5MB');
+
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+        const rand = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const path = `${userData.user.id}/${rand}.${safeExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('athlete-avatars')
+            .upload(path, file, { upsert: false, contentType: file.type });
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('athlete-avatars').getPublicUrl(path);
+        return data.publicUrl;
     },
 
     // --- EXERCISES ---

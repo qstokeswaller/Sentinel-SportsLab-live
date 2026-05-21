@@ -14,6 +14,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { DatabaseService } from '../services/databaseService';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { computeComposite, computeAthleteBaseline, scoreToHex } from '../utils/wellnessScoring';
+import { AthleteAvatar } from '../components/roster/AthleteAvatar';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -446,7 +447,6 @@ export const DashboardPage = () => {
         const remaining = atRiskAthletes.length - 5;
 
         const renderCompactRow = (player, onClick) => {
-            const initials = player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
             const isInjured = player.isInjured;
             const acwrColor = isInjured ? 'text-slate-400' : player.acwr > 1.5 ? 'text-rose-600' : player.acwr > 1.3 ? 'text-amber-600' : 'text-sky-600';
             const bgColor = isInjured ? 'bg-slate-200 text-slate-500' : player.acwr > 1.5 ? 'bg-rose-100 text-rose-700' : player.acwr > 1.3 ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700';
@@ -456,9 +456,13 @@ export const DashboardPage = () => {
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border-l-[3px] ${borderColor} ${isInjured ? 'bg-slate-50/80 dark:bg-[#1A2D48]/60 opacity-70' : 'bg-slate-50/50 dark:bg-[#1A2D48]/30'} hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-sm transition-all cursor-pointer`}
                     onClick={onClick}
                 >
-                    <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${bgColor}`}>
-                        {initials}
-                    </div>
+                    <AthleteAvatar
+                        player={player}
+                        size="xs"
+                        shape="rounded-md"
+                        className="w-7 h-7"
+                        fallbackClass={bgColor}
+                    />
                     <div className="flex-1 min-w-0">
                         <h4 className="text-[12px] font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{player.name}</h4>
                     </div>
@@ -1008,15 +1012,19 @@ export const DashboardPage = () => {
                                                                     ) : (
                                                                         <div className="space-y-1.5">
                                                                             {visible.map(({ r, player, reason, isCritical, aid }) => {
-                                                                                const initials = player
-                                                                                    ? player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-                                                                                    : '??';
+                                                                                const fallbackBg = isCritical
+                                                                                    ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300'
+                                                                                    : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300';
                                                                                 return (
                                                                                     <div key={aid} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 border ${isCritical ? 'bg-white dark:bg-[#132338] border-slate-100 dark:border-rose-500/30' : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-amber-500/30'}`}>
                                                                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCritical ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                                                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 ${isCritical ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'}`}>
-                                                                                            {initials}
-                                                                                        </div>
+                                                                                        <AthleteAvatar
+                                                                                            player={player || { name: 'Unknown' }}
+                                                                                            size="xs"
+                                                                                            className="w-6 h-6"
+                                                                                            fallbackClass={fallbackBg}
+                                                                                            fallbackTextSize="text-[8px]"
+                                                                                        />
                                                                                         <div className="flex-1 min-w-0">
                                                                                             <p className="text-[10px] font-semibold text-slate-800 dark:text-[#E2E8F0] truncate leading-tight">{player?.name || 'Unknown'}</p>
                                                                                             <p className={`text-[9px] font-bold uppercase tracking-wide leading-tight ${isCritical ? 'text-rose-500 dark:text-rose-300' : 'text-amber-500 dark:text-amber-300'}`}>{reason}</p>

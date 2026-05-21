@@ -49,6 +49,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
         path.startsWith('/data-hub/snapshot') ||
+        path.startsWith('/athlete-share/') ||
         path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
         path === '/';
 
@@ -1095,7 +1096,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const [newAthleteTeam, setNewAthleteTeam] = useState(teams.find(t => t.id !== 't_private')?.id || '');
 
     const [newAthleteProfile, setNewAthleteProfile] = useState({
-        age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: ''
+        age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '', image_url: ''
     });
 
     const [newTeamName, setNewTeamName] = useState('');
@@ -1425,6 +1426,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                     position: newAthleteProfile.position || undefined,
                     goals: newAthleteProfile.goals || undefined,
                     notes: newAthleteProfile.notes || undefined,
+                    image_url: newAthleteProfile.image_url || undefined,
                 });
                 // Optimistically add to local state — no full reload, no loading flash
                 if (newAthlete) {
@@ -1446,7 +1448,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             }
             if (!keepOpen) setIsAddAthleteModalOpen(false);
             setNewAthleteName('');
-            setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '' });
+            setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '', image_url: '' });
             return true;
         } catch (err) {
             console.error("Error adding athlete/team:", err);
@@ -1468,6 +1470,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             console.error("Error adding team:", err);
             const msg = err instanceof Error ? err.message : String(err);
             alert(`Failed to add team: ${msg}`);
+        }
+    };
+
+    const handleUpdateAthlete = async (athleteId: string, updates: Record<string, any>) => {
+        // Optimistic local update
+        setTeams(prev => prev.map(t => ({
+            ...t,
+            players: (t.players || []).map(p => p.id === athleteId ? { ...p, ...updates } : p),
+        })));
+        setViewingPlayer(prev => (prev && prev.id === athleteId) ? { ...prev, ...updates } : prev);
+        try {
+            const updated = await DatabaseService.updateAthlete(athleteId, updates);
+            return updated;
+        } catch (err) {
+            console.error('Error updating athlete:', err);
+            showToast('Failed to update athlete — please try again', 'error');
+            initData();
+            throw err;
         }
     };
 
@@ -2932,6 +2952,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleOpenPlayerProfile,
         handleAddAthlete,
         handleAddTeam,
+        handleUpdateAthlete,
         handleDeleteAthlete,
         handleDeleteTeam,
         handleAddSession,

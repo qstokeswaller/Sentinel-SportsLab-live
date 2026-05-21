@@ -10,9 +10,11 @@ import WattbikeMapCalculator from './components/performance/WattbikeMapCalculato
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
 import { CustomSelect } from './components/ui/CustomSelect';
+import { AthleteAvatar } from './components/roster/AthleteAvatar';
 // Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
 const DashboardPage      = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const RosterPage         = lazy(() => import('./pages/RosterPage').then(m => ({ default: m.RosterPage })));
+const AthleteProfilePage = lazy(() => import('./pages/AthleteProfilePage').then(m => ({ default: m.AthleteProfilePage })));
 const PeriodizationPage  = lazy(() => import('./pages/PeriodizationPage').then(m => ({ default: m.PeriodizationPage })));
 const ExerciseLibraryPage = lazy(() => import('./pages/ExerciseLibraryPage').then(m => ({ default: m.ExerciseLibraryPage })));
 const WorkoutsPage       = lazy(() => import('./pages/WorkoutsPage').then(m => ({ default: m.WorkoutsPage })));
@@ -295,6 +297,31 @@ const AddAthleteModal = () => {
                     {/* ATHLETE step 2 — profile */}
                     {addAthleteMode === 'athlete' && step === 2 && (
                         <div className="space-y-4">
+                            {/* Profile photo */}
+                            <div className="flex items-center gap-4 pb-2">
+                                <AthleteAvatar
+                                    player={{ name: newAthleteName || '?', image_url: newAthleteProfile.image_url || null }}
+                                    size="xl"
+                                    editable
+                                    uploadOnly
+                                    onChange={(url) => setProfile('image_url', url)}
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <label className={LABEL}>Profile Photo</label>
+                                    <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] leading-snug">
+                                        Click the avatar to upload. Optional — initials shown if none.
+                                    </p>
+                                    {newAthleteProfile.image_url && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setProfile('image_url', '')}
+                                            className="mt-1.5 text-[11px] font-medium text-rose-500 hover:text-rose-600 transition-colors"
+                                        >
+                                            Remove photo
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className={LABEL}>Age</label>
@@ -435,6 +462,7 @@ const App = () => {
                         <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/periodization" element={<PeriodizationPage />} />
                         <Route path="/clients" element={<RosterPage />} />
+                        <Route path="/clients/:athleteId" element={<AthleteProfilePage />} />
                         <Route path="/workouts" element={<WorkoutsPage />} />
                         <Route path="/workouts/programs" element={<WorkoutsPage />} />
                         <Route path="/workouts/sessions" element={<WorkoutsPage />} />
@@ -451,7 +479,7 @@ const App = () => {
                         <Route path="*" element={(() => {
                             // Don't redirect public form routes — they're handled by the outer Router
                             const path = window.location.pathname;
-                            if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') || path.startsWith('/wellness-form') || path.startsWith('/injury-form') || path.startsWith('/workout/') || path.startsWith('/protocol/')) {
+                            if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') || path.startsWith('/wellness-form') || path.startsWith('/injury-form') || path.startsWith('/workout/') || path.startsWith('/protocol/') || path.startsWith('/athlete-share/') || path.startsWith('/data-hub/snapshot')) {
                                 return null;
                             }
                             return <Navigate to="/dashboard" replace />;
@@ -1242,7 +1270,6 @@ const AthleteProfileModal = () => {
     if (!viewingPlayer) return null;
 
     const p = viewingPlayer;
-    const initials = p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     const playerTeam = teams.find(t => (t.players || []).some(pl => pl.id === p.id));
     const teamId = playerTeam?.id;
 
@@ -1352,9 +1379,8 @@ const AthleteProfileModal = () => {
                 {/* ── Header ── */}
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm shrink-0">
-                            {initials}
-                        </div>
+                        <AthleteAvatar player={p} size="md" editable shape="rounded-xl" />
+
                         <div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{p.name}</h2>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">

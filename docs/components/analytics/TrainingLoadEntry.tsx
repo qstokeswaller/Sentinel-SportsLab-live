@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
+import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
@@ -324,7 +325,6 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                 const row = getRow(player.id);
                                 const computed = computeValue(row);
                                 const existing = existingDataForDate[player.id];
-                                const initials = player.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
                                 const exclusion = acwrExclusions?.[player.id];
                                 const isPlayerExcluded = exclusion?.excluded === true;
                                 const excludeLabel = exclusion?.excludeType === 'non_injury' ? 'Excluded' : 'Injured';
@@ -365,9 +365,14 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                     >
                                         {/* Athlete name */}
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] shrink-0">
-                                                {initials}
-                                            </div>
+                                            <AthleteAvatar
+                                                player={player}
+                                                size="xs"
+                                                shape="rounded-lg"
+                                                className="w-7 h-7"
+                                                fallbackClass="bg-slate-200 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]"
+                                                fallbackTextSize="text-[10px]"
+                                            />
                                             <div className="min-w-0">
                                                 <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate block">{player.name}</span>
                                                 {existing && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700 dark:text-emerald-400 text-[9px] font-semibold">✓ Logged</span>}

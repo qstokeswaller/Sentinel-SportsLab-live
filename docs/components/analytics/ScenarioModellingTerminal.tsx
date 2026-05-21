@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
+import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
     UsersIcon, TargetIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon,
@@ -910,11 +911,12 @@ export const ScenarioModellingTerminal = ({
                                             <button onClick={() => setExpandedPlayer(isExpanded ? null : player.id)}
                                                 className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center">
-                                                        <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
-                                                            {(player.name || '??').split(' ').map(n => n[0]).join('').toUpperCase()}
-                                                        </span>
-                                                    </div>
+                                                    <AthleteAvatar
+                                                        player={player}
+                                                        size="sm"
+                                                        fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-indigo-400"
+                                                        fallbackTextSize="text-[10px]"
+                                                    />
                                                     <div className="text-left">
                                                         <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</div>
                                                         <div className="text-[9px] text-slate-400">

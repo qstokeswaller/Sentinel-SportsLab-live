@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useMemo } from 'react';
+import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { ACWR_UTILS } from '../../utils/constants';
 import ACWRLineChart from './ACWRLineChart';
 import {
@@ -67,9 +68,13 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                 <div className={`px-6 py-5 border-b ${ratioStatus.status === 'danger' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40' : ratioStatus.status === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 bg-slate-200 rounded-xl flex items-center justify-center text-sm font-bold text-slate-600 dark:text-[#CBD5E1]">
-                                {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </div>
+                            <AthleteAvatar
+                                player={athlete}
+                                size="md"
+                                shape="rounded-xl"
+                                fallbackClass="bg-slate-200 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]"
+                                fallbackTextSize="text-sm"
+                            />
                             <div>
                                 <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0]">{athlete.name}</h3>
                                 <p className="text-xs text-slate-500">{athlete.position || 'Athlete'}</p>

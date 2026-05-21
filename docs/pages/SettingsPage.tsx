@@ -19,6 +19,7 @@ import { PAGE_TOURS, WORKFLOW_TOURS, getDefaultTourState } from '../utils/tourSt
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, saveGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { AthleteAvatar } from '../components/roster/AthleteAvatar';
 import type { GpsTeamProfile } from '../components/performance/GpsConfigModal';
 
 const inputCls = "w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
@@ -678,9 +679,14 @@ const SettingsPage: React.FC = () => {
                           <div key={key} className={`rounded-xl border p-4 transition-all ${s.enabled ? 'border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50 dark:bg-[#132338]/40'}`}>
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 dark:text-[#CBD5E1] text-[10px] font-bold">
-                                  {athlete.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                </div>
+                                <AthleteAvatar
+                                  player={athlete}
+                                  size="xs"
+                                  shape="rounded-lg"
+                                  className="w-7 h-7"
+                                  fallbackClass="bg-slate-200 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]"
+                                  fallbackTextSize="text-[10px]"
+                                />
                                 <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0]">{athlete.name}</span>
                               </div>
                               <button type="button" onClick={() => updateSettings(key, { enabled: !s.enabled })}

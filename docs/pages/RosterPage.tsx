@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon, PlusIcon,
@@ -11,22 +12,25 @@ import { Button } from '@/components/ui/button';
 import TrainingRegister from '../components/roster/TrainingRegister';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { ImportRosterModal } from '../components/roster/ImportRosterModal';
+import { AthleteAvatar } from '../components/roster/AthleteAvatar';
 
 type ViewMode     = 'list' | 'grid';
 type PlayerLayout = 'list' | 'cards';          // sub-toggle inside team drill-down
 type TeamDetailTab = 'athletes' | 'register';
 
 export const RosterPage = () => {
+    const navigate = useNavigate();
     const {
         teams,
         setIsAddAthleteModalOpen,
         setNewAthleteName,
         setAddAthleteMode,
-        setViewingPlayer,
         handleDeleteAthlete,
         handleDeleteTeam,
         isLoading,
     } = useAppState();
+
+    const openAthlete = (player: any) => navigate(`/clients/${player.id}`);
 
     const [viewMode, setViewMode]           = useState<ViewMode>('list');
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
@@ -173,12 +177,10 @@ export const RosterPage = () => {
                                     className={`grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group ${
                                         playerIdx < (team.players || []).length - 1 || teamIdx < teams.length - 1 ? 'border-b border-slate-100 dark:border-[#1A2D48]' : ''
                                     }`}
-                                    onClick={() => setViewingPlayer(player)}
+                                    onClick={() => openAthlete(player)}
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-xs font-semibold shrink-0">
-                                            {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                        </div>
+                                        <AthleteAvatar player={player} size="sm" />
                                         <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</span>
                                     </div>
                                     <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{team.name}</span>
@@ -192,7 +194,7 @@ export const RosterPage = () => {
                                             <Trash2Icon size={13} />
                                         </button>
                                         <span
-                                            onClick={() => setViewingPlayer(player)}
+                                            onClick={() => openAthlete(player)}
                                             className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                         >
                                             View <ChevronRightIcon size={12} />
@@ -307,10 +309,10 @@ export const RosterPage = () => {
                                             {preview.map(p => (
                                                 <div
                                                     key={p.id}
-                                                    className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 border-2 border-white dark:border-[#132338] flex items-center justify-center text-indigo-600 dark:text-white text-[10px] font-bold shrink-0"
+                                                    className="ring-2 ring-white dark:ring-[#132338] rounded-full"
                                                     title={p.name}
                                                 >
-                                                    {p.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                                    <AthleteAvatar player={p} size="sm" />
                                                 </div>
                                             ))}
                                         </div>
@@ -443,7 +445,7 @@ export const RosterPage = () => {
                             <div
                                 key={player.id}
                                 className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col items-center gap-2 hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group cursor-pointer relative"
-                                onClick={() => setViewingPlayer(player)}
+                                onClick={() => openAthlete(player)}
                             >
                                 <button
                                     onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'athlete', id: player.id, name: player.name }); }}
@@ -453,8 +455,8 @@ export const RosterPage = () => {
                                     <Trash2Icon size={13} />
                                 </button>
 
-                                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-lg font-bold ring-2 ring-white dark:ring-[#132338] shadow">
-                                    {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                <div className="ring-2 ring-white dark:ring-[#132338] rounded-full shadow">
+                                    <AthleteAvatar player={player} size="lg" />
                                 </div>
 
                                 <div className="text-center min-w-0 w-full">
@@ -484,12 +486,10 @@ export const RosterPage = () => {
                                 className={`grid grid-cols-[2fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group ${
                                     idx < players.length - 1 ? 'border-b border-slate-100 dark:border-[#1A2D48]' : ''
                                 }`}
-                                onClick={() => setViewingPlayer(player)}
+                                onClick={() => openAthlete(player)}
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center text-indigo-600 dark:text-white text-xs font-semibold shrink-0">
-                                        {player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </div>
+                                    <AthleteAvatar player={player} size="sm" />
                                     <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</span>
                                 </div>
                                 <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
@@ -502,7 +502,7 @@ export const RosterPage = () => {
                                         <Trash2Icon size={13} />
                                     </button>
                                     <span
-                                        onClick={() => setViewingPlayer(player)}
+                                        onClick={() => openAthlete(player)}
                                         className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                     >
                                         View <ChevronRightIcon size={12} />

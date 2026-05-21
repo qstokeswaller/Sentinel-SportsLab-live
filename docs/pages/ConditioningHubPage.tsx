@@ -4,12 +4,11 @@ import { useAppState } from '../context/AppStateContext';
 import { Button } from '@/components/ui/button';
 import {
     ActivityIcon, ZapIcon, PlusIcon, Trash2Icon, SaveIcon, PrinterIcon,
-    ClockIcon, FileEditIcon, Calculator as CalculatorIcon, FootprintsIcon, ArrowLeftIcon,
+    ClockIcon, FileEditIcon, Calculator as CalculatorIcon, ArrowLeftIcon,
     TimerIcon, HeartPulseIcon, RepeatIcon, CopyIcon, CalendarPlusIcon,
 } from 'lucide-react';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { RunningMechanicsLibrary } from '../components/conditioning/RunningMechanicsLibrary';
 import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsPicker';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 
@@ -756,7 +755,7 @@ ${sectionsHtml}
                 </div>
             )}
             {!activeConditioningModule && !isLoading && (
-                <div data-tour="conditioning-main" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div data-tour="conditioning-main" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div
                         onClick={() => setActiveConditioningModule('wattbike')}
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
@@ -776,16 +775,6 @@ ${sectionsHtml}
                         </div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Sessions</h3>
                         <p className="text-sm text-slate-500 dark:text-[#CBD5E1] leading-relaxed">Prescribe running, bike & sled sessions with sets, reps, intensity & work:rest ratios.</p>
-                    </div>
-                    <div
-                        onClick={() => setActiveConditioningModule('mechanics')}
-                        className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-emerald-200 dark:border-emerald-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
-                    >
-                        <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/15 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white dark:group-hover:bg-emerald-500 dark:group-hover:text-white transition-all">
-                            <FootprintsIcon size={20} />
-                        </div>
-                        <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Running Mechanics</h3>
-                        <p className="text-sm text-slate-500 dark:text-[#CBD5E1] leading-relaxed">Gait analysis, sprint mechanics & movement documents.</p>
                     </div>
                 </div>
             )}
@@ -983,24 +972,6 @@ ${sectionsHtml}
                         </div>
                     </div>
                     <div className="text-center py-16"><p className="text-slate-400 dark:text-[#CBD5E1] text-sm italic">Module coming soon...</p></div>
-                </div>
-            )}
-
-            {/* Running Mechanics */}
-            {activeConditioningModule === 'mechanics' && (
-                <div className="space-y-5 animate-in slide-in-from-bottom-3">
-                    <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0">
-                                <FootprintsIcon size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Running Mechanics</h3>
-                                <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Gait analysis, sprint mechanics & movement documents</p>
-                            </div>
-                        </div>
-                    </div>
-                    <RunningMechanicsLibrary />
                 </div>
             )}
 

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
+import { AthleteAvatar } from './AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import {
@@ -241,13 +242,14 @@ const TrainingRegister: React.FC<TrainingRegisterProps> = ({ team }) => {
                                                             : 'border-indigo-200 dark:border-indigo-500/40 bg-indigo-50 dark:bg-indigo-500/15 shadow-sm'
                                                     }`}
                                                 >
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                                                        isAbsent
+                                                    <AthleteAvatar
+                                                        player={player}
+                                                        size="sm"
+                                                        fallbackClass={isAbsent
                                                             ? 'bg-slate-200 dark:bg-[#243A58] text-slate-400 dark:text-[#CBD5E1]'
-                                                            : 'bg-indigo-500 text-white'
-                                                    }`}>
-                                                        {player.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                                                    </div>
+                                                            : 'bg-indigo-500 text-white'}
+                                                        fallbackTextSize="text-xs"
+                                                    />
                                                     <span className={`text-sm font-medium truncate ${
                                                         isAbsent
                                                             ? 'text-slate-500 dark:text-[#94A3B8] line-through'

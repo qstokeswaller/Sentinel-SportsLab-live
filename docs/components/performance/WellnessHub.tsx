@@ -7,6 +7,7 @@ import {
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import { CustomSelect } from '../ui/CustomSelect';
+import { AthleteAvatar } from '../roster/AthleteAvatar';
 import QuestionnaireManager from './QuestionnaireManager';
 import WellnessChartCard from '../charts/WellnessChartCard';
 import WellnessHeatmap from '../wellness/WellnessHeatmap';
@@ -1597,9 +1598,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
                                         >
                                             {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
-                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border border-slate-200 dark:border-[#243A58] shrink-0">
-                                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300">{a?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
-                                            </div>
+                                            <AthleteAvatar
+                                                player={a || { name: '?' }}
+                                                size="sm"
+                                                className="w-9 h-9 border border-slate-200 dark:border-[#243A58]"
+                                                fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
+                                                fallbackTextSize="text-[10px]"
+                                            />
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{a?.name || 'Unknown'}</div>
                                                 <div className="text-[9px] font-bold text-rose-500 uppercase">{reason}</div>
@@ -1906,9 +1911,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 <td className="px-6 py-4">
                                                     {player ? (
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0">
-                                                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0, 2).toUpperCase()}</span>
-                                                            </div>
+                                                            <AthleteAvatar
+                                                                player={player}
+                                                                size="sm"
+                                                                className="w-9 h-9 border-2 border-white dark:border-[#132338] shadow-sm ring-1 ring-slate-100 dark:ring-[#243A58]"
+                                                                fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
+                                                                fallbackTextSize="text-[10px]"
+                                                            />
                                                             <div>
                                                                 <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</div>
                                                                 <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-tighter">{player.subsection}</div>
@@ -2035,9 +2044,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                             <td className="px-6 py-3.5">
                                                                 {player ? (
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                                                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
-                                                                        </div>
+                                                                        <AthleteAvatar
+                                                                            player={player}
+                                                                            size="xs"
+                                                                            className="w-7 h-7"
+                                                                            fallbackClass="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                                                                            fallbackTextSize="text-[9px]"
+                                                                        />
                                                                         <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                                     </div>
                                                                 ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
@@ -2107,9 +2120,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                             <td className="px-6 py-3.5">
                                                                 {player ? (
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#1A2D48] flex items-center justify-center shrink-0">
-                                                                            <span className="text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1]">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
-                                                                        </div>
+                                                                        <AthleteAvatar
+                                                                            player={player}
+                                                                            size="xs"
+                                                                            className="w-7 h-7"
+                                                                            fallbackClass="bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]"
+                                                                            fallbackTextSize="text-[9px]"
+                                                                        />
                                                                         <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                                     </div>
                                                                 ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
@@ -2213,9 +2230,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     <td className="px-6 py-4">
                                                         {player ? (
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border border-white shadow-sm ring-1 ring-slate-100 shrink-0">
-                                                                    <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-300">{player.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2).toUpperCase()}</span>
-                                                                </div>
+                                                                <AthleteAvatar
+                                                                    player={player}
+                                                                    size="sm"
+                                                                    className="border border-white dark:border-[#132338] shadow-sm ring-1 ring-slate-100 dark:ring-[#243A58]"
+                                                                    fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
+                                                                    fallbackTextSize="text-[9px]"
+                                                                />
                                                                 <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">{player.name}</span>
                                                             </div>
                                                         ) : <span className="text-slate-400 dark:text-[#CBD5E1] text-xs">Unknown</span>}
@@ -2394,9 +2415,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             <ArrowLeft size={20} />
                         </button>
                         <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-xl bg-indigo-100 dark:bg-indigo-600 flex items-center justify-center border-2 border-white shadow-md ring-1 ring-slate-100">
-                                <span className="text-lg font-bold text-indigo-600 dark:text-indigo-300">{activeAthlete?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}</span>
-                            </div>
+                            <AthleteAvatar
+                                player={activeAthlete || { name: '?' }}
+                                size="lg"
+                                shape="rounded-xl"
+                                className="w-16 h-16 border-2 border-white dark:border-[#132338] shadow-md ring-1 ring-slate-100 dark:ring-[#243A58]"
+                                fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
+                                fallbackTextSize="text-lg"
+                            />
                             <div>
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">{activeAthlete?.name}</h2>

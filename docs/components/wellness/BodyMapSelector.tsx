@@ -38,7 +38,7 @@ const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOn
                     ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
                     : selected && useSeverity
                         ? 'text-white'
-                        : 'bg-white border-slate-200 text-slate-600 dark:text-[#CBD5E1] hover:border-slate-300'
+                        : 'bg-white dark:bg-[#0F1C30] border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-slate-300 dark:hover:border-indigo-500/40'
             } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
             style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
         >
@@ -132,7 +132,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {groups.map(g => (
                 <div key={g.label}>
                     {g.label && (
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{g.label}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#94A3B8] mb-1.5">{g.label}</p>
                     )}
                     <div className="grid grid-cols-2 gap-1.5">
                         {g.areas.map(area => (
@@ -156,15 +156,15 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
     return (
         <div className="space-y-4">
             {/* Instructions */}
-            <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-3 space-y-2">
+            <div className="bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 rounded-xl p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                    <Info size={16} className="text-cyan-600 shrink-0 mt-0.5" />
+                    <Info size={16} className="text-cyan-600 dark:text-cyan-300 shrink-0 mt-0.5" />
                     {selectOnly ? (
-                        <p className="text-sm font-semibold text-cyan-800">
+                        <p className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
                             Tap an area to select it. Tap again to remove. You'll rate severity on the next screen.
                         </p>
                     ) : (
-                        <ol className="text-sm font-semibold text-cyan-800 list-decimal list-inside space-y-0.5">
+                        <ol className="text-sm font-semibold text-cyan-800 dark:text-cyan-200 list-decimal list-inside space-y-0.5">
                             {(cfg.instructionText || '1. Tap an area to mark it\n2. Tap again to increase severity of injury\n3. Tap a third time to clear')
                                 .split('\n')
                                 .map((line, i) => {
@@ -175,7 +175,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                     )}
                 </div>
                 {!selectOnly && (
-                    <div className="flex justify-center gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                    <div className="flex justify-center gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-[#CBD5E1]">
                         {cfg.severityLevels.map(s => (
                             <div key={s.value} className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.legendColor }} /> {s.label}
@@ -187,7 +187,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
 
             {/* Reference image */}
             {cfg.referenceImageUrl && (
-                <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
+                <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-[#243A58] bg-white dark:bg-[#0F1C30]">
                     <img
                         src={cfg.referenceImageUrl}
                         alt="Body reference — front and back"
@@ -200,8 +200,8 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {frontGroups.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Front of Body</p>
-                        <div className="flex-1 h-px bg-slate-200" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] shrink-0">Front of Body</p>
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-[#243A58]" />
                     </div>
                     {renderGroups(frontGroups)}
                 </div>
@@ -210,9 +210,9 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {/* Divider between front and back */}
             {frontGroups.length > 0 && backGroups.length > 0 && (
                 <div className="flex items-center gap-2 py-1">
-                    <div className="flex-1 h-0.5 bg-slate-200 rounded-full" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 px-1">↑ Front · Back ↓</span>
-                    <div className="flex-1 h-0.5 bg-slate-200 rounded-full" />
+                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-[#243A58] rounded-full" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-[#94A3B8] px-1">↑ Front · Back ↓</span>
+                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-[#243A58] rounded-full" />
                 </div>
             )}
 
@@ -220,8 +220,8 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {backGroups.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Back of Body</p>
-                        <div className="flex-1 h-px bg-slate-200" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] shrink-0">Back of Body</p>
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-[#243A58]" />
                     </div>
                     {renderGroups(backGroups)}
                 </div>

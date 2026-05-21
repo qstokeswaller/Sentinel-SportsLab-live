@@ -614,7 +614,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     {onBack && (
                         <button
                             onClick={onBack}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all shrink-0"
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 dark:hover:border-indigo-500/40 transition-all shrink-0"
                             title="Back to Reporting Hub"
                         >
                             <ArrowLeftIcon size={14} />
