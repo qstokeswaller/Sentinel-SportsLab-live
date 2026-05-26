@@ -719,7 +719,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                             <Share2Icon size={12} /> Share
                         </button>
                         {sharePopoverOpen && (
-                            <div className="absolute left-0 top-full mt-1.5 w-80 max-w-[calc(100vw-260px)] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl z-[100] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
+                            <div className="absolute right-0 top-full mt-1.5 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl z-[100] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">Share Data Hub snapshot</h4>
                                     <button onClick={() => setSharePopoverOpen(false)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>

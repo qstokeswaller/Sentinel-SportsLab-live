@@ -389,7 +389,8 @@ export const ProgramBuilderModal = ({
   const [trainingPhase, setTrainingPhase]     = useState<string>('Strength');
 
   // Days (flat array — grouped visually into weeks of 7)
-  const [days, setDays]               = useState<LocalDay[]>(() => Array.from({ length: DAYS_PER_WEEK }, (_, i) => newDay(i + 1, 0)));
+  // Programs start with a single day — users add more via the "Add Day" button
+  const [days, setDays]               = useState<LocalDay[]>(() => [newDay(1, 0)]);
   const [activeDayIdx, setActiveDayIdx] = useState(0);
   // Per-row collapse state — collapsed rows render header-only to save vertical space
   const [collapsedRows, setCollapsedRows] = useState<Set<string>>(new Set());
@@ -401,7 +402,6 @@ export const ProgramBuilderModal = ({
   // Active week tab (0-indexed). Replaces the stacked-weeks layout — only the active week renders.
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   // Drag-over hint for the Rest tile drop target
-  const [restDragTarget, setRestDragTarget] = useState<number | null>(null);
   // Accordion — Set of day tempIds that are currently expanded. Default collapsed for week-overview at a glance.
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   // Per-row Display Options modal — null when closed
@@ -421,7 +421,6 @@ export const ProgramBuilderModal = ({
   // Picker drag-in-progress hint (matches Packets behavior)
   const [draggedExId, setDraggedExId] = useState<string | null>(null);
   // Tracks whether the current drag came from the Rest tile (so day-card amber ring only fires for rest drags, not picker/row)
-  const [isDraggingRest, setIsDraggingRest] = useState(false);
   const toggleDayExpanded = (tempId: string) => setExpandedDays(prev => {
     const next = new Set(prev);
     if (next.has(tempId)) next.delete(tempId); else next.add(tempId);
@@ -531,7 +530,7 @@ export const ProgramBuilderModal = ({
         };
       });
       // No more pad-to-7 — load whatever was saved. New programs default to a 7-day week below; users can add/remove days freely.
-      setDays(loadedDays.length > 0 ? loadedDays : Array.from({ length: DAYS_PER_WEEK }, (_, i) => newDay(i + 1, 0)));
+      setDays(loadedDays.length > 0 ? loadedDays : [newDay(1, 0)]);
     } else {
       setProgramName('');
       setProgramOverview('');
@@ -539,7 +538,7 @@ export const ProgramBuilderModal = ({
       setTrackTonnage(true);
       setStartDate(new Date().toISOString().split('T')[0]);
       setTrainingPhase('Strength');
-      setDays(Array.from({ length: DAYS_PER_WEEK }, (_, i) => newDay(i + 1, 0)));
+      setDays([newDay(1, 0)]);
     }
     setActiveDayIdx(0);
     setActiveWeekIdx(0);
@@ -640,9 +639,9 @@ export const ProgramBuilderModal = ({
 
   const addWeek = () => {
     // The new week gets the next weekIdx after the current max.
+    // New weeks start with one day; users add more via the "Add Day" button.
     const nextWeekIdx = Math.max(-1, ...days.map(d => d.weekIdx ?? 0)) + 1;
-    const newDays: LocalDay[] = [];
-    for (let i = 0; i < DAYS_PER_WEEK; i++) newDays.push(newDay(i + 1, nextWeekIdx));
+    const newDays: LocalDay[] = [newDay(1, nextWeekIdx)];
     const insertAt = days.length; // weeks are sorted; new week always goes at the end
     setDays((prev) => [...prev, ...newDays]);
     setActiveWeekIdx(nextWeekIdx);
@@ -949,6 +948,7 @@ export const ProgramBuilderModal = ({
   return (
     // Renders inside the main app layout (NOT a full-screen overlay) so the
     // sidebar nav stays visible for consistency with every other workflow page.
+    // Matches the packet builder page layout (WorkoutPacketsPage).
     <div className="flex items-stretch bg-white dark:bg-[#0A1628] animate-in fade-in duration-200 rounded-xl border border-slate-200 dark:border-[#243A58] overflow-hidden h-[calc(100vh-40px)]">
 
       {/* ── Main Panel ── */}
@@ -1007,7 +1007,7 @@ export const ProgramBuilderModal = ({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="max-w-4xl mx-auto px-8 py-6 space-y-6">
+          <div className="px-6 py-6 space-y-6">
 
             {/* Setup card — collapsible (matches Packets `Details` UX). Slim summary always visible, full form on expand. */}
             <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl">
@@ -1200,34 +1200,10 @@ export const ProgramBuilderModal = ({
                     count: (day.sections[sec] || []).length,
                   })).filter(s => s.count > 0);
                   const totalEx = sectionCountsList.reduce((sum, s) => sum + s.count, 0);
-                  const isDropTarget = restDragTarget === globalIdx;
                   return (
                     <div
                       key={day.tempId}
-                      className={`bg-white dark:bg-[#132338] border rounded-xl transition-all ${isDropTarget && isDraggingRest ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-500/30' : day.isRestDay ? 'border-slate-300 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/40' : 'border-slate-200 dark:border-[#243A58]'}`}
-                      onDragOver={(e) => {
-                        // Only show the amber rest-drop ring when the Rest tile is being dragged
-                        if (!isDraggingRest) return;
-                        if (e.dataTransfer.types.includes('text/plain')) {
-                          e.preventDefault();
-                          e.dataTransfer.dropEffect = 'copy';
-                          if (restDragTarget !== globalIdx) setRestDragTarget(globalIdx);
-                        }
-                      }}
-                      onDragLeave={(e) => {
-                        if (!e.currentTarget.contains(e.relatedTarget as Node)) setRestDragTarget(null);
-                      }}
-                      onDrop={(e) => {
-                        // Inner section drop zones handle picker/row drops; only respond here for rest tile
-                        if (!isDraggingRest) return;
-                        e.preventDefault();
-                        const data = e.dataTransfer.getData('text/plain') || '';
-                        if (data === 'rest' && !days[globalIdx].isRestDay) {
-                          applyRestDay(globalIdx);
-                        }
-                        setRestDragTarget(null);
-                        setIsDraggingRest(false);
-                      }}
+                      className={`bg-white dark:bg-[#132338] border rounded-xl transition-all ${day.isRestDay ? 'border-slate-300 dark:border-[#243A58] bg-slate-50/60 dark:bg-[#0F1C30]/40' : 'border-slate-200 dark:border-[#243A58]'}`}
                     >
                       {/* Day header — always visible */}
                       <button
@@ -1655,8 +1631,8 @@ export const ProgramBuilderModal = ({
                   <button
                     type="button"
                     onClick={addDayToActiveWeek}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 transition-all">
-                    <PlusIcon size={11} /> Add Day ({activeWeekDays.length} / {DAYS_PER_WEEK})
+                    className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-500/50 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/15 hover:scale-[1.01] hover:shadow-sm active:scale-[0.99] transition-all">
+                    <PlusIcon size={13} /> Add Day ({activeWeekDays.length} / {DAYS_PER_WEEK})
                   </button>
                 )}
               </div>
@@ -1667,7 +1643,7 @@ export const ProgramBuilderModal = ({
       </div>
 
       {/* ── Right Panel: Exercise Chooser ── */}
-      <div className="w-72 border-l border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] flex flex-col shrink-0 overflow-hidden">
+      <div className="w-96 shrink-0 bg-white dark:bg-[#132338] border-l border-slate-200 dark:border-[#243A58] flex flex-col overflow-hidden">
 
         {/* Header / filters */}
         <div className="px-4 py-4 border-b border-slate-200 dark:border-[#243A58] space-y-3 shrink-0">
@@ -1810,32 +1786,6 @@ export const ProgramBuilderModal = ({
         {/* Exercise list + pagination */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-            {/* Rest Day tile — pinned at top, draggable onto any day header to mark as rest */}
-            <div
-              role="button"
-              tabIndex={0}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/plain', 'rest');
-                e.dataTransfer.effectAllowed = 'copy';
-                setIsDraggingRest(true);
-              }}
-              onDragEnd={() => setIsDraggingRest(false)}
-              onClick={() => {
-                if (!days[clampedActiveDayIdx]?.isRestDay) applyRestDay(clampedActiveDayIdx);
-              }}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!days[clampedActiveDayIdx]?.isRestDay) applyRestDay(clampedActiveDayIdx); } }}
-              className="group w-full px-2.5 py-2 rounded-xl border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#1A2D48]/40 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-all flex items-center gap-2.5 cursor-grab active:cursor-grabbing"
-              title="Drag onto a day, or click to mark the active day as rest"
-            >
-              <div className="w-10 h-10 rounded-md bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] flex items-center justify-center shrink-0 pointer-events-none">
-                <MoonIcon size={15} />
-              </div>
-              <div className="flex-1 min-w-0 pointer-events-none">
-                <div className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] leading-tight truncate">Rest Day</div>
-                <div className="text-[9px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate">Drag onto any day · or click for active</div>
-              </div>
-            </div>
             {exLoading ? (
               <div className="py-12 flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] text-xs">Loading...</div>
             ) : searchResults.length === 0 ? (

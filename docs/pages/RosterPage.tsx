@@ -32,7 +32,7 @@ export const RosterPage = () => {
 
     const openAthlete = (player: any) => navigate(`/clients/${player.id}`);
 
-    const [viewMode, setViewMode]           = useState<ViewMode>('list');
+    const [viewMode, setViewMode]           = useState<ViewMode>('grid');
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [playerLayout, setPlayerLayout]   = useState<PlayerLayout>('cards');
     // Start all teams collapsed — user expands the ones they want to see
