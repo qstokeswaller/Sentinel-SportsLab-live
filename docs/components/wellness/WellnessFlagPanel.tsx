@@ -85,15 +85,15 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
     if (flags.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-[#132338] border border-amber-200 dark:border-amber-800/50 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#132338] border border-amber-200 dark:border-amber-500/40 rounded-xl shadow-sm overflow-hidden">
             <button
                 onClick={() => setExpanded(!expanded)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/15 hover:bg-amber-50 dark:hover:bg-amber-900/25 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-amber-50/50 dark:bg-amber-500/10 hover:bg-amber-50 dark:hover:bg-amber-500/20 transition-colors"
             >
                 <div className="flex items-center gap-2">
-                    <AlertTriangleIcon size={16} className="text-amber-600 dark:text-amber-400" />
+                    <AlertTriangleIcon size={16} className="text-amber-600 dark:text-amber-300" />
                     <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Wellness Flags</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/25 text-amber-700 dark:text-amber-200">
                         {pendingCount} pending
                     </span>
                 </div>
@@ -127,7 +127,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes }) => {
                                         <div key={`${f.athlete_id}-${f.trigger_field}-${i}`} className="px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors">
                                             <span className={`w-2 h-2 rounded-full shrink-0 ${isRed ? 'bg-rose-500' : 'bg-amber-400'}`} />
                                             <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] min-w-[120px] truncate">{name}</span>
-                                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${isRed ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50'}`}>
+                                            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${isRed ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40' : 'bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40'}`}>
                                                 {FLAG_LABELS[f.trigger_field] || f.trigger_field}: {f.trigger_value}
                                             </span>
                                             <span className="ml-auto flex items-center gap-2 shrink-0">

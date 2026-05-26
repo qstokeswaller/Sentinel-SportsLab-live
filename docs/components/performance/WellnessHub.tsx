@@ -97,7 +97,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
         handleLoadWellnessResponses,
         wellnessDateRange,
         setWellnessDateRange,
+        isDarkMode,
     } = useAppState();
+
+    // Chart palette — matches ACWRLineChart for visual consistency
+    const chartGridColor  = isDarkMode ? '#1A2D48' : '#f1f5f9';
+    const chartAxisColor  = isDarkMode ? '#243A58' : '#e2e8f0';
+    const chartLabelColor = isDarkMode ? '#64748B' : '#94a3b8';
+    const chartTextColor  = isDarkMode ? '#E2E8F0' : '#1e293b';
 
     const [viewMode, setViewMode] = useState<'selection' | 'dashboard' | 'athlete' | 'templates' | 'share'>('selection');
     const [previewTemplate, setPreviewTemplate] = useState<'daily' | 'weekly' | null>(null);
@@ -648,8 +655,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16">
                                         {gridVals.map(gv => (
                                             <g key={gv}>
-                                                <line x1={PAD_L} y1={yPos(gv)} x2={W - PAD_R} y2={yPos(gv)} stroke="#f1f5f9" strokeWidth="1" />
-                                                <text x={PAD_L - 3} y={yPos(gv) + 3} textAnchor="end" fontSize="6" fill="#cbd5e1">{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
+                                                <line x1={PAD_L} y1={yPos(gv)} x2={W - PAD_R} y2={yPos(gv)} stroke={chartGridColor} strokeWidth="1" />
+                                                <text x={PAD_L - 3} y={yPos(gv) + 3} textAnchor="end" fontSize="6" fill={chartLabelColor}>{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
                                             </g>
                                         ))}
                                         <polygon
@@ -666,7 +673,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             return (
                                                 <g key={i}>
                                                     <circle cx={xPos(i)} cy={yPos(v)} r="2.5" fill={activeDef.color} />
-                                                    {showLabel && <text x={xPos(i)} y={H - 2} textAnchor="middle" fontSize="6" fill="#94a3b8">{trend[i].date}</text>}
+                                                    {showLabel && <text x={xPos(i)} y={H - 2} textAnchor="middle" fontSize="6" fill={chartLabelColor}>{trend[i].date}</text>}
                                                 </g>
                                             );
                                         })}
@@ -707,7 +714,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             offset += dash;
                             return seg;
                         })}
-                        <text x="65" y="65" textAnchor="middle" dominantBaseline="central" className="text-lg font-bold" fill="#1e293b">{total}</text>
+                        <text x="65" y="65" textAnchor="middle" dominantBaseline="central" className="text-lg font-bold" fill={chartTextColor}>{total}</text>
                     </svg>
                     <div className="space-y-2">
                         {data.map(d => (
@@ -768,13 +775,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             const gy = yPos(gv);
                             return (
                                 <g key={gv}>
-                                    <line x1={PAD_L} y1={gy} x2={W - PAD_R} y2={gy} stroke="#f1f5f9" strokeWidth="1" />
-                                    <text x={PAD_L - 4} y={gy + 3} textAnchor="end" fontSize="7" fill="#94a3b8">{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
+                                    <line x1={PAD_L} y1={gy} x2={W - PAD_R} y2={gy} stroke={chartGridColor} strokeWidth="1" />
+                                    <text x={PAD_L - 4} y={gy + 3} textAnchor="end" fontSize="7" fill={chartLabelColor}>{gv}{activeDef.key === 'sleep_hours' ? 'h' : ''}</text>
                                 </g>
                             );
                         })}
                         {/* X axis baseline */}
-                        <line x1={PAD_L} y1={PAD_T + plotH} x2={W - PAD_R} y2={PAD_T + plotH} stroke="#e2e8f0" strokeWidth="1" />
+                        <line x1={PAD_L} y1={PAD_T + plotH} x2={W - PAD_R} y2={PAD_T + plotH} stroke={chartAxisColor} strokeWidth="1" />
                         {/* Fill area under line */}
                         <polygon
                             points={[
@@ -798,7 +805,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     <circle cx={xPos(i)} cy={yPos(t.avg)} r="3" fill={activeDef.color} />
                                     <title>{`${t.date}: ${t.avg}${activeDef.key === 'sleep_hours' ? 'h' : ''} (${t.count} responses)`}</title>
                                     {showLabel && (
-                                        <text x={xPos(i)} y={H - 4} textAnchor="middle" fontSize="7" fill="#94a3b8">{t.date}</text>
+                                        <text x={xPos(i)} y={H - 4} textAnchor="middle" fontSize="7" fill={chartLabelColor}>{t.date}</text>
                                     )}
                                 </g>
                             );
@@ -867,7 +874,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             off += dash;
                             return seg;
                         })}
-                        <text x="65" y="65" textAnchor="middle" dominantBaseline="central" className="text-lg font-bold" fill="#1e293b">{total}</text>
+                        <text x="65" y="65" textAnchor="middle" dominantBaseline="central" className="text-lg font-bold" fill={chartTextColor}>{total}</text>
                     </svg>
                     <div className="space-y-2">
                         {data.map(d => (
@@ -1595,7 +1602,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         <div
                                             key={r.id}
                                             onClick={onClick || (() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); })}
-                                            className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white hover:shadow-md transition-all group"
+                                            className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-md dark:hover:border-rose-700/50 transition-all group"
                                         >
                                             {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
                                             <AthleteAvatar

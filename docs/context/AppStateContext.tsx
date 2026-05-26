@@ -1600,9 +1600,40 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleUpdateSession = async (sessionId, updates) => {
+        // Compute date delta once so we can shift dependent rows (planned_tonnage_log
+        // + the program's derived end-date) by the same number of days.
+        const oldSession = scheduledSessions.find(s => s.id === sessionId);
+        let deltaDays = 0;
+        let newProgramEndDate: string | null = null;
+        if (updates.date !== undefined && oldSession?.date && oldSession.date !== updates.date) {
+            const oldD = new Date(oldSession.date + 'T00:00:00');
+            const newD = new Date(updates.date + 'T00:00:00');
+            deltaDays = Math.round((newD.getTime() - oldD.getTime()) / 86400000);
+            // Programs: keep program_end_date in lockstep with the start so the
+            // calendar popup ("ends X") stays truthful after the drag.
+            if (oldSession.session_type === 'program' && oldSession.program_end_date) {
+                const oldEnd = new Date(oldSession.program_end_date + 'T00:00:00');
+                oldEnd.setDate(oldEnd.getDate() + deltaDays);
+                newProgramEndDate = oldEnd.toISOString().split('T')[0];
+            }
+        }
+        const isProgram = oldSession?.session_type === 'program' || !!oldSession?.program_id;
+        const tonnageSourceId = isProgram ? oldSession?.program_id : sessionId;
+
         try {
             // Optimistic: update local state immediately
-            setScheduledSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updates } : s));
+            setScheduledSessions(prev => prev.map(s => s.id === sessionId
+                ? { ...s, ...updates, ...(newProgramEndDate ? { program_end_date: newProgramEndDate } : {}) }
+                : s));
+            // Optimistic: shift local tonnage rows so Tracking/Data Hub update instantly
+            if (deltaDays !== 0 && tonnageSourceId) {
+                setPlannedTonnageLog((prev: any[]) => prev.map(r => {
+                    if (r.source_id !== tonnageSourceId) return r;
+                    const d = new Date(r.date + 'T00:00:00');
+                    d.setDate(d.getDate() + deltaDays);
+                    return { ...r, date: d.toISOString().split('T')[0] };
+                }));
+            }
             // Map camelCase → snake_case for DB
             const dbUpdates: any = {};
             if (updates.date !== undefined) dbUpdates.date = updates.date;
@@ -1613,15 +1644,35 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (updates.targetType !== undefined) dbUpdates.target_type = updates.targetType;
             if (updates.targetId !== undefined) dbUpdates.target_id = updates.targetId;
             if (updates.status !== undefined) dbUpdates.status = updates.status;
+            if (newProgramEndDate) dbUpdates.program_end_date = newProgramEndDate;
             await DatabaseService.updateSession(sessionId, dbUpdates);
+            // Shift DB tonnage rows. Non-fatal: a failure here leaves the calendar
+            // accurate but the tonnage charts misaligned — we surface a warning
+            // rather than rolling back the visible move.
+            if (deltaDays !== 0 && tonnageSourceId) {
+                try {
+                    await DatabaseService.shiftTonnageDatesForSource(tonnageSourceId, deltaDays);
+                } catch (tErr) {
+                    console.warn('Tonnage date shift failed (non-fatal):', tErr);
+                    showToast('Session moved — tonnage charts may need a refresh', 'info');
+                    // Resync local tonnage with DB reality so we don't show shifted
+                    // rows in memory while the DB still has the old dates.
+                    try {
+                        const tonnage = await DatabaseService.fetchPlannedTonnage();
+                        if (tonnage) setPlannedTonnageLog(tonnage);
+                    } catch (_) {}
+                }
+            }
             showToast("Session updated", "success");
         } catch (err) {
             console.error("Error updating session:", err);
             showToast("Failed to update session", "error");
-            // Rollback: refetch
+            // Rollback: refetch sessions AND tonnage so optimistic shifts unwind
             try {
                 const sessions = await DatabaseService.fetchSessions();
                 if (sessions) setScheduledSessions(sessions.map(s => ({ ...s, trainingPhase: s.training_phase, targetType: s.target_type, targetId: s.target_id, plannedDuration: s.planned_duration })));
+                const tonnage = await DatabaseService.fetchPlannedTonnage();
+                if (tonnage) setPlannedTonnageLog(tonnage);
             } catch (_) {}
         }
     };

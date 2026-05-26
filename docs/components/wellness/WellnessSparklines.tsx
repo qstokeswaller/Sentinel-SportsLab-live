@@ -26,7 +26,7 @@ const METRICS = [
 /** Mini SVG sparkline */
 const Sparkline = ({ data, negative, width = 120, height = 32 }: { data: (number | null)[]; negative: boolean; width?: number; height?: number }) => {
     const validPoints = data.map((v, i) => v !== null ? { x: i, y: v } : null).filter(Boolean) as { x: number; y: number }[];
-    if (validPoints.length < 2) return <div className="text-[9px] text-slate-300 italic">Not enough data</div>;
+    if (validPoints.length < 2) return <div className="text-[9px] text-slate-300 dark:text-[#475569] italic">Not enough data</div>;
 
     const xScale = width / (data.length - 1);
     const yMin = 0;
@@ -123,21 +123,21 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
     }, [responses, athleteId, dateColumns]);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-100">
+        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-[#1A2D48]">
                 <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{athleteName} — Wellness Trends</h4>
-                <p className="text-[10px] text-slate-400">Last {days} days</p>
+                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">Last {days} days</p>
             </div>
 
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50 dark:divide-[#1A2D48]">
                 {METRICS.map(metric => {
                     const d = metricData[metric.key];
                     if (!d) return null;
                     const latestColor = d.latest !== null
                         ? metric.negative
-                            ? d.latest >= 7 ? 'text-rose-600' : d.latest >= 5 ? 'text-amber-600' : 'text-emerald-600'
-                            : d.latest >= 7 ? 'text-emerald-600' : d.latest >= 5 ? 'text-amber-600' : 'text-rose-600'
-                        : 'text-slate-300';
+                            ? d.latest >= 7 ? 'text-rose-600 dark:text-rose-400' : d.latest >= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                            : d.latest >= 7 ? 'text-emerald-600 dark:text-emerald-400' : d.latest >= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                        : 'text-slate-300 dark:text-[#475569]';
 
                     return (
                         <div key={metric.key} className="flex items-center gap-4 px-4 py-3">
@@ -145,7 +145,7 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
                                 <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] flex items-center gap-1.5">
                                     <span>{metric.icon}</span> {metric.label}
                                 </div>
-                                <div className="text-[10px] text-slate-400">
+                                <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                                     avg: {d.avg !== null ? d.avg.toFixed(1) : '—'}
                                 </div>
                             </div>
@@ -165,14 +165,14 @@ const WellnessSparklines: React.FC<SparklineProps> = ({ athleteId, athleteName, 
                         <div className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] flex items-center gap-1.5">
                             <span>🛏️</span> Sleep Hours
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                             avg: {sleepData.avg !== null ? sleepData.avg.toFixed(1) : '—'}h
                         </div>
                     </div>
                     <div className="flex-1">
                         <Sparkline data={sleepData.data.map(v => v !== null ? Math.min(12, v) * (10 / 12) : null)} negative={false} width={140} height={28} />
                     </div>
-                    <div className={`text-lg font-bold w-8 text-right ${sleepData.latest !== null ? (sleepData.latest >= 7 ? 'text-emerald-600' : sleepData.latest >= 6 ? 'text-amber-600' : 'text-rose-600') : 'text-slate-300'}`}>
+                    <div className={`text-lg font-bold w-8 text-right ${sleepData.latest !== null ? (sleepData.latest >= 7 ? 'text-emerald-600 dark:text-emerald-400' : sleepData.latest >= 6 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400') : 'text-slate-300 dark:text-[#475569]'}`}>
                         {sleepData.latest !== null ? `${sleepData.latest}` : '—'}
                     </div>
                 </div>

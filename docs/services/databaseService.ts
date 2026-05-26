@@ -906,6 +906,18 @@ export const DatabaseService = {
     },
 
     /**
+     * Bulk-shift every planned_tonnage_log row for a given source by N days.
+     * Called when a coach drags a scheduled packet/program to a different
+     * date — keeps Tracking Hub / Data Hub aligned with the new schedule.
+     */
+    async shiftTonnageDatesForSource(sourceId: string, deltaDays: number): Promise<void> {
+        if (!deltaDays) return;
+        const { error } = await (supabase as any)
+            .rpc('shift_planned_tonnage_for_source', { p_source_id: sourceId, p_delta_days: deltaDays });
+        if (error) throw error;
+    },
+
+    /**
      * Delete only FUTURE-dated tonnage rows for a source. Used on edit/delete
      * flows so historical (already-occurred) tonnage stays preserved as a
      * record — matches the user's "if its done before the assigned date" rule.

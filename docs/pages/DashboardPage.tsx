@@ -7,8 +7,14 @@ import {
     ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, UserIcon, UsersIcon, PlusIcon, CheckCircle2Icon,
     MapPinIcon, PencilIcon, Trash2Icon, XIcon, ClockIcon, CheckIcon,
     Activity as ActivityIcon, Timer as TimerIcon, Dumbbell as DumbbellIcon, Link2 as Link2Icon, EyeIcon,
-    ExternalLinkIcon,
+    ExternalLinkIcon, GripVertical as GripVerticalIcon,
 } from 'lucide-react';
+
+// Hover affordance: short tooltip on every draggable calendar tile so users
+// learn that drag-to-reschedule and Ctrl-drag-to-copy exist without needing
+// to read docs. Events get the Ctrl-copy hint; sessions/programs are move-only.
+const DRAG_HINT_SESSION = 'Drag to reschedule';
+const DRAG_HINT_EVENT   = 'Drag to reschedule · Hold Ctrl to copy';
 import InterventionModal from '../components/analytics/InterventionModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { DatabaseService } from '../services/databaseService';
@@ -1236,12 +1242,14 @@ export const DashboardPage = () => {
                                                                         <div
                                                                             key={session.id}
                                                                             draggable
+                                                                            title={DRAG_HINT_SESSION}
                                                                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, wd.dateStr); }}
                                                                             onDragEnd={handleDragEnd}
                                                                             onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
-                                                                            className={`flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                            className={`group relative flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
                                                                             style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
                                                                         >
+                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
                                                                             <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`} style={isDark ? { backgroundColor: tc.darkPillBg } : undefined}>
                                                                                 <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
                                                                                     {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
@@ -1276,12 +1284,14 @@ export const DashboardPage = () => {
                                                                         <div
                                                                             key={event.id}
                                                                             draggable
+                                                                            title={DRAG_HINT_EVENT}
                                                                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, wd.dateStr); }}
                                                                             onDragEnd={handleDragEnd}
                                                                             onClick={(e) => { e.stopPropagation(); const popKey = `${event.id}_${wd.dateStr}`; setActivePopover({ id: popKey, event }); }}
-                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
+                                                                            className="group relative flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
                                                                             style={{ backgroundColor: `${event.color}${isDark ? '6B' : '26'}`, borderColor: `${event.color}${isDark ? 'A8' : '55'}`, color: isDark ? '#ffffff' : darkenHex(event.color) }}
                                                                         >
+                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
                                                                             <span className="text-[9px] font-medium leading-tight truncate">
                                                                                 {!event.all_day && event.start_time && (
@@ -1387,11 +1397,13 @@ export const DashboardPage = () => {
                                                                         const session = entry.item;
                                                                         const tc = getTargetColor(session.targetId);
                                                                         return (
-                                                                <div key={session.id} className="relative"
+                                                                <div key={session.id} className="group relative"
                                                                     draggable
+                                                                    title={DRAG_HINT_SESSION}
                                                                     onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, dateObj.dateStr); }}
                                                                     onDragEnd={handleDragEnd}
                                                                 >
+                                                                <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none z-10" />
                                                                 <div
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -1495,11 +1507,13 @@ export const DashboardPage = () => {
                                                                     } else {
                                                                         const event = entry.item;
                                                                         return (
-                                                                    <div key={`${event.id}_${dateObj.dateStr}`} className="relative"
+                                                                    <div key={`${event.id}_${dateObj.dateStr}`} className="group relative"
                                                                         draggable
+                                                                        title={DRAG_HINT_EVENT}
                                                                         onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, dateObj.dateStr); }}
                                                                         onDragEnd={handleDragEnd}
                                                                     >
+                                                                        <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none z-10" />
                                                                         <div
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
@@ -1636,12 +1650,14 @@ export const DashboardPage = () => {
                                                                                             <div
                                                                                                 key={session.id}
                                                                                                 draggable
+                                                                                                title={DRAG_HINT_SESSION}
                                                                                                 onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, dateObj.dateStr); }}
                                                                                                 onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
                                                                                                 onClick={() => { setViewingSession(session); setOverflowDay(null); }}
-                                                                                                className={`flex items-center gap-2 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                                                className={`group relative flex items-center gap-2 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
                                                                                                 style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
                                                                                             >
+                                                                                                <GripVerticalIcon size={10} className="absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
                                                                                                 <div className="flex-1 min-w-0">
                                                                                                     <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
                                                                                                     <div className="text-[8px] opacity-70 truncate">
@@ -1664,6 +1680,7 @@ export const DashboardPage = () => {
                                                                                         <div
                                                                                             key={event.id}
                                                                                             draggable
+                                                                                            title={DRAG_HINT_EVENT}
                                                                                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, dateObj.dateStr); }}
                                                                                             onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
                                                                                             onClick={() => {
@@ -1671,13 +1688,14 @@ export const DashboardPage = () => {
                                                                                                 const popKey = `${event.id}_${dateObj.dateStr}`;
                                                                                                 setActivePopover({ id: popKey, event });
                                                                                             }}
-                                                                                            className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95"
+                                                                                            className="group relative flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95"
                                                                                             style={{
                                                                                                 backgroundColor: `${event.color}${isDark ? '6B' : '26'}`,
                                                                                                 borderColor: `${event.color}${isDark ? 'A8' : '55'}`,
                                                                                                 color: isDark ? '#ffffff' : darkenHex(event.color),
                                                                                             }}
                                                                                         >
+                                                                                            <GripVerticalIcon size={10} className="absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
                                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
                                                                                             <span className="text-[9px] font-medium leading-tight truncate flex-1">
                                                                                                 {!event.all_day && event.start_time && (

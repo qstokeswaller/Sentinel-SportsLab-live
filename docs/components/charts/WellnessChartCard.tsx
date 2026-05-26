@@ -4,6 +4,7 @@ import {
     PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts';
 import { BarChart3, PieChart as PieIcon, TrendingUp } from 'lucide-react';
+import { useAppState } from '../../context/AppStateContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,16 +18,6 @@ interface Props {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PIE_COLORS = ['#06b6d4', '#6366f1', '#f59e0b', '#ec4899', '#10b981', '#f97316', '#8b5cf6', '#14b8a6'];
-
-const TOOLTIP_STYLE = {
-    fontSize: 11,
-    fontWeight: 700,
-    borderRadius: 8,
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-};
-
-const AXIS_TICK = { fontSize: 8, fontWeight: 700, fill: '#94a3b8' };
 
 const CHART_LABEL: Record<string, string> = {
     bar:            'Bar — per athlete',
@@ -49,6 +40,19 @@ const CHART_ICON: Record<string, React.ReactNode> = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses, athletes }) => {
+    const { isDarkMode } = useAppState();
+    const gridStroke   = isDarkMode ? '#1A2D48' : '#f1f5f9';
+    const axisTick     = { fontSize: 8, fontWeight: 700, fill: isDarkMode ? '#64748B' : '#94a3b8' } as const;
+    const legendColor  = isDarkMode ? '#CBD5E1' : '#64748b';
+    const tooltipStyle = {
+        fontSize: 11,
+        fontWeight: 700,
+        borderRadius: 8,
+        border: `1px solid ${isDarkMode ? '#243A58' : '#e2e8f0'}`,
+        backgroundColor: isDarkMode ? '#132338' : '#ffffff',
+        color: isDarkMode ? '#E2E8F0' : '#1e293b',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+    } as const;
     const chartType = question.visualization?.chartType || 'bar';
     const scaleMax  = question.scaleMax ?? (
         question.type === 'scale_1_10' ? 10 :
@@ -175,8 +179,8 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
         if (isEmpty) {
             return (
                 <div className="h-44 flex flex-col items-center justify-center gap-2 bg-slate-50/30 dark:bg-[#0F1C30]/30">
-                    <BarChart3 size={28} className="text-slate-200" />
-                    <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-wide">
+                    <BarChart3 size={28} className="text-slate-200 dark:text-[#475569]" />
+                    <p className="text-[9px] font-semibold text-slate-300 dark:text-[#CBD5E1] uppercase tracking-wide">
                         No data for this period
                     </p>
                 </div>
@@ -189,10 +193,10 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                 <div className="px-2 pt-3 pb-1">
                     <ResponsiveContainer width="100%" height={160}>
                         <BarChart data={barData} margin={{ top: 4, right: 4, left: -28, bottom: 30 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="name" tick={AXIS_TICK} angle={-35} textAnchor="end" interval={0} />
-                            <YAxis tick={AXIS_TICK} domain={[0, scaleMax]} />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                            <XAxis dataKey="name" tick={axisTick} angle={-35} textAnchor="end" interval={0} />
+                            <YAxis tick={axisTick} domain={[0, scaleMax]} />
+                            <Tooltip contentStyle={tooltipStyle} />
                             <Bar dataKey="value" radius={[3, 3, 0, 0]} fill="#06b6d4" />
                         </BarChart>
                     </ResponsiveContainer>
@@ -206,10 +210,10 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                 <div className="px-2 pt-3 pb-1">
                     <ResponsiveContainer width="100%" height={160}>
                         <BarChart data={countData} margin={{ top: 4, right: 4, left: -28, bottom: 30 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="name" tick={AXIS_TICK} angle={-35} textAnchor="end" interval={0} />
-                            <YAxis tick={AXIS_TICK} allowDecimals={false} />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v} athletes`, 'Count']} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                            <XAxis dataKey="name" tick={axisTick} angle={-35} textAnchor="end" interval={0} />
+                            <YAxis tick={axisTick} allowDecimals={false} />
+                            <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} athletes`, 'Count']} />
                             <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                                 {countData.map((_, i) => (
                                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -242,13 +246,13 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                                 ))}
                             </Pie>
                             <Tooltip
-                                contentStyle={TOOLTIP_STYLE}
+                                contentStyle={tooltipStyle}
                                 formatter={(v, name) => [`${v} athletes`, name]}
                             />
                             <Legend
                                 iconType="circle"
                                 iconSize={6}
-                                wrapperStyle={{ fontSize: 9, fontWeight: 700, color: '#64748b' }}
+                                wrapperStyle={{ fontSize: 9, fontWeight: 700, color: legendColor }}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -262,10 +266,10 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                 <div className="px-2 pt-3 pb-1">
                     <ResponsiveContainer width="100%" height={160}>
                         <LineChart data={lineData} margin={{ top: 4, right: 8, left: -28, bottom: 4 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis dataKey="date" tick={AXIS_TICK} />
-                            <YAxis tick={AXIS_TICK} domain={[0, scaleMax]} />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                            <XAxis dataKey="date" tick={axisTick} />
+                            <YAxis tick={axisTick} domain={[0, scaleMax]} />
+                            <Tooltip contentStyle={tooltipStyle} />
                             <Line
                                 type="monotone"
                                 dataKey="avg"
@@ -299,11 +303,11 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
                 <div className="px-2 pt-3 pb-1">
                     <ResponsiveContainer width="100%" height={160}>
                         <BarChart data={vsResult.data} margin={{ top: 4, right: 4, left: -28, bottom: 30 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="name" tick={AXIS_TICK} angle={-35} textAnchor="end" interval={0} />
-                            <YAxis tick={AXIS_TICK} />
-                            <Tooltip contentStyle={TOOLTIP_STYLE} />
-                            <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 9, fontWeight: 700, color: '#64748b' }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+                            <XAxis dataKey="name" tick={axisTick} angle={-35} textAnchor="end" interval={0} />
+                            <YAxis tick={axisTick} />
+                            <Tooltip contentStyle={tooltipStyle} />
+                            <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 9, fontWeight: 700, color: legendColor }} />
                             <Bar dataKey="q1"  name={q1Label} fill="#06b6d4" radius={[3, 3, 0, 0]} />
                             <Bar dataKey="q2"  name={q2Label} fill="#6366f1" radius={[3, 3, 0, 0]} />
                         </BarChart>
@@ -319,29 +323,29 @@ const WellnessChartCard: React.FC<Props> = ({ question, allQuestions, responses,
     return (
         <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="p-5 border-b border-slate-50">
+            <div className="p-5 border-b border-slate-50 dark:border-[#1A2D48]">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">
                             {question.text || 'Unnamed question'}
                         </p>
                         {question.templateName && (
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">
+                            <p className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mt-0.5">
                                 {question.templateName}
                             </p>
                         )}
                     </div>
-                    <span className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-semibold text-slate-400 uppercase shrink-0">
+                    <span className="px-2 py-0.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-lg text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase shrink-0">
                         {question.visualization?.aggregation || 'daily'}
                     </span>
                 </div>
                 <div className="mt-2 flex items-center gap-1.5">
                     {CHART_ICON[chartType]}
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">
                         {CHART_LABEL[chartType] || chartType}
                     </span>
                     {chartType === 'vs_bar' && vsResult.compareQ && (
-                        <span className="text-[9px] font-bold text-slate-300 ml-1">
+                        <span className="text-[9px] font-bold text-slate-300 dark:text-[#475569] ml-1">
                             vs {(vsResult.compareQ.text || '').slice(0, 18)}…
                         </span>
                     )}
