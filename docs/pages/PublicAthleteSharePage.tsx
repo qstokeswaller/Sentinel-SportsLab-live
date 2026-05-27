@@ -5,6 +5,7 @@ import {
     GaugeIcon, HeartIcon, AlertTriangleIcon, FlaskConicalIcon,
     DumbbellIcon, CalendarDaysIcon, ShieldIcon, BadgeCheckIcon,
     TrendingUpIcon, TrendingDownIcon, CheckCircle2Icon, ActivityIcon,
+    Printer as PrinterIcon,
 } from 'lucide-react';
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -126,9 +127,17 @@ const PublicAthleteSharePage: React.FC = () => {
                         <span className="text-sm font-semibold text-slate-800">Sentinel SportsLab</span>
                         <span className="text-[10px] uppercase tracking-wide text-slate-400 ml-1">Shared Dossier</span>
                     </div>
-                    <span className="text-[10px] text-slate-400">
-                        Snapshot · {fmtDate(data.generatedAt)}
-                    </span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-slate-400">
+                            Snapshot · {fmtDate(data.generatedAt)}
+                        </span>
+                        <button
+                            onClick={() => window.print()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-[10px] font-semibold transition-all print:hidden"
+                        >
+                            <PrinterIcon size={12} /> Download PDF
+                        </button>
+                    </div>
                 </div>
 
                 {/* Header */}

@@ -158,11 +158,45 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     const [showLegend, setShowLegend] = useState(false);
 
     // ── Display mode ──
-    type ViewMode = 'metric-first' | 'date-first' | 'multi-table';
-    const [viewMode, setViewMode] = useState<ViewMode>('metric-first');
+    //   • latest    — one column per metric, latest value or as-of snapshotDate
+    //   • compare   — history columns split into N sub-columns (auto = most-recent per
+    //                 athlete, manually locked slot = precise on a specific date)
+    //   • snapshots — many stacked tables, each = one date with its own precise/recent toggle
+    type ViewMode = 'latest' | 'compare' | 'snapshots';
+    const [viewMode, setViewMode] = useState<ViewMode>('latest');
 
-    // ── Snapshot date (freeze-on-date) ──
-    const [snapshotDate, setSnapshotDate] = useState<string>(''); // '' = live
+    // ── Date semantics ──
+    //   • most_recent — value = latest on-or-before reference date (per athlete)
+    //   • precise     — value = exact match on reference date, blank otherwise
+    type DateMode = 'most_recent' | 'precise';
+
+    // Today as YYYY-MM-DD — used as the default snapshot date and the seed for Snapshots.
+    const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+
+    // ── Latest mode controls ──
+    // Defaults to today so the date picker shows the current date on entry; the user
+    // can change it or clear it (clearing falls back to today behaviour internally).
+    const [snapshotDate, setSnapshotDate] = useState<string>(today);
+    const [latestDateMode, setLatestDateMode] = useState<DateMode>('most_recent');
+
+    // ── Compare mode controls ──
+    //   compareN is the uniform "show last N entries" override; overrides per-column
+    //   dateCounts from the picker so the scientist has one toolbar dropdown to control
+    //   the whole table at once.
+    //   slotLocks lets the scientist click a sub-header and lock that slot to a precise
+    //   date. Map: column key → array of (string | null), aligned to sub-column index.
+    //   null means "auto / most-recent for this athlete's Nth entry".
+    const [compareN, setCompareN] = useState<number>(3);
+    const [slotLocks, setSlotLocks] = useState<Record<string, (string | null)[]>>({});
+    // Active picker for Compare slot lock — { colKey, slotIdx } or null
+    const [activeSlotPicker, setActiveSlotPicker] = useState<{ colKey: string; slotIdx: number } | null>(null);
+
+    // ── Snapshots mode controls ──
+    interface SnapshotTableCfg { id: string; date: string; dateMode: DateMode; }
+    const [snapshots, setSnapshots] = useState<SnapshotTableCfg[]>(() => [{ id: 'init', date: today, dateMode: 'most_recent' }]);
+    const [addSnapshotOpen, setAddSnapshotOpen] = useState(false);
+    const [newSnapshotDate, setNewSnapshotDate] = useState<string>(today);
+    const [newSnapshotMode, setNewSnapshotMode] = useState<DateMode>('most_recent');
 
     // ── Column drag-to-reorder ──
     const [dragKey, setDragKey] = useState<string | null>(null);
@@ -189,14 +223,12 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     };
 
     // ── Build all athletes + their pre-sorted history once ──
+    // No global date cutoff here — each mode applies its own reference date at resolve
+    // time. This keeps Snapshots tables independent of each other and lets Latest's
+    // snapshotDate change without rebuilding every athlete's history.
     const athleteCtxs = useMemo(() => {
         const ctxs: { player: any; squad: string; teamId: string; ctx: ResolveCtx }[] = [];
-        const cutoff = snapshotDate ? new Date(snapshotDate).getTime() + 86400000 : Infinity;
-        const beforeCutoff = (iso: string | null | undefined) => {
-            if (!iso) return false;
-            const t = new Date(iso).getTime();
-            return Number.isFinite(t) && t < cutoff;
-        };
+        const beforeCutoff = (_iso: string | null | undefined) => true;
         const sortDesc = (a: any, b: any, k: string) => new Date(b[k]).getTime() - new Date(a[k]).getTime();
 
         (teams || []).forEach(team => {
@@ -286,7 +318,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             });
         });
         return ctxs;
-    }, [teams, wellnessResponses, calculateACWR, snapshotDate, injuryReports, scheduledSessions, loadRecords, maxHistory, gpsData, exerciseFullMap, plannedTonnageLog]);
+    }, [teams, wellnessResponses, calculateACWR, injuryReports, scheduledSessions, loadRecords, maxHistory, gpsData, exerciseFullMap, plannedTonnageLog]);
 
     // ── Team filter options ──
     const teamOptions = useMemo(() => ['All', ...new Set((teams || []).map(t => t.name))], [teams]);
@@ -448,7 +480,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             redacted: opts.redactWellness,
             colDefs,
             rows,
-            multiTableDates: viewMode === 'multi-table' ? multiTableDates : null,
+            snapshots: viewMode === 'snapshots' ? snapshots : null,
         };
     };
 
@@ -517,45 +549,43 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         URL.revokeObjectURL(url);
     };
 
-    // ── Multi-table mode: pick the last N global dates from each column with history ──
-    // For v1 of multi-table we anchor on the max date_count among visible columns and pull
-    // global timeline rows. Per-row alignment still uses each athlete's own latest.
-    const multiTableDates: { iso: string; label: string }[] = useMemo(() => {
-        if (viewMode !== 'multi-table') return [];
-        // Gather every visible col's most-recent date list across all filtered athletes
-        const maxN = Math.max(1, ...visibleCols.map(c => config.dateCounts[c.key] || 1));
-        const dateSet = new Set<string>();
-        filteredCtxs.forEach(rc => {
-            visibleCols.forEach(c => {
-                if (!c.supportsHistory) return;
-                for (let i = 0; i < (config.dateCounts[c.key] || 1); i++) {
-                    const p = c.resolve(rc.ctx, i);
-                    if (p.date) dateSet.add(p.date.slice(0, 10));
-                }
-            });
-        });
-        const all = [...dateSet].sort((a, b) => new Date(b).getTime() - new Date(a).getTime()).slice(0, Math.max(maxN, 1));
-        return all.map(d => ({ iso: d, label: new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) }));
-    }, [viewMode, filteredCtxs, visibleCols, config.dateCounts]);
+    // ── Snapshot table label helper ──
+    const labelForDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
 
-    // ── Resolve a cell's data point for multi-table (find the closest record on or before that date) ──
+    // ── Resolve a cell at a given reference date and mode ──
+    // most_recent: latest record on-or-before iso (existing behaviour)
+    // precise:    record whose date matches iso exactly; blank otherwise
+    //
     // For each backing data source, we synthesise a context where index 0 is the matched record so the
     // existing column resolver runs unchanged. Sources that don't store dated history (ACWR scalar,
-    // athlete identity, rolling averages anchored on "now") fall back to the live latest value.
-    const resolveOnDate = (col: ColumnDef, rc: typeof filteredCtxs[number], iso: string): DataPoint => {
+    // athlete identity, rolling averages anchored on "now") always fall back to the live latest value
+    // regardless of mode — they don't have a meaningful "date this was true".
+    const resolveOnDate = (
+        col: ColumnDef,
+        rc: typeof filteredCtxs[number],
+        iso: string,
+        dateMode: DateMode = 'most_recent',
+    ): DataPoint => {
+        const day = (d: string | undefined | null) => (d ? d.slice(0, 10) : '');
+        const onOrBefore = (d: string | undefined | null) => !!d && day(d) <= iso;
+        const onExact = (d: string | undefined | null) => !!d && day(d) === iso;
+        const matchPredicate = dateMode === 'precise' ? onExact : onOrBefore;
+
         if (col.group === 'Wellness' || col.key === 'availability' || col.key === 'painFlags') {
-            const match = rc.ctx.wellnessSorted.find(w => w.session_date && w.session_date.slice(0, 10) <= iso);
+            const match = rc.ctx.wellnessSorted.find(w => matchPredicate(w.session_date));
             if (!match) return { value: null, date: null };
             const synthCtx = { ...rc.ctx, wellnessSorted: [match, ...rc.ctx.wellnessSorted.filter(w => w !== match)] };
             return col.resolve(synthCtx, 0);
         }
         if (col.key === 'activeInjury') {
-            // Active at point in time = an injury whose dateOfInjury <= iso AND (status !== 'resolved' OR resolvedDate > iso)
+            // Precise: only injuries that BEGAN on iso. Most-recent: injuries active at iso.
             const matches = rc.ctx.allInjuries.filter(r => {
-                const start = (r.dateOfInjury || r.date_of_injury || '').slice(0, 10);
-                if (!start || start > iso) return false;
+                const start = day(r.dateOfInjury || r.date_of_injury);
+                if (!start) return false;
+                if (dateMode === 'precise') return start === iso;
+                if (start > iso) return false;
                 if (r.status === 'resolved') {
-                    const end = (r.resolvedDate || r.resolved_date || r.endDate || r.end_date || '').slice(0, 10);
+                    const end = day(r.resolvedDate || r.resolved_date || r.endDate || r.end_date);
                     if (end && end <= iso) return false;
                 }
                 return true;
@@ -564,9 +594,8 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             return col.resolve(synthCtx, 0);
         }
         if (col.group === 'Performance' && col.subsection === '1RM') {
-            // Per-exercise 1RM — walk maxHistory for that exercise
             const exMatch = col.key.replace(/^oneRM_/, '').replace(/_/g, ' ').toLowerCase();
-            const match = rc.ctx.maxHistory.find(m => m.exercise && m.exercise.toLowerCase() === exMatch && m.date && m.date.slice(0, 10) <= iso);
+            const match = rc.ctx.maxHistory.find(m => m.exercise && m.exercise.toLowerCase() === exMatch && matchPredicate(m.date));
             if (!match) return { value: null, date: null };
             const synthCtx = { ...rc.ctx, maxHistory: [match, ...rc.ctx.maxHistory.filter(m => m !== match)] };
             return col.resolve(synthCtx, 0);
@@ -575,42 +604,53 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             const typeMap: Record<string, string> = { Hamstring: 'hamstring', DSI: 'dsi', RSI: 'rsi' };
             const t = typeMap[col.subsection || ''];
             if (!t) return col.resolve(rc.ctx, 0);
-            const match = rc.ctx.perfSorted.filter(m => m.type === t).find(m => m.date && m.date.slice(0, 10) <= iso);
+            const match = rc.ctx.perfSorted.filter(m => m.type === t).find(m => matchPredicate(m.date));
             if (!match) return { value: null, date: null };
             const synthCtx = { ...rc.ctx, perfSorted: [match, ...rc.ctx.perfSorted.filter(m => m !== match)] };
             return col.resolve(synthCtx, 0);
         }
         if (col.group === 'Workouts') {
-            const match = rc.ctx.completedSessions.find(s => s.date && s.date.slice(0, 10) <= iso);
+            const match = rc.ctx.completedSessions.find(s => matchPredicate(s.date));
             if (!match) return { value: null, date: null };
             const synthCtx = { ...rc.ctx, completedSessions: [match, ...rc.ctx.completedSessions.filter(s => s !== match)] };
             return col.resolve(synthCtx, 0);
         }
         if (col.group === 'GPS') {
-            const match = rc.ctx.gpsRecords.find(g => g.date && g.date.slice(0, 10) <= iso);
+            const match = rc.ctx.gpsRecords.find(g => matchPredicate(g.date));
             if (!match) return { value: null, date: null };
             const synthCtx = { ...rc.ctx, gpsRecords: [match, ...rc.ctx.gpsRecords.filter(g => g !== match)] };
             return col.resolve(synthCtx, 0);
         }
-        // ACWR scalar, Athlete identity, rolling averages — latest only
+        // ACWR scalar, Athlete identity, rolling averages — undated, always show live
         return col.resolve(rc.ctx, 0);
     };
 
     // ─── Render ────────────────────────────────────────────────────────────
     const totalCols = 1 + visibleCols.length;
-    // Multi-table mode renders as long as the scientist picked it AND we found
-    // at least one date in history. With 0 unique dates (no history at all),
-    // we fall back to single-table mode and surface a hint banner so the
-    // selector understands why.
-    const isMultiTable = viewMode === 'multi-table' && multiTableDates.length >= 1;
-    const multiTableEmpty = viewMode === 'multi-table' && multiTableDates.length === 0;
+    const isSnapshots = viewMode === 'snapshots';
+    // Reference date for Latest mode — blank picker means "today" so we don't blank
+    // out cells when latestDateMode === 'precise' on the live view.
+    const latestRefDate = snapshotDate || today;
+    // Compare mode effective dateCounts override — the toolbar "Last N" wins; each
+    // history-supporting column gets compareN, all others stay at 1.
+    const compareDateCounts: Record<string, number> = useMemo(() => {
+        const out: Record<string, number> = {};
+        visibleCols.forEach(c => { if (c.supportsHistory) out[c.key] = compareN; });
+        return out;
+    }, [visibleCols, compareN]);
 
     return (
-        <div className={`flex flex-col gap-3 ${isMultiTable ? '' : 'h-[calc(100vh-40px)]'} animate-in fade-in duration-200`}>
+        <div className={`flex flex-col gap-3 ${isSnapshots ? '' : 'h-[calc(100vh-40px)]'} animate-in fade-in duration-200`}>
 
             {/* ─── Consolidated banner (back · title · filters · actions) ─── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm shrink-0">
-                <div className="flex items-center gap-3 px-4 py-3 flex-wrap">
+                {/* items-start so the right-side button group sits flush with the top
+                    of the heading. No flex-wrap on the OUTER container — that would
+                    drop the whole button group below the title and leave dead space
+                    next to the heading. The button group has its own internal
+                    flex-wrap so buttons themselves still wrap into 2+ rows when they
+                    don't all fit horizontally. */}
+                <div className="flex items-start gap-3 px-4 py-3">
                     {onBack && (
                         <button
                             onClick={onBack}
@@ -622,17 +662,17 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     )}
                     <div className="min-w-0">
                         <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8]">Reporting Hub</p>
-                        <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
-                            Athlete Data Hub
-                            <span className="ml-2 text-[10px] font-medium text-slate-400 dark:text-[#94A3B8]">
-                                {filteredCtxs.length} athlete{filteredCtxs.length === 1 ? '' : 's'} · {totalCols} column{totalCols === 1 ? '' : 's'}
-                                {snapshotDate && ` · frozen at ${snapshotDate}`}
-                            </span>
-                        </h2>
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] leading-tight">Athlete Data Hub</h2>
+                        <p className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8] mt-0.5">
+                            {filteredCtxs.length} athlete{filteredCtxs.length === 1 ? '' : 's'} · {totalCols} column{totalCols === 1 ? '' : 's'}
+                            {viewMode === 'latest' && snapshotDate && ` · as of ${snapshotDate}`}
+                        </p>
                     </div>
 
-                    {/* Spacer */}
-                    <div className="flex-1" />
+                    {/* Right-side action group — keeps Search/filters/buttons together so
+                        when the row wraps, the whole group drops as a unit and stays
+                        right-aligned instead of stacking left under the title. */}
+                    <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
 
                     {/* Search */}
                     <div className="relative">
@@ -651,26 +691,110 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                         {teamOptions.map(t => <option key={t} value={t}>{t}</option>)}
                     </CustomSelect>
 
-                    {/* Snapshot date */}
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg" title="Freeze data at a specific date. Leave blank for live.">
-                        <CalendarIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
-                        <input
-                            type="date"
-                            value={snapshotDate}
-                            onChange={e => setSnapshotDate(e.target.value)}
-                            className="bg-transparent text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none w-28"
-                        />
-                        {snapshotDate && (
-                            <button onClick={() => setSnapshotDate('')} className="text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1]" title="Clear snapshot date"><XIcon size={11} /></button>
-                        )}
-                    </div>
+                    {/* Latest mode: snapshot date picker (date the table resolves to; blank = today) */}
+                    {viewMode === 'latest' && (
+                        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg" title="Show data as-of this date. Leave blank for today's most-recent.">
+                            <CalendarIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
+                            <input
+                                type="date"
+                                value={snapshotDate}
+                                onChange={e => setSnapshotDate(e.target.value)}
+                                className="bg-transparent text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none w-28"
+                            />
+                            {snapshotDate && (
+                                <button onClick={() => setSnapshotDate('')} className="text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1]" title="Clear date"><XIcon size={11} /></button>
+                            )}
+                        </div>
+                    )}
 
-                    {/* View mode */}
+                    {/* Latest mode: precise vs most-recent toggle */}
+                    {viewMode === 'latest' && (
+                        <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
+                            {([
+                                { id: 'most_recent', label: 'Most recent', title: 'Show each athlete’s latest value on or before the selected date' },
+                                { id: 'precise',     label: 'Precise',     title: 'Show only data collected exactly on the selected date' },
+                            ] as const).map(opt => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => setLatestDateMode(opt.id)}
+                                    title={opt.title}
+                                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${latestDateMode === opt.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Compare mode: uniform "show last N entries" override */}
+                    {viewMode === 'compare' && (
+                        <CustomSelect variant="filter" size="xs" value={String(compareN)} onChange={e => setCompareN(parseInt(e.target.value, 10))} prefixLabel="Last">
+                            {[2, 3, 4, 5, 7, 10].map(n => <option key={n} value={n}>{n} entries</option>)}
+                        </CustomSelect>
+                    )}
+
+                    {/* Snapshots mode: add-snapshot button */}
+                    {viewMode === 'snapshots' && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setAddSnapshotOpen(o => !o)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-semibold transition-colors shadow-sm"
+                            >
+                                + Add Snapshot
+                            </button>
+                            {addSnapshotOpen && (
+                                <div className="absolute right-0 top-full mt-1.5 w-72 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl z-[100] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">New snapshot</h4>
+                                        <button onClick={() => setAddSnapshotOpen(false)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                                    </div>
+                                    <label className="block">
+                                        <span className="block text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1 uppercase tracking-wide">Date</span>
+                                        <input
+                                            type="date"
+                                            value={newSnapshotDate}
+                                            onChange={e => setNewSnapshotDate(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
+                                        />
+                                    </label>
+                                    <div>
+                                        <span className="block text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1 uppercase tracking-wide">Mode</span>
+                                        <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
+                                            {([
+                                                { id: 'most_recent', label: 'Most recent' },
+                                                { id: 'precise',     label: 'Precise' },
+                                            ] as const).map(opt => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => setNewSnapshotMode(opt.id)}
+                                                    className={`flex-1 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${newSnapshotMode === opt.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            if (!newSnapshotDate) return;
+                                            setSnapshots(prev => [...prev, { id: `s_${Date.now()}`, date: newSnapshotDate, dateMode: newSnapshotMode }]);
+                                            setAddSnapshotOpen(false);
+                                        }}
+                                        className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-wide shadow-sm transition-colors"
+                                    >
+                                        Add snapshot
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* View mode tabs */}
                     <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
                         {([
-                            { id: 'metric-first', label: 'By Metric', title: 'Group sub-columns under each metric (best for trend studies)' },
-                            { id: 'date-first',  label: 'By Date',   title: 'Group sub-columns by date (best for snapshot studies)' },
-                            { id: 'multi-table', label: 'Tables',    title: 'One table per date — page scrolls vertically' },
+                            { id: 'latest',    label: 'Latest',    title: 'One row per athlete — latest values (or as-of a chosen date)' },
+                            { id: 'compare',   label: 'Compare',   title: 'Split each history column into N sub-columns to compare entries side-by-side' },
+                            { id: 'snapshots', label: 'Snapshots', title: 'Stacked tables, one per date you pick' },
                         ] as const).map(opt => (
                             <button
                                 key={opt.id}
@@ -786,6 +910,8 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     >
                         <DownloadIcon size={12} /> Export CSV
                     </button>
+
+                    </div>{/* /right-side action group */}
                 </div>
 
                 {/* Legend strip (collapsible) */}
@@ -808,50 +934,20 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 )}
             </div>
 
-            {/* Empty-state hint when scientist picks Tables mode but no history is available
-                across the visible column set. Falls back to single-table render below. */}
-            {multiTableEmpty && (
-                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-4 py-2.5 flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-300 shrink-0">
-                    <AlertCircle size={14} />
-                    No date history available for the visible columns yet — Tables mode needs at least one history-supporting column with data. Showing the latest snapshot below.
-                </div>
-            )}
-
-            {/* ─── Table container ─── */}
-            {isMultiTable ? (
-                <div className="flex flex-col gap-4">
-                    {multiTableDates.map(d => (
-                        <DataHubTable
-                            key={d.iso}
-                            title={`Snapshot — ${d.label}`}
-                            cols={visibleCols}
-                            ctxs={sortedCtxs}
-                            resolveCell={(col, rc) => resolveOnDate(col, rc, d.iso)}
-                            mode="single"
-                            dateCounts={{}}
-                            sortKey={sortKey}
-                            sortDir={sortDir}
-                            onSort={handleSort}
-                            dragKey={dragKey}
-                            dragOverKey={dragOverKey}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDragEnd={handleDragEnd}
-                            onDrop={handleDrop}
-                            scrollPct={null}
-                            onScroll={null}
-                            colFilters={colFilters}
-                            onOpenColMenu={setOpenMenuColKey}
-                        />
-                    ))}
-                </div>
-            ) : (
+            {/* ─── Mode dispatch ─── */}
+            {viewMode === 'latest' && (
                 <DataHubTable
                     cols={visibleCols}
                     ctxs={sortedCtxs}
-                    resolveCell={(col, rc, idx) => col.resolve(rc.ctx, idx || 0)}
-                    mode={viewMode}
-                    dateCounts={config.dateCounts}
+                    // When a snapshot date is set or precise mode is on, route through
+                    // resolveOnDate. Otherwise use the column's live latest resolver.
+                    resolveCell={(col, rc) => (snapshotDate || latestDateMode === 'precise')
+                        ? resolveOnDate(col, rc, latestRefDate, latestDateMode)
+                        : col.resolve(rc.ctx, 0)}
+                    mode="single"
+                    dateCounts={{}}
+                    referenceDate={snapshotDate ? latestRefDate : today}
+                    showCellDates={latestDateMode === 'most_recent'}
                     sortKey={sortKey}
                     sortDir={sortDir}
                     onSort={handleSort}
@@ -868,6 +964,168 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     onOpenColMenu={setOpenMenuColKey}
                 />
             )}
+
+            {viewMode === 'compare' && (
+                <DataHubTable
+                    cols={visibleCols}
+                    ctxs={sortedCtxs}
+                    // For each (column, slot i):
+                    //   • if slot is locked to a date → resolve precisely on that date
+                    //   • else → use col.resolve(ctx, i) for that athlete's i-th most recent entry
+                    resolveCell={(col, rc, idx = 0) => {
+                        const lock = slotLocks[col.key]?.[idx];
+                        if (lock) return resolveOnDate(col, rc, lock, 'precise');
+                        return col.resolve(rc.ctx, idx);
+                    }}
+                    mode="metric-first"
+                    dateCounts={compareDateCounts}
+                    slotLocks={slotLocks}
+                    onClickSubHeader={(key, idx) => setActiveSlotPicker({ colKey: key, slotIdx: idx })}
+                    // No reference date — each cell shows its own source date (since each
+                    // athlete's i-th entry has a different date), unless slot is locked
+                    // (in which case header carries the date and cells stay clean).
+                    showCellDates
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={handleSort}
+                    dragKey={dragKey}
+                    dragOverKey={dragOverKey}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                    onDrop={handleDrop}
+                    scrollPct={scrollPct}
+                    onScroll={handleScroll}
+                    tableWrapRef={tableWrapRef}
+                    colFilters={colFilters}
+                    onOpenColMenu={setOpenMenuColKey}
+                />
+            )}
+
+            {viewMode === 'snapshots' && (
+                <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1">
+                    {snapshots.length === 0 ? (
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-dashed border-slate-300 dark:border-[#243A58] px-6 py-10 text-center">
+                            <CalendarIcon size={24} className="mx-auto text-slate-300 dark:text-[#475569] mb-2" />
+                            <p className="text-[12px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1">No snapshots yet</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8]">Use "+ Add Snapshot" above to create one.</p>
+                        </div>
+                    ) : snapshots.map(s => (
+                        <div key={s.id} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col overflow-hidden">
+                            {/* Snapshot header — date + per-table precise/recent toggle + remove */}
+                            <div className="px-4 py-2.5 border-b border-slate-200 dark:border-[#243A58] flex items-center gap-3 shrink-0 flex-wrap">
+                                <CalendarIcon size={12} className="text-indigo-500 dark:text-indigo-300 shrink-0" />
+                                <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">Snapshot — {labelForDate(s.date)}</h3>
+                                <div className="flex-1" />
+                                <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
+                                    {([
+                                        { id: 'most_recent', label: 'Most recent' },
+                                        { id: 'precise',     label: 'Precise' },
+                                    ] as const).map(opt => (
+                                        <button
+                                            key={opt.id}
+                                            onClick={() => setSnapshots(prev => prev.map(x => x.id === s.id ? { ...x, dateMode: opt.id } : x))}
+                                            className={`px-2 py-0.5 rounded-md text-[9px] font-semibold transition-all ${s.dateMode === opt.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setSnapshots(prev => prev.filter(x => x.id !== s.id))}
+                                    className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                    title="Remove snapshot"
+                                >
+                                    <XIcon size={12} />
+                                </button>
+                            </div>
+                            {/* Snapshot table — fixed-height container scrolls inside */}
+                            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
+                                <DataHubTable
+                                    cols={visibleCols}
+                                    ctxs={sortedCtxs}
+                                    resolveCell={(col, rc) => resolveOnDate(col, rc, s.date, s.dateMode)}
+                                    mode="single"
+                                    dateCounts={{}}
+                                    referenceDate={s.date}
+                                    showCellDates={s.dateMode === 'most_recent'}
+                                    sortKey={sortKey}
+                                    sortDir={sortDir}
+                                    onSort={handleSort}
+                                    dragKey={dragKey}
+                                    dragOverKey={dragOverKey}
+                                    onDragStart={handleDragStart}
+                                    onDragOver={handleDragOver}
+                                    onDragEnd={handleDragEnd}
+                                    onDrop={handleDrop}
+                                    scrollPct={null}
+                                    onScroll={null}
+                                    colFilters={colFilters}
+                                    onOpenColMenu={setOpenMenuColKey}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Compare slot-lock picker popover */}
+            {activeSlotPicker && (() => {
+                const colKey = activeSlotPicker.colKey;
+                const slotIdx = activeSlotPicker.slotIdx;
+                const currentLock = slotLocks[colKey]?.[slotIdx] || '';
+                return (
+                    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4" onClick={() => setActiveSlotPicker(null)}>
+                        <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl w-80 p-4 space-y-3" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">
+                                    Lock slot {slotIdx + 1} of {findColumn(colKey)?.label || colKey}
+                                </h4>
+                                <button onClick={() => setActiveSlotPicker(null)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] leading-snug">
+                                Pick a date to lock this sub-column to. The cell will only show values collected on that exact date (blank otherwise) — like a "precise" filter on this slot.
+                            </p>
+                            <input
+                                type="date"
+                                defaultValue={currentLock}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setSlotLocks(prev => {
+                                        const arr = [...(prev[colKey] || [])];
+                                        while (arr.length <= slotIdx) arr.push(null);
+                                        arr[slotIdx] = val || null;
+                                        return { ...prev, [colKey]: arr };
+                                    });
+                                }}
+                                className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setSlotLocks(prev => {
+                                            const arr = [...(prev[colKey] || [])];
+                                            while (arr.length <= slotIdx) arr.push(null);
+                                            arr[slotIdx] = null;
+                                            return { ...prev, [colKey]: arr };
+                                        });
+                                        setActiveSlotPicker(null);
+                                    }}
+                                    className="flex-1 py-2 rounded-lg bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] text-[10px] font-bold uppercase tracking-wide hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors"
+                                >
+                                    Unlock (auto)
+                                </button>
+                                <button
+                                    onClick={() => setActiveSlotPicker(null)}
+                                    className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm transition-colors"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Per-column menu (sort + quick filter) */}
             {openMenuColKey && (() => {
@@ -983,7 +1241,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     );
 };
 
-// ─── Inner table component (shared between single and multi modes) ─────────
+// ─── Inner table component (shared between Latest, Compare, Snapshots) ─────
 interface TableProps {
     title?: string;
     cols: ColumnDef[];
@@ -991,6 +1249,14 @@ interface TableProps {
     resolveCell: (col: ColumnDef, ctx: any, dateIdx?: number) => DataPoint;
     mode: 'metric-first' | 'date-first' | 'single';
     dateCounts: Record<string, number>;
+    /** When set + showCellDates, the per-cell date subtitle hides if source date === referenceDate. */
+    referenceDate?: string;
+    /** Show the per-cell date subtitle ("20 Feb 26") under values. */
+    showCellDates?: boolean;
+    /** Compare-mode per-slot date locks. Map: column key → array of (string | null). */
+    slotLocks?: Record<string, (string | null)[]>;
+    /** Compare-mode click handler for sub-header → opens the slot-lock picker. */
+    onClickSubHeader?: (colKey: string, slotIdx: number) => void;
     sortKey: string | null;
     sortDir: 'asc' | 'desc';
     onSort: (key: string) => void;
@@ -1003,19 +1269,24 @@ interface TableProps {
     scrollPct: number | null;
     onScroll: ((e: React.UIEvent) => void) | null;
     tableWrapRef?: React.RefObject<HTMLDivElement>;
-    /** Per-column filter map keyed by column.key */
     colFilters?: Record<string, Set<string>>;
-    /** Callback when scientist clicks the filter icon on a column header */
     onOpenColMenu?: (key: string) => void;
-    /** Read-only mode disables drag/click-to-sort + menu (for shared snapshots) */
     readOnly?: boolean;
 }
 
 const DataHubTable: React.FC<TableProps> = ({
-    title, cols, ctxs, resolveCell, mode, dateCounts, sortKey, sortDir, onSort,
+    title, cols, ctxs, resolveCell, mode, dateCounts, referenceDate, showCellDates,
+    slotLocks, onClickSubHeader,
+    sortKey, sortDir, onSort,
     dragKey, dragOverKey, onDragStart, onDragOver, onDragEnd, onDrop, scrollPct, onScroll, tableWrapRef,
     colFilters, onOpenColMenu, readOnly,
 }) => {
+    // "20 Feb 26" format used for per-cell date subtitles + locked-slot headers.
+    const fmtFull = (iso: string | undefined | null): string => {
+        if (!iso) return '';
+        return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+    };
+    const refDay = referenceDate ? referenceDate.slice(0, 10) : null;
     // Determine the effective "date count" per column for multi-date display.
     // Single-date columns always render once. History-supporting columns use the count.
     const dateCount = (c: ColumnDef): number => c.supportsHistory ? Math.max(1, dateCounts[c.key] || 1) : 1;
@@ -1098,20 +1369,28 @@ const DataHubTable: React.FC<TableProps> = ({
                         </tr>
                         {/* Sub-header row for multi-date columns (only when any column has >1).
                             Each sub-th carries its own bg so sticky scrolling never reveals the
-                            scrolling body row underneath. */}
+                            scrolling body row underneath. Locked slots show their precise date
+                            and the whole sub-th is clickable when onClickSubHeader is provided. */}
                         {cols.some(c => dateCount(c) > 1) && (
                             <tr className="bg-slate-800 dark:bg-[#0A1628]">
                                 <th className="sticky left-0 z-30 bg-slate-800 dark:bg-[#0A1628] p-2 border-r border-slate-700 dark:border-[#1A2D48]" />
                                 {cols.flatMap(c => {
                                     const n = dateCount(c);
-                                    return Array.from({ length: n }).map((_, i) => (
-                                        <th
-                                            key={`${c.key}__${i}`}
-                                            className="bg-slate-800 dark:bg-[#0A1628] p-2 text-[8px] font-semibold uppercase tracking-wider text-slate-400 dark:text-[#94A3B8] whitespace-nowrap text-center"
-                                        >
-                                            {n === 1 ? '' : i === 0 ? 'Latest' : `L-${i}`}
-                                        </th>
-                                    ));
+                                    return Array.from({ length: n }).map((_, i) => {
+                                        const lock = slotLocks?.[c.key]?.[i] || null;
+                                        const label = n === 1 ? '' : lock ? fmtFull(lock) : (i === 0 ? 'Latest' : `L-${i}`);
+                                        const clickable = !!onClickSubHeader && n > 1;
+                                        return (
+                                            <th
+                                                key={`${c.key}__${i}`}
+                                                onClick={clickable ? () => onClickSubHeader!(c.key, i) : undefined}
+                                                title={clickable ? (lock ? `Locked to ${fmtFull(lock)} — click to edit` : 'Click to lock this slot to a precise date') : undefined}
+                                                className={`bg-slate-800 dark:bg-[#0A1628] p-2 text-[8px] font-semibold uppercase tracking-wider whitespace-nowrap text-center ${lock ? 'text-indigo-300' : 'text-slate-400 dark:text-[#94A3B8]'} ${clickable ? 'cursor-pointer hover:bg-slate-700 dark:hover:bg-[#1A2D48] transition-colors' : ''}`}
+                                            >
+                                                {label}
+                                            </th>
+                                        );
+                                    });
                                 })}
                             </tr>
                         )}
@@ -1141,12 +1420,22 @@ const DataHubTable: React.FC<TableProps> = ({
                                     return Array.from({ length: n }).map((_, i) => {
                                         const point = resolveCell(c, rc, i);
                                         const stale = c.staleAfterDays != null && point.date && (daysSince(point.date) ?? 0) > c.staleAfterDays;
+                                        // Decide whether to show the per-cell date subtitle.
+                                        //  • Compare auto slot (no lock): always show — each athlete's i-th entry has its own date
+                                        //  • Compare locked slot: hide — the sub-header already carries the precise date
+                                        //  • Single (Latest/Snapshot) most-recent: show only if cell's source date differs from referenceDate
+                                        //  • Single (Latest/Snapshot) precise: showCellDates is false, so nothing shows
+                                        const slotLocked = !!slotLocks?.[c.key]?.[i];
+                                        const pointDay = point.date ? point.date.slice(0, 10) : null;
+                                        const showThisDate = showCellDates && !!pointDay && !slotLocked && (
+                                            n > 1 || (refDay ? pointDay !== refDay : true)
+                                        );
                                         return (
                                             <td key={`${c.key}__${i}`} className={`p-3 whitespace-nowrap text-center ${stale ? 'bg-amber-50/40 dark:bg-amber-500/5' : ''}`}>
                                                 <div className="flex flex-col items-center gap-0.5">
                                                     {renderCellValue(c, point, { hasConfig })}
-                                                    {point.date && n > 1 && (
-                                                        <span className="text-[8px] text-slate-300 dark:text-[#475569] font-medium">{formatDate(point.date)}</span>
+                                                    {showThisDate && (
+                                                        <span className="text-[8px] text-slate-300 dark:text-[#475569] font-medium">{fmtFull(point.date)}</span>
                                                     )}
                                                 </div>
                                             </td>

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    ArrowLeftIcon, EditIcon, Share2Icon, PrinterIcon, MoreHorizontalIcon,
+    ArrowLeftIcon, EditIcon, Share2Icon, MoreHorizontalIcon,
     GaugeIcon, HeartIcon, AlertTriangleIcon, FlaskConicalIcon,
     DumbbellIcon, CalendarDaysIcon, TrendingUpIcon, TrendingDownIcon,
     ActivityIcon, ShieldIcon, BadgeCheckIcon, ChevronRightIcon,
@@ -17,6 +17,7 @@ import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
 import { AthleteAvatar } from '../components/roster/AthleteAvatar';
 import { ShareAthleteModal } from '../components/athlete/ShareAthleteModal';
+import { EditAthleteProfileModal } from '../components/athlete/EditAthleteProfileModal';
 
 // ────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -172,6 +173,7 @@ export const AthleteProfilePage: React.FC = () => {
     const [notesDraft, setNotesDraft] = useState({ goals: '', notes: '' });
     const [savingNotes, setSavingNotes] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
+    const [editProfileOpen, setEditProfileOpen] = useState(false);
 
     useEffect(() => {
         if (athlete) setNotesDraft({ goals: athlete.goals || '', notes: athlete.notes || '' });
@@ -552,16 +554,16 @@ export const AthleteProfilePage: React.FC = () => {
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={() => setEditProfileOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-200 dark:border-[#243A58] rounded-full text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
+                        >
+                            <EditIcon size={13} /> Edit
+                        </button>
+                        <button
                             onClick={() => setShareOpen(true)}
                             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-indigo-300 dark:border-indigo-500/40 bg-indigo-50 dark:bg-indigo-600/15 rounded-full text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-600/25 transition-colors"
                         >
                             <Share2Icon size={13} /> Share
-                        </button>
-                        <button
-                            onClick={() => window.print()}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-200 dark:border-[#243A58] rounded-full text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
-                        >
-                            <PrinterIcon size={13} /> Print
                         </button>
                     </div>
                 </div>
@@ -1067,6 +1069,12 @@ export const AthleteProfilePage: React.FC = () => {
                 onClose={() => setShareOpen(false)}
                 athlete={{ id: athlete.id, name: athlete.name }}
                 buildSnapshot={buildSnapshot}
+            />
+
+            <EditAthleteProfileModal
+                isOpen={editProfileOpen}
+                onClose={() => setEditProfileOpen(false)}
+                athlete={athlete}
             />
         </div>
     );
