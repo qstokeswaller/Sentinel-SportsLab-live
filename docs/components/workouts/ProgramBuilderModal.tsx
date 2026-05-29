@@ -1456,7 +1456,11 @@ export const ProgramBuilderModal = ({
                                       if (data === 'rest') return;
                                       if (data.startsWith('picker:')) {
                                         const exId = data.slice('picker:'.length);
-                                        const ex = searchResults.find((x: any) => x.id === exId);
+                                        // Look up against the unfiltered picker source first so the drop
+                                        // still resolves when the user changed picker filter (search,
+                                        // letter, Mine/collection) between drag start and drop.
+                                        const ex = (exData?.exercises ?? []).find((x: any) => x.id === exId)
+                                                || searchResults.find((x: any) => x.id === exId);
                                         if (ex && !(day.sections[sec] || []).some(r => r.exerciseId === ex.id)) {
                                           // Add to THIS section (not the global activeSection) — that's the whole point of drag
                                           const newRow = emptyRow(ex);
@@ -1520,7 +1524,8 @@ export const ProgramBuilderModal = ({
                                         onRemove={() => setDays(prev => prev.map((d, di) => di === globalIdx ? { ...d, sections: { ...d.sections, [sec]: d.sections[sec].filter(r => r.tempId !== row.tempId) } } : d))}
                                         onOpenDisplayOptions={() => setDisplayOptionsRow({ dayIdx: globalIdx, sec, tempId: row.tempId })}
                                         onPickerDrop={(exId, pos) => {
-                                          const ex = searchResults.find((x: any) => x.id === exId);
+                                          const ex = (exData?.exercises ?? []).find((x: any) => x.id === exId)
+                                                  || searchResults.find((x: any) => x.id === exId);
                                           if (!ex) return;
                                           setDays(prev => prev.map((d, di) => {
                                             if (di !== globalIdx) return d;

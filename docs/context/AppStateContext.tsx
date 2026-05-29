@@ -746,9 +746,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     });
 
     // MODULES CONFIGURATION
+    // Note: the old "Baseline & Trend Analysis" module was merged into Performance
+    // Intelligence on 2026-05-28 (summary tiles + Load-vs-Wellness chart now live at
+    // the top of PI). Removed from this registry.
     const modules = [
-        { id: 'load', title: 'Baseline & Trend Analysis', icon: TrendingUpIcon, description: 'Diagnostic baselines & trend classification' },
-        { id: 'kpi', title: 'Performance Intelligence', icon: LineChartIcon, description: 'KPI trendlines & progression predictors' },
+        { id: 'kpi', title: 'Performance Intelligence', icon: LineChartIcon, description: 'Readiness composite, baselines & trend insights — the rolled-up state of athlete' },
         { id: 'scenario', title: 'Scenario Modelling', icon: ZapIcon, description: 'Simulate training decisions and assess future risk/readiness.' },
         { id: 'dose_response', title: 'Dose-Response Analysis', icon: ActivityIcon, description: 'Did the training block produce performance gains? Compare load vs test deltas.' },
         { id: 'fv_profile', title: 'Force-Velocity Profile', icon: ZapIcon, description: 'F-V profiling from CMJ, IMTP & sprint data. Identifies force/velocity deficits.' },

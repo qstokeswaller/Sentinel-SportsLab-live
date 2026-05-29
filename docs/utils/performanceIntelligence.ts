@@ -15,6 +15,129 @@
 
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from './constants';
 
+// ── Sport-aware testing thresholds ──────────────────────────────────────────
+// In-season pro soccer realistically tests 2-4× per year; treating that as
+// "stale" data pathologises healthy cadence. Buckets below come from
+// `plans/PI-SPORT-AWARE-THRESHOLDS.md` (McGuigan 2017, Cormack 2008,
+// Claudino 2017, Coutts 2017). CMJ + Nordic carve-outs override the bucket
+// because they're cheap/repeatable (CMJ) or injury-risk-windowed (Nordic).
+
+export type SportBucket = 'high_density_team' | 'mid_density_team' | 'individual' | 'combat' | 'default';
+
+export interface SportThresholds {
+    bucket: SportBucket;
+    bucketLabel: string;
+    sport: string | null;
+    decayStart: number;        // tests older than this start losing confidence in Performance Trend
+    excludeAfter: number;      // tests older than this drop out of Performance Trend entirely
+    retestAfter: number;       // generic re-test recommendation (Re-Test Due rule)
+    staleness: { strength: number; power: number; injury_screen: number; speed: number; aerobic: number; anthropometry: number; other: number };
+    typeOverrides: Record<string, { decayStart: number; excludeAfter: number; retestAfter: number }>;
+}
+
+const SPORT_BUCKET_DEFS: Record<SportBucket, Omit<SportThresholds, 'bucket' | 'bucketLabel' | 'sport' | 'typeOverrides'> & { label: string }> = {
+    high_density_team: {
+        label: 'High-density team sport',
+        decayStart: 120, excludeAfter: 270, retestAfter: 180,
+        staleness: { strength: 180, power: 120, injury_screen: 120, speed: 150, aerobic: 180, anthropometry: 180, other: 180 },
+    },
+    mid_density_team: {
+        label: 'Mid-density team sport',
+        decayStart: 90, excludeAfter: 210, retestAfter: 120,
+        staleness: { strength: 120, power: 90, injury_screen: 90, speed: 120, aerobic: 120, anthropometry: 120, other: 120 },
+    },
+    individual: {
+        label: 'Individual / training-dominant',
+        decayStart: 45, excludeAfter: 120, retestAfter: 60,
+        staleness: { strength: 60, power: 45, injury_screen: 60, speed: 60, aerobic: 60, anthropometry: 60, other: 60 },
+    },
+    combat: {
+        label: 'Combat / camp-based',
+        decayStart: 60, excludeAfter: 240, retestAfter: 90,
+        staleness: { strength: 90, power: 60, injury_screen: 90, speed: 90, aerobic: 90, anthropometry: 90, other: 90 },
+    },
+    default: {
+        label: 'Default (unknown sport)',
+        decayStart: 90, excludeAfter: 210, retestAfter: 120,
+        staleness: { strength: 90, power: 90, injury_screen: 90, speed: 90, aerobic: 90, anthropometry: 90, other: 90 },
+    },
+};
+
+// Universal test-type overrides — apply regardless of sport bucket
+const TEST_TYPE_OVERRIDES: SportThresholds['typeOverrides'] = {
+    cmj:       { decayStart: 21, excludeAfter: 60,  retestAfter: 21 }, // Claudino 2017 CMJ review
+    dsi:       { decayStart: 21, excludeAfter: 60,  retestAfter: 21 },
+    rsi:       { decayStart: 21, excludeAfter: 60,  retestAfter: 21 },
+    sj:        { decayStart: 21, excludeAfter: 60,  retestAfter: 21 },
+    nordic:    { decayStart: 42, excludeAfter: 120, retestAfter: 42 }, // Opar 2015 / Bourne 2018 hamstring window
+    hamstring: { decayStart: 42, excludeAfter: 120, retestAfter: 42 },
+};
+
+const SPORT_TO_BUCKET: Record<string, SportBucket> = {
+    // High-density team
+    'soccer': 'high_density_team',
+    'football': 'high_density_team',
+    'association football': 'high_density_team',
+    'basketball': 'high_density_team',
+    'ice hockey': 'high_density_team',
+    'hockey': 'high_density_team',
+    'afl': 'high_density_team',
+    'australian rules': 'high_density_team',
+    'cricket': 'high_density_team',
+    'american football': 'high_density_team',
+    'nfl': 'high_density_team',
+    // Mid-density team
+    'rugby': 'mid_density_team',
+    'rugby union': 'mid_density_team',
+    'rugby league': 'mid_density_team',
+    'college football': 'mid_density_team',
+    // Individual / training-dominant
+    'athletics': 'individual',
+    'track': 'individual',
+    'track and field': 'individual',
+    'swimming': 'individual',
+    'cycling': 'individual',
+    'olympic lifting': 'individual',
+    'olympic weightlifting': 'individual',
+    'powerlifting': 'individual',
+    'triathlon': 'individual',
+    'rowing': 'individual',
+    'personal training': 'individual',
+    // Combat
+    'mma': 'combat',
+    'boxing': 'combat',
+    'martial arts': 'combat',
+    'combat sports': 'combat',
+};
+
+export function getSportThresholds(sport: string | null | undefined): SportThresholds {
+    const norm = (sport || '').trim().toLowerCase();
+    const bucket: SportBucket = SPORT_TO_BUCKET[norm] || 'default';
+    const def = SPORT_BUCKET_DEFS[bucket];
+    return {
+        bucket,
+        bucketLabel: def.label,
+        sport: sport || null,
+        decayStart: def.decayStart,
+        excludeAfter: def.excludeAfter,
+        retestAfter: def.retestAfter,
+        staleness: def.staleness,
+        typeOverrides: TEST_TYPE_OVERRIDES,
+    };
+}
+
+// Resolve effective decay/exclude/retest for a specific test type. Universal
+// type overrides (CMJ, Nordic) win over the sport bucket.
+export function getEffectiveTestThresholds(thresholds: SportThresholds, testType: string) {
+    const override = thresholds.typeOverrides[testType];
+    if (override) return override;
+    return {
+        decayStart: thresholds.decayStart,
+        excludeAfter: thresholds.excludeAfter,
+        retestAfter: thresholds.retestAfter,
+    };
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface Insight {
@@ -55,6 +178,8 @@ export interface DataProfile {
     daysSinceBreak: number;
     // Multi-metric ACWR (if team has multiple models)
     additionalAcwrModels: { metricType: string; ratio: number; status: string }[];
+    // Sport-aware staleness thresholds resolved from the athlete's team sport
+    sportThresholds: SportThresholds;
 }
 
 export interface ReadinessScore {
@@ -82,13 +207,21 @@ export function buildAthleteDataProfile(
     assessments: any[],
     acwrSettings: Record<string, any>,
     teams: any[],
+    /** As-of date (YYYY-MM-DD). All rolling windows anchor to this date.
+     *  Records dated after this point are filtered out so analysis runs
+     *  exactly as it would have on the chosen date. Defaults to today. */
+    asOfDate?: string,
 ): DataProfile {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const now = asOfDate ? new Date(asOfDate + 'T23:59:59') : new Date();
+    const today = (asOfDate || now.toISOString().split('T')[0]).slice(0, 10);
+    const onOrBefore = (iso: string | null | undefined) => {
+        if (!iso) return false;
+        return iso.slice(0, 10) <= today;
+    };
 
     // ── Load domain ──
     const athleteLoads = (loadRecords || []).filter(r =>
-        (r.athleteId === athleteId || r.athlete_id === athleteId)
+        (r.athleteId === athleteId || r.athlete_id === athleteId) && onOrBefore(r.date)
     );
     const hasLoadData = athleteLoads.length >= 7;
     const loadDays = new Set(athleteLoads.map(r => (r.date || '').split('T')[0])).size;
@@ -104,10 +237,13 @@ export function buildAthleteDataProfile(
     const chronicN = settings.chronicWindow || 28;
     const freezeRestDays = settings.freezeRestDays !== false;
 
+    // Filter the raw loadRecords array (not just athleteLoads) to as-of so ACWR
+    // sees the right history.
+    const loadRecordsAsOf = (loadRecords || []).filter(r => onOrBefore(r.date));
     let acwrResult = null;
     let acwrRatio = 0;
     if (hasLoadData) {
-        acwrResult = ACWR_UTILS.calculateAthleteACWR(loadRecords, athleteId, {
+        acwrResult = ACWR_UTILS.calculateAthleteACWR(loadRecordsAsOf, athleteId, {
             metricType: loadMetricType !== 'srpe' ? loadMetricType : undefined,
             acuteN, chronicN, freezeRestDays,
         });
@@ -164,26 +300,47 @@ export function buildAthleteDataProfile(
     }
 
     // ── Wellness domain ──
+    // habitRecords here is now the live `wellnessResponses` array (legacy param name
+    // kept for back-compat). Records use `session_date` (not `date`) and nest the
+    // questionnaire fields under `responses` for FIFA-style forms. The accessors
+    // below check both top-level and nested locations so both shapes work.
+    const wellnessDateOf = (r: any) => r?.session_date || r?.date || '';
+    const wellnessField = (r: any, key: string) => {
+        const v = r?.responses?.[key];
+        if (typeof v === 'number') return v;
+        const top = r?.[key];
+        return typeof top === 'number' ? top : null;
+    };
     const athleteWellness = (habitRecords || []).filter(r =>
-        r.athleteId === athleteId || r.athlete_id === athleteId
+        (r.athleteId === athleteId || r.athlete_id === athleteId) && onOrBefore(wellnessDateOf(r))
     );
-    const sortedWellness = [...athleteWellness].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedWellness = [...athleteWellness].sort((a, b) =>
+        new Date(wellnessDateOf(b)).getTime() - new Date(wellnessDateOf(a)).getTime()
+    );
     const hasWellnessData = sortedWellness.length > 0 &&
-        daysBetween(sortedWellness[0]?.date, today) <= 7;
+        daysBetween(wellnessDateOf(sortedWellness[0]), today) <= 7;
     const wellnessDays = sortedWellness.length;
     const latestWellness = sortedWellness[0] || null;
 
-    // 3-day rolling averages
+    // 3-day rolling averages — map questionnaire fields to PI's domain shape.
+    // sleep_quality → sleep score; fatigue (inverse) → energy; soreness/stress unchanged.
     const recent3 = sortedWellness.slice(0, 3);
-    const avg = (arr, key) => arr.length > 0 ? arr.reduce((s, r) => s + (Number(r[key]) || 0), 0) / arr.length : 0;
-    const avgSleep3d = avg(recent3, 'sleep');
-    const avgEnergy3d = avg(recent3, 'energy');
-    const avgSoreness3d = avg(recent3, 'soreness');
-    const avgStress3d = avg(recent3, 'stress');
+    const avgRecent = (key: string, invert = false) => {
+        const vals = recent3
+            .map(r => wellnessField(r, key))
+            .filter(v => typeof v === 'number') as number[];
+        if (vals.length === 0) return 0;
+        const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+        return invert ? Math.max(0, 10 - mean) : mean;
+    };
+    const avgSleep3d    = avgRecent('sleep_quality');        // 1-10, higher = better
+    const avgEnergy3d   = avgRecent('fatigue', /*invert*/ true); // fatigue inverse → energy
+    const avgSoreness3d = avgRecent('soreness');             // 1-10, higher = worse
+    const avgStress3d   = avgRecent('stress');               // 1-10, higher = worse
 
     // ── Assessment domains ──
     const athleteAssessments = (assessments || []).filter(a =>
-        a.athlete_id === athleteId || a.athleteId === athleteId
+        (a.athlete_id === athleteId || a.athleteId === athleteId) && onOrBefore(a.date)
     ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const assessmentsByType: DataProfile['assessmentsByType'] = {};
@@ -224,7 +381,7 @@ export function buildAthleteDataProfile(
         for (const mt of otherTypes) {
             const mtRecords = athleteLoads.filter(r => r.metric_type === mt);
             if (mtRecords.length >= 7) {
-                const result = ACWR_UTILS.calculateAthleteACWR(loadRecords, athleteId, {
+                const result = ACWR_UTILS.calculateAthleteACWR(loadRecordsAsOf, athleteId, {
                     metricType: mt, acuteN, chronicN, freezeRestDays,
                 });
                 if (result.ratio > 0) {
@@ -235,6 +392,9 @@ export function buildAthleteDataProfile(
         }
     }
 
+    // Resolve sport-aware testing thresholds from the athlete's team
+    const sportThresholds = getSportThresholds(playerTeam?.sport);
+
     return {
         athleteId, athleteName,
         hasLoadData, loadDays, loadMetricType, acwrResult, acwrRatio, monotony, strain,
@@ -242,6 +402,7 @@ export function buildAthleteDataProfile(
         assessmentsByType, testCategories,
         breakDetected, daysSinceBreak,
         additionalAcwrModels,
+        sportThresholds,
     };
 }
 
@@ -325,7 +486,10 @@ export function generateInsights(profile: DataProfile): Insight[] {
     const strengthTypes = ['1rm', 'rm_back_squat', 'rm_bench_press', 'rm_deadlift', 'rm_front_squat', 'rm_ohp'];
     for (const st of strengthTypes) {
         const data = profile.assessmentsByType[st];
-        if (!data || data.count < 2 || data.daysSinceLatest > 90) continue;
+        // Use the strength staleness threshold from the sport bucket — high-density
+        // team sports get 180 d, individual sports get 60 d, etc.
+        const strengthCutoff = profile.sportThresholds.staleness.strength;
+        if (!data || data.count < 2 || data.daysSinceLatest > strengthCutoff) continue;
         const latest = Number(data.latest?.metrics?.value || data.latest?.metrics?.weight || 0);
         const prev = Number(data.previous?.metrics?.value || data.previous?.metrics?.weight || 0);
         if (latest <= 0 || prev <= 0) continue;
@@ -432,6 +596,138 @@ export function generateInsights(profile: DataProfile): Insight[] {
         }
     }
 
+    // Y-Balance — composite < 94% of leg length (Plisky 2006) + anterior
+    // asymmetry > 4 cm (Smith 2015). Defensively reads both stored composite
+    // values and recomputes from raw reaches if needed.
+    {
+        const data = profile.assessmentsByType['y_balance'];
+        const injuryCutoff = profile.sportThresholds.staleness.injury_screen;
+        if (data && data.daysSinceLatest <= injuryCutoff) {
+            const m = data.latest?.metrics || {};
+            let compL = Number(m.composite_left || 0);
+            let compR = Number(m.composite_right || 0);
+            const legLen = Number(m.leg_length || 0);
+            if ((!compL || !compR) && legLen > 0) {
+                const sumL = Number(m.ant_left || 0) + Number(m.pm_left || 0) + Number(m.pl_left || 0);
+                const sumR = Number(m.ant_right || 0) + Number(m.pm_right || 0) + Number(m.pl_right || 0);
+                if (!compL && sumL > 0) compL = (sumL / (legLen * 3)) * 100;
+                if (!compR && sumR > 0) compR = (sumR / (legLen * 3)) * 100;
+            }
+            const lowerComp = Math.min(compL || 999, compR || 999);
+            if (lowerComp < 89) {
+                insights.push({
+                    id: id(), category: 'Risk', severity: 'warning',
+                    title: `Y-Balance Composite Low (${lowerComp.toFixed(0)}%)`,
+                    message: `Worst-side composite reach is ${lowerComp.toFixed(0)}% of leg length — below 89% threshold. Plisky 2006 found this elevates lower-extremity injury risk by ~2.5×.`,
+                    recommendation: 'Targeted dynamic balance work — single-leg reach drills, perturbation training. Re-screen in 4 weeks.',
+                    dataSource: 'y_balance', confidence: `Tested ${data.daysSinceLatest} days ago`,
+                });
+            } else if (lowerComp < 94) {
+                insights.push({
+                    id: id(), category: 'Risk', severity: 'info',
+                    title: `Y-Balance Composite Borderline (${lowerComp.toFixed(0)}%)`,
+                    message: `Worst-side composite reach is ${lowerComp.toFixed(0)}% of leg length — approaching the 94% risk threshold.`,
+                    recommendation: 'Monitor closely. Add single-leg balance work to programming.',
+                    dataSource: 'y_balance', confidence: `Tested ${data.daysSinceLatest} days ago`,
+                });
+            }
+            let antAsym = Number(m.ant_asymmetry || 0);
+            if (!antAsym) {
+                const al = Number(m.ant_left || 0), ar = Number(m.ant_right || 0);
+                if (al > 0 && ar > 0) antAsym = Math.abs(al - ar);
+            }
+            if (antAsym > 4) {
+                const weakSide = Number(m.ant_left || 0) < Number(m.ant_right || 0) ? 'left' : 'right';
+                insights.push({
+                    id: id(), category: 'Risk', severity: 'warning',
+                    title: `Y-Balance Anterior Asymmetry: ${antAsym.toFixed(1)} cm`,
+                    message: `Anterior reach differs by ${antAsym.toFixed(1)} cm between limbs (${weakSide} side limited). Exceeds the 4 cm threshold for elevated injury risk (Plisky 2006).`,
+                    recommendation: `Investigate ankle dorsiflexion ROM and quadriceps control on the ${weakSide} side. Add unilateral work.`,
+                    dataSource: 'y_balance', confidence: `Tested ${data.daysSinceLatest} days ago`,
+                });
+            }
+        }
+    }
+
+    // CMJ Advanced — bilateral asymmetry_index (Bishop 2018)
+    {
+        const data = profile.assessmentsByType['cmj_advanced'];
+        const eff = getEffectiveTestThresholds(profile.sportThresholds, 'cmj');
+        if (data && data.daysSinceLatest <= eff.excludeAfter) {
+            const m = data.latest?.metrics || {};
+            const asym = Number(m.asymmetry_index || 0);
+            if (asym > 15) {
+                insights.push({
+                    id: id(), category: 'Risk', severity: 'warning',
+                    title: `CMJ Asymmetry: ${asym.toFixed(0)}%`,
+                    message: `Bilateral force asymmetry is ${asym.toFixed(0)}% — exceeds the 15% threshold linked to elevated lower-limb injury risk in cutting and jumping sports (Bishop 2018).`,
+                    recommendation: 'Prescribe unilateral strength + landing mechanics work. Re-test bilateral CMJ in 4 weeks.',
+                    dataSource: 'cmj_advanced', confidence: `Tested ${data.daysSinceLatest} days ago`,
+                });
+            } else if (asym > 10) {
+                insights.push({
+                    id: id(), category: 'Risk', severity: 'info',
+                    title: `CMJ Asymmetry: ${asym.toFixed(0)}%`,
+                    message: `Bilateral force asymmetry is ${asym.toFixed(0)}% — approaching the 15% risk threshold.`,
+                    recommendation: 'Monitor closely. Include unilateral jump and landing work in programming.',
+                    dataSource: 'cmj_advanced', confidence: `Tested ${data.daysSinceLatest} days ago`,
+                });
+            }
+        }
+    }
+
+    // FMS sub-scores — any 0 (pain) is critical, any 1 (unable) is a warning
+    // (Cook 2014 — sub-score interpretation predicts injury better than total)
+    {
+        const fmsKeys = ['fms_deep_squat', 'fms_hurdle_step', 'fms_inline_lunge', 'fms_shoulder_mobility', 'fms_aslr', 'fms_trunk_pushup', 'fms_rotary_stability'];
+        const fmsLabels: Record<string, string> = {
+            fms_deep_squat: 'Deep Squat',
+            fms_hurdle_step: 'Hurdle Step',
+            fms_inline_lunge: 'In-Line Lunge',
+            fms_shoulder_mobility: 'Shoulder Mobility',
+            fms_aslr: 'Active Straight Leg Raise',
+            fms_trunk_pushup: 'Trunk Stability Push-Up',
+            fms_rotary_stability: 'Rotary Stability',
+        };
+        const injuryCutoff = profile.sportThresholds.staleness.injury_screen;
+        const painMoves: string[] = [];
+        const failMoves: string[] = [];
+        let mostRecentDays = -1;
+        for (const fk of fmsKeys) {
+            const data = profile.assessmentsByType[fk];
+            if (!data || data.daysSinceLatest > injuryCutoff) continue;
+            mostRecentDays = mostRecentDays === -1 ? data.daysSinceLatest : Math.min(mostRecentDays, data.daysSinceLatest);
+            const m = data.latest?.metrics || {};
+            const raw = [m.score, m.score_left, m.score_right];
+            let hasPain = false, hasFail = false;
+            for (const v of raw) {
+                if (v === null || v === undefined || v === '') continue;
+                const n = Number(v);
+                if (n === 0) hasPain = true;
+                else if (n === 1) hasFail = true;
+            }
+            if (hasPain) painMoves.push(fmsLabels[fk]);
+            else if (hasFail) failMoves.push(fmsLabels[fk]);
+        }
+        if (painMoves.length > 0) {
+            insights.push({
+                id: id(), category: 'Risk', severity: 'critical',
+                title: `FMS Pain Reported (${painMoves.length} movement${painMoves.length > 1 ? 's' : ''})`,
+                message: `Athlete scored 0 (pain) on: ${painMoves.join(', ')}. Pain during screening overrides all other interpretation — refer to medical staff before further loading.`,
+                recommendation: 'Refer to medical / physiotherapy. Do not load painful movements until cleared.',
+                dataSource: 'FMS', confidence: `Most recent FMS: ${mostRecentDays} days ago`,
+            });
+        } else if (failMoves.length > 0) {
+            insights.push({
+                id: id(), category: 'Risk', severity: 'warning',
+                title: `FMS Movement Dysfunction (${failMoves.length} movement${failMoves.length > 1 ? 's' : ''})`,
+                message: `Athlete scored 1 (unable) on: ${failMoves.join(', ')}. Cook 2014 — a single "1" score predicts injury better than the FMS total alone.`,
+                recommendation: 'Targeted corrective work on the failed pattern(s). Re-screen in 4-6 weeks.',
+                dataSource: 'FMS', confidence: `Most recent FMS: ${mostRecentDays} days ago`,
+            });
+        }
+    }
+
     // ── Group 4: Wellness Patterns ──
     if (profile.hasWellnessData) {
         // ACWR + wellness compound
@@ -480,18 +776,21 @@ export function generateInsights(profile: DataProfile): Insight[] {
     }
 
     // ── Group 5: Meta Rules ──
-    const staleness = {
-        strength: 60, power: 60, injury_screen: 90, speed: 60,
-        aerobic: 90, anthropometry: 90, other: 90,
-    };
+    // Staleness pulls from the sport bucket; CMJ / Nordic / RSI / DSI / SJ /
+    // hamstring use their type-specific universal overrides (cheap-and-frequent
+    // or injury-risk-windowed).
+    const staleness = profile.sportThresholds.staleness;
     for (const [testType, data] of Object.entries(profile.assessmentsByType)) {
         const cat = getCategoryForTest(testType);
-        const threshold = staleness[cat] || 90;
+        const override = profile.sportThresholds.typeOverrides[testType];
+        const threshold = override
+            ? override.retestAfter
+            : (staleness[cat] || profile.sportThresholds.retestAfter);
         if (data.daysSinceLatest > threshold) {
             insights.push({
                 id: id(), category: 'Opportunity', severity: 'info',
                 title: `Re-Test Due: ${titleCase(testType.replace(/_/g, ' '))}`,
-                message: `Last tested ${data.daysSinceLatest} days ago (recommended: every ${threshold} days). Data may no longer reflect current capacity.`,
+                message: `Last tested ${data.daysSinceLatest} days ago (recommended: every ${threshold} days for ${profile.sportThresholds.bucketLabel.toLowerCase()}). Data may no longer reflect current capacity.`,
                 recommendation: 'Schedule re-assessment to maintain an accurate performance profile.',
                 dataSource: testType, confidence: `Last test: ${data.latestDate}`,
             });
@@ -566,11 +865,16 @@ export function calculateReadinessScore(profile: DataProfile): ReadinessScore {
     domains.push({ name: 'Recovery State', score: Math.round(recoveryScore), weight: 25, available: recoveryAvailable, reason: recoveryAvailable ? `Sleep: ${profile.avgSleep3d.toFixed(1)}, Energy: ${profile.avgEnergy3d.toFixed(1)}` : 'No recent wellness data' });
 
     // Domain 3: Performance Trend (test direction → 0-100)
+    // Decay-start, exclusion, and re-test thresholds are sport-aware (sport bucket
+    // resolved during discovery). CMJ / Nordic / RSI / DSI / SJ / hamstring use
+    // universal type overrides regardless of sport — see SPORT_BUCKET_DEFS +
+    // TEST_TYPE_OVERRIDES above and plans/PI-SPORT-AWARE-THRESHOLDS.md.
     let perfScore = 75;
     let perfAvailable = false;
     const trendScores = [];
     for (const [type, data] of Object.entries(profile.assessmentsByType)) {
-        if (data.count < 2 || data.daysSinceLatest > 180) continue; // include up to 6 months
+        const eff = getEffectiveTestThresholds(profile.sportThresholds, type);
+        if (data.count < 2 || data.daysSinceLatest > eff.excludeAfter) continue;
         // Skip if post-break and this is first test back
         if (profile.breakDetected && data.count < 3) continue;
         const latest = Number(data.latest?.metrics?.value || data.latest?.metrics?.weight || 0);
@@ -579,10 +883,11 @@ export function calculateReadinessScore(profile: DataProfile): ReadinessScore {
         const pctChange = ((latest - prev) / prev) * 100;
         // Score: improving = 90, stable = 75, declining = 40
         let raw = pctChange > 3 ? 90 : pctChange >= -3 ? 75 : 40;
-        // Soft decay: tests older than 60 days lose confidence (discount factor)
-        // 60d = 1.0, 90d = 0.85, 120d = 0.70, 150d = 0.55, 180d = 0.40
-        if (data.daysSinceLatest > 60) {
-            const decay = Math.max(0.4, 1.0 - (data.daysSinceLatest - 60) / 300);
+        // Soft decay: tests older than the decay-start point lose confidence on
+        // a linear ramp down to a 0.4 floor at the exclusion cliff.
+        if (data.daysSinceLatest > eff.decayStart) {
+            const span = Math.max(1, eff.excludeAfter - eff.decayStart);
+            const decay = Math.max(0.4, 1.0 - (data.daysSinceLatest - eff.decayStart) / (span / 0.6));
             raw = 75 + (raw - 75) * decay; // decay toward neutral (75), not toward 0
         }
         trendScores.push(raw);
@@ -591,49 +896,146 @@ export function calculateReadinessScore(profile: DataProfile): ReadinessScore {
     if (perfAvailable && trendScores.length > 0) {
         perfScore = trendScores.reduce((a, b) => a + b, 0) / trendScores.length;
     }
-    domains.push({ name: 'Performance Trend', score: Math.round(perfScore), weight: 20, available: perfAvailable, reason: perfAvailable ? `${trendScores.length} test trends analysed` : 'Insufficient recent test data' });
+    domains.push({ name: 'Performance Trend', score: Math.round(perfScore), weight: 20, available: perfAvailable, reason: perfAvailable ? `${trendScores.length} test trends · ${profile.sportThresholds.bucketLabel}` : 'Insufficient recent test data' });
 
     // Domain 4: Injury Risk Flags (inverse of severity → 0-100)
+    // Multi-factor scoring. Nordic / hamstring still drive the score where
+    // present (Opar 2015, Bourne 2018, van Dyk 2019). For sports where Nordic
+    // isn't typically tested, Y-balance (Plisky 2006), CMJ Advanced bilateral
+    // asymmetry (Bishop 2018), and FMS sub-scores (Cook 2014) carry the domain.
+    // Each rule is field-presence-defensive — missing fields silently skip.
     let injuryScore = 100;
     let injuryAvailable = false;
-    for (const nt of ['nordic', 'hamstring', 'fms_total', 'y_balance']) {
+
+    // 1) Nordic / hamstring — relative strength + bilateral asymmetry
+    for (const nt of ['nordic', 'hamstring']) {
         const data = profile.assessmentsByType[nt];
-        if (data && data.daysSinceLatest <= 90) {
-            injuryAvailable = true;
-            const m = data.latest?.metrics;
-            if (!m) continue;
-            // Nordic/hamstring risk
-            const rel = Number(m.relativeStrength || 0);
-            if (rel > 0 && rel < 3.37) injuryScore = Math.min(injuryScore, 20);
-            else if (rel > 0 && rel < 4.47) injuryScore = Math.min(injuryScore, 60);
-            // Asymmetry
-            const left = Number(m.leftPeak || m.left || 0);
-            const right = Number(m.rightPeak || m.right || 0);
-            if (left > 0 && right > 0) {
-                const asym = Math.abs(left - right) / Math.max(left, right) * 100;
-                if (asym > 15) injuryScore = Math.min(injuryScore, 40);
-                else if (asym > 10) injuryScore = Math.min(injuryScore, 70);
+        const eff = getEffectiveTestThresholds(profile.sportThresholds, nt);
+        if (!data || data.daysSinceLatest > eff.excludeAfter) continue;
+        injuryAvailable = true;
+        const m = data.latest?.metrics;
+        if (!m) continue;
+        const rel = Number(m.relativeStrength || 0);
+        if (rel > 0 && rel < 3.37) injuryScore = Math.min(injuryScore, 20);
+        else if (rel > 0 && rel < 4.47) injuryScore = Math.min(injuryScore, 60);
+        const left = Number(m.leftPeak || m.left || 0);
+        const right = Number(m.rightPeak || m.right || 0);
+        if (left > 0 && right > 0) {
+            const asym = Math.abs(left - right) / Math.max(left, right) * 100;
+            if (asym > 15) injuryScore = Math.min(injuryScore, 40);
+            else if (asym > 10) injuryScore = Math.min(injuryScore, 70);
+        }
+    }
+
+    // 2) Y-Balance — composite reach + anterior asymmetry (Plisky 2006, Smith 2015)
+    {
+        const data = profile.assessmentsByType['y_balance'];
+        const injuryCutoff = profile.sportThresholds.staleness.injury_screen;
+        if (data && data.daysSinceLatest <= injuryCutoff) {
+            const m = data.latest?.metrics || {};
+            // Some platforms persist the registry's computed `composite_left/right`;
+            // others store only raw reaches. Compute defensively from raw if needed.
+            let compL = Number(m.composite_left || 0);
+            let compR = Number(m.composite_right || 0);
+            const legLen = Number(m.leg_length || 0);
+            if ((!compL || !compR) && legLen > 0) {
+                const sumL = Number(m.ant_left || 0) + Number(m.pm_left || 0) + Number(m.pl_left || 0);
+                const sumR = Number(m.ant_right || 0) + Number(m.pm_right || 0) + Number(m.pl_right || 0);
+                if (!compL && sumL > 0) compL = (sumL / (legLen * 3)) * 100;
+                if (!compR && sumR > 0) compR = (sumR / (legLen * 3)) * 100;
             }
-            // FMS
-            if (nt === 'fms_total' && m.total && Number(m.total) < 14) {
+            const lowerComp = Math.min(compL || 999, compR || 999); // most-at-risk side
+            if (lowerComp < 999) {
+                injuryAvailable = true;
+                if (lowerComp < 89) injuryScore = Math.min(injuryScore, 40);
+                else if (lowerComp < 94) injuryScore = Math.min(injuryScore, 70);
+            }
+            // Anterior asymmetry — Plisky threshold >4 cm
+            let antAsym = Number(m.ant_asymmetry || 0);
+            if (!antAsym) {
+                const al = Number(m.ant_left || 0), ar = Number(m.ant_right || 0);
+                if (al > 0 && ar > 0) antAsym = Math.abs(al - ar);
+            }
+            if (antAsym > 4) {
+                injuryAvailable = true;
                 injuryScore = Math.min(injuryScore, 50);
             }
         }
     }
-    // Compound: Nordic risk + ACWR elevated
+
+    // 3) CMJ Advanced — bilateral asymmetry_index (Bishop 2018)
+    {
+        const data = profile.assessmentsByType['cmj_advanced'];
+        const eff = getEffectiveTestThresholds(profile.sportThresholds, 'cmj');
+        if (data && data.daysSinceLatest <= eff.excludeAfter) {
+            const m = data.latest?.metrics || {};
+            const asym = Number(m.asymmetry_index || 0);
+            if (asym > 0) {
+                injuryAvailable = true;
+                if (asym > 15) injuryScore = Math.min(injuryScore, 40);
+                else if (asym > 10) injuryScore = Math.min(injuryScore, 70);
+            }
+        }
+    }
+
+    // 4) FMS sub-scores — any 0 (pain) or 1 (unable) on any movement (Cook 2014)
+    {
+        const fmsKeys = ['fms_deep_squat', 'fms_hurdle_step', 'fms_inline_lunge', 'fms_shoulder_mobility', 'fms_aslr', 'fms_trunk_pushup', 'fms_rotary_stability'];
+        const injuryCutoff = profile.sportThresholds.staleness.injury_screen;
+        let anyPain = false, anyOne = false, anyFmsPresent = false;
+        for (const fk of fmsKeys) {
+            const data = profile.assessmentsByType[fk];
+            if (!data || data.daysSinceLatest > injuryCutoff) continue;
+            anyFmsPresent = true;
+            const m = data.latest?.metrics || {};
+            // Some FMS tests have single `score`, others have bilateral `score_left/right`
+            const raw = [m.score, m.score_left, m.score_right];
+            for (const v of raw) {
+                if (v === null || v === undefined || v === '') continue;
+                const n = Number(v);
+                if (n === 0) anyPain = true;
+                else if (n === 1) anyOne = true;
+            }
+        }
+        if (anyFmsPresent) {
+            injuryAvailable = true;
+            if (anyPain) injuryScore = Math.min(injuryScore, 20);
+            else if (anyOne) injuryScore = Math.min(injuryScore, 60);
+        }
+    }
+
+    // Compound: any high-risk screening flag + ACWR elevated → amplify
     if (injuryScore <= 40 && profile.acwrRatio > 1.3) {
         injuryScore = Math.max(0, injuryScore - 20);
     }
-    domains.push({ name: 'Injury Risk', score: Math.round(injuryScore), weight: 15, available: injuryAvailable, reason: injuryAvailable ? `Screening data available` : 'No screening tests in last 90 days' });
+    domains.push({ name: 'Injury Risk', score: Math.round(injuryScore), weight: 15, available: injuryAvailable, reason: injuryAvailable ? `Screening data available` : 'No screening tests in window' });
 
     // Domain 5: Data Freshness (confidence signal → 0-100)
+    // Each check uses sport-bucket thresholds. Power/screening for specific test
+    // types fall back to the universal CMJ/Nordic overrides since those are the
+    // cheap-and-frequent / injury-windowed measures.
+    const stale = profile.sportThresholds.staleness;
+    const overrideFor = (t: string) => profile.sportThresholds.typeOverrides[t];
+    const nordicOver = overrideFor('nordic'); // 120d exclusion universal
     let freshnessScore = 0;
     const freshnessChecks = [
         { label: 'Load data current', pass: profile.hasLoadData },
         { label: 'Wellness current', pass: profile.hasWellnessData },
-        { label: 'Strength tested', pass: Object.keys(profile.assessmentsByType).some(t => ['1rm', 'rm_back_squat', 'rm_bench_press', 'rm_deadlift'].includes(t) && profile.assessmentsByType[t].daysSinceLatest <= 60) },
-        { label: 'Screening tested', pass: Object.keys(profile.assessmentsByType).some(t => ['nordic', 'hamstring', 'fms_total', 'y_balance'].includes(t) && profile.assessmentsByType[t].daysSinceLatest <= 90) },
-        { label: 'Power tested', pass: Object.keys(profile.assessmentsByType).some(t => ['cmj', 'dsi', 'rsi', 'sj'].includes(t) && profile.assessmentsByType[t].daysSinceLatest <= 60) },
+        { label: 'Strength tested', pass: Object.keys(profile.assessmentsByType).some(t => ['1rm', 'rm_back_squat', 'rm_bench_press', 'rm_deadlift', 'rm_front_squat', 'rm_ohp'].includes(t) && profile.assessmentsByType[t].daysSinceLatest <= stale.strength) },
+        { label: 'Screening tested', pass: ['nordic', 'hamstring', 'fms_deep_squat', 'fms_hurdle_step', 'fms_inline_lunge', 'fms_shoulder_mobility', 'fms_aslr', 'fms_trunk_pushup', 'fms_rotary_stability', 'y_balance'].some(t => {
+            const data = profile.assessmentsByType[t];
+            if (!data) return false;
+            if (t === 'nordic' || t === 'hamstring') return data.daysSinceLatest <= (nordicOver?.excludeAfter || stale.injury_screen);
+            return data.daysSinceLatest <= stale.injury_screen;
+        }) },
+        { label: 'Power tested', pass: ['cmj', 'cmj_advanced', 'dsi', 'rsi', 'squat_jump', 'sj'].some(t => {
+            const data = profile.assessmentsByType[t];
+            if (!data) return false;
+            // CMJ override applies to all CMJ variants; everything else uses sport-bucket power staleness
+            const cmjFamily = t === 'cmj' || t === 'cmj_advanced' || t === 'dsi' || t === 'rsi' || t === 'squat_jump' || t === 'sj';
+            const cutoff = cmjFamily ? (overrideFor('cmj')?.excludeAfter || stale.power) : ((overrideFor(t)?.excludeAfter) || stale.power);
+            return data.daysSinceLatest <= cutoff;
+        }) },
     ];
     freshnessScore = freshnessChecks.filter(c => c.pass).length * 20;
     domains.push({ name: 'Data Freshness', score: freshnessScore, weight: 10, available: true, reason: `${freshnessChecks.filter(c => c.pass).length} of ${freshnessChecks.length} data domains current` });

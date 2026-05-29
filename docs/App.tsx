@@ -449,6 +449,44 @@ const App = () => {
         return () => clearTimeout(t);
     }, []);
 
+    // Version drift recovery — after a deploy, the running SPA still holds the OLD
+    // chunk filenames in memory; navigating to a not-yet-loaded route requests a
+    // chunk URL that 404s on the new build. Catch the dynamic-import failure and
+    // hard-reload once so the user transparently picks up the new bundle.
+    //
+    // Skip in dev — Vite HMR fires transient "Failed to fetch dynamically imported
+    // module" errors while it's rebuilding, and auto-reloading would fight HMR.
+    useEffect(() => {
+        if (import.meta.env.DEV) return;
+        const RELOAD_KEY = 'sentinel:chunkReloadAt';
+        const isStaleChunkError = (msg: string) =>
+            /Failed to fetch dynamically imported module/i.test(msg) ||
+            /Importing a module script failed/i.test(msg) ||
+            /Loading chunk \S+ failed/i.test(msg) ||
+            /ChunkLoadError/i.test(msg);
+        const tryReload = (msg: string) => {
+            if (!isStaleChunkError(msg)) return false;
+            // Guard against an infinite reload loop if the chunk is genuinely missing
+            const last = Number(sessionStorage.getItem(RELOAD_KEY) || '0');
+            if (Date.now() - last < 60_000) return false;
+            sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+            window.location.reload();
+            return true;
+        };
+        const onError = (e: ErrorEvent) => { tryReload(String(e?.message || e?.error || '')); };
+        const onRejection = (e: PromiseRejectionEvent) => {
+            const reason: any = e?.reason;
+            const msg = typeof reason === 'string' ? reason : (reason?.message || reason?.toString?.() || '');
+            tryReload(String(msg));
+        };
+        window.addEventListener('error', onError);
+        window.addEventListener('unhandledrejection', onRejection);
+        return () => {
+            window.removeEventListener('error', onError);
+            window.removeEventListener('unhandledrejection', onRejection);
+        };
+    }, []);
+
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-[#0D1829] text-slate-900 dark:text-[#E2E8F0] font-sans selection:bg-indigo-500/30 overflow-hidden relative transition-colors duration-200">
             <Sidebar />

@@ -3,7 +3,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { UserIcon, ChevronDownIcon, AlertTriangleIcon, LockIcon, CalendarIcon, ArrowLeftIcon, ActivityIcon, UsersIcon, XIcon } from 'lucide-react';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { BaselineTrendTerminal } from '../components/analytics/BaselineTrendTerminal';
 import { PerformanceIntelligenceTerminal } from '../components/analytics/PerformanceIntelligenceTerminal';
 import { ScenarioModellingTerminal } from '../components/analytics/ScenarioModellingTerminal';
 import { KpiWatchlistModal } from '../components/analytics/KpiWatchlistModal';
@@ -226,9 +225,16 @@ export const AnalyticsHubPage = () => {
                 </div>
             )}
         </div>
-    ) : (
-        <div className="space-y-5 animate-in fade-in duration-300">
-            {/* Unified module nav bar — back, subject, date range */}
+    ) : (() => {
+        // PI ('load' + 'kpi') owns its own top banner now (Hub back + module title +
+        // subject + as-of date picker + Explain all in one slim row), so we skip the
+        // shared module nav bar for those modules and let PI render full-height.
+        const isPI = activeAnalyticsModule === 'load' || activeAnalyticsModule === 'kpi';
+        const moduleTitle = modules.find(m => m.id === activeAnalyticsModule)?.title;
+        return (
+        <div className={isPI ? 'animate-in fade-in duration-300' : 'space-y-5 animate-in fade-in duration-300'}>
+            {/* Module nav bar — hidden for PI, shown for every other terminal */}
+            {!isPI && (
             <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
@@ -243,7 +249,7 @@ export const AnalyticsHubPage = () => {
                             <ActivityIcon size={14} />
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{modules.find(m => m.id === activeAnalyticsModule)?.title}</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{moduleTitle}</h3>
                             <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{selectedSubject?.name} · {isTeamSelection ? 'Squad' : 'Individual'}</p>
                         </div>
                     </div>
@@ -255,20 +261,31 @@ export const AnalyticsHubPage = () => {
                     <input type="date" value={analyticsEndDate} onChange={(e) => setAnalyticsEndDate(e.target.value)} className="text-xs text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer" />
                 </div>
             </div>
+            )}
 
             {activeAnalyticsModule === 'load' && (
                 <div className="relative">
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl min-h-[200px]">
                             <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedSubject?.name} baseline & trend data...</span>
+                            <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedSubject?.name} performance intelligence...</span>
                         </div>
                     )}
-                    <BaselineTrendTerminal
-                        habitRecords={habitRecords}
-                        loadRecords={loadRecords}
+                    {/* Baseline & Trend Analysis was merged into Performance Intelligence.
+                        The `load` module id is kept so existing deep links still resolve;
+                        it renders the same PI terminal as the `kpi` id below. */}
+                    <PerformanceIntelligenceTerminal
+                        kpiDefinitions={kpiDefinitions}
+                        kpiRecords={kpiRecords}
                         selectedAnalyticsAthleteId={selectedAnalyticsAthleteId}
                         subjectAthleteIds={subjectAthleteIds}
+                        analyticsStartDate={analyticsStartDate}
+                        analyticsEndDate={analyticsEndDate}
+                        watchedKpiIds={watchedKpiIds}
+                        setWatchedKpiIds={setWatchedKpiIds}
+                        setIsKpiWatchlistModalOpen={setIsKpiWatchlistModalOpen}
+                        onBackToHub={() => setActiveAnalyticsModule(null)}
+                        moduleTitle={moduleTitle}
                     />
                 </div>
             )}
@@ -290,6 +307,8 @@ export const AnalyticsHubPage = () => {
                         watchedKpiIds={watchedKpiIds}
                         setWatchedKpiIds={setWatchedKpiIds}
                         setIsKpiWatchlistModalOpen={setIsKpiWatchlistModalOpen}
+                        onBackToHub={() => setActiveAnalyticsModule(null)}
+                        moduleTitle={moduleTitle}
                     />
                 </div>
             )}
@@ -340,5 +359,6 @@ export const AnalyticsHubPage = () => {
                 setWatchedKpiIds={setWatchedKpiIds}
             />
         </div>
-    );
+        );
+    })();
 };
