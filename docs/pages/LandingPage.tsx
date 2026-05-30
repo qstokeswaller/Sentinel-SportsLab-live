@@ -11,6 +11,7 @@ import {
     SparklesIcon, SunIcon, MoonIcon, MenuIcon, XIcon,
     GaugeIcon, HeartIcon, FlaskConicalIcon, BrainIcon, DumbbellIcon, BarChart3Icon,
     ShieldIcon, ZapIcon, TargetIcon, LayersIcon, MapPinIcon, ClipboardListIcon,
+    UsersIcon,
 } from 'lucide-react';
 
 // ── Scroll reveal ──
@@ -346,6 +347,19 @@ const LandingPage: React.FC = () => {
             {/* ═══════ HERO ═══════ */}
             <section className="relative min-h-screen flex items-center justify-center pt-16">
                 <div className="absolute inset-0 overflow-hidden">
+                    {/* Photo backdrop — null-safe. If /images/landing/hero.jpg
+                        doesn't exist the browser silently fails the request and
+                        the underlying gradient orbs below remain visible.
+                        Opacity tuned a touch higher than the original scaffold
+                        so the photo carries more of the hero (user feedback). */}
+                    <div
+                        className={`absolute inset-0 bg-cover bg-center ${dark ? 'opacity-45' : 'opacity-70'}`}
+                        style={{ backgroundImage: 'url(/images/landing/hero.jpg)' }}
+                    />
+                    {/* Overlay tint — softened so more of the photo shows through.
+                        Bottom anchor stays solid so the section blends into the
+                        next section's dark/light background cleanly. */}
+                    <div className={`absolute inset-0 ${dark ? 'bg-gradient-to-b from-[#06060B]/35 via-[#06060B]/45 to-[#06060B]' : 'bg-gradient-to-b from-white/25 via-white/50 to-white'}`} />
                     {dark ? (
                         <>
                             <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
@@ -728,6 +742,83 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
+            {/* ═══════ AUDIENCE CARDS ═══════
+                Two-card layout pairing the two primary users — sport scientists
+                and coaches — with the photo of each context (Images 3 and 4).
+                Both card backgrounds are null-safe via CSS background-image, so
+                missing files = a clean coloured card with no broken-image icon. */}
+            <section className={`py-16 sm:py-24 ${dark ? 'bg-[#0a0a14]' : 'bg-slate-50'}`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                    <div className="text-center mb-12">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'} border rounded-full text-xs font-semibold mb-5`}>
+                            <UsersIcon size={12} /> Who it's for
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+                            Two roles. <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">One platform.</span>
+                        </h2>
+                        <p className={`mt-4 text-lg ${txm} max-w-xl mx-auto`}>
+                            Built around the day-to-day work of sport scientists and coaches — the people who actually use this every morning.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-6xl mx-auto">
+                        {[
+                            {
+                                tag: 'For sport scientists',
+                                title: 'Run analysis without leaving the workflow',
+                                img: '/images/landing/audience-scientist.jpg',
+                                Icon: BarChart3Icon,
+                                points: [
+                                    'ACWR (EWMA) load monitoring with individualised thresholds',
+                                    'F-V profiling from existing CMJ and sprint data',
+                                    'Dose-response analysis across training blocks',
+                                    'Five analytics terminals, GPS column auto-detection',
+                                ],
+                            },
+                            {
+                                tag: 'For coaches',
+                                title: 'See readiness before the session starts',
+                                img: '/images/landing/audience-coach.jpg',
+                                Icon: HeartIcon,
+                                points: [
+                                    'FIFA/IOC daily wellness with auto-flag alerts',
+                                    'Squad-wide readiness dashboard',
+                                    'Injury and illness pathway from a single form',
+                                    'Conditioning Hub, Wattbike and HR monitoring',
+                                ],
+                            },
+                        ].map((a, i) => (
+                            <div key={i} className={`group relative rounded-2xl overflow-hidden border ${dark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-slate-200 bg-white'} hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all`}>
+                                {/* Photo block — null-safe */}
+                                <div
+                                    className="relative h-56 bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${a.img}), linear-gradient(135deg, #4338ca 0%, #6366f1 100%)` }}
+                                >
+                                    <div className={`absolute inset-0 ${dark ? 'bg-gradient-to-t from-[#0a0a14]/85 via-[#0a0a14]/30 to-transparent' : 'bg-gradient-to-t from-white/95 via-white/30 to-transparent'}`} />
+                                    <div className="absolute top-4 left-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dark ? 'bg-[#0a0a14]/85 text-indigo-300 border border-indigo-500/40' : 'bg-white/95 text-indigo-600 border border-indigo-200'} backdrop-blur-sm`}>
+                                            <a.Icon size={11} /> {a.tag}
+                                        </span>
+                                    </div>
+                                </div>
+                                {/* Content */}
+                                <div className="p-6 sm:p-7">
+                                    <h3 className={`text-lg sm:text-xl font-semibold tracking-tight mb-4 ${tx}`}>{a.title}</h3>
+                                    <ul className={`space-y-2.5 text-[13px] ${txm} leading-relaxed`}>
+                                        {a.points.map((p, j) => (
+                                            <li key={j} className="flex items-start gap-2">
+                                                <CheckIcon size={13} className="text-emerald-500 shrink-0 mt-1" />
+                                                <span>{p}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ═══════ 21-DAY PILOT ═══════
                 Replaces the old "14-day trial" framing. The whole positioning
                 shift is from "free try-before-you-buy" to "structured guided
@@ -735,6 +826,18 @@ const LandingPage: React.FC = () => {
                 time for setup, real-world use, and a calibration review. */}
             <section id="pilot" className="py-16 sm:py-32">
                 <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                    {/* Header photo strip — null-safe. Missing file = the slot
+                        collapses (hidden when pilot.jpg fails to load) so the
+                        section opens straight into the heading below. */}
+                    <div
+                        className="relative max-w-5xl mx-auto mb-12 rounded-2xl overflow-hidden bg-cover bg-center"
+                        style={{ backgroundImage: 'url(/images/landing/pilot.jpg)', aspectRatio: '21 / 9' }}
+                    >
+                        {/* Gradient overlay anchored bottom — keeps the heading
+                            below the photo from feeling disconnected. */}
+                        <div className={`absolute inset-0 ${dark ? 'bg-gradient-to-b from-transparent via-transparent to-[#06060B]' : 'bg-gradient-to-b from-transparent via-transparent to-white'}`} />
+                    </div>
+
                     <div className="text-center mb-16">
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 dark:bg-indigo-600 border-indigo-100 dark:border-indigo-800/40 text-indigo-600'} border rounded-full text-xs font-semibold mb-5`}>
                             <SparklesIcon size={12} /> How the pilot works

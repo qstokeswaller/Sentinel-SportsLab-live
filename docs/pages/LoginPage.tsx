@@ -144,10 +144,20 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+            className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0a1628 0%, #1e1b4b 40%, #312e81 100%)' }}
         >
-            <div className="w-full max-w-5xl min-h-[640px] bg-white rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.45)] overflow-hidden relative flex flex-col lg:flex-row">
+            {/* Photo backdrop — null-safe. Missing file = gradient stays visible.
+                Photo sits at ~30% opacity with a blur so the form card on top
+                remains the focal point and text stays crisp. */}
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-30"
+                style={{ backgroundImage: 'url(/images/landing/auth-bg.jpg)', filter: 'blur(2px)' }}
+            />
+            {/* Vignette overlay — darkens edges so the card has clean separation */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(10,22,40,0) 30%, rgba(10,22,40,0.55) 100%)' }} />
+
+            <div className="relative w-full max-w-5xl min-h-[640px] bg-white rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col lg:flex-row">
 
                 {/* ── SIGN IN FORM (always left half on lg+) ───────────────────────
                     On mobile (<lg) only the active form renders — avoids a long
