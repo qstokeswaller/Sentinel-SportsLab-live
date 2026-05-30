@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Search, Users, ChevronRight, ChevronLeft, ArrowLeft, ClipboardList, AlertTriangle,
     Share2, Calendar, Activity, CheckCircle2, Clock, Copy, Zap, Link2, Plus, X,
@@ -87,7 +87,7 @@ interface VizBlock {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) => {
+const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => void }> = ({ initialTeamId, onBackToSections }) => {
     const {
         teams,
         athletes,
@@ -136,14 +136,94 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
     const [responseViewDate, setResponseViewDate] = useState(TODAY);
     const [showDailyTracker, setShowDailyTracker] = useState(false);
     const [isRundownOpen, setIsRundownOpen] = useState(true);
+    // Option A layout: Heatmap collapsed by default; coach expands when they want
+    // the visual scan. Flag Panel keeps its own internal expanded state (defaults
+    // to collapsed via prop below). See plans/WELLNESS-HUB-QUESTIONNAIRE-LAYOUT.md.
+    const [isHeatmapOpen, setIsHeatmapOpen] = useState(false);
     const [showAllAlerts, setShowAllAlerts] = useState(false);
     const [alertsModalOpen, setAlertsModalOpen] = useState(false);
     const [rundownTab, setRundownTab] = useState<'daily' | 'deepcheck'>('daily');
-    const [rundownFrom, setRundownFrom] = useState<string>(() => localDateStr());
-    const [rundownTo, setRundownTo] = useState<string>(() => localDateStr());
+    // Rundown date scope — same UX as Wellness Flags panel. Range buttons
+    // (Today/3d/7d/14d/30d) + an as-of date picker. Default = today only.
+    // Shared by both Daily Responses and Deep Checks sub-tabs.
+    const [rundownAsOfDate, setRundownAsOfDate] = useState<string>(() => localDateStr());
+    const [rundownRangeDays, setRundownRangeDays] = useState<number>(1);
+    // Derived window — inclusive [from, to].
+    const RUNDOWN_RANGE_OPTIONS: { id: number; label: string }[] = [
+        { id: 1,  label: 'Today' },
+        { id: 3,  label: '3d' },
+        { id: 7,  label: '7d' },
+        { id: 14, label: '14d' },
+        { id: 30, label: '30d' },
+    ];
+    const rundownWindow = useMemo(() => {
+        const [y, m, d] = rundownAsOfDate.split('-').map(Number);
+        const end = new Date(y, m - 1, d);
+        const start = new Date(y, m - 1, d - rundownRangeDays + 1);
+        const fmt = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        return { from: fmt(start), to: fmt(end) };
+    }, [rundownAsOfDate, rundownRangeDays]);
+    const rundownFrom = rundownWindow.from;
+    const rundownTo   = rundownWindow.to;
     const [selectedResponseIds, setSelectedResponseIds] = useState<Set<string>>(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+    // Select Mode — when off, checkboxes/delete UI are completely hidden so the
+    // rundown reads as a clean review table. Toggling on reveals checkboxes +
+    // bulk-delete bar. Replaces the always-on per-row delete buttons (accidental
+    // deletions) with an explicit opt-in flow.
+    const [isSelectMode, setIsSelectMode] = useState(false);
+
+    // Athlete drill-in — History section state. Three collapsible cards at the
+    // bottom of the per-athlete view (Daily Responses History / Deep Checks
+    // History / Flag History). All default closed; each has its own range scope
+    // (7/30/90 days/All time, default 30d). `athleteHistoryFocus` lets external
+    // entry points (e.g. clicking a flag row) auto-open one specific section
+    // when navigating into the athlete view.
+    const [isDailyHistOpen,  setIsDailyHistOpen]  = useState(false);
+    const [isWeeklyHistOpen, setIsWeeklyHistOpen] = useState(false);
+    const [isFlagHistOpen,   setIsFlagHistOpen]   = useState(false);
+    const [historyDailyDays,  setHistoryDailyDays]  = useState<number>(30);
+    const [historyWeeklyDays, setHistoryWeeklyDays] = useState<number>(30);
+    const [historyFlagDays,   setHistoryFlagDays]   = useState<number>(30);
+    const [athleteFlagHistory, setAthleteFlagHistory] = useState<any[]>([]);
+    const HISTORY_RANGE_OPTIONS: { id: number; label: string }[] = [
+        { id: 7,    label: '7d' },
+        { id: 30,   label: '30d' },
+        { id: 90,   label: '90d' },
+        { id: 9999, label: 'All' },
+    ];
+
+    // Navigate to an athlete's drill-in. Optional focus param auto-opens one of
+    // the three history sections (used by flag-row click — opens Flag History).
+    const openAthlete = (athleteId: string, focus?: 'daily' | 'weekly' | 'flags') => {
+        setSelectedAthleteId(athleteId);
+        setIsDailyHistOpen(focus === 'daily');
+        setIsWeeklyHistOpen(focus === 'weekly');
+        setIsFlagHistOpen(focus === 'flags');
+        setViewMode('athlete');
+    };
+
+    // Fetch this athlete's full flag history when their profile opens. Scoped
+    // to the team to honour RLS; filtered to this athlete client-side.
+    useEffect(() => {
+        if (viewMode !== 'athlete' || !selectedTeamId || !selectedAthleteId) {
+            setAthleteFlagHistory([]);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            try {
+                const all = await DatabaseService.fetchWellnessFlags(selectedTeamId, false);
+                if (cancelled) return;
+                setAthleteFlagHistory((all || []).filter((f: any) => f.athlete_id === selectedAthleteId));
+            } catch (err) {
+                console.warn('Failed to load athlete flag history:', err);
+                if (!cancelled) setAthleteFlagHistory([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [viewMode, selectedTeamId, selectedAthleteId]);
     const [heatmapDays, setHeatmapDays] = useState<number>(7);
     const [heatmapAnchor, setHeatmapAnchor] = useState<string>(() => localDateStr());
 
@@ -219,10 +299,35 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
         wellnessResponses.filter(r => r.team_id === selectedTeamId && r.tier === 'weekly'),
     [wellnessResponses, selectedTeamId]);
 
-    // Rundown-specific filtered responses — own date range independent of global wellness period
-    const rundownDailyFiltered = useMemo(() =>
-        dailyResponses.filter(r => r.session_date >= rundownFrom && r.session_date <= rundownTo),
-    [dailyResponses, rundownFrom, rundownTo]);
+    // Rundown daily responses — filtered from raw wellnessResponses (NOT from
+    // `dailyResponses` which is already gated by the banner's global filter).
+    // That coupling was the bug: a banner set to "Today" + rundown set to
+    // "30d" would only see today's data. Now Rundown's range is truly
+    // independent.
+    //
+    // After scoping by window, we collapse to ONE row per athlete = their
+    // latest response within the window (matches the "Individual Rundown"
+    // intent — squad-wide latest-state view). Athletes with no response in
+    // the window are simply excluded.
+    const rundownDailyFiltered = useMemo(() => {
+        const inWindow = (wellnessResponses || [])
+            .filter(r => r.team_id === selectedTeamId && r.tier !== 'weekly')
+            .filter(r => {
+                const d = r.session_date || r.created_at?.split('T')[0];
+                return d && d >= rundownFrom && d <= rundownTo;
+            });
+        // Latest per athlete in the window
+        const latestByAthlete = new Map<string, any>();
+        for (const r of inWindow) {
+            const existing = latestByAthlete.get(r.athlete_id);
+            if (!existing) { latestByAthlete.set(r.athlete_id, r); continue; }
+            const existingKey = (existing.session_date || '') + (existing.submitted_at || '');
+            const newKey = (r.session_date || '') + (r.submitted_at || '');
+            if (newKey > existingKey) latestByAthlete.set(r.athlete_id, r);
+        }
+        return Array.from(latestByAthlete.values())
+            .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || '') || (b.submitted_at || '').localeCompare(a.submitted_at || ''));
+    }, [wellnessResponses, selectedTeamId, rundownFrom, rundownTo]);
 
     const rundownDeepChecks = useMemo(() =>
         (wellnessResponses || [])
@@ -1312,7 +1417,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         const resp = r.responses || {};
                                         return (
                                             <tr key={r.id} className="hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors cursor-pointer"
-                                                onClick={() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); }}>
+                                                onClick={() => openAthlete(r.athlete_id)}>
                                                 <td className="px-4 py-2.5 font-medium text-slate-900 dark:text-[#E2E8F0]">{a?.name || 'Unknown'}</td>
                                                 {METRIC_DEFS.filter(m => m.type === 'scale').map(m => {
                                                     const v = resp[m.key];
@@ -1351,36 +1456,61 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
     };
 
     const renderDashboard = () => (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-500">
-            {/* Header */}
-            <div className="bg-white dark:bg-[#132338] p-6 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
+        <div className="space-y-4 animate-in slide-in-from-right-8 duration-500">
+            {/* Consolidated top banner — replaces the old big team header + the
+                4-tile KPI strip + the availability summary bar. Owns the section
+                breadcrumb (Wellness Hub > Questionnaire Data > Team), team title,
+                date + response count, inline Avail/Mod/Unav pills, date range
+                filter, and share. Parent WellnessHubPage hides its own breadcrumb
+                when this is active (see WellnessHubPage:ownsBreadcrumb). */}
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+                {/* Left: breadcrumb + team + date + response counts */}
+                <div className="flex items-center gap-3 min-w-0">
+                    {/* Back arrow goes up ONE level — to team selection — so coaches can
+                        switch teams without leaving Questionnaire Data. To go further back
+                        (out to all Wellness Hub sections), click "Wellness Hub" in the
+                        breadcrumb below. */}
                     <button
                         onClick={() => setViewMode('selection')}
-                        className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                        className="w-8 h-8 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 dark:hover:border-[#364E6E] transition-all shrink-0"
+                        title="Change team"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={14} />
                     </button>
-                    <div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <h2 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTeam?.name}</h2>
-                            <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 rounded-lg text-[10px] font-semibold uppercase tracking-wide">Dashboard</span>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">
+                            <button
+                                type="button"
+                                onClick={() => onBackToSections ? onBackToSections() : setViewMode('selection')}
+                                className="hover:text-slate-700 dark:hover:text-[#E2E8F0] transition-colors"
+                                title="Back to Wellness Hub sections"
+                            >
+                                Wellness Hub
+                            </button>
+                            <ChevronRight size={10} />
+                            <span className="text-slate-500 dark:text-[#CBD5E1]">Questionnaire Data</span>
                         </div>
-                        {/* Improvement #4: date + response count */}
-                        <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[10px] tracking-wide mt-1">
-                            {formatDate(TODAY)} — {kpi.total} daily response{kpi.total !== 1 ? 's' : ''} from {activeTeam?.players.length} athlete{activeTeam?.players.length !== 1 ? 's' : ''}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight truncate">{activeTeam?.name}</h2>
+                            <span className="px-1.5 py-0.5 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 rounded text-[9px] font-bold uppercase tracking-wide">Dashboard</span>
+                            <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] truncate">
+                                · {formatDate(TODAY)} · {kpi.total} of {activeTeam?.players.length} {kpi.total === 1 ? 'response' : 'responses'}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="flex-1 md:w-48">
+                {/* Right cluster: date filter + share. Availability pills + expandable
+                    distribution bar moved into the Response Rate tile in the right rail —
+                    same parent metric (daily check-in compliance), more logical drill-down. */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <div className="w-32">
                         <CustomSelect
                             variant="filter"
                             size="sm"
                             value={wellnessDateRange}
                             onChange={e => setWellnessDateRange(e.target.value)}
-                            prefixIcon={<Calendar size={14} />}
+                            prefixIcon={<Calendar size={12} />}
                         >
                             <option value="today">Today</option>
                             <option value="7d">Last 7 Days</option>
@@ -1388,63 +1518,19 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         </CustomSelect>
                     </div>
                     <button
-                        onClick={() => setIsKpiExpanded(v => !v)}
-                        title={isKpiExpanded ? 'Hide availability summary' : 'Show availability summary'}
-                        className="flex items-center gap-1.5 px-3 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:border-slate-400 transition-all text-[10px] font-bold uppercase tracking-wide"
-                    >
-                        {isKpiExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                        {isKpiExpanded ? 'Hide' : 'Show'}
-                    </button>
-                    <button
                         data-tour="wellness-share"
                         onClick={() => setViewMode('share')}
-                        className="p-3.5 bg-cyan-600 text-white rounded-xl hover:bg-cyan-500 transition-all shadow-lg shadow-cyan-200 dark:shadow-none"
+                        className="p-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-all shadow-sm"
+                        title="Share dashboard"
                     >
-                        <Share2 size={20} />
+                        <Share2 size={14} />
                     </button>
                 </div>
             </div>
 
-            {isKpiExpanded && (<>
-            {/* Improvement #2: KPI strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                    { label: 'Responses',   value: kpi.total,       color: 'text-slate-900 dark:text-[#E2E8F0]',   bg: 'bg-white dark:bg-[#132338]',       border: 'border-slate-100 dark:border-[#1A2D48]' },
-                    { label: 'Available',   value: kpi.available,   color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20',  border: 'border-emerald-100 dark:border-emerald-800/40' },
-                    { label: 'Modified',    value: kpi.modified,    color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/20',    border: 'border-amber-100 dark:border-amber-800/40' },
-                    { label: 'Unavailable', value: kpi.unavailable, color: 'text-rose-600 dark:text-rose-400',    bg: 'bg-rose-50 dark:bg-rose-700',     border: 'border-rose-100 dark:border-rose-900/40' },
-                ].map(kpiItem => (
-                    <div key={kpiItem.label} className={`${kpiItem.bg} border-2 ${kpiItem.border} rounded-xl p-6 flex flex-col gap-1`}>
-                        <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">{kpiItem.label}</span>
-                        <span className={`text-4xl font-semibold tracking-tighter ${kpiItem.color}`}>{kpiItem.value}</span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Improvement #5: Availability summary bar */}
-            {kpi.total > 0 && (
-                <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] overflow-hidden shadow-sm">
-                    <div className="flex h-3">
-                        <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${(kpi.available / activeTeam!.players.length) * 100}%` }} />
-                        <div className="bg-amber-400 transition-all duration-700" style={{ width: `${(kpi.modified / activeTeam!.players.length) * 100}%` }} />
-                        <div className="bg-rose-500 transition-all duration-700" style={{ width: `${(kpi.unavailable / activeTeam!.players.length) * 100}%` }} />
-                        <div className="bg-slate-100 dark:bg-[#1A2D48] flex-1" />
-                    </div>
-                    <div className="flex items-center gap-6 px-6 py-2.5">
-                        {[
-                            { label: 'Available',    color: 'bg-emerald-500' },
-                            { label: 'Modified',     color: 'bg-amber-400' },
-                            { label: 'Unavailable',  color: 'bg-rose-500' },
-                            { label: 'No Response',  color: 'bg-slate-200 dark:bg-[#243A58]' },
-                        ].map(l => (
-                            <span key={l.label} className="flex items-center gap-1.5 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#CBD5E1]">
-                                <span className={`w-2 h-2 rounded-full ${l.color}`} />{l.label}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            )}
-            </>)}
+            {/* Availability distribution bar moved into the Response Rate tile.
+                Trigger lives there too (clicking the pills inside Response Rate
+                expands the proportional bar). */}
 
             {/* ── Tab strip ───────────────────────────────────────────── */}
             <div className="flex gap-1 bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl p-1 w-fit shadow-sm">
@@ -1464,16 +1550,30 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
             </div>
 
             {dashboardTab === 'overview' && (<>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Readiness Averages + Response Rate */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* 2-COL OVERVIEW BODY — main reading column on the left, summary rail
+                on the right. Uses CSS `order` so the JSX stays mobile-first (rail
+                content appears first in DOM = first on phones, where alerts come
+                top of stream) while lg+ visually puts the rail on the right. */}
+            <div className="flex flex-col lg:flex-row gap-4">
+                {/* RIGHT RAIL — Priority Alerts (top, moved here) + Response Rate +
+                    Team Averages. The OLD inner sm:grid-cols-2 (Avg+Response side-by-side)
+                    collapses to a vertical stack at lg via lg:grid-cols-1.
+                    lg:sticky keeps the rail glued to viewport-top as the left column
+                    scrolls (solves the "right side blank when you scroll" problem). The
+                    lg:max-h calc + overflow-y-auto are the safety net for tall rail
+                    content in laptop viewports. */}
+                <div className="lg:order-2 lg:w-96 shrink-0 flex flex-col gap-4 lg:sticky lg:top-0 lg:self-start lg:max-h-[calc(100vh-1rem)] lg:overflow-y-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
 
-                        <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-6">
+                        {/* lg:order-2 pushes Team Averages BELOW Response Rate in the rail,
+                            matching the requested order: Alerts → Response Rate → Averages.
+                            Compressed from p-8/space-y-6 → p-5/space-y-3 + h-2 bars to fit
+                            the rail without scroll on a typical laptop viewport. */}
+                        <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-3 lg:order-2">
                             <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
-                                <Zap size={16} className="text-amber-500" /> Team Averages
+                                <Zap size={14} className="text-amber-500" /> Team Averages
                             </h3>
-                            <div className="space-y-5">
+                            <div className="space-y-2.5">
                                 {[
                                     { label: 'Fatigue',       id: 'fatigue',       color: '#f59e0b', max: 10, negative: true },
                                     { label: 'Soreness',      id: 'soreness',      color: '#ef4444', max: 10, negative: true },
@@ -1490,14 +1590,14 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         : metric.color;
                                     return (
                                         <div key={metric.id}>
-                                            <div className="flex justify-between items-center mb-1.5">
-                                                <span className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1]">{metric.label}</span>
-                                                <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0]">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1]">{metric.label}</span>
+                                                <span className="text-[11px] font-semibold text-slate-900 dark:text-[#E2E8F0] tabular-nums">
                                                     {metric.id === 'sleep_hours' ? `${avg.toFixed(1)}h` : avg.toFixed(1)}
                                                     <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] ml-1">/{metric.max}</span>
                                                 </span>
                                             </div>
-                                            <div className="h-3 bg-slate-50 dark:bg-[#0F1C30] rounded-full overflow-hidden border border-slate-100 dark:border-[#1A2D48]">
+                                            <div className="h-2 bg-slate-50 dark:bg-[#0F1C30] rounded-full overflow-hidden border border-slate-100 dark:border-[#1A2D48]">
                                                 <div
                                                     className="h-full rounded-full transition-all duration-1000 ease-out"
                                                     style={{ width: `${percent}%`, backgroundColor: barColor }}
@@ -1509,55 +1609,125 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 dark:bg-[#1A2D48] dark:border dark:border-[#2D4A6A] p-8 rounded-xl text-white shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none"><Activity size={80} /></div>
-                            <div className="relative z-10 h-full flex flex-col justify-between">
+                        {/* Response Rate tile — light card matching the rest of the
+                            rail. Big % accent on top, "X of Y expected" subline, dot
+                            compliance row, then availability pills (clickable to expand
+                            the proportional distribution bar). Was previously a dark
+                            slate-900 card that clashed with the white siblings.
+                            lg:order-1 pulls Response Rate ABOVE Team Averages in the rail. */}
+                        {/* Compressed from p-6/text-5xl/gap-4 → p-5/text-4xl/gap-3 to
+                            fit rail without scroll on a laptop viewport. */}
+                        <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm relative overflow-hidden lg:order-1">
+                            <div className="absolute top-3 right-3 opacity-[0.06] pointer-events-none text-cyan-600 dark:text-cyan-400"><Activity size={56} /></div>
+                            <div className="relative z-10 flex flex-col gap-3">
+                                {/* Header + headline % */}
                                 <div>
-                                    <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">Response Rate</h3>
+                                    <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
+                                        <Activity size={14} className="text-cyan-500" /> Response Rate
+                                    </h3>
                                     {compliance.expected > 0 ? (
                                         <>
-                                            <div className="text-5xl font-semibold mt-2 tracking-tighter">
+                                            <div className="text-4xl font-semibold mt-2 tracking-tighter text-cyan-600 dark:text-cyan-400">
                                                 {compliance.rate}%
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-2">
+                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-1">
                                                 {compliance.actual} of {compliance.expected} expected
                                             </p>
-                                            <p className="text-[9px] font-medium text-slate-600 dark:text-[#CBD5E1] mt-1">
+                                            <p className="text-[9px] font-medium text-slate-400 dark:text-[#94A3B8] mt-0.5">
                                                 {compliance.sessionCount} day{compliance.sessionCount !== 1 ? 's' : ''} tracked · {compliance.athleteCount} athlete{compliance.athleteCount !== 1 ? 's' : ''}
                                             </p>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="text-5xl font-semibold mt-2 tracking-tighter text-slate-600 dark:text-[#CBD5E1]">
+                                            <div className="text-4xl font-semibold mt-2 tracking-tighter text-slate-300 dark:text-[#475569]">
                                                 —
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-2">
+                                            <p className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase mt-1">
                                                 No days tracked yet in this period
                                             </p>
                                         </>
                                     )}
                                 </div>
-                                <div className="pt-8 flex gap-1.5">
+
+                                {/* Dot compliance row — filled segments = days responded */}
+                                <div className="flex gap-1.5">
                                     {compliance.expected > 0
                                         ? Array.from({ length: Math.min(compliance.expected, 12) }, (_, i) => (
-                                            <div key={i} className={`flex-1 h-1.5 rounded-full overflow-hidden ${i < compliance.actual ? 'bg-cyan-500' : 'bg-white/10'}`} />
+                                            <div key={i} className={`flex-1 h-1.5 rounded-full ${i < compliance.actual ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-slate-100 dark:bg-[#1A2D48]'}`} />
                                         ))
                                         : (activeTeam?.players || []).slice(0, 6).map((_, i) => (
-                                            <div key={i} className="flex-1 h-1.5 rounded-full overflow-hidden bg-white/10" />
+                                            <div key={i} className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-[#1A2D48]" />
                                         ))
                                     }
                                 </div>
+
+                                {/* Availability pills — moved from the banner. Click any
+                                    pill (or the underlying button) to toggle the proportional
+                                    distribution bar below. */}
+                                {kpi.total > 0 && (
+                                    <div className="border-t border-slate-100 dark:border-[#1A2D48] pt-3 -mx-5 px-5">
+                                        <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] mb-2">Availability today</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsKpiExpanded(v => !v)}
+                                            title={isKpiExpanded ? 'Hide distribution bar' : 'Show proportional distribution bar (includes non-respondents)'}
+                                            className="flex items-center gap-1.5 w-full hover:opacity-90 transition-opacity"
+                                        >
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 text-[11px] leading-tight">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                <span className="font-bold text-emerald-700 dark:text-emerald-300">{kpi.available}</span>
+                                                <span className="text-emerald-600 dark:text-emerald-400">avail</span>
+                                            </span>
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-[11px] leading-tight">
+                                                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                                <span className="font-bold text-amber-700 dark:text-amber-300">{kpi.modified}</span>
+                                                <span className="text-amber-600 dark:text-amber-400">mod</span>
+                                            </span>
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 text-[11px] leading-tight">
+                                                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                                <span className="font-bold text-rose-700 dark:text-rose-300">{kpi.unavailable}</span>
+                                                <span className="text-rose-600 dark:text-rose-400">unav</span>
+                                            </span>
+                                        </button>
+                                        {/* Proportional distribution bar — collapsible. Shows
+                                            % widths + "No Response" segment (athletes who haven't
+                                            submitted today). */}
+                                        {isKpiExpanded && activeTeam && (
+                                            <div className="mt-3">
+                                                <div className="flex h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-[#0F1C30]">
+                                                    <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${(kpi.available / activeTeam.players.length) * 100}%` }} />
+                                                    <div className="bg-amber-400 transition-all duration-700" style={{ width: `${(kpi.modified / activeTeam.players.length) * 100}%` }} />
+                                                    <div className="bg-rose-500 transition-all duration-700" style={{ width: `${(kpi.unavailable / activeTeam.players.length) * 100}%` }} />
+                                                    <div className="flex-1 bg-slate-200 dark:bg-[#243A58]" />
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                                    {[
+                                                        { label: 'Avail',  color: 'bg-emerald-500' },
+                                                        { label: 'Mod',    color: 'bg-amber-400' },
+                                                        { label: 'Unav',   color: 'bg-rose-500' },
+                                                        { label: 'No resp', color: 'bg-slate-200 dark:bg-[#243A58]' },
+                                                    ].map(l => (
+                                                        <span key={l.label} className="flex items-center gap-1 text-[9px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8]">
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${l.color}`} />{l.label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </div>{/* /Avg+Response inner stack */}
 
-                {/* Priority Alerts sidebar */}
-                <div>
-                    <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-rose-50 dark:bg-rose-700 rounded-xl flex items-center justify-center text-rose-500">
-                                <AlertTriangle size={20} />
+                {/* Priority Alerts — order-first to pin top of the rail. Compressed
+                    from p-8/mb-6 → p-5/mb-3 and PREVIEW from 5 → 3 to fit the rail
+                    without page scroll on a typical laptop. Overflow opens the modal. */}
+                <div className="order-first">
+                    <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm">
+                        <div className="flex items-center gap-2.5 mb-3">
+                            <div className="w-8 h-8 bg-rose-50 dark:bg-rose-700 rounded-xl flex items-center justify-center text-rose-500">
+                                <AlertTriangle size={16} />
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-[#E2E8F0]">Priority Alerts</h3>
@@ -1566,7 +1736,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                 )}
                             </div>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {(() => {
                                 const flagged = latestPerAthlete.filter(r => {
                                     const resp = r.responses || {};
@@ -1580,7 +1750,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         || resp.health_complaint === 'illness'
                                         || resp.health_complaint === 'both';
                                 });
-                                const PREVIEW = 5;
+                                const PREVIEW = 3;
                                 const visible = flagged.slice(0, PREVIEW);
                                 const hiddenCount = flagged.length - PREVIEW;
 
@@ -1601,7 +1771,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     return (
                                         <div
                                             key={r.id}
-                                            onClick={onClick || (() => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); })}
+                                            onClick={onClick || (() => openAthlete(r.athlete_id))}
                                             className="p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-md dark:hover:border-rose-700/50 transition-all group"
                                         >
                                             {status && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
@@ -1654,7 +1824,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                     </div>
                                                     {/* List */}
                                                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                                                        {flagged.map(r => renderAlertCard(r, () => { setSelectedAthleteId(r.athlete_id); setViewMode('athlete'); setAlertsModalOpen(false); }))}
+                                                        {flagged.map(r => renderAlertCard(r, () => { openAthlete(r.athlete_id); setAlertsModalOpen(false); }))}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1673,11 +1843,15 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
+                </div>{/* /Priority Alerts wrapper */}
+                </div>{/* /right rail */}
 
-            {/* Individual Rundown — full width below the grid, collapsible */}
-            <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm overflow-hidden">
+                {/* LEFT COLUMN — order-1 on lg+ pulls this column to the left. Contains
+                    Individual Rundown (top), Wellness Flag Panel, and the Team Wellness
+                    Heatmap (the FIFA block was moved up here from below). */}
+                <div className="lg:order-1 flex-1 min-w-0 space-y-4">
+                    {/* Individual Rundown */}
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm overflow-hidden">
                 {/* ── Header ── */}
                 <div className="p-5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/30 dark:bg-[#0F1C30]/30 flex flex-wrap items-center gap-3">
                     <button onClick={() => setIsRundownOpen(v => !v)} className="flex items-center gap-2 hover:text-indigo-600 dark:text-indigo-300 transition-colors mr-auto">
@@ -1685,17 +1859,30 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0] tracking-wide">Individual Rundown</h3>
                         <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] font-medium ml-1">({new Set(dailyResponses.filter(r => r.session_date === TODAY).map(r => r.athlete_id)).size} today)</span>
                     </button>
-                    {/* Date range pickers */}
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-[#CBD5E1] font-semibold">
-                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">From</span>
-                        <input type="date" value={rundownFrom} max={rundownTo}
-                            onChange={e => setRundownFrom(e.target.value)}
-                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
-                        />
-                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">To</span>
-                        <input type="date" value={rundownTo} max={TODAY} min={rundownFrom}
-                            onChange={e => setRundownTo(e.target.value)}
-                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
+                    {/* Date scope — range buttons + as-of date input. Same UX as
+                        WellnessFlagPanel. Applies to both Daily and Deep Check tabs. */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {RUNDOWN_RANGE_OPTIONS.map(opt => (
+                            <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => setRundownRangeDays(opt.id)}
+                                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                                    rundownRangeDays === opt.id
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58]'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                        <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] ml-1">As of</span>
+                        <input
+                            type="date"
+                            value={rundownAsOfDate}
+                            max={TODAY}
+                            onChange={e => setRundownAsOfDate(e.target.value || TODAY)}
+                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
                         />
                     </div>
                     {rundownTab === 'daily' && (
@@ -1705,6 +1892,30 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             {showDailyTracker ? 'Hide' : 'Daily'} Tracker
                         </button>
                     )}
+                    {/* Select Mode toggle — reveals/hides checkboxes + bulk-delete
+                        UI. Hidden by default = no accidental clicks. Replaces the
+                        always-visible per-row delete buttons + permanent checkboxes. */}
+                    <button
+                        onClick={() => {
+                            const next = !isSelectMode;
+                            setIsSelectMode(next);
+                            if (!next) {
+                                // Leaving select mode — clear any selection so we
+                                // don't carry stale state into the next session.
+                                setSelectedResponseIds(new Set());
+                                setShowBulkConfirm(false);
+                            }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all border ${
+                            isSelectMode
+                                ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400'
+                                : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#CBD5E1] hover:border-slate-400'
+                        }`}
+                        title={isSelectMode ? 'Exit select mode' : 'Enter select mode to bulk-delete responses'}
+                    >
+                        <Trash2 size={12} />
+                        {isSelectMode ? 'Done' : 'Select'}
+                    </button>
                     <div className="relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                         <input type="text" placeholder="Find athlete..."
@@ -1833,8 +2044,10 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     return { label, badge };
                                 };
 
-                                // Prepend a real select-all header row (rendered before date groups)
-                                const headerSelectRow = (
+                                // Prepend a real select-all header row (rendered before date groups).
+                                // Only rendered when Select Mode is active — otherwise the rundown
+                                // reads as a clean review table with no selection controls.
+                                const headerSelectRow = isSelectMode ? (
                                     <tr key="__header_select__" className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-100 dark:border-[#1A2D48]">
                                         <td className="pl-4 pr-1 py-3">
                                             <input
@@ -1854,7 +2067,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                             </span>
                                         </td>
                                     </tr>
-                                );
+                                ) : null;
 
                                 return [headerSelectRow, ...groups.flatMap(({ date, items }) => {
                                     const { label, badge } = fmtDate(date);
@@ -1862,20 +2075,24 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                     const allDateSelected = dateIds.every(id => selectedResponseIds.has(id));
                                     const rows: React.ReactNode[] = [
                                         <tr key={`date-${date}`} className="border-t-2 border-slate-100 dark:border-[#1A2D48] bg-slate-50/60 dark:bg-[#132338]/40">
-                                            <td className="pl-4 pr-1 py-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={allDateSelected}
-                                                    onChange={e => {
-                                                        setSelectedResponseIds(prev => {
-                                                            const next = new Set(prev);
-                                                            if (e.target.checked) dateIds.forEach(id => next.add(id));
-                                                            else dateIds.forEach(id => next.delete(id));
-                                                            return next;
-                                                        });
-                                                    }}
-                                                    className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 cursor-pointer w-3.5 h-3.5"
-                                                />
+                                            {/* First column is ALWAYS rendered to keep td count == th count
+                                                (9). The checkbox only appears inside when Select Mode is on. */}
+                                            <td className="pl-4 pr-1 py-2 w-9">
+                                                {isSelectMode && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={allDateSelected}
+                                                        onChange={e => {
+                                                            setSelectedResponseIds(prev => {
+                                                                const next = new Set(prev);
+                                                                if (e.target.checked) dateIds.forEach(id => next.add(id));
+                                                                else dateIds.forEach(id => next.delete(id));
+                                                                return next;
+                                                            });
+                                                        }}
+                                                        className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                                                    />
+                                                )}
                                             </td>
                                             <td colSpan={8} className="px-2 py-2">
                                                 <div className="flex items-center gap-2.5">
@@ -1897,22 +2114,27 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                         const isChecked = selectedResponseIds.has(res.id);
                                         rows.push(
                                             <tr key={res.id} className={`group transition-colors border-t border-slate-50 ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
-                                                <td className="pl-4 pr-1 py-4">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isChecked}
-                                                        onChange={() => {
-                                                            setSelectedResponseIds(prev => {
-                                                                const next = new Set(prev);
-                                                                if (next.has(res.id)) next.delete(res.id);
-                                                                else next.add(res.id);
-                                                                return next;
-                                                            });
-                                                        }}
-                                                        className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 cursor-pointer w-3.5 h-3.5"
-                                                    />
+                                                {/* First cell ALWAYS rendered so body td-count matches thead
+                                                    (9). Without this, when isSelectMode is off, every cell
+                                                    shifts left under the wrong header (e.g. 7h under "Availability"). */}
+                                                <td className="pl-4 pr-1 py-4 w-9">
+                                                    {isSelectMode && (
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={() => {
+                                                                setSelectedResponseIds(prev => {
+                                                                    const next = new Set(prev);
+                                                                    if (next.has(res.id)) next.delete(res.id);
+                                                                    else next.add(res.id);
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 cursor-pointer w-3.5 h-3.5"
+                                                        />
+                                                    )}
                                                 </td>
-                                                <td className="pl-5 pr-1 py-4">
+                                                <td className="pl-5 pr-1 py-4 w-8">
                                                     {status ? <span className={`w-3 h-3 rounded-full block ${STATUS_DOT[status]} shadow-sm`} /> : <span className="w-3 h-3 rounded-full block bg-slate-200 dark:bg-[#243A58]" />}
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -1978,18 +2200,9 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
-                                                        {confirmDeleteId === res.id ? (
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="text-[9px] font-bold text-rose-500 uppercase">Delete?</span>
-                                                                <button onClick={() => handleDeleteResponse(res.id)} className="px-1.5 py-1 bg-rose-50 dark:bg-rose-700 border border-rose-200 dark:border-rose-700 dark:border-rose-700 rounded text-[9px] font-bold text-rose-600 hover:bg-rose-100">Yes</button>
-                                                                <button onClick={() => setConfirmDeleteId(null)} className="px-1.5 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded text-[9px] font-bold text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]">No</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button onClick={() => setConfirmDeleteId(res.id)} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:border-rose-100 hover:shadow-sm transition-all" title="Delete response">
-                                                                <Trash2 size={13} />
-                                                            </button>
-                                                        )}
-                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
+                                                        {/* Per-row delete button removed — bulk delete via Select Mode
+                                                            replaces it to avoid accidental single-click deletions. */}
+                                                        <button onClick={() => player?.id && openAthlete(player.id)} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
                                                             <ChevronRight size={16} />
                                                         </button>
                                                     </div>
@@ -2285,7 +2498,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                                         })()}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <button onClick={() => { setSelectedAthleteId(player?.id || ''); setViewMode('athlete'); }} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
+                                                        <button onClick={() => player?.id && openAthlete(player.id)} className="p-2 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-cyan-600 hover:border-cyan-100 hover:shadow-sm transition-all">
                                                             <ChevronRight size={16} />
                                                         </button>
                                                     </td>
@@ -2300,101 +2513,131 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                     </div>
                 )}
                 </>)}
-            </div>
-            </>)}
-            {dashboardTab === 'insights' && renderInsightsTab()}
+            </div>{/* /Individual Rundown card */}
 
-            {/* FIFA Wellness Visualisations */}
-            {dashboardTab === 'overview' && selectedTeamId && activeTeam && (
-                <div className="space-y-5 mt-5">
-                    {/* Wellness Flags */}
-                    <WellnessFlagPanel
-                        teamId={selectedTeamId}
-                        athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
-                    />
+            {/* Wellness Flag Panel — uses its own internal expanded state. Option A
+                layout passes defaultExpanded={false} so it renders header-only
+                ("Wellness Flags · N pending") until the coach opens it.
+                onAthleteClick navigates into the athlete drill-in with Flag History
+                auto-opened (#6 from the layout scope). */}
+            {selectedTeamId && activeTeam && (
+                <WellnessFlagPanel
+                    teamId={selectedTeamId}
+                    athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
+                    defaultExpanded={false}
+                    onAthleteClick={(athleteId) => openAthlete(athleteId, 'flags')}
+                />
+            )}
 
-                    {/* Team Heatmap */}
-                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
-                        {/* Heatmap title + nav controls */}
-                        <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between gap-3 flex-wrap">
-                            {/* Title */}
-                            <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Team Wellness Heatmap</h4>
-                            {/* Period navigation */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(heatmapAnchor + 'T12:00:00');
-                                        d.setDate(d.getDate() - heatmapDays);
-                                        setHeatmapAnchor(d.toISOString().split('T')[0]);
-                                    }}
-                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors"
-                                    title="Previous period"
-                                >
-                                    <ChevronLeft size={14} />
-                                </button>
-                                <span className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[140px] text-center">
-                                    {(() => {
-                                        const end = new Date(heatmapAnchor + 'T12:00:00');
-                                        const start = new Date(end);
-                                        start.setDate(end.getDate() - heatmapDays + 1);
-                                        const fmt = (d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'short' });
-                                        return `${fmt(start)} – ${fmt(end)}`;
-                                    })()}
-                                </span>
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(heatmapAnchor + 'T12:00:00');
-                                        d.setDate(d.getDate() + heatmapDays);
-                                        const today = localDateStr();
-                                        const next = d.toISOString().split('T')[0];
-                                        setHeatmapAnchor(next > today ? today : next);
-                                    }}
-                                    disabled={heatmapAnchor >= localDateStr()}
-                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title="Next period"
-                                >
-                                    <ChevronRight size={14} />
-                                </button>
-                                <button
-                                    onClick={() => setHeatmapAnchor(localDateStr())}
-                                    disabled={heatmapAnchor >= localDateStr()}
-                                    className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                >
-                                    Today
-                                </button>
+            {/* Team Wellness Heatmap — collapsible (Option A). Default closed; coach
+                expands via the chevron header for the visual scan. Period nav +
+                day-width toggle + colour legend only render when expanded. See
+                plans/WELLNESS-HUB-QUESTIONNAIRE-LAYOUT.md. */}
+            {selectedTeamId && activeTeam && (
+                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+                    {/* Title row — left side is the collapse trigger; right side shows
+                        nav controls only when expanded. */}
+                    <div className={`px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap ${isHeatmapOpen ? 'border-b border-slate-100 dark:border-[#1A2D48]' : ''}`}>
+                        <button
+                            type="button"
+                            onClick={() => setIsHeatmapOpen(v => !v)}
+                            className="flex items-center gap-2 mr-auto text-left hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                            title={isHeatmapOpen ? 'Collapse heatmap' : 'Expand heatmap'}
+                        >
+                            <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isHeatmapOpen ? '' : '-rotate-90'}`}>
+                                <ChevronDown size={14} />
                             </div>
-                            {/* Day-width toggle + colour legend */}
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5" title="Low → High wellness">
-                                    {['bg-rose-500', 'bg-rose-400', 'bg-amber-500', 'bg-amber-400', 'bg-sky-400', 'bg-emerald-400', 'bg-emerald-500'].map((c, i) => (
-                                        <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
-                                    ))}
-                                </div>
-                                <div className="w-px h-4 bg-slate-200 dark:bg-[#243A58]" />
-                                {([7, 14, 30] as const).map(d => (
-                                    <button
-                                        key={d}
-                                        onClick={() => setHeatmapDays(d)}
-                                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
-                                            heatmapDays === d
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
-                                        }`}
-                                    >
-                                        {d}d
-                                    </button>
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">Team Wellness Heatmap</h4>
+                            {/* Collapsed-state summary: "7d ending 29 May" */}
+                            {!isHeatmapOpen && (
+                                <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8]">
+                                    · {heatmapDays}d ending {new Date(heatmapAnchor + 'T12:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short' })}
+                                </span>
+                            )}
+                        </button>
+                        {/* Period navigation — only when expanded */}
+                        {isHeatmapOpen && (<>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    const d = new Date(heatmapAnchor + 'T12:00:00');
+                                    d.setDate(d.getDate() - heatmapDays);
+                                    setHeatmapAnchor(d.toISOString().split('T')[0]);
+                                }}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors"
+                                title="Previous period"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <span className="text-[11px] font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[140px] text-center">
+                                {(() => {
+                                    const end = new Date(heatmapAnchor + 'T12:00:00');
+                                    const start = new Date(end);
+                                    start.setDate(end.getDate() - heatmapDays + 1);
+                                    const fmt = (d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'short' });
+                                    return `${fmt(start)} – ${fmt(end)}`;
+                                })()}
+                            </span>
+                            <button
+                                onClick={() => {
+                                    const d = new Date(heatmapAnchor + 'T12:00:00');
+                                    d.setDate(d.getDate() + heatmapDays);
+                                    const today = localDateStr();
+                                    const next = d.toISOString().split('T')[0];
+                                    setHeatmapAnchor(next > today ? today : next);
+                                }}
+                                disabled={heatmapAnchor >= localDateStr()}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Next period"
+                            >
+                                <ChevronRight size={14} />
+                            </button>
+                            <button
+                                onClick={() => setHeatmapAnchor(localDateStr())}
+                                disabled={heatmapAnchor >= localDateStr()}
+                                className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                                Today
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5" title="Low → High wellness">
+                                {['bg-rose-500', 'bg-rose-400', 'bg-amber-500', 'bg-amber-400', 'bg-sky-400', 'bg-emerald-400', 'bg-emerald-500'].map((c, i) => (
+                                    <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
                                 ))}
                             </div>
+                            <div className="w-px h-4 bg-slate-200 dark:bg-[#243A58]" />
+                            {([7, 14, 30] as const).map(d => (
+                                <button
+                                    key={d}
+                                    onClick={() => setHeatmapDays(d)}
+                                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                                        heatmapDays === d
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {d}d
+                                </button>
+                            ))}
                         </div>
+                        </>)}{/* /isHeatmapOpen nav controls */}
+                    </div>{/* /title row */}
+                    {isHeatmapOpen && (
                         <WellnessHeatmap
                             athletes={(activeTeam.players || []).map(p => ({ id: p.id, name: p.name }))}
                             responses={wellnessResponses}
                             days={heatmapDays}
                             anchorDate={heatmapAnchor}
                         />
-                    </div>
+                    )}
                 </div>
             )}
+                </div>{/* /LEFT column */}
+            </div>{/* /2-col overview body */}
+            </>)}
+            {dashboardTab === 'insights' && renderInsightsTab()}
+
         </div>
     );
 
@@ -2411,33 +2654,34 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
         const status = getAthleteStatus(res);
 
         return (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-500">
-                {/* Header */}
-                <div className="bg-white dark:bg-[#132338] p-6 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-5">
+            <div className="space-y-4 animate-in slide-in-from-right-8 duration-500">
+                {/* Header — compressed: smaller back, smaller avatar, tighter padding.
+                    Makes room for the new history sections below without bloating page height. */}
+                <div className="bg-white dark:bg-[#132338] p-4 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => setViewMode('dashboard')}
-                            className="w-12 h-12 bg-slate-50 dark:bg-[#0F1C30] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                            className="w-9 h-9 bg-slate-50 dark:bg-[#0F1C30] rounded-lg flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
                         >
-                            <ArrowLeft size={20} />
+                            <ArrowLeft size={16} />
                         </button>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <AthleteAvatar
                                 player={activeAthlete || { name: '?' }}
                                 size="lg"
-                                shape="rounded-xl"
-                                className="w-16 h-16 border-2 border-white dark:border-[#132338] shadow-md ring-1 ring-slate-100 dark:ring-[#243A58]"
+                                shape="rounded-lg"
+                                className="w-11 h-11 border-2 border-white dark:border-[#132338] shadow-sm ring-1 ring-slate-100 dark:ring-[#243A58]"
                                 fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
-                                fallbackTextSize="text-lg"
+                                fallbackTextSize="text-sm"
                             />
                             <div>
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">{activeAthlete?.name}</h2>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tight leading-tight">{activeAthlete?.name}</h2>
                                     {status && (
-                                        <span className={`w-3 h-3 rounded-full ${STATUS_DOT[status]} shadow-md`} />
+                                        <span className={`w-2.5 h-2.5 rounded-full ${STATUS_DOT[status]} shadow-sm`} />
                                     )}
                                 </div>
-                                <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[10px] tracking-wide mt-1">
+                                <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[9px] tracking-wide leading-tight">
                                     {activeAthlete?.subsection} • Individual Profile
                                 </p>
                             </div>
@@ -2451,13 +2695,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                                   : avail === 'modified'  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border border-amber-100 dark:border-amber-800/40'
                                                           : 'bg-rose-50 dark:bg-rose-700 text-rose-600 dark:text-white border border-rose-100 dark:border-rose-900/40';
                         const label = avail === 'available' ? 'Full Training' : avail === 'modified' ? 'Modified Training' : 'Unavailable';
-                        return <span className={`px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{label}</span>;
+                        return <span className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide ${cls}`}>{label}</span>;
                     })()}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Entry Analysis */}
-                    <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-6">
+                    <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-4">
                         <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0]">Entry Analysis</h3>
                         {(dailyRes || weeklyRes) ? (() => {
                             const complaint = dailyRes?.responses?.health_complaint;
@@ -2650,8 +2894,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                         )}
                     </div>
 
-                    {/* Body Map + Per-Area Injury Details */}
-                    <div className="bg-white dark:bg-[#132338] p-8 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-6">
+                    {/* Body Map + Per-Area Injury Details — compressed p-8/space-y-6 → p-5/space-y-4 */}
+                    <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
                                 <Activity size={18} className="text-rose-500" /> Niggles & Injuries
@@ -2683,7 +2927,11 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             </div>
                         </div>
 
-                        {/* Per-area injury follow-up details */}
+                        {/* Per-area injury follow-up details
+                            (When an athlete has injuries flagged, each affected body area
+                            gets its own card here listing Nature, When, Mechanism, Side,
+                            and Interrupted Training — populated from the deep check
+                            follow-up answers tied to that area.) */}
                         {res?.injury_report?.areas?.length > 0 && (() => {
                             const followUpIds = ['injury_type', 'injury_timing', 'injury_mechanism', 'injury_side', 'training_interruption'];
                             const followUpLabels: Record<string, string> = {
@@ -2728,17 +2976,270 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                             );
                         })()}
                     </div>
+
+                    {/* Wellness Trends — third tile in the row, 7-day compact view.
+                        Compact prop keeps chart/labels narrow so the tile fits a
+                        ~⅓-column at lg+. Below lg it stacks underneath the others. */}
+                    <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] shadow-sm">
+                        <h3 className="text-sm font-semibold uppercase text-slate-900 dark:text-[#E2E8F0] mb-3">Wellness Trends</h3>
+                        {selectedAthleteId && activeAthlete && (
+                            <WellnessSparklines
+                                athleteId={selectedAthleteId}
+                                athleteName={activeAthlete.name}
+                                responses={wellnessResponses}
+                                days={7}
+                                compact
+                            />
+                        )}
+                    </div>
                 </div>
 
-                {/* Sparklines for this athlete */}
-                {selectedAthleteId && activeAthlete && (
-                    <WellnessSparklines
-                        athleteId={selectedAthleteId}
-                        athleteName={activeAthlete.name}
-                        responses={wellnessResponses}
-                        days={14}
-                    />
-                )}
+                {/* ── HISTORY SECTIONS — three collapsible cards. Each defaults closed
+                    so the page stays compact; sport scientists expand what they need.
+                    Per-section range filter (7/30/90d/All) sits next to each chevron. */}
+                {selectedAthleteId && (() => {
+                    // Per-section windowed lists. All anchored to today.
+                    const todayKey = TODAY;
+                    const inLastNDays = (d: string | null | undefined, n: number) => {
+                        if (!d) return false;
+                        const day = d.slice(0, 10);
+                        if (n >= 9999) return true;
+                        const cutoff = new Date();
+                        cutoff.setDate(cutoff.getDate() - (n - 1));
+                        const cut = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+                        return day >= cut && day <= todayKey;
+                    };
+
+                    const dailyHistAll = (wellnessResponses || [])
+                        .filter(r => r.athlete_id === selectedAthleteId && r.tier !== 'weekly')
+                        .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''));
+                    const weeklyHistAll = (wellnessResponses || [])
+                        .filter(r => r.athlete_id === selectedAthleteId && r.tier === 'weekly')
+                        .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || ''));
+                    const flagHistAll = [...athleteFlagHistory]
+                        .sort((a, b) => (b.flag_date || '').localeCompare(a.flag_date || ''));
+
+                    const dailyHist  = dailyHistAll.filter(r => inLastNDays(r.session_date, historyDailyDays));
+                    const weeklyHist = weeklyHistAll.filter(r => inLastNDays(r.session_date, historyWeeklyDays));
+                    const flagHist   = flagHistAll.filter(f => inLastNDays(f.flag_date, historyFlagDays));
+
+                    const pendingFlags = flagHistAll.filter(f => !f.weekly_completed).length;
+
+                    // Render a range-toggle chip group (used by all three sections)
+                    const renderRangeChips = (current: number, setter: (n: number) => void, accent: string) => (
+                        <div className="flex items-center gap-1 flex-wrap">
+                            {HISTORY_RANGE_OPTIONS.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); setter(opt.id); }}
+                                    className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                        current === opt.id
+                                            ? `${accent} text-white`
+                                            : 'bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58]'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    );
+
+                    // ── Card 1: Daily Responses History ──────────────────────────────
+                    // 3-col side-by-side on lg+. Each row body is sparse (date + a
+                    // few tiny pills) — stacking wasted ~⅔ of the width. `items-start`
+                    // keeps cards independent height (no stretch-to-tallest).
+                    return (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                        <div className="bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl shadow-sm overflow-hidden">
+                            <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsDailyHistOpen(v => !v)}
+                                    className="flex items-center gap-2 mr-auto text-left hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                                >
+                                    <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isDailyHistOpen ? '' : '-rotate-90'}`}>
+                                        <ChevronDown size={14} />
+                                    </div>
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase tracking-tight">Daily Responses History</h4>
+                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8]">
+                                        · {dailyHistAll.length} {dailyHistAll.length === 1 ? 'entry' : 'entries'}
+                                    </span>
+                                </button>
+                                {isDailyHistOpen && renderRangeChips(historyDailyDays, setHistoryDailyDays, 'bg-indigo-600')}
+                            </div>
+                            {isDailyHistOpen && (
+                                <div className="border-t border-slate-100 dark:border-[#1A2D48] divide-y divide-slate-50 dark:divide-[#1A2D48] max-h-96 overflow-y-auto">
+                                    {dailyHist.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase">No daily responses in this window</div>
+                                    ) : dailyHist.slice(0, 100).map(r => {
+                                        const resp = r.responses || {};
+                                        const avail = resolveAvailability(r);
+                                        const sleepH = resp.sleep_hours;
+                                        return (
+                                            <div key={r.id} className="px-4 py-2 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors">
+                                                <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[80px] tabular-nums">
+                                                    {r.session_date ? new Date(r.session_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
+                                                </span>
+                                                <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+                                                    {avail && (
+                                                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                                                            avail === 'available' ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-300' :
+                                                            avail === 'modified'  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300' :
+                                                                                    'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'
+                                                        }`}>{avail === 'available' ? 'Full' : avail === 'modified' ? 'Mod' : 'Out'}</span>
+                                                    )}
+                                                    {resp.fatigue != null && <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1]">Fat {resp.fatigue}</span>}
+                                                    {resp.soreness != null && <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1]">Sor {resp.soreness}</span>}
+                                                    {sleepH != null && <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1]">Slp {sleepH}h</span>}
+                                                    {resp.stress != null && <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1]">Str {resp.stress}</span>}
+                                                    {resp.health_complaint && resp.health_complaint !== 'no' && (
+                                                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300">{resp.health_complaint}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {dailyHist.length > 100 && (
+                                        <div className="px-4 py-2 text-center text-[9px] text-slate-400 dark:text-[#94A3B8]">
+                                            Showing 100 most recent of {dailyHist.length} entries. Narrow the range to see older context.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Card 2: Deep Checks History ────────────────────────────── */}
+                        <div className="bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl shadow-sm overflow-hidden">
+                            <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsWeeklyHistOpen(v => !v)}
+                                    className="flex items-center gap-2 mr-auto text-left hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                                >
+                                    <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isWeeklyHistOpen ? '' : '-rotate-90'}`}>
+                                        <ChevronDown size={14} />
+                                    </div>
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase tracking-tight">Deep Checks History</h4>
+                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8]">
+                                        · {weeklyHistAll.length} weekly {weeklyHistAll.length === 1 ? 'entry' : 'entries'}
+                                    </span>
+                                </button>
+                                {isWeeklyHistOpen && renderRangeChips(historyWeeklyDays, setHistoryWeeklyDays, 'bg-violet-600')}
+                            </div>
+                            {isWeeklyHistOpen && (
+                                <div className="border-t border-slate-100 dark:border-[#1A2D48] divide-y divide-slate-50 dark:divide-[#1A2D48] max-h-96 overflow-y-auto">
+                                    {weeklyHist.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase">No deep checks in this window</div>
+                                    ) : weeklyHist.slice(0, 100).map(r => {
+                                        const resp = r.responses || {};
+                                        const followup = resp.weekly_followup;
+                                        const problemType = resp.problem_type;
+                                        return (
+                                            <div key={r.id} className="px-4 py-2 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors">
+                                                <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[80px] tabular-nums">
+                                                    {r.session_date ? new Date(r.session_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
+                                                </span>
+                                                <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+                                                    {problemType && (
+                                                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300">{problemType}</span>
+                                                    )}
+                                                    {followup && (
+                                                        <span className="text-[9px] text-slate-600 dark:text-[#CBD5E1]">Follow-up: {followup.replace(/_/g, ' ')}</span>
+                                                    )}
+                                                    {!problemType && !followup && (
+                                                        <span className="text-[9px] text-slate-400 dark:text-[#94A3B8] italic">Submitted</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {weeklyHist.length > 100 && (
+                                        <div className="px-4 py-2 text-center text-[9px] text-slate-400 dark:text-[#94A3B8]">
+                                            Showing 100 most recent of {weeklyHist.length} entries.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Card 3: Flag History — grouped by date, pills per trigger ──── */}
+                        <div className="bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl shadow-sm overflow-hidden">
+                            <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFlagHistOpen(v => !v)}
+                                    className="flex items-center gap-2 mr-auto text-left hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                                >
+                                    <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isFlagHistOpen ? '' : '-rotate-90'}`}>
+                                        <ChevronDown size={14} />
+                                    </div>
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase tracking-tight">Flag History</h4>
+                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8]">
+                                        · {flagHistAll.length} {flagHistAll.length === 1 ? 'flag' : 'flags'}
+                                        {/* Dropped "(N pending)" — pending is the default state; the
+                                            count is redundant with the total flag count and only
+                                            meaningful as "done" when actioned. Surface done count
+                                            instead when any have been completed. */}
+                                        {pendingFlags < flagHistAll.length && flagHistAll.length > 0 && (
+                                            <> · {flagHistAll.length - pendingFlags} done</>
+                                        )}
+                                    </span>
+                                </button>
+                                {isFlagHistOpen && renderRangeChips(historyFlagDays, setHistoryFlagDays, 'bg-rose-600')}
+                            </div>
+                            {isFlagHistOpen && (
+                                <div className="border-t border-slate-100 dark:border-[#1A2D48] max-h-96 overflow-y-auto">
+                                    {flagHist.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase">No flags in this window</div>
+                                    ) : (() => {
+                                        // Group by date desc
+                                        const groups: { date: string; flags: any[] }[] = [];
+                                        for (const f of flagHist) {
+                                            const g = groups.find(x => x.date === f.flag_date);
+                                            if (g) g.flags.push(f);
+                                            else groups.push({ date: f.flag_date, flags: [f] });
+                                        }
+                                        return groups.map(g => {
+                                            const topSeverity = g.flags.some(f => f.flag_type === 'red') ? 'red' : 'amber';
+                                            const allCompleted = g.flags.every(f => f.weekly_completed);
+                                            return (
+                                                <div key={g.date} className="px-4 py-2 flex items-center gap-3 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/40 transition-colors border-b border-slate-50 dark:border-[#1A2D48]">
+                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${topSeverity === 'red' ? 'bg-rose-500' : 'bg-amber-400'}`} />
+                                                    <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[80px] tabular-nums">
+                                                        {new Date(g.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                    </span>
+                                                    <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
+                                                        {g.flags.map((f, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                                                                    f.flag_type === 'red'
+                                                                        ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40'
+                                                                        : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40'
+                                                                }`}
+                                                            >
+                                                                {f.trigger_field}: {f.trigger_value}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    {/* Per-row "Pending" tag dropped — every row would carry
+                                                        it (pending is the default state until follow-up is
+                                                        completed). Pending count surfaces in the section
+                                                        header. Only "Done" badge renders when actioned. */}
+                                                    {allCompleted && (
+                                                        <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">Done</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                        </div>
+                    );
+                })()}
             </div>
         );
     };
@@ -3292,8 +3793,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string }> = ({ initialTeamId }) =>
                 </div>
             )}
 
-            {/* ── Bulk Action Floating Bar ── */}
-            {selectedResponseIds.size > 0 && (
+            {/* ── Bulk Action Floating Bar ── only when Select Mode is on AND items are selected */}
+            {isSelectMode && selectedResponseIds.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[9px] font-bold">{selectedResponseIds.size}</div>

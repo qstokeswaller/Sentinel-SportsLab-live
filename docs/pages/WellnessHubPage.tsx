@@ -2098,19 +2098,25 @@ export const WellnessHubPage: React.FC = () => {
     }, []);
 
     if (activeSection) {
+        // Questionnaire Data owns its own consolidated breadcrumb (Wellness Hub >
+        // Questionnaire Data > Team) inside WellnessHub's dashboard banner, so we
+        // suppress the parent banner here to avoid a double-bar header.
+        const ownsBreadcrumb = activeSection === 'Questionnaire Data';
         return (
             <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 hover:border-slate-300 transition-all">
-                            <ArrowLeftIcon size={16} />
-                        </button>
-                        <div>
-                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Wellness Hub</div>
-                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeSection}</h2>
+                {!ownsBreadcrumb && (
+                    <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 hover:border-slate-300 transition-all">
+                                <ArrowLeftIcon size={16} />
+                            </button>
+                            <div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Wellness Hub</div>
+                                <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeSection}</h2>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
                 <div className="min-h-[600px] relative">
                     {isLoading && (
                         <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
@@ -2118,7 +2124,7 @@ export const WellnessHubPage: React.FC = () => {
                             <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {activeSection.toLowerCase()}...</span>
                         </div>
                     )}
-                    {activeSection === 'Questionnaire Data' && <WellnessHub initialTeamId={urlTeamId} />}
+                    {activeSection === 'Questionnaire Data' && <WellnessHub initialTeamId={urlTeamId} onBackToSections={() => setActiveSection(null)} />}
                     {activeSection === 'Medical Reports' && <MedicalReports />}
                     {activeSection === 'Injury Report' && <InjuryReport />}
                     {activeSection === 'ACWR Monitoring' && <ACWRMonitoringHub />}
