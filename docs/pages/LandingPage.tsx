@@ -5,9 +5,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SiteFooter from '../components/layout/SiteFooter';
 import {
     ActivityIcon, CheckIcon, ArrowRightIcon, ChevronRightIcon,
-    SparklesIcon, SunIcon, MoonIcon,
+    SparklesIcon, SunIcon, MoonIcon, MenuIcon, XIcon,
     GaugeIcon, HeartIcon, FlaskConicalIcon, BrainIcon, DumbbellIcon, BarChart3Icon,
     ShieldIcon, ZapIcon, TargetIcon, LayersIcon, MapPinIcon, ClipboardListIcon,
 } from 'lucide-react';
@@ -51,6 +52,7 @@ const LandingPage: React.FC = () => {
     const [dark, setDark] = useState(true);
     const [flippedCard, setFlippedCard] = useState<number | null>(null);
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const rHero = useReveal(100);
     const rStats = useReveal();
@@ -59,7 +61,21 @@ const LandingPage: React.FC = () => {
     const rDiff = useReveal();
     const rVision = useReveal(100);
     const rPrice = useReveal();
-    const rCta = useReveal();
+
+    // Hash-scroll handler: when arriving via a hash anchor from another page
+    // (e.g. /privacy → footer "Features" → /#features), React Router doesn't
+    // scroll to the target automatically. This effect waits a tick for the
+    // page to render, then scrolls smoothly to the matching element. Same-page
+    // clicks (already on /) are handled by the browser natively via <a href>.
+    useEffect(() => {
+        if (!window.location.hash) return;
+        const id = window.location.hash.slice(1);
+        const t = setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        return () => clearTimeout(t);
+    }, []);
 
     const bg = dark ? '#06060B' : '#FFFFFF';
     const tx = dark ? 'text-white' : 'text-slate-900';
@@ -281,16 +297,50 @@ const LandingPage: React.FC = () => {
                     <div className={`hidden md:flex items-center gap-10 text-[13px] font-medium ${txm}`}>
                         <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
                         <a href="#why" className="hover:text-indigo-400 transition-colors">Why Us</a>
+                        <a href="#pilot" className="hover:text-indigo-400 transition-colors">Pilot</a>
                         <a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing</a>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        <button onClick={() => setDark(!dark)} className={`p-2 rounded-lg transition-all ${dark ? 'text-slate-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
+                        <button onClick={() => setDark(!dark)} aria-label="Toggle theme" className={`p-2 rounded-lg transition-all ${dark ? 'text-slate-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
                             {dark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
                         </button>
                         <button onClick={() => nav('/login')} className={`hidden sm:block text-[13px] font-medium ${txm} hover:text-indigo-400 transition-colors px-3 py-2`}>Log in</button>
-                        <button onClick={() => nav('/login')} className="text-[12px] sm:text-[13px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-3 sm:px-5 py-2 rounded-lg transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30">Get Started</button>
+                        <button onClick={() => nav('/login?mode=signup')} className="hidden sm:block text-[13px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30">Get Started</button>
+                        {/* Hamburger — visible below md. Replaces the section
+                            links + Log in + Get Started on small screens. */}
+                        <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Open menu" className={`md:hidden p-2 rounded-lg transition-all ${dark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                            {mobileMenuOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
+                        </button>
                     </div>
                 </div>
+
+                {/* Mobile menu panel — slides down under the nav bar */}
+                {mobileMenuOpen && (
+                    <div className={`md:hidden border-t ${dark ? 'border-white/10 bg-[#06060B]/95' : 'border-slate-200 bg-white/95'} backdrop-blur-lg`}>
+                        <div className="px-4 py-4 flex flex-col gap-1">
+                            {[
+                                { href: '#features', label: 'Features' },
+                                { href: '#why',      label: 'Why Us' },
+                                { href: '#pilot',    label: 'Pilot' },
+                                { href: '#pricing',  label: 'Pricing' },
+                            ].map(l => (
+                                <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
+                                   className={`text-[14px] font-medium px-3 py-3 rounded-lg transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'}`}>
+                                    {l.label}
+                                </a>
+                            ))}
+                            <div className={`h-px my-2 ${dark ? 'bg-white/10' : 'bg-slate-200'}`} />
+                            <button onClick={() => { setMobileMenuOpen(false); nav('/login'); }}
+                                    className={`text-[14px] font-medium px-3 py-3 rounded-lg text-left transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'}`}>
+                                Log in
+                            </button>
+                            <button onClick={() => { setMobileMenuOpen(false); nav('/login?mode=signup'); }}
+                                    className="text-[14px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-3 rounded-lg transition-all mt-1">
+                                Get Started
+                            </button>
+                        </div>
+                    </div>
+                )}
             </nav>
 
             {/* ═══════ HERO ═══════ */}
@@ -328,18 +378,32 @@ const LandingPage: React.FC = () => {
                         Built on published research. Accessible from day one.
                     </p>
                     <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-                        <button onClick={() => nav('/login')}
+                        <button onClick={() => nav('/login?mode=signup')}
                             className="group flex items-center gap-2.5 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-2xl shadow-indigo-600/25 hover:shadow-indigo-500/35 transition-all active:scale-[0.97] text-[15px]">
-                            Start Free Trial <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
+                            Activate 21-day Access <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                         <a href="#features" className={`flex items-center gap-2 px-6 py-4 ${txm} font-medium hover:text-indigo-400 transition-colors text-[15px]`}>
                             Explore Features <ChevronRightIcon size={16} />
                         </a>
                     </div>
                     <div className={`mt-14 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-sm ${txs}`}>
-                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> Free 14-day trial</span>
+                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> 21-day guided pilot</span>
                         <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> No credit card</span>
-                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> Cancel anytime</span>
+                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> Direct onboarding support</span>
+                    </div>
+
+                    {/* Sport list strip — Catapult-style "Built for" row.
+                        Pattern observed across competitor sites where the
+                        homepage immediately signals which sports the platform
+                        covers, so prospects don't have to scroll to verify. */}
+                    <div className={`mt-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10.5px] font-bold uppercase tracking-[0.18em] ${txs}`}>
+                        <span className={`opacity-70 mr-1`}>Built for</span>
+                        {['Football', 'Rugby', 'Cricket', 'Hockey', 'Basketball', 'Athletics', 'Combat Sports'].map((s, i, arr) => (
+                            <React.Fragment key={s}>
+                                <span className="opacity-90">{s}</span>
+                                {i < arr.length - 1 && <span className="opacity-40">·</span>}
+                            </React.Fragment>
+                        ))}
                     </div>
 
                     {/* Floating mock dashboard */}
@@ -391,6 +455,64 @@ const LandingPage: React.FC = () => {
                     </div>
                 </div>
                 <style>{`@keyframes spin { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }`}</style>
+            </section>
+
+            {/* ═══════ TRUST / FRAMEWORK STRIP ═══════
+                Two-part credibility section between Hero and Stats. Pattern
+                observed across competitors (Firstbeat, Edge10, VALD) where
+                the homepage frames credibility through methodology + parent
+                backing rather than relying on feature lists alone. We have
+                two real signals: (1) the platform is built on published
+                sport-science frameworks (FIFA, IOC, ACWR, Hooper, POPIA),
+                and (2) Sentinel SportsTech is a family of four products
+                — SportsLab sits alongside Football Hub, SportsCoder, and
+                Football AI, which is real organisational depth. */}
+            <section className={`relative border-y ${dark ? 'border-white/[0.05] bg-white/[0.015]' : 'border-slate-100 bg-slate-50/40'}`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                    {/* Frameworks */}
+                    <div>
+                        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${txs} mb-4`}>Built on validated frameworks</p>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { label: 'FIFA Wellness',     sub: 'Daily forms' },
+                                { label: 'IOC Surveillance',  sub: 'Injury &amp; illness' },
+                                { label: 'ACWR (EWMA)',       sub: 'Load monitoring' },
+                                { label: 'Hooper Index',      sub: 'Wellness composite' },
+                                { label: 'POPIA + GDPR',      sub: 'Data protection' },
+                            ].map(b => (
+                                <div key={b.label} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${dark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-slate-200 bg-white'}`}>
+                                    <ShieldIcon size={12} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                    <div className="leading-tight">
+                                        <div className={`text-[11px] font-bold ${tx}`}>{b.label}</div>
+                                        <div className={`text-[9px] ${txs}`} dangerouslySetInnerHTML={{ __html: b.sub }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Sentinel SportsTech parent-brand family */}
+                    <div className={`md:border-l ${dark ? 'md:border-white/[0.05]' : 'md:border-slate-200'} md:pl-12`}>
+                        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${txs} mb-4`}>Part of the Sentinel SportsTech platform</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                                { name: 'SportsLab',     desc: 'Athlete monitoring',  active: true },
+                                { name: 'Football Hub',  desc: 'Club management' },
+                                { name: 'SportsCoder',   desc: 'Match analysis' },
+                                { name: 'Football AI',   desc: 'Video intelligence' },
+                            ].map(p => (
+                                <div key={p.name} className={`p-3 rounded-lg border transition-colors ${
+                                    p.active
+                                        ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-500/40 dark:bg-indigo-500/10'
+                                        : `${dark ? 'border-white/[0.07] bg-white/[0.02]' : 'border-slate-200 bg-white'}`
+                                }`}>
+                                    <div className={`text-[11px] font-bold ${p.active ? 'text-indigo-700 dark:text-indigo-300' : tx}`}>{p.name}{p.active && <span className="ml-1 text-[8.5px] font-bold opacity-70">·  this one</span>}</div>
+                                    <div className={`text-[9px] uppercase tracking-wide ${txs} mt-0.5`}>{p.desc}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </section>
 
             {/* ═══════ STATS ═══════ */}
@@ -606,36 +728,138 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
+            {/* ═══════ 21-DAY PILOT ═══════
+                Replaces the old "14-day trial" framing. The whole positioning
+                shift is from "free try-before-you-buy" to "structured guided
+                pilot" — 14 days is enough for first impressions, 21 gives
+                time for setup, real-world use, and a calibration review. */}
+            <section id="pilot" className="py-16 sm:py-32">
+                <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                    <div className="text-center mb-16">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 dark:bg-indigo-600 border-indigo-100 dark:border-indigo-800/40 text-indigo-600'} border rounded-full text-xs font-semibold mb-5`}>
+                            <SparklesIcon size={12} /> How the pilot works
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Three weeks. Guided. Structured.</h2>
+                        <p className={`mt-5 text-lg ${txm} max-w-2xl mx-auto leading-relaxed`}>
+                            14 days surfaces first impressions. 21 days gives us setup, data collection, interpretation, and a real review window — long enough to settle into routine and generate behavioural feedback rather than gut reactions.
+                        </p>
+                    </div>
+
+                    {/* Step-flow grid — md+ shows a faint dashed line behind the
+                        three cards so they read as sequential steps in a single
+                        journey, not three unrelated cards. Pattern observed on
+                        Teamworks workflow sections + Edge10 product steps. */}
+                    <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+                        {/* Connector line — dashed indigo on md+ only, sits behind
+                            the cards so the three step-number discs (1, 2, 3) read
+                            as nodes on a single timeline. The line is anchored to
+                            the vertical centre of the disc row (-top-3 + h-7/2 ≈ 12). */}
+                        <div className="hidden md:block absolute top-[8px] left-[16.7%] right-[16.7%] h-px z-0" style={{ background: 'repeating-linear-gradient(to right, rgba(99,102,241,0.45) 0 6px, transparent 6px 12px)' }} />
+                        {[
+                            {
+                                week: 'Week 1',
+                                step: 1,
+                                title: 'Setup & onboarding',
+                                sub: 'Foundation',
+                                icon: LayersIcon,
+                                items: [
+                                    'Account setup and provisioning',
+                                    'Importing your data — athletes, history, GPS, tests',
+                                    'Understanding workflows across each hub',
+                                    'Guided walkthroughs led by us',
+                                ],
+                            },
+                            {
+                                week: 'Week 2',
+                                step: 2,
+                                title: 'Active usage',
+                                sub: 'Live use',
+                                icon: ActivityIcon,
+                                items: [
+                                    'Daily use across training and recovery cycles',
+                                    'Applying features in real scenarios',
+                                    'Embedding the system into your routine',
+                                ],
+                            },
+                            {
+                                week: 'Week 3',
+                                step: 3,
+                                title: 'Evaluation & refinement',
+                                sub: 'Calibration',
+                                icon: TargetIcon,
+                                items: [
+                                    'Structured feedback session',
+                                    'Identifying sticking points together',
+                                    'Surfacing deeper functionality',
+                                    'Mapping long-term integration',
+                                ],
+                            },
+                        ].map((w, i) => (
+                            <div key={i} className={`relative z-10 p-6 rounded-2xl ${card} border ${cardH} transition-all duration-300 flex flex-col`}>
+                                {/* Step-number disc — sits at top-right, anchored
+                                    onto the connector line so the three cards read
+                                    as 1 → 2 → 3 sequential steps. */}
+                                <div className={`absolute -top-3 right-5 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white bg-indigo-600 shadow-lg shadow-indigo-600/30 ring-4 ${dark ? 'ring-[#06060B]' : 'ring-white'}`}>
+                                    {w.step}
+                                </div>
+                                <div className="flex items-start gap-4 mb-5">
+                                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500/15 to-cyan-500/15 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                                        <w.icon size={20} className="text-indigo-500 dark:text-indigo-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500/80 dark:text-indigo-400/70 mb-1">{w.week} · {w.sub}</p>
+                                        <h4 className="font-semibold text-base leading-snug">{w.title}</h4>
+                                    </div>
+                                </div>
+                                <ul className={`space-y-2.5 text-[13px] ${txm} leading-relaxed flex-1`}>
+                                    {w.items.map((it, j) => (
+                                        <li key={j} className="flex items-start gap-2">
+                                            <CheckIcon size={13} className="text-emerald-500 shrink-0 mt-1" />
+                                            <span>{it}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
+            </section>
+
             {/* ═══════ PRICING ═══════ */}
             <section id="pricing" className="py-16 sm:py-32">
                 <div ref={rPrice.ref} style={rPrice.style} className="max-w-7xl mx-auto px-4 sm:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Simple, transparent pricing</h2>
-                        <p className={`mt-5 text-lg ${txm} max-w-lg mx-auto`}>Start free for 14 days. Choose the tier that fits your program.</p>
+                        <p className={`mt-5 text-lg ${txm} max-w-lg mx-auto`}>Begin with a 21-day guided pilot on any tier. Pick the one that fits your program.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
                         {[
                             {
-                                name: 'Basic', price: 'R1,000', per: '/month',
+                                name: 'Basic', price: 'R1,450', per: '/month',
+                                seats: '1 user',
                                 desc: 'Core platform for individual practitioners',
                                 features: ['Dashboard & squad readiness','Athlete roster management','Workout builder (3,700+ exercises)','Tonnage & session tracking','Testing Hub — 80+ protocols','Exercise library & catalogues','Session calendar & scheduling'],
                                 pop: false, cust: false,
                             },
                             {
                                 name: 'Performance', price: 'R7,500', per: '/month',
+                                seats: 'Up to 3 users',
                                 desc: 'Everything in Basic, plus welfare & conditioning',
                                 features: ['Everything in Basic','Wellness Hub — daily & weekly forms','FIFA/IOC wellness surveillance','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
                                 pop: true, cust: false,
                             },
                             {
                                 name: 'Elite', price: 'R12,550', per: '/month',
-                                desc: 'Full platform — every feature unlocked',
+                                seats: 'Up to 4 users · Organisational',
+                                desc: 'Full platform — built for performance staff',
                                 features: ['Everything in Performance','ACWR load monitoring (EWMA)','GPS & load intelligence','Reporting Hub with GPS Insights','Analytics Hub (5 terminals)','Scenario modelling & F-V profiling','Periodization planner'],
                                 pop: false, cust: false,
                             },
                             {
                                 name: 'Custom', price: 'Contact us', per: '',
+                                seats: 'Custom seat count',
                                 desc: 'Pick exactly the features you need — we quote accordingly',
                                 features: ['Choose any combination of features','Pay only for what you use','Dedicated onboarding session','Priority support channel','Custom integrations on request','White-label options available'],
                                 pop: false, cust: true,
@@ -652,8 +876,15 @@ const LandingPage: React.FC = () => {
                                 <h3 className="text-lg font-semibold">{t.name}</h3>
                                 <p className={`text-sm mt-1 mb-4 leading-snug ${t.pop ? 'text-indigo-200' : t.cust ? 'text-slate-400' : txm}`}>{t.desc}</p>
                                 <div className="mb-5">
-                                    <span className="text-2xl font-bold">{t.price}</span>
-                                    {t.per && <span className={`text-sm ml-1 ${t.pop ? 'text-indigo-200' : txm}`}>{t.per}</span>}
+                                    <div>
+                                        <span className="text-2xl font-bold">{t.price}</span>
+                                        {t.per && <span className={`text-sm ml-1 ${t.pop ? 'text-indigo-200' : txm}`}>{t.per}</span>}
+                                    </div>
+                                    {t.seats && (
+                                        <p className={`text-[10px] font-bold uppercase tracking-wider mt-1.5 ${t.pop ? 'text-indigo-200' : t.cust ? 'text-slate-400' : 'text-indigo-500/80 dark:text-indigo-400/80'}`}>
+                                            {t.seats}
+                                        </p>
+                                    )}
                                 </div>
                                 <ul className={`space-y-2.5 text-[12px] mb-8 flex-1 ${t.pop ? 'text-indigo-100' : t.cust ? 'text-slate-300' : txm}`}>
                                     {t.features.map((f, j) => (
@@ -664,7 +895,7 @@ const LandingPage: React.FC = () => {
                                     ))}
                                 </ul>
                                 <button
-                                    onClick={() => t.cust ? (window.location.href = 'mailto:hello@sentinelsportslab.com') : nav('/login')}
+                                    onClick={() => t.cust ? (window.location.href = 'mailto:hello@sentinelsportslab.com') : nav('/login?mode=signup')}
                                     className={`w-full py-3 font-semibold rounded-xl text-sm transition-all ${
                                         t.pop
                                             ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
@@ -674,7 +905,7 @@ const LandingPage: React.FC = () => {
                                                     ? 'border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
                                                     : 'border-2 border-slate-200 text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
                                     }`}>
-                                    {t.cust ? 'Get a Quote' : 'Start Free Trial'}
+                                    {t.cust ? 'Get a Quote' : 'Begin Access'}
                                 </button>
                                 {t.cust && (
                                     <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -684,47 +915,12 @@ const LandingPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    <p className={`text-center text-xs mt-10 ${txs}`}>All prices exclude VAT. Free 14-day trial on all tiers — no credit card required.</p>
-                </div>
-            </section>
-
-            {/* ═══════ FINAL CTA ═══════ */}
-            <section className="py-32 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700" />
-                <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-                <div ref={rCta.ref} style={rCta.style} className="relative max-w-3xl mx-auto px-4 sm:px-8 text-center">
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-                        Precision over convenience.<br />Impact over reach.
-                    </h2>
-                    <p className="mt-6 text-lg text-indigo-200 max-w-xl mx-auto leading-relaxed">
-                        If you hold your program to a higher standard, Sentinel was built for you.
-                    </p>
-                    <button onClick={() => nav('/login')}
-                        className="mt-10 px-10 py-4 bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 font-bold rounded-xl shadow-2xl hover:shadow-[0_20px_60px_rgba(255,255,255,0.2)] hover:bg-indigo-50 dark:hover:bg-indigo-600 transition-all active:scale-[0.97] text-[15px]">
-                        Start Your Free Trial
-                    </button>
+                    <p className={`text-center text-xs mt-10 ${txs}`}>All prices exclude VAT. 21-day guided pilot on all tiers — no credit card required.</p>
                 </div>
             </section>
 
             {/* ═══════ FOOTER ═══════ */}
-            <footer className="bg-[#04040A] text-slate-500 py-14">
-                <div className="max-w-7xl mx-auto px-4 sm:px-8">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center"><ActivityIcon size={13} className="text-white" /></div>
-                            <span className="font-semibold text-sm text-white tracking-tight">Sentinel <span className="text-indigo-400">SportsLab</span></span>
-                        </div>
-                        <div className="flex items-center gap-8 text-[13px]">
-                            <a href="#features" className="hover:text-white transition-colors">Features</a>
-                            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-                            <button onClick={() => nav('/login')} className="hover:text-white transition-colors">Login</button>
-                        </div>
-                    </div>
-                    <div className="mt-10 pt-6 border-t border-slate-800/50 text-center text-xs text-slate-600">
-                        &copy; {new Date().getFullYear()} Sentinel SportsTech. All rights reserved.
-                    </div>
-                </div>
-            </footer>
+            <SiteFooter />
         </div>
     );
 };

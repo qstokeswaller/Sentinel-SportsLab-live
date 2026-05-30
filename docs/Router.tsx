@@ -14,6 +14,11 @@ import PublicDataHubView from './pages/PublicDataHubView';
 import PublicAthleteSharePage from './pages/PublicAthleteSharePage';
 import LandingPage from './pages/LandingPage';
 import PolarCallbackPage from './pages/PolarCallbackPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import DataProcessingPage from './pages/DataProcessingPage';
+import ContactPage from './pages/ContactPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -57,6 +62,13 @@ const AppRouter: React.FC = () => {
 
       {/* POLAR OAUTH CALLBACK — public route, handles redirect from Polar */}
       <Route path="/polar/callback" element={<PolarCallbackPage />} />
+
+      {/* LEGAL + CONTACT — public, no auth required */}
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/cookies" element={<CookiePolicyPage />} />
+      <Route path="/data-processing" element={<DataProcessingPage />} />
+      <Route path="/contact" element={<ContactPage />} />
 
       {/* AUTH ROUTES */}
       <Route
