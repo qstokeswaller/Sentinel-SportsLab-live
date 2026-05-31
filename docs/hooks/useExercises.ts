@@ -6,6 +6,8 @@ import { useUserProfile } from './useUserProfile';
 export interface Exercise {
   id: string;
   user_id: string | null;
+  organisation_id: string | null; // NULL = Platform Library default; non-NULL = org override or org-new
+  source_id: string | null;        // FK to the platform-default this row overrides (NULL for defaults + org-new)
   name: string;
   description: string | null;
   body_parts: string[];
@@ -25,6 +27,10 @@ export interface Exercise {
     longVideoUrl?: string | null;
   } | null;
   created_at: string;
+  // ── Overlay-merge fields injected by the read path (not in DB) ─────────
+  __custom?: boolean;          // true if this row is an org override or org-new
+  __original_id?: string;      // present on overrides — points at the underlying Platform Library default's id
+  __override_id?: string | null; // actual UUID of the override row (when canonical id is the default's id)
 }
 
 export interface ExerciseFilters {
@@ -49,9 +55,10 @@ export function useExercises(filters: ExerciseFilters = {}) {
     queryKey: ['exercises', filters],
     staleTime: 10 * 60 * 1000, // 10 min — exercise library changes infrequently
     queryFn: async () => {
-      let query = supabase
-        .from('exercises')
-        .select('*', { count: 'exact' });
+      // Fetch ALL visible rows (RLS exposes platform defaults + this org's rows).
+      // We must merge in JS because filtering on the server would hide platform-default rows that have
+      // org-specific overrides we want to surface instead.
+      let query = supabase.from('exercises').select('*');
 
       if (search?.trim()) {
         query = query.ilike('name', `%${search.trim()}%`);
@@ -69,17 +76,58 @@ export function useExercises(filters: ExerciseFilters = {}) {
         query = query.contains('body_parts', [muscleGroup]);
       }
 
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to).order('name');
+      query = query.order('name');
 
-      const { data, error, count } = await query;
+      const { data, error } = await query;
       if (error) throw error;
 
+      const rows = (data ?? []) as Exercise[];
+
+      // Build override map keyed by source_id.
+      const overridesBySourceId = new Map<string, Exercise>();
+      const orgNew: Exercise[] = [];
+      const platformDefaults: Exercise[] = [];
+
+      for (const row of rows) {
+        if (row.organisation_id && row.source_id) {
+          // Override of a platform default
+          overridesBySourceId.set(row.source_id, row);
+        } else if (row.organisation_id && !row.source_id) {
+          // Org-new exercise
+          orgNew.push(row);
+        } else {
+          // Platform default (organisation_id is null)
+          platformDefaults.push(row);
+        }
+      }
+
+      // Merge: prefer override when present, otherwise the platform default.
+      const merged: Exercise[] = [];
+      for (const def of platformDefaults) {
+        const override = overridesBySourceId.get(def.id);
+        if (override) {
+          merged.push({ ...override, __custom: true, __original_id: def.id });
+        } else {
+          merged.push({ ...def, __custom: false });
+        }
+      }
+      for (const n of orgNew) {
+        merged.push({ ...n, __custom: true });
+      }
+
+      // Sort by name post-merge (overrides may have been renamed).
+      merged.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Paginate in memory.
+      const total = merged.length;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize;
+      const pageSlice = merged.slice(from, to);
+
       return {
-        exercises: (data ?? []) as Exercise[],
-        total: count ?? 0,
-        totalPages: Math.ceil((count ?? 0) / pageSize),
+        exercises: pageSlice,
+        total,
+        totalPages: Math.ceil(total / pageSize),
       };
     },
   });
@@ -105,62 +153,191 @@ export function useExercise(id: string) {
 }
 
 /**
- * Create a custom exercise scoped to the current user's club.
+ * Create a brand-new organisation-scoped exercise (not an override).
+ * organisation_id is filled by the BEFORE INSERT trigger; we explicitly null
+ * source_id so it's classified as "org-new" rather than an override.
  */
 export function useCreateExercise() {
   const qc = useQueryClient();
   const { data: profile } = useUserProfile();
 
   return useMutation({
-    mutationFn: async (exercise: Omit<Exercise, 'id' | 'user_id' | 'created_at'>) => {
+    mutationFn: async (exercise: Omit<Exercise, 'id' | 'user_id' | 'created_at' | 'organisation_id' | 'source_id' | '__custom' | '__original_id'>) => {
       if (!profile?.id) throw new Error('Not authenticated.');
+      const payload: any = { ...exercise, user_id: profile.id, source_id: null };
+      delete payload.__custom;
+      delete payload.__original_id;
       const { data, error } = await supabase
         .from('exercises')
-        .insert({ ...exercise, user_id: profile.id })
+        .insert(payload)
         .select()
         .single();
       if (error) throw error;
-      return data as Exercise;
+      return { ...(data as Exercise), __custom: true } as Exercise;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['exercises'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['exercises'] });
+      qc.invalidateQueries({ queryKey: ['exercises-smart'] });
+    },
   });
 }
 
 /**
- * Update an existing exercise (must belong to user's club).
+ * Update an existing exercise.
+ * If the target row is a Platform Library default (organisation_id IS NULL),
+ * we don't mutate it — we insert an organisation-scoped override row pointing
+ * back at the default via source_id. Subsequent edits to that override go
+ * through a normal UPDATE.
  */
 export function useUpdateExercise() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Exercise> & { id: string }) => {
+    mutationFn: async (input: Partial<Exercise> & { id: string }) => {
+      const { id, __custom, __original_id, __override_id, ...updates } = input as any;
+
+      // Strip overlay-only fields so they never hit the DB.
+      delete (updates as any).__custom;
+      delete (updates as any).__original_id;
+      delete (updates as any).__override_id;
+
+      // If we already have an override id, the canonical id is the platform-default's id —
+      // the actual writable row is __override_id. Otherwise, id is the writable row.
+      const targetId: string = __override_id || id;
+
+      const { data: target, error: fetchErr } = await supabase
+        .from('exercises')
+        .select('id, organisation_id, source_id')
+        .eq('id', targetId)
+        .single();
+      if (fetchErr) throw fetchErr;
+      if (!target) throw new Error('Exercise not found.');
+
+      // Case 1: platform-default (no org). Insert an override row pointing at it.
+      if (target.organisation_id === null) {
+        const insertPayload: any = { ...updates, source_id: target.id };
+        delete insertPayload.id;
+        delete insertPayload.user_id;
+        delete insertPayload.organisation_id; // BEFORE INSERT trigger fills this
+        delete insertPayload.created_at;
+
+        const { data, error } = await supabase
+          .from('exercises')
+          .insert(insertPayload)
+          .select()
+          .single();
+        if (error) throw error;
+        // Surface the canonical id (= the default's id) so callers' references keep working.
+        return {
+          ...(data as Exercise),
+          id: target.id,
+          __custom: true,
+          __original_id: target.id,
+          __override_id: (data as any).id,
+        } as Exercise;
+      }
+
+      // Case 2: org-scoped row (override or org-new). Normal UPDATE.
       const { data, error } = await supabase
         .from('exercises')
         .update(updates)
-        .eq('id', id)
+        .eq('id', targetId)
         .select();
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error('You can only edit exercises you created.');
-      return data[0] as Exercise;
+      if (!data || data.length === 0) throw new Error('You can only edit exercises in your organisation.');
+      const row = data[0] as Exercise;
+      // If this is an override, keep id = canonical (default) id; surface real row id as __override_id.
+      const canonicalId = row.source_id ?? row.id;
+      return {
+        ...row,
+        id: canonicalId,
+        __custom: true,
+        __original_id: row.source_id ?? undefined,
+        __override_id: row.id,
+      } as Exercise;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['exercises'] });
+      qc.invalidateQueries({ queryKey: ['exercises-smart'] });
       qc.invalidateQueries({ queryKey: ['exercise', data.id] });
     },
   });
 }
 
 /**
- * Delete an exercise (must belong to user's club — shared exercises are protected by RLS).
+ * Reset an exercise back to its Platform Library default by deleting the
+ * organisation-scoped override row. The default reappears in the merged view.
+ * No-op if the exercise has no source_id (it's not an override).
+ */
+export function useResetExerciseToDefault() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    // Accepts either the canonical exercise row (preferred — it has __override_id),
+    // or a bare override row id (fallback for direct callers).
+    mutationFn: async (input: { id: string; __override_id?: string | null } | string) => {
+      const overrideId =
+        typeof input === 'string'
+          ? input
+          : (input.__override_id ?? input.id);
+
+      const { data: target, error: fetchErr } = await supabase
+        .from('exercises')
+        .select('id, organisation_id, source_id')
+        .eq('id', overrideId)
+        .single();
+      if (fetchErr) throw fetchErr;
+      if (!target) throw new Error('Exercise not found.');
+      if (target.organisation_id === null) {
+        throw new Error('This is already the Platform Library default.');
+      }
+      if (!target.source_id) {
+        throw new Error('This is an organisation-created exercise — use Delete instead.');
+      }
+
+      const { error } = await supabase.from('exercises').delete().eq('id', overrideId);
+      if (error) throw error;
+      return { restoredDefaultId: target.source_id };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['exercises'] });
+      qc.invalidateQueries({ queryKey: ['exercises-smart'] });
+    },
+  });
+}
+
+/**
+ * Delete an exercise. Platform defaults can never be deleted (RLS blocks it
+ * anyway; we reject early for a friendly error). For overrides, deleting
+ * "resets to default". For org-new rows, deleting truly removes them.
  */
 export function useDeleteExercise() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('exercises').delete().eq('id', id);
+    // Accepts either the canonical exercise row (with __override_id) or a bare id.
+    mutationFn: async (input: { id: string; __override_id?: string | null } | string) => {
+      const writableId =
+        typeof input === 'string'
+          ? input
+          : (input.__override_id ?? input.id);
+
+      const { data: target, error: fetchErr } = await supabase
+        .from('exercises')
+        .select('id, organisation_id, source_id')
+        .eq('id', writableId)
+        .single();
+      if (fetchErr) throw fetchErr;
+      if (!target) throw new Error('Exercise not found.');
+      if (target.organisation_id === null) {
+        throw new Error('Platform Library defaults cannot be deleted.');
+      }
+      const { error } = await supabase.from('exercises').delete().eq('id', writableId);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['exercises'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['exercises'] });
+      qc.invalidateQueries({ queryKey: ['exercises-smart'] });
+    },
   });
 }

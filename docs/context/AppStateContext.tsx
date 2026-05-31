@@ -50,6 +50,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
         path.startsWith('/data-hub/snapshot') ||
         path.startsWith('/athlete-share/') ||
+        path.startsWith('/accept-invite/') ||
         path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
         path === '/';
 
@@ -73,6 +74,40 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }, [activeTab]);
 
     const [recentDeletions, setRecentDeletions] = useState([]); // Track deletions for Undo
+
+    // ── Organisation context (Phase B) ───────────────────────────────────────
+    // currentOrg = { id, name, tier, seat_cap, subscription_status, ... } | null
+    // currentUserRole = 'admin' | 'member' | null
+    // isOrgAdmin = boolean
+    // These fetched once on auth state change; available to all consumers via context.
+    const { user: authUser } = useAuth();
+    const [currentOrg, setCurrentOrg] = useState<any>(null);
+    const [currentUserRole, setCurrentUserRole] = useState<'admin' | 'member' | null>(null);
+    const [orgLoading, setOrgLoading] = useState<boolean>(false);
+
+    const refreshCurrentOrg = useCallback(async () => {
+        if (!authUser?.id) {
+            setCurrentOrg(null);
+            setCurrentUserRole(null);
+            return;
+        }
+        setOrgLoading(true);
+        try {
+            const info = await DatabaseService.getCurrentOrgInfo();
+            setCurrentOrg(info?.organisation ?? null);
+            setCurrentUserRole(info?.role ?? null);
+        } catch (err) {
+            console.warn('[org] getCurrentOrgInfo failed:', (err as any)?.message || err);
+            setCurrentOrg(null);
+            setCurrentUserRole(null);
+        } finally {
+            setOrgLoading(false);
+        }
+    }, [authUser?.id]);
+
+    useEffect(() => { refreshCurrentOrg(); }, [refreshCurrentOrg]);
+
+    const isOrgAdmin = currentUserRole === 'admin';
 
     // ── Dark Mode ─────────────────────────────────────────────────────────────
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -2533,6 +2568,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setActiveTab,
         isPerformanceLabOpen,
         setIsPerformanceLabOpen,
+        // Organisation context (Phase B)
+        currentOrg,
+        currentUserRole,
+        isOrgAdmin,
+        orgLoading,
+        refreshCurrentOrg,
         recentDeletions,
         setRecentDeletions,
         wattbikeSessions,

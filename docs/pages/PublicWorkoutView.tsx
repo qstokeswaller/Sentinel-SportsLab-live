@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { AlertCircle, Dumbbell, Printer, ExternalLink, Weight, Activity as ActivityIcon, Moon as MoonIcon, Link2 as Link2Icon } from 'lucide-react';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 
 // ── Branding Banner (shared across public pages + PDF exports) ───────────────
 const BrandingBanner = () => (
@@ -248,6 +249,7 @@ function resolveSectionOrder(saved: any, presentSections: string[]): string[] {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const PublicWorkoutView: React.FC = () => {
+    useForceLightMode();
     const { workoutType, workoutId } = useParams<{ workoutType: string; workoutId: string }>();
 
     const [loading, setLoading] = useState(true);

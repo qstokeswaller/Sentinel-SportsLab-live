@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { AlertCircle, FileText, Printer, DumbbellIcon, TagIcon, Activity as ActivityIcon } from 'lucide-react';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 
 const BrandingBanner = () => (
     <div className="bg-white border-b border-slate-100 py-4 print:py-6 print:border-b-2 print:border-slate-200">
@@ -207,6 +208,7 @@ const normaliseProtocol = (raw: any): Protocol | null => {
 // ── Main Component ───────────────────────────────────────────────────────────
 
 const PublicProtocolView: React.FC = () => {
+    useForceLightMode();
     const { protocolId } = useParams<{ protocolId: string }>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

@@ -107,8 +107,20 @@ const TermsOfServicePage: React.FC = () => {
             <p>Payment is processed by a third-party payment processor. We do not store raw card data. By providing payment details, you authorise recurring charges for your subscription until cancelled.</p>
 
             <h2 id="t7">7. Refunds, Cancellation &amp; Downgrade</h2>
-            <p>You may cancel your subscription at any time from within the Platform or by emailing us. Cancellation takes effect at the end of the current billing cycle — you retain access for the remainder of the period you have already paid for. We do not issue pro-rata refunds for partial months.</p>
-            <p>You may downgrade your subscription at any time. Downgrade takes effect at the start of the next billing cycle. You are responsible for ensuring that your data and active user accounts fit within the seat allocation of the new tier before the downgrade takes effect.</p>
+            <p>You may cancel your subscription at any time from within the Platform or by emailing us. Cancellation takes effect at the end of the current billing cycle — you retain full read-and-write access for the remainder of the period you have already paid for. We do not issue pro-rata refunds for partial months.</p>
+            <p>You may downgrade your subscription at any time. Downgrade takes effect at the start of the next billing cycle. You are responsible for ensuring that your data and active user accounts fit within the seat allocation of the new tier before the downgrade takes effect. The Platform will block a downgrade where your current member count or pending invitations would exceed the destination tier's seat cap — reduce your team to fit, or contact us for a custom seat allocation, before completing the change.</p>
+
+            <h3>7.1 Post-cancellation read-only window</h3>
+            <p>Following the end of your paid billing period after cancellation, your workspace transitions to <strong>read-only mode for a 30-day grace period</strong>. During this window:</p>
+            <ul>
+                <li>You and your organisation's members may continue to sign in.</li>
+                <li>You may view, search, and <strong>export</strong> all of Your Data.</li>
+                <li>No new data may be added, edited, or deleted via the Platform.</li>
+                <li>Public form links and share links cease to accept new submissions.</li>
+            </ul>
+            <p>At the end of the 30-day grace period, all of Your Data — including organisation library customisations and any uploaded media — is permanently deleted in accordance with our <a href="/privacy">Privacy Policy</a> Section 8 retention schedule. Billing and transaction records are retained separately for the period required by South African tax law (currently 5 years).</p>
+            <p>If you re-subscribe before the 30-day window ends, your workspace is restored to its prior state immediately. After the 30-day window, re-subscription requires creating a fresh organisation; previous data cannot be recovered.</p>
+
             <p>Where the Consumer Protection Act 68 of 2008 ("CPA") applies and grants additional cooling-off or cancellation rights, those statutory rights are unaffected by this section.</p>
 
             <h2 id="t8">8. Service Availability</h2>
@@ -123,6 +135,11 @@ const TermsOfServicePage: React.FC = () => {
             <p>Your organisation owns the data you upload, enter, or submit to the Platform ("Your Data"). You grant us a limited licence to host, process, and display Your Data solely to provide the Platform to you and to perform our obligations under these terms.</p>
             <p>You may export Your Data at any time during your active subscription via the export features available within the Platform. Following cancellation, your data is retained for 30 days during which an export request remains available. After that period, your data is securely deleted in accordance with our Privacy Policy.</p>
             <p>You are responsible for ensuring that you have a lawful basis to upload Your Data, including all required consents from athletes or, where the athlete is under 18, from a parent or legal guardian.</p>
+
+            <h3>10.1 Platform Library vs Organisation Library Customisations</h3>
+            <p>The Platform ships with a default library of exercises, protocols, testing instruments, and reference materials (the "<strong>Platform Library</strong>"). The Platform Library is owned by Sentinel SportsTech and licensed to you for use within your subscription. You may not extract, redistribute, or resell the Platform Library outside of your use of the Platform.</p>
+            <p>Edits you make to Platform Library items, items you add to your organisation's library, images you upload, and links you attach (collectively, "<strong>Organisation Library Customisations</strong>") are part of Your Data. They are owned by your organisation, scoped to your workspace, and not used by us to improve the Platform Library unless you have explicitly opted in through a feature provided for that purpose. If and when an opt-in is introduced, sharing remains entirely at your discretion and can be withdrawn at any time.</p>
+            <p>For clarity: removing a customisation reverts the affected item to the underlying Platform Library version. Deletion of your organisation's account permanently removes all Organisation Library Customisations in accordance with the retention schedule in our Privacy Policy.</p>
 
             <h2 id="t11">11. Privacy &amp; Data Protection</h2>
             <p>Our handling of personal information is governed by our <a href="/privacy">Privacy Policy</a>. Where we process Athlete Data on behalf of your organisation, we act as an Operator (Processor) under POPIA, and the organisation is the Responsible Party. Our sub-processors are listed in the <a href="/data-processing">Data Processing</a> page.</p>

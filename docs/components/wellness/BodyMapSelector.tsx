@@ -132,7 +132,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {groups.map(g => (
                 <div key={g.label}>
                     {g.label && (
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#94A3B8] mb-1.5">{g.label}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-[#94A3B8] mb-1.5">{g.label}</p>
                     )}
                     <div className="grid grid-cols-2 gap-1.5">
                         {g.areas.map(area => (
@@ -155,16 +155,19 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
 
     return (
         <div className="space-y-4">
-            {/* Instructions */}
-            <div className="bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 rounded-xl p-3 space-y-2">
+            {/* Instructions — bumped contrast (cyan-900 / slate-700) so the
+                light-mode rendering on the public wellness form is readable.
+                Dark-mode variants preserved for in-app usage (Wellness Hub
+                injury entry). */}
+            <div className="bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-500/30 rounded-xl p-3 space-y-2">
                 <div className="flex items-start gap-2">
-                    <Info size={16} className="text-cyan-600 dark:text-cyan-300 shrink-0 mt-0.5" />
+                    <Info size={16} className="text-cyan-700 dark:text-cyan-300 shrink-0 mt-0.5" />
                     {selectOnly ? (
-                        <p className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
+                        <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-200">
                             Tap an area to select it. Tap again to remove. You'll rate severity on the next screen.
                         </p>
                     ) : (
-                        <ol className="text-sm font-semibold text-cyan-800 dark:text-cyan-200 list-decimal list-inside space-y-0.5">
+                        <ol className="text-sm font-semibold text-cyan-900 dark:text-cyan-200 list-decimal list-inside space-y-0.5">
                             {(cfg.instructionText || '1. Tap an area to mark it\n2. Tap again to increase severity of injury\n3. Tap a third time to clear')
                                 .split('\n')
                                 .map((line, i) => {
@@ -175,7 +178,7 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                     )}
                 </div>
                 {!selectOnly && (
-                    <div className="flex justify-center gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-[#CBD5E1]">
+                    <div className="flex justify-center gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-700 dark:text-[#CBD5E1]">
                         {cfg.severityLevels.map(s => (
                             <div key={s.value} className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.legendColor }} /> {s.label}
@@ -196,23 +199,25 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
                 </div>
             )}
 
-            {/* Front section */}
+            {/* Front section — light-mode label bumped to slate-700 and 11px
+                so it's readable on the public form. Dark-mode variant unchanged. */}
             {frontGroups.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] shrink-0">Front of Body</p>
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-[#243A58]" />
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:text-[#CBD5E1] shrink-0">Front of Body</p>
+                        <div className="flex-1 h-px bg-slate-300 dark:bg-[#243A58]" />
                     </div>
                     {renderGroups(frontGroups)}
                 </div>
             )}
 
-            {/* Divider between front and back */}
+            {/* Divider between front and back — slate-500 instead of slate-300
+                so the "↑ Front · Back ↓" label is visible in light mode. */}
             {frontGroups.length > 0 && backGroups.length > 0 && (
                 <div className="flex items-center gap-2 py-1">
-                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-[#243A58] rounded-full" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-[#94A3B8] px-1">↑ Front · Back ↓</span>
-                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-[#243A58] rounded-full" />
+                    <div className="flex-1 h-0.5 bg-slate-300 dark:bg-[#243A58] rounded-full" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#94A3B8] px-1">↑ Front · Back ↓</span>
+                    <div className="flex-1 h-0.5 bg-slate-300 dark:bg-[#243A58] rounded-full" />
                 </div>
             )}
 
@@ -220,8 +225,8 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
             {backGroups.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] shrink-0">Back of Body</p>
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-[#243A58]" />
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:text-[#CBD5E1] shrink-0">Back of Body</p>
+                        <div className="flex-1 h-px bg-slate-300 dark:bg-[#243A58]" />
                     </div>
                     {renderGroups(backGroups)}
                 </div>

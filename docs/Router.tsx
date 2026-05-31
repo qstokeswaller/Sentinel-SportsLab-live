@@ -19,6 +19,7 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import DataProcessingPage from './pages/DataProcessingPage';
 import ContactPage from './pages/ContactPage';
+import AcceptInvitePage from './pages/AcceptInvitePage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -69,6 +70,11 @@ const AppRouter: React.FC = () => {
       <Route path="/cookies" element={<CookiePolicyPage />} />
       <Route path="/data-processing" element={<DataProcessingPage />} />
       <Route path="/contact" element={<ContactPage />} />
+
+      {/* INVITATION ACCEPT — public landing for /accept-invite/:token magic links.
+          Auth-aware: if signed in with matching email, accepts immediately;
+          otherwise prompts to sign in/up with the invited email. */}
+      <Route path="/accept-invite/:token" element={<AcceptInvitePage />} />
 
       {/* AUTH ROUTES */}
       <Route

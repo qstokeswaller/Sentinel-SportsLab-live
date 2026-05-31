@@ -14,7 +14,9 @@ import {
     Trash2Icon, PencilIcon, StarIcon, ClockIcon,
     FolderIcon, FolderPlusIcon, CheckIcon, SlidersHorizontalIcon,
     ArrowLeftIcon, MoreHorizontalIcon,
+    RotateCcwIcon,
 } from 'lucide-react';
+import { useResetExerciseToDefault } from '../hooks/useExercises';
 import { ExerciseDetailPanel, ExerciseDetailEmptyState } from '../components/library/ExerciseDetailPanel';
 import { ExerciseInfoModal } from '../components/library/ExerciseInfoModal';
 import { EditExerciseModal } from '../components/library/EditExerciseModal';
@@ -160,6 +162,7 @@ interface ExerciseRowProps {
     onTogglePersonal: (id: string) => void;
     onEdit: (ex: any) => void;
     onDelete: (ex: any) => void;
+    onReset?: (ex: any) => void;
     bulkMode?: boolean;
     isChecked?: boolean;
     onToggleCheck?: () => void;
@@ -167,9 +170,12 @@ interface ExerciseRowProps {
 
 function ExerciseRow({
     ex, showDelete = false, onRemoveFromCollection,
-    isSelected, onSelect, isInLibrary, onTogglePersonal, onEdit, onDelete,
+    isSelected, onSelect, isInLibrary, onTogglePersonal, onEdit, onDelete, onReset,
     bulkMode = false, isChecked = false, onToggleCheck,
 }: ExerciseRowProps) {
+    const isCustom = !!ex.__custom;
+    const isOverride = isCustom && !!ex.__original_id;
+    const isOrgNew = isCustom && !ex.__original_id;
     const inLib = isInLibrary(ex.id);
     const handleClick = () => {
         if (bulkMode) { onToggleCheck?.(); } else { onSelect(ex); }
@@ -195,8 +201,18 @@ function ExerciseRow({
             )}
             {/* Exercise name */}
             <td className="px-3 py-2">
-                <div className={`font-semibold text-xs leading-snug ${isSelected && !bulkMode ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
-                    {ex.name}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className={`font-semibold text-xs leading-snug ${isSelected && !bulkMode ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>
+                        {ex.name}
+                    </div>
+                    {isCustom && (
+                        <span
+                            title={isOverride ? 'Customised — your org has edited this Platform Library exercise' : 'Your organisation’s own exercise'}
+                            className="text-[9px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30"
+                        >
+                            {isOverride ? 'Customised' : 'Custom'}
+                        </span>
+                    )}
                 </div>
                 {(ex.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-0.5 mt-1">
@@ -240,12 +256,26 @@ function ExerciseRow({
                         >
                             <StarIcon size={13} fill={inLib ? 'currentColor' : 'none'} />
                         </button>
-                        {ex.user_id && (
-                            <button onClick={() => onEdit(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all" title="Edit">
-                                <PencilIcon size={13} />
+                        {/* Edit is allowed on every row — platform-default edits insert an org override. */}
+                        <button
+                            onClick={() => onEdit(ex)}
+                            className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/25 transition-all"
+                            title={isCustom ? 'Edit your version' : 'Customise for your organisation'}
+                        >
+                            <PencilIcon size={13} />
+                        </button>
+                        {/* Reset is available for overrides (deletes the override row → default reappears). */}
+                        {isOverride && onReset && (
+                            <button
+                                onClick={() => onReset(ex)}
+                                className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/15 transition-all"
+                                title="Reset to Platform Library default"
+                            >
+                                <RotateCcwIcon size={13} />
                             </button>
                         )}
-                        {showDelete && ex.user_id && (
+                        {/* Delete is only for org-new exercises (platform defaults can't be deleted). */}
+                        {showDelete && isOrgNew && (
                             <button onClick={() => onDelete(ex)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Delete">
                                 <Trash2Icon size={13} />
                             </button>
@@ -301,7 +331,20 @@ export const ExerciseLibraryPage = () => {
     const [filterForceType, setFilterForceType] = useState('All');
     // Filter the exercise list by a saved collection (null = no filter)
     const [filterCollectionId, setFilterCollectionId] = useState<string | null>(null);
+    // Restrict view to org-customised rows (overrides + org-new) only
+    const [customOnly, setCustomOnly] = useState(false);
     const [showMoreFilters, setShowMoreFilters] = useState(false);
+
+    const resetExercise = useResetExerciseToDefault();
+    const handleResetExercise = (ex: any) => {
+        resetExercise.mutate(
+            { id: ex.id, __override_id: ex.__override_id ?? null },
+            {
+                onSuccess: () => showToast(`${ex.name} reset to Platform Library default`, 'success'),
+                onError: (err: any) => showToast(err?.message || 'Failed to reset exercise', 'error'),
+            }
+        );
+    };
 
     // ── My Library sub-state ──────────────────────────────────────────────
     const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
@@ -356,6 +399,7 @@ export const ExerciseLibraryPage = () => {
         alphabetLetter,
         page: libraryPage,
         pageSize: ITEMS_PER_PAGE,
+        customOnly,
     });
 
     const dbExercises = exerciseData?.exercises ?? [];
@@ -377,17 +421,18 @@ export const ExerciseLibraryPage = () => {
         if (filterEquipment !== 'All') list = list.filter(ex => ex.equipment?.includes(filterEquipment));
         if (filterForceType !== 'All') list = list.filter(ex => ex.options?.forceType === filterForceType);
         if (filterCollectionSet) list = list.filter(ex => filterCollectionSet.has(ex.id));
+        // customOnly is now applied server-side via smart_exercise_search.p_custom_only, no client filter.
         return list;
     }, [dbExercises, filterMovement, filterEquipment, filterForceType, filterCollectionSet]);
 
     const hasActiveFilters = selectedCategory !== 'All' || selectedClassification !== 'All' || selectedMuscleGroup !== 'All'
         || filterMovement !== 'All' || filterEquipment !== 'All' || filterForceType !== 'All' || alphabetLetter !== 'All'
-        || filterCollectionId !== null;
+        || filterCollectionId !== null || customOnly;
 
     const clearAllFilters = () => {
         setSelectedCategory('All'); setSelectedClassification('All'); setSelectedMuscleGroup('All');
         setFilterMovement('All'); setFilterEquipment('All'); setFilterForceType('All');
-        setAlphabetLetter('All'); setFilterCollectionId(null); setLibraryPage(1);
+        setAlphabetLetter('All'); setFilterCollectionId(null); setCustomOnly(false); setLibraryPage(1);
     };
 
     // ── Personal library exercises ────────────────────────────────────────
@@ -396,11 +441,15 @@ export const ExerciseLibraryPage = () => {
         if (!(personalExerciseIds || []).length) { setPersonalExercises([]); return; }
         let cancelled = false;
         (async () => {
-            const { data } = await supabase
-                .from('exercises')
-                .select('id, user_id, name, body_parts, categories, description, video_url, equipment, options, tags')
-                .in('id', personalExerciseIds);
-            if (!cancelled && data) setPersonalExercises(data);
+            const { data } = await (supabase as any).rpc('get_exercises_overlay', { p_ids: personalExerciseIds });
+            if (!cancelled && data) {
+                setPersonalExercises(data.map((r: any) => ({
+                    ...r,
+                    __custom: !!r.is_custom,
+                    __override_id: r.override_id ?? null,
+                    __original_id: r.original_id ?? undefined,
+                })));
+            }
         })();
         return () => { cancelled = true; };
     }, [personalExerciseIds]);
@@ -428,11 +477,15 @@ export const ExerciseLibraryPage = () => {
         if (!needed.length) { setRecentNotInPersonal([]); return; }
         let cancelled = false;
         (async () => {
-            const { data } = await supabase
-                .from('exercises')
-                .select('id, name, body_parts, categories, options')
-                .in('id', needed);
-            if (!cancelled && data) setRecentNotInPersonal(data);
+            const { data } = await (supabase as any).rpc('get_exercises_overlay', { p_ids: needed });
+            if (!cancelled && data) {
+                setRecentNotInPersonal(data.map((r: any) => ({
+                    ...r,
+                    __custom: !!r.is_custom,
+                    __override_id: r.override_id ?? null,
+                    __original_id: r.original_id ?? undefined,
+                })));
+            }
         })();
         return () => { cancelled = true; };
     }, [recentlyUsedExerciseIds, personalExerciseIds]);
@@ -444,11 +497,15 @@ export const ExerciseLibraryPage = () => {
         if (!activeCollection || !activeCollection.exercise_ids.length) { setCollectionExercises([]); return; }
         let cancelled = false;
         (async () => {
-            const { data } = await supabase
-                .from('exercises')
-                .select('id, user_id, name, body_parts, categories, equipment, options, video_url, tags')
-                .in('id', activeCollection.exercise_ids);
-            if (!cancelled && data) setCollectionExercises(data);
+            const { data } = await (supabase as any).rpc('get_exercises_overlay', { p_ids: activeCollection.exercise_ids });
+            if (!cancelled && data) {
+                setCollectionExercises(data.map((r: any) => ({
+                    ...r,
+                    __custom: !!r.is_custom,
+                    __override_id: r.override_id ?? null,
+                    __original_id: r.original_id ?? undefined,
+                })));
+            }
         })();
         return () => { cancelled = true; };
     }, [activeCollection?.id, activeCollection?.exercise_ids.length]);
@@ -516,6 +573,7 @@ export const ExerciseLibraryPage = () => {
         onTogglePersonal: handleTogglePersonal,
         onEdit: openEditModal,
         onDelete: handleDeleteExercise,
+        onReset: handleResetExercise,
     });
 
     // ── Exercises tab ─────────────────────────────────────────────────────
@@ -558,6 +616,14 @@ export const ExerciseLibraryPage = () => {
                                 {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
                             </CustomSelect>
                             {/* Collection filter removed from Exercises tab — collections are browsed from My Library. */}
+                            <button
+                                onClick={() => { setCustomOnly(v => !v); setLibraryPage(1); }}
+                                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${customOnly ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-violet-300'}`}
+                                title={customOnly ? 'Showing only your customised exercises' : 'Show only exercises your org has customised or created'}
+                            >
+                                <StarIcon size={11} fill={customOnly ? 'currentColor' : 'none'} />
+                                Customised
+                            </button>
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
                                 className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}

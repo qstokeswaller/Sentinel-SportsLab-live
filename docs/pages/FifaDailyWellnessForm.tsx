@@ -15,6 +15,7 @@ import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { DEFAULT_BODY_MAP_CONFIG } from '../utils/mocks';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 import { AlertTriangle } from 'lucide-react';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send } from 'lucide-react';
 
@@ -98,6 +99,7 @@ const READINESS_OPTIONS = [
 // ═══════════════════════════════════════════════════════════════════════
 
 const FifaDailyWellnessForm: React.FC = () => {
+    useForceLightMode();
     const { teamId } = useParams<{ teamId: string }>();
 
     const [loading, setLoading] = useState(true);

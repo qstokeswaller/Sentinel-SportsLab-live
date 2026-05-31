@@ -6,6 +6,7 @@ import { CheckCircle2, AlertCircle, Clock, ChevronRight, ChevronLeft, Send, Acti
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { BODY_MAP_AREAS } from '../utils/mocks';
 import { BORG_RPE_SCALE } from '../utils/constants';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ interface VisibleStep {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const PublicWellnessForm: React.FC = () => {
+    useForceLightMode();
     const { templateId, teamId } = useParams<{ templateId: string; teamId: string }>();
     const [searchParams] = useSearchParams();
     const shareSessionId = searchParams.get('s') || undefined;

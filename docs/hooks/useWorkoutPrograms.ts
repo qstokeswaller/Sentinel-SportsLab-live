@@ -137,13 +137,12 @@ export function useProgramWithDays(programId: string | null) {
         const exerciseIds = [...new Set((exData ?? []).map((e: any) => e.exercise_id).filter(Boolean))];
         let exMetaMap: Record<string, { name: string; description?: string; body_parts?: string[]; categories?: string[]; video_url?: string }> = {};
         if (exerciseIds.length > 0) {
-          const { data: metaData, error: metaErr } = await supabase
-            .from('exercises')
-            .select('id, name, description, body_parts, categories, video_url')
-            .in('id', exerciseIds);
+          // Use overlay-aware RPC so org-customised exercises resolve to the override row.
+          const { data: metaData, error: metaErr } = await (supabase as any)
+            .rpc('get_exercises_overlay', { p_ids: exerciseIds });
           if (metaErr) console.warn('Could not resolve exercise metadata:', metaErr.message);
           if (metaData) {
-            for (const n of metaData) { exMetaMap[n.id] = n; }
+            for (const n of metaData as any[]) { exMetaMap[n.id] = n; }
           }
         }
 

@@ -133,7 +133,11 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
                 },
             };
             if (isEditing) {
-                await updateExercise.mutateAsync({ id: exercise.id, ...payload });
+                await updateExercise.mutateAsync({
+                    id: exercise.id,
+                    __override_id: exercise.__override_id ?? null,
+                    ...payload,
+                });
                 showToast(`${form.name} updated`, 'success');
             } else {
                 await createExercise.mutateAsync(payload);

@@ -7,10 +7,14 @@ interface SmartSearchRow extends Exercise {
   match_type: 'exact' | 'fuzzy';
   similarity_score: number | null;
   total_count: number;
+  // Overlay-merge fields populated by smart_exercise_search RPC:
+  is_custom: boolean;
+  override_id: string | null;  // actual UUID of the org override row (for write path)
+  original_id: string | null;  // platform-default's UUID (for "Reset to default")
 }
 
 interface SmartSearchResult {
-  exercises: Exercise[];
+  exercises: (Exercise & { __override_id?: string | null })[];
   total: number;
   totalPages: number;
   hasFuzzyResults: boolean;
@@ -22,8 +26,8 @@ interface SmartSearchResult {
  * Drop-in replacement for useExercises — same filters interface,
  * plus hasFuzzyResults and suggestions for "Did you mean?" UI.
  */
-export function useSmartSearch(filters: ExerciseFilters = {}) {
-  const { search, category, classification, muscleGroup, alphabetLetter, page = 1, pageSize = 50 } = filters;
+export function useSmartSearch(filters: ExerciseFilters & { customOnly?: boolean } = {}) {
+  const { search, category, classification, muscleGroup, alphabetLetter, page = 1, pageSize = 50, customOnly = false } = filters;
 
   // Debounce search term by 300ms
   const [debouncedSearch, setDebouncedSearch] = useState(search ?? '');
@@ -47,6 +51,7 @@ export function useSmartSearch(filters: ExerciseFilters = {}) {
         p_alphabet_letter: (alphabetLetter && alphabetLetter !== 'All') ? alphabetLetter : null,
         p_limit: pageSize,
         p_offset: offset,
+        p_custom_only: customOnly,
       });
 
       if (error) throw error;
@@ -61,8 +66,16 @@ export function useSmartSearch(filters: ExerciseFilters = {}) {
         .slice(0, 3)
         .map(r => ({ name: r.name, score: r.similarity_score ?? 0 }));
 
-      // Strip smart-search metadata from exercise objects
-      const exercises: Exercise[] = rows.map(({ match_type, similarity_score, total_count, ...ex }) => ex);
+      // Strip smart-search metadata; promote overlay fields onto the canonical Exercise shape.
+      const exercises = rows.map((r) => {
+        const { match_type, similarity_score, total_count, is_custom, override_id, original_id, ...ex } = r as any;
+        return {
+          ...ex,
+          __custom: !!is_custom,
+          __override_id: override_id ?? null,
+          __original_id: original_id ?? undefined,
+        };
+      });
 
       return {
         exercises,

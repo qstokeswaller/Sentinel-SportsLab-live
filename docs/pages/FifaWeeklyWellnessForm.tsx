@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import type { BodyMapConfig } from '../types/types';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 // DEFAULT_BODY_MAP_CONFIG retained in case other components need it, but this form uses FIFA_BODY_MAP_CONFIG
 
 
@@ -133,6 +134,7 @@ const URTI_OPTIONS = ['No Symptoms', 'Mild', 'Moderate', 'Severe'];
 // ═══════════════════════════════════════════════════════════════════════
 
 const FifaWeeklyWellnessForm: React.FC = () => {
+    useForceLightMode();
     const { teamId, athleteId: urlAthleteId } = useParams<{ teamId: string; athleteId?: string }>();
     const [searchParams] = useSearchParams();
     // complaint param passed from daily form: 'injury' | 'illness' | 'both'

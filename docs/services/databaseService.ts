@@ -163,12 +163,45 @@ export const DatabaseService = {
     },
 
     // --- EXERCISES ---
+    // Fetch the merged exercise catalogue: for each platform default we substitute the
+    // current org's override row when one exists (keeping the default's id as canonical so
+    // references in workouts/collections/personal_library continue to resolve), plus all
+    // org-new exercises. RLS already restricts what we see to platform defaults + own org.
     async fetchExercises() {
         const { data, error } = await supabase
             .from('exercises')
             .select('*');
         if (error) throw error;
-        return data;
+        const rows = data ?? [];
+
+        const overridesBySource = new Map<string, any>();
+        const orgNew: any[] = [];
+        const platformDefaults: any[] = [];
+        for (const r of rows) {
+            if (r.organisation_id && r.source_id) overridesBySource.set(r.source_id, r);
+            else if (r.organisation_id && !r.source_id) orgNew.push(r);
+            else platformDefaults.push(r);
+        }
+
+        const merged: any[] = [];
+        for (const def of platformDefaults) {
+            const ovr = overridesBySource.get(def.id);
+            if (ovr) {
+                merged.push({
+                    ...ovr,
+                    id: def.id,                  // canonical id (refs stay stable)
+                    __custom: true,
+                    __original_id: def.id,
+                    __override_id: ovr.id,
+                });
+            } else {
+                merged.push({ ...def, __custom: false });
+            }
+        }
+        for (const n of orgNew) {
+            merged.push({ ...n, __custom: true, __override_id: n.id });
+        }
+        return merged;
     },
 
     // --- SESSIONS ---
@@ -1061,5 +1094,206 @@ export const DatabaseService = {
             .delete()
             .eq('id', id);
         if (error) throw error;
+    },
+
+    // --- ORGANISATIONS / MEMBERSHIP (Phase B) ---
+
+    /**
+     * Returns the signed-in user's organisation (id, name, tier, seat_cap, status)
+     * plus their role inside it. NULL if not signed in or not yet a member.
+     */
+    async getCurrentOrgInfo() {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) return null;
+
+        const { data, error } = await (supabase as any)
+            .from('org_members')
+            .select(`
+                role,
+                joined_at,
+                organisation:organisations (
+                    id, name, tier, seat_cap, subscription_status, subscription_period_end, created_at, settings
+                )
+            `)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) return null;
+
+        return {
+            role: data.role as 'admin' | 'member',
+            joined_at: data.joined_at as string,
+            organisation: data.organisation,
+            isAdmin: data.role === 'admin',
+        };
+    },
+
+    /**
+     * Lists members of the caller's organisation via the SECURITY DEFINER RPC.
+     * Includes auth.users email + signup metadata (full_name, first_name, surname).
+     * Returns empty list if caller is not in any org.
+     */
+    async getOrgMembers() {
+        const { data, error } = await (supabase as any).rpc('get_org_members_with_users');
+        if (error) throw error;
+        return (data || []) as Array<{
+            member_id: string;
+            user_id: string;
+            role: 'admin' | 'member';
+            joined_at: string;
+            invited_by: string | null;
+            email: string;
+            full_name: string;
+            first_name: string | null;
+            surname: string | null;
+        }>;
+    },
+
+    /**
+     * Lists pending (non-accepted, non-revoked, non-expired) invitations
+     * for the caller's organisation. RLS scopes this to current org.
+     */
+    async getOrgPendingInvitations() {
+        const nowIso = new Date().toISOString();
+        const { data, error } = await (supabase as any)
+            .from('org_invitations')
+            .select('id, email, role, created_at, expires_at')
+            .is('accepted_at', null)
+            .is('revoked_at', null)
+            .gt('expires_at', nowIso)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as Array<{
+            id: string;
+            email: string;
+            role: 'admin' | 'member';
+            created_at: string;
+            expires_at: string;
+        }>;
+    },
+
+    /**
+     * Updates the organisation name. RLS allows only admins of the caller's
+     * own organisation; non-admins will get a permissions error from the DB.
+     */
+    /**
+     * Admin-only. Creates a pending invitation for an email, returns the
+     * token + expires_at so the caller can build/copy the magic-link URL.
+     * Server-side validates: caller is admin, seat cap, no duplicate invite,
+     * email isn't already in another org.
+     */
+    async createOrgInvitation(email: string, role: 'admin' | 'member' = 'member') {
+        const { data, error } = await (supabase as any).rpc('create_org_invitation', {
+            p_email: email,
+            p_role: role,
+        });
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row as { id: string; token: string; expires_at: string; organisation_id: string };
+    },
+
+    async revokeOrgInvitation(invitationId: string) {
+        const { error } = await (supabase as any).rpc('revoke_org_invitation', {
+            p_invitation_id: invitationId,
+        });
+        if (error) throw error;
+    },
+
+    /**
+     * Public — no auth required. Looks up an invitation by its token for the
+     * accept-invite landing page. Returns is_valid + a reason if not.
+     */
+    async getInvitationInfo(token: string) {
+        const { data, error } = await (supabase as any).rpc('get_invitation_info', {
+            p_token: token,
+        });
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row as {
+            organisation_name: string | null;
+            role: 'admin' | 'member' | null;
+            email: string | null;
+            expires_at: string | null;
+            is_valid: boolean;
+            invalid_reason: string | null;
+        };
+    },
+
+    /**
+     * Called by a signed-in user to redeem their invitation token. Server-side
+     * validates: token still valid, email matches signed-in user, etc.
+     */
+    async acceptOrgInvitation(token: string) {
+        const { data, error } = await (supabase as any).rpc('accept_org_invitation', {
+            p_token: token,
+        });
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row as { organisation_id: string; role: 'admin' | 'member' };
+    },
+
+    async removeOrgMember(memberId: string) {
+        const { error } = await (supabase as any).rpc('remove_org_member', {
+            p_member_id: memberId,
+        });
+        if (error) throw error;
+    },
+
+    async changeMemberRole(memberId: string, newRole: 'admin' | 'member') {
+        const { error } = await (supabase as any).rpc('change_member_role', {
+            p_member_id: memberId,
+            p_new_role: newRole,
+        });
+        if (error) throw error;
+    },
+
+    async transferAdmin(toMemberId: string) {
+        const { error } = await (supabase as any).rpc('transfer_admin', {
+            p_to_member_id: toMemberId,
+        });
+        if (error) throw error;
+    },
+
+    /**
+     * Admin-only. Uses the SECURITY DEFINER RPC update_org_name which:
+     *   - re-validates admin permission server-side (defence in depth)
+     *   - writes an entry to org_audit_log so the rename shows up in
+     *     the Settings Activity panel
+     */
+    async updateOrgName(newName: string) {
+        const trimmed = (newName || '').trim();
+        if (!trimmed) throw new Error('Organisation name cannot be empty');
+        const { error } = await (supabase as any).rpc('update_org_name', { p_new_name: trimmed });
+        if (error) throw error;
+        return { ok: true };
+    },
+
+    /**
+     * Returns the most recent org_audit_log entries for the caller's
+     * organisation. Used by the Settings → Organisation Activity panel.
+     */
+    async getOrgAuditLog(limit: number = 50) {
+        const { data, error } = await (supabase as any).rpc('get_org_audit_log', { p_limit: limit });
+        if (error) throw error;
+        return (data || []) as Array<{
+            id: string;
+            action:
+                | 'org_renamed'
+                | 'invite_created'
+                | 'invite_revoked'
+                | 'invite_accepted'
+                | 'member_removed'
+                | 'role_changed'
+                | 'admin_transferred';
+            actor_user_id: string | null;
+            actor_email: string | null;
+            target_user_id: string | null;
+            target_email: string | null;
+            metadata: any;
+            created_at: string;
+        }>;
     },
 };

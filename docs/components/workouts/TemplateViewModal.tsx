@@ -51,13 +51,11 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
     if (!ids.length) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from('exercises')
-        .select('id, name, description, body_parts, categories, video_url')
-        .in('id', ids);
+      // Use overlay-aware RPC so customised exercises in templates resolve to the override.
+      const { data } = await (supabase as any).rpc('get_exercises_overlay', { p_ids: ids });
       if (!cancelled && data) {
         const map: Record<string, any> = {};
-        for (const e of data) map[e.id] = e;
+        for (const e of data as any[]) map[e.id] = e;
         setFetchedExMeta(map);
       }
     })();

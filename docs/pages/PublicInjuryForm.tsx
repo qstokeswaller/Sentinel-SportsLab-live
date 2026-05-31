@@ -5,6 +5,7 @@ import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, AlertCircle, Activity, ShieldAlertIcon, ChevronRight, ChevronLeft, Send, UploadCloudIcon, XIcon, Loader2 } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 import {
     INJURY_CLASSIFICATIONS, SEVERITY_GRADES, LATERALITY_OPTIONS,
     INJURY_ACTIVITIES, PAIN_KINDS, RANGE_OF_MOTION_OPTIONS,
@@ -55,6 +56,7 @@ const Label = ({ children }) => (
 const STEP_NAMES = ['Select Athlete', 'Injury Location', 'Classification', 'Clinical', 'Management', 'Notes & Attachments', 'Review & Submit'];
 
 const PublicInjuryForm = () => {
+    useForceLightMode();
     const { teamId, athleteId: preselectedAthleteId } = useParams();
 
     const [loading, setLoading] = useState(true);

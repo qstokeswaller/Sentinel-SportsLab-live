@@ -38,7 +38,9 @@ export const Sidebar = () => {
         setIsPerformanceLabOpen,
         setActiveAnalyticsModule,
         setActiveReport,
-        setActiveConditioningModule
+        setActiveConditioningModule,
+        currentOrg,
+        isOrgAdmin,
     } = useAppState();
 
     const collapsed = isSidebarCollapsed;
@@ -138,7 +140,22 @@ export const Sidebar = () => {
                         <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300">{userInitial}</span>
                     </div>
                     {showLabels && (
-                        <p className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1] truncate flex-1 min-w-0">{displayName}</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1] truncate flex items-center gap-1.5">
+                                <span className="truncate">{displayName}</span>
+                                {isOrgAdmin && (
+                                    <span title="Organisation admin"
+                                        className="shrink-0 text-[8.5px] font-bold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
+                                        Admin
+                                    </span>
+                                )}
+                            </p>
+                            {currentOrg?.name && (
+                                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] truncate mt-0.5">
+                                    {currentOrg.name}
+                                </p>
+                            )}
+                        </div>
                     )}
                 </div>
 

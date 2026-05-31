@@ -89,7 +89,11 @@ const PrivacyPolicyPage: React.FC = () => {
                 <li>Athlete-uploaded images (e.g. body-area annotations)</li>
             </ul>
 
-            <h3>2.4 Automatically collected technical data</h3>
+            <h3>2.4 Organisation library customisations</h3>
+            <p>The Platform ships with a default library of exercises, protocols, and reference materials (collectively the "Platform Library"). Organisations may edit any item in the Platform Library, add their own custom items, attach images or video links, and adjust descriptions. These customisations ("Organisation Library Customisations") are stored separately from the original Platform Library entries and are visible only inside the subscribing organisation's workspace.</p>
+            <p>We retain a record of Organisation Library Customisations on our infrastructure to deliver the Platform to you. We do <strong>not</strong> use the content of those customisations to improve the Platform Library by default. A future opt-in mechanism may be added so that organisations who choose to do so can elect to share specific customisations back to the Platform Library, where they may inform improvements that all organisations benefit from. Until that opt-in is in place and you have explicitly enabled it, your customisations remain private to your organisation.</p>
+
+            <h3>2.5 Automatically collected technical data</h3>
             <ul>
                 <li>Browser type, device type, operating system</li>
                 <li>IP address (used transiently for security and rate-limiting; not stored in identifiable form for analytics)</li>

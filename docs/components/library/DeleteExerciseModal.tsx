@@ -20,7 +20,10 @@ export const DeleteExerciseModal = ({ exercise, isOpen, onClose, showToast }: De
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await deleteExercise.mutateAsync(exercise.id);
+      await deleteExercise.mutateAsync({
+        id: exercise.id,
+        __override_id: exercise.__override_id ?? null,
+      });
       showToast(`${exercise.name} deleted`, 'success');
       onClose();
     } catch (err: any) {

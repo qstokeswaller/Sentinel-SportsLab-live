@@ -14,6 +14,7 @@ import {
     AlertCircle, Printer, Activity as ActivityIcon,
     Shield, ShieldAlert,
 } from 'lucide-react';
+import { useForceLightMode } from '../hooks/useForceLightMode';
 
 const BrandingBanner = () => (
     <div className="bg-white border-b border-slate-100 py-3 print:py-2 print:border-b print:border-slate-200">
@@ -178,6 +179,7 @@ const SnapshotTable: React.FC<{ snapshot: any; titleSuffix?: string; rows: any[]
 
 // ── Page ─────────────────────────────────────────────────────────────────
 const PublicDataHubView: React.FC = () => {
+    useForceLightMode();
     const { snapshotId } = useParams<{ snapshotId: string }>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
