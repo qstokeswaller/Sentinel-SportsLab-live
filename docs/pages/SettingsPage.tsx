@@ -13,6 +13,7 @@ import {
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
   MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
   ActivityIcon, TagIcon, CheckIcon, LinkIcon, XIcon, SunIcon, MoonIcon, MonitorIcon, CalendarIcon,
+  KeyIcon, MailIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
@@ -549,6 +550,58 @@ const SettingsPage: React.FC = () => {
   const orgRef = useRef<HTMLDivElement>(null);
 
   const origProfile = useRef({ fullName: '', organization: '', phone: '' });
+
+  // ── Change password state ──────────────────────────────────────────
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 8) {
+      showToast?.('Password must be at least 8 characters', 'error');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      showToast?.('Passwords do not match', 'error');
+      return;
+    }
+    setPwSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPwSaving(false);
+    if (error) {
+      showToast?.(error.message || 'Could not change password', 'error');
+    } else {
+      setNewPassword('');
+      setConfirmNewPassword('');
+      showToast?.('Password updated. Check your inbox for the security notification.', 'success');
+    }
+  };
+
+  // ── Change email state ────────────────────────────────────────────
+  const [newEmail, setNewEmail] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailConfirmSent, setEmailConfirmSent] = useState(false);
+
+  const handleChangeEmail = async () => {
+    const trimmed = newEmail.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      showToast?.('Please enter a valid email address', 'error');
+      return;
+    }
+    if (trimmed === user?.email?.toLowerCase()) {
+      showToast?.('That is already your current email', 'error');
+      return;
+    }
+    setEmailSaving(true);
+    const { error } = await supabase.auth.updateUser({ email: trimmed });
+    setEmailSaving(false);
+    if (error) {
+      showToast?.(error.message || 'Could not request email change', 'error');
+    } else {
+      setEmailConfirmSent(true);
+      showToast?.(`Confirmation link sent to ${trimmed}`, 'success');
+    }
+  };
 
   useEffect(() => {
     if (user?.user_metadata) {
@@ -1210,7 +1263,7 @@ const SettingsPage: React.FC = () => {
                 <div>
                   <label className={labelCls}>Email</label>
                   <input type="email" value={user?.email || ''} disabled className={`${inputCls} opacity-50 cursor-not-allowed`} />
-                  <p className="text-[11px] text-slate-400 mt-1">Email cannot be changed here.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">To change your sign-in email, use the <strong>Change email</strong> section below.</p>
                 </div>
                 {profileError && <div className="bg-red-50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5"><p className="text-red-600 text-xs font-medium">{profileError}</p></div>}
                 <button onClick={handleSaveProfile} disabled={profileSaving || !profileDirty}
@@ -1220,6 +1273,78 @@ const SettingsPage: React.FC = () => {
                   <SaveIcon size={14} />
                   {profileSaving ? 'Saving...' : profileDirty ? 'Save Profile' : 'No changes'}
                 </button>
+              </div>
+            </CollapsibleSection>
+
+            {/* Change password */}
+            <CollapsibleSection id="change-password" icon={KeyIcon} title="Change password"
+              subtitle="Set a new password — you stay signed in"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>New password</label>
+                  <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                    className={inputCls} placeholder="Min 8 characters" autoComplete="new-password" />
+                </div>
+                <div>
+                  <label className={labelCls}>Confirm new password</label>
+                  <input type="password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)}
+                    className={inputCls} placeholder="Repeat new password" autoComplete="new-password" />
+                </div>
+                <button onClick={handleChangePassword}
+                  disabled={pwSaving || !newPassword || !confirmNewPassword}
+                  className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
+                    pwSaving || !newPassword || !confirmNewPassword
+                      ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  }`}>
+                  <KeyIcon size={14} />
+                  {pwSaving ? 'Updating…' : 'Update password'}
+                </button>
+                <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] leading-relaxed">
+                  A confirmation email will be sent from <strong>noreply@sentinelsportslab.com</strong> letting you know your password changed.
+                  If you didn't make this change, contact <a href="mailto:support@sentinelsportslab.com" className="text-indigo-600 hover:underline">support@sentinelsportslab.com</a> immediately.
+                </p>
+              </div>
+            </CollapsibleSection>
+
+            {/* Change email */}
+            <CollapsibleSection id="change-email" icon={MailIcon} title="Change email"
+              subtitle="Update your sign-in email — confirmation required"
+              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>Current email</label>
+                  <input type="email" value={user?.email || ''} disabled
+                    className={`${inputCls} opacity-50 cursor-not-allowed`} />
+                </div>
+                <div>
+                  <label className={labelCls}>New email</label>
+                  <input type="email" value={newEmail} onChange={e => { setNewEmail(e.target.value); setEmailConfirmSent(false); }}
+                    className={inputCls} placeholder="new-email@example.com" autoComplete="email" />
+                </div>
+                {emailConfirmSent ? (
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 rounded-lg px-3 py-3">
+                    <p className="text-[12px] text-emerald-700 dark:text-emerald-300 font-medium">
+                      Confirmation link sent to <strong>{newEmail}</strong>. Click the link in that inbox to complete the change. Until you do, your current email stays active.
+                    </p>
+                  </div>
+                ) : (
+                  <button onClick={handleChangeEmail}
+                    disabled={emailSaving || !newEmail.trim()}
+                    className={`w-full flex items-center justify-center gap-2 text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors ${
+                      emailSaving || !newEmail.trim()
+                        ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#475569] border border-slate-200 dark:border-[#243A58] cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    }`}>
+                    <MailIcon size={14} />
+                    {emailSaving ? 'Sending…' : 'Send confirmation link'}
+                  </button>
+                )}
+                <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] leading-relaxed">
+                  We'll send a confirmation link to the new email address. Your sign-in email only changes once you click that link.
+                  Both your old and new inboxes will receive a security notification when the change completes.
+                </p>
               </div>
             </CollapsibleSection>
 
