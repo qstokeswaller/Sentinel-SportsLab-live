@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     const { error } = await resend.emails.send({
       from: FROM_ADDRESS,
       to: SUPPORT_INBOX,
-      reply_to: email.trim(),
+      replyTo: email.trim(),
       subject: `[${subjectLabel}] ${name.trim()}`,
       html: notificationHtml,
     });
