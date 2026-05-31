@@ -109,9 +109,9 @@ const SiteFooter: React.FC = () => {
                             <h4 className={colHead}>Support</h4>
                             <ul className="space-y-2.5">
                                 <li><Link to="/contact" className={linkCls}>Contact Us</Link></li>
-                                <li><a href="mailto:hello@sentinelsportslab.com?subject=Sentinel%20SportsLab%20Support" className={linkCls}>Email Support</a></li>
-                                <li><a href="mailto:hello@sentinelsportslab.com?subject=Bug%20Report" className={linkCls}>Report a Bug</a></li>
-                                <li><a href="mailto:hello@sentinelsportslab.com?subject=Feature%20Request" className={linkCls}>Feature Request</a></li>
+                                <li><a href="mailto:support@sentinelsportslab.com?subject=Sentinel%20SportsLab%20Support" className={linkCls}>Email Support</a></li>
+                                <li><a href="mailto:support@sentinelsportslab.com?subject=Bug%20Report" className={linkCls}>Report a Bug</a></li>
+                                <li><a href="mailto:support@sentinelsportslab.com?subject=Feature%20Request" className={linkCls}>Feature Request</a></li>
                                 <li>
                                     <span className="text-[13px] text-white/55 flex items-center gap-1.5">
                                         Help Centre

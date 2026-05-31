@@ -354,7 +354,7 @@ const LandingPage: React.FC = () => {
                                             </li>
                                         ))}
                                     </ul>
-                                    <button onClick={() => isCustom ? (window.location.href = 'mailto:hello@sentinelsportslab.com') : navigate('/login')}
+                                    <button onClick={() => isCustom ? (window.location.href = 'mailto:support@sentinelsportslab.com') : navigate('/login')}
                                         className={`w-full py-2.5 font-semibold rounded-xl text-sm transition-all ${
                                             isHighlight ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
                                             : isCustom ? 'bg-white text-slate-900 hover:bg-slate-100'

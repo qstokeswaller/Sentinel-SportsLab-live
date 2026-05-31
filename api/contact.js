@@ -14,6 +14,7 @@
  */
 
 import { Resend } from 'resend';
+import { renderEmail, escapeHtml } from './_email-template.js';
 
 const SUBJECT_LABELS = {
   sales:   'Sales / Pilot enquiry',
@@ -24,15 +25,6 @@ const SUBJECT_LABELS = {
 
 const FROM_ADDRESS = 'Sentinel SportsLab <noreply@sentinelsportslab.com>';
 const SUPPORT_INBOX = 'support@sentinelsportslab.com';
-
-function escapeHtml(str = '') {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -65,19 +57,22 @@ export default async function handler(req, res) {
   const safeOrg = organisation?.trim() ? escapeHtml(organisation.trim()) : '—';
   const safeMessage = escapeHtml(message.trim()).replace(/\n/g, '<br>');
 
-  const notificationHtml = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px;">
-      <h2 style="color: #4f46e5; margin: 0 0 16px;">${escapeHtml(subjectLabel)}</h2>
-      <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-        <tr><td style="padding: 6px 12px 6px 0; color: #64748b; font-size: 13px;">From</td><td style="padding: 6px 0; color: #0f172a; font-size: 14px;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
-        <tr><td style="padding: 6px 12px 6px 0; color: #64748b; font-size: 13px;">Organisation</td><td style="padding: 6px 0; color: #0f172a; font-size: 14px;">${safeOrg}</td></tr>
+  const notificationHtml = renderEmail({
+    preheader: `${name.trim()} — ${subjectLabel}`,
+    heading: subjectLabel,
+    introHtml: `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 18px; width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 4px 12px 4px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; width: 110px;">From</td>
+            <td style="padding: 4px 0; font-size: 14px; color: #0f172a;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;">Organisation</td>
+            <td style="padding: 4px 0; font-size: 14px; color: #0f172a;">${safeOrg}</td></tr>
       </table>
-      <div style="background: #f8fafc; border-left: 3px solid #4f46e5; padding: 16px 20px; border-radius: 4px;">
+      <div style="background: #f8fafc; border-left: 3px solid #4f46e5; padding: 16px 20px; border-radius: 8px;">
         <p style="margin: 0; color: #0f172a; font-size: 14px; line-height: 1.6;">${safeMessage}</p>
       </div>
-      <p style="margin-top: 24px; color: #94a3b8; font-size: 12px;">Reply to this email and your response will go directly to ${safeEmail}.</p>
-    </div>
-  `;
+    `,
+    postCtaHtml: `<p style="margin: 0;">Reply to this email and your response will go directly to ${safeEmail}.</p>`,
+  });
 
   try {
     const { error } = await resend.emails.send({

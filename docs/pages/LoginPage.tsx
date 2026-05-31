@@ -48,10 +48,17 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
         ?? (searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
     const [mode, setMode] = useState<Mode>(initialMode);
 
+    // When the page is opened from an invitation link, the accept-invite page
+    // redirects with ?email=<the invited email>. We pre-fill it and lock the
+    // field so the user can't accidentally sign up with a different address
+    // (which would create a separate org instead of joining the inviting one).
+    const lockedEmail = searchParams.get('email') || '';
+
     // Shared fields
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(lockedEmail);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const emailReadOnly = !!lockedEmail;
 
     // Signup-only fields
     const [firstName, setFirstName] = useState('');
@@ -171,7 +178,11 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
 
                     {mode !== 'reset' ? (
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div><label className={labelCls}>Email address</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} placeholder="coach@club.com" autoComplete="email" /></div>
+                            <div>
+                                <label className={labelCls}>Email address</label>
+                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required readOnly={emailReadOnly} className={`${inputCls} ${emailReadOnly ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`} placeholder="coach@club.com" autoComplete="email" />
+                                {emailReadOnly && <p className="text-[11px] text-slate-400 mt-1">From your invitation — can't be changed</p>}
+                            </div>
                             <div><label className={labelCls}>Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={inputCls} placeholder="Your password" autoComplete="current-password" /></div>
                             <button type="button" onClick={() => switchMode('reset')} className="block text-right text-[12px] text-indigo-600 hover:text-indigo-700 font-medium ml-auto -mt-1.5">Forgot password?</button>
                             <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 transition-colors">{loading ? 'Signing in…' : 'Sign In'}</button>
@@ -179,7 +190,10 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <p className="text-[12px] text-slate-600 mb-3">Enter your email — we'll send a reset link.</p>
-                            <div><label className={labelCls}>Email address</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} placeholder="coach@club.com" autoComplete="email" /></div>
+                            <div>
+                                <label className={labelCls}>Email address</label>
+                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required readOnly={emailReadOnly} className={`${inputCls} ${emailReadOnly ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`} placeholder="coach@club.com" autoComplete="email" />
+                            </div>
                             <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 transition-colors">{loading ? 'Sending…' : 'Send reset link'}</button>
                             <button type="button" onClick={() => switchMode('signin')} className="w-full text-[12px] text-slate-500 hover:text-slate-700 mt-1">Back to sign in</button>
                         </form>
@@ -204,7 +218,11 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                             <div><label className={labelCls}>First name *</label><input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} required className={inputCls} placeholder="First name" autoComplete="given-name" /></div>
                             <div><label className={labelCls}>Surname *</label><input type="text" value={surname} onChange={e => setSurname(e.target.value)} required className={inputCls} placeholder="Surname" autoComplete="family-name" /></div>
                         </div>
-                        <div><label className={labelCls}>Email address *</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} placeholder="coach@club.com" autoComplete="email" /></div>
+                        <div>
+                            <label className={labelCls}>Email address *</label>
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required readOnly={emailReadOnly} className={`${inputCls} ${emailReadOnly ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`} placeholder="coach@club.com" autoComplete="email" />
+                            {emailReadOnly && <p className="text-[11px] text-slate-400 mt-1">From your invitation — can't be changed</p>}
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div><label className={labelCls}>Password *</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className={inputCls} placeholder="Min 8 characters" autoComplete="new-password" /></div>
                             <div><label className={labelCls}>Confirm *</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className={inputCls} placeholder="Repeat password" autoComplete="new-password" /></div>

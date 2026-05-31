@@ -315,7 +315,7 @@ const LandingPage: React.FC = () => {
                                         <li key={i} className="flex items-start gap-2"><CheckIcon size={14} className="text-emerald-400 mt-0.5 shrink-0" />{f}</li>
                                     ))}
                                 </ul>
-                                <button onClick={() => window.location.href = 'mailto:hello@sentinelsportslab.com'} className="w-full py-2.5 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all text-sm flex items-center justify-center gap-2"><MessageCircleIcon size={14} /> Contact Us</button>
+                                <button onClick={() => window.location.href = 'mailto:support@sentinelsportslab.com'} className="w-full py-2.5 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all text-sm flex items-center justify-center gap-2"><MessageCircleIcon size={14} /> Contact Us</button>
                             </div>
                         </div>
                     </div>

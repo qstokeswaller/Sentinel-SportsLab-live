@@ -998,7 +998,7 @@ const LandingPage: React.FC = () => {
                                     ))}
                                 </ul>
                                 <button
-                                    onClick={() => t.cust ? (window.location.href = 'mailto:hello@sentinelsportslab.com') : nav('/login?mode=signup')}
+                                    onClick={() => t.cust ? (window.location.href = 'mailto:support@sentinelsportslab.com') : nav('/login?mode=signup')}
                                     className={`w-full py-3 font-semibold rounded-xl text-sm transition-all ${
                                         t.pop
                                             ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'

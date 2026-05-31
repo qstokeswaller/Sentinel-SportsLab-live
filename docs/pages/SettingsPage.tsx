@@ -423,7 +423,34 @@ const SettingsPage: React.FC = () => {
       setLastInviteLink(acceptUrl);
       setInviteEmail('');
       await reloadOrgLists();
-      showToast?.('Invitation created — copy the link below to send it');
+
+      // Fire-and-forget send via Resend. Failure here doesn't undo the invitation —
+      // the link is still valid and shown in the UI as a manual fallback.
+      const inviterName =
+        (user?.user_metadata?.full_name as string | undefined) ||
+        (user?.email as string | undefined) ||
+        'A teammate';
+      try {
+        const emailRes = await fetch('/api/send-org-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: email,
+            role: inviteRole,
+            acceptUrl,
+            orgName: currentOrg?.name || 'Sentinel SportsLab',
+            inviterName,
+          }),
+        });
+        if (emailRes.ok) {
+          showToast?.(`Invitation email sent to ${email}`, 'success');
+        } else {
+          const data = await emailRes.json().catch(() => ({}));
+          showToast?.(data?.error || `Invitation created — copy the link below to send to ${email} manually`, 'info');
+        }
+      } catch {
+        showToast?.(`Invitation created — copy the link below to send to ${email} manually`, 'info');
+      }
     } catch (e: any) {
       showToast?.(e?.message || 'Failed to create invitation', 'error');
     } finally {
