@@ -19,7 +19,7 @@
  */
 
 import { Resend } from 'resend';
-import { renderEmail, escapeHtml } from './_email-template.js';
+import { renderEmail, escapeHtml, ICONS } from './_email-template.js';
 
 const FROM_ADDRESS = 'Sentinel SportsLab <noreply@sentinelsportslab.com>';
 
@@ -52,23 +52,45 @@ export default async function handler(req, res) {
 
   const safeOrg = escapeHtml(orgName.trim());
   const safeInviter = escapeHtml(inviterName.trim());
-  const roleLabel = role === 'admin' ? 'an admin' : 'a member';
+  const inviterInitial = escapeHtml((inviterName.trim()[0] || 'S').toUpperCase());
+  const roleLabel = role === 'admin' ? 'Admin' : 'Member';
   const safeRoleLabel = escapeHtml(roleLabel);
+
+  // Rich "inviter card" — gradient-bg panel with inviter's initial in a
+  // gradient circle, then their name, the org name, and the assigned role.
+  const inviterCardHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #e0e7ff;border-radius:14px;">
+      <tr><td style="padding:18px 22px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="vertical-align:middle;padding-right:14px;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;line-height:44px;text-align:center;color:#fff;font-weight:700;font-size:16px;">${inviterInitial}</div>
+            </td>
+            <td style="vertical-align:middle;">
+              <p style="margin:0 0 2px;font-size:14px;color:#475569;line-height:1.4;"><strong style="color:#0f172a;">${safeInviter}</strong> invited you to</p>
+              <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;line-height:1.3;">${safeOrg}</p>
+              <p style="margin:2px 0 0;font-size:12px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">As ${safeRoleLabel === 'Admin' ? 'an Admin' : 'a Member'}</p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  `;
 
   const html = renderEmail({
     preheader: `${inviterName.trim()} invited you to join ${orgName.trim()} on Sentinel SportsLab.`,
-    heading: `You've been invited to ${safeOrg}`,
-    introHtml: `
-      <p style="margin: 0 0 14px;"><strong>${safeInviter}</strong> has invited you to join <strong>${safeOrg}</strong> on Sentinel SportsLab as ${safeRoleLabel}.</p>
-      <p style="margin: 0;">Click the button below to accept the invitation. You'll be asked to create a password — your email is already linked to the invitation, so you don't need to enter it again.</p>
+    hero: ICONS.people,
+    eyebrow: "You're invited",
+    heading: `Join ${orgName.trim()}`,
+    subheadingHtml: '', // moved into the rich insert + post-CTA copy below
+    richInsertHtml: inviterCardHtml + `
+      <div style="text-align:center;padding-top:18px;">
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#475569;">Click the button below to accept. You'll be asked to create a password — your email is already linked to the invitation.</p>
+      </div>
     `,
-    cta: { url: acceptUrl, label: 'Accept invitation' },
-    postCtaHtml: `
-      <p style="margin: 0 0 6px;">Or copy and paste this link into your browser:</p>
-      <p style="margin: 0; word-break: break-all;"><a href="${escapeHtml(acceptUrl)}" style="color: #4f46e5;">${escapeHtml(acceptUrl)}</a></p>
-      <p style="margin: 14px 0 0;">This invitation expires in 7 days.</p>
-    `,
-    footerNote: `Invitation sent to ${escapeHtml(to.trim())}.`,
+    cta: { url: acceptUrl, label: 'Accept invitation →' },
+    fallbackLink: { url: acceptUrl, expiryText: 'This invitation expires in 7 days.' },
+    footerExtra: `Invitation sent to ${escapeHtml(to.trim())}. Didn't expect this? You can safely ignore it.`,
   });
 
   const resend = new Resend(apiKey);

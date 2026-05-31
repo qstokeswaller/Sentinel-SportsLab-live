@@ -14,7 +14,7 @@
  */
 
 import { Resend } from 'resend';
-import { renderEmail, escapeHtml } from './_email-template.js';
+import { renderEmail, escapeHtml, ICONS } from './_email-template.js';
 
 const SUBJECT_LABELS = {
   sales:   'Sales / Pilot enquiry',
@@ -57,21 +57,35 @@ export default async function handler(req, res) {
   const safeOrg = organisation?.trim() ? escapeHtml(organisation.trim()) : '—';
   const safeMessage = escapeHtml(message.trim()).replace(/\n/g, '<br>');
 
+  // For the support-side notification we don't show a CTA — it's a notification,
+  // not actionable. The message body lives in the rich insert.
+  const detailsHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #e0e7ff;border-radius:14px;margin-bottom:14px;">
+      <tr><td style="padding:16px 22px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+          <tr><td style="padding:4px 12px 4px 0;color:#7c3aed;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;width:110px;">From</td>
+              <td style="padding:4px 0;font-size:14px;color:#0f172a;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#7c3aed;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Organisation</td>
+              <td style="padding:4px 0;font-size:14px;color:#0f172a;">${safeOrg}</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:3px solid #4f46e5;padding:16px 20px;border-radius:10px;">
+      <p style="margin:0;color:#0f172a;font-size:14px;line-height:1.65;">${safeMessage}</p>
+    </div>
+  `;
+
   const notificationHtml = renderEmail({
     preheader: `${name.trim()} — ${subjectLabel}`,
+    hero: ICONS.message,
+    eyebrow: 'New contact form submission',
     heading: subjectLabel,
-    introHtml: `
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 18px; width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 4px 12px 4px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; width: 110px;">From</td>
-            <td style="padding: 4px 0; font-size: 14px; color: #0f172a;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;">Organisation</td>
-            <td style="padding: 4px 0; font-size: 14px; color: #0f172a;">${safeOrg}</td></tr>
-      </table>
-      <div style="background: #f8fafc; border-left: 3px solid #4f46e5; padding: 16px 20px; border-radius: 8px;">
-        <p style="margin: 0; color: #0f172a; font-size: 14px; line-height: 1.6;">${safeMessage}</p>
-      </div>
-    `,
-    postCtaHtml: `<p style="margin: 0;">Reply to this email and your response will go directly to ${safeEmail}.</p>`,
+    subheadingHtml: '',
+    richInsertHtml: detailsHtml,
+    securityCallout: {
+      tone: 'info',
+      html: `Hit <strong>Reply</strong> and your response will go directly to <strong>${safeEmail}</strong>.`,
+    },
   });
 
   try {
