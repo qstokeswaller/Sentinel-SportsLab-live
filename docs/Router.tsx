@@ -39,6 +39,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+const PENDING_INVITE_KEY = 'sentinel_pending_invite_token';
+
+/**
+ * Returns the pending invite token from localStorage (set by AcceptInvitePage
+ * when an unauthenticated user lands on the magic link). Cleared once the user
+ * lands back on /accept-invite/:token by AcceptInvitePage itself.
+ */
+const readPendingInviteToken = (): string | null => {
+  try { return localStorage.getItem(PENDING_INVITE_KEY); } catch { return null; }
+};
+
 const AppRouter: React.FC = () => {
   const { user, loading, needsPasswordUpdate } = useAuth();
 
@@ -46,6 +57,13 @@ const AppRouter: React.FC = () => {
   if (needsPasswordUpdate && user) {
     return <LoginPage forceMode="update-password" />;
   }
+
+  // POST-SIGN-IN INVITE RESUME — if the user just signed in/up and there's a
+  // pending invite token in localStorage (stashed by AcceptInvitePage before
+  // we sent them to login/signup), bounce them back to /accept-invite/:token
+  // instead of /dashboard so the invitation actually gets accepted. Without this
+  // every new-user signup via an invite link gets orphaned into an empty org.
+  const pendingInviteToken = user && !loading ? readPendingInviteToken() : null;
 
   return (
     <Routes>
@@ -79,11 +97,11 @@ const AppRouter: React.FC = () => {
       {/* AUTH ROUTES */}
       <Route
         path="/"
-        element={loading ? null : user ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+        element={loading ? null : user ? (pendingInviteToken ? <Navigate to={`/accept-invite/${pendingInviteToken}`} replace /> : <Navigate to="/dashboard" replace />) : <LandingPage />}
       />
       <Route
         path="/login"
-        element={loading ? null : user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        element={loading ? null : user ? (pendingInviteToken ? <Navigate to={`/accept-invite/${pendingInviteToken}`} replace /> : <Navigate to="/dashboard" replace />) : <LoginPage />}
       />
       <Route
         path="/onboarding"

@@ -224,7 +224,18 @@ const AcceptInvitePage: React.FC = () => {
                 </p>
                 {acceptError && (
                     <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4 text-left">
-                        <p className="text-[12px] text-rose-700">{acceptError}</p>
+                        <p className="text-[12px] text-rose-700 font-medium mb-1">{acceptError}</p>
+                        {/* The accept_org_invitation RPC raises this exact message when the
+                            user is already in an org that has athletes/teams/wellness/loads.
+                            Surface a clear next-step so users aren't stuck. */}
+                        {acceptError.toLowerCase().includes('already belong') && (
+                            <p className="text-[11px] text-rose-600 leading-relaxed">
+                                Multi-org membership isn't supported yet. Ask an admin in your current organisation
+                                to remove your data + membership before accepting this invitation. Alternatively,
+                                contact <a href="mailto:support@sentinelsportslab.com" className="underline font-semibold">support@sentinelsportslab.com</a> and
+                                we'll help you migrate.
+                            </p>
+                        )}
                     </div>
                 )}
                 <button

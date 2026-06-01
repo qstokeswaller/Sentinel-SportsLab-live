@@ -1223,6 +1223,29 @@ export const DatabaseService = {
     },
 
     /**
+     * Pre-invite check (admin-only). Tells the caller whether the target email
+     * already has an account + whether that account is already in another
+     * organisation. Used by the invite UI to surface clear warnings BEFORE
+     * we send the invite — otherwise the invitee may receive an invite that
+     * fails to accept due to the one-user-one-org constraint.
+     */
+    async checkInviteEmail(email: string) {
+        const { data, error } = await (supabase as any).rpc('check_invite_email', {
+            p_email: email,
+        });
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row as {
+            user_exists: boolean;
+            user_id: string | null;
+            has_other_org: boolean;
+            other_org_id: string | null;
+            other_org_name: string | null;
+            other_org_has_data: boolean;
+        };
+    },
+
+    /**
      * Public — no auth required. Looks up an invitation by its token for the
      * accept-invite landing page. Returns is_valid + a reason if not.
      */

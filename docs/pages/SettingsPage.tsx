@@ -596,6 +596,16 @@ const SettingsPage: React.FC = () => {
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
   const [inviteSending, setInviteSending] = useState(false);
   const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
+  // Pre-flight check result for the invite email — surfaces a clear warning if
+  // the email is tied to a user who is already in another org with data, since
+  // the accept flow would fail (multi-org membership is not yet supported).
+  const [inviteEmailCheck, setInviteEmailCheck] = useState<null | {
+    user_exists: boolean;
+    has_other_org: boolean;
+    other_org_name: string | null;
+    other_org_has_data: boolean;
+  }>(null);
+  const [inviteEmailChecking, setInviteEmailChecking] = useState(false);
   const [memberActionBusy, setMemberActionBusy] = useState<string | null>(null); // member_id being acted on
 
   // ── Phase E: audit log state ────────────────────────────────────────────
@@ -616,6 +626,30 @@ const SettingsPage: React.FC = () => {
     })();
     return () => { cancelled = true; };
   }, [activeTab, orgMembers.length, orgInvitations.length]); // refresh after member-list changes
+
+  // Debounced pre-flight check on the invite email — runs once the user has
+  // typed a plausibly-complete email, surfaces "already in another org" warnings
+  // before they hit Send. Self-cancelling on input change.
+  useEffect(() => {
+    const trimmed = inviteEmail.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setInviteEmailCheck(null);
+      return;
+    }
+    let cancelled = false;
+    setInviteEmailChecking(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await DatabaseService.checkInviteEmail(trimmed);
+        if (!cancelled) setInviteEmailCheck(res);
+      } catch {
+        if (!cancelled) setInviteEmailCheck(null);
+      } finally {
+        if (!cancelled) setInviteEmailChecking(false);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(t); setInviteEmailChecking(false); };
+  }, [inviteEmail]);
 
   const reloadOrgLists = React.useCallback(async () => {
     setOrgListLoading(true);
@@ -1732,6 +1766,48 @@ const SettingsPage: React.FC = () => {
                         {inviteSending ? 'Creating…' : 'Create invite'}
                       </button>
                     </div>
+
+                    {/* Pre-flight email status — shows existing-account + other-org conflicts before the admin commits */}
+                    {inviteEmailCheck && !inviteSending && (
+                      inviteEmailCheck.has_other_org && inviteEmailCheck.other_org_has_data ? (
+                        <div className="mt-2.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                          <AlertCircleIcon size={14} className="text-rose-600 dark:text-rose-300 shrink-0 mt-0.5" />
+                          <div className="text-[11.5px] text-rose-700 dark:text-rose-300 leading-relaxed">
+                            <strong>This person is already a member of "{inviteEmailCheck.other_org_name}"</strong> which has athletes/training data.
+                            They <strong>can't accept</strong> this invite until they leave that organisation first (multi-org membership isn't supported yet).
+                            Either send the invite to a different email, or ask them to leave their current org before accepting.
+                          </div>
+                        </div>
+                      ) : inviteEmailCheck.has_other_org ? (
+                        <div className="mt-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                          <AlertCircleIcon size={14} className="text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" />
+                          <div className="text-[11.5px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                            This person already has an account in "{inviteEmailCheck.other_org_name}" but that org has no data, so accepting will silently migrate them to {currentOrg?.name || 'this org'}.
+                          </div>
+                        </div>
+                      ) : inviteEmailCheck.user_exists ? (
+                        <div className="mt-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                          <CheckCircleIcon size={14} className="text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" />
+                          <div className="text-[11.5px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                            This person already has an account and isn't in any other organisation — invite should accept cleanly.
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 flex items-start gap-2">
+                          <MailIcon size={14} className="text-slate-500 dark:text-[#CBD5E1] shrink-0 mt-0.5" />
+                          <div className="text-[11.5px] text-slate-600 dark:text-[#CBD5E1] leading-relaxed">
+                            No existing account for this email. They'll be prompted to sign up + set a password when they accept.
+                            <span className="block mt-0.5 text-[10.5px] text-slate-500 dark:text-[#94A3B8]">
+                              If they already use a different email for an existing account, send the invite to <em>that</em> email instead.
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                    {inviteEmailChecking && (
+                      <p className="mt-2 text-[11px] text-slate-400 dark:text-[#94A3B8]">Checking email…</p>
+                    )}
+
                     {atCap && (
                       <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-2">
                         Seat cap reached. Upgrade your tier or revoke a pending invitation to add another member.
