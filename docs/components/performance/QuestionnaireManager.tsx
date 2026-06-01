@@ -11,6 +11,8 @@ import BodyMapAreaEditor from '../wellness/BodyMapAreaEditor';
 import ImageAttachment from '../wellness/ImageAttachment';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
 import { CustomSelect } from '../ui/CustomSelect';
+import { CreatorBadge } from '../tier/CreatorBadge';
+import { useAuth } from '../../context/AuthContext';
 
 // ─── Question type metadata ───────────────────────────────────────────────────
 const QUESTION_TYPES = [
@@ -383,6 +385,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) => {
+    const { user: authUser } = useAuth();
     const [viewMode, setViewMode] = useState('list'); // list | create
     const [newQuestTitle, setNewQuestTitle] = useState('');
     const [newQuestQuestions, setNewQuestQuestions] = useState<any[]>([]);
@@ -489,7 +492,18 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                     <ClipboardCheck size={24} />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight mb-1">{t.title || t.name}</h4>
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <h4 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{t.title || t.name}</h4>
+                                        {/* Templates created by a user are always org-shared (mode='always') —
+                                            badge only renders when org has >1 member. */}
+                                        {t.user_id && (
+                                            <CreatorBadge
+                                                creatorUserId={t.user_id}
+                                                lastModifiedByUserId={t.last_modified_by}
+                                                mode="always"
+                                            />
+                                        )}
+                                    </div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">{t.questions?.length || 0} Questions • {t.status || 'Active'}</p>
                                 </div>
 
@@ -511,6 +525,10 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                     {t.user_id == null ? (
                                         <div className="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-wide text-slate-300">
                                             Platform Default
+                                        </div>
+                                    ) : (authUser?.id && t.user_id !== authUser.id) ? (
+                                        <div className="flex-1 py-2 text-center text-[9px] font-bold uppercase tracking-wide text-slate-300">
+                                            Shared by colleague — view only
                                         </div>
                                     ) : (
                                         <>

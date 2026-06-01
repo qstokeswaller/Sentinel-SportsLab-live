@@ -1,12 +1,14 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState } from '../context/AppStateContext';
+import { useAuth } from '../context/AuthContext';
 import { useSmartSearch } from '../hooks/useSmartSearch';
 
 import { useCollections } from '../hooks/useCollections';
 import { supabase } from '../lib/supabase';
 import { MUSCLE_GROUPS, BODY_REGIONS, CLASSIFICATIONS, MOVEMENT_PATTERNS, EQUIPMENT_LIST, FORCE_TYPES } from '../utils/mocks';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
+import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { Button } from '@/components/ui/button';
 import {
     DumbbellIcon, SearchIcon, PlusIcon, XIcon,
@@ -213,6 +215,13 @@ function ExerciseRow({
                             {isOverride ? 'Customised' : 'Custom'}
                         </span>
                     )}
+                    {isCustom && (
+                        <CreatorBadge
+                            creatorUserId={ex.user_id}
+                            lastModifiedByUserId={ex.last_modified_by}
+                            mode="always"
+                        />
+                    )}
                 </div>
                 {(ex.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-0.5 mt-1">
@@ -312,6 +321,7 @@ export const ExerciseLibraryPage = () => {
         personalExerciseIds, addToPersonalLibrary, removeFromPersonalLibrary,
         isInPersonalLibrary, recentlyUsedExerciseIds,
     } = useAppState();
+    const { user: authUser } = useAuth();
 
     const {
         collections, createCollection, deleteCollection, renameCollection,
@@ -862,16 +872,25 @@ export const ExerciseLibraryPage = () => {
                                                 <span className={`w-2 h-2 rounded-full ${c.dot} shrink-0`} />
                                                 <span className={`text-[11px] font-semibold ${c.text} whitespace-nowrap`}>{col.name}</span>
                                                 <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] whitespace-nowrap">{col.exercise_ids.length}</span>
+                                                {/* Inline creator badge (always-mode — collections are org-wide). Hidden on single-user orgs. */}
+                                                <CreatorBadge
+                                                    creatorUserId={col.user_id}
+                                                    lastModifiedByUserId={col.last_modified_by}
+                                                    mode="always"
+                                                    className="text-[9px] py-0 px-1"
+                                                />
                                                 <ChevronRightIcon size={10} className="text-slate-300 dark:text-[#475569]" />
                                             </button>
-                                            {/* Collection menu */}
+                                            {/* Collection menu — only the original creator can rename/delete (matches RLS) */}
                                             <div ref={collectionMenuId === col.id ? menuRef : null} className="absolute top-1 right-1 z-10">
+                                                {(!col.user_id || !authUser?.id || col.user_id === authUser.id) && (
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setCollectionMenuId(collectionMenuId === col.id ? null : col.id); }}
                                                     className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-all"
                                                 >
                                                     <MoreHorizontalIcon size={11} />
                                                 </button>
+                                                )}
                                                 {collectionMenuId === col.id && (
                                                     <div className="absolute top-5 right-0 w-32 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-50 py-1 overflow-hidden" onClick={e => e.stopPropagation()}>
                                                         <button

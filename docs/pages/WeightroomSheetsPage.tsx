@@ -11,6 +11,10 @@ import {
     type WeightroomSheet,
 } from '../hooks/useWeightroomSheets';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
+import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
+import { CreatorBadge } from '../components/tier/CreatorBadge';
+import { ShareToOrgToggle } from '../components/tier/ShareToOrgToggle';
+import { useAuth } from '../context/AuthContext';
 import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
@@ -74,6 +78,7 @@ export const WeightroomSheetsPage = () => {
     const [mode, setMode] = useState<'list' | 'builder'>('list');
     const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
     const [sheetName, setSheetName] = useState('');
+    const [sheetVisibility, setSheetVisibility] = useState<'personal' | 'org'>('personal');
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     // Selected sheet drives the right-rail descriptor (Library-style master-detail).
     const [selectedSheet, setSelectedSheet] = useState<WeightroomSheet | null>(null);
@@ -83,6 +88,8 @@ export const WeightroomSheetsPage = () => {
     const [sourceFilter, setSourceFilter] = useState<'All' | 'Standalone' | 'FromPacket'>('All');
     const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
     const filterPopoverRef = useRef<HTMLDivElement | null>(null);
+    const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
+    const { user: authUser } = useAuth();
     // search + view live in the Workouts shell layout (persistent across tab switches).
     // The shell's "Create Sheet" button opens our local builder via registerCreate.
     const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
@@ -123,8 +130,11 @@ export const WeightroomSheetsPage = () => {
                 return true;
             });
         }
+        if (ownershipScope !== 'all') {
+            list = list.filter(s => matchesOwnershipScope(s as any, ownershipScope, authUser?.id));
+        }
         return list;
-    }, [savedSheets, search, modeFilter, targetFilter, sourceFilter]);
+    }, [savedSheets, search, modeFilter, targetFilter, sourceFilter, ownershipScope, authUser?.id]);
 
     // Build a unique team list from the sheets themselves so the dropdown only shows teams in use
     const sheetTeamOptions = useMemo(() => {
@@ -217,6 +227,7 @@ export const WeightroomSheetsPage = () => {
         setWsMode(s.ws_mode || 'blank');
         setWsColumns((s.ws_columns?.length ? s.ws_columns : defaultColumns()));
         setWsOrientation(s.ws_orientation || 'portrait');
+        setSheetVisibility((s as any).visibility === 'org' ? 'org' : 'personal');
         setMode('builder');
     };
 
@@ -263,16 +274,20 @@ export const WeightroomSheetsPage = () => {
                 : 'All Teams';
         const sourceLine = formatSourceLine(s.source_context);
         const cols = s.ws_columns || [];
+        // Only the original creator can edit/delete a shared sheet (matches RLS).
+        const canModify = !(s as any).user_id || !authUser?.id || (s as any).user_id === authUser.id;
         return (
             <div className="relative bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
                 {/* Subtle delete */}
-                <button
-                    onClick={() => setConfirmDeleteId(s.id)}
-                    className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
-                    title="Delete sheet"
-                >
-                    <Trash2Icon size={12} />
-                </button>
+                {canModify && (
+                    <button
+                        onClick={() => setConfirmDeleteId(s.id)}
+                        className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
+                        title="Delete sheet"
+                    >
+                        <Trash2Icon size={12} />
+                    </button>
+                )}
 
                 {/* Header */}
                 <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
@@ -319,25 +334,27 @@ export const WeightroomSheetsPage = () => {
                     )}
                 </div>
 
-                {/* Footer — Edit (opens builder) + View (opens print preview) */}
+                {/* Footer — Edit (opens builder, owner only) + View (opens print preview, anyone) */}
                 <div className="border-t border-slate-100 dark:border-[#1A2D48] p-2.5 flex items-center gap-1.5 shrink-0 bg-slate-50/40 dark:bg-[#0F1C30]/40">
-                    <button
-                        onClick={() => openExistingSheet(s)}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[11px] font-semibold transition-all shadow-sm"
-                    >
-                        <PencilIcon size={12} /> Edit Sheet
-                    </button>
+                    {canModify && (
+                        <button
+                            onClick={() => openExistingSheet(s)}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[11px] font-semibold transition-all shadow-sm"
+                        >
+                            <PencilIcon size={12} /> Edit Sheet
+                        </button>
+                    )}
                     <button
                         onClick={() => previewSheet(s)}
-                        className="px-2.5 py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-sky-400 dark:hover:border-sky-500/60 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/15 transition-all"
+                        className={`${canModify ? 'px-2.5' : 'flex-1'} py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-sky-400 dark:hover:border-sky-500/60 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/15 transition-all flex items-center justify-center gap-1.5`}
                         title="View / print preview"
                     >
-                        <EyeIcon size={13} />
+                        <EyeIcon size={13} /> {!canModify && <span className="text-[11px] font-semibold">View / Print</span>}
                     </button>
                 </div>
             </div>
         );
-    }, [selectedSheet, teams, previewSheet]);
+    }, [selectedSheet, teams, previewSheet, authUser?.id]);
 
     useLayoutEffect(() => {
         setSidebarExtra(sidebarExtraNode);
@@ -353,6 +370,7 @@ export const WeightroomSheetsPage = () => {
             ws_columns: wsColumns,
             team_id: wrSelectedTeam === 'All' ? null : wrSelectedTeam,
             notes: null,
+            visibility: sheetVisibility,
         };
         try {
             if (editingSheetId) {
@@ -457,7 +475,8 @@ table { width: 100%; border-collapse: collapse; }
             <>
                 <div className="flex-1 min-h-0 flex flex-col gap-4">
                     {/* Filter button — Sheets has no sub-tab strip, so this lives in its own thin row above the list */}
-                    <div className="flex items-center justify-end shrink-0 relative" ref={filterPopoverRef}>
+                    <div className="flex items-center justify-end gap-2 shrink-0 relative" ref={filterPopoverRef}>
+                        <OwnershipFilter value={ownershipScope} onChange={setOwnershipScope} />
                         <button
                             onClick={() => setFilterPopoverOpen(v => !v)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
@@ -573,6 +592,11 @@ table { width: 100%; border-collapse: collapse; }
                                             <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1] rounded text-[9px] font-medium uppercase">
                                                 {s.ws_mode}
                                             </span>
+                                            <CreatorBadge
+                                                creatorUserId={s.user_id}
+                                                lastModifiedByUserId={(s as any).last_modified_by}
+                                                visibility={(s as any).visibility}
+                                            />
                                         </div>
                                         <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-2 truncate">
                                             {s.team_id === BLANK_TEAM_ID
@@ -687,6 +711,9 @@ table { width: 100%; border-collapse: collapse; }
                     >
                         <SaveIcon size={13} /> {editingSheetId ? 'Save Changes' : 'Save Sheet'}
                     </button>
+                </div>
+                <div className="mt-3 max-w-md">
+                    <ShareToOrgToggle value={sheetVisibility} onChange={setSheetVisibility} />
                 </div>
             </div>
 

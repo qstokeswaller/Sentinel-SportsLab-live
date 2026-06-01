@@ -1,28 +1,35 @@
 // @ts-nocheck
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { hasFeatureAccess, requiredTierFor, TIER_LABEL, type Feature } from '../../utils/tierFeatures';
+import { UpgradePromptModal } from '../tier/UpgradePromptModal';
 
 import {
     ActivityIcon, LayoutDashboardIcon, CalendarIcon, UsersIcon, BookOpenIcon, DumbbellIcon,
     ZapIcon, BarChart3Icon, FileIcon, FlaskConicalIcon, ChevronLeftIcon, ChevronRightIcon,
-    SettingsIcon, HeartPulseIcon, ClipboardListIcon, XIcon
+    SettingsIcon, HeartPulseIcon, ClipboardListIcon, XIcon, LockIcon
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-    { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon },
-    { id: 'periodization', label: 'Planner',           icon: CalendarIcon },
-    { id: 'clients',       label: 'Roster',            icon: UsersIcon },
-    { id: 'workouts',      label: 'Workouts',           icon: DumbbellIcon },
-    { id: 'library',       label: 'Library',            icon: BookOpenIcon },
-    { id: 'conditioning',  label: 'Conditioning Hub',  icon: ZapIcon },
-    { id: 'analytics',     label: 'Analytics Hub',     icon: BarChart3Icon },
-    { id: 'reports',       label: 'Reporting Hub',     icon: FileIcon },
-    { id: 'wellness',      label: 'Wellness Hub',      icon: HeartPulseIcon },
-    { id: 'testing',       label: 'Testing Hub',       icon: ClipboardListIcon },
-    { id: 'lab',           label: 'Performance Lab',   icon: FlaskConicalIcon },
+// Each nav item declares a `feature` key from utils/tierFeatures so the sidebar can
+// render locked rows for tiers that don't include it.
+// Ordering: foundational pages first (dashboard → library), then hubs grouped by
+// daily workflow (Conditioning → Wellness → Testing) before analysis-layer hubs
+// (Reporting → Analytics → Performance Lab).
+const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = [
+    { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon, feature: 'dashboard' },
+    { id: 'periodization', label: 'Planner',          icon: CalendarIcon,        feature: 'planner' },
+    { id: 'clients',       label: 'Roster',           icon: UsersIcon,           feature: 'roster' },
+    { id: 'workouts',      label: 'Workouts',         icon: DumbbellIcon,        feature: 'workouts' },
+    { id: 'library',       label: 'Library',          icon: BookOpenIcon,        feature: 'library' },
+    { id: 'conditioning',  label: 'Conditioning Hub', icon: ZapIcon,             feature: 'conditioning' },
+    { id: 'wellness',      label: 'Wellness Hub',     icon: HeartPulseIcon,      feature: 'wellness' },
+    { id: 'testing',       label: 'Testing Hub',      icon: ClipboardListIcon,   feature: 'testing' },
+    { id: 'reports',       label: 'Reporting Hub',    icon: FileIcon,            feature: 'reporting' },
+    { id: 'analytics',     label: 'Analytics Hub',    icon: BarChart3Icon,       feature: 'analytics' },
+    { id: 'lab',           label: 'Performance Lab',  icon: FlaskConicalIcon,    feature: 'lab' },
 ];
 
 export const Sidebar = () => {
@@ -47,6 +54,11 @@ export const Sidebar = () => {
     const displayName = user?.user_metadata?.full_name || user?.email || '';
     const userInitial = displayName[0]?.toUpperCase() ?? '?';
 
+    // Tier gating — if the current org's tier doesn't unlock a nav feature, render it
+    // locked and open the upgrade modal on click instead of navigating.
+    const currentTier = currentOrg?.tier || null;
+    const [upgradePrompt, setUpgradePrompt] = useState<{ feature: Feature; tier: any } | null>(null);
+
     // Lock body scroll when drawer is open on mobile
     useEffect(() => {
         if (isMobile && isMobileDrawerOpen) {
@@ -65,6 +77,12 @@ export const Sidebar = () => {
     }, [isMobile]);
 
     const handleNavClick = (item) => {
+        // If the user's tier doesn't unlock this feature, open the upgrade modal
+        // instead of routing — avoids broken landing pages and surfaces the upsell.
+        if (!hasFeatureAccess(currentTier, item.feature)) {
+            setUpgradePrompt({ feature: item.feature, tier: requiredTierFor(item.feature) });
+            return;
+        }
         if (item.id === 'lab') {
             setIsPerformanceLabOpen(true);
         } else {
@@ -108,22 +126,40 @@ export const Sidebar = () => {
                 <div className="space-y-0.5">
                     {NAV_ITEMS.map(item => {
                         const isActive = activeTab === item.id;
+                        const locked = !hasFeatureAccess(currentTier, item.feature);
+                        const lockedTitle = locked
+                            ? `${item.label} — ${TIER_LABEL[requiredTierFor(item.feature)]} only`
+                            : item.label;
                         return (
                             <button
                                 key={item.id}
                                 onClick={() => handleNavClick(item)}
-                                title={!showLabels ? item.label : ''}
+                                title={!showLabels ? lockedTitle : ''}
+                                aria-disabled={locked}
                                 className={`w-full flex items-center gap-3 rounded-lg transition-colors
                                     ${isMobile ? 'min-h-[44px]' : ''}
                                     ${!showLabels ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'}
-                                    ${isActive
+                                    ${isActive && !locked
                                         ? 'bg-indigo-600 text-white'
-                                        : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
+                                        : locked
+                                            ? 'text-slate-300 dark:text-[#475569] hover:bg-slate-50 dark:hover:bg-[#1A2D48]/40 cursor-pointer'
+                                            : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
                                     }`}
                             >
                                 <item.icon size={18} className="shrink-0" />
                                 {showLabels && (
-                                    <span className="text-sm font-medium truncate">{item.label}</span>
+                                    <>
+                                        <span className="text-sm font-medium truncate flex-1 text-left">{item.label}</span>
+                                        {locked && (
+                                            <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#475569] shrink-0">
+                                                <LockIcon size={10} />
+                                                {TIER_LABEL[requiredTierFor(item.feature)]}
+                                            </span>
+                                        )}
+                                    </>
+                                )}
+                                {!showLabels && locked && (
+                                    <LockIcon size={9} className="shrink-0 absolute right-1 top-1 text-slate-300 dark:text-[#475569]" />
                                 )}
                             </button>
                         );
@@ -185,15 +221,28 @@ export const Sidebar = () => {
         </>
     );
 
+    const upgradeModal = (
+        <UpgradePromptModal
+            isOpen={!!upgradePrompt}
+            onClose={() => setUpgradePrompt(null)}
+            feature={upgradePrompt?.feature ?? null}
+            requiredTier={upgradePrompt?.tier ?? null}
+            currentTier={currentTier}
+        />
+    );
+
     // ── Desktop: fixed sidebar (unchanged behaviour) ──────────────────────────
     if (!isMobile) {
         return (
-            <nav
-                data-tour="sidebar-nav"
-                className={`${collapsed ? 'w-14' : 'w-52'} bg-white dark:bg-[#132338] border-r border-slate-200 dark:border-[#243A58] flex flex-col shrink-0 transition-all duration-300 print:hidden`}
-            >
-                {navContent(!collapsed)}
-            </nav>
+            <>
+                <nav
+                    data-tour="sidebar-nav"
+                    className={`${collapsed ? 'w-14' : 'w-52'} bg-white dark:bg-[#132338] border-r border-slate-200 dark:border-[#243A58] flex flex-col shrink-0 transition-all duration-300 print:hidden`}
+                >
+                    {navContent(!collapsed)}
+                </nav>
+                {upgradeModal}
+            </>
         );
     }
 
@@ -216,6 +265,7 @@ export const Sidebar = () => {
             >
                 {navContent(true)}
             </nav>
+            {upgradeModal}
         </>
     );
 };

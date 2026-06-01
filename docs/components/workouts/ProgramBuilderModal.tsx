@@ -14,6 +14,7 @@ import {
   Info as InfoIcon,
 } from 'lucide-react';
 import { ExerciseInfoModal } from '../library/ExerciseInfoModal';
+import { ShareToOrgToggle } from '../tier/ShareToOrgToggle';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
 import { useExerciseMap } from '../../hooks/useExerciseMap';
@@ -387,6 +388,8 @@ export const ProgramBuilderModal = ({
   const [startDate, setStartDate]             = useState<string>(() => new Date().toISOString().split('T')[0]);
   // Phase enum — drives the Phase Distribution panel on the Programs list page
   const [trainingPhase, setTrainingPhase]     = useState<string>('Strength');
+  // Personal vs Org visibility — drives whether other org members can see this program
+  const [visibility, setVisibility]           = useState<'personal' | 'org'>('personal');
 
   // Days (flat array — grouped visually into weeks of 7)
   // Programs start with a single day — users add more via the "Add Day" button
@@ -463,6 +466,7 @@ export const ProgramBuilderModal = ({
       setTrackTonnage(editingProgram.track_tonnage !== false);
       setStartDate(editingProgram.start_date || new Date().toISOString().split('T')[0]);
       setTrainingPhase(editingProgram.training_phase || 'Strength');
+      setVisibility((editingProgram as any).visibility === 'org' ? 'org' : 'personal');
 
       const mapRow = (e: any): LocalExRow => {
         const exInfo = exerciseFullMap[e.exercise_id];
@@ -807,10 +811,10 @@ export const ProgramBuilderModal = ({
       let programId: string;
 
       if (editingProgram) {
-        await updateProgram.mutateAsync({ id: editingProgram.id, name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null });
+        await updateProgram.mutateAsync({ id: editingProgram.id, name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null, visibility });
         programId = editingProgram.id;
       } else {
-        const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null });
+        const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null, visibility });
         programId = created.id;
       }
 
@@ -915,7 +919,7 @@ export const ProgramBuilderModal = ({
     setError('');
     try {
       const tags = programTags.split(',').map((t) => t.trim()).filter(Boolean);
-      const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null });
+      const created = await createProgram.mutateAsync({ name: programName.trim(), overview: programOverview, tags, track_tonnage: trackTonnage, start_date: startDate || null, training_phase: trainingPhase || null, visibility });
 
       const dayPayloads = days.map((d, i) => ({
         day_number: i + 1,
@@ -1089,6 +1093,9 @@ export const ProgramBuilderModal = ({
                     <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
                   </button>
                 </div>
+              </div>
+              <div className="col-span-12">
+                <ShareToOrgToggle value={visibility} onChange={setVisibility} />
               </div>
               <div className="col-span-12">
                 <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] mb-1 block">Program Overview</label>

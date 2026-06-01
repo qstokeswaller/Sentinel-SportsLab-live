@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import WeightroomSheetPanel from '../components/workout/WeightroomSheetPanel';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { ShareToOrgToggle } from '../components/tier/ShareToOrgToggle';
 import { ExerciseInfoModal } from '../components/library/ExerciseInfoModal';
 import { LinkedSessionsPicker, LinkedSession } from '../components/conditioning/LinkedSessionsPicker';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
@@ -188,6 +189,8 @@ export const WorkoutPacketsPage = () => {
     const [trainingPhase, setTrainingPhase] = useState('Strength');
     const [load, setLoad] = useState('Medium');
     const [trackTonnage, setTrackTonnage] = useState(true);
+    // Personal vs Org — drives whether colleagues in the same org see this packet.
+    const [visibility, setVisibility] = useState<'personal' | 'org'>('personal');
 
     // ── Workout builder state ──────────────────────────────────────────────
     const [sections, setSections] = useState<Record<string, ExRow[]>>({ warmup: [], workout: [], cooldown: [] });
@@ -326,6 +329,7 @@ export const WorkoutPacketsPage = () => {
         setTitle(tpl.name || '');
         setTrainingPhase(tpl.trainingPhase || tpl.training_phase || 'Strength');
         setLoad(tpl.load || 'Medium');
+        setVisibility(tpl.visibility === 'org' ? 'org' : 'personal');
         const sd = tpl.sections || {};
         // Pull persisted meta from the reserved `_meta` key inside sections first
         // (that's where buildTemplatePayload puts it so it survives the workout_templates
@@ -454,6 +458,7 @@ export const WorkoutPacketsPage = () => {
                 name: payload.name,
                 training_phase: payload.trainingPhase,
                 load: payload.load,
+                visibility: payload.visibility,
                 sections: payload.sections,
             });
             templateId = created.id;
@@ -691,6 +696,7 @@ export const WorkoutPacketsPage = () => {
             name: title.trim(),
             trainingPhase,
             load,
+            visibility,
             sections: serializedSections,
             sectionMeta,
             sectionOrder,
@@ -764,6 +770,7 @@ export const WorkoutPacketsPage = () => {
                         name: tplPayload.name,
                         training_phase: tplPayload.trainingPhase,
                         load: tplPayload.load,
+                        visibility: tplPayload.visibility,
                         sections: tplPayload.sections,
                     });
                     setWorkoutTemplates(prev => [{ id: created.id, ...tplPayload, createdAt: created.created_at }, ...prev]);
@@ -825,6 +832,7 @@ export const WorkoutPacketsPage = () => {
                 name: payload.name,
                 training_phase: payload.trainingPhase,
                 load: payload.load,
+                visibility: payload.visibility,
                 sections: payload.sections,
             });
             setWorkoutTemplates(prev => prev.map(t =>
@@ -850,6 +858,7 @@ export const WorkoutPacketsPage = () => {
                 name: payload.name,
                 training_phase: payload.trainingPhase,
                 load: payload.load,
+                visibility: payload.visibility,
                 sections: payload.sections,
             });
             const template = {
@@ -1236,6 +1245,9 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         </span>
                                     </div>
                                 </div>
+                            </div>
+                            <div className="mt-3">
+                                <ShareToOrgToggle value={visibility} onChange={setVisibility} />
                             </div>
 
                             {/* Row 3: Target Type + Target — only in normal mode */}

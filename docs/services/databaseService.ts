@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabase';
 
 export const DatabaseService = {
     // --- TEAMS ---
+    // Teams are org-shared: any member of the organisation sees every team.
+    // RLS (org_isolation policy) handles the scope; no app-level user_id filter.
     async fetchTeams() {
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData.user?.id;
-        let query = supabase.from('teams').select('*, athletes (*)');
-        if (userId) query = query.eq('user_id', userId);
-        const { data, error } = await query;
+        const { data, error } = await supabase
+            .from('teams')
+            .select('*, athletes (*)');
         if (error) throw error;
         return data;
     },
@@ -32,12 +32,12 @@ export const DatabaseService = {
     },
 
     // --- ATHLETES ---
+    // Athletes are org-shared: every member of the organisation sees every athlete.
+    // RLS (org_isolation policy) enforces the scope; no app-level user_id filter.
     async fetchAthletes() {
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData.user?.id;
-        let query = supabase.from('athletes').select('*');
-        if (userId) query = query.eq('user_id', userId);
-        const { data, error } = await query;
+        const { data, error } = await supabase
+            .from('athletes')
+            .select('*');
         if (error) throw error;
         return data;
     },
@@ -296,7 +296,10 @@ export const DatabaseService = {
         return [...new Set((data || []).map((r: any) => r.exercise_id).filter(Boolean))];
     },
 
-    // --- WORKOUT TEMPLATES ---
+    // --- WORKOUT TEMPLATES (a.k.a. "Workout Packets" in the UI) ---
+    // Personal by default; visibility='org' rows are visible to everyone in the org.
+    // RLS already filters at this boundary, but we mirror the rule client-side so the
+    // query result matches what users expect on Mine/Org filter toggles.
     async fetchWorkoutTemplates() {
         const { data, error } = await (supabase as any)
             .from('workout_templates')
@@ -341,13 +344,18 @@ export const DatabaseService = {
     },
 
     // --- CALENDAR EVENTS ---
+    // Calendar events are PERSONAL — every user in an org keeps their own schedule.
+    // Filter by user_id so colleagues never see each other's planner entries.
     async fetchCalendarEvents() {
-        // Only fetch events from last 3 months + 3 months ahead
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) return [];
         const from = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
         const to = new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0];
         const { data, error } = await (supabase as any)
             .from('calendar_events')
             .select('*')
+            .eq('user_id', userId)
             .gte('start_date', from)
             .lte('start_date', to)
             .order('start_date', { ascending: true })
@@ -1122,11 +1130,23 @@ export const DatabaseService = {
         if (error) throw error;
         if (!data) return null;
 
+        // Count active members in the same org so AppState can decide whether
+        // to render multi-user UI affordances (Mine/Org filter, Share toggle, creator badge).
+        let memberCount = 1;
+        if (data.organisation?.id) {
+            const { count } = await (supabase as any)
+                .from('org_members')
+                .select('user_id', { count: 'exact', head: true })
+                .eq('organisation_id', data.organisation.id);
+            if (typeof count === 'number') memberCount = Math.max(1, count);
+        }
+
         return {
             role: data.role as 'admin' | 'member',
             joined_at: data.joined_at as string,
             organisation: data.organisation,
             isAdmin: data.role === 'admin',
+            memberCount,
         };
     },
 

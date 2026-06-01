@@ -83,12 +83,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const { user: authUser } = useAuth();
     const [currentOrg, setCurrentOrg] = useState<any>(null);
     const [currentUserRole, setCurrentUserRole] = useState<'admin' | 'member' | null>(null);
+    const [orgMemberCount, setOrgMemberCount] = useState<number>(1);
     const [orgLoading, setOrgLoading] = useState<boolean>(false);
 
     const refreshCurrentOrg = useCallback(async () => {
         if (!authUser?.id) {
             setCurrentOrg(null);
             setCurrentUserRole(null);
+            setOrgMemberCount(1);
             return;
         }
         setOrgLoading(true);
@@ -96,10 +98,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             const info = await DatabaseService.getCurrentOrgInfo();
             setCurrentOrg(info?.organisation ?? null);
             setCurrentUserRole(info?.role ?? null);
+            // Member count drives whether multi-user UI affordances (Mine/Org filter,
+            // Share-to-Org toggle, creator badges) are shown. Single-user orgs hide
+            // them so the experience stays clean for Basic-tier (1 seat) users.
+            setOrgMemberCount(info?.memberCount ?? 1);
         } catch (err) {
             console.warn('[org] getCurrentOrgInfo failed:', (err as any)?.message || err);
             setCurrentOrg(null);
             setCurrentUserRole(null);
+            setOrgMemberCount(1);
         } finally {
             setOrgLoading(false);
         }
@@ -108,6 +115,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     useEffect(() => { refreshCurrentOrg(); }, [refreshCurrentOrg]);
 
     const isOrgAdmin = currentUserRole === 'admin';
+    const isMultiUserOrg = orgMemberCount > 1;
 
     // ── Dark Mode ─────────────────────────────────────────────────────────────
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -2572,6 +2580,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         currentOrg,
         currentUserRole,
         isOrgAdmin,
+        orgMemberCount,
+        isMultiUserOrg,
         orgLoading,
         refreshCurrentOrg,
         recentDeletions,

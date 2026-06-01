@@ -10,6 +10,9 @@ import { ProgramAssignModal } from '../components/workouts/ProgramAssignModal';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
+import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
+import { CreatorBadge } from '../components/tier/CreatorBadge';
+import { useAuth } from '../context/AuthContext';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
@@ -55,6 +58,8 @@ function formatDate(iso: string) {
 
 export const WorkoutProgramsPage = () => {
     const { showToast, scheduledSessions, resolveTargetName, setPlannedTonnageLog } = useAppState();
+    const { user: authUser } = useAuth();
+    const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
     // Pull the memoized id→name map (NOT resolveExerciseName, which isn't memoized in the hook
     // and would invalidate the descriptor's useMemo every render → infinite loop).
     const { exerciseMap } = useExerciseMap();
@@ -208,8 +213,12 @@ export const WorkoutProgramsPage = () => {
         if (activeTab === 'assigned' && targetFilter !== 'All') {
             list = list.filter(p => programAssignmentInfo[p.id]?.targetIds.has(targetFilter));
         }
+        // Ownership scope filter (All / Mine / Org). No-op on single-user orgs.
+        if (ownershipScope !== 'all') {
+            list = list.filter(p => matchesOwnershipScope(p, ownershipScope, authUser?.id));
+        }
         return list;
-    }, [programSearch.results, activeTab, assignedProgramIdsFiltered, phaseFilter, durationFilter, statusFilter, targetFilter, weekCounts, programAssignmentInfo]);
+    }, [programSearch.results, activeTab, assignedProgramIdsFiltered, phaseFilter, durationFilter, statusFilter, targetFilter, weekCounts, programAssignmentInfo, ownershipScope, authUser?.id]);
 
     // Use the canonical list (same as Create Program) so every phase a user could possibly
     // assign is filterable, even if no current program uses it yet.
@@ -425,15 +434,21 @@ export const WorkoutProgramsPage = () => {
         }
 
         // ── Program-level view ────────────────────────────────────────────
+        // Only the original creator can edit/delete a shared program (matches RLS).
+        // Hide destructive actions when viewing a colleague's shared program so we
+        // never present an action that would silently fail.
+        const canModify = !p.user_id || !authUser?.id || p.user_id === authUser.id;
         return (
             <div className="relative bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
-                <button
-                    onClick={() => setConfirmDeleteId(p.id)}
-                    className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
-                    title="Delete program"
-                >
-                    <Trash2Icon size={12} />
-                </button>
+                {canModify && (
+                    <button
+                        onClick={() => setConfirmDeleteId(p.id)}
+                        className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
+                        title="Delete program"
+                    >
+                        <Trash2Icon size={12} />
+                    </button>
+                )}
 
                 <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] pr-7 leading-tight">{p.name}</h3>
@@ -538,13 +553,15 @@ export const WorkoutProgramsPage = () => {
                     >
                         <EyeIcon size={13} />
                     </button>
-                    <button
-                        onClick={() => openEdit(p)}
-                        className="px-2.5 py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-amber-400 dark:hover:border-amber-500/60 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/15 transition-all"
-                        title="Edit"
-                    >
-                        <PencilIcon size={13} />
-                    </button>
+                    {canModify && (
+                        <button
+                            onClick={() => openEdit(p)}
+                            className="px-2.5 py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-amber-400 dark:hover:border-amber-500/60 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/15 transition-all"
+                            title="Edit"
+                        >
+                            <PencilIcon size={13} />
+                        </button>
+                    )}
                     <button
                         onClick={() => setShareTarget({ type: 'program', id: p.id, name: p.name })}
                         className="px-2.5 py-2 bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#364E6E] text-slate-600 dark:text-[#CBD5E1] rounded-lg hover:border-violet-400 dark:hover:border-violet-500/60 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/15 transition-all"
@@ -633,6 +650,10 @@ export const WorkoutProgramsPage = () => {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                        {/* Ownership scope — only renders when org has more than 1 user */}
+                        <div className="shrink-0 mb-1.5">
+                            <OwnershipFilter value={ownershipScope} onChange={setOwnershipScope} />
                         </div>
                         {/* Filter button — popover anchored here */}
                         <div className="shrink-0 mb-1.5 relative" ref={filterPopoverRef}>
@@ -779,6 +800,11 @@ export const WorkoutProgramsPage = () => {
                                     {(p.tags ?? []).slice(0, 2).map(t => (
                                         <span key={t} className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-600 dark:text-[#CBD5E1] rounded text-[9px] font-medium">{t}</span>
                                     ))}
+                                    <CreatorBadge
+                                        creatorUserId={p.user_id}
+                                        lastModifiedByUserId={(p as any).last_modified_by}
+                                        visibility={(p as any).visibility}
+                                    />
                                 </div>
                                 {p.overview && (
                                     <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] leading-relaxed mt-2 line-clamp-2">{p.overview}</p>

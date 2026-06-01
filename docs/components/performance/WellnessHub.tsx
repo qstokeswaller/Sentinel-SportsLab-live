@@ -508,7 +508,9 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                     const modCount       = todayRes.filter(r => resolveAvailability(r) === 'modified').length;
                     const outCount       = todayRes.filter(r => resolveAvailability(r) === 'unavailable').length;
                     const alertCount     = todayRes.filter(r => (r.rpe || 0) >= 8 || r.injury_report || resolveAvailability(r) === 'unavailable').length;
-                    const responseCount  = todayRes.length;
+                    // Count only daily check-ins for the "responded" ratio so it never exceeds athlete count.
+                    // Weekly responses are tracked separately and would double-count if included.
+                    const responseCount  = fullCount + modCount + outCount;
                     const totalAthletes  = team.players.length;
 
                     return (

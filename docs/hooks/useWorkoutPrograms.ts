@@ -13,6 +13,8 @@ export interface WorkoutProgram {
   track_tonnage: boolean;
   start_date: string | null;
   training_phase: string | null;
+  visibility: 'personal' | 'org';
+  last_modified_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -172,7 +174,7 @@ export function useProgramWithDays(programId: string | null) {
 export function useCreateProgram() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { name: string; overview?: string; tags?: string[]; track_tonnage?: boolean; start_date?: string | null; training_phase?: string | null }) => {
+    mutationFn: async (payload: { name: string; overview?: string; tags?: string[]; track_tonnage?: boolean; start_date?: string | null; training_phase?: string | null; visibility?: 'personal' | 'org' }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase

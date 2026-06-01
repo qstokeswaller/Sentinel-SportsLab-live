@@ -6,6 +6,9 @@ import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { DatabaseService } from '../services/databaseService';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 import { TemplateViewModal } from '../components/workouts/TemplateViewModal';
+import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
+import { CreatorBadge } from '../components/tier/CreatorBadge';
+import { useAuth } from '../context/AuthContext';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { fuzzySearch } from '../utils/fuzzySearch';
@@ -67,6 +70,8 @@ export const WorkoutSessionsPage = () => {
         workoutTemplates, setWorkoutTemplates, isLoading, showToast,
         scheduledSessions, teams, resolveTargetName,
     } = useAppState();
+    const { user: authUser } = useAuth();
+    const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
     // search + view live in the Workouts shell layout (persistent across tab switches).
     const { search, setSearch, view, registerCreate, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
 
@@ -151,8 +156,12 @@ export const WorkoutSessionsPage = () => {
         if (activeTab === 'assigned' && targetFilter !== 'All') {
             list = list.filter(t => templateAssignmentInfo[t.id]?.targetIds.has(targetFilter));
         }
+        // Ownership scope filter (All / Mine / Org). No-op on single-user orgs.
+        if (ownershipScope !== 'all') {
+            list = list.filter(t => matchesOwnershipScope(t as any, ownershipScope, authUser?.id));
+        }
         return list;
-    }, [searchedTemplates, activeTab, assignedTemplateIds, phaseFilter, loadFilter, timeWindowFilter, targetFilter, templateAssignmentInfo]);
+    }, [searchedTemplates, activeTab, assignedTemplateIds, phaseFilter, loadFilter, timeWindowFilter, targetFilter, templateAssignmentInfo, ownershipScope, authUser?.id]);
 
     // Use the canonical list (same as Create Packet) so every phase a user could possibly
     // assign is filterable, even if no current packet uses it yet.
@@ -324,17 +333,21 @@ export const WorkoutSessionsPage = () => {
         const persistedOrder = tpl.sectionOrder as string[] | undefined;
         const sectionOrder = (persistedOrder && persistedOrder.length > 0) ? persistedOrder : ['warmup', 'workout', 'cooldown'];
         const totalExercises = sectionOrder.reduce((sum, sec) => sum + ((sections[sec] || []).length || 0), 0);
+        // Only the original creator can edit/delete a shared packet (matches RLS).
+        const canModify = !(tpl as any).user_id || !authUser?.id || (tpl as any).user_id === authUser.id;
 
         return (
             <div className="relative bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
                 {/* Subtle delete — top-right corner, kept out of the primary action flow */}
-                <button
-                    onClick={() => setConfirmDelete({ id: tpl.id, name: tpl.name })}
-                    className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
-                    title="Delete packet"
-                >
-                    <Trash2Icon size={12} />
-                </button>
+                {canModify && (
+                    <button
+                        onClick={() => setConfirmDelete({ id: tpl.id, name: tpl.name })}
+                        className="absolute top-2.5 right-2.5 p-1.5 rounded-md text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 transition-all z-10"
+                        title="Delete packet"
+                    >
+                        <Trash2Icon size={12} />
+                    </button>
+                )}
 
                 {/* Header — name, pills, created date, assignment summary if applicable */}
                 <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-[#1A2D48] shrink-0">
@@ -569,6 +582,10 @@ export const WorkoutSessionsPage = () => {
                                 </div>
                             )}
                         </div>
+                        {/* Ownership scope — only renders when org has more than 1 user */}
+                        <div className="shrink-0 mb-1.5">
+                            <OwnershipFilter value={ownershipScope} onChange={setOwnershipScope} />
+                        </div>
                         <div className="shrink-0 mb-1.5 relative" ref={filterPopoverRef}>
                             <button
                                 onClick={() => setFilterPopoverOpen(v => !v)}
@@ -721,6 +738,11 @@ export const WorkoutSessionsPage = () => {
                                             </span>
                                         )}
                                         <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1]">{ex} exercise{ex !== 1 ? 's' : ''}</span>
+                                        <CreatorBadge
+                                            creatorUserId={(tpl as any).user_id}
+                                            lastModifiedByUserId={(tpl as any).last_modified_by}
+                                            visibility={(tpl as any).visibility}
+                                        />
                                     </div>
                                 </div>
                             );

@@ -26,6 +26,8 @@ export interface WeightroomSheet {
     team_id: string | null;
     notes: string | null;
     source_context: SheetSourceContext | null;
+    visibility: 'personal' | 'org';
+    last_modified_by: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -36,10 +38,10 @@ export function useWeightroomSheets() {
         queryFn: async (): Promise<WeightroomSheet[]> => {
             const { data: userData } = await supabase.auth.getUser();
             if (!userData.user) return [];
+            // Drop the user_id filter — RLS allows seeing own sheets + visibility='org' sheets.
             const { data, error } = await supabase
                 .from('weightroom_sheets')
                 .select('*')
-                .eq('user_id', userData.user.id)
                 .order('created_at', { ascending: false });
             if (error) throw error;
             return (data ?? []) as WeightroomSheet[];
@@ -50,7 +52,9 @@ export function useWeightroomSheets() {
 export function useCreateSheet() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: async (payload: Omit<WeightroomSheet, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+        // `last_modified_by` is set by the BEFORE UPDATE trigger and `source_context` is optional.
+        // The caller passes the core payload; visibility defaults to 'personal' if omitted.
+        mutationFn: async (payload: Partial<Omit<WeightroomSheet, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'last_modified_by'>> & { name: string; ws_mode: string; ws_orientation: string; ws_columns: any[] }) => {
             const { data: userData } = await supabase.auth.getUser();
             if (!userData.user) throw new Error('Not authenticated');
             const { data, error } = await supabase

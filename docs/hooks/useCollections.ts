@@ -9,6 +9,8 @@ export interface ExerciseCollection {
     color: string;
     created_at: string;
     exercise_ids: string[];
+    user_id: string;
+    last_modified_by: string | null;
 }
 
 async function getAuthUser() {
@@ -24,10 +26,11 @@ export function useCollections() {
         queryFn: async () => {
             const user = await getAuthUser();
             if (!user) return [];
+            // Collections are org-shared library curation — drop the user_id filter so
+            // every colleague in the org sees the same curated set. RLS scopes by org.
             const { data, error } = await supabase
                 .from('exercise_collections')
                 .select('*, collection_exercises(exercise_id)')
-                .eq('user_id', user.id)
                 .order('created_at', { ascending: true });
             if (error) throw error;
             return (data || []).map(c => ({
@@ -36,6 +39,8 @@ export function useCollections() {
                 description: c.description,
                 color: c.color ?? 'indigo',
                 created_at: c.created_at,
+                user_id: c.user_id,
+                last_modified_by: c.last_modified_by,
                 exercise_ids: (c.collection_exercises || []).map((ce: any) => ce.exercise_id),
             }));
         },

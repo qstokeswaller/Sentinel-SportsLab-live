@@ -9,6 +9,7 @@ import ImportResolverModal from './components/performance/ImportResolverModal';
 import WattbikeMapCalculator from './components/performance/WattbikeMapCalculator';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
+import { TierGate } from './components/tier/TierGate';
 import { CustomSelect } from './components/ui/CustomSelect';
 import { AthleteAvatar } from './components/roster/AthleteAvatar';
 // Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
@@ -498,7 +499,7 @@ const App = () => {
                     <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/periodization" element={<PeriodizationPage />} />
+                        <Route path="/periodization" element={<TierGate feature="planner"><PeriodizationPage /></TierGate>} />
                         <Route path="/clients" element={<RosterPage />} />
                         <Route path="/clients/:athleteId" element={<AthleteProfilePage />} />
                         <Route path="/workouts" element={<WorkoutsPage />} />
@@ -508,10 +509,10 @@ const App = () => {
                         <Route path="/workouts/weightroom-sheets" element={<WorkoutsPage />} />
                         <Route path="/workouts/packets" element={<WorkoutPacketsPage />} />
                         <Route path="/library" element={<ExerciseLibraryPage />} />
-                        <Route path="/conditioning" element={<ConditioningHubPage />} />
-                        <Route path="/analytics" element={<AnalyticsHubPage />} />
-                        <Route path="/reports" element={<ReportingHubPage />} />
-                        <Route path="/wellness" element={<WellnessHubPage />} />
+                        <Route path="/conditioning" element={<TierGate feature="conditioning"><ConditioningHubPage /></TierGate>} />
+                        <Route path="/analytics" element={<TierGate feature="analytics"><AnalyticsHubPage /></TierGate>} />
+                        <Route path="/reports" element={<TierGate feature="reporting"><ReportingHubPage /></TierGate>} />
+                        <Route path="/wellness" element={<TierGate feature="wellness"><WellnessHubPage /></TierGate>} />
                         <Route path="/testing" element={<TestingHubPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={(() => {
