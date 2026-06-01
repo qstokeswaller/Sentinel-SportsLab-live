@@ -48,6 +48,7 @@ export const Sidebar = () => {
         setActiveConditioningModule,
         currentOrg,
         isOrgAdmin,
+        orgLoading,
     } = useAppState();
 
     const collapsed = isSidebarCollapsed;
@@ -55,8 +56,13 @@ export const Sidebar = () => {
     const userInitial = displayName[0]?.toUpperCase() ?? '?';
 
     // Tier gating — if the current org's tier doesn't unlock a nav feature, render it
-    // locked and open the upgrade modal on click instead of navigating.
+    // locked and open the upgrade modal on click instead of navigating. Until the
+    // org's tier has actually loaded, render everything as unlocked: a freshly-
+    // signed-in member who hasn't had `currentOrg` populated yet would otherwise
+    // see every hub flash as "locked" (this caused real reports of dashboards
+    // appearing inaccessible right after invite acceptance).
     const currentTier = currentOrg?.tier || null;
+    const tierResolved = !orgLoading && !!currentOrg;
     const [upgradePrompt, setUpgradePrompt] = useState<{ feature: Feature; tier: any } | null>(null);
 
     // Lock body scroll when drawer is open on mobile
@@ -79,7 +85,10 @@ export const Sidebar = () => {
     const handleNavClick = (item) => {
         // If the user's tier doesn't unlock this feature, open the upgrade modal
         // instead of routing — avoids broken landing pages and surfaces the upsell.
-        if (!hasFeatureAccess(currentTier, item.feature)) {
+        // Skip this gate entirely until org info has resolved (otherwise an org
+        // member sees their own dashboard nav-click open the upgrade prompt
+        // during the bootstrap second).
+        if (tierResolved && !hasFeatureAccess(currentTier, item.feature)) {
             setUpgradePrompt({ feature: item.feature, tier: requiredTierFor(item.feature) });
             return;
         }
@@ -126,7 +135,10 @@ export const Sidebar = () => {
                 <div className="space-y-0.5">
                     {NAV_ITEMS.map(item => {
                         const isActive = activeTab === item.id;
-                        const locked = !hasFeatureAccess(currentTier, item.feature);
+                        // Only show locked state once we know the user's tier — otherwise
+                        // freshly-authed members see every hub flash as "locked" until
+                        // currentOrg.tier loads from the server.
+                        const locked = tierResolved && !hasFeatureAccess(currentTier, item.feature);
                         const lockedTitle = locked
                             ? `${item.label} — ${TIER_LABEL[requiredTierFor(item.feature)]} only`
                             : item.label;

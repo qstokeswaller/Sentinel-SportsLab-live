@@ -57,11 +57,21 @@ export const FEATURE_TIER: Record<Feature, Tier> = {
     lab:           'elite',
 };
 
-/** Returns true when `userTier` meets or exceeds the requirement for `feature`. */
+/**
+ * Returns true when `userTier` meets or exceeds the requirement for `feature`.
+ *
+ * IMPORTANT: when tier is unknown (null/undefined), we treat it as 'basic' rather
+ * than rejecting outright. This matters during the brief window between sign-in
+ * and the AppStateContext finishing its org-info round trip — without this fall
+ * back, Dashboard (and every other basic-tier feature) flashed as "locked" for
+ * freshly invited members until currentOrg.tier resolved, causing real "I can't
+ * access my dashboard" reports. Callers that need to distinguish "loading" from
+ * "no access" should also check orgLoading from AppStateContext.
+ */
 export function hasFeatureAccess(userTier: Tier | null | undefined, feature: Feature): boolean {
-    if (!userTier) return false;
+    const effectiveTier: Tier = userTier ?? 'basic';
     const required = FEATURE_TIER[feature];
-    return TIER_RANK[userTier] >= TIER_RANK[required];
+    return TIER_RANK[effectiveTier] >= TIER_RANK[required];
 }
 
 /** Tier required to unlock the feature, for display in lock pills / upgrade modals. */

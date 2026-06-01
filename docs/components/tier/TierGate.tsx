@@ -20,10 +20,12 @@ export const TierGate: React.FC<TierGateProps> = ({ feature, children }) => {
     const navigate = useNavigate();
     const { currentOrg, orgLoading } = useAppState();
 
-    // While org info is loading, render nothing — avoids a flash of the upgrade
-    // panel for users who actually have access. (currentOrg starts as null, not
-    // undefined, so we have to gate on orgLoading.)
-    if (orgLoading) return null;
+    // Render nothing while we don't yet know the user's tier — covers both the
+    // "still loading" case and the brief window where loading completes but
+    // currentOrg hasn't been populated yet (e.g. immediately after invite
+    // acceptance, before AppStateContext refreshes). Otherwise users would see
+    // a flash of the "Upgrade required" panel on pages they actually have access to.
+    if (orgLoading || !currentOrg) return null;
 
     const tier = currentOrg?.tier || null;
     if (hasFeatureAccess(tier, feature)) return <>{children}</>;
