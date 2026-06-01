@@ -71,7 +71,12 @@ const ShellHeader = () => {
                 Search is anchored next to the actions on the right; the middle is intentionally empty
                 because workout/packet/sheet names are short and a long search input wasted space. */}
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-3 shrink-0 min-w-0">
+                {/* Title block — allow it to shrink so long taglines (e.g. Sheets:
+                    "Saved weightroom sheets — load, print and reuse with any squad")
+                    truncate via the inner min-w-0 + truncate rather than pushing the
+                    search/view-toggle/Create button past the column boundary into the
+                    Overview tile. shrink-0 here previously clipped "Create Sheet" → "Create Sh". */}
+                <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-9 h-9 ${theme.iconBg} rounded-lg flex items-center justify-center shrink-0 transition-colors`}>
                         <Icon size={18} className="text-white" />
                     </div>

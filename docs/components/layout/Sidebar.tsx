@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
 import { useAuth } from '../../context/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -34,6 +34,8 @@ const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = 
 
 export const Sidebar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isSettingsActive = location.pathname.startsWith('/settings');
     const { user } = useAuth();
     const isMobile = useIsMobile();
     const {
@@ -209,9 +211,13 @@ export const Sidebar = () => {
                     <button
                         onClick={() => { navigate('/settings'); if (isMobile) setIsMobileDrawerOpen(false); }}
                         title="Settings"
-                        className={`w-full flex items-center gap-3 rounded-lg py-2 text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#94A3B8] transition-colors
+                        className={`w-full flex items-center gap-3 rounded-lg py-2 transition-colors
                             ${isMobile ? 'min-h-[44px]' : ''}
-                            ${!showLabels ? 'justify-center px-0' : 'px-2'}`}
+                            ${!showLabels ? 'justify-center px-0' : 'px-2'}
+                            ${isSettingsActive
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#94A3B8]'
+                            }`}
                     >
                         <SettingsIcon size={16} className="shrink-0" />
                         {showLabels && <span className="text-sm font-medium">Settings</span>}
