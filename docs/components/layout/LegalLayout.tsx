@@ -25,7 +25,7 @@ const LegalLayout: React.FC<Props> = ({ title, lastUpdated, summary, children })
             <nav className="border-b border-slate-200 bg-white sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
                     <Link to="/" className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center"><ActivityIcon size={15} className="text-white" /></div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                         <span className="font-semibold text-[15px] text-slate-900 tracking-tight">Sentinel <span className="text-indigo-600">SportsLab</span></span>
                     </Link>
                     <Link to="/" className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-indigo-600 transition-colors">

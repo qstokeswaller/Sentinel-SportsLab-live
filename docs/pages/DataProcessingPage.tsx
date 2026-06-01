@@ -128,7 +128,7 @@ const DataProcessingPage: React.FC = () => {
             <h2>8. Contact</h2>
             <p>
                 Information Officer: Quintin Stokes-Waller<br />
-                Sentinel SportsTech (Pty) Ltd<br />
+                Sentinel SportsLab (Pty) Ltd<br />
                 Email: <strong>stokeswallerq@gmail.com</strong> (subject: "DPO Enquiry — SportsLab")<br />
                 Registered in South Africa
             </p>

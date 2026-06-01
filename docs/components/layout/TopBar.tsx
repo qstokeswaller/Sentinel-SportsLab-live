@@ -42,12 +42,12 @@ export const TopBar = () => {
             </button>
 
             {/* Logo mark */}
-            <div
-                className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
+            <img
+                src="/images/sentinel-sportslab-logo.png"
+                alt="Sentinel SportsLab"
+                className="h-11 w-auto shrink-0 cursor-pointer select-none"
                 onClick={() => navigate('/dashboard')}
-            >
-                <ActivityIcon className="text-white w-3.5 h-3.5" />
-            </div>
+            />
 
             {/* Page title */}
             <span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] truncate flex-1 min-w-0">{pageTitle}</span>

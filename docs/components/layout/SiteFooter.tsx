@@ -47,13 +47,8 @@ const SiteFooter: React.FC = () => {
                         {/* Brand */}
                         <div className="md:col-span-2 lg:col-span-2">
                             <Link to="/" className="flex items-center gap-3 mb-4">
-                                <div className="w-9 h-9 bg-white/15 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                    <ActivityIcon size={15} className="text-white" />
-                                </div>
-                                <div className="leading-tight">
-                                    <div className="text-sm font-bold text-white">Sentinel SportsLab</div>
-                                    <div className="text-[10.5px] text-white/60 font-medium tracking-wide">by Sentinel SportsTech</div>
-                                </div>
+                                <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-14 w-auto select-none" />
+                                <div className="text-sm font-bold text-white">Sentinel SportsLab</div>
                             </Link>
                             <p className="text-[13px] leading-relaxed text-white/75 max-w-xs mb-6">
                                 Sport-science intelligence for athlete monitoring, load management, and performance optimisation — research-grade, accessible from day one.
@@ -139,7 +134,7 @@ const SiteFooter: React.FC = () => {
             <div className="relative py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-[11.5px] text-white/60">
-                        <p>&copy; {new Date().getFullYear()} Sentinel SportsTech (Pty) Ltd. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} Sentinel SportsLab (Pty) Ltd. All rights reserved.</p>
                         <p className="flex items-center gap-1.5">
                             Built for serious performance staff
                             <HeartIcon size={11} className="text-rose-300 fill-rose-300" />

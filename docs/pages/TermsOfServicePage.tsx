@@ -21,7 +21,7 @@ const TermsOfServicePage: React.FC = () => {
             lastUpdated="30 May 2026"
             summary={
                 <span>
-                    <strong>Governing law:</strong> Republic of South Africa. <strong>Operator:</strong> Sentinel SportsTech (Pty) Ltd. By creating an account or otherwise using the Sentinel SportsLab platform, you agree to be bound by these terms.
+                    <strong>Governing law:</strong> Republic of South Africa. <strong>Operator:</strong> Sentinel SportsLab (Pty) Ltd. By creating an account or otherwise using the Sentinel SportsLab platform, you agree to be bound by these terms.
                 </span>
             }
         >
@@ -48,7 +48,7 @@ const TermsOfServicePage: React.FC = () => {
             <h2 id="t1">1. Definitions</h2>
             <ul>
                 <li><strong>"Platform"</strong> means the Sentinel SportsLab web application and any associated services, public forms, and APIs.</li>
-                <li><strong>"Operator"</strong>, <strong>"we"</strong>, <strong>"us"</strong> means Sentinel SportsTech (Pty) Ltd, a private company registered in South Africa.</li>
+                <li><strong>"Operator"</strong>, <strong>"we"</strong>, <strong>"us"</strong> means Sentinel SportsLab (Pty) Ltd, a private company registered in South Africa.</li>
                 <li><strong>"Organisation"</strong> means the subscribing entity — a club, academy, performance lab, private practice, or other body — under whose subscription one or more user accounts operate.</li>
                 <li><strong>"User"</strong> or <strong>"you"</strong> means an individual with a registered account on the Platform.</li>
                 <li><strong>"Athlete data"</strong> means personal information about athletes uploaded, entered, or submitted to the Platform via an organisation's workspace.</li>
@@ -97,9 +97,9 @@ const TermsOfServicePage: React.FC = () => {
             <table>
                 <thead><tr><th>Tier</th><th>Price</th><th>User seats</th><th>Notes</th></tr></thead>
                 <tbody>
-                    <tr><td>Basic</td><td>R1,450 / month</td><td>1</td><td>Single-practitioner access to the core platform</td></tr>
-                    <tr><td>Performance</td><td>R7,500 / month</td><td>Up to 3</td><td>Wellness, conditioning, and core platform</td></tr>
-                    <tr><td>Elite</td><td>R12,550 / month</td><td>Up to 4</td><td>Full platform — organisational tier</td></tr>
+                    <tr><td>Basic</td><td>R1,449 / month</td><td>1</td><td>Single-practitioner access to the core platform</td></tr>
+                    <tr><td>Performance</td><td>R5,449 / month</td><td>Up to 3</td><td>Wellness, conditioning, and core platform</td></tr>
+                    <tr><td>Elite</td><td>R12,499 / month</td><td>Up to 4</td><td>Full platform — organisational tier</td></tr>
                     <tr><td>Custom</td><td>By quotation</td><td>Custom</td><td>Bespoke seat count and feature selection</td></tr>
                 </tbody>
             </table>
@@ -128,7 +128,7 @@ const TermsOfServicePage: React.FC = () => {
             <p>We do not warrant that the Platform will be uninterrupted, error-free, or that any specific result will be obtained from its use. The Platform is provided on an "as is" and "as available" basis to the maximum extent permitted by South African law.</p>
 
             <h2 id="t9">9. Intellectual Property</h2>
-            <p>The Platform — including its software, design, brand marks, documentation, and original content — is owned by Sentinel SportsTech (Pty) Ltd and is protected by South African and international intellectual property laws. Nothing in these terms transfers any IP rights to you, save for the limited, revocable, non-exclusive licence to access and use the Platform for the duration of your subscription.</p>
+            <p>The Platform — including its software, design, brand marks, documentation, and original content — is owned by Sentinel SportsLab (Pty) Ltd and is protected by South African and international intellectual property laws. Nothing in these terms transfers any IP rights to you, save for the limited, revocable, non-exclusive licence to access and use the Platform for the duration of your subscription.</p>
             <p>You may not use our brand marks (including "Sentinel SportsLab" and the Sentinel logo) without our prior written consent, save as necessary to factually describe your use of the service.</p>
 
             <h2 id="t10">10. Your Data &amp; Export</h2>
@@ -137,7 +137,7 @@ const TermsOfServicePage: React.FC = () => {
             <p>You are responsible for ensuring that you have a lawful basis to upload Your Data, including all required consents from athletes or, where the athlete is under 18, from a parent or legal guardian.</p>
 
             <h3>10.1 Platform Library vs Organisation Library Customisations</h3>
-            <p>The Platform ships with a default library of exercises, protocols, testing instruments, and reference materials (the "<strong>Platform Library</strong>"). The Platform Library is owned by Sentinel SportsTech and licensed to you for use within your subscription. You may not extract, redistribute, or resell the Platform Library outside of your use of the Platform.</p>
+            <p>The Platform ships with a default library of exercises, protocols, testing instruments, and reference materials (the "<strong>Platform Library</strong>"). The Platform Library is owned by Sentinel SportsLab and licensed to you for use within your subscription. You may not extract, redistribute, or resell the Platform Library outside of your use of the Platform.</p>
             <p>Edits you make to Platform Library items, items you add to your organisation's library, images you upload, and links you attach (collectively, "<strong>Organisation Library Customisations</strong>") are part of Your Data. They are owned by your organisation, scoped to your workspace, and not used by us to improve the Platform Library unless you have explicitly opted in through a feature provided for that purpose. If and when an opt-in is introduced, sharing remains entirely at your discretion and can be withdrawn at any time.</p>
             <p>For clarity: removing a customisation reverts the affected item to the underlying Platform Library version. Deletion of your organisation's account permanently removes all Organisation Library Customisations in accordance with the retention schedule in our Privacy Policy.</p>
 
@@ -170,7 +170,7 @@ const TermsOfServicePage: React.FC = () => {
 
             <h2 id="t16">16. Contact</h2>
             <p>
-                Sentinel SportsTech (Pty) Ltd<br />
+                Sentinel SportsLab (Pty) Ltd<br />
                 Email: <strong>hello@sentinelsportslab.com</strong> (general)<br />
                 Email: <strong>stokeswallerq@gmail.com</strong> (legal queries, subject: "Legal Enquiry — SportsLab")<br />
                 Registered in South Africa

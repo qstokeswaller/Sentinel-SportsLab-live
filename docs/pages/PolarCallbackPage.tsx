@@ -84,9 +84,7 @@ export default function PolarCallbackPage() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 w-full max-w-sm text-center">
-                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-5">
-                    <ActivityIcon className="text-white w-6 h-6" />
-                </div>
+                <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-16 w-auto mx-auto mb-5 select-none" />
 
                 {status === 'loading' && (
                     <>

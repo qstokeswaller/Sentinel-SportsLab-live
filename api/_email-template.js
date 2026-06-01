@@ -189,10 +189,10 @@ export function renderEmail({
         <tr><td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%);height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
 
         <!-- Wordmark -->
-        <tr><td align="center" style="background:linear-gradient(180deg,#fafbff 0%,#ffffff 100%);padding:30px 32px 4px;">
+        <tr><td align="center" style="background:linear-gradient(180deg,#fafbff 0%,#ffffff 100%);padding:24px 32px 8px;">
           <a href="https://sentinelsportslab.com" style="text-decoration:none;display:inline-block;">
-            <span style="display:inline-block;vertical-align:middle;width:38px;height:38px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:9px;line-height:38px;text-align:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 4px 12px -2px rgba(79,70,229,0.4);">S</span>
-            <span style="display:inline-block;vertical-align:middle;margin-left:11px;font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.015em;">Sentinel <span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:#7c3aed;">SportsLab</span></span>
+            <img src="https://sentinelsportslab.com/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" height="44" style="display:inline-block;vertical-align:middle;border:0;outline:none;text-decoration:none;height:44px;width:auto;">
+            <span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.015em;">Sentinel <span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:#7c3aed;">SportsLab</span></span>
           </a>
         </td></tr>
 

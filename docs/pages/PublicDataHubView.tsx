@@ -20,9 +20,7 @@ const BrandingBanner = () => (
     <div className="bg-white border-b border-slate-100 py-3 print:py-2 print:border-b print:border-slate-200">
         <div className="flex flex-col items-center justify-center gap-0.5">
             <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center shrink-0">
-                    <ActivityIcon className="text-white w-3 h-3" />
-                </div>
+                <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
                 <span className="font-bold text-sm text-slate-900 tracking-tight">
                     Sentinel <span className="text-indigo-600">SportsLab</span>
                 </span>

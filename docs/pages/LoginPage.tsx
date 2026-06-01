@@ -28,9 +28,9 @@ interface PlanTier {
 }
 
 const PLANS: PlanTier[] = [
-    { id: 'basic',       label: 'Basic',       price: 'R1,450/mo',  seats: '1 user',      seatCap: 1 },
-    { id: 'performance', label: 'Performance', price: 'R7,500/mo',  seats: 'Up to 3',     seatCap: 3, popular: true },
-    { id: 'elite',       label: 'Elite',       price: 'R12,550/mo', seats: 'Up to 4',     seatCap: 4 },
+    { id: 'basic',       label: 'Basic',       price: 'R1,449/mo',  seats: '1 user',      seatCap: 1 },
+    { id: 'performance', label: 'Performance', price: 'R5,449/mo',  seats: 'Up to 3',     seatCap: 3, popular: true },
+    { id: 'elite',       label: 'Elite',       price: 'R12,499/mo', seats: 'Up to 4',     seatCap: 4 },
     { id: 'custom',      label: 'Custom',      price: 'Contact us', seats: 'Custom seats', seatCap: null },
 ];
 
@@ -132,7 +132,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
                 <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
                     <div className="flex items-center gap-2.5 mb-6">
-                        <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center"><ActivityIcon size={16} className="text-white" /></div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                         <span className="font-bold text-slate-900">Sentinel <span className="text-indigo-600">SportsLab</span></span>
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 mb-1">Set new password</h2>
@@ -286,8 +286,9 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
 
                     {/* Two overlay-content blocks, only one visible at a time */}
                     <div className={`absolute w-full px-10 py-12 text-center text-white transition-opacity duration-300 ${!isSignup ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                        <div className="flex items-center justify-center gap-2.5 mb-6 opacity-85">
-                            <ShieldIcon size={20} /> <span className="text-sm font-bold">Sentinel SportsLab</span>
+                        <div className="flex items-center justify-center gap-2.5 mb-6">
+                            <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-14 w-auto select-none brightness-0 invert opacity-95" />
+                            <span className="text-sm font-bold opacity-90">Sentinel SportsLab</span>
                         </div>
                         <div className="mb-4"><UsersIcon size={42} className="mx-auto opacity-90" /></div>
                         <h2 className="text-2xl font-extrabold mb-3">Hey There!</h2>
@@ -301,8 +302,9 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                     </div>
 
                     <div className={`absolute w-full px-10 py-12 text-center text-white transition-opacity duration-300 ${isSignup ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                        <div className="flex items-center justify-center gap-2.5 mb-6 opacity-85">
-                            <ShieldIcon size={20} /> <span className="text-sm font-bold">Sentinel SportsLab</span>
+                        <div className="flex items-center justify-center gap-2.5 mb-6">
+                            <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-14 w-auto select-none brightness-0 invert opacity-95" />
+                            <span className="text-sm font-bold opacity-90">Sentinel SportsLab</span>
                         </div>
                         <div className="mb-4"><ShieldIcon size={42} className="mx-auto opacity-90" /></div>
                         <h2 className="text-2xl font-extrabold mb-3">Welcome Back!</h2>

@@ -234,9 +234,7 @@ const PublicWellnessForm: React.FC = () => {
             <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                            <Activity size={13} className="text-white" />
-                        </div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
                         <span className="font-bold text-sm text-slate-900 tracking-tight">
                             Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
                         </span>

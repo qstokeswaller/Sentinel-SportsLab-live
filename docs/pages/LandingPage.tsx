@@ -290,9 +290,7 @@ const LandingPage: React.FC = () => {
             <nav className={`fixed top-0 inset-x-0 z-50 ${glass} border-b`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                            <ActivityIcon size={15} className="text-white" />
-                        </div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                         <span className="font-semibold text-[15px] tracking-tight">Sentinel <span className="text-indigo-500">SportsLab</span></span>
                     </div>
                     <div className={`hidden md:flex items-center gap-10 text-[13px] font-medium ${txm}`}>
@@ -469,64 +467,6 @@ const LandingPage: React.FC = () => {
                     </div>
                 </div>
                 <style>{`@keyframes spin { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }`}</style>
-            </section>
-
-            {/* ═══════ TRUST / FRAMEWORK STRIP ═══════
-                Two-part credibility section between Hero and Stats. Pattern
-                observed across competitors (Firstbeat, Edge10, VALD) where
-                the homepage frames credibility through methodology + parent
-                backing rather than relying on feature lists alone. We have
-                two real signals: (1) the platform is built on published
-                sport-science frameworks (FIFA, IOC, ACWR, Hooper, POPIA),
-                and (2) Sentinel SportsTech is a family of four products
-                — SportsLab sits alongside Football Hub, SportsCoder, and
-                Football AI, which is real organisational depth. */}
-            <section className={`relative border-y ${dark ? 'border-white/[0.05] bg-white/[0.015]' : 'border-slate-100 bg-slate-50/40'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                    {/* Frameworks */}
-                    <div>
-                        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${txs} mb-4`}>Built on validated frameworks</p>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { label: 'FIFA Wellness',     sub: 'Daily forms' },
-                                { label: 'IOC Surveillance',  sub: 'Injury &amp; illness' },
-                                { label: 'ACWR (EWMA)',       sub: 'Load monitoring' },
-                                { label: 'Hooper Index',      sub: 'Wellness composite' },
-                                { label: 'POPIA + GDPR',      sub: 'Data protection' },
-                            ].map(b => (
-                                <div key={b.label} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${dark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-slate-200 bg-white'}`}>
-                                    <ShieldIcon size={12} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
-                                    <div className="leading-tight">
-                                        <div className={`text-[11px] font-bold ${tx}`}>{b.label}</div>
-                                        <div className={`text-[9px] ${txs}`} dangerouslySetInnerHTML={{ __html: b.sub }} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Sentinel SportsTech parent-brand family */}
-                    <div className={`md:border-l ${dark ? 'md:border-white/[0.05]' : 'md:border-slate-200'} md:pl-12`}>
-                        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${txs} mb-4`}>Part of the Sentinel SportsTech platform</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {[
-                                { name: 'SportsLab',     desc: 'Athlete monitoring',  active: true },
-                                { name: 'Football Hub',  desc: 'Club management' },
-                                { name: 'SportsCoder',   desc: 'Match analysis' },
-                                { name: 'Football AI',   desc: 'Video intelligence' },
-                            ].map(p => (
-                                <div key={p.name} className={`p-3 rounded-lg border transition-colors ${
-                                    p.active
-                                        ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-500/40 dark:bg-indigo-500/10'
-                                        : `${dark ? 'border-white/[0.07] bg-white/[0.02]' : 'border-slate-200 bg-white'}`
-                                }`}>
-                                    <div className={`text-[11px] font-bold ${p.active ? 'text-indigo-700 dark:text-indigo-300' : tx}`}>{p.name}{p.active && <span className="ml-1 text-[8.5px] font-bold opacity-70">·  this one</span>}</div>
-                                    <div className={`text-[9px] uppercase tracking-wide ${txs} mt-0.5`}>{p.desc}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
             </section>
 
             {/* ═══════ STATS ═══════ */}
@@ -735,9 +675,8 @@ const LandingPage: React.FC = () => {
                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                         <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/10" />
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-xl sm:text-2xl font-semibold text-slate-500 line-through decoration-slate-600">We don't promise more data.</p>
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">We deliver conviction in every decision.</p>
+                    <div>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">Data drives decisions. Decisions drive success.</p>
                     </div>
                 </div>
             </section>
@@ -853,11 +792,6 @@ const LandingPage: React.FC = () => {
                         journey, not three unrelated cards. Pattern observed on
                         Teamworks workflow sections + Edge10 product steps. */}
                     <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
-                        {/* Connector line — dashed indigo on md+ only, sits behind
-                            the cards so the three step-number discs (1, 2, 3) read
-                            as nodes on a single timeline. The line is anchored to
-                            the vertical centre of the disc row (-top-3 + h-7/2 ≈ 12). */}
-                        <div className="hidden md:block absolute top-[8px] left-[16.7%] right-[16.7%] h-px z-0" style={{ background: 'repeating-linear-gradient(to right, rgba(99,102,241,0.45) 0 6px, transparent 6px 12px)' }} />
                         {[
                             {
                                 week: 'Week 1',
@@ -940,21 +874,21 @@ const LandingPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
                         {[
                             {
-                                name: 'Basic', price: 'R1,450', per: '/month',
+                                name: 'Basic', price: 'R1,449', per: '/month',
                                 seats: '1 user',
                                 desc: 'Core platform for individual practitioners',
                                 features: ['Dashboard & squad readiness','Athlete roster management','Workout builder (3,700+ exercises)','Tonnage & session tracking','Testing Hub — 80+ protocols','Exercise library & catalogues','Session calendar & scheduling'],
                                 pop: false, cust: false,
                             },
                             {
-                                name: 'Performance', price: 'R7,500', per: '/month',
+                                name: 'Performance', price: 'R5,449', per: '/month',
                                 seats: 'Up to 3 users',
                                 desc: 'Everything in Basic, plus welfare & conditioning',
                                 features: ['Everything in Basic','Wellness Hub — daily & weekly forms','FIFA/IOC wellness surveillance','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
                                 pop: true, cust: false,
                             },
                             {
-                                name: 'Elite', price: 'R12,550', per: '/month',
+                                name: 'Elite', price: 'R12,499', per: '/month',
                                 seats: 'Up to 4 users · Organisational',
                                 desc: 'Full platform — built for performance staff',
                                 features: ['Everything in Performance','ACWR load monitoring (EWMA)','GPS & load intelligence','Reporting Hub with GPS Insights','Analytics Hub (5 terminals)','Scenario modelling & F-V profiling','Periodization planner'],

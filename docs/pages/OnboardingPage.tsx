@@ -84,9 +84,7 @@ const OnboardingPage: React.FC = () => {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-            <ActivityIcon className="text-white w-4 h-4" />
-          </div>
+          <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto shrink-0 select-none" />
           <span className="font-bold text-slate-900 dark:text-[#E2E8F0]">
             Sentinel <span className="text-indigo-600 dark:text-indigo-300">SportsLab</span>
           </span>

@@ -81,9 +81,7 @@ export const Sidebar = () => {
         <>
             {/* Logo */}
             <div className={`flex items-center gap-3 border-b border-slate-100 dark:border-[#243A58] shrink-0 ${!showLabels ? 'justify-center px-3 py-5' : 'px-4 py-5'}`}>
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                    <ActivityIcon className="text-white w-4 h-4" />
-                </div>
+                <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto shrink-0 select-none" />
                 {showLabels && (
                     <div className="flex flex-col min-w-0">
                         <span className="font-bold text-sm text-slate-900 dark:text-[#E2E8F0] leading-tight">

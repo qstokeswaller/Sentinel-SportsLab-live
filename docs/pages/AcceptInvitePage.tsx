@@ -92,9 +92,7 @@ const AcceptInvitePage: React.FC = () => {
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
                 <Link to="/" className="flex items-center justify-center gap-2.5 mb-6">
-                    <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center">
-                        <ActivityIcon size={16} className="text-white" />
-                    </div>
+                    <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                     <span className="font-bold text-slate-900">Sentinel <span className="text-indigo-600">SportsLab</span></span>
                 </Link>
                 {children}

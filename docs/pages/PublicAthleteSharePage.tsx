@@ -123,9 +123,7 @@ const PublicAthleteSharePage: React.FC = () => {
                 {/* Branding */}
                 <div className="flex items-center justify-between pb-2">
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-                            <ActivityIcon size={14} className="text-white" />
-                        </div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-11 w-auto select-none" />
                         <span className="text-sm font-semibold text-slate-800">Sentinel SportsLab</span>
                         <span className="text-[10px] uppercase tracking-wide text-slate-400 ml-1">Shared Dossier</span>
                     </div>

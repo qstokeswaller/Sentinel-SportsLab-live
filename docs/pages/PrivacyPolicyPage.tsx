@@ -46,7 +46,7 @@ const PrivacyPolicyPage: React.FC = () => {
             </ol>
 
             <h2 id="s1">1. Who We Are</h2>
-            <p>Sentinel SportsTech (Pty) Ltd ("<strong>Sentinel</strong>", "<strong>we</strong>", "<strong>us</strong>") operates the Sentinel SportsLab platform — an athlete monitoring and sport-science intelligence tool used by coaches, sport scientists, and performance staff. We are the Responsible Party for personal information processed in connection with the platform.</p>
+            <p>Sentinel SportsLab (Pty) Ltd ("<strong>Sentinel</strong>", "<strong>we</strong>", "<strong>us</strong>") operates the Sentinel SportsLab platform — an athlete monitoring and sport-science intelligence tool used by coaches, sport scientists, and performance staff. We are the Responsible Party for personal information processed in connection with the platform.</p>
             <p>We operate in two capacities depending on the data involved:</p>
             <table>
                 <thead><tr><th>Data stream</th><th>Our role</th><th>What that means</th></tr></thead>
@@ -232,7 +232,7 @@ const PrivacyPolicyPage: React.FC = () => {
             <h3>Information Officer</h3>
             <p>
                 Quintin Stokes-Waller<br />
-                Information Officer, Sentinel SportsTech (Pty) Ltd<br />
+                Information Officer, Sentinel SportsLab (Pty) Ltd<br />
                 Email: <strong>stokeswallerq@gmail.com</strong> (subject: "Privacy Request — SportsLab")
             </p>
 

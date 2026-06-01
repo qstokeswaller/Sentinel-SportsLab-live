@@ -127,9 +127,7 @@ const LandingPage: React.FC = () => {
             <nav className={`fixed top-0 left-0 right-0 z-50 ${t.navBg} border-b`}>
                 <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 ${t.accentBg} rounded-lg flex items-center justify-center shrink-0 shadow-lg ${t.accentGlow}`}>
-                            <ActivityIcon size={16} className="text-white" />
-                        </div>
+                        <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none shrink-0" />
                         <span className="font-bold text-base tracking-tight">
                             Sentinel <span className={t.accent}>SportsLab</span>
                         </span>
@@ -390,9 +388,7 @@ const LandingPage: React.FC = () => {
                 <div className="max-w-6xl mx-auto px-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                                <ActivityIcon size={14} className="text-white" />
-                            </div>
+                            <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-11 w-auto select-none shrink-0 brightness-0 invert opacity-95" />
                             <span className="font-bold text-sm text-white tracking-tight">Sentinel <span className="text-indigo-400">SportsLab</span></span>
                         </div>
                         <div className="flex items-center gap-6 text-sm">
@@ -402,7 +398,7 @@ const LandingPage: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-8 pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
-                        &copy; {new Date().getFullYear()} Sentinel SportsTech. All rights reserved.
+                        &copy; {new Date().getFullYear()} Sentinel SportsLab. All rights reserved.
                     </div>
                 </div>
             </footer>
