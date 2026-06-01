@@ -606,6 +606,17 @@ const SettingsPage: React.FC = () => {
     other_org_has_data: boolean;
   }>(null);
   const [inviteEmailChecking, setInviteEmailChecking] = useState(false);
+
+  // Generic confirm-action modal — replaces the ugly native window.confirm()
+  // calls we previously used for revoke / remove / transfer-admin actions.
+  const [pendingConfirm, setPendingConfirm] = useState<null | {
+    title: string;
+    body: string;
+    confirmLabel: string;
+    confirmTone: 'danger' | 'primary';
+    onConfirm: () => void | Promise<void>;
+  }>(null);
+  const askConfirm = (opts: typeof pendingConfirm) => setPendingConfirm(opts);
   const [memberActionBusy, setMemberActionBusy] = useState<string | null>(null); // member_id being acted on
 
   // ── Phase E: audit log state ────────────────────────────────────────────
@@ -717,32 +728,46 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleRevokeInvite = async (invId: string) => {
-    if (!confirm('Revoke this invitation? The link will stop working immediately.')) return;
-    setMemberActionBusy(invId);
-    try {
-      await DatabaseService.revokeOrgInvitation(invId);
-      await reloadOrgLists();
-      showToast?.('Invitation revoked');
-    } catch (e: any) {
-      showToast?.(e?.message || 'Failed to revoke invitation', 'error');
-    } finally {
-      setMemberActionBusy(null);
-    }
+  const handleRevokeInvite = (invId: string) => {
+    askConfirm({
+      title: 'Revoke invitation?',
+      body: 'The invite link will stop working immediately. You can always send a new invitation later.',
+      confirmLabel: 'Revoke invitation',
+      confirmTone: 'danger',
+      onConfirm: async () => {
+        setMemberActionBusy(invId);
+        try {
+          await DatabaseService.revokeOrgInvitation(invId);
+          await reloadOrgLists();
+          showToast?.('Invitation revoked');
+        } catch (e: any) {
+          showToast?.(e?.message || 'Failed to revoke invitation', 'error');
+        } finally {
+          setMemberActionBusy(null);
+        }
+      },
+    });
   };
 
-  const handleRemoveMember = async (memberId: string, memberName: string) => {
-    if (!confirm(`Remove ${memberName} from this organisation? Their account remains but they lose access to your workspace.`)) return;
-    setMemberActionBusy(memberId);
-    try {
-      await DatabaseService.removeOrgMember(memberId);
-      await reloadOrgLists();
-      showToast?.(`${memberName} removed`);
-    } catch (e: any) {
-      showToast?.(e?.message || 'Failed to remove member', 'error');
-    } finally {
-      setMemberActionBusy(null);
-    }
+  const handleRemoveMember = (memberId: string, memberName: string) => {
+    askConfirm({
+      title: `Remove ${memberName}?`,
+      body: `${memberName}'s account remains, but they lose access to your workspace and all athletes/data scoped to this organisation. You can re-invite them later.`,
+      confirmLabel: 'Remove from organisation',
+      confirmTone: 'danger',
+      onConfirm: async () => {
+        setMemberActionBusy(memberId);
+        try {
+          await DatabaseService.removeOrgMember(memberId);
+          await reloadOrgLists();
+          showToast?.(`${memberName} removed`);
+        } catch (e: any) {
+          showToast?.(e?.message || 'Failed to remove member', 'error');
+        } finally {
+          setMemberActionBusy(null);
+        }
+      },
+    });
   };
 
   const handleChangeRole = async (memberId: string, newRole: 'admin' | 'member', memberName: string) => {
@@ -758,18 +783,25 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleTransferAdmin = async (memberId: string, memberName: string) => {
-    if (!confirm(`Transfer your admin role to ${memberName}? You'll be demoted to member. This cannot be undone without them transferring it back.`)) return;
-    setMemberActionBusy(memberId);
-    try {
-      await DatabaseService.transferAdmin(memberId);
-      await Promise.all([reloadOrgLists(), refreshCurrentOrg()]);
-      showToast?.(`Admin transferred to ${memberName}`);
-    } catch (e: any) {
-      showToast?.(e?.message || 'Failed to transfer admin', 'error');
-    } finally {
-      setMemberActionBusy(null);
-    }
+  const handleTransferAdmin = (memberId: string, memberName: string) => {
+    askConfirm({
+      title: `Transfer admin to ${memberName}?`,
+      body: `You'll be demoted to member. ${memberName} will gain full admin control of this organisation. This can only be reversed if they transfer admin back to you.`,
+      confirmLabel: 'Transfer admin role',
+      confirmTone: 'primary',
+      onConfirm: async () => {
+        setMemberActionBusy(memberId);
+        try {
+          await DatabaseService.transferAdmin(memberId);
+          await Promise.all([reloadOrgLists(), refreshCurrentOrg()]);
+          showToast?.(`Admin transferred to ${memberName}`);
+        } catch (e: any) {
+          showToast?.(e?.message || 'Failed to transfer admin', 'error');
+        } finally {
+          setMemberActionBusy(null);
+        }
+      },
+    });
   };
   // All sections start collapsed (GPS sections also collapsed by default)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
@@ -1749,15 +1781,18 @@ const SettingsPage: React.FC = () => {
                         disabled={inviteSending || atCap}
                         className="flex-1 min-w-0 px-3.5 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm text-slate-900 dark:text-[#E2E8F0] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50"
                       />
-                      <select
-                        value={inviteRole}
-                        onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
-                        disabled={inviteSending || atCap}
-                        className="px-3.5 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg text-sm text-slate-900 dark:text-[#E2E8F0] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50"
-                      >
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <div className="sm:w-40">
+                        <CustomSelect
+                          value={inviteRole}
+                          onChange={(e: any) => setInviteRole(e.target.value as 'admin' | 'member')}
+                          disabled={inviteSending || atCap}
+                          variant="form"
+                          size="sm"
+                        >
+                          <option value="member">Member</option>
+                          <option value="admin">Admin</option>
+                        </CustomSelect>
+                      </div>
                       <button
                         onClick={handleSendInvite}
                         disabled={inviteSending || atCap || !inviteEmail.trim()}
@@ -2151,6 +2186,42 @@ const SettingsPage: React.FC = () => {
         onDiscard={handleUnsavedDiscard}
         onCancel={() => setPendingTab(null)}
       />
+
+      {/* Confirm-action modal — styled replacement for the native window.confirm()
+          dialogs we used to pop for revoke / remove / transfer-admin actions. */}
+      {pendingConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={() => setPendingConfirm(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white dark:bg-[#132338] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#243A58] p-6"
+          >
+            <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0] mb-2">{pendingConfirm.title}</h3>
+            <p className="text-sm text-slate-600 dark:text-[#CBD5E1] leading-relaxed mb-5">{pendingConfirm.body}</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setPendingConfirm(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-[#243A58] text-slate-700 dark:text-[#CBD5E1] text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const fn = pendingConfirm.onConfirm;
+                  setPendingConfirm(null);
+                  await fn();
+                }}
+                className={`px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${
+                  pendingConfirm.confirmTone === 'danger'
+                    ? 'bg-rose-600 hover:bg-rose-500'
+                    : 'bg-indigo-600 hover:bg-indigo-500'
+                }`}
+              >
+                {pendingConfirm.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GPS Config Modal */}
       {gpsConfigTarget && (
