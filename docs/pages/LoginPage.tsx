@@ -13,7 +13,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ActivityIcon, ArrowRightIcon, CheckIcon, ShieldIcon, UsersIcon } from 'lucide-react';
+import { ActivityIcon, ArrowRightIcon, CheckIcon, ShieldIcon, UsersIcon, MailIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 type Mode = 'signin' | 'signup' | 'reset' | 'update-password';
@@ -53,6 +53,16 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
     // field so the user can't accidentally sign up with a different address
     // (which would create a separate org instead of joining the inviting one).
     const lockedEmail = searchParams.get('email') || '';
+    // Detect invite-signup mode: either an email is pre-filled from the
+    // accept-invite redirect, OR there's a pending invite token still in
+    // localStorage. In either case the user is joining an existing org —
+    // they should NOT pick a new tier or type a new org name, both of which
+    // are ignored by handle_new_user_signup() when an invitation exists
+    // for the email and would otherwise just confuse the user.
+    const hasPendingInviteToken = (() => {
+        try { return !!localStorage.getItem('sentinel_pending_invite_token'); } catch { return false; }
+    })();
+    const isInviteSignup = !!lockedEmail || hasPendingInviteToken;
 
     // Shared fields
     const [email, setEmail] = useState(lockedEmail);
@@ -93,7 +103,9 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                 if (err) setError(err.message);
             } else if (mode === 'signup') {
                 if (!firstName.trim() || !surname.trim()) { setError('First name and surname are required.'); return; }
-                if (!organisation.trim()) { setError('Organisation is required.'); return; }
+                // Org name is only required when self-serve signing up; invite signup
+                // inherits the org from the invitation so we don't ask for it.
+                if (!isInviteSignup && !organisation.trim()) { setError('Organisation is required.'); return; }
                 if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
                 if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
                 const { error: err } = await supabase.auth.signUp({
@@ -105,12 +117,17 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                             full_name: `${firstName.trim()} ${surname.trim()}`,
                             first_name: firstName.trim(),
                             surname: surname.trim(),
-                            organization: organisation.trim(),
-                            selected_plan: selectedPlan,
-                            // Seat cap captured at signup so it can be enforced once
-                            // the org/multi-user phase ships (see Gate 2.2 of
-                            // plans/COMPLIANCE-LAUNCH-PLAN.md). null = custom tier.
-                            selected_seat_cap: PLANS.find(p => p.id === selectedPlan)?.seatCap ?? null,
+                            // For invite signups, omit org/plan metadata so
+                            // handle_new_user_signup() skips the create-org block
+                            // and the accept_org_invitation RPC handles membership.
+                            ...(isInviteSignup ? {} : {
+                                organization: organisation.trim(),
+                                selected_plan: selectedPlan,
+                                // Seat cap captured at signup so it can be enforced once
+                                // the org/multi-user phase ships (see Gate 2.2 of
+                                // plans/COMPLIANCE-LAUNCH-PLAN.md). null = custom tier.
+                                selected_seat_cap: PLANS.find(p => p.id === selectedPlan)?.seatCap ?? null,
+                            }),
                         },
                     },
                 });
@@ -207,14 +224,41 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
 
                 {/* ── SIGN UP FORM (always right half on lg+) ─────────────────────
                     On mobile (<lg) only renders when mode === 'signup'. */}
-                <div className={`lg:w-1/2 p-8 sm:p-12 lg:flex flex-col justify-center order-3 lg:order-2 ${isSignup ? 'flex' : 'hidden'}`}>
-                    <h1 className="text-2xl font-extrabold text-slate-900 mb-1">Create Account</h1>
-                    <p className="text-sm text-slate-500 mb-6">Start managing your program smarter today.</p>
+                <div className={`lg:w-1/2 p-5 sm:p-8 md:p-12 lg:flex flex-col justify-center order-3 lg:order-2 ${isSignup ? 'flex' : 'hidden'}`}>
+                    {/* SUCCESS STATE — full panel takeover so the confirm-email step is impossible to miss.
+                        For invite signups especially, the user needs to know they MUST verify before they can log in. */}
+                    {isSignup && message && isInviteSignup ? (
+                        <div className="text-center">
+                            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <MailIcon size={26} className="text-emerald-600" />
+                            </div>
+                            <h2 className="text-xl font-extrabold text-slate-900 mb-2">Check your inbox</h2>
+                            <p className="text-sm text-slate-600 leading-relaxed mb-1">
+                                We've sent a confirmation link to
+                            </p>
+                            <p className="text-sm font-bold text-slate-900 mb-3">{email}</p>
+                            <p className="text-[13px] text-slate-500 leading-relaxed mb-5 max-w-sm mx-auto">
+                                Click the link in that email to verify your account, then sign in here — you'll be added to your organisation automatically.
+                            </p>
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-3 text-left text-[11.5px] text-amber-800 leading-relaxed">
+                                Didn't get the email? Check your spam folder, or ask the admin who invited you to resend the invitation if it's been more than a few minutes.
+                            </div>
+                        </div>
+                    ) : (
+                    <>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1">
+                        {isInviteSignup ? 'Join your organisation' : 'Create Account'}
+                    </h1>
+                    <p className="text-[13px] sm:text-sm text-slate-500 mb-5 sm:mb-6">
+                        {isInviteSignup
+                            ? 'Just set your name and password — your organisation and plan are inherited from the invitation.'
+                            : 'Start managing your program smarter today.'}
+                    </p>
                     {isSignup && error && <div className="bg-rose-50 border border-rose-200 rounded-lg px-3.5 py-3 text-[12px] text-rose-700 font-medium mb-4">{error}</div>}
                     {isSignup && message && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3.5 py-3 text-[12px] text-emerald-700 font-medium mb-4">{message}</div>}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div><label className={labelCls}>First name *</label><input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} required className={inputCls} placeholder="First name" autoComplete="given-name" /></div>
                             <div><label className={labelCls}>Surname *</label><input type="text" value={surname} onChange={e => setSurname(e.target.value)} required className={inputCls} placeholder="Surname" autoComplete="family-name" /></div>
                         </div>
@@ -223,46 +267,53 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required readOnly={emailReadOnly} className={`${inputCls} ${emailReadOnly ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`} placeholder="coach@club.com" autoComplete="email" />
                             {emailReadOnly && <p className="text-[11px] text-slate-400 mt-1">From your invitation — can't be changed</p>}
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div><label className={labelCls}>Password *</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className={inputCls} placeholder="Min 8 characters" autoComplete="new-password" /></div>
                             <div><label className={labelCls}>Confirm *</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} className={inputCls} placeholder="Repeat password" autoComplete="new-password" /></div>
                         </div>
-                        <div><label className={labelCls}>Organisation *</label><input type="text" value={organisation} onChange={e => setOrganisation(e.target.value)} required className={inputCls} placeholder="e.g. Tuks FC, Northside Academy" autoComplete="organization" /></div>
+                        {/* Org name + plan picker only shown for self-serve signup — for
+                            invite signup, the org and tier come from the inviting org and
+                            handle_new_user_signup() skips the org-creation block entirely. */}
+                        {!isInviteSignup && (
+                            <>
+                                <div><label className={labelCls}>Organisation *</label><input type="text" value={organisation} onChange={e => setOrganisation(e.target.value)} required={!isInviteSignup} className={inputCls} placeholder="e.g. Tuks FC, Northside Academy" autoComplete="organization" /></div>
 
-                        {/* Plan picker */}
-                        <div>
-                            <label className={labelCls}>Choose your plan</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {PLANS.map(p => {
-                                    const isSel = selectedPlan === p.id;
-                                    return (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            onClick={() => setSelectedPlan(p.id)}
-                                            className={`relative text-left px-3 py-2.5 rounded-lg border-[1.5px] transition-all ${
-                                                isSel ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
-                                            }`}
-                                        >
-                                            {p.popular && (
-                                                <span className="absolute -top-px right-2 text-[8.5px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-1.5 py-0.5 rounded-b">Popular</span>
-                                            )}
-                                            {isSel && (
-                                                <span className="absolute top-2 right-2 w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
-                                                    <CheckIcon size={9} className="text-white" strokeWidth={3} />
-                                                </span>
-                                            )}
-                                            <span className="block text-[12.5px] font-bold text-slate-900 leading-tight">{p.label}</span>
-                                            <span className={`block text-[11px] ${isSel ? 'text-indigo-700 font-semibold' : 'text-slate-500'}`}>{p.price}</span>
-                                            <span className={`block text-[9.5px] font-bold uppercase tracking-wider mt-0.5 ${isSel ? 'text-indigo-600/80' : 'text-slate-400'}`}>{p.seats}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                                {/* Plan picker */}
+                                <div>
+                                    <label className={labelCls}>Choose your plan</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {PLANS.map(p => {
+                                            const isSel = selectedPlan === p.id;
+                                            return (
+                                                <button
+                                                    key={p.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedPlan(p.id)}
+                                                    className={`relative text-left px-3 py-2.5 rounded-lg border-[1.5px] transition-all ${
+                                                        isSel ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                                    }`}
+                                                >
+                                                    {p.popular && (
+                                                        <span className="absolute -top-px right-2 text-[8.5px] font-bold uppercase tracking-wider bg-indigo-600 text-white px-1.5 py-0.5 rounded-b">Popular</span>
+                                                    )}
+                                                    {isSel && (
+                                                        <span className="absolute top-2 right-2 w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                            <CheckIcon size={9} className="text-white" strokeWidth={3} />
+                                                        </span>
+                                                    )}
+                                                    <span className="block text-[12.5px] font-bold text-slate-900 leading-tight">{p.label}</span>
+                                                    <span className={`block text-[11px] ${isSel ? 'text-indigo-700 font-semibold' : 'text-slate-500'}`}>{p.price}</span>
+                                                    <span className={`block text-[9.5px] font-bold uppercase tracking-wider mt-0.5 ${isSel ? 'text-indigo-600/80' : 'text-slate-400'}`}>{p.seats}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
-                            <ShieldIcon size={14} /> {loading ? 'Creating…' : 'Create Account'}
+                            <ShieldIcon size={14} /> {loading ? 'Creating…' : (isInviteSignup ? 'Create Account & Join' : 'Create Account')}
                         </button>
                     </form>
 
@@ -270,6 +321,8 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                     <div className="lg:hidden mt-6 pt-5 border-t border-slate-100 text-center">
                         <button onClick={() => switchMode('signin')} className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-700">Already have an account? Sign in →</button>
                     </div>
+                    </>
+                    )}
                 </div>
 
                 {/* ── SLIDING OVERLAY (lg+ only) ────────────────────────────────── */}
