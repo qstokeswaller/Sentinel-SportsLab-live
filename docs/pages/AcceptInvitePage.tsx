@@ -109,6 +109,10 @@ const AcceptInvitePage: React.FC = () => {
     }
 
     if (!info || !info.is_valid) {
+        // CRITICAL: clear the pending token so Router doesn't loop us back here.
+        // Without this, navigating "Back to home" while signed in re-redirects to
+        // /accept-invite/:token (Router reads the same stale token from localStorage).
+        try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {}
         return (
             <Shell>
                 <div className="text-center">
@@ -203,6 +207,17 @@ const AcceptInvitePage: React.FC = () => {
                     >
                         <LogOutIcon size={14} /> Sign out and use {info.email}
                     </button>
+                    {/* Dismiss escape — clears the pending token so Router stops
+                        bouncing them back here every time they navigate. */}
+                    <button
+                        onClick={() => {
+                            try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {}
+                            navigate('/dashboard');
+                        }}
+                        className="w-full py-2 text-[12px] text-slate-500 hover:text-slate-700"
+                    >
+                        Dismiss this invitation
+                    </button>
                 </div>
             </Shell>
         );
@@ -245,6 +260,19 @@ const AcceptInvitePage: React.FC = () => {
                 >
                     {accepting ? 'Accepting…' : 'Accept invitation'}{!accepting && <ArrowRightIcon size={14} />}
                 </button>
+                {/* Escape hatch — if accept keeps failing (e.g. unresolvable "already belong"
+                    case), let the user dismiss so Router stops looping them back to this page. */}
+                {acceptError && (
+                    <button
+                        onClick={() => {
+                            try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {}
+                            navigate('/dashboard');
+                        }}
+                        className="w-full mt-2 py-2 text-[12px] text-slate-500 hover:text-slate-700"
+                    >
+                        Dismiss this invitation
+                    </button>
+                )}
             </div>
         </Shell>
     );
