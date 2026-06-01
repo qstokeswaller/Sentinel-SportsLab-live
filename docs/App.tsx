@@ -108,9 +108,11 @@ const WelcomeSplash = () => {
         >
             {/* Logo mark */}
             <div className="flex flex-col items-center gap-6">
-                <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-                    <ActivityIcon size={30} className="text-white" />
-                </div>
+                <img
+                    src="/images/sentinel-sportslab-logo.png"
+                    alt="Sentinel SportsLab"
+                    className="h-20 w-auto select-none drop-shadow-[0_0_30px_rgba(99,102,241,0.4)]"
+                />
 
                 <div className="text-center space-y-1">
                     <p className="text-slate-400 text-sm font-medium tracking-widest uppercase">Sentinel <span className="text-indigo-400">SportsLab</span></p>

@@ -27,7 +27,7 @@ const ONE_RM_EXERCISES = {
         { id: 'lat_pulldown', name: 'Lat Pulldown' }
     ]
 };
-import { calculateRpmForFan } from '../../utils/performanceUtils';
+import { calculateRpmForFan, WATTBIKE_MODELS, WATTBIKE_TABLES } from '../../utils/performanceUtils';
 import WattbikeMapCalculator from './WattbikeMapCalculator';
 
 
@@ -510,17 +510,16 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
-                                    {['Trainer', 'Pro'].map(m => (
-                                        <button
-                                            key={m}
-                                            onClick={() => setBikeModel(m)}
-                                            className={`flex-1 py-2.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all ${bikeModel === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}
-                                        >
-                                            {m}
-                                        </button>
+                                <CustomSelect
+                                    value={bikeModel}
+                                    onChange={(e: any) => setBikeModel(e.target.value)}
+                                    variant="form"
+                                    size="sm"
+                                >
+                                    {WATTBIKE_MODELS.map(m => (
+                                        <option key={m} value={m}>{WATTBIKE_TABLES[m].label}</option>
                                     ))}
-                                </div>
+                                </CustomSelect>
 
                                 <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-5 grid grid-cols-5 gap-3">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(fan => {

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { CustomSelect } from '../ui/CustomSelect';
-import { calculateFanFromRPM, calculateRpmForFan } from '../../utils/performanceUtils';
+import { calculateFanFromRPM, calculateRpmForFan, WATTBIKE_MODELS, WATTBIKE_TABLES } from '../../utils/performanceUtils';
 
 const WattbikeMapCalculator = ({ inline = false }) => {
     const {
@@ -146,20 +146,19 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                         {/* Controls Row */}
                         <div className="flex flex-wrap items-end gap-3">
 
-                            {/* BIKE MODEL */}
+                            {/* BIKE MODEL — 4 models grouped per official Wattbike docs */}
                             <div className="space-y-1.5">
                                 <label className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide block">Bike Model</label>
-                                <div className="flex rounded-xl overflow-hidden border border-slate-200">
-                                    {['Pro', 'Trainer'].map((m, i) => (
-                                        <button
-                                            key={m}
-                                            onClick={() => setWbMapBikeModel(m)}
-                                            className={`px-5 py-2 text-[10px] font-semibold uppercase tracking-wide transition-all ${i > 0 ? 'border-l border-slate-200' : ''} ${wbMapBikeModel === m ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400 hover:text-indigo-500'}`}
-                                        >
-                                            {m}
-                                        </button>
+                                <CustomSelect
+                                    value={wbMapBikeModel}
+                                    onChange={(e: any) => setWbMapBikeModel(e.target.value)}
+                                    variant="form"
+                                    size="sm"
+                                >
+                                    {WATTBIKE_MODELS.map(m => (
+                                        <option key={m} value={m}>{WATTBIKE_TABLES[m].label}</option>
                                     ))}
-                                </div>
+                                </CustomSelect>
                             </div>
 
                             {/* SELECTION TYPE */}
@@ -433,8 +432,9 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                                                                 [p.id]: { ...wbMapAthleteData[p.id], model: e.target.value }
                                                             })}
                                                         >
-                                                            <option value="Pro">Pro</option>
-                                                            <option value="Trainer">Trainer</option>
+                                                            {WATTBIKE_MODELS.map(m => (
+                                                                <option key={m} value={m}>{WATTBIKE_TABLES[m].label}</option>
+                                                            ))}
                                                         </CustomSelect>
                                                     </td>
                                                 </tr>
