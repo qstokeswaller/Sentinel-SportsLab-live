@@ -2111,7 +2111,7 @@ export const WellnessHubPage: React.FC = () => {
                                 <ArrowLeftIcon size={16} />
                             </button>
                             <div>
-                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Wellness Hub</div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Wellness</div>
                                 <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeSection}</h2>
                             </div>
                         </div>
@@ -2138,7 +2138,7 @@ export const WellnessHubPage: React.FC = () => {
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness Hub</h2>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Wellness</h2>
                 <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Athlete wellness monitoring, medical records & injury tracking.</p>
             </div>
             {isLoading ? (
@@ -2161,9 +2161,10 @@ export const WellnessHubPage: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div data-tour="wellness-sections" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {SECTIONS.map((section, i) => (
                         <button key={i} onClick={() => setActiveSection(section.title)}
+                            data-tour={`wellness-section-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
                             className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                         >
                             <div className="flex items-start gap-4 h-full">

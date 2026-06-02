@@ -97,7 +97,7 @@ export const AnalyticsHubPage = () => {
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
-                        <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Analytics Hub</h2>
+                        <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Analytics</h2>
                         <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Diagnostic monitoring terminals for elite high-performance units.</p>
                     </div>
                     {/* Dual subject selector */}
@@ -198,6 +198,7 @@ export const AnalyticsHubPage = () => {
                             key={mod.id}
                             onClick={() => selectedAnalyticsAthleteId && setActiveAnalyticsModule(mod.id)}
                             disabled={!selectedAnalyticsAthleteId}
+                            data-tour={`analytics-module-${mod.id}`}
                             className={`bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm transition-all text-left relative overflow-hidden group h-[160px] flex flex-col justify-center
                                 ${selectedAnalyticsAthleteId
                                     ? 'hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 cursor-pointer'

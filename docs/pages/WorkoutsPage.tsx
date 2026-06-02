@@ -120,6 +120,7 @@ const ShellHeader = () => {
                     )}
                     <button
                         onClick={fireCreate}
+                        data-tour="workouts-create"
                         className={`flex items-center gap-1.5 px-3 py-2 ${theme.createBtnBg} ${theme.createBtnHover} text-white rounded-lg text-xs font-semibold transition-all shadow-sm`}
                     >
                         <PlusIcon size={13} /> {theme.createLabel}
@@ -128,7 +129,7 @@ const ShellHeader = () => {
             </div>
 
             {/* Row 2 — top-level tabs, left-aligned under the title */}
-            <div className="flex items-center gap-1 mt-3 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58] w-fit">
+            <div data-tour="workouts-tabs" className="flex items-center gap-1 mt-3 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58] w-fit">
                 {(Object.values(TAB_THEMES) as any[]).map(t => {
                     const TIcon = t.icon;
                     const isActive = activeTab === t.id;
@@ -136,6 +137,7 @@ const ShellHeader = () => {
                         <button
                             key={t.id}
                             onClick={() => navigate(t.path)}
+                            data-tour={`workouts-tab-${t.id}`}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                                 isActive
                                     ? `${t.activeTabBg} text-white shadow-sm`

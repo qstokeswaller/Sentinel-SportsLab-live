@@ -154,7 +154,7 @@ export const HeartRateMetricsReport: React.FC = () => {
     const chartData = filtered.slice(-20);
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div data-tour="wellness-heart-rate-overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Controls Header */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#132338] px-4 py-3 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">

@@ -732,7 +732,7 @@ ${sectionsHtml}
             {/* Header — only show when no module active */}
             {!activeConditioningModule && (
                 <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Hub</h2>
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning</h2>
                     <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Performance conditioning monitoring & Wattbike protocols.</p>
                 </div>
             )}
@@ -758,6 +758,7 @@ ${sectionsHtml}
                 <div data-tour="conditioning-main" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div
                         onClick={() => setActiveConditioningModule('wattbike')}
+                        data-tour="conditioning-card-wattbike"
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
                         <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/15 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white transition-all">
@@ -768,6 +769,7 @@ ${sectionsHtml}
                     </div>
                     <div
                         onClick={() => setActiveConditioningModule('conditioning')}
+                        data-tour="conditioning-card-sessions"
                         className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-cyan-200 dark:border-cyan-800/50 transition-all overflow-hidden cursor-pointer group p-5 space-y-3"
                     >
                         <div className="w-10 h-10 bg-cyan-50 dark:bg-cyan-500/15 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300 group-hover:bg-cyan-600 group-hover:text-white dark:group-hover:bg-cyan-500 dark:group-hover:text-white transition-all">

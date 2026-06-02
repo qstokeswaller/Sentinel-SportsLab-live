@@ -33,6 +33,7 @@ import WorkoutPacketModal from './components/WorkoutPacketModal';
 import AddEventModal from './components/calendar/AddEventModal';
 import { WEIGHTROOM_1RM_EXERCISES } from './utils/constants';
 import PageTour from './components/ui/PageTour';
+import { FirstLoginTour } from './components/onboarding/FirstLoginTour';
 
 import {
     Activity as ActivityIcon,
@@ -541,6 +542,7 @@ const App = () => {
             <PerformanceLab isOpen={isPerformanceLabOpen} onClose={() => setIsPerformanceLabOpen(false)} />
             <WattbikeMapCalculator />
             <PageTour tourState={tourState || {}} setTourState={setTourState} />
+            <FirstLoginTour />
             <ToastContainer />
             <WelcomeSplash />
         </div>

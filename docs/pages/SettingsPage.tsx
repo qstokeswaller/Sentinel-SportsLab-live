@@ -14,12 +14,14 @@ import {
   MapIcon, CheckCircleIcon, CircleIcon, PlayIcon, RotateCcwIcon, LayoutGridIcon,
   ActivityIcon, TagIcon, CheckIcon, LinkIcon, XIcon, SunIcon, MoonIcon, MonitorIcon, CalendarIcon,
   KeyIcon, MailIcon, MessageSquareIcon, LifeBuoyIcon, SendIcon, AlertCircleIcon, CheckCircle2Icon,
+  PlayCircleIcon, SparklesIcon, VideoIcon,
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from '../utils/constants';
 import { hasFeatureAccess, TIER_LABEL, type Tier } from '../utils/tierFeatures';
 import { TEST_CATEGORIES, getTestsByCategory } from '../utils/testRegistry';
 import { PAGE_TOURS, WORKFLOW_TOURS, getDefaultTourState } from '../utils/tourSteps';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { GpsConfigModal, GpsCategoryManager, loadGpsProfiles, saveGpsProfiles, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { AthleteAvatar } from '../components/roster/AthleteAvatar';
@@ -45,9 +47,11 @@ const SETTINGS_TABS = [
 ];
 
 // ── Collapsible Section wrapper ──────────────────────────────────────
-const CollapsibleSection = ({ id, icon: Icon, title, subtitle, defaultOpen = true, children, collapsedSections, setCollapsedSections }) => {
-  const isOpen = !collapsedSections.has(id);
-  const toggle = () => setCollapsedSections(prev => {
+const CollapsibleSection = ({ id, icon: Icon, title, subtitle, children, openSections, setOpenSections }) => {
+  // Inverted semantics: openSections tracks IDs that are OPEN. Default state is
+  // an empty set, so every collapsible section starts collapsed by default.
+  const isOpen = openSections.has(id);
+  const toggle = () => setOpenSections(prev => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
@@ -531,6 +535,7 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { teams, acwrSettings, setAcwrSettings, acwrRecalcAnchors, setAcwrRecalcAnchors, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources, isDarkMode, toggleDarkMode, currentOrg, isOrgAdmin, currentUserRole, refreshCurrentOrg } = useAppState();
+  const { replayOnboarding } = useOnboarding();
   const [activeTab, setActiveTab] = useState('account');
 
   // ── Organisation tab state (Phase C) ────────────────────────────────────
@@ -804,7 +809,9 @@ const SettingsPage: React.FC = () => {
     });
   };
   // All sections start collapsed (GPS sections also collapsed by default)
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['acwr', 'testing', 'heatmap_settings', 'profile', 'gps_config']));
+  // Tracks which sections the user has explicitly opened. Empty set = everything
+  // collapsed by default; user clicks the section header to expand it.
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
   // ── Unsaved changes guard ──────────────────────────────────────────
   const [pendingTab, setPendingTab] = useState<string | null>(null);
@@ -1176,7 +1183,7 @@ const SettingsPage: React.FC = () => {
             ) : (
             <CollapsibleSection id="acwr" icon={GaugeIcon} title="ACWR Monitoring"
               subtitle="Enable/disable ACWR and choose load method per team"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
 
               <div className="bg-slate-800 text-white p-4 rounded-xl mb-5">
                 <h4 className="text-xs font-semibold text-emerald-400 mb-1.5">EWMA Model Reference</h4>
@@ -1284,7 +1291,7 @@ const SettingsPage: React.FC = () => {
             {/* Readiness Heatmap Section */}
             <CollapsibleSection id="heatmap_settings" icon={LayoutGridIcon} title="Readiness Heatmap"
               subtitle="Set the default team shown on the dashboard heatmap"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
               <div className="space-y-3">
                 <p className="text-xs text-slate-500">Choose which team is displayed by default when you open the dashboard, or prompt to select each time.</p>
                 <div>
@@ -1314,7 +1321,7 @@ const SettingsPage: React.FC = () => {
             {/* Testing Hub Section */}
             <CollapsibleSection id="testing" icon={FlaskConicalIcon} title="Testing Hub"
               subtitle="Show or hide test categories and individual tests"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
               <TestingHubSettings testVisibility={testVisibility} setTestVisibility={setTestVisibility} />
             </CollapsibleSection>
 
@@ -1337,7 +1344,7 @@ const SettingsPage: React.FC = () => {
               id="gps_config" icon={LinkIcon}
               title="GPS Configuration"
               subtitle="Import profiles, ACWR column binding, and session categories"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}
+              openSections={openSections} setOpenSections={setOpenSections}
             >
               <div className="space-y-4">
 
@@ -1558,7 +1565,7 @@ const SettingsPage: React.FC = () => {
             {/* Profile Section */}
             <CollapsibleSection id="profile" icon={UserIcon} title="Profile"
               subtitle="Name, organisation, contact details"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
               <div className="space-y-4">
                 <div ref={nameRef}>
                   <label className={labelCls}>Full name <span className="text-red-500">*</span></label>
@@ -1599,7 +1606,7 @@ const SettingsPage: React.FC = () => {
             {/* Change password */}
             <CollapsibleSection id="change-password" icon={KeyIcon} title="Change password"
               subtitle="Set a new password — you stay signed in"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
               <div className="space-y-4">
                 <div>
                   <label className={labelCls}>New password</label>
@@ -1631,7 +1638,7 @@ const SettingsPage: React.FC = () => {
             {/* Change email */}
             <CollapsibleSection id="change-email" icon={MailIcon} title="Change email"
               subtitle="Update your sign-in email — confirmation required"
-              collapsedSections={collapsedSections} setCollapsedSections={setCollapsedSections}>
+              openSections={openSections} setOpenSections={setOpenSections}>
               <div className="space-y-4">
                 <div>
                   <label className={labelCls}>Current email</label>
@@ -2056,102 +2063,191 @@ const SettingsPage: React.FC = () => {
           <>
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Walkthrough</h2>
-              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Page-by-page guided tours of the platform. Start, resume, or reset tours for each section.</p>
+              <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                The welcome tour, per-page interactive walkthroughs and (soon) video tutorials, all in one place.
+              </p>
             </div>
 
-            {/* Page Tours */}
+            {/* Top feature card — Replay welcome tour */}
+            <div className="relative overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-br from-indigo-50 via-white to-white dark:from-indigo-900/30 dark:via-[#132338] dark:to-[#132338] shadow-sm p-5">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <SparklesIcon size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Welcome tour</h3>
+                  <p className="text-[12px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 leading-relaxed">
+                    Replay the first-login walkthrough — sidebar, top KPIs, Performance Report, Wellness Summary, Calendar, theme picker, and where Settings lives.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      await replayOnboarding();
+                      showToast?.('Welcome tour starting…', 'success');
+                    }}
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
+                  >
+                    <PlayIcon size={13} /> Replay welcome tour
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Per-page sections — each collapsed by default. Inside each: a video
+                placeholder + the page tour + any workflow sub-tours. The
+                video-placeholder + tour-buttons live together so the user finds
+                "how do I learn about Wellness Hub" in one place, not split. */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide px-1">Page Tours</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide px-1">Pages & hubs</h3>
               {PAGE_TOURS.map(tour => {
+                const isSectionOpen = openSections.has(`wt-${tour.pageId}`);
                 const status = tourState?.[tour.pageId] || 'pending';
                 const isCompleted = status === 'completed';
                 const isSkipped = status === 'skipped';
                 const workflowsForPage = WORKFLOW_TOURS.filter(wf => wf.parentPageId === tour.pageId);
 
                 return (
-                  <div key={tour.pageId} className="space-y-1">
-                    <div className={`border rounded-xl p-4 flex items-center justify-between transition-all ${isCompleted ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]'}`}>
-                      <div className="flex items-center gap-3">
-                        {isCompleted ? (
-                          <CheckCircleIcon size={18} className="text-emerald-500 shrink-0" />
-                        ) : (
-                          <CircleIcon size={18} className="text-slate-300 dark:text-[#1A2D48] shrink-0" />
-                        )}
-                        <div>
-                          <span className={`text-sm font-medium ${isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-800 dark:text-[#E2E8F0]'}`}>{tour.pageName}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-2">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}</span>
-                          {isSkipped && <span className="text-[10px] text-amber-500 font-medium ml-2">Skipped</span>}
-                        </div>
+                  <div key={tour.pageId} className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm overflow-hidden">
+                    {/* Collapsible header */}
+                    <button
+                      onClick={() => setOpenSections(prev => {
+                        const next = new Set(prev);
+                        const key = `wt-${tour.pageId}`;
+                        if (next.has(key)) next.delete(key); else next.add(key);
+                        return next;
+                      })}
+                      className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50/60 dark:hover:bg-[#1A2D48]/50 transition-colors"
+                    >
+                      {isCompleted ? (
+                        <CheckCircleIcon size={16} className="text-emerald-500 shrink-0" />
+                      ) : (
+                        <CircleIcon size={16} className="text-slate-300 dark:text-[#1A2D48] shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{tour.pageName}</h3>
+                        <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                          {tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}
+                          {workflowsForPage.length > 0 && ` · ${workflowsForPage.length} sub-tour${workflowsForPage.length !== 1 ? 's' : ''}`}
+                          {isSkipped && <span className="text-amber-500 font-medium ml-1.5">· Skipped</span>}
+                          {isCompleted && <span className="text-emerald-500 font-medium ml-1.5">· Completed</span>}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {isCompleted && (
-                          <button
-                            onClick={() => {
-                              const updated = { ...tourState, [tour.pageId]: 'pending' };
-                              setTourState(updated);
-                              StorageService.saveTourState(updated);
-                              showToast?.(`${tour.pageName} tour reset`);
-                            }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <RotateCcwIcon size={12} /> Reset
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            const updated = { ...tourState, [tour.pageId]: 'pending' };
-                            setTourState(updated);
-                            StorageService.saveTourState(updated);
-                            navigate(tour.route);
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors"
-                        >
-                          <PlayIcon size={12} /> {isCompleted ? 'Restart' : isSkipped ? 'Resume' : 'Start Tour'}
-                        </button>
+                      <div className={`text-slate-400 dark:text-[#CBD5E1] transition-transform ${isSectionOpen ? '' : '-rotate-90'}`}>
+                        <ChevronDownIcon size={16} />
                       </div>
-                    </div>
+                    </button>
 
-                    {/* Workflow tours under this page */}
-                    {workflowsForPage.map(wf => {
-                      const wfStatus = tourState?.[wf.id] || 'pending';
-                      const wfCompleted = wfStatus === 'completed';
-                      const wfSkipped = wfStatus === 'skipped';
-                      return (
-                        <div key={wf.id} className={`ml-8 border rounded-lg px-3 py-2.5 flex items-center justify-between transition-all ${wfCompleted ? 'border-emerald-200 dark:border-emerald-800/50 dark:border-emerald-800/40 bg-emerald-50/20 dark:bg-emerald-900/10' : 'border-slate-100 dark:border-[#243A58] bg-white dark:bg-[#132338]'}`}>
-                          <div className="flex items-center gap-2.5">
-                            {wfCompleted ? (
-                              <CheckCircleIcon size={14} className="text-emerald-400 shrink-0" />
-                            ) : (
-                              <CircleIcon size={14} className="text-slate-200 shrink-0" />
-                            )}
-                            <div>
-                              <span className={`text-xs font-medium ${wfCompleted ? 'text-emerald-600' : 'text-slate-600 dark:text-[#CBD5E1]'}`}>{wf.name}</span>
-                              <span className="text-[9px] text-slate-300 ml-1.5">{wf.steps.length} step{wf.steps.length !== 1 ? 's' : ''}</span>
-                              {wfSkipped && <span className="text-[9px] text-amber-400 font-medium ml-1.5">Skipped</span>}
-                            </div>
+                    {isSectionOpen && (
+                      <div className="px-5 pb-5 border-t border-slate-100 dark:border-[#243A58] pt-4 space-y-3">
+
+                        {/* Video walkthrough — placeholder until recordings ship.
+                            Lives inside each page section so the user finds the
+                            "how do I learn about Wellness Hub" video right next
+                            to the interactive tour for that same hub. */}
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-dashed border-slate-200 dark:border-[#243A58]">
+                          <div className="w-9 h-9 rounded-md bg-slate-200/70 dark:bg-[#1A2D48] flex items-center justify-center text-slate-400 dark:text-[#475569] shrink-0">
+                            <VideoIcon size={15} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-semibold text-slate-600 dark:text-[#CBD5E1]">Video walkthrough</p>
+                            <p className="text-[10.5px] text-slate-400 dark:text-[#64748B] leading-snug">
+                              A short screen-recorded tour of this hub and its sub-pages. Coming soon — we'll wire YouTube links here as each video lands.
+                            </p>
                           </div>
                           <button
-                            onClick={() => {
-                              const updated = { ...tourState, [wf.id]: 'pending' };
-                              setTourState(updated);
-                              StorageService.saveTourState(updated);
-                              showToast?.(`${wf.name} reset`);
-                              navigate(PAGE_TOURS.find(p => p.pageId === wf.parentPageId)?.route || '/');
-                            }}
-                            className="flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-indigo-50 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-slate-500 hover:text-indigo-600 dark:text-white rounded-md text-[10px] font-medium transition-colors"
+                            disabled
+                            className="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#64748B] border border-slate-200 dark:border-[#243A58] cursor-not-allowed shrink-0"
                           >
-                            <RotateCcwIcon size={10} /> Reset
+                            <PlayCircleIcon size={12} className="inline mr-1" /> Coming soon
                           </button>
                         </div>
-                      );
-                    })}
+
+                        {/* Page tour row */}
+                        <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58]">
+                          <div className="min-w-0">
+                            <p className="text-[12.5px] font-semibold text-slate-700 dark:text-[#E2E8F0]">{tour.pageName} — page tour</p>
+                            <p className="text-[10.5px] text-slate-400 dark:text-[#CBD5E1]">{tour.steps.length} step{tour.steps.length !== 1 ? 's' : ''}, ~1 minute</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isCompleted && (
+                              <button
+                                onClick={() => {
+                                  const updated = { ...tourState, [tour.pageId]: 'pending' };
+                                  setTourState(updated);
+                                  StorageService.saveTourState(updated);
+                                  showToast?.(`${tour.pageName} tour reset`);
+                                }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-md text-[11px] font-medium transition-colors"
+                              >
+                                <RotateCcwIcon size={11} /> Reset
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                const updated = { ...tourState, [tour.pageId]: 'pending' };
+                                setTourState(updated);
+                                StorageService.saveTourState(updated);
+                                navigate(tour.route);
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-[11px] font-semibold transition-colors"
+                            >
+                              <PlayIcon size={11} /> {isCompleted ? 'Restart' : isSkipped ? 'Resume' : 'Start tour'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Hub / workflow sub-tours */}
+                        {workflowsForPage.length > 0 && (
+                          <div className="space-y-1.5 pt-1">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#64748B] pl-1">Hub tours</p>
+                            {workflowsForPage.map(wf => {
+                              const wfStatus = tourState?.[wf.id] || 'pending';
+                              const wfCompleted = wfStatus === 'completed';
+                              const wfSkipped = wfStatus === 'skipped';
+                              return (
+                                <div key={wf.id} className="flex items-center justify-between gap-3 p-2.5 rounded-md bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58]">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    {wfCompleted ? (
+                                      <CheckCircleIcon size={13} className="text-emerald-500 shrink-0" />
+                                    ) : (
+                                      <CircleIcon size={13} className="text-slate-300 dark:text-[#1A2D48] shrink-0" />
+                                    )}
+                                    <div className="min-w-0">
+                                      <p className="text-[11.5px] font-medium text-slate-700 dark:text-[#E2E8F0] truncate">{wf.name}</p>
+                                      <p className="text-[9.5px] text-slate-400 dark:text-[#64748B]">
+                                        {wf.steps.length} step{wf.steps.length !== 1 ? 's' : ''}
+                                        {wfSkipped && <span className="text-amber-500 ml-1">· Skipped</span>}
+                                        {wfCompleted && <span className="text-emerald-500 ml-1">· Completed</span>}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      const updated = { ...tourState, [wf.id]: 'pending' };
+                                      setTourState(updated);
+                                      StorageService.saveTourState(updated);
+                                      // Prefer the workflow's explicit route (e.g. /wellness?section=ACWR+Monitoring)
+                                      // so the trigger element actually mounts. Fall back to parent page route.
+                                      const parentRoute = PAGE_TOURS.find(p => p.pageId === wf.parentPageId)?.route || '/';
+                                      navigate(wf.route || parentRoute);
+                                    }}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 rounded-md text-[10.5px] font-semibold transition-colors shrink-0 border border-indigo-100 dark:border-indigo-500/30"
+                                  >
+                                    <PlayIcon size={10} /> Start tour
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
             {/* Reset All */}
-            <div className="pt-3 border-t border-slate-100">
+            <div className="pt-3 border-t border-slate-100 dark:border-[#243A58]">
               <button
                 onClick={() => {
                   const fresh = getDefaultTourState();
@@ -2161,7 +2257,7 @@ const SettingsPage: React.FC = () => {
                 }}
                 className="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-rose-500 transition-colors"
               >
-                <RotateCcwIcon size={12} /> Reset all tours
+                <RotateCcwIcon size={12} /> Reset all page tours
               </button>
             </div>
           </>

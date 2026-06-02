@@ -621,7 +621,7 @@ export const AthleteProfilePage: React.FC = () => {
                 }
             >
                 {acwrValue == null ? (
-                    <EmptyHint text="ACWR tracking isn't enabled yet for this athlete's team. Enable it in the Wellness Hub to start monitoring load." />
+                    <EmptyHint text="ACWR tracking isn't enabled yet for this athlete's team. Enable it in Wellness to start monitoring load." />
                 ) : (
                     <div className="space-y-4">
                         {/* Zone bar */}

@@ -123,7 +123,7 @@ export const TestingHubPage: React.FC = () => {
                                 <ArrowLeftIcon size={16} />
                             </button>
                             <div>
-                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
                                 <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTest.name}</h2>
                             </div>
                         </div>
@@ -147,7 +147,7 @@ export const TestingHubPage: React.FC = () => {
                         </button>
                         <div>
                             <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">
-                                {activeCategoryInfo?.name || 'Testing Hub'}
+                                {activeCategoryInfo?.name || 'Testing'}
                             </div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeTest.name}</h2>
                         </div>
@@ -299,7 +299,7 @@ export const TestingHubPage: React.FC = () => {
                                 <IconComponent size={18} />
                             </div>
                             <div>
-                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
+                                <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
                                 <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeCategoryInfo.name}</h2>
                             </div>
                         </div>
@@ -373,7 +373,7 @@ export const TestingHubPage: React.FC = () => {
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Team Comparison</h2>
                         </div>
                     </div>
@@ -396,7 +396,7 @@ export const TestingHubPage: React.FC = () => {
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing Hub</div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
                             <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Export & Print</h2>
                         </div>
                     </div>
@@ -410,7 +410,7 @@ export const TestingHubPage: React.FC = () => {
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Testing Hub</h2>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Testing</h2>
                 <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Sports science assessments, screening protocols & performance testing.</p>
             </div>
 

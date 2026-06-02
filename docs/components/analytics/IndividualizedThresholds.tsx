@@ -486,7 +486,7 @@ const IndividualizedThresholds: React.FC = () => {
     };
 
     return (
-        <div className="space-y-5">
+        <div data-tour="wellness-thresholds-overview" className="space-y-5">
             {/* Slim header — title + Personalised pill + Team/Athlete cascading filters + Explain.
                 One row on lg+, wraps on narrow viewports. Replaces the original full-card header
                 + standalone athlete dropdown + "no athlete selected" empty card. */}

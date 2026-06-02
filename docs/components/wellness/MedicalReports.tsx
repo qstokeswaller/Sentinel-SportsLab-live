@@ -650,11 +650,11 @@ const MedicalReports: React.FC = () => {
     };
 
     return (
-        <>
+        <div data-tour="wellness-medical-overview">
             {reportMode === 'input' ? renderMedicalInput() : renderMedicalReport()}
             {renderMedicalModal()}
             {renderInspectModal()}
-        </>
+        </div>
     );
 };
 

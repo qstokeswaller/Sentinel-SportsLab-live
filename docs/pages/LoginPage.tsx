@@ -75,6 +75,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
     const [surname, setSurname] = useState('');
     const [organisation, setOrganisation] = useState('');
     const [selectedPlan, setSelectedPlan] = useState<PlanTier['id']>('performance');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -108,6 +109,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                 if (!isInviteSignup && !organisation.trim()) { setError('Organisation is required.'); return; }
                 if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
                 if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+                if (!agreedToTerms) { setError('Please agree to the Terms of Service and Privacy Policy to continue.'); return; }
                 const { error: err } = await supabase.auth.signUp({
                     email,
                     password,
@@ -312,7 +314,25 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                             </>
                         )}
 
-                        <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
+                        {/* Terms + Privacy consent — required before submit. Opens in new tabs
+                            so the user doesn't lose half-filled form state. POPIA/GDPR-friendly
+                            checkbox pattern: unticked by default, explicit affirmative action. */}
+                        <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={agreedToTerms}
+                                onChange={e => setAgreedToTerms(e.target.checked)}
+                                className="mt-0.5 w-4 h-4 rounded border-[1.5px] border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-0 cursor-pointer shrink-0"
+                            />
+                            <span className="text-[12px] text-slate-600 leading-snug">
+                                I agree to the{' '}
+                                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">Terms of Service</a>
+                                {' '}and{' '}
+                                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">Privacy Policy</a>.
+                            </span>
+                        </label>
+
+                        <button type="submit" disabled={loading || !agreedToTerms} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
                             <ShieldIcon size={14} /> {loading ? 'Creating…' : (isInviteSignup ? 'Create Account & Join' : 'Create Account')}
                         </button>
                     </form>

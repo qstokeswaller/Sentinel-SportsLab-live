@@ -18,6 +18,7 @@ import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { getTourForRoute, WORKFLOW_TOURS } from '../../utils/tourSteps';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
+import { injectTourStyles } from '../onboarding/FirstLoginTour';
 
 interface PageTourProps {
     tourState: Record<string, string>;
@@ -44,6 +45,7 @@ const PageTour: React.FC<PageTourProps> = ({ tourState, setTourState }) => {
             try { driverRef.current.destroy(); } catch {}
         }
 
+        injectTourStyles();
         activeIdRef.current = id;
 
         const filteredSteps = steps

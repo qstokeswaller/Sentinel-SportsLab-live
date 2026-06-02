@@ -24,11 +24,11 @@ const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = 
     { id: 'clients',       label: 'Roster',           icon: UsersIcon,           feature: 'roster' },
     { id: 'workouts',      label: 'Workouts',         icon: DumbbellIcon,        feature: 'workouts' },
     { id: 'library',       label: 'Library',          icon: BookOpenIcon,        feature: 'library' },
-    { id: 'conditioning',  label: 'Conditioning Hub', icon: ZapIcon,             feature: 'conditioning' },
-    { id: 'wellness',      label: 'Wellness Hub',     icon: HeartPulseIcon,      feature: 'wellness' },
-    { id: 'testing',       label: 'Testing Hub',      icon: ClipboardListIcon,   feature: 'testing' },
-    { id: 'reports',       label: 'Reporting Hub',    icon: FileIcon,            feature: 'reporting' },
-    { id: 'analytics',     label: 'Analytics Hub',    icon: BarChart3Icon,       feature: 'analytics' },
+    { id: 'conditioning',  label: 'Conditioning',     icon: ZapIcon,             feature: 'conditioning' },
+    { id: 'wellness',      label: 'Wellness',         icon: HeartPulseIcon,      feature: 'wellness' },
+    { id: 'testing',       label: 'Testing',          icon: ClipboardListIcon,   feature: 'testing' },
+    { id: 'reports',       label: 'Reporting',        icon: FileIcon,            feature: 'reporting' },
+    { id: 'analytics',     label: 'Analytics',        icon: BarChart3Icon,       feature: 'analytics' },
     { id: 'lab',           label: 'Performance Lab',  icon: FlaskConicalIcon,    feature: 'lab' },
 ];
 
@@ -209,6 +209,7 @@ export const Sidebar = () => {
 
                 <div className={`py-2 space-y-0.5 ${!showLabels ? 'px-2' : 'px-3'}`}>
                     <button
+                        data-tour="settings-button"
                         onClick={() => { navigate('/settings'); if (isMobile) setIsMobileDrawerOpen(false); }}
                         title="Settings"
                         className={`w-full flex items-center gap-3 rounded-lg py-2 transition-colors

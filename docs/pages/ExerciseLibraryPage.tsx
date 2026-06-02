@@ -598,7 +598,7 @@ export const ExerciseLibraryPage = () => {
                     {/* ── Embedded filter + alphabet header ── */}
                     <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 dark:border-[#1A2D48] shrink-0 space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 flex-1 min-w-[160px]">
+                            <div data-tour="library-search" className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 flex-1 min-w-[160px]">
                                 <SearchIcon size={12} className="text-slate-400 shrink-0" />
                                 <input
                                     type="text"
@@ -922,7 +922,7 @@ export const ExerciseLibraryPage = () => {
                     </div>
 
                     {/* All Saved Exercises — primary content */}
-                    <div className="flex flex-col flex-1 min-h-0">
+                    <div data-tour="library-personal" className="flex flex-col flex-1 min-h-0">
                         <div className="flex items-center justify-between mb-1.5 shrink-0 px-0.5">
                             <h3 className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">
                                 All Saved Exercises

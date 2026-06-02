@@ -219,7 +219,7 @@ const InjuryReportComponent = () => {
     // ─── RENDER ─────────────────────────────────────────────────────────────
 
     return (
-        <div className="space-y-5 animate-in fade-in duration-300">
+        <div data-tour="wellness-injury-overview" className="space-y-5 animate-in fade-in duration-300">
             {/* ACTION BAR */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-4">
