@@ -1665,6 +1665,15 @@ export const DashboardPage = () => {
                                                                                 </button>
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                {/* Source badge — packet wins over program when both are set
+                                                                                    (program-days backed by a packet template are conceptually packets). */}
+                                                                                {(session.workout_template_id || session.workoutTemplateId) ? (
+                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-sky-50 dark:bg-sky-500/15 border border-sky-200 dark:border-sky-500/30 text-sky-700 dark:text-sky-300">Packet</span>
+                                                                                ) : (session.program_id || session.programId) ? (
+                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-violet-50 dark:bg-violet-500/15 border border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300">Program</span>
+                                                                                ) : (
+                                                                                    <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1]">Workout</span>
+                                                                                )}
                                                                                 <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300">{session.trainingPhase}</span>
                                                                                 {session.load && (
                                                                                     <span className={`px-2 py-0.5 rounded text-[9px] font-semibold border ${

@@ -233,38 +233,26 @@ export const TestingHubPage: React.FC = () => {
                             />
                         </div>
 
-                        {/* Trend chart — shows how results change over time */}
-                        <div className="relative">
-                            {isLoading && selectedAthleteId && (
-                                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
-                                    <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                    <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {selectedAthlete?.name || 'athlete'} test data...</span>
-                                </div>
-                            )}
-                            <TrendChart
-                                test={activeTest}
-                                athleteId={selectedAthleteId}
-                                athleteName={selectedAthlete?.name}
-                                refreshKey={historyRefresh}
-                            />
-                        </div>
+                        {/* Trend chart — shows how results change over time.
+                            Loading + empty states are handled inside TrendChart (subtle
+                            dim during refetch, friendly empty state when there's no
+                            data). No page-level overlay here — that caused the
+                            "appearing then disappearing" flicker on every athlete switch. */}
+                        <TrendChart
+                            test={activeTest}
+                            athleteId={selectedAthleteId}
+                            athleteName={selectedAthlete?.name}
+                            refreshKey={historyRefresh}
+                        />
 
-                        {/* History panel */}
-                        <div className="relative">
-                            {isLoading && selectedAthleteId && (
-                                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-[#132338]/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 rounded-xl">
-                                    <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                                    <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading assessment history...</span>
-                                </div>
-                            )}
-                            <TestHistoryPanel
-                                test={activeTest}
-                                athleteId={selectedAthleteId}
-                                athleteName={selectedAthlete?.name}
-                                athleteGender={selectedAthlete?.gender}
-                                refreshKey={historyRefresh}
-                            />
-                        </div>
+                        {/* History panel — same self-contained loading + empty state. */}
+                        <TestHistoryPanel
+                            test={activeTest}
+                            athleteId={selectedAthleteId}
+                            athleteName={selectedAthlete?.name}
+                            athleteGender={selectedAthlete?.gender}
+                            refreshKey={historyRefresh}
+                        />
                     </>
                 ) : (
                     /* Team batch entry */

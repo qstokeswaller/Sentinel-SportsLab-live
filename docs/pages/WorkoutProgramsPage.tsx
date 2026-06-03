@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { useExerciseMap } from '../hooks/useExerciseMap';
@@ -59,6 +60,7 @@ function formatDate(iso: string) {
 export const WorkoutProgramsPage = () => {
     const { showToast, scheduledSessions, resolveTargetName, setPlannedTonnageLog } = useAppState();
     const { user: authUser } = useAuth();
+    const location = useLocation();
     const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
     // Pull the memoized id→name map (NOT resolveExerciseName, which isn't memoized in the hook
     // and would invalidate the descriptor's useMemo every render → infinite loop).
@@ -98,6 +100,23 @@ export const WorkoutProgramsPage = () => {
 
     const { data: programs = [], isLoading } = useWorkoutPrograms();
     const deleteProgram = useDeleteProgram();
+
+    // When navigated here from Dashboard → "View Workout" on a program-linked
+    // calendar session, land on the Assigned tab and pre-select the source program
+    // so the user sees its days/exercises immediately. Same UX as if they
+    // clicked the program card themselves. Placed AFTER the programs query so
+    // it can read the loaded list without hitting a TDZ on the closure.
+    React.useEffect(() => {
+        const focusProgramId = (location.state as any)?.focusProgramId;
+        if (!focusProgramId || programs.length === 0) return;
+        const match = programs.find((p: any) => p.id === focusProgramId);
+        if (match) {
+            setActiveTab('assigned');
+            setSelectedProgram(match);
+            // Clear the state once consumed so a manual tab change doesn't re-trigger
+            window.history.replaceState({}, '');
+        }
+    }, [programs, location.state]);
 
     // A program is "Assigned" if at least one scheduled_session references it via program_id.
     // assignedProgramIds (unfiltered) drives the tab count; assignedProgramIdsFiltered

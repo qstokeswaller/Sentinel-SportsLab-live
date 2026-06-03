@@ -89,6 +89,22 @@ export const WorkoutSessionsPage = () => {
     // Selected packet drives the right-rail descriptor (replaces the old "Most Assigned" tiles).
     // Click a row → it populates here, descriptor renders breakdown. Click another row → swap.
     const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+
+    // When navigated here from Dashboard → "View Workout" on a packet-linked
+    // calendar session, land on the Assigned tab and pre-select the source packet.
+    // Mirrors the same UX as Programs page so View Workout behaves consistently
+    // for both packet- and program-linked sessions.
+    React.useEffect(() => {
+        const focusTemplateId = (location.state as any)?.focusTemplateId;
+        if (!focusTemplateId || !workoutTemplates || workoutTemplates.length === 0) return;
+        const match = workoutTemplates.find((t: any) => t.id === focusTemplateId);
+        if (match) {
+            setActiveTab('assigned');
+            setSelectedTemplate(match);
+            window.history.replaceState({}, '');
+        }
+    }, [workoutTemplates, location.state]);
+
     const [shareTarget, setShareTarget] = useState<{ type: 'template'; id: string; name: string } | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
     // "View Full" modal — opens from descriptor footer for the deep-dive read-only view

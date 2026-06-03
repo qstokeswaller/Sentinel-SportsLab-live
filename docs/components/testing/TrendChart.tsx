@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     ReferenceLine,
@@ -8,6 +8,7 @@ import { DatabaseService } from '../../services/databaseService';
 import type { TestDefinition } from '../../utils/testRegistry';
 import { TrendingUpIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import { useAppState } from '../../context/AppStateContext';
 
 interface Props {
     test: TestDefinition;
@@ -21,10 +22,18 @@ interface Props {
  * Plots the primary metric (or first numeric field) across assessment dates.
  */
 export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refreshKey }) => {
+    const { isDarkMode } = useAppState();
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(true);
     const [selectedMetric, setSelectedMetric] = useState<string>('');
+
+    // Recharts doesn't ship Tailwind-aware theming, so we resolve grid / axis /
+    // tooltip palette from isDarkMode here. Picking values that match the rest
+    // of the platform (slate-100/200 for light, the project's #243A58/#94A3B8 for dark).
+    const chartTheme = isDarkMode
+        ? { grid: '#1A2D48', axis: '#243A58', tick: '#94A3B8', tooltipBg: '#132338', tooltipBorder: '#243A58', tooltipText: '#E2E8F0' }
+        : { grid: '#f1f5f9', axis: '#e2e8f0', tick: '#94a3b8', tooltipBg: '#ffffff', tooltipBorder: '#e2e8f0', tooltipText: '#1e293b' };
 
     // Determine which metrics can be plotted
     const plottableMetrics = useMemo(() => {
@@ -47,17 +56,23 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
         }
     }, [plottableMetrics, test.norms, selectedMetric]);
 
+    // Request-id guard so quick athlete switches don't let an older response
+    // overwrite a newer one (race condition on slow networks).
+    const reqIdRef = useRef(0);
     const loadResults = useCallback(async () => {
         if (!athleteId) { setResults([]); return; }
+        const myReq = ++reqIdRef.current;
         setLoading(true);
         try {
             const data = await DatabaseService.fetchAssessmentsByAthlete(athleteId, test.id);
+            if (myReq !== reqIdRef.current) return;
             setResults((data || []).reverse()); // oldest first for chart
         } catch (err) {
+            if (myReq !== reqIdRef.current) return;
             console.error('TrendChart load error:', err);
             setResults([]);
         } finally {
-            setLoading(false);
+            if (myReq === reqIdRef.current) setLoading(false);
         }
     }, [athleteId, test.id]);
 
@@ -98,8 +113,16 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
         return { diff: diff.toFixed(2), pct, direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat' };
     }, [chartData]);
 
+    // Always rendered once an athlete is selected, so the section stays put with
+    // a friendly empty state when there aren't enough points to plot. Advertises
+    // the feature and avoids the appearing/disappearing shimmer that read as a bug.
     if (!athleteId) return null;
-    if (chartData.length < 2 && !loading) return null;
+
+    const isWarmLoad = loading && chartData.length >= 2;
+    const isEmpty = !loading && chartData.length < 2;
+    const emptyMessage = results.length === 0
+        ? 'No trend data yet'
+        : `One result so far — record at least one more ${test.name} to plot a trend.`;
 
     return (
         <div className="space-y-3">
@@ -118,6 +141,13 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                         }`}>
                             {trend.direction === 'up' ? '+' : ''}{trend.pct}%
                         </span>
+                    )}
+                    {loading && (
+                        <span
+                            className="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-300 animate-pulse"
+                            aria-label="Loading"
+                            title="Refreshing"
+                        />
                     )}
                 </div>
                 {expanded ? <ChevronUpIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" /> : <ChevronDownIcon size={14} className="text-slate-400 dark:text-[#94A3B8]" />}
@@ -144,22 +174,27 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                         </div>
                     )}
 
-                    {loading ? (
-                        <div className="text-xs text-slate-400 dark:text-[#94A3B8] py-8 text-center">Loading trend data...</div>
-                    ) : chartData.length < 2 ? (
-                        <div className="text-xs text-slate-400 dark:text-[#94A3B8] py-8 text-center">Need at least 2 results to show trend</div>
+                    {isEmpty ? (
+                        <div className="rounded-lg border border-dashed border-slate-200 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/50 p-6 text-center">
+                            <TrendingUpIcon size={18} className="mx-auto text-slate-300 dark:text-[#475569] mb-1.5" />
+                            <p className="text-xs font-medium text-slate-500 dark:text-[#CBD5E1]">{emptyMessage}</p>
+                            <p className="text-[11px] text-slate-400 dark:text-[#64748B] mt-1 leading-snug">
+                                Trend lines populate once at least two results are saved for this athlete.
+                            </p>
+                        </div>
                     ) : (
+                    <div className={`transition-opacity duration-150 ${isWarmLoad ? 'opacity-60' : 'opacity-100'}`}>
                         <ResponsiveContainer width="100%" height={200}>
                             <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
                                 <XAxis
                                     dataKey="label"
-                                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                    tick={{ fontSize: 10, fill: chartTheme.tick }}
                                     tickLine={false}
-                                    axisLine={{ stroke: '#e2e8f0' }}
+                                    axisLine={{ stroke: chartTheme.axis }}
                                 />
                                 <YAxis
-                                    tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                    tick={{ fontSize: 10, fill: chartTheme.tick }}
                                     tickLine={false}
                                     axisLine={false}
                                     width={45}
@@ -168,9 +203,13 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                                     contentStyle={{
                                         fontSize: 12,
                                         borderRadius: 8,
-                                        border: '1px solid #e2e8f0',
+                                        border: `1px solid ${chartTheme.tooltipBorder}`,
+                                        background: chartTheme.tooltipBg,
+                                        color: chartTheme.tooltipText,
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                                     }}
+                                    labelStyle={{ color: chartTheme.tooltipText }}
+                                    itemStyle={{ color: chartTheme.tooltipText }}
                                     formatter={(value: number) => [
                                         `${value}${metricInfo?.unit ? ` ${metricInfo.unit}` : ''}`,
                                         metricInfo?.label || selectedMetric,
@@ -187,6 +226,7 @@ export const TrendChart: React.FC<Props> = ({ test, athleteId, athleteName, refr
                                 />
                             </LineChart>
                         </ResponsiveContainer>
+                    </div>
                     )}
 
                     {/* Summary stats */}

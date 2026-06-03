@@ -16,6 +16,7 @@ import {
 
 import { ACWR_UTILS, BORG_RPE_SCALE, DSI_NORMS, RSI_NORMS, RM_EXERCISE_MAP } from '../utils/constants';
 import { DEFAULT_WATTBIKE_SESSIONS } from '../utils/wattbikeSessions';
+import { normalisePlan } from '../utils/periodizationUtils';
 import {
     MOCK_INDIVIDUAL_PLAN_BLOCKS,
     MOCK_TEAMS,
@@ -1823,8 +1824,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const _uid = () => `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
     const savePlans = async (updated) => {
-        setPeriodizationPlans(updated);
-        await StorageService.savePeriodizationPlans(updated);
+        // Normalise on every save → if any caller builds a plan with a missing
+        // nested array, it's repaired before it ever lands in state or storage.
+        const normalised = (updated || []).map(normalisePlan);
+        setPeriodizationPlans(normalised);
+        await StorageService.savePeriodizationPlans(normalised);
     };
 
     const handleCreatePlan = async (planData) => {
@@ -2393,10 +2397,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
             // ── Workout templates ──
             if (dbTemplatesResult && dbTemplatesResult.length > 0) {
+                // Keep user_id + visibility + organisation_id on the in-memory row so
+                // OwnershipFilter (Mine / Org) can match. Dropping them here silently
+                // made both filters return zero matches regardless of the underlying data.
                 setWorkoutTemplates(dbTemplatesResult.map(t => ({
                     id: t.id, name: t.name, trainingPhase: t.training_phase,
                     load: t.load, sections: t.sections || { warmup: [], workout: [], cooldown: [] },
                     createdAt: t.created_at,
+                    user_id: t.user_id,
+                    visibility: t.visibility,
+                    organisation_id: t.organisation_id,
                 })));
             } else if (dbTemplatesResult !== null && loadedTemplates && loadedTemplates.length > 0) {
                 setWorkoutTemplates(loadedTemplates);
@@ -2452,7 +2462,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setWorkoutLog(loadedWorkoutLog || []);
 
             // ── Periodization plans + evaluations + RM history ──
-            setPeriodizationPlans(loadedPlans || []);
+            // Normalise on the way in so every nested array (phases / blocks /
+            // weeks / sessions / sections / exercises) is guaranteed to exist.
+            // This protects TimelineView, MicrocyclesTab and the volume/intensity
+            // calcs from "X is not iterable" crashes regardless of how the plan
+            // was authored or which legacy version of the structure was saved.
+            setPeriodizationPlans((loadedPlans || []).map(normalisePlan));
 
             if (dbEvaluations) {
                 setEvaluationData(dbEvaluations.map(raw => ({

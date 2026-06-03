@@ -605,7 +605,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                                 {/* Block bars */}
                                 <div className="relative" style={{ height: '18px' }}>
-                                    {plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, phaseColor: ph.color || '#6366f1', phaseId: ph.id }))).map(b => {
+                                    {(plan.phases || []).flatMap(ph => (ph.blocks || []).map(b => ({ ...b, phaseColor: ph.color || '#6366f1', phaseId: ph.id }))).map(b => {
                                         if (!b.startDate) return null;
                                         const isSel = b.id === selBlockId;
                                         const bColor = b.color || b.phaseColor;

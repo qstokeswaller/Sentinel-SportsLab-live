@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
+import { useAuth } from '../context/AuthContext';
 import { useSmartSearch } from '../hooks/useSmartSearch';
 import { useExerciseMap } from '../hooks/useExerciseMap';
 import { computePlannedTonnage } from '../utils/plannedTonnage';
@@ -146,6 +147,7 @@ const emptyRow = (ex: { id: string; name: string; body_parts?: string[]; categor
 export const WorkoutPacketsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user: authUser } = useAuth();
     const {
         teams, resolveTargetName,
         scheduleWorkoutSession, showToast,
@@ -462,10 +464,16 @@ export const WorkoutPacketsPage = () => {
                 sections: payload.sections,
             });
             templateId = created.id;
-            setWorkoutTemplates(prev => [{ id: templateId, ...payload, createdAt: created.created_at }, ...prev]);
+            setWorkoutTemplates(prev => [{
+                id: templateId, ...payload, createdAt: created.created_at,
+                user_id: created.user_id, visibility: created.visibility, organisation_id: created.organisation_id,
+            }, ...prev]);
         } catch {
             templateId = `tpl_${Date.now()}`;
-            setWorkoutTemplates(prev => [{ id: templateId, ...payload, createdAt: new Date().toISOString() }, ...prev]);
+            setWorkoutTemplates(prev => [{
+                id: templateId, ...payload, createdAt: new Date().toISOString(),
+                user_id: authUser?.id, visibility: payload.visibility,
+            }, ...prev]);
         }
 
         // 2. Write workoutTemplateId back to the plan session
@@ -504,6 +512,7 @@ export const WorkoutPacketsPage = () => {
                         status: 'Scheduled',
                         planned_duration: sess?.plannedDuration || 60,
                         session_type: 'workout',
+                        workout_template_id: templateId,
                         exercises: {
                             warmup:   sections.warmup.map(attachOverrides),
                             workout:  [...sections.workout.map(attachOverrides), ...customRowsForSchedule],
@@ -762,7 +771,10 @@ export const WorkoutPacketsPage = () => {
 
         try {
             setScheduling(true);
-            // Auto-save as template if not already editing one
+            // Auto-save as template if not already editing one. Capture the resulting
+            // templateId so we can stamp it onto the scheduled_session row below —
+            // that link is what makes the packet appear under the Assigned tab.
+            let resolvedTemplateId: string | null = editingTemplateId || null;
             if (!editingTemplateId) {
                 const tplPayload = buildTemplatePayload();
                 try {
@@ -773,14 +785,31 @@ export const WorkoutPacketsPage = () => {
                         visibility: tplPayload.visibility,
                         sections: tplPayload.sections,
                     });
-                    setWorkoutTemplates(prev => [{ id: created.id, ...tplPayload, createdAt: created.created_at }, ...prev]);
+                    resolvedTemplateId = created.id;
+                    setWorkoutTemplates(prev => [{
+                        id: created.id,
+                        ...tplPayload,
+                        createdAt: created.created_at,
+                        user_id: created.user_id,
+                        visibility: created.visibility,
+                        organisation_id: created.organisation_id,
+                    }, ...prev]);
                 } catch {
-                    // Fallback: save locally
                     const localId = `tpl_${Date.now()}`;
-                    setWorkoutTemplates(prev => [{ id: localId, ...tplPayload, createdAt: new Date().toISOString() }, ...prev]);
+                    resolvedTemplateId = localId;
+                    setWorkoutTemplates(prev => [{
+                        id: localId,
+                        ...tplPayload,
+                        createdAt: new Date().toISOString(),
+                        user_id: authUser?.id,
+                        visibility: tplPayload.visibility,
+                    }, ...prev]);
                 }
             }
-            const savedSession = await scheduleWorkoutSession(payload);
+            const savedSession = await scheduleWorkoutSession({
+                ...payload,
+                workout_template_id: resolvedTemplateId,
+            });
 
             // ── Write planned tonnage rows ───────────────────────────────────
             // New tracking model: compute per-athlete tonnage from the packet

@@ -1154,7 +1154,20 @@ const SessionModal = () => {
     const handleViewWorkout = () => {
         const session = viewingSession;
         setViewingSession(null);
-        navigate('/workouts/packets', { state: { editSession: session, returnTo: '/' } });
+        // Route by source — packet wins over program when both are set.
+        // Many program-days are backed by a packet template; the user clicking
+        // "View Workout" wants to see the exercises (which live on the template),
+        // not the program meta. Only fall through to Programs when there is no
+        // template link.
+        const templateId = session?.workout_template_id || session?.workoutTemplateId;
+        const programId  = session?.program_id || session?.programId;
+        if (templateId) {
+            navigate('/workouts/sessions', { state: { focusTemplateId: templateId, returnTo: '/' } });
+        } else if (programId) {
+            navigate('/workouts/programs', { state: { focusProgramId: programId, returnTo: '/' } });
+        } else {
+            navigate('/workouts/packets', { state: { editSession: session, returnTo: '/' } });
+        }
     };
 
     return (
@@ -1178,6 +1191,15 @@ const SessionModal = () => {
                 <div className="p-5 space-y-4">
                     {/* Meta row */}
                     <div className="flex items-center gap-2 flex-wrap">
+                        {/* Source badge — packet wins over program when both are set
+                            (program-days backed by a packet template are conceptually packets). */}
+                        {(viewingSession.workout_template_id || viewingSession.workoutTemplateId) ? (
+                            <span className="px-2.5 py-1 bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 rounded-md text-xs font-semibold border border-sky-200 dark:border-sky-500/30">Packet</span>
+                        ) : (viewingSession.program_id || viewingSession.programId) ? (
+                            <span className="px-2.5 py-1 bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 rounded-md text-xs font-semibold border border-violet-200 dark:border-violet-500/30">Program</span>
+                        ) : (
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-500/15 text-slate-600 dark:text-[#CBD5E1] rounded-md text-xs font-semibold border border-slate-200 dark:border-slate-500/30">Workout</span>
+                        )}
                         {viewingSession.time && (
                             <span className="px-2.5 py-1 bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] rounded-md text-xs font-medium">{viewingSession.time}</span>
                         )}

@@ -99,19 +99,56 @@ export const getMonthLabels = (planStartDate: string, totalWeeks: number): { lab
     return months;
 };
 
+/**
+ * Normalise a periodization plan loaded from storage so every nested collection
+ * is guaranteed to be an array. Defends downstream consumers (volume / intensity
+ * calcs, TimelineView, MicrocyclesTab, etc.) from `xxx.weeks is not iterable`
+ * style crashes when a partially-authored or legacy plan is missing a level.
+ *
+ * Safe to call on any plan shape — already-normalised plans pass through unchanged.
+ */
+export function normalisePlan(plan: any): any {
+    if (!plan || typeof plan !== 'object') return plan;
+    return {
+        ...plan,
+        phases: (plan.phases || []).map((ph: any) => ({
+            ...ph,
+            blocks: (ph?.blocks || []).map((b: any) => ({
+                ...b,
+                weeks: (b?.weeks || []).map((w: any) => ({
+                    ...w,
+                    sessions: (w?.sessions || []).map((s: any) => ({
+                        ...s,
+                        sections: (s?.sections || []).map((sec: any) => ({
+                            ...sec,
+                            exercises: sec?.exercises || [],
+                        })),
+                    })),
+                })),
+            })),
+        })),
+        events: plan.events || [],
+        volumeOverrides: plan.volumeOverrides || {},
+        intensityOverrides: plan.intensityOverrides || {},
+    };
+}
+
 /** Calculate weekly volume from session data (normalized 0-10) */
 export const calculateWeeklyVolume = (plan: PeriodizationPlan, totalWeeks: number): (number | null)[] => {
     const weeklyTotals: number[] = new Array(totalWeeks).fill(0);
     const hasSessions: boolean[] = new Array(totalWeeks).fill(false);
 
-    for (const phase of plan.phases) {
-        for (const block of phase.blocks) {
-            for (const week of block.weeks) {
+    // Defensive: any nested array can be undefined on a partially-authored plan
+    // (e.g. a phase without blocks, a block without weeks). Treat missing as empty
+    // so the calc proceeds and the affected weeks just stay at zero.
+    for (const phase of (plan.phases || [])) {
+        for (const block of (phase.blocks || [])) {
+            for (const week of (block.weeks || [])) {
                 const wIdx = dateToWeekIndex(week.startDate, plan.startDate);
                 if (wIdx < 0 || wIdx >= totalWeeks) continue;
-                for (const session of week.sessions) {
-                    for (const section of session.sections) {
-                        for (const ex of section.exercises) {
+                for (const session of (week.sessions || [])) {
+                    for (const section of (session.sections || [])) {
+                        for (const ex of (section.exercises || [])) {
                             const reps = parseInt(ex.reps) || 0;
                             weeklyTotals[wIdx] += ex.sets * reps;
                             hasSessions[wIdx] = true;
@@ -124,7 +161,7 @@ export const calculateWeeklyVolume = (plan: PeriodizationPlan, totalWeeks: numbe
 
     const max = Math.max(...weeklyTotals, 1);
     return weeklyTotals.map((v, i) => {
-        if (plan.volumeOverrides[i] !== undefined) return plan.volumeOverrides[i];
+        if (plan.volumeOverrides?.[i] !== undefined) return plan.volumeOverrides[i];
         if (!hasSessions[i]) return null;
         return Math.round((v / max) * 10);
     });
@@ -134,12 +171,13 @@ export const calculateWeeklyVolume = (plan: PeriodizationPlan, totalWeeks: numbe
 export const calculateWeeklyIntensity = (plan: PeriodizationPlan, totalWeeks: number): (number | null)[] => {
     const weeklyRpe: number[][] = Array.from({ length: totalWeeks }, () => []);
 
-    for (const phase of plan.phases) {
-        for (const block of phase.blocks) {
-            for (const week of block.weeks) {
+    // Defensive null-coalesce on every level — see calculateWeeklyVolume for rationale.
+    for (const phase of (plan.phases || [])) {
+        for (const block of (phase.blocks || [])) {
+            for (const week of (block.weeks || [])) {
                 const wIdx = dateToWeekIndex(week.startDate, plan.startDate);
                 if (wIdx < 0 || wIdx >= totalWeeks) continue;
-                for (const session of week.sessions) {
+                for (const session of (week.sessions || [])) {
                     if (session.plannedRPE) weeklyRpe[wIdx].push(session.plannedRPE);
                 }
             }
@@ -147,7 +185,7 @@ export const calculateWeeklyIntensity = (plan: PeriodizationPlan, totalWeeks: nu
     }
 
     return weeklyRpe.map((rpes, i) => {
-        if (plan.intensityOverrides[i] !== undefined) return plan.intensityOverrides[i];
+        if (plan.intensityOverrides?.[i] !== undefined) return plan.intensityOverrides[i];
         if (rpes.length === 0) return null;
         return Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length);
     });
