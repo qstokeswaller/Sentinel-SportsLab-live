@@ -1114,7 +1114,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                             <td className="px-4 py-2">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                                        playerRoster?.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600'
+                                                        playerRoster?.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300'
                                                         : weekAcwr > 1.5 ? 'bg-rose-100 text-rose-700'
                                                         : weekAcwr > 1.3 ? 'bg-amber-100 text-amber-700'
                                                         : weekAcwr > 0 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
@@ -1478,7 +1478,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                     >
                                         <td className="px-4 py-2.5">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${player.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600' : player.ratio > 1.30 ? 'bg-rose-100 text-rose-700' : player.ratio > 1.00 ? 'bg-amber-100 text-amber-700' : player.ratio >= 0.70 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : player.ratio > 0 ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'}`}>{getInitials(player.name)}</div>
+                                                <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${player.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300' : player.ratio > 1.30 ? 'bg-rose-100 text-rose-700' : player.ratio > 1.00 ? 'bg-amber-100 text-amber-700' : player.ratio >= 0.70 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : player.ratio > 0 ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'}`}>{getInitials(player.name)}</div>
                                                 <span className="font-medium text-slate-800 dark:text-[#E2E8F0] truncate max-w-[90px]">{player.name}</span>
                                             </div>
                                         </td>
@@ -1741,7 +1741,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                         </td></tr>
                                     ) : (
                                         filteredRoster.map(player => {
-                                    const initialsStyle = player.excluded ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600'
+                                    const initialsStyle = player.excluded ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300'
                                                         : player.ratio > 1.30 ? 'bg-rose-100 text-rose-700'
                                                         : player.ratio > 1.00 ? 'bg-amber-100 text-amber-700'
                                                         : player.ratio >= 0.70 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
@@ -2165,7 +2165,7 @@ export const WellnessHubPage: React.FC = () => {
                     {SECTIONS.map((section, i) => (
                         <button key={i} onClick={() => setActiveSection(section.title)}
                             data-tour={`wellness-section-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
-                            className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
+                            className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group flex flex-col text-left h-[150px]"
                         >
                             <div className="flex items-start gap-4 h-full">
                                 <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-500 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white flex items-center justify-center transition-all shrink-0">

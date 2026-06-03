@@ -44,7 +44,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const [isPerformanceLabOpen, setIsPerformanceLabOpen] = useState(false);
 
-    // Public routes that should never trigger tab sync or app state
+    // Public routes that should never trigger tab sync or app state.
+    // (Broader list: includes authenticated app pages like /settings + /onboarding
+    // that just shouldn't run the tab-sync redirect.)
     const isPublicRoute = (path: string) =>
         path.startsWith('/workout/') || path.startsWith('/wellness-form') ||
         path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
@@ -54,6 +56,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/accept-invite/') ||
         path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
         path === '/';
+
+    // Athlete-facing public SHARE routes — these are links the scientist sends
+    // to athletes (no login). They should always render in light mode regardless
+    // of the scientist's theme, because athletes open the URL in the same browser
+    // and were inheriting the platform's dark class. Narrower than isPublicRoute
+    // because /settings + /onboarding + /login are authenticated app pages that
+    // must respect the user's theme.
+    const isPublicShareRoute = (path: string) =>
+        path.startsWith('/workout/') || path.startsWith('/wellness-form') ||
+        path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
+        path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
+        path.startsWith('/data-hub/snapshot') ||
+        path.startsWith('/athlete-share/');
 
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
@@ -125,10 +140,23 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const toggleDarkMode = () => setIsDarkMode(prev => !prev);
     useEffect(() => {
         const root = document.documentElement;
-        if (isDarkMode) root.classList.add('dark');
-        else root.classList.remove('dark');
-        try { localStorage.setItem('sentinel_dark_mode', String(isDarkMode)); } catch {}
-    }, [isDarkMode]);
+        // Athlete-facing public share routes ALWAYS render in light mode regardless
+        // of the scientist's theme. /settings / /onboarding / /login are NOT in
+        // this set — they're authenticated app pages and must respect dark mode.
+        const isShared = isPublicShareRoute(location.pathname);
+        if (isShared) {
+            root.classList.remove('dark');
+        } else if (isDarkMode) {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+        // Persist the scientist's preference — only on non-shared routes (which
+        // covers /settings / /onboarding etc. where the toggle actually lives).
+        if (!isShared) {
+            try { localStorage.setItem('sentinel_dark_mode', String(isDarkMode)); } catch {}
+        }
+    }, [isDarkMode, location.pathname]);
 
     // --- WATTBIKE HUB STATE ---
     const [wattbikeSessions, setWattbikeSessions] = useState(DEFAULT_WATTBIKE_SESSIONS);
@@ -1072,7 +1100,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const getSessionTypeColor = (phase) => {
         const map = {
-            'Strength': 'bg-indigo-50 dark:bg-indigo-600 border-indigo-200 dark:border-indigo-800/50 text-indigo-700',
+            'Strength': 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300',
             'Hypertrophy': 'bg-purple-50 border-purple-200 dark:border-purple-800/50 text-purple-700',
             'Power': 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 text-rose-700',
             'Speed': 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 text-amber-700',

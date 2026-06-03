@@ -22,6 +22,28 @@ function trigramSimilarity(a: string, b: string): number {
   return union === 0 ? 0 : intersection / union;
 }
 
+/**
+ * Match the query against each individual word in the searchable text and
+ * return the highest per-word similarity. Without this, a 5-char query like
+ * "swuat" gets compared against an 80+ char text ("FMS: Deep Squat — Tests …")
+ * and the trigram overlap gets drowned by the long text's unrelated trigrams,
+ * pushing the score below threshold. Per-word matching gives "swuat" a chance
+ * to score directly against the word "squat" and find it.
+ */
+function bestWordSimilarity(query: string, text: string): number {
+  // Whole-text similarity is still useful for longer multi-word queries
+  // ("deep squat"), so we keep it as the baseline and only let per-word
+  // matching push the score higher.
+  const wholeText = trigramSimilarity(query, text);
+  const words = text.toLowerCase().split(/[\s\-_:,.()/]+/).filter(w => w.length > 1);
+  let best = wholeText;
+  for (const w of words) {
+    const sim = trigramSimilarity(query, w);
+    if (sim > best) best = sim;
+  }
+  return best;
+}
+
 export interface FuzzyResult<T> {
   item: T;
   matchType: 'exact' | 'fuzzy';
@@ -64,12 +86,14 @@ export function fuzzySearch<T>(
     return { results: exact, hasFuzzyResults: false, suggestions: [] };
   }
 
-  // Phase 2: fuzzy trigram matching
+  // Phase 2: fuzzy trigram matching, scored per-word so single-token typos
+  // ("swuat" → "squat") don't get diluted by surrounding text in the
+  // searchable string. See bestWordSimilarity above for the rationale.
   const scored: FuzzyResult<T>[] = items
     .map(item => ({
       item,
       matchType: 'fuzzy' as const,
-      score: trigramSimilarity(q, getSearchText(item)),
+      score: bestWordSimilarity(q, getSearchText(item)),
     }))
     .filter(r => r.score >= threshold)
     .sort((a, b) => b.score - a.score);

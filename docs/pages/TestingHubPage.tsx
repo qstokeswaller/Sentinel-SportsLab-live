@@ -1,10 +1,11 @@
 // @ts-nocheck
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { DatabaseService } from '../services/databaseService';
 import {
-    TEST_CATEGORIES, getTestsByCategory, getTestById,
+    TEST_CATEGORIES, getTestsByCategory, getTestById, ALL_TESTS,
 } from '../utils/testRegistry';
+import { fuzzySearch } from '../utils/fuzzySearch';
 import type { TestCategory, TestDefinition, CategoryInfo } from '../utils/testRegistry';
 import { TestEntryForm } from '../components/testing/TestEntryForm';
 import { TestHistoryPanel } from '../components/testing/TestHistoryPanel';
@@ -49,6 +50,61 @@ export const TestingHubPage: React.FC = () => {
     const [historyRefresh, setHistoryRefresh] = useState(0);
     const [hubView, setHubView] = useState<HubView>('categories');
 
+    // Global search — searches every visible test across every category. Uses
+    // the project's fuzzySearch util (exact-first, trigram fallback) so the
+    // user can mistype and still find the test.
+    const [globalQuery, setGlobalQuery] = useState('');
+    const [globalDropdownOpen, setGlobalDropdownOpen] = useState(false);
+    const globalSearchRef = useRef<HTMLDivElement | null>(null);
+
+    // Pool of searchable tests = ALL_TESTS minus those hidden via Settings → Features.
+    const searchableTests = useMemo(
+        () => ALL_TESTS.filter(t => testVisibility[t.id] !== false),
+        [testVisibility]
+    );
+
+    // Search includes name + shortName + description + category id + equipment so
+    // typos like "fms deep" or "deep squat" or "movement" all surface the FMS test.
+    const globalSearch = useMemo(
+        () => fuzzySearch(
+            searchableTests,
+            globalQuery,
+            (t) => [t.name, t.shortName || '', t.description || '', t.category, ...(t.equipmentRequired || [])].join(' '),
+            (t) => t.name,
+        ),
+        [searchableTests, globalQuery]
+    );
+    const globalResults = useMemo(() => globalSearch.results.slice(0, 8), [globalSearch.results]);
+
+    // Close dropdown on outside click + Esc
+    useEffect(() => {
+        if (!globalDropdownOpen) return;
+        const handleClick = (e: MouseEvent) => {
+            if (globalSearchRef.current && !globalSearchRef.current.contains(e.target as Node)) {
+                setGlobalDropdownOpen(false);
+            }
+        };
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setGlobalDropdownOpen(false);
+        };
+        document.addEventListener('mousedown', handleClick);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('keydown', handleKey);
+        };
+    }, [globalDropdownOpen]);
+
+    // Click result → open that test directly (set both category + testId so the
+    // back-navigation breadcrumb works correctly).
+    const openTestFromSearch = (t: TestDefinition) => {
+        setActiveCategory(t.category);
+        setActiveTestId(t.id);
+        setGlobalQuery('');
+        setGlobalDropdownOpen(false);
+        setHubView('categories');
+    };
+
     // ─── Derived data ─────────────────────────────────────────────────
     const allAthletes = useMemo(
         () => teams.flatMap(t => t.players).sort((a, b) => a.name.localeCompare(b.name)),
@@ -86,13 +142,21 @@ export const TestingHubPage: React.FC = () => {
         [activeCategory]
     );
 
-    const filteredTests = useMemo(() => {
-        if (!searchQuery.trim()) return categoryTests;
-        const q = searchQuery.toLowerCase();
-        return categoryTests.filter(t =>
-            t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
-        );
-    }, [categoryTests, searchQuery]);
+    // Per-category search uses the same fuzzySearch util as Library / Workouts
+    // and the global Testing search: exact substring first (so typing "s" → "sq"
+    // → "squat" narrows progressively as expected), then trigram-similarity
+    // fallback so typos still surface the right test. Includes name + shortName
+    // + description + equipment for richer matches.
+    const categorySearch = useMemo(
+        () => fuzzySearch(
+            categoryTests,
+            searchQuery,
+            (t) => [t.name, t.shortName || '', t.description || '', ...(t.equipmentRequired || [])].join(' '),
+            (t) => t.name,
+        ),
+        [categoryTests, searchQuery]
+    );
+    const filteredTests = categorySearch.results;
 
     // ─── Handlers ─────────────────────────────────────────────────────
 
@@ -337,8 +401,18 @@ export const TestingHubPage: React.FC = () => {
                         </button>
                     ))}
                     {filteredTests.length === 0 && searchQuery && (
-                        <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">
-                            No tests match "{searchQuery}"
+                        <div className="text-center py-8">
+                            <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">No tests match "{searchQuery}"</p>
+                            {categorySearch.suggestions.length > 0 && (
+                                <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1">
+                                    Did you mean <button onClick={() => setSearchQuery(categorySearch.suggestions[0].name)} className="font-semibold text-indigo-500 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 underline">{categorySearch.suggestions[0].name}</button>?
+                                </p>
+                            )}
+                        </div>
+                    )}
+                    {categorySearch.hasFuzzyResults && filteredTests.length > 0 && (
+                        <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/30 text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide rounded-lg">
+                            Showing closest matches for "{searchQuery}"
                         </div>
                     )}
                 </div>
@@ -397,9 +471,68 @@ export const TestingHubPage: React.FC = () => {
     // Default: category cards + tools
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Testing</h2>
-                <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Sports science assessments, screening protocols & performance testing.</p>
+            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm flex items-center justify-between gap-4 flex-wrap">
+                <div className="min-w-0">
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Testing</h2>
+                    <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Sports science assessments, screening protocols & performance testing.</p>
+                </div>
+                {/* Global test search — typo-tolerant fuzzy match across all 80+ tests. */}
+                <div ref={globalSearchRef} className="relative w-full sm:w-80 shrink-0">
+                    <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#94A3B8] pointer-events-none" />
+                    <input
+                        type="text"
+                        value={globalQuery}
+                        onChange={e => { setGlobalQuery(e.target.value); setGlobalDropdownOpen(true); }}
+                        onFocus={() => globalQuery && setGlobalDropdownOpen(true)}
+                        placeholder="Search any test…"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#94A3B8] rounded-xl text-sm focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 focus:border-indigo-400 outline-none transition-all"
+                    />
+                    {globalDropdownOpen && globalQuery.trim() && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-50 overflow-hidden max-h-[420px] overflow-y-auto">
+                            {globalResults.length === 0 ? (
+                                <div className="px-4 py-5 text-center">
+                                    <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">No tests match "{globalQuery}"</p>
+                                    {globalSearch.suggestions.length > 0 && (
+                                        <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-1">
+                                            Did you mean <span className="font-semibold text-indigo-500">{globalSearch.suggestions[0].name}</span>?
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    {globalSearch.hasFuzzyResults && (
+                                        <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/15 border-b border-amber-100 dark:border-amber-800/30 text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                                            Closest matches
+                                        </div>
+                                    )}
+                                    {globalResults.map(t => {
+                                        const catInfo = TEST_CATEGORIES.find(c => c.id === t.category);
+                                        const Icon = catInfo ? (ICON_MAP[catInfo.icon] || ActivityIcon) : ActivityIcon;
+                                        return (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => openTestFromSearch(t)}
+                                                className="w-full px-3 py-2.5 flex items-center gap-3 text-left hover:bg-indigo-50 dark:hover:bg-indigo-500/15 transition-colors border-b border-slate-100 dark:border-[#1A2D48] last:border-b-0"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                                                    <Icon size={14} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{t.name}</div>
+                                                    <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] flex items-center gap-1.5">
+                                                        <span>{catInfo?.name}</span>
+                                                        {t.estimatedDuration && <><span>·</span><span>~{t.estimatedDuration}</span></>}
+                                                    </div>
+                                                </div>
+                                                <ChevronRightIcon size={13} className="text-slate-300 dark:text-[#475569] shrink-0" />
+                                            </button>
+                                        );
+                                    })}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Quick tools row */}

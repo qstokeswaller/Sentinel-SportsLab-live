@@ -15,6 +15,7 @@ import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../
 import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { ShareToOrgToggle } from '../components/tier/ShareToOrgToggle';
 import { useAuth } from '../context/AuthContext';
+import { fuzzySearch } from '../utils/fuzzySearch';
 import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
@@ -109,12 +110,21 @@ export const WeightroomSheetsPage = () => {
         return { total, drafts };
     }, [savedSheets]);
 
+    // Search uses fuzzySearch — exact-substring first (so typing narrows
+    // progressively), then per-word trigram fallback for typo tolerance.
+    // Matches against sheet name + mode + any saved column labels.
+    const sheetsSearch = useMemo(
+        () => fuzzySearch(
+            savedSheets,
+            search,
+            (s: any) => [s.name, s.ws_mode || '', ...(s.columns?.map((c: any) => c.label || c.exerciseId) || [])].join(' '),
+            (s: any) => s.name,
+        ),
+        [savedSheets, search]
+    );
+
     const filteredSheets = useMemo(() => {
-        let list = savedSheets;
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            list = list.filter(s => s.name.toLowerCase().includes(q));
-        }
+        let list = sheetsSearch.results;
         if (modeFilter !== 'All') list = list.filter(s => s.ws_mode === modeFilter);
         if (targetFilter !== 'All') {
             list = list.filter(s => {

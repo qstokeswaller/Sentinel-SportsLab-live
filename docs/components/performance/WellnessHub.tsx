@@ -1258,7 +1258,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                                 }
                             </span>
                             {insightPeriodMode && activeView === 'bar_sorted' && (
-                                <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-600 text-indigo-500">Avg per athlete</span>
+                                <span className="text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-300">Avg per athlete</span>
                             )}
                         </div>
                         {activeDef.type === 'scale' && (
@@ -1329,7 +1329,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                         <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-indigo-50 shadow-sm p-6 space-y-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-600 rounded-xl flex items-center justify-center text-indigo-500">
+                                    <div className="w-9 h-9 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-500 dark:text-indigo-300">
                                         <Thermometer size={18} />
                                     </div>
                                     <div>
@@ -3326,7 +3326,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                                 }`}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__wellness_check__' ? 'bg-white/20' : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-500'}`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedTemplate?.id === '__wellness_check__' ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-300'}`}>
                                         <Activity size={20} />
                                     </div>
                                     <div>
@@ -3536,7 +3536,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div onClick={() => setPreviewTemplate('daily')} className="bg-white dark:bg-[#132338] border-2 border-indigo-100 dark:border-indigo-800/40 rounded-xl p-5 space-y-2 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-600 text-indigo-500 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-300 flex items-center justify-center">
                                         <Activity size={20} />
                                     </div>
                                     <div className="flex-1">

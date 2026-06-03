@@ -160,7 +160,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                     {isResolved && (
                                         <span className={`text-[9px] font-semibold uppercase px-2 py-0.5 rounded-full ${
                                             r.action === 'assign' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600'
-                                            : r.action === 'add' ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-600'
+                                            : r.action === 'add' ? 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-600 dark:text-indigo-300'
                                             : 'bg-slate-100 text-slate-400'
                                         }`}>
                                             {r.action === 'assign' ? 'Assigned' : r.action === 'add' ? 'Will Add' : 'Skipped'}

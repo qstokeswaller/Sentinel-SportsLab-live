@@ -606,7 +606,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         </div>
 
                         {/* Adding to indicator */}
-                        <div className="text-[9px] font-medium text-indigo-500 bg-indigo-50 dark:bg-indigo-600 rounded-lg px-3 py-1.5">
+                        <div className="text-[9px] font-medium text-indigo-500 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg px-3 py-1.5">
                             Adding to: <strong>{SECTION_LABELS[activeSection]}</strong>
                         </div>
                     </div>

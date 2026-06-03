@@ -377,7 +377,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                 <div className="flex items-center gap-2">
                                     <ZapIcon size={15} className="text-indigo-600 dark:text-indigo-300 shrink-0" />
                                     <h3 className="text-sm font-semibold text-indigo-900">ACWR Column Binding</h3>
-                                    <span className="text-[10px] text-indigo-500 bg-indigo-100 dark:bg-indigo-600 px-2 py-0.5 rounded-full font-semibold">Required for ACWR</span>
+                                    <span className="text-[10px] text-indigo-500 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/35 px-2 py-0.5 rounded-full font-semibold">Required for ACWR</span>
                                 </div>
                                 <p className="text-xs text-indigo-700 dark:text-indigo-400 leading-relaxed">
                                     This team's ACWR method is set to <strong>{methodLabel}</strong>. Select which CSV column
@@ -491,11 +491,18 @@ export const GpsCategoryManager: React.FC<GpsCategoryManagerProps> = ({ onChange
         <div className="space-y-4">
             {/* Existing categories */}
             <div className="space-y-2">
-                {categories.map(cat => (
-                    <div key={cat.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${COLOR_DOT[cat.color] || 'bg-slate-400'}`} />
+                {categories.map(cat => {
+                    const isHex = typeof cat.color === 'string' && cat.color.startsWith('#');
+                    const dotClass = isHex ? '' : (COLOR_DOT[cat.color] || 'bg-slate-400');
+                    const dotStyle = isHex ? { backgroundColor: cat.color } : undefined;
+                    const badgeClass = isHex
+                        ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]'
+                        : (COLOR_BADGE[cat.color] || 'bg-slate-100 dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]');
+                    return (
+                    <div key={cat.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58]">
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}`} style={dotStyle} />
                         <span className="text-sm font-medium text-slate-700 dark:text-[#CBD5E1] flex-1">{cat.label}</span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${COLOR_BADGE[cat.color] || ''}`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
                             {cat.color}
                         </span>
                         <button
@@ -506,24 +513,25 @@ export const GpsCategoryManager: React.FC<GpsCategoryManagerProps> = ({ onChange
                             <Trash2Icon size={13} />
                         </button>
                     </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Add new */}
-            <div className="flex items-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-end gap-2 pt-2 border-t border-slate-100 dark:border-[#1A2D48]">
                 <div className="flex-1">
-                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1.5">New Category</label>
+                    <label className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1.5">New Category</label>
                     <input
                         type="text"
                         value={newLabel}
                         onChange={e => setNewLabel(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleAdd()}
                         placeholder="e.g. Pre-season, Test Day…"
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 focus:outline-none focus:border-indigo-400 transition-colors"
+                        className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 dark:placeholder:text-[#64748B] focus:outline-none focus:border-indigo-400 transition-colors"
                     />
                 </div>
                 <div>
-                    <label className="text-[10px] font-semibold uppercase text-slate-400 tracking-wide block mb-1.5">Colour</label>
+                    <label className="text-[10px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide block mb-1.5">Colour</label>
                     <div className="flex gap-1.5 flex-wrap">
                         {COLOR_OPTIONS.map(c => (
                             <button

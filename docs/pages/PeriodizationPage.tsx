@@ -212,7 +212,7 @@ export const PeriodizationPage = () => {
                             return (
                                 <div key={plan.id}
                                     onClick={() => { setActivePlanId(plan.id); setPlanDrillPath([]); }}
-                                    className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-all group">
+                                    className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group">
                                     <div className="flex items-start justify-between mb-3">
                                         <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors leading-snug pr-2">{plan.name}</h3>
                                         <div className="flex items-center gap-1.5 shrink-0">

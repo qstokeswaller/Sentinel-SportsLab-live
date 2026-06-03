@@ -17,6 +17,7 @@ import type { GpsProfile, ProfileMatchResult } from '../components/performance/G
 import { loadGpsProfiles, saveGpsProfiles, loadGpsCategories, saveGpsCategories, getProfileForTeam } from '../components/performance/GpsConfigModal';
 import type { GpsTeamProfile, GpsCategory } from '../components/performance/GpsConfigModal';
 import { normaliseDate } from '../utils/csvSchemas';
+import { fuzzySearch } from '../utils/fuzzySearch';
 import {
     UsersIcon, TrendingUpIcon, ActivityIcon, AlertTriangleIcon, SearchIcon, AlertCircleIcon,
     CalendarIcon, HeartPulseIcon, DumbbellIcon, FlameIcon, BatteryIcon, ShieldAlertIcon,
@@ -699,7 +700,7 @@ export const ReportingHubPage = () => {
         'Chest': 'bg-rose-100 text-rose-700', 'Back': 'bg-sky-100 text-sky-700', 'Shoulders': 'bg-amber-100 text-amber-700',
         'Biceps': 'bg-cyan-100 text-cyan-700', 'Triceps': 'bg-violet-100 text-violet-700', 'Quadriceps': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
         'Hamstrings': 'bg-lime-100 text-lime-700', 'Glutes': 'bg-pink-100 text-pink-700', 'Calves': 'bg-teal-100 text-teal-700',
-        'Abdominals': 'bg-orange-100 text-orange-700', 'Forearms': 'bg-stone-100 text-stone-600', 'Trapezius': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700',
+        'Abdominals': 'bg-orange-100 text-orange-700', 'Forearms': 'bg-stone-100 text-stone-600', 'Trapezius': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700 dark:text-indigo-300',
         'Hip Flexors': 'bg-fuchsia-100 text-fuchsia-700', 'Adductors': 'bg-blue-100 text-blue-700', 'Abductors': 'bg-purple-100 text-purple-700',
         'Shins': 'bg-green-100 text-green-700',
     };
@@ -707,7 +708,7 @@ export const ReportingHubPage = () => {
         'Upper Body': '#6366f1', 'Lower Body': '#10b981', 'Core': '#f59e0b', 'Full Body': '#a855f7',
     };
     const REGION_BG: Record<string, string> = {
-        'Upper Body': 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700', 'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
+        'Upper Body': 'bg-indigo-100 dark:bg-indigo-900/35 text-indigo-700 dark:text-indigo-300', 'Lower Body': 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700',
         'Core': 'bg-amber-100 text-amber-700', 'Full Body': 'bg-purple-100 text-purple-700',
     };
     // Map body parts → regions
@@ -2578,10 +2579,15 @@ export const ReportingHubPage = () => {
                         { id: 'hrv',         label: 'HRV' },
                         { id: 'other',       label: 'Other' },
                     ];
-                    const searchLower = gpsColSearch.toLowerCase();
-                    const filteredCols = mergedColConfig
-                        .filter(c => !searchLower || c.key.toLowerCase().includes(searchLower) || colLabel(c.key).toLowerCase().includes(searchLower))
-                        .sort((a, b) => gpsSortCols(a.key, b.key));
+                    // Fuzzy column search — same util as Library / Workouts / Testing.
+                    // Exact-substring first (so progressive narrowing works as the
+                    // user types), trigram per-word fallback for typo tolerance.
+                    const filteredCols = fuzzySearch(
+                        mergedColConfig,
+                        gpsColSearch,
+                        (c: any) => [c.key, colLabel(c.key)].join(' '),
+                        (c: any) => colLabel(c.key),
+                    ).results.sort((a, b) => gpsSortCols(a.key, b.key));
                     const visibleCount = mergedColConfig.filter(c => c.visible !== false).length;
                     const toggleAll = (visible: boolean) => saveColConfig(mergedColConfig.map(c => ({ ...c, visible })));
                     const toggleGroup = (gid: string, visible: boolean) => saveColConfig(mergedColConfig.map(c =>
@@ -2768,7 +2774,7 @@ export const ReportingHubPage = () => {
                                 <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold ${
                                     polarSyncStatus === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800/50 text-emerald-700' :
                                     polarSyncStatus === 'error' ? 'bg-red-50 border border-red-200 dark:border-red-900/50 text-red-700' :
-                                    'bg-indigo-50 dark:bg-indigo-600 border border-indigo-200 dark:border-indigo-600 text-indigo-700'
+                                    'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300'
                                 }`}>
                                     {polarSyncStatus === 'syncing' && <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />}
                                     {polarSyncStatus === 'success' && <CheckIcon size={13} />}

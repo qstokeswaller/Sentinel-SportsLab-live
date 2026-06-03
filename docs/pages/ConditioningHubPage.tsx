@@ -1,16 +1,17 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { Button } from '@/components/ui/button';
 import {
     ActivityIcon, ZapIcon, PlusIcon, Trash2Icon, SaveIcon, PrinterIcon,
     ClockIcon, FileEditIcon, Calculator as CalculatorIcon, ArrowLeftIcon,
-    TimerIcon, HeartPulseIcon, RepeatIcon, CopyIcon, CalendarPlusIcon,
+    TimerIcon, HeartPulseIcon, RepeatIcon, CopyIcon, CalendarPlusIcon, SearchIcon,
 } from 'lucide-react';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsPicker';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
+import { fuzzySearch } from '../utils/fuzzySearch';
 
 const ICON_MAP = {
     'Activity': ActivityIcon,
@@ -40,6 +41,35 @@ export const ConditioningHubPage = () => {
         setIsWattbikeMapCalculatorOpen,
         scheduleWorkoutSession, teams, resolveTargetName,
     } = useAppState();
+
+    // Per-list search state. Wattbike ships with 26 defaults so search is always
+    // on; Conditioning starts empty so we only show the search input when there
+    // are enough sessions to make scanning slow (>=5). Both use the same fuzzy
+    // util (exact-substring first, per-word trigram fallback for typos).
+    const [wattbikeSearch, setWattbikeSearch] = useState('');
+    const [conditioningSearch, setConditioningSearch] = useState('');
+
+    const wattbikeSearchResult = useMemo(
+        () => fuzzySearch(
+            wattbikeSessions || [],
+            wattbikeSearch,
+            (s: any) => [s.title, s.type || '', s.duration || ''].join(' '),
+            (s: any) => s.title,
+        ),
+        [wattbikeSessions, wattbikeSearch]
+    );
+    const filteredWattbikeSessions = wattbikeSearchResult.results;
+
+    const conditioningSearchResult = useMemo(
+        () => fuzzySearch(
+            conditioningSessions || [],
+            conditioningSearch,
+            (s: any) => [s.title, s.modality || '', s.energySystem || '', s.notes || ''].join(' '),
+            (s: any) => s.title,
+        ),
+        [conditioningSessions, conditioningSearch]
+    );
+    const filteredConditioningSessions = conditioningSearchResult.results;
 
     // --- SCHEDULING STATE ---
     const [scheduleOpen, setScheduleOpen] = React.useState<null | { type: 'wattbike' | 'conditioning'; session: any }>(null);
@@ -810,15 +840,47 @@ ${sectionsHtml}
 
                     {wattbikeView === 'grid' && (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">Session Repository</h4>
-                                <Button size="sm" onClick={() => setWattbikeView('create')}>
-                                    <PlusIcon size={13} className="mr-1.5" /> Add Session
-                                </Button>
+                            <div className="flex justify-between items-center gap-3 flex-wrap">
+                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">
+                                    Session Repository
+                                    <span className="text-xs text-slate-400 dark:text-[#94A3B8] ml-2 font-normal">({filteredWattbikeSessions.length} of {wattbikeSessions.length})</span>
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                    <div className="relative w-full sm:w-64">
+                                        <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#94A3B8]" />
+                                        <input
+                                            type="text"
+                                            value={wattbikeSearch}
+                                            onChange={e => setWattbikeSearch(e.target.value)}
+                                            placeholder="Search sessions…"
+                                            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#94A3B8] rounded-lg text-xs outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                                        />
+                                    </div>
+                                    <Button size="sm" onClick={() => setWattbikeView('create')}>
+                                        <PlusIcon size={13} className="mr-1.5" /> Add Session
+                                    </Button>
+                                </div>
                             </div>
 
+                            {wattbikeSearchResult.hasFuzzyResults && filteredWattbikeSessions.length > 0 && (
+                                <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/30 text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide rounded-lg">
+                                    Showing closest matches for "{wattbikeSearch}"
+                                </div>
+                            )}
+
+                            {filteredWattbikeSessions.length === 0 && wattbikeSearch && (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">No Wattbike sessions match "{wattbikeSearch}"</p>
+                                    {wattbikeSearchResult.suggestions.length > 0 && (
+                                        <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1">
+                                            Did you mean <button onClick={() => setWattbikeSearch(wattbikeSearchResult.suggestions[0].name)} className="font-semibold text-indigo-500 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 underline">{wattbikeSearchResult.suggestions[0].name}</button>?
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {wattbikeSessions.map(session => (
+                                {filteredWattbikeSessions.map(session => (
                                     <div
                                         key={session.id}
                                         onClick={() => { setSelectedWattbikeSession(session); setWattbikeView('view'); }}
@@ -901,12 +963,38 @@ ${sectionsHtml}
 
                     {conditioningView === 'grid' && (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">Session Repository ({conditioningSessions.length})</h4>
-                                <Button size="sm" onClick={() => setConditioningView('create')}>
-                                    <PlusIcon size={13} className="mr-1.5" /> Add Session
-                                </Button>
+                            <div className="flex justify-between items-center gap-3 flex-wrap">
+                                <h4 className="text-sm font-medium text-slate-500 dark:text-[#CBD5E1]">
+                                    Session Repository
+                                    <span className="text-xs text-slate-400 dark:text-[#94A3B8] ml-2 font-normal">
+                                        ({conditioningSearch ? `${filteredConditioningSessions.length} of ${conditioningSessions.length}` : conditioningSessions.length})
+                                    </span>
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                    {/* Search is hidden for tiny libraries to avoid empty-input clutter — appears once the user has built up a meaningful collection. */}
+                                    {conditioningSessions.length >= 5 && (
+                                        <div className="relative w-full sm:w-64">
+                                            <SearchIcon size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#94A3B8]" />
+                                            <input
+                                                type="text"
+                                                value={conditioningSearch}
+                                                onChange={e => setConditioningSearch(e.target.value)}
+                                                placeholder="Search sessions…"
+                                                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#94A3B8] rounded-lg text-xs outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                                            />
+                                        </div>
+                                    )}
+                                    <Button size="sm" onClick={() => setConditioningView('create')}>
+                                        <PlusIcon size={13} className="mr-1.5" /> Add Session
+                                    </Button>
+                                </div>
                             </div>
+
+                            {conditioningSearchResult.hasFuzzyResults && filteredConditioningSessions.length > 0 && (
+                                <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/30 text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide rounded-lg">
+                                    Showing closest matches for "{conditioningSearch}"
+                                </div>
+                            )}
 
                             {conditioningSessions.length === 0 && (
                                 <div className="bg-white dark:bg-[#132338] rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] py-16 flex flex-col items-center justify-center gap-3">
@@ -916,8 +1004,19 @@ ${sectionsHtml}
                                 </div>
                             )}
 
+                            {conditioningSessions.length > 0 && filteredConditioningSessions.length === 0 && conditioningSearch && (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-slate-400 dark:text-[#CBD5E1]">No sessions match "{conditioningSearch}"</p>
+                                    {conditioningSearchResult.suggestions.length > 0 && (
+                                        <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1">
+                                            Did you mean <button onClick={() => setConditioningSearch(conditioningSearchResult.suggestions[0].name)} className="font-semibold text-indigo-500 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 underline">{conditioningSearchResult.suggestions[0].name}</button>?
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {conditioningSessions.map(session => {
+                                {filteredConditioningSessions.map(session => {
                                     const ec = energyColor(session.energySystem);
                                     const sysLabel = ENERGY_SYSTEMS.find(e => e.value === session.energySystem)?.label?.split('/')[0]?.trim() || session.energySystem;
                                     const vol = totalCondVolume(session);
