@@ -7,9 +7,10 @@ import type { TestDefinition, TestCategory } from '../../utils/testRegistry';
 import { NormativeBar } from './NormativeBar';
 import {
     UsersIcon, ArrowUpIcon, ArrowDownIcon, MinusIcon, DownloadIcon,
-    PrinterIcon, FilterIcon, SearchIcon,
+    Share2Icon, FilterIcon, SearchIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import { ShareTestReportModal } from './ShareTestReportModal';
 
 interface Props {
     initialTestId?: string;
@@ -30,6 +31,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
     const [loading, setLoading] = useState(false);
     const [sortField, setSortField] = useState<string>('');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+    const [shareOpen, setShareOpen] = useState(false);
 
     const selectedTeam = useMemo(() => teams.find(t => t.id === selectedTeamId), [teams, selectedTeamId]);
     const selectedTest = useMemo(() => selectedTestId ? getTestById(selectedTestId) : null, [selectedTestId]);
@@ -153,6 +155,35 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
         URL.revokeObjectURL(url);
     }, [selectedTest, rows, displayFields]);
 
+    // Build the snapshot payload persisted in test_share_sessions.snapshot_data.
+    // Shape is consumed by PublicTestSharePage > TeamComparisonView.
+    const buildSnapshot = useCallback(() => {
+        if (!selectedTest || !selectedTeam) return null;
+        return {
+            type: 'team-comparison',
+            generatedAt: new Date().toISOString(),
+            team: { id: selectedTeam.id, name: selectedTeam.name },
+            test: {
+                id: selectedTest.id,
+                name: selectedTest.name,
+                hasNorms: !!selectedTest.norms,
+            },
+            displayFields,
+            rows: rows.map(r => ({
+                player: { id: r.player.id, name: r.player.name },
+                date: r.date,
+                allValues: r.allValues,
+                normLabel: r.normLabel,
+                normColor: r.normColor,
+                hasData: r.hasData,
+            })),
+        };
+    }, [selectedTest, selectedTeam, displayFields, rows]);
+
+    const shareTitle = selectedTest && selectedTeam
+        ? `${selectedTest.name} — ${selectedTeam.name}`
+        : 'Team Comparison';
+
     const NORM_COLORS: Record<string, string> = {
         emerald: 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
         sky: 'bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30',
@@ -209,10 +240,11 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                                 <DownloadIcon size={12} />CSV
                             </button>
                             <button
-                                onClick={() => window.print()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                                onClick={() => setShareOpen(true)}
+                                disabled={!rows.length}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <PrinterIcon size={12} />Print
+                                <Share2Icon size={12} />Share
                             </button>
                         </div>
                     </div>
@@ -322,6 +354,14 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
                     Select a team, category, and test above to compare athletes.
                 </div>
             )}
+
+            <ShareTestReportModal
+                isOpen={shareOpen}
+                onClose={() => setShareOpen(false)}
+                shareType="team-comparison"
+                title={shareTitle}
+                buildSnapshot={buildSnapshot}
+            />
         </div>
     );
 };

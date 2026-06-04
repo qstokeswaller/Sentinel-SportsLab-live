@@ -12,6 +12,7 @@ import PublicWorkoutView from './pages/PublicWorkoutView';
 import PublicProtocolView from './pages/PublicProtocolView';
 import PublicDataHubView from './pages/PublicDataHubView';
 import PublicAthleteSharePage from './pages/PublicAthleteSharePage';
+import PublicTestSharePage from './pages/PublicTestSharePage';
 import LandingPage from './pages/LandingPage';
 import PolarCallbackPage from './pages/PolarCallbackPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
@@ -78,6 +79,7 @@ const AppRouter: React.FC = () => {
       <Route path="/protocol/:protocolId" element={<PublicProtocolView />} />
       <Route path="/data-hub/snapshot/:snapshotId" element={<PublicDataHubView />} />
       <Route path="/athlete-share/:shareId" element={<PublicAthleteSharePage />} />
+      <Route path="/test-share/:shareId" element={<PublicTestSharePage />} />
 
       {/* POLAR OAUTH CALLBACK — public route, handles redirect from Polar */}
       <Route path="/polar/callback" element={<PolarCallbackPage />} />

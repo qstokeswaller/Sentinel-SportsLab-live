@@ -38,6 +38,7 @@ const LABEL = 'text-xs font-medium text-slate-700 dark:text-[#CBD5E1] block mb-1
 const AddEventModal = () => {
     const {
         isAddEventModalOpen, setIsAddEventModalOpen,
+        addEventPresetDate, setAddEventPresetDate,
         customEventTypes,
         handleAddCalendarEvent,
         handleSaveCustomEventTypes,
@@ -76,6 +77,17 @@ const AddEventModal = () => {
     const [newTypeLabel, setNewTypeLabel] = useState('');
     const [newTypeColor, setNewTypeColor] = useState('#8b5cf6');
 
+    // Hydrate startDate + dateToAdd from the preset (set when user clicks a
+    // day-cell on the dashboard calendar). useLayoutEffect runs synchronously
+    // after the modal DOM mounts but before paint, so the user never sees
+    // today's date flash before the preset value applies.
+    React.useLayoutEffect(() => {
+        if (isAddEventModalOpen && addEventPresetDate) {
+            setStartDate(addEventPresetDate);
+            setDateToAdd(addEventPresetDate);
+        }
+    }, [isAddEventModalOpen, addEventPresetDate]);
+
     if (!isAddEventModalOpen) return null;
 
     const allEventTypes = [...DEFAULT_EVENT_TYPES, ...customEventTypes];
@@ -106,6 +118,7 @@ const AddEventModal = () => {
     const handleClose = () => {
         resetForm();
         setIsAddEventModalOpen(false);
+        if (addEventPresetDate) setAddEventPresetDate(null);
     };
 
     const handleTypeChange = (value: string) => {

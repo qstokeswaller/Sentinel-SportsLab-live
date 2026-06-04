@@ -207,6 +207,7 @@ export const DashboardPage = () => {
         handleDeleteCalendarEvent,
         customEventTypes,
         setViewingDate, setViewingSession,
+        setAddEventPresetDate,
         setSelectedInterventionAthlete, setIsInterventionModalOpen,
         isInterventionModalOpen, selectedInterventionAthlete,
         loadRecords, acwrSettings, acwrExclusions, getAthleteAcwrOptions,
@@ -1424,16 +1425,16 @@ export const DashboardPage = () => {
                                                 return (
                                                     <div
                                                         key={wd.dateStr}
-                                                        onClick={() => setViewingDate(wd.dateStr)}
+                                                        onClick={() => { setAddEventPresetDate(wd.dateStr); setIsAddEventModalOpen(true); }}
                                                         onDragOver={(e) => handleDragOver(e, wd.dateStr)}
                                                         onDragLeave={handleDragLeave}
                                                         onDrop={(e) => handleDrop(e, wd.dateStr)}
-                                                        className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all hover:shadow-md ${
+                                                        className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 ${
                                                             dragOverDate === wd.dateStr
                                                                 ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
                                                                 : isToday
-                                                                ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 ring-1 ring-indigo-200 dark:ring-indigo-800/50'
-                                                                : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-white/30'
+                                                                ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 ring-1 ring-indigo-200 dark:ring-indigo-800/50 hover:border-indigo-400'
+                                                                : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-500/50'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-[#243A58]/60">
@@ -1545,14 +1546,14 @@ export const DashboardPage = () => {
                                                 onDragOver={dateObj ? (e) => handleDragOver(e, dateObj.dateStr) : undefined}
                                                 onDragLeave={dateObj ? handleDragLeave : undefined}
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
-                                                className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-200 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
-                                                    ? 'hover:shadow-md cursor-pointer'
+                                                className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-150 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
+                                                    ? 'hover:shadow-lg hover:-translate-y-0.5 cursor-pointer'
                                                     : 'bg-slate-50/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
                                                         ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
                                                         : isToday
-                                                        ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/50'
-                                                        : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-white/30'}`}
-                                                onClick={() => dateObj && setViewingDate(dateObj.dateStr)}>
+                                                        ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/50 hover:border-indigo-400'
+                                                        : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-500/50'}`}
+                                                onClick={() => { if (dateObj) { setAddEventPresetDate(dateObj.dateStr); setIsAddEventModalOpen(true); } }}>
                                                 {dateObj && (
                                                     <>
                                                         {/* Date number — circled on today (Google Calendar pattern, no overflow possible) */}

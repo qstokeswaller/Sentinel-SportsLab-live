@@ -5,9 +5,10 @@ import { DatabaseService } from '../../services/databaseService';
 import { CustomSelect } from '../ui/CustomSelect';
 import { getTestById, ALL_TESTS } from '../../utils/testRegistry';
 import {
-    DownloadIcon, PrinterIcon, CalendarIcon, UsersIcon, FilterIcon,
+    DownloadIcon, Share2Icon, CalendarIcon, UsersIcon, FilterIcon,
     FileTextIcon, CheckCircleIcon,
 } from 'lucide-react';
+import { ShareTestReportModal } from './ShareTestReportModal';
 
 /**
  * Export/Print testing session results.
@@ -24,6 +25,7 @@ export const TestSessionExport: React.FC = () => {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
 
     const selectedTeam = useMemo(() => teams.find(t => t.id === selectedTeamId), [teams, selectedTeamId]);
     const allAthletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
@@ -119,6 +121,43 @@ export const TestSessionExport: React.FC = () => {
         URL.revokeObjectURL(url);
     }, [groupedByTest, getAthleteName, dateStart, dateEnd]);
 
+    // Build the snapshot payload persisted in test_share_sessions.snapshot_data.
+    // Shape is consumed by PublicTestSharePage > ExportSummaryView.
+    const buildSnapshot = useCallback(() => {
+        return {
+            type: 'export-summary',
+            generatedAt: new Date().toISOString(),
+            dateRange: { start: dateStart, end: dateEnd },
+            team: selectedTeam ? { id: selectedTeam.id, name: selectedTeam.name } : null,
+            groupedByTest: groupedByTest.map(group => {
+                if (!group.test) return null;
+                const fields = group.test.fields.filter(f => f.type !== 'text' && f.key !== 'notes').slice(0, 6);
+                const calcs = (group.test.calculations || []).slice(0, 2);
+                const displayFields = [
+                    ...fields.map(f => ({ key: f.key, label: f.label, unit: f.unit })),
+                    ...calcs.map(c => ({ key: c.key, label: c.label, unit: c.unit, isCalc: true })),
+                ];
+                return {
+                    test: { id: group.test.id, name: group.test.name },
+                    displayFields,
+                    entries: group.entries.map(entry => {
+                        const m = entry.metrics || {};
+                        const calculated: Record<string, any> = {};
+                        for (const calc of calcs) calculated[calc.key] = calc.formula(m);
+                        return {
+                            athlete_id: entry.athlete_id,
+                            athleteName: getAthleteName(entry.athlete_id),
+                            date: entry.date,
+                            allValues: { ...m, ...calculated },
+                        };
+                    }),
+                };
+            }).filter(Boolean),
+        };
+    }, [dateStart, dateEnd, selectedTeam, groupedByTest, getAthleteName]);
+
+    const shareTitle = `Testing Export · ${dateStart} → ${dateEnd}${selectedTeam ? ` · ${selectedTeam.name}` : ''}`;
+
     return (
         <div className="space-y-4">
             {/* Controls */}
@@ -198,11 +237,11 @@ export const TestSessionExport: React.FC = () => {
                                 <DownloadIcon size={12} />CSV (Detailed)
                             </button>
                             <button
-                                onClick={() => window.print()}
+                                onClick={() => setShareOpen(true)}
                                 disabled={!results.length}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <PrinterIcon size={12} />Print
+                                <Share2Icon size={12} />Share
                             </button>
                         </div>
                     </div>
@@ -274,6 +313,14 @@ export const TestSessionExport: React.FC = () => {
                     )}
                 </div>
             )}
+
+            <ShareTestReportModal
+                isOpen={shareOpen}
+                onClose={() => setShareOpen(false)}
+                shareType="export-summary"
+                title={shareTitle}
+                buildSnapshot={buildSnapshot}
+            />
         </div>
     );
 };

@@ -459,7 +459,7 @@ export const TestingHubPage: React.FC = () => {
                         </button>
                         <div>
                             <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
-                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Export & Print</h2>
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Export & Share</h2>
                         </div>
                     </div>
                 </div>
@@ -549,7 +549,7 @@ export const TestingHubPage: React.FC = () => {
                     className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-sm font-medium text-slate-700 dark:text-[#E2E8F0] hover:border-indigo-200 dark:hover:border-[#364E6E] hover:shadow-sm transition-all"
                 >
                     <DownloadIcon size={14} className="text-indigo-500" />
-                    Export & Print
+                    Export & Share
                 </button>
             </div>
 

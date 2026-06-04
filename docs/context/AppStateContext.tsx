@@ -53,6 +53,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
         path.startsWith('/data-hub/snapshot') ||
         path.startsWith('/athlete-share/') ||
+        path.startsWith('/test-share/') ||
         path.startsWith('/accept-invite/') ||
         path.startsWith('/login') || path.startsWith('/onboarding') || path.startsWith('/settings') ||
         path === '/';
@@ -68,7 +69,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
         path.startsWith('/data-hub/snapshot') ||
-        path.startsWith('/athlete-share/');
+        path.startsWith('/athlete-share/') ||
+        path.startsWith('/test-share/');
 
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
@@ -639,6 +641,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // --- CALENDAR EVENTS STATE ---
     const [calendarEvents, setCalendarEvents] = useState([]);
     const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+    // When set, AddEventModal opens with startDate pre-filled to this YYYY-MM-DD.
+    // Cleared by the modal on close. Drives the click-a-day-to-add-event UX.
+    const [addEventPresetDate, setAddEventPresetDate] = useState<string | null>(null);
     const [customEventTypes, setCustomEventTypes] = useState([]);
 
     const [newSession, setNewSession] = useState({
@@ -1816,16 +1821,24 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleUpdateCalendarEvent = async (id, updates) => {
+        // Optimistic — mirror handleUpdateSession's pattern. The previous version
+        // flipped the global isLoading flag which made every dashboard skeleton
+        // (Performance Report, Wellness Summary, ACWR tiles…) blink during the
+        // DB round-trip on every event drag. Local state moves first; DB catches
+        // up; on failure we refetch to unwind the optimistic write.
+        const prevSnapshot = calendarEvents;
+        setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
         try {
-            setIsLoading(true);
             const updatedEvent = await DatabaseService.updateCalendarEvent(id, updates);
-            setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...(updatedEvent || updates) } : e));
+            if (updatedEvent) {
+                setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updatedEvent } : e));
+            }
             showToast("Event updated", "success");
         } catch (err) {
             console.error("Error updating calendar event:", err);
             showToast("Failed to update event", "error");
-        } finally {
-            setIsLoading(false);
+            // Rollback the optimistic write
+            setCalendarEvents(prevSnapshot);
         }
     };
 
@@ -2219,7 +2232,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (path.startsWith('/daily-wellness') || path.startsWith('/weekly-wellness') ||
             path.startsWith('/wellness-form') || path.startsWith('/injury-form') ||
             path.startsWith('/workout/') || path.startsWith('/protocol/') ||
-            path.startsWith('/data-hub/snapshot')) {
+            path.startsWith('/data-hub/snapshot') ||
+            path.startsWith('/athlete-share/') || path.startsWith('/test-share/')) {
             setIsLoading(false);
             return;
         }
@@ -3121,6 +3135,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setCalendarEvents,
         isAddEventModalOpen,
         setIsAddEventModalOpen,
+        addEventPresetDate,
+        setAddEventPresetDate,
         customEventTypes,
         handleAddCalendarEvent,
         handleUpdateCalendarEvent,

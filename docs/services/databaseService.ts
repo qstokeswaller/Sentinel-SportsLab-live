@@ -140,6 +140,67 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
+    // --- TEST REPORT SHARE LINKS ---
+    // Backs the Testing → Team Comparison + Export & Print share flow.
+    // share_type discriminates the snapshot shape on the public render page.
+    async createTestShare(payload: {
+        shareType: 'team-comparison' | 'export-summary';
+        title: string;
+        snapshotData: any;
+        expiresAt?: string | null;
+    }) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('User not authenticated');
+
+        const { data, error } = await supabase
+            .from('test_share_sessions')
+            .insert({
+                user_id: userData.user.id,
+                share_type: payload.shareType,
+                title: payload.title,
+                snapshot_data: payload.snapshotData,
+                expires_at: payload.expiresAt ?? null,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async listTestShares(shareType?: 'team-comparison' | 'export-summary') {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return [];
+
+        let q = supabase
+            .from('test_share_sessions')
+            .select('id, share_type, title, expires_at, created_at')
+            .eq('user_id', userData.user.id)
+            .order('created_at', { ascending: false });
+        if (shareType) q = q.eq('share_type', shareType);
+
+        const { data, error } = await q;
+        if (error) throw error;
+        return data || [];
+    },
+
+    async fetchTestShare(shareId: string) {
+        const { data, error } = await supabase
+            .from('test_share_sessions')
+            .select('*')
+            .eq('id', shareId)
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteTestShare(shareId: string) {
+        const { error } = await supabase
+            .from('test_share_sessions')
+            .delete()
+            .eq('id', shareId);
+        if (error) throw error;
+    },
+
     async uploadAthleteAvatar(file: File): Promise<string> {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');
