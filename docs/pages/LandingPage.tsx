@@ -12,6 +12,8 @@ import {
     GaugeIcon, HeartIcon, FlaskConicalIcon, BrainIcon, DumbbellIcon, BarChart3Icon,
     ShieldIcon, ZapIcon, TargetIcon, LayersIcon, MapPinIcon, ClipboardListIcon,
     UsersIcon,
+    DownloadIcon, AppleIcon, SmartphoneIcon, MonitorIcon, ShareIcon,
+    HomeIcon, RefreshCwIcon, WifiOffIcon, LockIcon, RocketIcon,
 } from 'lucide-react';
 
 // ── Scroll reveal ──
@@ -61,7 +63,42 @@ const LandingPage: React.FC = () => {
     const rFeatGrid = useReveal(100);
     const rDiff = useReveal();
     const rVision = useReveal(100);
+    const rInstall = useReveal();
     const rPrice = useReveal();
+
+    // Detect the visitor's install context. Three independent signals so we can
+    // render the right card layout: iOS (manual Add to Home Screen), Android +
+    // desktop Chromium (one-click via beforeinstallprompt — Phase 3 wires the
+    // real event), and "already installed" (hide the whole section).
+    // Frontend-only for now; the actual prompt event listener lands in Phase 3
+    // alongside the service worker registration.
+    const [installCtx, setInstallCtx] = useState({ isIOS: false, isAndroid: false, isDesktop: true, isStandalone: false });
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const ua = navigator.userAgent || '';
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+        const isAndroid = /android/i.test(ua);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+        setInstallCtx({ isIOS, isAndroid, isDesktop: !isIOS && !isAndroid, isStandalone });
+    }, []);
+
+    // Stub handler — wired to a real beforeinstallprompt event in Phase 3.
+    // For now, scrolls to the section and surfaces an inline "rolling out"
+    // message via state so users know the feature is coming next deploy.
+    const [installStubMessage, setInstallStubMessage] = useState<string | null>(null);
+    const handleInstallClick = (source: 'ios' | 'android' | 'desktop') => {
+        if (source === 'ios') {
+            // iOS doesn't fire beforeinstallprompt. The card's inline steps are
+            // the instruction. Scroll to top of section + flash the iOS card.
+            const el = document.getElementById('install');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setInstallStubMessage('Tap the Share icon in Safari, then choose "Add to Home Screen" to install.');
+            setTimeout(() => setInstallStubMessage(null), 6000);
+            return;
+        }
+        setInstallStubMessage("Install support rolls out with our next deploy — your browser will pop up an install prompt automatically when it's ready.");
+        setTimeout(() => setInstallStubMessage(null), 6000);
+    };
 
     // Hash-scroll handler: when arriving via a hash anchor from another page
     // (e.g. /privacy → footer "Features" → /#features), React Router doesn't
@@ -297,6 +334,10 @@ const LandingPage: React.FC = () => {
                         <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
                         <a href="#why" className="hover:text-indigo-400 transition-colors">Why Us</a>
                         <a href="#pilot" className="hover:text-indigo-400 transition-colors">Pilot</a>
+                        <a href="#install" className="hover:text-indigo-400 transition-colors inline-flex items-center gap-1.5">
+                            Install App
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-full">New</span>
+                        </a>
                         <a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing</a>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
@@ -321,6 +362,7 @@ const LandingPage: React.FC = () => {
                                 { href: '#features', label: 'Features' },
                                 { href: '#why',      label: 'Why Us' },
                                 { href: '#pilot',    label: 'Pilot' },
+                                { href: '#install',  label: 'Install App' },
                                 { href: '#pricing',  label: 'Pricing' },
                             ].map(l => (
                                 <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
@@ -860,6 +902,209 @@ const LandingPage: React.FC = () => {
                         ))}
                     </div>
 
+                </div>
+            </section>
+
+            {/* ═══════ INSTALL APP ═══════ */}
+            <section id="install" className={`py-16 sm:py-32 relative overflow-hidden ${dark ? 'bg-[#0a0a14]' : 'bg-slate-50'}`}>
+                {/* Background gradient orbs — matches hero aesthetic but tuned down */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {dark ? (
+                        <>
+                            <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+                            <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)' }} />
+                        </>
+                    ) : (
+                        <>
+                            <div className="absolute top-[10%] left-[10%] w-[400px] h-[400px] bg-indigo-200/20 rounded-full blur-[100px]" />
+                            <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-violet-200/20 rounded-full blur-[100px]" />
+                        </>
+                    )}
+                </div>
+
+                <div ref={rInstall.ref} style={rInstall.style} className="relative max-w-6xl mx-auto px-4 sm:px-8">
+                    {installCtx.isStandalone ? (
+                        /* ── Already installed — celebrate, don't nag ── */
+                        <div className={`max-w-2xl mx-auto text-center px-6 py-10 rounded-2xl border ${card}`}>
+                            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white mb-4 shadow-lg shadow-emerald-500/20">
+                                <CheckIcon size={26} />
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">You're running the app.</h2>
+                            <p className={`mt-3 ${txm}`}>Sentinel SportsLab is installed on this device — you're getting the fastest, fullscreen experience.</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* ── Eyebrow + heading ── */}
+                            <div className="text-center mb-14 sm:mb-20">
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 ${dark ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'} border rounded-full text-xs font-semibold mb-6`}>
+                                    <DownloadIcon size={13} /> Install App
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.05]">
+                                    Take it anywhere.
+                                    <br />
+                                    <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                                        Install in one tap.
+                                    </span>
+                                </h2>
+                                <p className={`mt-6 text-base sm:text-lg ${txm} max-w-xl mx-auto leading-relaxed`}>
+                                    Install Sentinel SportsLab as an app on your phone, tablet, or computer.
+                                    No app store. No download wait. Same login, same data, fullscreen experience.
+                                </p>
+                            </div>
+
+                            {/* ── Three platform cards ── */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                {/* iOS card */}
+                                <div className={`group relative rounded-2xl border ${card} ${cardH} p-6 transition-all duration-200 ${installCtx.isIOS ? 'ring-2 ring-indigo-500/40 shadow-xl shadow-indigo-500/10' : ''}`}>
+                                    {installCtx.isIOS && (
+                                        <div className="absolute -top-2.5 left-6 text-[9px] font-bold uppercase tracking-[0.15em] bg-indigo-600 text-white px-2 py-0.5 rounded-full shadow-lg shadow-indigo-500/30">
+                                            Your device
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${dark ? 'bg-white/10' : 'bg-slate-100'}`}>
+                                            <AppleIcon size={22} className={dark ? 'text-white' : 'text-slate-900'} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold">iPhone & iPad</h3>
+                                            <p className={`text-[11px] ${txs}`}>Safari · iOS 16.4+</p>
+                                        </div>
+                                    </div>
+                                    <ol className={`text-[12.5px] ${txm} space-y-2.5 mb-5 leading-relaxed`}>
+                                        <li className="flex items-start gap-2.5">
+                                            <span className={`shrink-0 w-5 h-5 rounded-full ${dark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-700'} flex items-center justify-center text-[10px] font-bold`}>1</span>
+                                            <span>Open this page in <strong className={tx}>Safari</strong></span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <span className={`shrink-0 w-5 h-5 rounded-full ${dark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-700'} flex items-center justify-center text-[10px] font-bold`}>2</span>
+                                            <span>Tap the <ShareIcon size={11} className="inline -mt-0.5" /> <strong className={tx}>Share</strong> icon at the bottom</span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <span className={`shrink-0 w-5 h-5 rounded-full ${dark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-700'} flex items-center justify-center text-[10px] font-bold`}>3</span>
+                                            <span>Choose <strong className={tx}>Add to Home Screen</strong></span>
+                                        </li>
+                                    </ol>
+                                    <button
+                                        onClick={() => handleInstallClick('ios')}
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${dark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                                    >
+                                        <ShareIcon size={14} />
+                                        Show me how
+                                    </button>
+                                </div>
+
+                                {/* Android card */}
+                                <div className={`group relative rounded-2xl border ${card} ${cardH} p-6 transition-all duration-200 ${installCtx.isAndroid ? 'ring-2 ring-indigo-500/40 shadow-xl shadow-indigo-500/10' : ''}`}>
+                                    {installCtx.isAndroid && (
+                                        <div className="absolute -top-2.5 left-6 text-[9px] font-bold uppercase tracking-[0.15em] bg-indigo-600 text-white px-2 py-0.5 rounded-full shadow-lg shadow-indigo-500/30">
+                                            Your device
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
+                                            <SmartphoneIcon size={22} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold">Android</h3>
+                                            <p className={`text-[11px] ${txs}`}>Chrome · Edge · Samsung Internet</p>
+                                        </div>
+                                    </div>
+                                    <ul className={`text-[12.5px] ${txm} space-y-2.5 mb-5 leading-relaxed`}>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>One-tap install from your browser</span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>App icon on your home screen instantly</span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>Fullscreen, no browser chrome</span>
+                                        </li>
+                                    </ul>
+                                    <button
+                                        onClick={() => handleInstallClick('android')}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all"
+                                    >
+                                        <DownloadIcon size={14} />
+                                        Install on Android
+                                    </button>
+                                </div>
+
+                                {/* Desktop card */}
+                                <div className={`group relative rounded-2xl border ${card} ${cardH} p-6 transition-all duration-200 ${installCtx.isDesktop ? 'ring-2 ring-indigo-500/40 shadow-xl shadow-indigo-500/10' : ''}`}>
+                                    {installCtx.isDesktop && (
+                                        <div className="absolute -top-2.5 left-6 text-[9px] font-bold uppercase tracking-[0.15em] bg-indigo-600 text-white px-2 py-0.5 rounded-full shadow-lg shadow-indigo-500/30">
+                                            Your device
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20">
+                                            <MonitorIcon size={22} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold">Desktop</h3>
+                                            <p className={`text-[11px] ${txs}`}>Windows · macOS · Linux</p>
+                                        </div>
+                                    </div>
+                                    <ul className={`text-[12.5px] ${txm} space-y-2.5 mb-5 leading-relaxed`}>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>Install via Chrome, Edge, or Brave</span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>Standalone window — separate from browser tabs</span>
+                                        </li>
+                                        <li className="flex items-start gap-2.5">
+                                            <CheckIcon size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                                            <span>Pin to dock, taskbar, or Start menu</span>
+                                        </li>
+                                    </ul>
+                                    <button
+                                        onClick={() => handleInstallClick('desktop')}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all"
+                                    >
+                                        <DownloadIcon size={14} />
+                                        Install on Desktop
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ── Stub message — replaced in Phase 3 with real install prompt ── */}
+                            {installStubMessage && (
+                                <div className={`mt-6 max-w-2xl mx-auto px-5 py-3.5 rounded-xl border flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${dark ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-200' : 'bg-indigo-50 border-indigo-200 text-indigo-900'}`}>
+                                    <RocketIcon size={16} className="shrink-0 mt-0.5 text-indigo-400" />
+                                    <p className="text-[13px] leading-relaxed">{installStubMessage}</p>
+                                </div>
+                            )}
+
+                            {/* ── Value props row ── */}
+                            <div className={`mt-14 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto`}>
+                                {[
+                                    { Icon: ZapIcon,        label: 'Instant updates',         sub: 'No store reviews' },
+                                    { Icon: LockIcon,       label: 'Same secure login',       sub: 'Your data, encrypted' },
+                                    { Icon: RefreshCwIcon,  label: 'Cross-device sync',       sub: 'Browser and app together' },
+                                    { Icon: HomeIcon,       label: 'Lives on home screen',    sub: 'One tap to open' },
+                                ].map(p => (
+                                    <div key={p.label} className="text-center">
+                                        <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl mb-3 ${dark ? 'bg-white/5 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+                                            <p.Icon size={18} className="text-indigo-400" />
+                                        </div>
+                                        <p className={`text-[12.5px] font-semibold ${tx}`}>{p.label}</p>
+                                        <p className={`text-[10.5px] ${txs} mt-0.5`}>{p.sub}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* ── Reassurance line ── */}
+                            <p className={`mt-10 text-center text-[11.5px] ${txs} max-w-xl mx-auto`}>
+                                The installed app and the website both connect to the same live database.
+                                Log in from anywhere — your athletes, sessions, and data are always in sync.
+                            </p>
+                        </>
+                    )}
                 </div>
             </section>
 

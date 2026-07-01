@@ -485,10 +485,15 @@ export const DashboardPage = () => {
 
     const getTargetColor = (targetId) => targetColorMap.get(targetId) || TARGET_COLORS[0];
 
-    // Close popover on click outside
+    // Close popover on click outside — industry-standard dismissal.
+    // Also closes on ESC key (standard accessibility pattern).
+    // Note: mousedown fires before click, so any outbound click starts a close
+    // before the target's own click handler runs. Popover contents use
+    // e.stopPropagation() on their own click handlers so intra-popover clicks
+    // don't trigger the outside-click closer.
     React.useEffect(() => {
         if (!activePopover && !activeSessionPopover && !overflowDay) return;
-        const handler = (e) => {
+        const handleMouse = (e) => {
             if (activePopover && popoverRef.current && !popoverRef.current.contains(e.target)) {
                 setActivePopover(null);
                 setEditingEvent(null);
@@ -500,8 +505,18 @@ export const DashboardPage = () => {
                 setOverflowDay(null);
             }
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        const handleKey = (e) => {
+            if (e.key !== 'Escape') return;
+            if (activePopover) { setActivePopover(null); setEditingEvent(null); }
+            if (activeSessionPopover) setActiveSessionPopover(null);
+            if (overflowDay) setOverflowDay(null);
+        };
+        document.addEventListener('mousedown', handleMouse);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleMouse);
+            document.removeEventListener('keydown', handleKey);
+        };
     }, [activePopover, activeSessionPopover, overflowDay]);
 
     const renderMorningReport = () => {
@@ -1422,14 +1437,25 @@ export const DashboardPage = () => {
                                                     ...daySessions.map(s => ({ type: 'session' as const, time: s.time || '99:99', item: s })),
                                                     ...dayEvents.map(e => ({ type: 'event' as const, time: e.all_day ? '00:00' : (e.start_time || '99:99'), item: e })),
                                                 ].sort((a, b) => a.time.localeCompare(b.time));
+                                                // Any popover open inside this cell? Same lift-the-host trick as
+                                                // month view so the popover doesn't get clipped by neighbouring days.
+                                                const hasActivePopover = (
+                                                    (activePopover?.id && activePopover.id.endsWith('_' + wd.dateStr)) ||
+                                                    activeSessionPopover?.session?.date === wd.dateStr
+                                                );
                                                 return (
                                                     <div
                                                         key={wd.dateStr}
-                                                        onClick={() => { setAddEventPresetDate(wd.dateStr); setIsAddEventModalOpen(true); }}
+                                                        onClick={() => {
+                                                            // If any popover is open, this click means "close it" —
+                                                            // don't also fire the add-event modal. Google Calendar UX.
+                                                            if (activePopover || activeSessionPopover || overflowDay) return;
+                                                            setAddEventPresetDate(wd.dateStr); setIsAddEventModalOpen(true);
+                                                        }}
                                                         onDragOver={(e) => handleDragOver(e, wd.dateStr)}
                                                         onDragLeave={handleDragLeave}
                                                         onDrop={(e) => handleDrop(e, wd.dateStr)}
-                                                        className={`min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 ${
+                                                        className={`relative min-h-[140px] rounded-lg border p-2 flex flex-col gap-1.5 cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 ${hasActivePopover ? 'z-[60]' : ''} ${
                                                             dragOverDate === wd.dateStr
                                                                 ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300'
                                                                 : isToday
@@ -1541,19 +1567,33 @@ export const DashboardPage = () => {
                                         const totalRows = Math.ceil(dashboardCalendarDays.length / 7);
                                         const isBottomRows = calendarRow >= totalRows - 2;
                                         const isDragOver = dateObj && dragOverDate === dateObj.dateStr;
+                                        // Any popover open inside this cell? Lift the whole cell's stacking
+                                        // context above sibling cells so the absolute popover isn't clipped
+                                        // by later-in-DOM day cells (whose hover transforms otherwise steal
+                                        // the paint order).
+                                        const hasActivePopover = !!dateObj && (
+                                            overflowDay === dateObj.dateStr ||
+                                            (activePopover?.id && activePopover.id.endsWith('_' + dateObj.dateStr)) ||
+                                            activeSessionPopover?.session?.date === dateObj.dateStr
+                                        );
                                         return (
                                             <div key={idx}
                                                 onDragOver={dateObj ? (e) => handleDragOver(e, dateObj.dateStr) : undefined}
                                                 onDragLeave={dateObj ? handleDragLeave : undefined}
                                                 onDrop={dateObj ? (e) => handleDrop(e, dateObj.dateStr) : undefined}
-                                                className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-150 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${dateObj
+                                                className={`relative min-h-[72px] sm:min-h-[96px] rounded-lg border transition-all duration-150 ease-out group p-1.5 sm:p-2.5 flex flex-col justify-between ${hasActivePopover ? 'z-[60]' : ''} ${dateObj
                                                     ? 'hover:shadow-lg hover:-translate-y-0.5 cursor-pointer'
                                                     : 'bg-slate-50/30 dark:bg-[#0D1829]/40 border-transparent'} ${isDragOver
                                                         ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-400 ring-2 ring-indigo-300 shadow-lg scale-[1.02]'
                                                         : isToday
                                                         ? 'bg-indigo-50 dark:bg-indigo-600/20 border-indigo-300 dark:border-indigo-500/50 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800/50 hover:border-indigo-400'
                                                         : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#243A58] hover:border-indigo-300 dark:hover:border-indigo-500/50'}`}
-                                                onClick={() => { if (dateObj) { setAddEventPresetDate(dateObj.dateStr); setIsAddEventModalOpen(true); } }}>
+                                                onClick={() => {
+                                                    // If any popover is open, this click means "close it" —
+                                                    // don't also fire the add-event modal. Google Calendar UX.
+                                                    if (activePopover || activeSessionPopover || overflowDay) return;
+                                                    if (dateObj) { setAddEventPresetDate(dateObj.dateStr); setIsAddEventModalOpen(true); }
+                                                }}>
                                                 {dateObj && (
                                                     <>
                                                         {/* Date number — circled on today (Google Calendar pattern, no overflow possible) */}
