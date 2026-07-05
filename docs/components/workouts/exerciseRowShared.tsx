@@ -4,6 +4,7 @@
 // intensity pill UX, and display-options toggles. CustomSelect is the platform dropdown.
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronUpIcon, ChevronDownIcon } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 
@@ -37,8 +38,24 @@ export const REPS_STEPPER: StepperConfig  = { step: 1, min: 1, max: 100, decimal
 // export adds the "s" suffix at render time. Using REST_STEPPER's formatter
 // would double-up the suffix — so callers with raw-seconds storage use this
 // simpler variant that never appends a unit.
+//
+// Parser also accepts minute-format input ("2min", "2.5min") so the popover
+// preset picker can offer minute shortcuts that normalise to raw seconds on
+// select — keeping the packet's HTML export clean while still giving coaches
+// the same "5min" shortcut as the Program builder's rest popover.
 export const SIMPLE_REST_STEPPER: StepperConfig = {
     step: 15, min: 0, max: 900, decimals: 0, defaultStart: 60,
+    parseValue: (s) => {
+        if (s == null) return null;
+        const trimmed = String(s).trim().toLowerCase();
+        if (!trimmed) return null;
+        const minMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*min$/);
+        if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
+        const secMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*s?$/);
+        if (secMatch) return Math.round(parseFloat(secMatch[1]));
+        return null;
+    },
+    // No custom formatValue — falls back to default (raw number, no suffix).
 };
 
 // Rest is time-formatted. Store as seconds internally but respect existing
@@ -179,16 +196,23 @@ const StepperArrows: React.FC<{
  * stepper arrows. Used by the legacy Packet builder where the row layout is a
  * grid of vanilla `<input>` fields (not PresetSelect / IntensityPillEditor).
  * Purely additive — the input itself still accepts arbitrary text.
+ *
+ * With `presets` also supplied, renders a small chevron popover between input
+ * and arrows for special-case picks (AMRAP/Max on reps, minute shortcuts on
+ * rest). Popover selection is auto-normalised through stepper.parseValue +
+ * formatValue so callers with raw-seconds storage (packet's rest) receive
+ * "120" when the user picks "2min", keeping downstream printers/CSV clean.
  */
 export const SteppableTextInput: React.FC<{
     value: string;
     onChange: (v: string) => void;
     stepper?: StepperConfig;
+    presets?: string[];
     placeholder?: string;
     className?: string;
     /** Inner input classes — packet builder passes its own styling here. */
     inputClassName?: string;
-}> = ({ value, onChange, stepper, placeholder = '—', className = '', inputClassName = '' }) => {
+}> = ({ value, onChange, stepper, presets, placeholder = '—', className = '', inputClassName = '' }) => {
     if (!stepper) {
         return (
             <input
@@ -200,6 +224,28 @@ export const SteppableTextInput: React.FC<{
             />
         );
     }
+    // Preset select handler — if the stepper has a parser+formatter, run the
+    // selected preset through both to normalise to the storage format that the
+    // rest of the row / CSV / print export expects. Falls back to raw select
+    // when the stepper uses the default (numeric) parser.
+    const handlePresetSelect = (p: string) => {
+        if (stepper.parseValue && stepper.formatValue) {
+            const parsed = stepper.parseValue(p);
+            if (parsed !== null) {
+                onChange(stepper.formatValue(parsed));
+                return;
+            }
+        } else if (stepper.parseValue) {
+            const parsed = stepper.parseValue(p);
+            if (parsed !== null) {
+                const d = stepper.decimals != null ? stepper.decimals : 0;
+                const fixed = parsed.toFixed(d);
+                onChange(d > 0 ? fixed.replace(/\.?0+$/, '') : fixed);
+                return;
+            }
+        }
+        onChange(p);
+    };
     return (
         <div className={`flex items-stretch bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg overflow-hidden focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all ${className}`}>
             <input
@@ -209,6 +255,9 @@ export const SteppableTextInput: React.FC<{
                 placeholder={placeholder}
                 className={`flex-1 min-w-0 bg-transparent px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none border-0 placeholder:text-slate-300 dark:placeholder:text-[#475569] ${inputClassName}`}
             />
+            {presets && presets.length > 0 && (
+                <PresetPopover presets={presets} currentValue={value} onSelect={handlePresetSelect} />
+            )}
             <StepperArrows
                 onIncrement={() => onChange(stepValue(value, stepper, 1))}
                 onDecrement={() => onChange(stepValue(value, stepper, -1))}
@@ -279,36 +328,63 @@ const PresetPopover: React.FC<{
     onSelect: (v: string) => void;
 }> = ({ presets, currentValue, onSelect }) => {
     const [open, setOpen] = useState(false);
-    const ref = React.useRef<HTMLDivElement>(null);
+    // Portal-rendered dropdown position — recalculated when opened. Portalling
+    // dodges the `overflow-hidden` on both the row wrapper (Program builder) and
+    // the SteppableTextInput wrapper (Packet builder), which would otherwise clip
+    // the dropdown to nothing.
+    const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+    const btnRef = React.useRef<HTMLButtonElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    const openMenu = () => {
+        if (!btnRef.current) return;
+        const rect = btnRef.current.getBoundingClientRect();
+        setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+        setOpen(true);
+    };
 
     React.useEffect(() => {
         if (!open) return;
         const onMouse = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            const target = e.target as Node;
+            if (btnRef.current?.contains(target)) return; // toggling button
+            if (dropdownRef.current?.contains(target)) return; // clicking a preset
+            setOpen(false);
         };
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+        // Close on scroll/resize since our pos is fixed at open-time.
+        const onScrollOrResize = () => setOpen(false);
         document.addEventListener('mousedown', onMouse);
         document.addEventListener('keydown', onKey);
+        window.addEventListener('scroll', onScrollOrResize, true);
+        window.addEventListener('resize', onScrollOrResize);
         return () => {
             document.removeEventListener('mousedown', onMouse);
             document.removeEventListener('keydown', onKey);
+            window.removeEventListener('scroll', onScrollOrResize, true);
+            window.removeEventListener('resize', onScrollOrResize);
         };
     }, [open]);
 
     return (
-        <div ref={ref} className="shrink-0 relative flex border-l border-slate-200 dark:border-[#243A58]">
+        <div className="shrink-0 relative flex border-l border-slate-200 dark:border-[#243A58]">
             <button
+                ref={btnRef}
                 type="button"
                 tabIndex={-1}
-                onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+                onClick={(e) => { e.stopPropagation(); open ? setOpen(false) : openMenu(); }}
                 onMouseDown={(e) => e.preventDefault()}
                 aria-label="Show presets"
                 className="px-1.5 flex items-center justify-center text-slate-400 hover:text-indigo-500 dark:text-[#94A3B8] dark:hover:text-indigo-300 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
             >
                 <ChevronDownIcon className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.5} />
             </button>
-            {open && (
-                <div className="absolute top-full right-0 mt-1 z-50 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg shadow-xl overflow-hidden min-w-[100px] max-h-[240px] overflow-y-auto">
+            {open && pos && typeof document !== 'undefined' && createPortal(
+                <div
+                    ref={dropdownRef}
+                    style={{ top: pos.top, right: pos.right }}
+                    className="fixed z-[1000] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg shadow-xl overflow-hidden min-w-[100px] max-h-[240px] overflow-y-auto"
+                >
                     {presets.map(p => (
                         <button
                             key={p}
@@ -323,7 +399,8 @@ const PresetPopover: React.FC<{
                             {p}
                         </button>
                     ))}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

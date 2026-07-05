@@ -22,6 +22,7 @@ import { CustomSelect } from './ui/CustomSelect';
 import {
     SteppableTextInput,
     SETS_STEPPER, REPS_STEPPER, SIMPLE_REST_STEPPER, UNIT_STEPPER_CONFIG,
+    SETS_PRESETS_SPECIAL, REPS_PRESETS_SPECIAL, REST_PRESETS_SPECIAL,
 } from './workouts/exerciseRowShared';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -512,14 +513,17 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                         ) : <div className="mb-3" />;
                                                     })()}
                                                     {/* Fields — steppers on the numeric ones (sets/reps/weight/rest/rpe);
-                                                        notes stays a plain input. Stepper configs match the Program builder
-                                                        (kg → 2.5, RPE → 1, rest → 15s) so the two builders feel identical. */}
+                                                        notes stays a plain input. Presets match the Program builder so both
+                                                        feel identical: no popover for Sets (all values numeric), AMRAP/Max
+                                                        popover for Reps, minute-shortcut popover for Rest. SIMPLE_REST_STEPPER
+                                                        parses "2min" back to raw seconds on select so the packet's HTML
+                                                        export stays clean. */}
                                                     <div className="grid grid-cols-6 gap-2">
                                                         {[
-                                                            { key: 'sets',   label: 'Sets',        placeholder: '3',  stepper: SETS_STEPPER },
-                                                            { key: 'reps',   label: 'Reps',        placeholder: '10', stepper: REPS_STEPPER },
+                                                            { key: 'sets',   label: 'Sets',        placeholder: '3',  stepper: SETS_STEPPER, presets: SETS_PRESETS_SPECIAL },
+                                                            { key: 'reps',   label: 'Reps',        placeholder: '10', stepper: REPS_STEPPER, presets: REPS_PRESETS_SPECIAL },
                                                             { key: 'weight', label: 'Weight (kg)', placeholder: '80', stepper: UNIT_STEPPER_CONFIG.kg },
-                                                            { key: 'rest',   label: 'Rest (s)',    placeholder: '60', stepper: SIMPLE_REST_STEPPER },
+                                                            { key: 'rest',   label: 'Rest (s)',    placeholder: '60', stepper: SIMPLE_REST_STEPPER, presets: REST_PRESETS_SPECIAL },
                                                             { key: 'rpe',    label: 'RPE',         placeholder: '7',  stepper: UNIT_STEPPER_CONFIG.RPE },
                                                             { key: 'notes',  label: 'Notes',       placeholder: '—' },
                                                         ].map(f => (
@@ -530,6 +534,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                                     onChange={v => updateRow(activeSection, row.tempId, f.key, v)}
                                                                     placeholder={f.placeholder}
                                                                     stepper={f.stepper}
+                                                                    presets={f.presets}
                                                                     className="w-full"
                                                                     inputClassName={f.stepper ? '' : 'w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300'}
                                                                 />
