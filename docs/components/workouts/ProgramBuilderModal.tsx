@@ -29,6 +29,8 @@ import { useCollections } from '../../hooks/useCollections';
 import {
   PresetSelect, IntensityPillEditor, DisplayOptionsModal, AddSectionPopover,
   SETS_PRESETS, REPS_PRESETS, REST_PRESETS, TEMPO_PRESETS,
+  SETS_PRESETS_SPECIAL, REPS_PRESETS_SPECIAL, REST_PRESETS_SPECIAL,
+  SETS_STEPPER, REPS_STEPPER, REST_STEPPER,
   DEFAULT_DISPLAY_FIELDS, DEFAULT_SECTION_META, DEFAULT_SECTION_ORDER, isDefaultSection,
   type IntensityPill,
 } from './exerciseRowShared';
@@ -296,9 +298,9 @@ const ExRow = ({
       {/* Sets / Reps / Rest / Tempo — prefix labels keep this row to a single line */}
       {!collapsed && (showSets || showReps || showRest || showTempo) && (
         <div className="grid grid-cols-4 gap-1.5 mb-1.5">
-          {showSets && <PresetSelect prefixLabel="Sets" size="xs" value={row.sets} onChange={v => upd({ sets: v })} presets={SETS_PRESETS} placeholder="—" />}
-          {showReps && <PresetSelect prefixLabel="Reps" size="xs" value={row.reps} onChange={v => upd({ reps: v })} presets={REPS_PRESETS} placeholder="—" />}
-          {showRest && <PresetSelect prefixLabel="Rest" size="xs" value={row.rest} onChange={v => upd({ rest: v })} presets={REST_PRESETS} placeholder="—" />}
+          {showSets && <PresetSelect prefixLabel="Sets" size="xs" value={row.sets} onChange={v => upd({ sets: v })} presets={SETS_PRESETS_SPECIAL} placeholder="—" stepper={SETS_STEPPER} />}
+          {showReps && <PresetSelect prefixLabel="Reps" size="xs" value={row.reps} onChange={v => upd({ reps: v })} presets={REPS_PRESETS_SPECIAL} placeholder="—" stepper={REPS_STEPPER} />}
+          {showRest && <PresetSelect prefixLabel="Rest" size="xs" value={row.rest} onChange={v => upd({ rest: v })} presets={REST_PRESETS_SPECIAL} placeholder="—" stepper={REST_STEPPER} />}
           {showTempo && <PresetSelect prefixLabel="Tempo" size="xs" value={row.tempo} onChange={v => upd({ tempo: v })} presets={TEMPO_PRESETS} placeholder="—" />}
         </div>
       )}

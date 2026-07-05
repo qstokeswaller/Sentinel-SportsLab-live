@@ -19,6 +19,10 @@ import {
     Clock as ClockIcon,
 } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
+import {
+    SteppableTextInput,
+    SETS_STEPPER, REPS_STEPPER, SIMPLE_REST_STEPPER, UNIT_STEPPER_CONFIG,
+} from './workouts/exerciseRowShared';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -507,24 +511,27 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                                             <p className="text-[10px] text-slate-400 leading-snug mb-3 ml-8">{desc}</p>
                                                         ) : <div className="mb-3" />;
                                                     })()}
-                                                    {/* Fields */}
+                                                    {/* Fields — steppers on the numeric ones (sets/reps/weight/rest/rpe);
+                                                        notes stays a plain input. Stepper configs match the Program builder
+                                                        (kg → 2.5, RPE → 1, rest → 15s) so the two builders feel identical. */}
                                                     <div className="grid grid-cols-6 gap-2">
                                                         {[
-                                                            { key: 'sets', label: 'Sets', placeholder: '3' },
-                                                            { key: 'reps', label: 'Reps', placeholder: '10' },
-                                                            { key: 'weight', label: 'Weight (kg)', placeholder: '80' },
-                                                            { key: 'rest', label: 'Rest (s)', placeholder: '60' },
-                                                            { key: 'rpe', label: 'RPE', placeholder: '7' },
-                                                            { key: 'notes', label: 'Notes', placeholder: '—' },
+                                                            { key: 'sets',   label: 'Sets',        placeholder: '3',  stepper: SETS_STEPPER },
+                                                            { key: 'reps',   label: 'Reps',        placeholder: '10', stepper: REPS_STEPPER },
+                                                            { key: 'weight', label: 'Weight (kg)', placeholder: '80', stepper: UNIT_STEPPER_CONFIG.kg },
+                                                            { key: 'rest',   label: 'Rest (s)',    placeholder: '60', stepper: SIMPLE_REST_STEPPER },
+                                                            { key: 'rpe',    label: 'RPE',         placeholder: '7',  stepper: UNIT_STEPPER_CONFIG.RPE },
+                                                            { key: 'notes',  label: 'Notes',       placeholder: '—' },
                                                         ].map(f => (
                                                             <div key={f.key}>
                                                                 <label className="text-[8px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">{f.label}</label>
-                                                                <input
-                                                                    type="text"
+                                                                <SteppableTextInput
                                                                     value={row[f.key]}
-                                                                    onChange={e => updateRow(activeSection, row.tempId, f.key, e.target.value)}
+                                                                    onChange={v => updateRow(activeSection, row.tempId, f.key, v)}
                                                                     placeholder={f.placeholder}
-                                                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                                                                    stepper={f.stepper}
+                                                                    className="w-full"
+                                                                    inputClassName={f.stepper ? '' : 'w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-indigo-400 transition-all placeholder:text-slate-300'}
                                                                 />
                                                             </div>
                                                         ))}
