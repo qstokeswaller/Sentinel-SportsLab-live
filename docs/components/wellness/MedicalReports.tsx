@@ -1,12 +1,17 @@
 // @ts-nocheck
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
     UserIcon, StethoscopeIcon, UploadCloudIcon, FileTextIcon, ActivityIcon,
     SearchIcon, ChevronRightIcon, ChevronDownIcon, FileIcon, XIcon, Trash2Icon, DownloadIcon,
-    PencilIcon
+    PencilIcon, Loader2Icon, AlertCircleIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import {
+    uploadMedicalDocument,
+    deleteMedicalDocument,
+    getMedicalDocumentSignedUrl,
+} from '../../utils/pdfUpload';
 
 const MedicalReports: React.FC = () => {
     const {
@@ -20,7 +25,11 @@ const MedicalReports: React.FC = () => {
     } = useAppState();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [fileData, setFileData] = useState<{ name: string; size: number; dataUrl: string } | null>(null);
+    // We keep a REAL File in state now (was a base64 dataUrl). The upload
+    // happens on save so mid-form cancels don't consume Storage quota.
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const [editingReportId, setEditingReportId] = useState<string | null>(null);
     const [editingOptOutId, setEditingOptOutId] = useState<string | null>(null);
 
@@ -30,18 +39,22 @@ const MedicalReports: React.FC = () => {
         setIsMedicalModalOpen(false);
         setEditingReportId(null);
         setMedicalForm({ targetId: '', targetName: '', date: new Date().toISOString().split('T')[0], title: '', description: '', fileName: '', fileSize: '' });
-        setFileData(null);
+        setPendingFile(null);
+        setUploadError(null);
+        setUploading(false);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            setFileData({ name: file.name, size: file.size, dataUrl: reader.result as string });
-            setMedicalForm(prev => ({ ...prev, fileName: file.name, fileSize: `${(file.size / 1024).toFixed(1)} KB` }));
-        };
-        reader.readAsDataURL(file);
+        // Client-side pre-check so oversized files don't waste the round trip.
+        if (file.size > 52_428_800) {
+            setUploadError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum size is 50 MB.`);
+            return;
+        }
+        setUploadError(null);
+        setPendingFile(file);
+        setMedicalForm(prev => ({ ...prev, fileName: file.name, fileSize: `${(file.size / 1024).toFixed(1)} KB` }));
     };
 
     const handleTargetChange = (value: string) => {
@@ -55,11 +68,33 @@ const MedicalReports: React.FC = () => {
         }
     };
 
-    const handleSaveReport = () => {
+    const handleSaveReport = async () => {
         if (!medicalForm.title || !medicalForm.targetId) return;
 
+        // Upload the file first (if one is queued). Only after Storage confirms
+        // the write do we mutate the medical_reports array — otherwise a network
+        // failure would leave a record pointing at nothing.
+        let uploadResult: Awaited<ReturnType<typeof uploadMedicalDocument>> | null = null;
+        if (pendingFile) {
+            setUploading(true);
+            setUploadError(null);
+            try {
+                uploadResult = await uploadMedicalDocument(pendingFile);
+            } catch (err: any) {
+                setUploadError(err?.message || 'Upload failed. Please try again.');
+                setUploading(false);
+                return;
+            }
+            setUploading(false);
+        }
+
         if (editingReportId) {
-            // Update existing record
+            // Editing an existing record. If a NEW file was uploaded, tidy up
+            // the old file from Storage so we don't leak orphans.
+            const oldRecord = medicalReports.find(r => r.id === editingReportId);
+            if (uploadResult && oldRecord?.fileUrl) {
+                deleteMedicalDocument(oldRecord.fileUrl);  // fire-and-forget
+            }
             setMedicalReports(medicalReports.map(r => r.id === editingReportId ? {
                 ...r,
                 targetId: medicalForm.targetId,
@@ -67,12 +102,13 @@ const MedicalReports: React.FC = () => {
                 date: medicalForm.date,
                 title: medicalForm.title,
                 description: medicalForm.description,
-                fileName: medicalForm.fileName || r.fileName,
-                fileSize: medicalForm.fileSize || r.fileSize,
-                fileData: fileData?.dataUrl || r.fileData,
+                fileName: uploadResult?.filename || medicalForm.fileName || r.fileName,
+                fileSize: uploadResult ? `${(uploadResult.size / 1024).toFixed(1)} KB` : (medicalForm.fileSize || r.fileSize),
+                fileUrl: uploadResult?.path || r.fileUrl,
+                mimeType: uploadResult?.mimeType || r.mimeType,
             } : r));
         } else {
-            // Create new record
+            // New record
             const newReport = {
                 id: `med_${Date.now()}`,
                 type: medicalModalMode === 'upload' ? 'upload' : 'log',
@@ -81,9 +117,10 @@ const MedicalReports: React.FC = () => {
                 date: medicalForm.date,
                 title: medicalForm.title,
                 description: medicalForm.description,
-                fileName: medicalForm.fileName || '',
-                fileSize: medicalForm.fileSize || '',
-                fileData: fileData?.dataUrl || '',
+                fileName: uploadResult?.filename || medicalForm.fileName || '',
+                fileSize: uploadResult ? `${(uploadResult.size / 1024).toFixed(1)} KB` : (medicalForm.fileSize || ''),
+                fileUrl: uploadResult?.path || '',       // Storage path, NOT a URL. Signed URL generated on view.
+                mimeType: uploadResult?.mimeType || '',
                 createdAt: new Date().toISOString(),
             };
             setMedicalReports([newReport, ...medicalReports]);
@@ -103,15 +140,23 @@ const MedicalReports: React.FC = () => {
             fileName: record.fileName || '',
             fileSize: record.fileSize || '',
         });
-        if (record.fileData) {
-            setFileData({ name: record.fileName, size: 0, dataUrl: record.fileData });
-        }
+        // Don't repopulate pendingFile on edit — the existing file lives in
+        // Storage. Only set pendingFile if the coach picks a replacement.
+        setPendingFile(null);
+        setUploadError(null);
         setInspectingMedicalRecord(null);
         setIsMedicalModalOpen(true);
     };
 
     const handleDeleteReport = (id: string) => {
         if (!confirm('Delete this record?')) return;
+        const record = medicalReports.find(r => r.id === id);
+        // Best-effort cleanup of the Storage file so it doesn't linger and count
+        // against the bucket quota. Legacy records with fileData (base64) or
+        // records without any file are silently skipped.
+        if (record?.fileUrl) {
+            deleteMedicalDocument(record.fileUrl);  // fire-and-forget
+        }
         setMedicalReports(medicalReports.filter(r => r.id !== id));
         setInspectingMedicalRecord(null);
     };
@@ -243,15 +288,25 @@ const MedicalReports: React.FC = () => {
                         {isUpload && (
                             <div>
                                 <label className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Document</label>
-                                <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.csv" onChange={handleFileChange} />
-                                {fileData ? (
+                                <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" onChange={handleFileChange} />
+                                {pendingFile || (isEditing && medicalForm.fileName) ? (
                                     <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-xl px-4 py-3">
                                         <FileIcon size={18} className="text-indigo-500 dark:text-indigo-300 shrink-0" />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{fileData.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{fileData.size ? `${(fileData.size / 1024).toFixed(1)} KB` : medicalForm.fileSize}</p>
+                                            <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate">
+                                                {pendingFile?.name || medicalForm.fileName}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                                {pendingFile
+                                                    ? `${(pendingFile.size / 1024).toFixed(1)} KB · Will upload on save`
+                                                    : `${medicalForm.fileSize} · Keep existing file`}
+                                            </p>
                                         </div>
-                                        <button onClick={() => { setFileData(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-lg transition-colors">
+                                        <button
+                                            onClick={() => { setPendingFile(null); setUploadError(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                            className="p-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-lg transition-colors"
+                                            title={pendingFile ? 'Clear pending upload' : 'Remove file from record'}
+                                        >
                                             <XIcon size={14} className="text-indigo-400 dark:text-indigo-300" />
                                         </button>
                                     </div>
@@ -262,8 +317,14 @@ const MedicalReports: React.FC = () => {
                                     >
                                         <UploadCloudIcon size={28} className="text-slate-300 dark:text-[#475569] group-hover:text-indigo-400 transition-colors" />
                                         <span className="text-xs text-slate-500 dark:text-[#CBD5E1] group-hover:text-indigo-500">Click to browse files</span>
-                                        <span className="text-[10px] text-slate-400 dark:text-[#94A3B8]">PDF, DOC, PNG, JPG, TXT, CSV</span>
+                                        <span className="text-[10px] text-slate-400 dark:text-[#94A3B8]">PDF or image (PNG, JPG) · Max 50 MB</span>
                                     </button>
+                                )}
+                                {uploadError && (
+                                    <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30">
+                                        <AlertCircleIcon size={14} className="text-rose-500 shrink-0 mt-0.5" />
+                                        <p className="text-[11px] text-rose-700 dark:text-rose-300">{uploadError}</p>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -282,13 +343,20 @@ const MedicalReports: React.FC = () => {
 
                     {/* Footer */}
                     <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] flex items-center justify-end gap-3">
-                        <button onClick={resetModal} className="px-4 py-2.5 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] transition-colors">Cancel</button>
+                        <button
+                            onClick={resetModal}
+                            disabled={uploading}
+                            className="px-4 py-2.5 text-sm font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Cancel
+                        </button>
                         <button
                             onClick={handleSaveReport}
-                            disabled={!medicalForm.title || !medicalForm.targetId}
-                            className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm ${(!medicalForm.title || !medicalForm.targetId) ? 'bg-slate-300 dark:bg-[#243A58] dark:text-[#475569] cursor-not-allowed' : isUpload ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
+                            disabled={!medicalForm.title || !medicalForm.targetId || uploading}
+                            className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-sm flex items-center gap-2 ${(!medicalForm.title || !medicalForm.targetId || uploading) ? 'bg-slate-300 dark:bg-[#243A58] dark:text-[#475569] cursor-not-allowed' : isUpload ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
                         >
-                            {isEditing ? 'Save Changes' : isUpload ? 'Upload Document' : 'Save Log'}
+                            {uploading && <Loader2Icon size={14} className="animate-spin" />}
+                            {uploading ? 'Uploading…' : isEditing ? 'Save Changes' : isUpload ? 'Upload Document' : 'Save Log'}
                         </button>
                     </div>
                 </div>
@@ -297,16 +365,52 @@ const MedicalReports: React.FC = () => {
     };
 
     // --- INSPECT RECORD DETAIL VIEW ---
+    // Signed URL for the current record's file. Fetched on open + refreshed if
+    // the record changes. Signed URLs have a 1h TTL — plenty for a modal.
+    const [signedUrl, setSignedUrl] = useState<string | null>(null);
+    const [signedUrlLoading, setSignedUrlLoading] = useState(false);
+    const [signedUrlError, setSignedUrlError] = useState<string | null>(null);
+    useEffect(() => {
+        // Reset immediately on record change
+        setSignedUrl(null);
+        setSignedUrlError(null);
+        const record = inspectingMedicalRecord;
+        if (!record?.fileUrl) return;
+        // Legacy records stored a full URL under fileData (base64) or in
+        // fileUrl (public URL from a previous experiment). If fileUrl already
+        // looks like http(s), use it directly. Otherwise treat it as a path
+        // and fetch a signed URL.
+        if (/^https?:\/\//i.test(record.fileUrl)) {
+            setSignedUrl(record.fileUrl);
+            return;
+        }
+        let cancelled = false;
+        setSignedUrlLoading(true);
+        getMedicalDocumentSignedUrl(record.fileUrl)
+            .then(url => { if (!cancelled) setSignedUrl(url); })
+            .catch(err => { if (!cancelled) setSignedUrlError(err?.message || 'Could not load the file.'); })
+            .finally(() => { if (!cancelled) setSignedUrlLoading(false); });
+        return () => { cancelled = true; };
+    }, [inspectingMedicalRecord?.id, inspectingMedicalRecord?.fileUrl]);
+
     const renderInspectModal = () => {
         if (!inspectingMedicalRecord) return null;
         const record = inspectingMedicalRecord;
         const isUpload = record.type === 'upload';
+        // The URL we hand to the iframe/download link. New records = signedUrl.
+        // Legacy base64 records = record.fileData (still works as data URL).
+        const viewableUrl = signedUrl || record.fileData || '';
+        const isPdf = (record.mimeType || '').includes('pdf')
+            || /\.pdf$/i.test(record.fileName || '')
+            || /\.pdf$/i.test(record.fileUrl || '');
+        const isImage = (record.mimeType || '').startsWith('image/')
+            || /\.(png|jpe?g|gif|webp)$/i.test(record.fileName || '');
 
         return (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setInspectingMedicalRecord(null)}>
-                <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-[#243A58] overflow-hidden" onClick={e => e.stopPropagation()}>
-                    {/* Header */}
-                    <div className="px-6 py-4 bg-slate-50 dark:bg-[#1A2D48] border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
+                <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                    {/* Header — fixed, doesn't scroll */}
+                    <div className="shrink-0 px-6 py-4 bg-slate-50 dark:bg-[#1A2D48] border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white ${isUpload ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
                                 {isUpload ? <FileIcon size={16} /> : <FileTextIcon size={16} />}
@@ -319,8 +423,10 @@ const MedicalReports: React.FC = () => {
                         <button onClick={() => setInspectingMedicalRecord(null)} className="p-2 hover:bg-white dark:hover:bg-[#243A58] rounded-lg transition-colors"><XIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" /></button>
                     </div>
 
-                    {/* Body */}
-                    <div className="p-6 space-y-5">
+                    {/* Body — flex-1 + overflow-y-auto so the content scrolls when tall
+                        (previously the whole modal was clipped by `overflow-hidden`
+                        and long previews got cut off top and bottom). */}
+                    <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#243A58] flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1]">
                                 {record.targetName?.charAt(0) || 'A'}
@@ -347,12 +453,66 @@ const MedicalReports: React.FC = () => {
                                         <p className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate">{record.fileName}</p>
                                         {record.fileSize && <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{record.fileSize}</p>}
                                     </div>
-                                    {record.fileData && (
-                                        <a href={record.fileData} download={record.fileName} className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-lg transition-colors">
-                                            <DownloadIcon size={14} className="text-indigo-500 dark:text-indigo-300" />
-                                        </a>
+                                    {viewableUrl && (
+                                        <>
+                                            <a
+                                                href={viewableUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-lg transition-colors"
+                                                title="Open in new tab"
+                                            >
+                                                <UploadCloudIcon size={14} className="text-indigo-500 dark:text-indigo-300 rotate-180" />
+                                            </a>
+                                            <a
+                                                href={viewableUrl}
+                                                download={record.fileName}
+                                                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 rounded-lg transition-colors"
+                                                title="Download"
+                                            >
+                                                <DownloadIcon size={14} className="text-indigo-500 dark:text-indigo-300" />
+                                            </a>
+                                        </>
                                     )}
                                 </div>
+                                {/* Inline preview area */}
+                                {signedUrlLoading && (
+                                    <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500 dark:text-[#CBD5E1]">
+                                        <Loader2Icon size={12} className="animate-spin" /> Loading preview…
+                                    </div>
+                                )}
+                                {signedUrlError && (
+                                    <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30">
+                                        <AlertCircleIcon size={14} className="text-rose-500 shrink-0 mt-0.5" />
+                                        <p className="text-[11px] text-rose-700 dark:text-rose-300">{signedUrlError}</p>
+                                    </div>
+                                )}
+                                {viewableUrl && !signedUrlLoading && !signedUrlError && isPdf && (
+                                    // Full-height preview — takes ~65% of viewport height so the
+                                    // reader isn't fighting a tiny window. Modal itself is
+                                    // scrollable so this can be as tall as it needs.
+                                    <iframe
+                                        src={viewableUrl}
+                                        title={record.fileName}
+                                        className="mt-3 w-full h-[65vh] min-h-[500px] rounded-lg border border-slate-200 dark:border-[#243A58] bg-white"
+                                    />
+                                )}
+                                {viewableUrl && !signedUrlLoading && !signedUrlError && isImage && (
+                                    <img
+                                        src={viewableUrl}
+                                        alt={record.fileName}
+                                        className="mt-3 w-full max-h-[65vh] object-contain rounded-lg border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]"
+                                    />
+                                )}
+                                {/* File-type hint for formats browsers can't preview inline (doc/docx). */}
+                                {viewableUrl && !signedUrlLoading && !signedUrlError && !isPdf && !isImage && (
+                                    <div className="mt-3 flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58]">
+                                        <FileIcon size={16} className="text-slate-400 shrink-0" />
+                                        <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1]">
+                                            Inline preview isn't available for this file type. Use the download or open-in-new-tab buttons above to view it.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -361,8 +521,8 @@ const MedicalReports: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] flex items-center justify-between">
+                    {/* Footer — fixed at bottom, doesn't scroll with body */}
+                    <div className="shrink-0 px-6 py-4 border-t border-slate-100 dark:border-[#243A58] flex items-center justify-between bg-white dark:bg-[#132338]">
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleDeleteReport(record.id)}

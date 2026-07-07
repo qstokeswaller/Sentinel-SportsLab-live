@@ -175,8 +175,7 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
                 <iframe
                     src={block.pdfUrl}
                     title={block.pdfTitle || block.pdfFileName}
-                    className="w-full border-t border-rose-200 dark:border-rose-900/50"
-                    style={{ height: '500px' }}
+                    className="w-full border-t border-rose-200 dark:border-rose-900/50 h-[75vh] min-h-[600px] bg-white"
                 />
             </div>
         );

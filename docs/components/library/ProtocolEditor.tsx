@@ -502,8 +502,7 @@ const PdfBlockCard: React.FC<{
                         <iframe
                             src={block.pdfUrl}
                             title={block.pdfTitle || block.pdfFileName}
-                            className="w-full rounded-lg border border-slate-200"
-                            style={{ height: '400px' }}
+                            className="w-full rounded-lg border border-slate-200 h-[70vh] min-h-[550px] bg-white"
                         />
                     </div>
                 ) : (
