@@ -21,6 +21,7 @@ import { DatabaseService } from '../services/databaseService';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { computeComposite, computeAthleteBaseline, scoreToHex } from '../utils/wellnessScoring';
 import { AthleteAvatar } from '../components/roster/AthleteAvatar';
+import { AssigneePicker } from '../components/calendar/AssigneePicker';
 
 // ── Constants for Edit Event Modal ────────────────────────────────────
 const DEFAULT_EVENT_TYPES = [
@@ -32,6 +33,138 @@ const PRESET_COLORS = [
     '#6366f1', '#3b82f6', '#10b981', '#f59e0b',
     '#ec4899', '#8b5cf6', '#ef4444', '#64748b',
 ];
+
+// Collision-aware popover for calendar tiles. It positions itself relative to its
+// parent (which MUST be `position: relative`) and flips vertically / horizontally
+// so it never runs off the viewport. The dashboard must not scroll to reveal a
+// cut-off popover, and the rightmost day columns would otherwise push a left-
+// anchored popover off the right edge — this handles both by measuring before
+// paint (useLayoutEffect) and choosing up/down + left/right.
+const CalendarPopover = React.forwardRef(function CalendarPopover(
+    { children, className = '', width = 224 }: { children: React.ReactNode; className?: string; width?: number },
+    forwardedRef: React.Ref<HTMLDivElement>
+) {
+    const localRef = React.useRef<HTMLDivElement>(null);
+    const [style, setStyle] = React.useState<React.CSSProperties>({
+        position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 50, visibility: 'hidden',
+    });
+
+    const setRefs = (node: HTMLDivElement | null) => {
+        localRef.current = node;
+        if (typeof forwardedRef === 'function') forwardedRef(node);
+        else if (forwardedRef) (forwardedRef as any).current = node;
+    };
+
+    React.useLayoutEffect(() => {
+        const place = () => {
+            const el = localRef.current;
+            const anchor = el?.parentElement;
+            if (!el || !anchor) return;
+            const a = anchor.getBoundingClientRect();
+            const h = el.offsetHeight;
+            const w = el.offsetWidth || width;
+            const margin = 8;
+            const vh = window.innerHeight;
+            const vw = window.innerWidth;
+            const roomBelow = vh - a.bottom - margin;
+            const roomAbove = a.top - margin;
+            const openUp = roomBelow < h && roomAbove > roomBelow;
+            const overflowRight = a.left + w + margin > vw;
+            const next: React.CSSProperties = { position: 'absolute', zIndex: 50, visibility: 'visible' };
+            if (openUp) { next.bottom = '100%'; next.marginBottom = 4; }
+            else { next.top = '100%'; next.marginTop = 4; }
+            if (overflowRight) { next.right = 0; } else { next.left = 0; }
+            setStyle(next);
+        };
+        place();
+        window.addEventListener('resize', place);
+        return () => window.removeEventListener('resize', place);
+    }, []);
+
+    return (
+        <div ref={setRefs} style={style} className={className} onClick={(e) => e.stopPropagation()}>
+            {children}
+        </div>
+    );
+});
+
+// Event detail popover, extracted so it can render both anchored to a visible
+// event tile AND as a fallback for events that only live inside the "+N more"
+// overflow list (those have no on-page tile to anchor to). Wraps CalendarPopover
+// so it inherits the collision-aware positioning.
+const EventDetailPopover = React.forwardRef(function EventDetailPopover(
+    { event, resolveAssignees, onClose, onEdit, onDelete }:
+    { event: any; resolveAssignees: (e: any) => { name: string; isTeam: boolean }[]; onClose: () => void; onEdit: () => void; onDelete: () => void },
+    ref: React.Ref<HTMLDivElement>
+) {
+    const assignees = resolveAssignees(event);
+    return (
+        <CalendarPopover
+            ref={ref}
+            width={224}
+            className="w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150"
+        >
+            <div className="h-1 rounded-t-lg" style={{ backgroundColor: event.color }} />
+            <div className="p-3 space-y-2">
+                <div className="flex items-start justify-between">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{event.title}</h4>
+                    <button onClick={onClose} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                        <XIcon size={12} />
+                    </button>
+                </div>
+                <span
+                    className="inline-block px-2 py-0.5 rounded text-[9px] font-semibold"
+                    style={{ backgroundColor: `${event.color}20`, color: event.color }}
+                >
+                    {event.event_type}
+                </span>
+                <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1] space-y-1">
+                    <div>
+                        {event.all_day
+                            ? `All Day · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                            : `${event.start_time || ''}${event.end_time ? ' – ' + event.end_time : ''} · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                        }
+                    </div>
+                    {assignees.length > 0 && (
+                        <div className="flex flex-col gap-0.5 max-h-24 overflow-y-auto">
+                            {assignees.map((a, i) => (
+                                <div key={i} className="flex items-center gap-1 min-w-0">
+                                    {a.isTeam
+                                        ? <UsersIcon size={9} className="text-slate-400 dark:text-[#94A3B8] shrink-0" />
+                                        : <UserIcon size={9} className="text-slate-400 dark:text-[#94A3B8] shrink-0" />}
+                                    <span className="truncate">{a.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {event.location && (
+                        <div className="flex items-center gap-1 min-w-0">
+                            <MapPinIcon size={9} className="text-slate-400 shrink-0" />
+                            <span className="truncate">{event.location}</span>
+                        </div>
+                    )}
+                    {event.description && (
+                        <p className="text-slate-400 dark:text-[#94A3B8] leading-relaxed">{event.description}</p>
+                    )}
+                </div>
+                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
+                    <button
+                        onClick={onEdit}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
+                    >
+                        <PencilIcon size={10} /> Edit
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    >
+                        <Trash2Icon size={10} /> Delete
+                    </button>
+                </div>
+            </div>
+        </CalendarPopover>
+    );
+});
 
 type KpiInfoKey = 'flagged' | 'acwr' | 'sleep' | 'readiness';
 
@@ -487,6 +620,27 @@ export const DashboardPage = () => {
 
     const getTargetColor = (targetId) => targetColorMap.get(targetId) || TARGET_COLORS[0];
 
+    // Resolve the assignees shown on a calendar event. Events store an `assignees`
+    // JSONB array of { type: 'team'|'individual', id }; older rows only have the
+    // legacy single assigned_to_type/assigned_to_id — we fall back to those.
+    // Returns an array of { name, isTeam }. Names are truncated at the render site
+    // and capped (3 shown + "+N more") so big rosters never overflow the bubble.
+    const getEventAssignees = (event) => {
+        const raw = (Array.isArray(event?.assignees) && event.assignees.length > 0)
+            ? event.assignees
+            : (event?.assigned_to_type && event?.assigned_to_id
+                ? [{ type: event.assigned_to_type, id: event.assigned_to_id }]
+                : []);
+        return raw.map(a => {
+            if (a.type === 'team') {
+                const team = teams.find(t => t.id === a.id);
+                return team ? { name: team.name, isTeam: true } : null;
+            }
+            const player = teams.flatMap(t => t.players).find(p => p.id === a.id);
+            return player ? { name: player.name, isTeam: false } : null;
+        }).filter(Boolean);
+    };
+
     // Close popover on click outside — industry-standard dismissal.
     // Also closes on ESC key (standard accessibility pattern).
     // Note: mousedown fires before click, so any outbound click starts a close
@@ -806,32 +960,39 @@ export const DashboardPage = () => {
     // assigned to the currently selected team/athlete so they surface in context.
     const filteredCalendarEventsForView = React.useMemo(() => {
         if (!calendarEvents) return [];
+        // Normalise an event's assignees to a {type,id}[] — new `assignees` array
+        // if present, else the legacy single columns. Filters below match if ANY
+        // assignee satisfies the criterion (an event can now target several).
+        const rawAssignees = (e: any) => (Array.isArray(e?.assignees) && e.assignees.length > 0)
+            ? e.assignees
+            : (e?.assigned_to_type && e?.assigned_to_id ? [{ type: e.assigned_to_type, id: e.assigned_to_id }] : []);
+
         if (calendarFilterCategory === 'all' || calendarFilterCategory === 'trainer') {
             return calendarEvents;
         }
         if (calendarFilterCategory === 'teams') {
             if (calendarFilterTeamId) {
-                return calendarEvents.filter(e =>
-                    (e.assigned_to_type === 'team' && e.assigned_to_id === calendarFilterTeamId) ||
-                    (e.assigned_to_type === 'individual' && selectedTeamPlayerIds.includes(e.assigned_to_id))
-                );
+                return calendarEvents.filter(e => rawAssignees(e).some((a: any) =>
+                    (a.type === 'team' && a.id === calendarFilterTeamId) ||
+                    (a.type === 'individual' && selectedTeamPlayerIds.includes(a.id))
+                ));
             }
-            // All teams selected — show all team-assigned events
-            return calendarEvents.filter(e => e.assigned_to_type === 'team');
+            // All teams selected — show any event with at least one team assignee
+            return calendarEvents.filter(e => rawAssignees(e).some((a: any) => a.type === 'team'));
         }
         if (calendarFilterCategory === 'athletes') {
             if (calendarFilterAthleteId) {
-                return calendarEvents.filter(e =>
-                    e.assigned_to_type === 'individual' && e.assigned_to_id === calendarFilterAthleteId
-                );
+                return calendarEvents.filter(e => rawAssignees(e).some((a: any) =>
+                    a.type === 'individual' && a.id === calendarFilterAthleteId
+                ));
             }
             if (calendarFilterTeamId) {
-                return calendarEvents.filter(e =>
-                    (e.assigned_to_type === 'team' && e.assigned_to_id === calendarFilterTeamId) ||
-                    (e.assigned_to_type === 'individual' && selectedTeamPlayerIds.includes(e.assigned_to_id))
-                );
+                return calendarEvents.filter(e => rawAssignees(e).some((a: any) =>
+                    (a.type === 'team' && a.id === calendarFilterTeamId) ||
+                    (a.type === 'individual' && selectedTeamPlayerIds.includes(a.id))
+                ));
             }
-            return calendarEvents.filter(e => e.assigned_to_type === 'individual');
+            return calendarEvents.filter(e => rawAssignees(e).some((a: any) => a.type === 'individual'));
         }
         return calendarEvents;
     }, [calendarEvents, calendarFilterCategory, calendarFilterTeamId, calendarFilterAthleteId, selectedTeamPlayerIds]);
@@ -1442,6 +1603,7 @@ export const DashboardPage = () => {
                                                 // Any popover open inside this cell? Same lift-the-host trick as
                                                 // month view so the popover doesn't get clipped by neighbouring days.
                                                 const hasActivePopover = (
+                                                    overflowDay === wd.dateStr ||
                                                     (activePopover?.id && activePopover.id.endsWith('_' + wd.dateStr)) ||
                                                     activeSessionPopover?.session?.date === wd.dateStr
                                                 );
@@ -1469,78 +1631,332 @@ export const DashboardPage = () => {
                                                             <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase">{wd.dayName}</span>
                                                             <span className={`text-sm font-bold leading-none inline-flex items-center justify-center ${isToday ? 'bg-indigo-600 text-white rounded-full w-5 h-5' : 'text-slate-700 dark:text-[#E2E8F0]'}`}>{wd.day}</span>
                                                         </div>
-                                                        <div className="flex-1 space-y-1 overflow-hidden">
+                                                        <div className="flex-1 space-y-1">
                                                             {allItems.length === 0 ? (
                                                                 <p className="text-[9px] text-slate-300 dark:text-[#1A2D48] text-center pt-3">—</p>
-                                                            ) : allItems.map(entry => {
+                                                            ) : allItems.slice(0, 3).map(entry => {
                                                                 if (entry.type === 'session') {
                                                                     const session = entry.item;
                                                                     const tc = getTargetColor(session.targetId);
                                                                     return (
-                                                                        <div
-                                                                            key={session.id}
+                                                                        <div key={session.id} className="group relative"
                                                                             draggable
                                                                             title={DRAG_HINT_SESSION}
                                                                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, wd.dateStr); }}
                                                                             onDragEnd={handleDragEnd}
-                                                                            onClick={(e) => { e.stopPropagation(); setViewingSession(session); }}
-                                                                            className={`group relative flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
-                                                                            style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
                                                                         >
-                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
-                                                                            <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`} style={isDark ? { backgroundColor: tc.darkPillBg } : undefined}>
-                                                                                <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
-                                                                                    {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
-                                                                                    {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
-                                                                                    {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} className="shrink-0" />}
-                                                                                    <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
+                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none z-10" />
+                                                                            <div
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const popKey = session.id;
+                                                                                    setActiveSessionPopover(activeSessionPopover?.id === popKey ? null : { id: popKey, session });
+                                                                                    setActivePopover(null);
+                                                                                }}
+                                                                                className={`flex flex-col gap-0.5 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95 overflow-hidden ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                                style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
+                                                                            >
+                                                                                <div className={`flex items-center gap-1 ${tc.pillBg} px-1 py-0.5 rounded overflow-hidden`} style={isDark ? { backgroundColor: tc.darkPillBg } : undefined}>
+                                                                                    <div className="flex items-center gap-0.5 min-w-0 flex-1 overflow-hidden">
+                                                                                        {session.session_type === 'wattbike' && <ActivityIcon size={7} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                                                                                        {session.session_type === 'conditioning' && <TimerIcon size={7} className="text-orange-500 shrink-0" />}
+                                                                                        {(!session.session_type || session.session_type === 'workout') && <DumbbellIcon size={7} className="shrink-0" />}
+                                                                                        <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-0.5 shrink-0">
+                                                                                        {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
+                                                                                        {session.load && (
+                                                                                            <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
+                                                                                                session.load === 'High' ? 'bg-red-500 text-white' :
+                                                                                                session.load === 'Medium' ? 'bg-amber-400 text-white' :
+                                                                                                'bg-emerald-400 text-white'
+                                                                                            }`}>{session.load[0]}</span>
+                                                                                        )}
+                                                                                        {session.targetType === 'Individual' && <UserIcon size={7} />}
+                                                                                    </div>
                                                                                 </div>
-                                                                                <div className="flex items-center gap-0.5 shrink-0">
-                                                                                    {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
-                                                                                    {session.load && (
-                                                                                        <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
-                                                                                            session.load === 'High' ? 'bg-red-500 text-white' :
-                                                                                            session.load === 'Medium' ? 'bg-amber-400 text-white' :
-                                                                                            'bg-emerald-400 text-white'
-                                                                                        }`}>{session.load[0]}</span>
-                                                                                    )}
-                                                                                    {session.targetType === 'Individual' && <UserIcon size={7} />}
+                                                                                <div className="px-0.5">
+                                                                                    <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
+                                                                                    <div className="text-[8px] opacity-70 truncate mt-0.5">
+                                                                                        {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                                        {resolveTargetName(session.targetId, session.targetType)}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div className="px-0.5">
-                                                                                <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
-                                                                                <div className="text-[8px] opacity-70 truncate mt-0.5">
-                                                                                    {session.time && <span className="font-semibold">{session.time} · </span>}
-                                                                                    {resolveTargetName(session.targetId, session.targetType)}
-                                                                                </div>
-                                                                            </div>
+                                                                            {/* Session Popover */}
+                                                                            {activeSessionPopover?.id === session.id && (
+                                                                                <CalendarPopover
+                                                                                    ref={sessionPopoverRef}
+                                                                                    width={224}
+                                                                                    className="w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150"
+                                                                                >
+                                                                                    <div className={`h-1 rounded-t-lg ${tc.bg === 'bg-red-50' ? 'bg-red-400' : tc.bg === 'bg-blue-50' ? 'bg-blue-400' : tc.bg === 'bg-emerald-50' ? 'bg-emerald-400' : tc.bg === 'bg-orange-50' ? 'bg-orange-400' : tc.bg === 'bg-violet-50' ? 'bg-violet-400' : 'bg-indigo-400'}`} />
+                                                                                    <div className="p-3 space-y-2">
+                                                                                        <div className="flex items-start justify-between">
+                                                                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
+                                                                                            <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                                                                                <XIcon size={12} />
+                                                                                            </button>
+                                                                                        </div>
+                                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                            {(session.workout_template_id || session.workoutTemplateId) ? (
+                                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-sky-50 dark:bg-sky-500/15 border border-sky-200 dark:border-sky-500/30 text-sky-700 dark:text-sky-300">Packet</span>
+                                                                                            ) : (session.program_id || session.programId) ? (
+                                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-violet-50 dark:bg-violet-500/15 border border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300">Program</span>
+                                                                                            ) : (
+                                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1]">Workout</span>
+                                                                                            )}
+                                                                                            <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300">{session.trainingPhase}</span>
+                                                                                            {session.load && (
+                                                                                                <span className={`px-2 py-0.5 rounded text-[9px] font-semibold border ${
+                                                                                                    session.load === 'High'   ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                                                                                                    session.load === 'Medium' ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400' :
+                                                                                                    'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                                                                                                }`}>{session.load} Load</span>
+                                                                                            )}
+                                                                                            {session.status && session.status !== 'Scheduled' && (
+                                                                                                <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1]">{session.status}</span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div className="text-[10px] text-slate-500 space-y-1">
+                                                                                            <div>
+                                                                                                {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                                                {new Date(session.date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                                                            </div>
+                                                                                            <div>{resolveTargetName(session.targetId, session.targetType)}</div>
+                                                                                        </div>
+                                                                                        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
+                                                                                            <button
+                                                                                                onClick={() => { setViewingSession(session); setActiveSessionPopover(null); }}
+                                                                                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
+                                                                                            >
+                                                                                                <EyeIcon size={10} /> View
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => { setEditingSession({ ...session }); setActiveSessionPopover(null); }}
+                                                                                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
+                                                                                            >
+                                                                                                <PencilIcon size={10} /> Edit
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => {
+                                                                                                    setConfirmDeleteItem({ type: 'session', id: session.id, name: session.title || 'this session' });
+                                                                                                    setActiveSessionPopover(null);
+                                                                                                }}
+                                                                                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                                            >
+                                                                                                <Trash2Icon size={10} /> Delete
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </CalendarPopover>
+                                                                            )}
                                                                         </div>
                                                                     );
                                                                 } else {
                                                                     const event = entry.item;
                                                                     return (
-                                                                        <div
-                                                                            key={event.id}
+                                                                        <div key={`${event.id}_${wd.dateStr}`} className="group relative"
                                                                             draggable
                                                                             title={DRAG_HINT_EVENT}
                                                                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, wd.dateStr); }}
                                                                             onDragEnd={handleDragEnd}
-                                                                            onClick={(e) => { e.stopPropagation(); const popKey = `${event.id}_${wd.dateStr}`; setActivePopover({ id: popKey, event }); }}
-                                                                            className="group relative flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
-                                                                            style={{ backgroundColor: `${event.color}${isDark ? '6B' : '26'}`, borderColor: `${event.color}${isDark ? 'A8' : '55'}`, color: isDark ? '#ffffff' : darkenHex(event.color) }}
                                                                         >
-                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
-                                                                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                            <span className="text-[9px] font-medium leading-tight truncate">
-                                                                                {!event.all_day && event.start_time && (
-                                                                                    <span className="font-semibold">{event.start_time} </span>
-                                                                                )}
-                                                                                {event.title}
-                                                                            </span>
+                                                                            <GripVerticalIcon size={9} className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none z-10" />
+                                                                            <div
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const popKey = `${event.id}_${wd.dateStr}`;
+                                                                                    setActivePopover(activePopover?.id === popKey ? null : { id: popKey, event });
+                                                                                    setActiveSessionPopover(null);
+                                                                                }}
+                                                                                className="flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.01] active:scale-95"
+                                                                                style={{ backgroundColor: `${event.color}${isDark ? '6B' : '26'}`, borderColor: `${event.color}${isDark ? 'A8' : '55'}`, color: isDark ? '#ffffff' : darkenHex(event.color) }}
+                                                                            >
+                                                                                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
+                                                                                <div className="flex flex-col min-w-0 flex-1">
+                                                                                    <span className="text-[9px] font-medium leading-tight truncate">
+                                                                                        {!event.all_day && event.start_time && (
+                                                                                            <span className="font-semibold">{event.start_time} </span>
+                                                                                        )}
+                                                                                        {event.title}
+                                                                                    </span>
+                                                                                    {(() => {
+                                                                                        const assignees = getEventAssignees(event);
+                                                                                        if (assignees.length === 0) return null;
+                                                                                        // Week view gives a little more leeway than month (shows a
+                                                                                        // couple of names) but is capped so a many-assignee event
+                                                                                        // can't balloon the day cell.
+                                                                                        const shown = assignees.slice(0, 2);
+                                                                                        const extra = assignees.length - shown.length;
+                                                                                        return (
+                                                                                            <>
+                                                                                                {shown.map((a, i) => (
+                                                                                                    <span key={i} className="flex items-center gap-0.5 text-[8px] leading-tight opacity-75 min-w-0">
+                                                                                                        {a.isTeam ? <UsersIcon size={7} className="shrink-0" /> : <UserIcon size={7} className="shrink-0" />}
+                                                                                                        <span className="truncate">{a.name}</span>
+                                                                                                    </span>
+                                                                                                ))}
+                                                                                                {extra > 0 && (
+                                                                                                    <span className="text-[8px] leading-tight opacity-60 font-semibold">+{extra} more</span>
+                                                                                                )}
+                                                                                            </>
+                                                                                        );
+                                                                                    })()}
+                                                                                </div>
+                                                                            </div>
+                                                                            {/* Event Popover */}
+                                                                            {activePopover?.id === `${event.id}_${wd.dateStr}` && (
+                                                                                <EventDetailPopover
+                                                                                    ref={popoverRef}
+                                                                                    event={event}
+                                                                                    resolveAssignees={getEventAssignees}
+                                                                                    onClose={() => setActivePopover(null)}
+                                                                                    onEdit={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
+                                                                                    onDelete={() => { setConfirmDeleteItem({ type: 'event', id: event.id, name: event.title || 'this event' }); setActivePopover(null); }}
+                                                                                />
+                                                                            )}
                                                                         </div>
                                                                     );
                                                                 }
                                                             })}
+                                                            {/* +N more button + overflow panel — parity with month view, caps a day at 3 visible items */}
+                                                            {(() => {
+                                                                const total = allItems.length;
+                                                                const hidden = total - 3;
+                                                                if (hidden <= 0 && overflowDay !== wd.dateStr) return null;
+                                                                return (
+                                                                    <div className="relative">
+                                                                        {hidden > 0 && (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setOverflowDay(overflowDay === wd.dateStr ? null : wd.dateStr);
+                                                                                    setActivePopover(null);
+                                                                                    setActiveSessionPopover(null);
+                                                                                }}
+                                                                                className="w-full text-[9px] font-semibold text-center py-1 mt-0.5 rounded-md transition-colors cursor-pointer text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-200 dark:hover:text-white dark:bg-indigo-500/20 dark:hover:bg-indigo-500/40 dark:border dark:border-indigo-500/30"
+                                                                            >
+                                                                                +{hidden} more
+                                                                            </button>
+                                                                        )}
+                                                                        {overflowDay === wd.dateStr && (
+                                                                            <CalendarPopover
+                                                                                ref={overflowRef}
+                                                                                width={240}
+                                                                                className="w-60 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto"
+                                                                            >
+                                                                                <div className="px-3 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#243A58] rounded-t-lg">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className="text-[10px] font-bold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wider">
+                                                                                            {new Date(wd.dateStr + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                                                        </span>
+                                                                                        <span className="text-[9px] text-slate-400">{total} items</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="p-2 space-y-1">
+                                                                                    {allItems.map(entry => {
+                                                                                        if (entry.type === 'session') {
+                                                                                            const session = entry.item;
+                                                                                            const tc = getTargetColor(session.targetId);
+                                                                                            return (
+                                                                                                <div
+                                                                                                    key={session.id}
+                                                                                                    draggable
+                                                                                                    title={DRAG_HINT_SESSION}
+                                                                                                    onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'session', session, wd.dateStr); }}
+                                                                                                    onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
+                                                                                                    onClick={() => { setViewingSession(session); setOverflowDay(null); }}
+                                                                                                    className={`group relative flex items-center gap-2 p-1.5 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95 ${tc.bg} ${tc.border} ${tc.text}`}
+                                                                                                    style={isDark ? { backgroundColor: tc.darkBg, borderColor: tc.darkBorder, color: tc.darkText } : undefined}
+                                                                                                >
+                                                                                                    <GripVerticalIcon size={10} className="absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
+                                                                                                    <div className="flex-1 min-w-0">
+                                                                                                        <div className="text-[9px] font-medium leading-tight truncate">{session.title}</div>
+                                                                                                        <div className="text-[8px] opacity-70 truncate">
+                                                                                                            {session.time && <span className="font-semibold">{session.time} · </span>}
+                                                                                                            {resolveTargetName(session.targetId, session.targetType)}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    {session.load && (
+                                                                                                        <span className={`text-[7px] font-bold uppercase px-1 py-px rounded shrink-0 ${
+                                                                                                            session.load === 'High' ? 'bg-red-500 text-white' :
+                                                                                                            session.load === 'Medium' ? 'bg-amber-400 text-white' :
+                                                                                                            'bg-emerald-400 text-white'
+                                                                                                        }`}>{session.load[0]}</span>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            );
+                                                                                        } else {
+                                                                                            const event = entry.item;
+                                                                                            return (
+                                                                                                <div
+                                                                                                    key={event.id}
+                                                                                                    draggable
+                                                                                                    title={DRAG_HINT_EVENT}
+                                                                                                    onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, 'event', event, wd.dateStr); }}
+                                                                                                    onDragEnd={() => { handleDragEnd(); setOverflowDay(null); }}
+                                                                                                    onClick={() => {
+                                                                                                        setOverflowDay(null);
+                                                                                                        const popKey = `${event.id}_${wd.dateStr}`;
+                                                                                                        setActivePopover({ id: popKey, event });
+                                                                                                    }}
+                                                                                                    className="group relative flex items-center gap-1.5 px-1.5 py-1 rounded-md border cursor-grab transition-all hover:scale-[1.02] active:scale-95"
+                                                                                                    style={{ backgroundColor: `${event.color}${isDark ? '6B' : '26'}`, borderColor: `${event.color}${isDark ? 'A8' : '55'}`, color: isDark ? '#ffffff' : darkenHex(event.color) }}
+                                                                                                >
+                                                                                                    <GripVerticalIcon size={10} className="absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
+                                                                                                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
+                                                                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                                                                        <span className="text-[9px] font-medium leading-tight truncate">
+                                                                                                            {!event.all_day && event.start_time && (
+                                                                                                                <span className="font-semibold">{event.start_time} </span>
+                                                                                                            )}
+                                                                                                            {event.title}
+                                                                                                        </span>
+                                                                                                        {(() => {
+                                                                                                            const assignees = getEventAssignees(event);
+                                                                                                            if (assignees.length === 0) return null;
+                                                                                                            const shown = assignees.slice(0, 2);
+                                                                                                            const extra = assignees.length - shown.length;
+                                                                                                            return (
+                                                                                                                <>
+                                                                                                                    {shown.map((a, i) => (
+                                                                                                                        <span key={i} className="flex items-center gap-0.5 text-[8px] leading-tight opacity-75 min-w-0">
+                                                                                                                            {a.isTeam ? <UsersIcon size={7} className="shrink-0" /> : <UserIcon size={7} className="shrink-0" />}
+                                                                                                                            <span className="truncate">{a.name}</span>
+                                                                                                                        </span>
+                                                                                                                    ))}
+                                                                                                                    {extra > 0 && (
+                                                                                                                        <span className="text-[8px] leading-tight opacity-60 font-semibold">+{extra} more</span>
+                                                                                                                    )}
+                                                                                                                </>
+                                                                                                            );
+                                                                                                        })()}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            );
+                                                                                        }
+                                                                                    })}
+                                                                                </div>
+                                                                            </CalendarPopover>
+                                                                        )}
+                                                                        {/* Fallback popover for a hidden (+N more) event that has no on-page tile to anchor to */}
+                                                                        {activePopover?.event
+                                                                            && activePopover.id === `${activePopover.event.id}_${wd.dateStr}`
+                                                                            && !allItems.slice(0, 3).some(e => e.type === 'event' && `${e.item.id}_${wd.dateStr}` === activePopover.id)
+                                                                            && (
+                                                                            <EventDetailPopover
+                                                                                ref={popoverRef}
+                                                                                event={activePopover.event}
+                                                                                resolveAssignees={getEventAssignees}
+                                                                                onClose={() => setActivePopover(null)}
+                                                                                onEdit={() => { setEditingEvent({ ...activePopover.event, all_day: activePopover.event.all_day || false }); setActivePopover(null); }}
+                                                                                onDelete={() => { setConfirmDeleteItem({ type: 'event', id: activePopover.event.id, name: activePopover.event.title || 'this event' }); setActivePopover(null); }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 );
@@ -1565,9 +1981,6 @@ export const DashboardPage = () => {
                                     ))}
                                     {dashboardCalendarDays.map((dateObj, idx) => {
                                         const isToday = dateObj && dateObj.dateStr === new Date().toLocaleDateString('en-CA');
-                                        const calendarRow = Math.floor(idx / 7);
-                                        const totalRows = Math.ceil(dashboardCalendarDays.length / 7);
-                                        const isBottomRows = calendarRow >= totalRows - 2;
                                         const isDragOver = dateObj && dragOverDate === dateObj.dateStr;
                                         // Any popover open inside this cell? Lift the whole cell's stacking
                                         // context above sibling cells so the absolute popover isn't clipped
@@ -1694,10 +2107,10 @@ export const DashboardPage = () => {
                                                                 </div>
                                                                 {/* Session Popover */}
                                                                 {activeSessionPopover?.id === session.id && (
-                                                                    <div
+                                                                    <CalendarPopover
                                                                         ref={sessionPopoverRef}
-                                                                        className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        width={224}
+                                                                        className="w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150"
                                                                     >
                                                                         <div className={`h-1 rounded-t-lg ${tc.bg === 'bg-red-50' ? 'bg-red-400' : tc.bg === 'bg-blue-50' ? 'bg-blue-400' : tc.bg === 'bg-emerald-50' ? 'bg-emerald-400' : tc.bg === 'bg-orange-50' ? 'bg-orange-400' : tc.bg === 'bg-violet-50' ? 'bg-violet-400' : 'bg-indigo-400'}`} />
                                                                         <div className="p-3 space-y-2">
@@ -1761,7 +2174,7 @@ export const DashboardPage = () => {
                                                                                 </button>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
+                                                                    </CalendarPopover>
                                                                 )}
                                                                 </div>
                                                                         );
@@ -1790,71 +2203,41 @@ export const DashboardPage = () => {
                                                                             }}
                                                                         >
                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                            <span className="text-[9px] font-medium leading-tight truncate">
+                                                                            <span className="text-[9px] font-medium leading-tight truncate flex-1 min-w-0" title={event.title}>
                                                                                 {!event.all_day && event.start_time && (
                                                                                     <span className="font-semibold">{event.start_time} </span>
                                                                                 )}
                                                                                 {event.title}
                                                                             </span>
+                                                                            {(() => {
+                                                                                // Month view keeps every event to a single compact line so day
+                                                                                // cells stay a uniform height. Assignees are hinted with an
+                                                                                // icon + count here; the full name list shows in the click
+                                                                                // popover (and inline in the taller week view).
+                                                                                const assignees = getEventAssignees(event);
+                                                                                if (assignees.length === 0) return null;
+                                                                                const anyTeam = assignees.some(a => a.isTeam);
+                                                                                return (
+                                                                                    <span
+                                                                                        className="flex items-center gap-0.5 text-[8px] font-semibold opacity-70 shrink-0"
+                                                                                        title={assignees.map(a => a.name).join(', ')}
+                                                                                    >
+                                                                                        {anyTeam ? <UsersIcon size={8} className="shrink-0" /> : <UserIcon size={8} className="shrink-0" />}
+                                                                                        {assignees.length > 1 && assignees.length}
+                                                                                    </span>
+                                                                                );
+                                                                            })()}
                                                                         </div>
                                                                         {/* Event Popover */}
                                                                         {activePopover?.id === `${event.id}_${dateObj.dateStr}` && (
-                                                                            <div
+                                                                            <EventDetailPopover
                                                                                 ref={popoverRef}
-                                                                                className={`absolute z-50 left-0 w-56 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                            >
-                                                                                {/* Color accent bar */}
-                                                                                <div className="h-1 rounded-t-lg" style={{ backgroundColor: event.color }} />
-                                                                                <div className="p-3 space-y-2">
-                                                                                    <div className="flex items-start justify-between">
-                                                                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{event.title}</h4>
-                                                                                        <button onClick={() => { setActivePopover(null); }} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
-                                                                                            <XIcon size={12} />
-                                                                                        </button>
-                                                                                    </div>
-                                                                                    <span
-                                                                                        className="inline-block px-2 py-0.5 rounded text-[9px] font-semibold"
-                                                                                        style={{ backgroundColor: `${event.color}20`, color: event.color }}
-                                                                                    >
-                                                                                        {event.event_type}
-                                                                                    </span>
-                                                                                    <div className="text-[10px] text-slate-500 space-y-1">
-                                                                                        <div>
-                                                                                            {event.all_day
-                                                                                                ? `All Day · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                                                                                                : `${event.start_time || ''}${event.end_time ? ' – ' + event.end_time : ''} · ${new Date(event.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                                                                                            }
-                                                                                        </div>
-                                                                                        {event.location && (
-                                                                                            <div className="flex items-center gap-1">
-                                                                                                <MapPinIcon size={9} className="text-slate-400 shrink-0" />
-                                                                                                {event.location}
-                                                                                            </div>
-                                                                                        )}
-                                                                                        {event.description && (
-                                                                                            <p className="text-slate-400 leading-relaxed">{event.description}</p>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#243A58]">
-                                                                                        <button
-                                                                                            onClick={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
-                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors"
-                                                                                        >
-                                                                                            <PencilIcon size={10} /> Edit
-                                                                                        </button>
-                                                                                        <button
-                                                                                            onClick={() => {
-                                                                                                setConfirmDeleteItem({ type: 'event', id: event.id, name: event.title || 'this event' });
-                                                                                                setActivePopover(null);
-                                                                                            }}
-                                                                                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                                                        >
-                                                                                            <Trash2Icon size={10} /> Delete
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                                event={event}
+                                                                                resolveAssignees={getEventAssignees}
+                                                                                onClose={() => setActivePopover(null)}
+                                                                                onEdit={() => { setEditingEvent({ ...event, all_day: event.all_day || false }); setActivePopover(null); }}
+                                                                                onDelete={() => { setConfirmDeleteItem({ type: 'event', id: event.id, name: event.title || 'this event' }); setActivePopover(null); }}
+                                                                            />
                                                                         )}
                                                                     </div>
                                                                         );
@@ -1883,16 +2266,16 @@ export const DashboardPage = () => {
                                                                                 setOverflowDay(overflowDay === dateObj.dateStr ? null : dateObj.dateStr);
                                                                                 setActivePopover(null);
                                                                             }}
-                                                                            className="hidden sm:block w-full text-[9px] text-indigo-500 hover:text-indigo-700 dark:text-white font-semibold text-center pt-0.5 hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 rounded transition-colors cursor-pointer"
+                                                                            className="hidden sm:block w-full text-[9px] font-semibold text-center py-1 mt-0.5 rounded-md transition-colors cursor-pointer text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-200 dark:hover:text-white dark:bg-indigo-500/20 dark:hover:bg-indigo-500/40 dark:border dark:border-indigo-500/30"
                                                                         >
                                                                             +{hidden} more
                                                                         </button>
                                                                         )}
                                                                         {overflowDay === dateObj.dateStr && (
-                                                                            <div
+                                                                            <CalendarPopover
                                                                                 ref={overflowRef}
-                                                                                className={`absolute z-50 left-0 w-60 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto ${isBottomRows ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                width={240}
+                                                                                className="w-60 bg-white dark:bg-[#1A2D48] rounded-lg shadow-xl border border-slate-200 dark:border-[#243A58] animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto"
                                                                             >
                                                                                 <div className="px-3 py-2 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#243A58] rounded-t-lg">
                                                                                     <div className="flex items-center justify-between">
@@ -1958,18 +2341,53 @@ export const DashboardPage = () => {
                                                                                         >
                                                                                             <GripVerticalIcon size={10} className="absolute top-1 right-1 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
                                                                                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: event.color }} />
-                                                                                            <span className="text-[9px] font-medium leading-tight truncate flex-1">
-                                                                                                {!event.all_day && event.start_time && (
-                                                                                                    <span className="font-semibold">{event.start_time} </span>
-                                                                                                )}
-                                                                                                {event.title}
-                                                                                            </span>
+                                                                                            <div className="flex flex-col min-w-0 flex-1">
+                                                                                                <span className="text-[9px] font-medium leading-tight truncate">
+                                                                                                    {!event.all_day && event.start_time && (
+                                                                                                        <span className="font-semibold">{event.start_time} </span>
+                                                                                                    )}
+                                                                                                    {event.title}
+                                                                                                </span>
+                                                                                                {(() => {
+                                                                                                    const assignees = getEventAssignees(event);
+                                                                                                    if (assignees.length === 0) return null;
+                                                                                                    const shown = assignees.slice(0, 3);
+                                                                                                    const extra = assignees.length - shown.length;
+                                                                                                    return (
+                                                                                                        <>
+                                                                                                            {shown.map((a, i) => (
+                                                                                                                <span key={i} className="flex items-center gap-0.5 text-[8px] leading-tight opacity-75 min-w-0">
+                                                                                                                    {a.isTeam ? <UsersIcon size={7} className="shrink-0" /> : <UserIcon size={7} className="shrink-0" />}
+                                                                                                                    <span className="truncate">{a.name}</span>
+                                                                                                                </span>
+                                                                                                            ))}
+                                                                                                            {extra > 0 && (
+                                                                                                                <span className="text-[8px] leading-tight opacity-60 font-semibold">+{extra} more</span>
+                                                                                                            )}
+                                                                                                        </>
+                                                                                                    );
+                                                                                                })()}
+                                                                                            </div>
                                                                                         </div>
                                                                                             );
                                                                                         }
                                                                                     })}
                                                                                 </div>
-                                                                            </div>
+                                                                            </CalendarPopover>
+                                                                        )}
+                                                                        {/* Fallback popover for a hidden (+N more) event that has no on-page tile to anchor to */}
+                                                                        {activePopover?.event
+                                                                            && activePopover.id === `${activePopover.event.id}_${dateObj.dateStr}`
+                                                                            && !allItems.slice(0, 3).some(e => e.type === 'event' && `${e.item.id}_${dateObj.dateStr}` === activePopover.id)
+                                                                            && (
+                                                                            <EventDetailPopover
+                                                                                ref={popoverRef}
+                                                                                event={activePopover.event}
+                                                                                resolveAssignees={getEventAssignees}
+                                                                                onClose={() => setActivePopover(null)}
+                                                                                onEdit={() => { setEditingEvent({ ...activePopover.event, all_day: activePopover.event.all_day || false }); setActivePopover(null); }}
+                                                                                onDelete={() => { setConfirmDeleteItem({ type: 'event', id: activePopover.event.id, name: activePopover.event.title || 'this event' }); setActivePopover(null); }}
+                                                                            />
                                                                         )}
                                                                     </div>
                                                                 );
@@ -2064,50 +2482,20 @@ export const DashboardPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* Assign To */}
+                                        {/* Assign To — multiple teams and/or athletes */}
                                         <div>
                                             <label className={LABEL}>Assign To</label>
-                                            <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] w-fit mb-2">
-                                                {(['none', 'team', 'individual'] as const).map(opt => (
-                                                    <button
-                                                        key={opt}
-                                                        onClick={() => setEditingEvent({ ...editingEvent, assigned_to_type: opt === 'none' ? null : opt, assigned_to_id: null })}
-                                                        className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all ${(opt === 'none' ? !editingEvent.assigned_to_type : editingEvent.assigned_to_type === opt) ? 'bg-slate-900 dark:bg-indigo-600 text-white' : 'bg-white dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}
-                                                    >
-                                                        {opt === 'team' && <UsersIcon size={12} />}
-                                                        {opt === 'individual' && <UserIcon size={12} />}
-                                                        {opt === 'none' ? 'No one' : opt === 'team' ? 'Team' : 'Athlete'}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            {editingEvent.assigned_to_type === 'team' && (
-                                                <CustomSelect
-                                                    value={editingEvent.assigned_to_id || ''}
-                                                    onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
-                                                    variant="form"
-                                                    placeholder="Select a team..."
-                                                >
-                                                    <option value="">Select a team...</option>
-                                                    {(teams || []).map((t: any) => (
-                                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                                    ))}
-                                                </CustomSelect>
-                                            )}
-                                            {editingEvent.assigned_to_type === 'individual' && (
-                                                <CustomSelect
-                                                    value={editingEvent.assigned_to_id || ''}
-                                                    onChange={e => setEditingEvent({ ...editingEvent, assigned_to_id: e.target.value || null })}
-                                                    variant="form"
-                                                    placeholder="Select an athlete..."
-                                                >
-                                                    <option value="">Select an athlete...</option>
-                                                    {(teams || []).flatMap((t: any) =>
-                                                        (t.players || []).map((p: any) => (
-                                                            <option key={p.id} value={p.id}>{p.name}{t.name ? ` — ${t.name}` : ''}</option>
-                                                        ))
-                                                    )}
-                                                </CustomSelect>
-                                            )}
+                                            <AssigneePicker
+                                                value={
+                                                    Array.isArray(editingEvent.assignees) && editingEvent.assignees.length > 0
+                                                        ? editingEvent.assignees
+                                                        : (editingEvent.assigned_to_type && editingEvent.assigned_to_id
+                                                            ? [{ type: editingEvent.assigned_to_type, id: editingEvent.assigned_to_id }]
+                                                            : [])
+                                                }
+                                                onChange={next => setEditingEvent({ ...editingEvent, assignees: next })}
+                                                teams={teams}
+                                            />
                                         </div>
 
                                         {/* All Day Toggle */}
@@ -2154,6 +2542,11 @@ export const DashboardPage = () => {
                                         </button>
                                         <button
                                             onClick={() => {
+                                                const nextAssignees = Array.isArray(editingEvent.assignees)
+                                                    ? editingEvent.assignees
+                                                    : (editingEvent.assigned_to_type && editingEvent.assigned_to_id
+                                                        ? [{ type: editingEvent.assigned_to_type, id: editingEvent.assigned_to_id }]
+                                                        : []);
                                                 handleUpdateCalendarEvent(editingEvent.id, {
                                                     title: editingEvent.title,
                                                     event_type: editingEvent.event_type,
@@ -2165,8 +2558,10 @@ export const DashboardPage = () => {
                                                     end_date: editingEvent.start_date,
                                                     start_time: editingEvent.all_day ? null : (editingEvent.start_time || null),
                                                     end_time: editingEvent.all_day ? null : (editingEvent.end_time || null),
-                                                    assigned_to_type: editingEvent.assigned_to_type || null,
-                                                    assigned_to_id: editingEvent.assigned_to_id || null,
+                                                    // Canonical array + legacy single mirror (first assignee)
+                                                    assignees: nextAssignees,
+                                                    assigned_to_type: nextAssignees[0]?.type ?? null,
+                                                    assigned_to_id: nextAssignees[0]?.id ?? null,
                                                 });
                                                 setEditingEvent(null);
                                             }}

@@ -16,6 +16,7 @@ import {
     User as UserIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import { AssigneePicker } from './AssigneePicker';
 
 // ── Constants ────────────────────────────────────────────────────────────
 
@@ -67,10 +68,8 @@ const AddEventModal = () => {
     const titleRef = React.useRef(null);
     const datesRef = React.useRef(null);
 
-    // Assignment
-    const [assignType, setAssignType] = useState<'none' | 'team' | 'individual'>('none');
-    const [assignId, setAssignId] = useState('');
-    const [assignTeamFilter, setAssignTeamFilter] = useState(''); // team filter when picking individual
+    // Assignment — an event can target several teams and/or athletes.
+    const [assignees, setAssignees] = useState<{ type: string; id: string }[]>([]);
 
     // Custom type inline form
     const [showCustomTypeForm, setShowCustomTypeForm] = useState(false);
@@ -106,9 +105,7 @@ const AddEventModal = () => {
         setScheduleMode('range');
         setSelectedDates([]);
         setDateToAdd(new Date().toISOString().split('T')[0]);
-        setAssignType('none');
-        setAssignId('');
-        setAssignTeamFilter('');
+        setAssignees([]);
         setShowCustomTypeForm(false);
         setNewTypeLabel('');
         setCreating(false);
@@ -161,7 +158,6 @@ const AddEventModal = () => {
         const errors: Record<string, string> = {};
         if (!title.trim()) errors.title = 'Please enter an event title';
         if (scheduleMode === 'dates' && selectedDates.length === 0) errors.dates = 'Please select at least one date';
-        if (assignType === 'individual' && !assignId) errors.assignId = 'Please select an athlete';
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
             const firstRef = errors.title ? titleRef : datesRef;
@@ -179,8 +175,11 @@ const AddEventModal = () => {
             all_day: allDay,
             start_time: allDay ? null : startTime || null,
             end_time: allDay ? null : endTime || null,
-            assigned_to_type: assignType === 'none' ? null : assignType,
-            assigned_to_id: assignType === 'none' ? null : (assignId || null),
+            // Canonical multi-assignee array + legacy single-column mirror (first
+            // assignee) for backward compat with older code paths / filters.
+            assignees,
+            assigned_to_type: assignees[0]?.type ?? null,
+            assigned_to_id: assignees[0]?.id ?? null,
         };
 
         if (scheduleMode === 'dates' && selectedDates.length > 0) {
@@ -379,87 +378,10 @@ const AddEventModal = () => {
                         </div>
                     </div>
 
-                    {/* Assign To */}
+                    {/* Assign To — multiple teams and/or athletes */}
                     <div>
                         <label className={LABEL}>Assign To</label>
-                        <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58] w-fit mb-2">
-                            {(['none', 'team', 'individual'] as const).map(opt => (
-                                <button
-                                    key={opt}
-                                    onClick={() => { setAssignType(opt); setAssignId(''); setAssignTeamFilter(''); }}
-                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all capitalize ${assignType === opt ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white dark:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#243A58]'}`}
-                                >
-                                    {opt === 'team' && <UsersIcon size={12} />}
-                                    {opt === 'individual' && <UserIcon size={12} />}
-                                    {opt === 'none' ? 'No one' : opt === 'team' ? 'Team' : 'Athlete'}
-                                </button>
-                            ))}
-                        </div>
-
-                        {assignType === 'team' && (
-                            <CustomSelect
-                                value={assignId}
-                                onChange={e => setAssignId(e.target.value)}
-                                variant="form"
-                                placeholder="Select a team..."
-                            >
-                                <option value="">Select a team...</option>
-                                {(teams || [])
-                                    .filter((t: any) => t.id !== 't_private')
-                                    .sort((a: any, b: any) => a.name.localeCompare(b.name))
-                                    .map((t: any) => (
-                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                    ))}
-                            </CustomSelect>
-                        )}
-
-                        {assignType === 'individual' && (() => {
-                            // All groups with at least one player, sorted A-Z. Private Clients shown last.
-                            const allGroups = (teams || [])
-                                .filter((t: any) => (t.players || []).length > 0)
-                                .sort((a: any, b: any) => {
-                                    if (a.id === 't_private') return 1;
-                                    if (b.id === 't_private') return -1;
-                                    return a.name.localeCompare(b.name);
-                                });
-                            const filteredPlayers = (assignTeamFilter
-                                ? (teams || []).filter((t: any) => t.id === assignTeamFilter)
-                                : allGroups
-                            ).flatMap((t: any) =>
-                                (t.players || []).map((p: any) => ({ ...p, teamName: t.name }))
-                            ).sort((a: any, b: any) => a.name.localeCompare(b.name));
-                            return (
-                                <div className="flex flex-col gap-2">
-                                    <CustomSelect
-                                        value={assignTeamFilter}
-                                        onChange={e => { setAssignTeamFilter(e.target.value); setAssignId(''); }}
-                                        variant="form"
-                                        placeholder="All teams"
-                                    >
-                                        <option value="">All teams</option>
-                                        {allGroups.map((t: any) => (
-                                            <option key={t.id} value={t.id}>{t.name}</option>
-                                        ))}
-                                    </CustomSelect>
-                                    <CustomSelect
-                                        value={assignId}
-                                        onChange={e => setAssignId(e.target.value)}
-                                        variant="form"
-                                        placeholder="Select an athlete..."
-                                    >
-                                        <option value="">Select an athlete...</option>
-                                        {filteredPlayers.map((p: any) => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name}{!assignTeamFilter && p.teamName ? ` — ${p.teamName}` : ''}
-                                            </option>
-                                        ))}
-                                    </CustomSelect>
-                                    {validationErrors.assignId && (
-                                        <p className="text-xs text-rose-500">{validationErrors.assignId}</p>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                        <AssigneePicker value={assignees} onChange={setAssignees} teams={teams} />
                     </div>
 
                     {/* All Day Toggle */}
