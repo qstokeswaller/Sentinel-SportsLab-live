@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
+import { clearStalePublicFormSession } from '../utils/publicFormSession';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import type { BodyMapConfig } from '../types/types';
@@ -157,13 +158,9 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const isTeamMode = !urlAthleteId;
     const athleteId = urlAthleteId || selectedAthleteId;
 
-    // Public form: clear any stale/expired session from localStorage so the anon key is used.
-    // Without this, devices that previously had a coach session stored will send an expired JWT → 401.
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            if (!data.session) supabase.auth.signOut({ scope: 'local' });
-        });
-    }, []);
+    // Public form: clear any stale/expired coach session so submit uses the anon key.
+    // See clearStalePublicFormSession — the previous inline check was inverted.
+    useEffect(() => { clearStalePublicFormSession(); }, []);
 
     useEffect(() => {
         const load = async () => {

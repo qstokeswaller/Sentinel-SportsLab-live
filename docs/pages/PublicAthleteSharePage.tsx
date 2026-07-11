@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { DatabaseService } from '../services/databaseService';
 import { useForceLightMode } from '../hooks/useForceLightMode';
+import { useDismissChartTooltips } from '../hooks/useDismissChartTooltips';
 
 const fmtDate = (s: string | null | undefined) => {
     if (!s) return '—';
@@ -48,6 +49,7 @@ const EmptyHint: React.FC<{ text: string }> = ({ text }) => (
 
 const PublicAthleteSharePage: React.FC = () => {
     useForceLightMode();
+    useDismissChartTooltips(); // dismiss stuck Recharts tooltips when tapping outside a chart (mobile)
     const { shareId } = useParams<{ shareId: string }>();
     const [share, setShare] = useState<any>(null);
     const [loading, setLoading] = useState(true);

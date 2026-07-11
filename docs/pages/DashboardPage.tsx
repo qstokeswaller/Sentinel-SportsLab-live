@@ -422,7 +422,9 @@ export const DashboardPage = () => {
         dragDataRef.current = null;
 
         if (e.ctrlKey && drag.type === 'event') {
-            // Ctrl+drop = copy event
+            // Ctrl+drop = copy event. Pass silent:true so the handler doesn't also
+            // fire its "Event created successfully" toast — the copy shows a single
+            // "Event copied" instead (was firing both = double notification).
             const ev = drag.item;
             await handleAddCalendarEvent({
                 title: ev.title,
@@ -435,7 +437,7 @@ export const DashboardPage = () => {
                 end_time: ev.end_time || null,
                 start_date: targetDate,
                 end_date: targetDate,
-            });
+            }, { silent: true });
             showToast('Event copied', 'success');
         } else if (drag.type === 'event') {
             handleUpdateCalendarEvent(drag.item.id, { start_date: targetDate, end_date: targetDate });
@@ -1049,25 +1051,25 @@ export const DashboardPage = () => {
                             <div data-tour="morning-report" className="lg:col-span-1 relative">
                                 {isLoading && (
                                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden flex flex-col h-full">
-                                        <div className="px-4 py-3 border-b border-slate-100 bg-rose-50/60 flex items-center gap-2.5">
-                                            <div className="w-8 h-8 bg-rose-200 rounded-lg animate-pulse" />
+                                        <div className="px-4 py-3 border-b border-slate-100 dark:border-[#243A58] bg-rose-50/60 dark:bg-rose-900/15 flex items-center gap-2.5">
+                                            <div className="w-8 h-8 bg-rose-200 dark:bg-rose-500/20 rounded-lg animate-pulse" />
                                             <div className="space-y-1">
-                                                <div className="h-3 w-24 bg-rose-100 rounded animate-pulse" />
-                                                <div className="h-2 w-16 bg-rose-50 rounded animate-pulse" />
+                                                <div className="h-3 w-24 bg-rose-100 dark:bg-rose-500/15 rounded animate-pulse" />
+                                                <div className="h-2 w-16 bg-rose-50 dark:bg-rose-500/10 rounded animate-pulse" />
                                             </div>
                                         </div>
                                         <div className="p-2.5 space-y-1.5 flex-1">
                                             {[1, 2, 3].map(i => (
-                                                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50 dark:bg-[#132338]/40">
+                                                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-50/50 dark:bg-[#0F1C30]/60">
                                                     <div className="w-7 h-7 rounded-md bg-slate-100 dark:bg-[#1A2D48] animate-pulse" />
-                                                    <div className="flex-1 h-3 bg-slate-100 rounded animate-pulse" />
-                                                    <div className="w-8 h-4 bg-slate-100 rounded animate-pulse" />
+                                                    <div className="flex-1 h-3 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
+                                                    <div className="w-8 h-4 bg-slate-100 dark:bg-[#1A2D48] rounded animate-pulse" />
                                                 </div>
                                             ))}
                                         </div>
                                         <div className="flex flex-col items-center py-4">
-                                            <div className="w-5 h-5 border-2 border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 border-t-rose-500 rounded-full animate-spin mb-1.5" />
-                                            <span className="text-[10px] font-medium text-slate-400">Loading performance report...</span>
+                                            <div className="w-5 h-5 border-2 border-rose-200 dark:border-rose-800/50 border-t-rose-500 rounded-full animate-spin mb-1.5" />
+                                            <span className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8]">Loading performance report...</span>
                                         </div>
                                     </div>
                                 )}

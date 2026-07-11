@@ -229,13 +229,23 @@ const AddEventModal = () => {
                     setCreating(false);
                 }
             } else {
-                // Single day
-                handleAddCalendarEvent({
-                    ...basePayload,
-                    start_date: startDate,
-                    end_date: startDate,
-                });
-                resetForm();
+                // Single day. Set creating=true + await so the button disables
+                // during the insert — otherwise a fast double-click on a trackpad
+                // fires two inserts (two events, two toasts). The batch paths above
+                // already guard this way; this brings the single-day path in line.
+                setCreating(true);
+                try {
+                    await handleAddCalendarEvent({
+                        ...basePayload,
+                        start_date: startDate,
+                        end_date: startDate,
+                    });
+                    resetForm();
+                } catch (err) {
+                    showToast('Failed to create event', 'error');
+                } finally {
+                    setCreating(false);
+                }
             }
         }
     };

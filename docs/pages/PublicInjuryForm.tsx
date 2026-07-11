@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
+import { clearStalePublicFormSession } from '../utils/publicFormSession';
 import { CheckCircle2, AlertCircle, Activity, ShieldAlertIcon, ChevronRight, ChevronLeft, Send, UploadCloudIcon, XIcon, Loader2 } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { useForceLightMode } from '../hooks/useForceLightMode';
@@ -99,12 +100,9 @@ const PublicInjuryForm = () => {
 
     const patch = (u) => setForm(p => ({ ...p, ...u }));
 
-    // Public form: clear any stale/expired session so the anon key is used on submit.
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            if (!data.session) supabase.auth.signOut({ scope: 'local' });
-        });
-    }, []);
+    // Public form: clear any stale/expired coach session so submit uses the anon key.
+    // See clearStalePublicFormSession — the previous inline check was inverted.
+    useEffect(() => { clearStalePublicFormSession(); }, []);
 
     useEffect(() => {
         const loadData = async () => {
@@ -160,7 +158,7 @@ const PublicInjuryForm = () => {
                 athlete_name: selectedAthlete?.name || 'Unknown',
                 date_of_injury: form.dateOfInjury,
                 report_data: form,
-            });
+            }, { isPublic: true });
             setSubmitted(true);
         } catch (err) {
             console.error(err);

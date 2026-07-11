@@ -320,9 +320,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     // --- TOAST SYSTEM ---
     const [toasts, setToasts] = useState([]);
+    // Monotonic counter — Date.now() collided when several toasts fired in the
+    // same millisecond (rapid event creation), producing duplicate React keys and
+    // a cleanup that removed multiple toasts at once. A counter guarantees unique ids.
+    const toastIdRef = useRef(0);
 
     const showToast = (message, typeOrActionLabel = null, actionHandler = null) => {
-        const id = Date.now();
+        const id = ++toastIdRef.current;
         const isType = ['success', 'error', 'info'].includes(typeOrActionLabel);
         const type = isType ? typeOrActionLabel : null;
         const actionLabel = isType ? null : typeOrActionLabel;
@@ -1757,13 +1761,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDeleteSession = async (sessionId) => {
+        // Optimistic — no global isLoading toggle (which would flash the dashboard
+        // skeletons, incl. the Performance Report, on every calendar delete).
+        // Capture pre-delete shape so we know if this was a program assignment and
+        // so we can roll back if the DB delete fails.
+        const sessionBeingDeleted = scheduledSessions.find(s => s.id === sessionId);
+        const prevSessions = scheduledSessions;
+        setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
         try {
-            setIsLoading(true);
-            // Capture pre-delete shape so we know if this was a program assignment.
-            // For packet sessions the tonnage source_id = session.id; for programs it = program_id.
-            const sessionBeingDeleted = scheduledSessions.find(s => s.id === sessionId);
             await DatabaseService.deleteSession(sessionId);
-            setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
 
             // Drop future-dated tonnage rows belonging to this session/program. Past
             // rows stay frozen as a historical record (per the "before the assigned
@@ -1786,8 +1792,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         } catch (err) {
             console.error("Error deleting session:", err);
             showToast("Failed to delete session", "error");
-        } finally {
-            setIsLoading(false);
+            setScheduledSessions(prevSessions); // rollback the optimistic removal
         }
     };
 
@@ -1797,7 +1802,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (isAddEventModalOpen) addEventModalGenRef.current += 1;
     }, [isAddEventModalOpen]);
 
-    const handleAddCalendarEvent = async (eventData) => {
+    // `options.silent` skips the built-in "Event created successfully" toast. The
+    // drag-to-copy path uses it so the copy shows a single "Event copied" toast
+    // instead of two (previously every copy fired both → "do 4 copies, get 8
+    // notifications" from the demo feedback).
+    const handleAddCalendarEvent = async (eventData, options = {}) => {
         const gen = addEventModalGenRef.current; // snapshot generation before async work
         try {
             const result = await DatabaseService.createCalendarEvent(eventData);
@@ -1805,7 +1814,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (result) {
                 setCalendarEvents(prev => [...prev, ...(Array.isArray(result) ? result : [result])]);
             }
-            showToast("Event created successfully", "success");
+            if (!options.silent) showToast("Event created successfully", "success");
             // Close modal only if user hasn't reopened it since this save started
             if (addEventModalGenRef.current === gen) {
                 setIsAddEventModalOpen(false);
@@ -1843,16 +1852,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDeleteCalendarEvent = async (id) => {
+        // Optimistic — same pattern as handleUpdateCalendarEvent. The old version
+        // flipped the global isLoading flag, which forced the Performance Report
+        // skeleton to render (always in its expanded form + light background) for
+        // the duration of the DB round-trip — so deleting an event made a collapsed
+        // report flash open with a white tinge before snapping back. Removing the
+        // isLoading toggle removes the flash; on failure we restore the snapshot.
+        const prevSnapshot = calendarEvents;
+        setCalendarEvents(prev => prev.filter(e => e.id !== id));
         try {
-            setIsLoading(true);
             await DatabaseService.deleteCalendarEvent(id);
-            setCalendarEvents(prev => prev.filter(e => e.id !== id));
             showToast("Event deleted", "success");
         } catch (err) {
             console.error("Error deleting calendar event:", err);
             showToast("Failed to delete event", "error");
-        } finally {
-            setIsLoading(false);
+            setCalendarEvents(prevSnapshot); // rollback
         }
     };
 

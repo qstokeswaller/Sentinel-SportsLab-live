@@ -13,6 +13,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
 import { supabase } from '../lib/supabase';
+import { clearStalePublicFormSession } from '../utils/publicFormSession';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
 import { DEFAULT_BODY_MAP_CONFIG } from '../utils/mocks';
 import { useForceLightMode } from '../hooks/useForceLightMode';
@@ -120,13 +121,9 @@ const FifaDailyWellnessForm: React.FC = () => {
     // Per-area severity picked in the sub-flow (areaKey → 1|2|3)
     const [areaSeverities, setAreaSeverities] = useState<Record<string, number>>({});
 
-    // Public form: clear any stale/expired session from localStorage so the anon key is used.
-    // Without this, devices that previously had a coach session stored will send an expired JWT → 401.
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            if (!data.session) supabase.auth.signOut({ scope: 'local' });
-        });
-    }, []);
+    // Public form: clear any stale/expired coach session so submit uses the anon key.
+    // See clearStalePublicFormSession — the previous inline check was inverted.
+    useEffect(() => { clearStalePublicFormSession(); }, []);
 
     useEffect(() => {
         const load = async () => {

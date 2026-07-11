@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from '../lib/supabase';
+import { supabasePublic } from '../lib/supabasePublic';
 
 export const DatabaseService = {
     // --- TEAMS ---
@@ -678,8 +679,9 @@ export const DatabaseService = {
     },
 
     // Resolve today's share session for a team+template (used by permalink auto-match)
+    // Public form → anon client (never attaches a stale device session).
     async resolveShareSessionId(teamId: string, templateId: string): Promise<string | null> {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         const { data, error } = await db.rpc('resolve_share_session_id', {
             p_team_id: teamId,
             p_template_id: templateId,
@@ -689,8 +691,9 @@ export const DatabaseService = {
     },
 
     // Check if athlete completed a weekly health check recently + get date
+    // Public form → anon client.
     async getRecentWeeklyInfo(athleteId: string, days = 7): Promise<{ hasRecent: boolean; lastDate: string | null }> {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         const { data, error } = await db.rpc('get_recent_weekly_info', { p_athlete_id: athleteId, p_days: days });
         if (error) { console.warn('getRecentWeeklyInfo error:', error); return { hasRecent: false, lastDate: null }; }
         return { hasRecent: !!data?.has_recent, lastDate: data?.last_date || null };
@@ -711,7 +714,9 @@ export const DatabaseService = {
         health_problem_flag?: boolean;
         readiness?: string;
     }) {
-        const db = supabase as any;
+        // Public form submit → anon client, so the insert always uses the anon key
+        // regardless of any (possibly stale) coach session on the device.
+        const db = supabasePublic as any;
         // No .select() on insert — avoids INSERT...RETURNING triggering the SELECT RLS
         // policy check on anon users (PostgreSQL 15 throws rather than silently filtering).
         const { error } = await db
@@ -771,12 +776,14 @@ export const DatabaseService = {
     },
 
     // --- INJURY CLASSIFICATIONS ---
+    // Public form (weekly wellness deep-check) → anon client. Athletes have no
+    // account, so user_id is intentionally null; the classification links via the
+    // wellness response, not a user.
     async saveInjuryClassification(classification: any) {
-        const { data: userData } = await supabase.auth.getUser();
-        const db = supabase as any;
+        const db = supabasePublic as any;
         // No .select() — avoids INSERT...RETURNING RLS check on anon (PostgreSQL 15)
         const { error } = await db.from('injury_classifications').insert({
-            ...classification, user_id: userData?.user?.id,
+            ...classification, user_id: null,
         });
         if (error) throw error;
     },
@@ -828,8 +835,12 @@ export const DatabaseService = {
         return data || [];
     },
 
+    // Public form (daily wellness repeat-detection) → anon client. This SELECT is
+    // best-effort: anon has no read policy on wellness_responses, so it returns []
+    // for real athletes — repeat detection simply doesn't fire, which is fine and
+    // non-fatal (the submit already succeeded).
     async fetchWellnessResponsesByAthlete(athleteId: string, dateFrom?: string, dateTo?: string) {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         let query = db
             .from('wellness_responses')
             .select('*')
@@ -855,17 +866,19 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
-    // Called by FIFA daily form (anon) — fetches athlete names only via SECURITY DEFINER RPC
+    // Called by FIFA daily/weekly form (anon) — fetches athlete names via SECURITY
+    // DEFINER RPC. Anon client so a stale device session can't 401 the form load.
     async getTeamAthletes(teamId: string) {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         const { data, error } = await db.rpc('get_team_athletes', { p_team_id: teamId });
         if (error) throw error;
         return data as { athletes: { id: string; name: string }[] };
     },
 
-    // Called by public form (anon) — fetches template + athlete names via SECURITY DEFINER RPC
+    // Called by public form (anon) — fetches template + athlete names via SECURITY
+    // DEFINER RPC. Anon client (see getTeamAthletes).
     async getWellnessFormData(templateId: string, teamId: string) {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         const { data, error } = await db
             .rpc('get_wellness_form_data', {
                 p_template_id: templateId,
@@ -877,6 +890,10 @@ export const DatabaseService = {
 
     // --- INJURY REPORTS ---
 
+    // `isPublic` routes through the anon client (public injury form) and skips
+    // .select() — anon has no SELECT policy on injury_reports, so INSERT...RETURNING
+    // would throw for real athletes (PostgreSQL 15). The authenticated Injury Report
+    // component keeps the shared client + returns the row it just wrote.
     async saveInjuryReport(report: {
         user_id?: string;
         team_id: string;
@@ -884,7 +901,13 @@ export const DatabaseService = {
         athlete_name: string;
         date_of_injury: string;
         report_data: Record<string, any>;
-    }) {
+    }, options: { isPublic?: boolean } = {}) {
+        if (options.isPublic) {
+            const db = supabasePublic as any;
+            const { error } = await db.from('injury_reports').insert(report);
+            if (error) throw error;
+            return undefined;
+        }
         const db = supabase as any;
         const { data, error } = await db
             .from('injury_reports')
@@ -936,9 +959,10 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
-    // Called by public injury form (anon) — fetches athlete roster via SECURITY DEFINER RPC
+    // Called by public injury form (anon) — fetches athlete roster via SECURITY
+    // DEFINER RPC. Anon client (see getTeamAthletes).
     async getInjuryFormData(teamId: string) {
-        const db = supabase as any;
+        const db = supabasePublic as any;
         const { data, error } = await db
             .rpc('get_injury_form_data', {
                 p_team_id: teamId,
