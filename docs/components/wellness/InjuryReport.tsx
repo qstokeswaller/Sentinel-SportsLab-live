@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
+import DatePicker from '../../components/ui/DatePicker';
 import {
     INJURY_CLASSIFICATIONS, SEVERITY_GRADES, LATERALITY_OPTIONS,
     INJURY_ACTIVITIES, PAIN_KINDS, RANGE_OF_MOTION_OPTIONS,
@@ -405,12 +406,7 @@ const InjuryReportComponent = () => {
                         <SectionCard title="Clinical Assessment">
                             <div>
                                 <Label>Date of Injury <span className="text-red-400">*</span></Label>
-                                <input
-                                    type="date"
-                                    value={form.dateOfInjury}
-                                    onChange={e => { patch({ dateOfInjury: e.target.value }); clearError('dateOfInjury'); }}
-                                    className={`w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] ${validationErrors.dateOfInjury ? 'border-red-400 ring-2 ring-red-100 dark:ring-red-500/20' : 'border-transparent dark:border-[#243A58] focus:border-indigo-500'}`}
-                                />
+                                <DatePicker value={form.dateOfInjury} onChange={e => { patch({ dateOfInjury: e.target.value }); clearError('dateOfInjury'); }} />
                                 {validationErrors.dateOfInjury && <p className="text-red-500 text-[10px] font-semibold mt-1.5 pl-1">{validationErrors.dateOfInjury}</p>}
                             </div>
 
@@ -517,12 +513,7 @@ const InjuryReportComponent = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label>Follow-up Date</Label>
-                                    <input
-                                        type="date"
-                                        value={form.followUpDate}
-                                        onChange={e => patch({ followUpDate: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white dark:focus:bg-[#1A2D48] border border-transparent dark:border-[#243A58] focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0]"
-                                    />
+                                    <DatePicker value={form.followUpDate} onChange={e => patch({ followUpDate: e.target.value })} className="w-full" />
                                 </div>
                                 <div>
                                     <Label>Expected Time Out</Label>

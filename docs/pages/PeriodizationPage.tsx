@@ -156,7 +156,7 @@ export const PeriodizationPage = () => {
                         <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5 ml-7">Periodization Plans</p>
                     </div>
                     <button onClick={() => setIsCreatePlanModalOpen(true)}
-                        className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-black transition-all">
+                        className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-black dark:hover:bg-indigo-500 transition-all">
                         <Plus size={14} /> New Plan
                     </button>
                 </div>
@@ -177,7 +177,7 @@ export const PeriodizationPage = () => {
                                 ].map(({ key, label, icon: Icon }) => (
                                     <button key={key}
                                         onClick={() => { setFilterType(key); setFilterTargetId(''); }}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${filterType === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-medium transition-all flex items-center gap-1 ${filterType === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                                         {Icon && <Icon size={10} />}
                                         {label}
                                     </button>

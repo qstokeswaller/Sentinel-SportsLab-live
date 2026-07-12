@@ -115,9 +115,9 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 bg-amber-50/50">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] bg-amber-50/50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
@@ -180,7 +180,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                                     className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
                                                         r?.action === 'assign' && r.athleteId === s.id
                                                             ? 'border-emerald-300 bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700'
-                                                            : 'border-slate-200 bg-white text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300'
+                                                            : 'border-slate-200 dark:border-[#243A58] bg-white text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300'
                                                     }`}
                                                 >
                                                     {s.name}
@@ -237,8 +237,8 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                         onClick={() => updateResolution(entry.csvName, { action: 'skip' })}
                                         className={`p-1.5 rounded-lg border transition-all ${
                                             r?.action === 'skip'
-                                                ? 'border-slate-300 bg-slate-100 text-slate-500'
-                                                : 'border-slate-200 text-slate-300 hover:text-slate-500 hover:border-slate-300'
+                                                ? 'border-slate-300 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1]'
+                                                : 'border-slate-200 dark:border-[#243A58] text-slate-300 hover:text-slate-500 hover:border-slate-300'
                                         }`}
                                         title="Skip this name"
                                     >
@@ -251,8 +251,8 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
-                    <button onClick={handleSkipAll} className="text-xs text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                <div className="px-5 py-4 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
+                    <button onClick={handleSkipAll} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                         Skip all unmatched
                     </button>
                     <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                                 allResolved
                                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm'
-                                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                    : 'bg-slate-200 text-slate-400 dark:text-[#94A3B8] cursor-not-allowed'
                             }`}
                         >
                             <CheckCircleIcon size={14} />

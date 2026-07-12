@@ -167,7 +167,7 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
                     </h2>
                     <button
                         onClick={onClose}
-                        aria-label="Close" className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                        aria-label="Close" className="p-2 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                     >
                         <XIcon size={16} />
                     </button>

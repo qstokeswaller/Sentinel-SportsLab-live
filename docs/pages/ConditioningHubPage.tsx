@@ -13,6 +13,8 @@ import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsP
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import { SkTileGrid, SkListCards } from '../components/ui/Skeleton';
+import TimePicker from '../components/ui/TimePicker';
+import DatePicker from '../components/ui/DatePicker';
 
 const ICON_MAP = {
     'Activity': ActivityIcon,
@@ -127,11 +129,11 @@ export const ConditioningHubPage = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Date</label>
-                        <input type="date" value={schedDate} onChange={e => setSchedDate(e.target.value)} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
+                        <DatePicker value={schedDate} onChange={e => setSchedDate(e.target.value)} className="w-full" />
                     </div>
                     <div>
                         <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Time</label>
-                        <input type="time" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="w-full bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-400" />
+                        <TimePicker value={schedTime} onChange={e => setSchedTime(e.target.value)} />
                     </div>
                     <div>
                         <label className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase mb-1 block">Assign to</label>

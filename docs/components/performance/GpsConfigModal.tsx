@@ -216,10 +216,10 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
     return (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
 
                 {/* ── Header ── */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                <div className="px-6 py-5 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
                             <LinkIcon size={18} />
@@ -233,7 +233,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-xl text-slate-400 transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-xl text-slate-400 dark:text-[#94A3B8] transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -252,14 +252,14 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                 value={provider}
                                 onChange={e => setProvider(e.target.value)}
                                 placeholder="e.g. Catapult, Polar Team Pro, STATSports"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
+                                className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
                             />
                         </div>
                         <div>
                             <label className="text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5">
                                 Upload Sample CSV <span className="text-slate-400 font-normal">(only headers are read — data is not stored)</span>
                             </label>
-                            <label className="flex items-center gap-2 cursor-pointer w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-slate-300 transition-colors">
+                            <label className="flex items-center gap-2 cursor-pointer w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:border-slate-300 transition-colors">
                                 <UploadIcon size={14} className="text-indigo-500 shrink-0" />
                                 <span className="truncate">
                                     {hasHeaders
@@ -273,8 +273,8 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
 
                     {/* Empty state */}
                     {!hasHeaders && (
-                        <div className="flex flex-col items-center justify-center py-14 text-center space-y-3 border-2 border-dashed border-slate-200 rounded-xl">
-                            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-300">
+                        <div className="flex flex-col items-center justify-center py-14 text-center space-y-3 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl">
+                            <div className="w-14 h-14 bg-slate-100 dark:bg-[#1A2D48] rounded-2xl flex items-center justify-center text-slate-300">
                                 <UploadIcon size={28} />
                             </div>
                             <div>
@@ -303,7 +303,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                         }`}>{pct}%</span>
                                     </div>
                                 </div>
-                                <div className="w-full bg-slate-100 rounded-full h-1.5 mb-4">
+                                <div className="w-full bg-slate-100 dark:bg-[#1A2D48] rounded-full h-1.5 mb-4">
                                     <div
                                         className={`h-1.5 rounded-full transition-all duration-500 ${
                                             pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500'
@@ -312,9 +312,9 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                     />
                                 </div>
 
-                                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                                <div className="border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                     {/* Table header */}
-                                    <div className="grid grid-cols-[2fr_2fr_2fr_72px] bg-slate-50 border-b border-slate-200 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 gap-3">
+                                    <div className="grid grid-cols-[2fr_2fr_2fr_72px] bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 gap-3">
                                         <span>CSV Column</span>
                                         <span>Platform Field</span>
                                         <span>Display Name</span>
@@ -326,7 +326,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                         {columnMappings.map((m, idx) => (
                                             <div
                                                 key={m.csvColumn}
-                                                className="grid grid-cols-[2fr_2fr_2fr_72px] items-center px-4 py-2.5 gap-3 hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors"
+                                                className="grid grid-cols-[2fr_2fr_2fr_72px] items-center px-4 py-2.5 gap-3 hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40 transition-colors"
                                             >
                                                 <span
                                                     className="text-xs font-mono text-slate-700 dark:text-[#CBD5E1] truncate"
@@ -349,7 +349,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                                     value={m.displayName}
                                                     onChange={e => updateMapping(idx, { displayName: e.target.value, autoMapped: false })}
                                                     placeholder={m.csvColumn}
-                                                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 transition-colors"
+                                                    className="text-xs bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 transition-colors"
                                                 />
                                                 <div className="flex justify-center">
                                                     {m.platformField ? (
@@ -361,7 +361,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                                                             {m.autoMapped ? 'Auto' : 'Manual'}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                                                        <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] px-2 py-0.5 rounded-full">
                                                             Ignored
                                                         </span>
                                                     )}
@@ -415,7 +415,7 @@ export const GpsConfigModal: React.FC<GpsConfigModalProps> = ({
                 </div>
 
                 {/* ── Footer ── */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] flex items-center justify-between shrink-0">
                     <p className="text-xs text-slate-400">
                         {existingProfile
                             ? `Last configured ${new Date(existingProfile.savedAt).toLocaleDateString()}`
@@ -553,7 +553,7 @@ export const GpsCategoryManager: React.FC<GpsCategoryManagerProps> = ({ onChange
 
             <button
                 onClick={handleReset}
-                className="text-xs text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors"
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors"
             >
                 Reset to defaults
             </button>

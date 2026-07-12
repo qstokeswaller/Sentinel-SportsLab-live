@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CalendarIcon, DumbbellIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const TrackingHub: React.FC<any> = ({
     BODY_PART_BG,
@@ -45,7 +46,7 @@ export const TrackingHub: React.FC<any> = ({
                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit border border-slate-200 dark:border-[#243A58]">
                     {tabs.map(tab => (
                         <button key={tab} onClick={() => setTrackingTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600"}`}>
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]"}`}>
                             {tab}
                         </button>
                     ))}
@@ -64,27 +65,25 @@ export const TrackingHub: React.FC<any> = ({
                             </div>
                             <div>
                                 <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
-                                <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
-                                    className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                <DatePicker value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))} />
                             </div>
                             <div>
                                 <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
-                                <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
-                                    className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                <DatePicker value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))} />
                             </div>
                         </div>
 
                         {/* KPI Cards */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
-                                { label: 'Weekly Total', value: `${trackingKpis.weeklyTotal.toLocaleString()} kg`, icon: <CalendarIcon size={16} className="text-indigo-500" />, sub: 'Last 7 days' },
-                                { label: 'Monthly Total', value: `${trackingKpis.monthlyTotal.toLocaleString()} kg`, icon: <DumbbellIcon size={16} className="text-indigo-500" />, sub: 'Selected range' },
-                                { label: 'Avg / Session', value: `${trackingKpis.avgPerSession.toLocaleString()} kg`, icon: <TrendingUpIcon size={16} className="text-indigo-500" />, sub: `${new Set(trackingAthleteData.map(d => d.date)).size} sessions` },
-                                { label: 'Peak Session', value: `${trackingKpis.peakTonnage.toLocaleString()} kg`, icon: <ZapIcon size={16} className="text-amber-500" />, sub: trackingKpis.peakDate || '—' },
+                                { label: 'Weekly Total', value: `${trackingKpis.weeklyTotal.toLocaleString()} kg`, icon: <CalendarIcon size={16} className="text-indigo-500 dark:text-indigo-300" />, sub: 'Last 7 days' },
+                                { label: 'Monthly Total', value: `${trackingKpis.monthlyTotal.toLocaleString()} kg`, icon: <DumbbellIcon size={16} className="text-indigo-500 dark:text-indigo-300" />, sub: 'Selected range' },
+                                { label: 'Avg / Session', value: `${trackingKpis.avgPerSession.toLocaleString()} kg`, icon: <TrendingUpIcon size={16} className="text-indigo-500 dark:text-indigo-300" />, sub: `${new Set(trackingAthleteData.map(d => d.date)).size} sessions` },
+                                { label: 'Peak Session', value: `${trackingKpis.peakTonnage.toLocaleString()} kg`, icon: <ZapIcon size={16} className="text-indigo-500 dark:text-indigo-300" />, sub: trackingKpis.peakDate || '—' },
                             ].map(kpi => (
                                 <div key={kpi.label} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center">{kpi.icon}</div>
+                                        <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg flex items-center justify-center">{kpi.icon}</div>
                                         <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">{kpi.label}</span>
                                     </div>
                                     <div className="text-2xl font-black text-slate-900 dark:text-[#E2E8F0]">{kpi.value}</div>
@@ -129,7 +128,7 @@ export const TrackingHub: React.FC<any> = ({
                                 </thead>
                                 <tbody>
                                     {trackingExerciseBreakdown.map((row, i) => (
-                                        <tr key={row.exercise} className={`border-b border-slate-50 ${i % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}`}>
+                                        <tr key={row.exercise} className={`border-b border-slate-50 dark:border-[#1A2D48] ${i % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}`}>
                                             <td className="px-5 py-3 text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">{row.exercise}</td>
                                             <td className="px-4 py-3 text-xs text-slate-600 dark:text-[#CBD5E1] text-center">{row.sets}</td>
                                             <td className="px-4 py-3 text-xs text-slate-600 dark:text-[#CBD5E1] text-center">{row.reps}</td>
@@ -166,7 +165,7 @@ export const TrackingHub: React.FC<any> = ({
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {(['This Week', 'This Month', 'Custom'] as const).map(p => (
                                     <button key={p} onClick={() => setTrackingPeriod(p)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                                         {p}
                                     </button>
                                 ))}
@@ -175,13 +174,11 @@ export const TrackingHub: React.FC<any> = ({
                                 <>
                                     <div>
                                         <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
-                                        <input type="date" value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))}
-                                            className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                        <DatePicker value={trackingDateRange.start} onChange={e => setTrackingDateRange(r => ({ ...r, start: e.target.value }))} />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
-                                        <input type="date" value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))}
-                                            className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                        <DatePicker value={trackingDateRange.end} onChange={e => setTrackingDateRange(r => ({ ...r, end: e.target.value }))} />
                                     </div>
                                 </>
                             )}
@@ -200,7 +197,7 @@ export const TrackingHub: React.FC<any> = ({
                                             { key: 'trend', label: 'Trend', align: 'center' },
                                         ].map(col => (
                                             <th key={col.key} onClick={() => handleTrackingSort(col.key)}
-                                                className={`px-5 py-3 text-${col.align} text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide cursor-pointer hover:text-slate-600 transition-colors select-none`}>
+                                                className={`px-5 py-3 text-${col.align} text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide cursor-pointer hover:text-slate-600 dark:hover:text-[#E2E8F0] transition-colors select-none`}>
                                                 <span className="inline-flex items-center gap-1">{col.label} <TrackingSortIcon col={col.key} /></span>
                                             </th>
                                         ))}
@@ -208,7 +205,7 @@ export const TrackingHub: React.FC<any> = ({
                                 </thead>
                                 <tbody>
                                     {trackingSortedTeamStats.length > 0 ? trackingSortedTeamStats.map((row, i) => (
-                                        <tr key={row.id} className={`border-b border-slate-50 hover:bg-indigo-50/30 transition-colors ${i % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}`}>
+                                        <tr key={row.id} className={`border-b border-slate-50 dark:border-[#1A2D48] hover:bg-indigo-50/30 dark:hover:bg-indigo-500/15 transition-colors ${i % 2 === 0 ? '' : 'bg-slate-50/30 dark:bg-[#0F1C30]/30'}`}>
                                             <td className="px-5 py-3.5 text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">{row.name}</td>
                                             <td className="px-4 py-3.5 text-xs text-slate-600 dark:text-[#CBD5E1] text-center">{row.sessions}</td>
                                             <td className="px-4 py-3.5 text-xs font-bold text-indigo-700 dark:text-indigo-400 text-center">{row.totalTonnage.toLocaleString()} kg</td>
@@ -238,7 +235,7 @@ export const TrackingHub: React.FC<any> = ({
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {(['Day', 'Week', 'Month', 'Custom'] as const).map(p => (
                                     <button key={p} onClick={() => setTrackingLoadPeriod(p)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadPeriod === p ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                                         {p}
                                     </button>
                                 ))}
@@ -247,23 +244,18 @@ export const TrackingHub: React.FC<any> = ({
                                 <div className="flex items-end gap-2">
                                     <div>
                                         <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">From</label>
-                                        <input type="date" value={trackingLoadCustomRange.start}
-                                            onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, start: e.target.value }))}
-                                            className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                        <DatePicker value={trackingLoadCustomRange.start} onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, start: e.target.value }))} />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">To</label>
-                                        <input type="date" value={trackingLoadCustomRange.end}
-                                            onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, end: e.target.value }))}
-                                            min={trackingLoadCustomRange.start}
-                                            className="text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 bg-slate-50 dark:bg-[#0F1C30]" />
+                                        <DatePicker value={trackingLoadCustomRange.end} onChange={e => setTrackingLoadCustomRange(prev => ({ ...prev, end: e.target.value }))} min={trackingLoadCustomRange.start} />
                                     </div>
                                 </div>
                             )}
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 {([['body_part', 'By Muscle'], ['region', 'By Region']] as const).map(([key, label]) => (
                                     <button key={key} onClick={() => setTrackingLoadView(key as any)}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadView === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${trackingLoadView === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                                         {label}
                                     </button>
                                 ))}

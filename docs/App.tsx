@@ -66,6 +66,7 @@ import {
 } from 'lucide-react';
 import { ACWR_METRIC_TYPES } from './utils/constants';
 import { useAuth } from './context/AuthContext';
+import DatePicker from './components/ui/DatePicker';
 
 // Extracted Components (None used directly in App.tsx)
 
@@ -152,7 +153,7 @@ const ToastContainer = () => {
                 return (
                     <div
                         key={t.id}
-                        className="pointer-events-auto flex items-center gap-3 min-w-[260px] max-w-sm bg-slate-900 text-white rounded-xl shadow-2xl px-4 py-3 border border-white/10 animate-in slide-in-from-bottom-2 fade-in duration-300"
+                        className="pointer-events-auto flex items-center gap-3 min-w-[260px] max-w-sm bg-slate-900 dark:bg-indigo-600 text-white rounded-xl shadow-2xl px-4 py-3 border border-white/10 animate-in slide-in-from-bottom-2 fade-in duration-300"
                     >
                         {isSuccess && <CheckCircle2Icon size={16} className="text-emerald-400 shrink-0" />}
                         {isError   && <XCircleIcon      size={16} className="text-rose-400 shrink-0" />}
@@ -168,7 +169,7 @@ const ToastContainer = () => {
                         )}
                         <button
                             onClick={() => dismiss(t.id)}
-                            className="p-0.5 text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+                            className="p-0.5 text-slate-500 dark:text-[#CBD5E1] hover:text-slate-300 transition-colors shrink-0"
                         >
                             <XIcon size={13} />
                         </button>
@@ -251,18 +252,18 @@ const AddAthleteModal = () => {
                             </span>
                         </div>
                     </div>
-                    <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Mode toggle */}
                 <div className="px-5 pt-4">
                     <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] p-0.5 rounded-lg">
                         <button onClick={() => { setAddAthleteMode('athlete'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:bg-[#1A2D48]'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'athlete' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:hover:bg-[#1A2D48]'}`}>
                             Athlete
                         </button>
                         <button onClick={() => { setAddAthleteMode('team'); setStep(1); }}
-                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:bg-[#1A2D48]'}`}>
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${addAthleteMode === 'team' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:hover:bg-[#1A2D48]'}`}>
                             Team
                         </button>
                     </div>
@@ -385,7 +386,7 @@ const AddAthleteModal = () => {
 
                 {/* Footer */}
                 <div className="px-5 py-4 border-t border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] flex justify-between items-center gap-3 shrink-0">
-                    <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         Cancel
                     </button>
                     <div className="flex gap-2">
@@ -413,7 +414,7 @@ const AddAthleteModal = () => {
                                 )}
                                 <button
                                     onClick={addAthleteMode === 'athlete' ? () => handleAddAthlete() : handleAddTeam}
-                                    className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors flex items-center gap-2"
+                                    className="px-5 py-2 bg-slate-900 dark:bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-black dark:hover:bg-indigo-500 transition-colors flex items-center gap-2"
                                 >
                                     <UserPlusIcon size={14} /> {addAthleteMode === 'athlete' ? 'Add Athlete' : 'Create Team'}
                                 </button>
@@ -705,7 +706,7 @@ table { width: 100%; border-collapse: collapse; }
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0"><PrinterIcon size={16} /></div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h3>
                     </div>
-                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Body */}
@@ -778,9 +779,9 @@ table { width: 100%; border-collapse: collapse; }
                                     <table className="w-full border-collapse text-xs">
                                         <thead>
                                             <tr>
-                                                <th className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
+                                                <th className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
                                                 {wsColumns.map((col, i) => (
-                                                    <th key={col.id} className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
+                                                    <th key={col.id} className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
                                                         {getColumnHeader(col, i)}
                                                     </th>
                                                 ))}
@@ -791,9 +792,9 @@ table { width: 100%; border-collapse: collapse; }
                                                 <tr><td colSpan={wsColumns.length + 1} className="px-3 py-6 text-center text-slate-300 text-xs">No athletes in selected squad</td></tr>
                                             ) : athletes.map(a => (
                                                 <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
-                                                    <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                                    <td className="px-3 py-2 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[11px] border border-slate-200 dark:border-[#243A58] whitespace-nowrap">{a.name}</td>
                                                     {wsColumns.map(col => (
-                                                        <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 text-center min-w-[80px]">
+                                                        <td key={col.id} className="px-3 py-2 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] text-center min-w-[80px]">
                                                             {getCellValue(col, a) || <span className="text-slate-200">&nbsp;</span>}
                                                         </td>
                                                     ))}
@@ -828,7 +829,7 @@ table { width: 100%; border-collapse: collapse; }
                                 </div>
                                 <button
                                     onClick={handlePrint}
-                                    className="w-full py-3 bg-white text-slate-900 dark:text-[#E2E8F0] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
+                                    className="w-full py-3 bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
                                 >
                                     <PrinterIcon size={14} /> Print Sheet
                                 </button>
@@ -839,7 +840,7 @@ table { width: 100%; border-collapse: collapse; }
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
                                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto no-scrollbar">
                                     {wsColumns.map((col, i) => (
-                                        <div key={col.id} className="border border-slate-100 rounded-lg p-3 space-y-2">
+                                        <div key={col.id} className="border border-slate-100 dark:border-[#243A58] rounded-lg p-3 space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Column {i + 1}</span>
                                                 <button onClick={() => removeColumn(col.id)} className="text-slate-300 hover:text-rose-400 transition-colors"><Trash2Icon size={13} /></button>
@@ -918,7 +919,7 @@ const AddSessionModal = () => {
                             <p className="text-xs text-slate-500">Quick schedule</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsAddSessionModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsAddSessionModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* TAB SWITCHER */}
@@ -954,12 +955,7 @@ const AddSessionModal = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className={LABEL}>Date</label>
-                                    <input
-                                        type="date"
-                                        value={newSession.date}
-                                        onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
-                                        className={INPUT}
-                                    />
+                                    <DatePicker value={newSession.date} onChange={(e) => setNewSession({ ...newSession, date: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className={LABEL}>Phase</label>
@@ -1089,7 +1085,7 @@ const AddSessionModal = () => {
 
                                                 {/* INPUTS FOR SETS/REPS IF SELECTED */}
                                                 {isSelected && (
-                                                    <div className="grid grid-cols-4 gap-2 border-t border-slate-100 pt-2.5 animate-in slide-in-from-top-2">
+                                                    <div className="grid grid-cols-4 gap-2 border-t border-slate-100 dark:border-[#243A58] pt-2.5 animate-in slide-in-from-top-2">
                                                         <div>
                                                             <label className="text-[9px] font-medium text-slate-400 block mb-1">Sets</label>
                                                             <input type="number" value={selectedEx.sets} onChange={(e) => {
@@ -1116,7 +1112,7 @@ const AddSessionModal = () => {
                                                             <button onClick={() => {
                                                                 const updated = newSession.exercises.filter(item => item.id !== ex.id);
                                                                 setNewSession({ ...newSession, exercises: updated });
-                                                            }} className="w-full bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-900/40 rounded-md py-1.5 text-[9px] font-medium hover:bg-rose-100">Remove</button>
+                                                            }} className="w-full bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-900/40 rounded-md py-1.5 text-[9px] font-medium hover:bg-rose-100 dark:hover:bg-rose-500/15">Remove</button>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1131,7 +1127,7 @@ const AddSessionModal = () => {
                     <button onClick={() => setIsAddSessionModalOpen(false)} className="flex-1 py-2.5 bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
                     <button
                         onClick={handleAddSession}
-                        className="flex-1 py-2.5 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-black transition-colors"
+                        className="flex-1 py-2.5 bg-slate-900 dark:bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-black dark:hover:bg-indigo-500 transition-colors"
                     >
                         Create Session
                     </button>
@@ -1201,7 +1197,7 @@ const SessionModal = () => {
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-md shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 ${headerBg} rounded-lg flex items-center justify-center text-white shrink-0`}>
                             {headerIcon}
@@ -1211,7 +1207,7 @@ const SessionModal = () => {
                             <p className="text-xs text-slate-400 mt-0.5">{typeLabel}</p>
                         </div>
                     </div>
-                    <button onClick={() => setViewingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setViewingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Details */}
@@ -1333,7 +1329,7 @@ const SessionModal = () => {
                         </button>
                     </div>
                     {!isWattbike && !isConditioning && (
-                        <button onClick={handleViewWorkout} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors">
+                        <button onClick={handleViewWorkout} className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-indigo-500 transition-colors">
                             <DumbbellIcon size={14} /> View Workout
                         </button>
                     )}
@@ -1620,7 +1616,7 @@ const ACWRDetailModal = () => {
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[500] p-0 lg:p-4 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] rounded-none lg:rounded-xl shadow-xl lg:max-w-5xl w-full h-full lg:h-auto lg:max-h-[90vh] overflow-hidden flex flex-col text-slate-900 dark:text-[#E2E8F0]">
-                <div className="px-5 py-4 border-b border-slate-100">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58]">
                     <div className="flex justify-between items-start">
                         <div>
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{acwrDetailAthlete.name}</h2>

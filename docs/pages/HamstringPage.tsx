@@ -29,16 +29,16 @@ export const HamstringPage = () => {
     return (
         <div className="space-y-5 animate-in fade-in duration-300">
             {/* Mode toggle */}
-            <div className="flex bg-slate-100 p-0.5 rounded-lg w-fit">
+            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
                 <button
                     onClick={() => setHamAssessmentMode('split')}
-                    className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hamAssessmentMode === 'split' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}
+                    className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hamAssessmentMode === 'split' ? 'bg-white dark:bg-[#132338] text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}
                 >
                     Split (L/R)
                 </button>
                 <button
                     onClick={() => setHamAssessmentMode('aggregate')}
-                    className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}
+                    className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white dark:bg-[#132338] text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}
                 >
                     Aggregate
                 </button>
@@ -53,15 +53,15 @@ export const HamstringPage = () => {
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500 block">Left (N)</label>
-                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="350" />
+                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="350" />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500 block">Right (N)</label>
-                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="340" />
+                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="340" />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500 block">Body Weight (kg)</label>
-                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="85" />
+                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="85" />
                         </div>
                     </div>
 
@@ -98,11 +98,11 @@ export const HamstringPage = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500 block">Total Force (N)</label>
-                            <input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="e.g. 700" />
+                            <input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="e.g. 700" />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-medium text-slate-500 block">Body Weight (kg)</label>
-                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="e.g. 85" />
+                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300" placeholder="e.g. 85" />
                         </div>
                     </div>
 
@@ -117,7 +117,7 @@ export const HamstringPage = () => {
             )}
 
             {/* Save row */}
-            <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
                 <CustomSelect
                     variant="form"
                     value={hamAthleteId}

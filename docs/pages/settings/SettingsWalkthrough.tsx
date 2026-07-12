@@ -212,7 +212,7 @@ export const SettingsWalkthrough: React.FC<any> = ({
                   StorageService.saveTourState(fresh);
                   showToast?.('All tours reset');
                 }}
-                className="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-rose-500 transition-colors"
+                className="flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-[#94A3B8] hover:text-rose-500 transition-colors"
               >
                 <RotateCcwIcon size={12} /> Reset all page tours
               </button>

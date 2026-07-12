@@ -61,7 +61,7 @@ export const WellnessAthleteView: React.FC<Props> = ({
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setViewMode('dashboard')}
-                            className="w-9 h-9 bg-slate-50 dark:bg-[#0F1C30] rounded-lg flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                            className="w-9 h-9 bg-slate-50 dark:bg-[#0F1C30] rounded-lg flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-all"
                         >
                             <ArrowLeft size={16} />
                         </button>

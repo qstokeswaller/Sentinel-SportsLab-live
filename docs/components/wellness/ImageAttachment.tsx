@@ -28,7 +28,7 @@ const ImageAttachment: React.FC<ImageAttachmentProps> = ({ imageUrl, onUpload, o
     if (imageUrl) {
         return (
             <div className="mt-3 relative group">
-                <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]">
                     <img src={imageUrl} alt="Reference" className="w-full object-contain max-h-40" />
                 </div>
                 <button
@@ -60,7 +60,7 @@ const ImageAttachment: React.FC<ImageAttachmentProps> = ({ imageUrl, onUpload, o
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={uploading}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-semibold text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] hover:border-slate-300 hover:text-slate-500 transition-all"
             >
                 {uploading ? (
                     <><Loader2 size={12} className="animate-spin" /> Uploading...</>

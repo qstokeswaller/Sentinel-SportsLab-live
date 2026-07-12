@@ -6,7 +6,7 @@ import { AlertCircle, FileText, Printer, DumbbellIcon, TagIcon, Activity as Acti
 import { useForceLightMode } from '../hooks/useForceLightMode';
 
 const BrandingBanner = () => (
-    <div className="bg-white border-b border-slate-100 py-4 print:py-6 print:border-b-2 print:border-slate-200">
+    <div className="bg-white border-b border-slate-100 dark:border-[#243A58] py-4 print:py-6 print:border-b-2 print:border-slate-200">
         <div className="flex flex-col items-center justify-center gap-1.5">
             <div className="flex items-center gap-2.5">
                 <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-11 w-auto shrink-0 select-none" />
@@ -103,7 +103,7 @@ const renderTextLines = (lines: TextLine[]) => {
             );
             i++;
         } else if (line.type === 'divider') {
-            elements.push(<hr key={line.id || i} className="border-slate-200 my-4" />);
+            elements.push(<hr key={line.id || i} className="border-slate-200 dark:border-[#243A58] my-4" />);
             i++;
         } else if (line.type === 'bullet') {
             const items: TextLine[] = [];
@@ -166,7 +166,7 @@ const BlockRenderer: React.FC<{ block: ProtocolBlock }> = ({ block }) => {
                 {exercises.length > 0 ? (
                     <div className="space-y-1.5">
                         {exercises.map((ex, idx) => (
-                            <div key={idx} className="flex items-start gap-2.5 bg-white rounded-lg border border-slate-200 px-3 py-2" style={{ breakInside: 'avoid' }}>
+                            <div key={idx} className="flex items-start gap-2.5 bg-white rounded-lg border border-slate-200 dark:border-[#243A58] px-3 py-2" style={{ breakInside: 'avoid' }}>
                                 <span className="text-[10px] font-bold text-indigo-400 mt-0.5 w-5 shrink-0 text-right">
                                     {idx + 1}.
                                 </span>
@@ -264,7 +264,7 @@ const PublicProtocolView: React.FC = () => {
         <div className="bg-[#F8F9FF] print-standalone">
             <BrandingBanner />
             {/* Header bar */}
-            <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">
+            <div className="bg-white border-b border-slate-200 dark:border-[#243A58] px-4 py-3 flex items-center justify-between print:border-none print:px-0 no-print">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                         <FileText size={16} className="text-indigo-500" />
@@ -302,7 +302,7 @@ const PublicProtocolView: React.FC = () => {
 
             {/* Document body */}
             <div className="max-w-3xl mx-auto px-4 sm:px-8 mt-5 pb-12 print:px-0 print:mt-0">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-8 sm:px-14 py-8 print:border-none print:shadow-none print:px-0 print:py-0">
+                <div className="bg-white rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-8 sm:px-14 py-8 print:border-none print:shadow-none print:px-0 print:py-0">
                     {protocol.blocks.length > 0 ? (
                         protocol.blocks.map((block, idx) => (
                             <BlockRenderer key={block?.id || idx} block={block} />

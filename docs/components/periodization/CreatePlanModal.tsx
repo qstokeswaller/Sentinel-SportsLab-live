@@ -4,6 +4,7 @@ import { useAppState } from '../../context/AppStateContext';
 import { X, Users, User, CalendarDays, Plus } from 'lucide-react';
 import { DEFAULT_MODALITY_PRESETS } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
+import DatePicker from '../../components/ui/DatePicker';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
 const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
@@ -102,11 +103,11 @@ export const CreatePlanModal = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className={LABEL}>Start Date</label>
-                            <input type="date" className={INPUT} value={startDate} onChange={e => setStartDate(e.target.value)} />
+                            <DatePicker value={startDate} onChange={e => setStartDate(e.target.value)} />
                         </div>
                         <div>
                             <label className={LABEL}>End Date <span className="text-slate-400 normal-case">(optional)</span></label>
-                            <input type="date" className={INPUT} value={endDate} onChange={e => setEndDate(e.target.value)} />
+                            <DatePicker value={endDate} onChange={e => setEndDate(e.target.value)} />
                         </div>
                     </div>
 
@@ -124,14 +125,14 @@ export const CreatePlanModal = () => {
                         <div className="flex gap-2">
                             <input className={`${INPUT} flex-1`} placeholder="Add modality..." value={newModality}
                                 onChange={e => setNewModality(e.target.value)} onKeyDown={e => e.key === 'Enter' && addModality()} />
-                            <button onClick={addModality} className="px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
+                            <button onClick={addModality} className="px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] rounded-lg text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
                                 <Plus size={14} />
                             </button>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-2">
                             {DEFAULT_MODALITY_PRESETS.filter(p => !modalities.includes(p)).map(preset => (
                                 <button key={preset} onClick={() => setModalities([...modalities, preset])}
-                                    className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 dark:border-[#243A58] text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors">
+                                    className="text-[10px] px-2 py-0.5 rounded-full border border-dashed border-slate-300 dark:border-[#243A58] text-slate-400 dark:text-[#94A3B8] hover:border-indigo-300 hover:text-indigo-500 transition-colors">
                                     + {preset}
                                 </button>
                             ))}
@@ -140,7 +141,7 @@ export const CreatePlanModal = () => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/30">
-                    <button onClick={() => setIsCreatePlanModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] transition-colors">Cancel</button>
+                    <button onClick={() => setIsCreatePlanModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">Cancel</button>
                     <button onClick={handleSubmit} disabled={!name.trim()}
                         className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                         Create Plan

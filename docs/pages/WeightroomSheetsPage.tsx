@@ -68,7 +68,7 @@ function formatSourceLine(src?: { packetName?: string; sessionDate?: string | nu
 
 export const WeightroomSheetsPage = () => {
     const navigate = useNavigate();
-    const { teams, exercises, maxHistory, isLoading, scheduledSessions, showToast } = useAppState();
+    const { teams, exercises, maxHistory, isLoading, isSecondaryLoading, scheduledSessions, showToast } = useAppState();
     const { data: savedSheets = [] } = useWeightroomSheets();
     const createSheet = useCreateSheet();
     const updateSheet = useUpdateSheet();
@@ -802,16 +802,16 @@ table { width: 100%; border-collapse: collapse; }
                                 <table className="w-full border-collapse text-xs">
                                     <thead>
                                         <tr>
-                                            <th className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
+                                            <th className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
                                             {wsColumns.map((col, i) => (
-                                                <th key={col.id} className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
+                                                <th key={col.id} className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
                                                     {getColumnHeader(col, i)}
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {isLoading ? (
+                                        {(isLoading || (isSecondaryLoading && exercises.length === 0)) ? (
                                             <>
                                                 {[1, 2, 3, 4, 5].map(i => (
                                                     <tr key={i}>
@@ -872,7 +872,7 @@ table { width: 100%; border-collapse: collapse; }
                         </div>
                         <button
                             onClick={handlePrint}
-                            className="w-full py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                            className="w-full py-3 bg-white dark:bg-[#132338] text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
                         >
                             <PrinterIcon size={14} /> Print Sheet
                         </button>

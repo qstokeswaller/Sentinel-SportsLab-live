@@ -68,6 +68,7 @@ export const WorkoutSessionsPage = () => {
     const assignCtx = (location.state as any)?.assignToPlanSession || null;
     const {
         workoutTemplates, setWorkoutTemplates, isLoading, showToast,
+        isSecondaryLoading,
         scheduledSessions, teams, resolveTargetName,
     } = useAppState();
     const { user: authUser } = useAuth();
@@ -699,10 +700,19 @@ export const WorkoutSessionsPage = () => {
                     Empty / loading states render INSIDE the white container so the shell never collapses. */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
                     <div className="overflow-y-auto flex-1 custom-scrollbar">
-                {isLoading && workoutTemplates.length === 0 ? (
-                    <div className="py-16 px-5 flex flex-col items-center justify-center gap-3">
-                        <div className="w-6 h-6 border-2 border-emerald-200 dark:border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin" />
-                        <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading packets...</span>
+                {(isLoading || isSecondaryLoading) && workoutTemplates.length === 0 ? (
+                    /* Skeleton (Phase 4c): mirrors the packet list rows */
+                    <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="px-5 py-4 flex items-center gap-3 animate-pulse">
+                                <div className="w-9 h-9 rounded-lg bg-slate-200/70 dark:bg-[#1A2D48] shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3.5 w-44 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                    <div className="h-2.5 w-24 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                </div>
+                                <div className="h-6 w-16 rounded-full bg-slate-200/70 dark:bg-[#1A2D48]" />
+                            </div>
+                        ))}
                     </div>
                 ) : filteredTemplates.length === 0 ? (
                     <div className="py-20 px-5 text-center">

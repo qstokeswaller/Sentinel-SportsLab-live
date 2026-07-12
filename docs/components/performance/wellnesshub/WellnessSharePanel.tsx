@@ -77,7 +77,7 @@ export const WellnessSharePanel: React.FC<Props> = ({
                 <button
                     onClick={() => setViewMode('dashboard')}
                     aria-label="Back to dashboard"
-                    className="w-12 h-12 bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] hover:text-slate-900 transition-all"
+                    className="w-12 h-12 bg-white dark:bg-[#132338] border-2 border-slate-100 dark:border-[#1A2D48] rounded-xl flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-all"
                 >
                     <ArrowLeft size={20} />
                 </button>
@@ -178,7 +178,7 @@ export const WellnessSharePanel: React.FC<Props> = ({
                                         {isSelected && (
                                             <div className="flex items-center gap-2">
                                                 <CheckCircle2 size={18} />
-                                                <div className="w-6 h-6 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-all" title="Deselect">
+                                                <div className="w-6 h-6 bg-white/20 hover:bg-white/40 dark:hover:bg-[#1A2D48]/60 rounded-full flex items-center justify-center transition-all" title="Deselect">
                                                     <X size={12} />
                                                 </div>
                                             </div>
@@ -191,7 +191,7 @@ export const WellnessSharePanel: React.FC<Props> = ({
                         {/* Create new template card */}
                         <div
                             onClick={() => setViewMode('templates')}
-                            className="p-5 rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40 hover:border-slate-300 hover:bg-white transition-all cursor-pointer group"
+                            className="p-5 rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40 hover:border-slate-300 hover:bg-white dark:hover:bg-[#1A2D48] transition-all cursor-pointer group"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] flex items-center justify-center text-slate-300 dark:text-[#475569] group-hover:text-slate-500 transition-colors">
@@ -275,7 +275,7 @@ export const WellnessSharePanel: React.FC<Props> = ({
                                         <button
                                             onClick={handleTrackToday}
                                             disabled={sharingInProgress}
-                                            className="w-full py-3 rounded-xl font-semibold text-[10px] uppercase tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border-2 bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 disabled:opacity-60"
+                                            className="w-full py-3 rounded-xl font-semibold text-[10px] uppercase tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 border-2 bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:border-cyan-300 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-500/15 disabled:opacity-60"
                                         >
                                             {sharingInProgress ? (
                                                 <><Clock size={14} className="animate-spin" /> Creating...</>

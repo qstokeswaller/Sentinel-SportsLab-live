@@ -149,7 +149,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
     if (mode === 'update-password') {
         return (
             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-                <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+                <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-[#243A58] p-8">
                     <div className="flex items-center gap-2.5 mb-6">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                         <span className="font-bold text-slate-900">Sentinel <span className="text-indigo-600">SportsLab</span></span>
@@ -214,12 +214,12 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required readOnly={emailReadOnly} className={`${inputCls} ${emailReadOnly ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}`} placeholder="coach@club.com" autoComplete="email" />
                             </div>
                             <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm disabled:opacity-60 transition-colors">{loading ? 'Sending…' : 'Send reset link'}</button>
-                            <button type="button" onClick={() => switchMode('signin')} className="w-full text-[12px] text-slate-500 hover:text-slate-700 mt-1">Back to sign in</button>
+                            <button type="button" onClick={() => switchMode('signin')} className="w-full text-[12px] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] mt-1">Back to sign in</button>
                         </form>
                     )}
 
                     {/* Mobile-only inline switch to signup */}
-                    <div className="lg:hidden mt-6 pt-5 border-t border-slate-100 text-center">
+                    <div className="lg:hidden mt-6 pt-5 border-t border-slate-100 dark:border-[#243A58] text-center">
                         <button onClick={() => switchMode('signup')} className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-700">Don't have an account? Create one →</button>
                     </div>
                 </div>
@@ -292,7 +292,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                                     type="button"
                                                     onClick={() => setSelectedPlan(p.id)}
                                                     className={`relative text-left px-3 py-2.5 rounded-lg border-[1.5px] transition-all ${
-                                                        isSel ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                                        isSel ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
                                                     }`}
                                                 >
                                                     {p.popular && (
@@ -338,7 +338,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                     </form>
 
                     {/* Mobile-only inline switch to signin */}
-                    <div className="lg:hidden mt-6 pt-5 border-t border-slate-100 text-center">
+                    <div className="lg:hidden mt-6 pt-5 border-t border-slate-100 dark:border-[#243A58] text-center">
                         <button onClick={() => switchMode('signin')} className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-700">Already have an account? Sign in →</button>
                     </div>
                     </>

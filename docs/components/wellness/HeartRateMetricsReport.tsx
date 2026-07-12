@@ -9,6 +9,7 @@ import { CustomSelect } from '../ui/CustomSelect';
 import SmartCsvMapper from '../ui/SmartCsvMapper';
 import { HR_SCHEMA } from '../../utils/csvSchemas';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
+import DatePicker from '../../components/ui/DatePicker';
 
 const HR_ZONE_DEFS = [
     { zone: 'Z1', label: 'Recovery', min: 0, max: 60, color: 'bg-sky-400' },
@@ -160,7 +161,7 @@ export const HeartRateMetricsReport: React.FC = () => {
                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
                     {['Team', 'Individual'].map(m => (
                         <button key={m} onClick={() => setHrReportViewMode(m)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${hrReportViewMode === m ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                             {m} View
                         </button>
                     ))}
@@ -181,11 +182,9 @@ export const HeartRateMetricsReport: React.FC = () => {
                 )}
                 <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] px-4 py-2 rounded-xl border border-slate-200 dark:border-[#243A58]">
                     <CalendarIcon size={14} className="text-slate-400 dark:text-[#CBD5E1]" />
-                    <input type="date" value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })}
-                        className="bg-transparent text-xs font-bold text-slate-700 dark:text-[#E2E8F0] outline-none uppercase w-24" />
+                    <DatePicker value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })} className="w-24" />
                     <span className="text-slate-300 dark:text-[#475569]">-</span>
-                    <input type="date" value={hrReportDateRange.end} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })}
-                        className="bg-transparent text-xs font-bold text-slate-700 dark:text-[#E2E8F0] outline-none uppercase w-24" />
+                    <DatePicker value={hrReportDateRange.end} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })} className="w-24" />
                 </div>
                 <div className="flex items-center gap-2">
                     <input ref={hrFileRef} type="file" accept=".csv" className="hidden" onChange={handleHrFileUpload} />
@@ -193,7 +192,7 @@ export const HeartRateMetricsReport: React.FC = () => {
                         <UploadIcon size={13} /> Import CSV
                     </button>
                     {safeHrData.length > 0 && (
-                        <button onClick={handleClearHrData} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold hover:bg-red-50 hover:text-red-500 transition-all">
+                        <button onClick={handleClearHrData} className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold hover:bg-red-50 dark:hover:bg-red-500/15 hover:text-red-500 transition-all">
                             <Trash2Icon size={12} /> Clear
                         </button>
                     )}

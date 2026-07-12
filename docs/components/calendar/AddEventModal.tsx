@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { AssigneePicker } from './AssigneePicker';
+import TimePicker from '../ui/TimePicker';
+import DatePicker from '../../components/ui/DatePicker';
 
 // ── Constants ────────────────────────────────────────────────────────────
 
@@ -390,7 +392,7 @@ const AddEventModal = () => {
                             onClick={() => setAllDay(!allDay)}
                             className={`w-10 h-5 rounded-full transition-colors relative ${allDay ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#243A58]'}`}
                         >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white dark:bg-[#132338] shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
                         </button>
                         <span className="text-xs font-medium text-slate-700 dark:text-[#CBD5E1]">All Day</span>
                     </div>
@@ -419,22 +421,11 @@ const AddEventModal = () => {
                         <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-150">
                             <div>
                                 <label className={LABEL}>Start Date <span className="text-red-400">*</span></label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={e => setStartDate(e.target.value)}
-                                    className={INPUT}
-                                />
+                                <DatePicker value={startDate} onChange={e => setStartDate(e.target.value)} />
                             </div>
                             <div>
                                 <label className={LABEL}>End Date</label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={e => setEndDate(e.target.value)}
-                                    min={startDate}
-                                    className={INPUT}
-                                />
+                                <DatePicker value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} />
                             </div>
                         </div>
                     )}
@@ -445,12 +436,7 @@ const AddEventModal = () => {
                             <div className="flex items-end gap-2">
                                 <div className="flex-1">
                                     <label className={LABEL}>Pick a Date</label>
-                                    <input
-                                        type="date"
-                                        value={dateToAdd}
-                                        onChange={e => setDateToAdd(e.target.value)}
-                                        className={INPUT}
-                                    />
+                                    <DatePicker value={dateToAdd} onChange={e => setDateToAdd(e.target.value)} />
                                 </div>
                                 <button
                                     onClick={addSelectedDate}
@@ -487,25 +473,13 @@ const AddEventModal = () => {
                             <div>
                                 <label className={LABEL}>Start Time</label>
                                 <div className="relative">
-                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#475569]" />
-                                    <input
-                                        type="time"
-                                        value={startTime}
-                                        onChange={e => setStartTime(e.target.value)}
-                                        className={INPUT + ' pl-9'}
-                                    />
+                                    <TimePicker value={startTime} onChange={e => setStartTime(e.target.value)} />
                                 </div>
                             </div>
                             <div>
                                 <label className={LABEL}>End Time</label>
                                 <div className="relative">
-                                    <ClockIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#475569]" />
-                                    <input
-                                        type="time"
-                                        value={endTime}
-                                        onChange={e => setEndTime(e.target.value)}
-                                        className={INPUT + ' pl-9'}
-                                    />
+                                    <TimePicker value={endTime} onChange={e => setEndTime(e.target.value)} />
                                 </div>
                             </div>
                         </div>

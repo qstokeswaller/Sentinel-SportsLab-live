@@ -9,6 +9,7 @@ import { KpiWatchlistModal } from '../components/analytics/KpiWatchlistModal';
 import DoseResponseTerminal from '../components/analytics/DoseResponseTerminal';
 import ForceVelocityTerminal from '../components/analytics/ForceVelocityTerminal';
 import { DatabaseService } from '../services/databaseService';
+import DatePicker from '../components/ui/DatePicker';
 
 export const AnalyticsHubPage = () => {
     const {
@@ -257,9 +258,9 @@ export const AnalyticsHubPage = () => {
                 </div>
                 <div data-tour="analytics-dates" className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-1.5 border border-slate-200 dark:border-[#243A58]">
                     <CalendarIcon size={13} className="text-slate-400 dark:text-[#CBD5E1]" />
-                    <input type="date" value={analyticsStartDate} onChange={(e) => setAnalyticsStartDate(e.target.value)} className="text-xs text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer" />
+                    <DatePicker value={analyticsStartDate} onChange={(e) => setAnalyticsStartDate(e.target.value)} className="w-28" />
                     <span className="text-slate-300 dark:text-[#475569] text-xs">–</span>
-                    <input type="date" value={analyticsEndDate} onChange={(e) => setAnalyticsEndDate(e.target.value)} className="text-xs text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer" />
+                    <DatePicker value={analyticsEndDate} onChange={(e) => setAnalyticsEndDate(e.target.value)} className="w-28" />
                 </div>
             </div>
             )}

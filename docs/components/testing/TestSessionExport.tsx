@@ -9,6 +9,7 @@ import {
     FileTextIcon, CheckCircleIcon,
 } from 'lucide-react';
 import { ShareTestReportModal } from './ShareTestReportModal';
+import DatePicker from '../../components/ui/DatePicker';
 
 /**
  * Export/Print testing session results.
@@ -167,23 +168,13 @@ export const TestSessionExport: React.FC = () => {
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <CalendarIcon size={12} className="inline mr-1" />From
                         </label>
-                        <input
-                            type="date"
-                            value={dateStart}
-                            onChange={e => { setDateStart(e.target.value); setLoaded(false); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
-                        />
+                        <DatePicker value={dateStart} onChange={e => { setDateStart(e.target.value); setLoaded(false); }} className="w-full" />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">
                             <CalendarIcon size={12} className="inline mr-1" />To
                         </label>
-                        <input
-                            type="date"
-                            value={dateEnd}
-                            onChange={e => { setDateEnd(e.target.value); setLoaded(false); }}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
-                        />
+                        <DatePicker value={dateEnd} onChange={e => { setDateEnd(e.target.value); setLoaded(false); }} className="w-full" />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-600 dark:text-[#CBD5E1] mb-1">

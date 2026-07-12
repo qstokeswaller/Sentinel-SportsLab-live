@@ -113,7 +113,7 @@ export const WellnessTeamSelection: React.FC<any> = ({
                                     </span>
                                 )}
 
-                                <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
+                                <div className="pt-3 border-t border-slate-50 dark:border-[#1A2D48] flex items-center justify-between">
                                     <span className="text-[9px] font-bold text-slate-300 dark:text-[#475569] uppercase">
                                         {responseCount}/{totalAthletes} responded today
                                     </span>

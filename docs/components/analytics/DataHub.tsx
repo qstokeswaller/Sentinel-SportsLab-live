@@ -28,6 +28,7 @@ import { CustomSelect } from '../ui/CustomSelect';
 import { COLUMNS, ColumnDef, DEFAULT_VISIBLE_KEYS, findColumn, ResolveCtx, DataPoint } from './dataHubColumns';
 import { DataHubColumnsModal, ColumnsConfig } from './DataHubColumnsModal';
 import { DatabaseService } from '../../services/databaseService';
+import DatePicker from '../../components/ui/DatePicker';
 
 // ─── Cell-level rendering ─────────────────────────────────────────────────
 const DASH = <span className="text-slate-300 dark:text-[#94A3B8] text-xs font-bold">—</span>;
@@ -696,12 +697,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     {viewMode === 'latest' && (
                         <div className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg" title="Show data as-of this date. Leave blank for today's most-recent.">
                             <CalendarIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
-                            <input
-                                type="date"
-                                value={snapshotDate}
-                                onChange={e => setSnapshotDate(e.target.value)}
-                                className="bg-transparent text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none w-28"
-                            />
+                            <DatePicker value={snapshotDate} onChange={e => setSnapshotDate(e.target.value)} className="w-28" />
                             {snapshotDate && (
                                 <button onClick={() => setSnapshotDate('')} className="text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1]" title="Clear date"><XIcon size={11} /></button>
                             )}
@@ -751,12 +747,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                                     </div>
                                     <label className="block">
                                         <span className="block text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1 uppercase tracking-wide">Date</span>
-                                        <input
-                                            type="date"
-                                            value={newSnapshotDate}
-                                            onChange={e => setNewSnapshotDate(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                                        />
+                                        <DatePicker value={newSnapshotDate} onChange={e => setNewSnapshotDate(e.target.value)} className="w-full" />
                                     </label>
                                     <div>
                                         <span className="block text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1 uppercase tracking-wide">Mode</span>
@@ -1087,10 +1078,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                             <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] leading-snug">
                                 Pick a date to lock this sub-column to. The cell will only show values collected on that exact date (blank otherwise) — like a "precise" filter on this slot.
                             </p>
-                            <input
-                                type="date"
-                                defaultValue={currentLock}
-                                onChange={e => {
+                            <DatePicker value="" onChange={e => {
                                     const val = e.target.value;
                                     setSlotLocks(prev => {
                                         const arr = [...(prev[colKey] || [])];
@@ -1098,9 +1086,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                                         arr[slotIdx] = val || null;
                                         return { ...prev, [colKey]: arr };
                                     });
-                                }}
-                                className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                                }} className="w-full" />
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => {
@@ -1357,7 +1343,7 @@ const DataHubTable: React.FC<TableProps> = ({
                                             {!readOnly && onOpenColMenu && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onOpenColMenu(c.key); }}
-                                                    className={`p-0.5 rounded transition-colors ${activeFilter ? 'text-indigo-300' : 'text-slate-500 hover:text-white'}`}
+                                                    className={`p-0.5 rounded transition-colors ${activeFilter ? 'text-indigo-300' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-white'}`}
                                                     title="Sort & filter"
                                                 >
                                                     <FilterIcon size={10} />

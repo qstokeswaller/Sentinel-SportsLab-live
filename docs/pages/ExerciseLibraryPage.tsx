@@ -72,7 +72,7 @@ function NewCollectionModal({ onClose, onSave }: { onClose: () => void; onSave: 
             <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-sm shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 dark:text-[#E2E8F0] text-sm">New Collection</h3>
-                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"><XIcon size={14} /></button>
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"><XIcon size={14} /></button>
                 </div>
                 <div className="px-5 py-4 space-y-4">
                     <div>
@@ -608,7 +608,7 @@ export const ExerciseLibraryPage = () => {
                                     className="flex-1 bg-transparent text-xs outline-none text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400"
                                 />
                                 {librarySearch && (
-                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]">
+                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]">
                                         <XIcon size={10} />
                                     </button>
                                 )}
@@ -886,7 +886,7 @@ export const ExerciseLibraryPage = () => {
                                                 {(!col.user_id || !authUser?.id || col.user_id === authUser.id) && (
                                                 <button
                                                     onClick={e => { e.stopPropagation(); setCollectionMenuId(collectionMenuId === col.id ? null : col.id); }}
-                                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-all"
                                                 >
                                                     <MoreHorizontalIcon size={11} />
                                                 </button>
@@ -961,7 +961,7 @@ export const ExerciseLibraryPage = () => {
                                 </Button>
                                 <button
                                     onClick={exitBulkMode}
-                                    className="text-xs text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 font-medium transition-colors shrink-0"
+                                    className="text-xs text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] font-medium transition-colors shrink-0"
                                 >
                                     Cancel
                                 </button>
@@ -1144,7 +1144,7 @@ export const ExerciseLibraryPage = () => {
                                     className="flex-1 bg-transparent text-xs outline-none text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400"
                                 />
                                 {librarySearch && (
-                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]">
+                                    <button onClick={() => setLibrarySearch('')} className="text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]">
                                         <XIcon size={11} />
                                     </button>
                                 )}

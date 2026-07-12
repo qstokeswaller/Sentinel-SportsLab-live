@@ -31,8 +31,8 @@ const toneClasses: Record<string, string> = {
 };
 
 const Section: React.FC<{ icon?: any; title: string; trailing?: React.ReactNode; children: React.ReactNode }> = ({ icon: Icon, title, trailing, children }) => (
-    <section className="bg-white border border-slate-200 rounded-xl">
-        <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+    <section className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl">
+        <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
             <div className="flex items-center gap-2">
                 {Icon && <Icon size={14} className="text-indigo-500" />}
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-700">{title}</h3>
@@ -89,7 +89,7 @@ const PublicAthleteSharePage: React.FC = () => {
     if (error || !share) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-                <div className="max-w-md text-center bg-white border border-slate-200 rounded-xl p-8">
+                <div className="max-w-md text-center bg-white border border-slate-200 dark:border-[#243A58] rounded-xl p-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-rose-50 rounded-full mb-3">
                         <AlertTriangleIcon size={20} className="text-rose-500" />
                     </div>
@@ -143,7 +143,7 @@ const PublicAthleteSharePage: React.FC = () => {
                 </div>
 
                 {/* Header */}
-                <section className="bg-white border border-slate-200 rounded-xl p-5">
+                <section className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl p-5">
                     <div className="flex flex-col md:flex-row md:items-center gap-5">
                         <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-indigo-100">
                             {ath.image_url ? (
@@ -317,7 +317,7 @@ const PublicAthleteSharePage: React.FC = () => {
                                 <div className="space-y-1.5 min-w-[180px]">
                                     <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Latest Responses</div>
                                     {wellness.latest.fields.slice(0, 8).map((f: any) => (
-                                        <div key={f.key} className="flex items-center justify-between px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-200">
+                                        <div key={f.key} className="flex items-center justify-between px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-200 dark:border-[#243A58]">
                                             <span className="text-[11px] font-medium capitalize text-slate-700">{f.key.replace(/_/g, ' ')}</span>
                                             <span className="text-sm font-bold text-slate-800">{f.value}<span className="text-[9px] opacity-60">/10</span></span>
                                         </div>
@@ -359,7 +359,7 @@ const PublicAthleteSharePage: React.FC = () => {
                                     <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">History</div>
                                     <div className="space-y-1.5">
                                         {injuries.historical.map((inj: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                                            <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-50 border border-slate-100 dark:border-[#243A58] rounded-lg">
                                                 <CheckCircle2Icon size={14} className="text-emerald-500 shrink-0" />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-xs font-medium text-slate-700">{inj.body_area || 'Injury'}{inj.type ? ` — ${inj.type}` : ''}</div>
@@ -382,7 +382,7 @@ const PublicAthleteSharePage: React.FC = () => {
                     }>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {testing.map((t: any) => (
-                                <div key={t.type} className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                                <div key={t.type} className="bg-slate-50 border border-slate-100 dark:border-[#243A58] rounded-lg p-4">
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 capitalize truncate">{t.type.replace(/_/g, ' ')}</div>
                                         {t.delta != null && (
@@ -416,7 +416,7 @@ const PublicAthleteSharePage: React.FC = () => {
                                     </>
                                 ) : <EmptyHint text="No upcoming sessions." />}
                             </div>
-                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                            <div className="bg-slate-50 border border-slate-200 dark:border-[#243A58] rounded-lg p-4">
                                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Last Session</div>
                                 {program.previous ? (
                                     <>
@@ -427,7 +427,7 @@ const PublicAthleteSharePage: React.FC = () => {
                             </div>
                         </div>
                         {phase && (
-                            <div className="mt-3 bg-white border border-slate-200 rounded-lg p-4">
+                            <div className="mt-3 bg-white border border-slate-200 dark:border-[#243A58] rounded-lg p-4">
                                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Periodisation Phase</div>
                                 <div className="text-sm font-semibold text-slate-800">{phase.name}</div>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 my-2">
@@ -441,18 +441,18 @@ const PublicAthleteSharePage: React.FC = () => {
                                 </div>
                                 {phase.block && (
                                     <div className="mt-3 grid sm:grid-cols-3 gap-2">
-                                        <div className="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                                        <div className="bg-slate-50 border border-slate-100 dark:border-[#243A58] rounded-lg p-2.5">
                                             <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-0.5">Current Block</div>
                                             <div className="text-xs font-semibold text-slate-700">{phase.block.name}</div>
                                         </div>
                                         {phase.block.intensityLevel && (
-                                            <div className="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                                            <div className="bg-slate-50 border border-slate-100 dark:border-[#243A58] rounded-lg p-2.5">
                                                 <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-0.5">Intensity</div>
                                                 <div className="text-xs font-semibold text-slate-700">{phase.block.intensityLevel}</div>
                                             </div>
                                         )}
                                         {phase.block.volumeLevel && (
-                                            <div className="bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                                            <div className="bg-slate-50 border border-slate-100 dark:border-[#243A58] rounded-lg p-2.5">
                                                 <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-0.5">Volume</div>
                                                 <div className="text-xs font-semibold text-slate-700">{phase.block.volumeLevel}</div>
                                             </div>

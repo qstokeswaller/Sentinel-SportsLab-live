@@ -17,7 +17,7 @@ import {
 import { useForceLightMode } from '../hooks/useForceLightMode';
 
 const BrandingBanner = () => (
-    <div className="bg-white border-b border-slate-100 py-3 print:py-2 print:border-b print:border-slate-200">
+    <div className="bg-white border-b border-slate-100 dark:border-[#243A58] py-3 print:py-2 print:border-b print:border-slate-200">
         <div className="flex flex-col items-center justify-center gap-0.5">
             <div className="flex items-center gap-2">
                 <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -106,9 +106,9 @@ function renderValue(col: any, value: any, notConfigured: boolean): React.ReactN
 const SnapshotTable: React.FC<{ snapshot: any; titleSuffix?: string; rows: any[] }> = ({ snapshot, titleSuffix, rows }) => {
     const cols = snapshot.colDefs as any[];
     return (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden shadow-sm">
             {titleSuffix && (
-                <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
+                <div className="px-4 py-2 border-b border-slate-200 dark:border-[#243A58] bg-slate-50">
                     <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-700">{titleSuffix}</h3>
                 </div>
             )}
@@ -141,8 +141,8 @@ const SnapshotTable: React.FC<{ snapshot: any; titleSuffix?: string; rows: any[]
                         {rows.length === 0 ? (
                             <tr><td colSpan={1 + cols.length} className="p-12 text-center text-xs text-slate-400">No athletes in this snapshot.</td></tr>
                         ) : rows.map((r, ri) => (
-                            <tr key={ri} className="hover:bg-slate-50">
-                                <td className="sticky left-0 z-[1] bg-white group-hover:bg-slate-50 p-3 whitespace-nowrap border-r border-slate-100">
+                            <tr key={ri} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                                <td className="sticky left-0 z-[1] bg-white group-hover:bg-slate-50 p-3 whitespace-nowrap border-r border-slate-100 dark:border-[#243A58]">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-semibold text-slate-900">{r.athleteName}</span>
                                         <span className="text-[9px] text-slate-400">{r.squad}</span>
@@ -229,7 +229,7 @@ const PublicDataHubView: React.FC = () => {
     return (
         <div className="bg-[#F8F9FF] min-h-screen print:bg-white" id="print-content">
             <BrandingBanner />
-            <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+            <div className="bg-white border-b border-slate-200 dark:border-[#243A58] px-4 py-3 flex items-center justify-between">
                 <div>
                     <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">Athlete Data Hub Snapshot</p>
                     <h1 className="text-sm font-bold text-slate-900">{snapshot.name || 'Snapshot'}</h1>

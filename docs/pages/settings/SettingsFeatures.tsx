@@ -58,7 +58,7 @@ const TestingHubSettings: React.FC<{
             <div className="flex items-center gap-3 px-4 py-3">
               <button onClick={() => toggleCategory(cat.id)}
                 className={`w-9 h-5 rounded-full transition-all relative shrink-0 ${!noneVisible ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#243A58]'}`}>
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${!noneVisible ? 'left-4' : 'left-0.5'}`} />
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white dark:bg-[#132338] shadow-sm transition-all ${!noneVisible ? 'left-4' : 'left-0.5'}`} />
               </button>
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpand(cat.id)}>
                 <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ const TestingHubSettings: React.FC<{
                       <span className={`text-xs font-medium ${visible ? 'text-slate-700 dark:text-[#CBD5E1]' : 'text-slate-400'}`}>{test.name}</span>
                       <button onClick={() => toggleTest(test.id)}
                         className={`w-9 h-5 rounded-full transition-all relative ${visible ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-[#243A58]'}`}>
-                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${visible ? 'left-4' : 'left-0.5'}`} />
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white dark:bg-[#132338] shadow-sm transition-all ${visible ? 'left-4' : 'left-0.5'}`} />
                       </button>
                     </div>
                   );

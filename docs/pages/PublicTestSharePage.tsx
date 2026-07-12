@@ -94,7 +94,7 @@ const PublicTestSharePage: React.FC = () => {
     if (error || !share) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-                <div className="max-w-md text-center bg-white border border-slate-200 rounded-xl p-8">
+                <div className="max-w-md text-center bg-white border border-slate-200 dark:border-[#243A58] rounded-xl p-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-rose-50 rounded-full mb-3">
                         <AlertTriangleIcon size={20} className="text-rose-500" />
                     </div>
@@ -130,7 +130,7 @@ const PublicTestSharePage: React.FC = () => {
                         </span>
                         <button
                             onClick={() => exportCSV(shareType, data, share.title)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-lg text-[10px] font-semibold transition-all print:hidden"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 dark:border-[#243A58] hover:border-slate-300 text-slate-700 rounded-lg text-[10px] font-semibold transition-all print:hidden"
                         >
                             <DownloadIcon size={12} /> Download CSV
                         </button>
@@ -144,7 +144,7 @@ const PublicTestSharePage: React.FC = () => {
                 </div>
 
                 {/* Report title */}
-                <section className="bg-white border border-slate-200 rounded-xl p-5">
+                <section className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl p-5">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                             {shareType === 'team-comparison' ? <UsersIcon size={18} /> : <CalendarDaysIcon size={18} />}
@@ -191,8 +191,8 @@ const TeamComparisonView: React.FC<{ data: any }> = ({ data }) => {
     }, [rows]);
 
     return (
-        <section className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
+        <section className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
+            <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58] bg-slate-50">
                 <div className="flex items-center gap-2">
                     <FlaskConicalIcon size={14} className="text-indigo-500" />
                     <span className="text-sm font-semibold text-slate-700">{test.name}</span>
@@ -204,7 +204,7 @@ const TeamComparisonView: React.FC<{ data: any }> = ({ data }) => {
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="bg-slate-50 border-b border-slate-100">
+                        <tr className="bg-slate-50 border-b border-slate-100 dark:border-[#243A58]">
                             <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Athlete</th>
                             <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
                             {displayFields.map((f: any) => (
@@ -232,7 +232,7 @@ const TeamComparisonView: React.FC<{ data: any }> = ({ data }) => {
                                 {test.hasNorms && (
                                     <td className="px-3 py-2.5">
                                         {r.normLabel ? (
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${NORM_COLORS[r.normColor] || 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${NORM_COLORS[r.normColor] || 'bg-slate-100 text-slate-500 border border-slate-200 dark:border-[#243A58]'}`}>
                                                 {r.normLabel}
                                             </span>
                                         ) : <span className="text-slate-300">—</span>}
@@ -248,7 +248,7 @@ const TeamComparisonView: React.FC<{ data: any }> = ({ data }) => {
             </div>
 
             {tested > 0 && Object.keys(counts).length > 0 && (
-                <footer className="px-4 py-3 border-t border-slate-100 bg-slate-50/60 flex flex-wrap gap-4 text-xs">
+                <footer className="px-4 py-3 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/60 flex flex-wrap gap-4 text-xs">
                     {Object.entries(counts).map(([label, count]) => (
                         <span key={label} className="text-slate-500">
                             {label}: <span className="font-semibold text-slate-800">{count}</span>
@@ -270,7 +270,7 @@ const ExportSummaryView: React.FC<{ data: any }> = ({ data }) => {
 
     return (
         <>
-            <section className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex flex-wrap items-center gap-3">
+            <section className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl px-5 py-3 flex flex-wrap items-center gap-3">
                 <span className="text-xs text-slate-500">Range:</span>
                 <span className="text-xs font-semibold text-slate-700">{fmtDate(dateStart)} → {fmtDate(dateEnd)}</span>
                 <span className="text-slate-300">·</span>
@@ -282,7 +282,7 @@ const ExportSummaryView: React.FC<{ data: any }> = ({ data }) => {
             </section>
 
             {groups.length === 0 && (
-                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-400">
+                <div className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl p-8 text-center text-sm text-slate-400">
                     No test data in the selected range.
                 </div>
             )}
@@ -292,8 +292,8 @@ const ExportSummaryView: React.FC<{ data: any }> = ({ data }) => {
                 const entries: any[] = group.entries || [];
                 const fields: any[] = group.displayFields || [];
                 return (
-                    <section key={t.id || t.name} className="bg-white border border-slate-200 rounded-xl overflow-hidden break-inside-avoid">
-                        <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
+                    <section key={t.id || t.name} className="bg-white border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden break-inside-avoid">
+                        <header className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58] bg-slate-50">
                             <div className="flex items-center gap-2">
                                 <FlaskConicalIcon size={14} className="text-indigo-500" />
                                 <span className="text-sm font-semibold text-slate-700">{t.name}</span>
@@ -303,7 +303,7 @@ const ExportSummaryView: React.FC<{ data: any }> = ({ data }) => {
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-100">
+                                    <tr className="bg-slate-50 border-b border-slate-100 dark:border-[#243A58]">
                                         <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
                                         <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Athlete</th>
                                         {fields.map((f: any) => (

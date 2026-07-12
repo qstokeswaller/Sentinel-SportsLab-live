@@ -121,7 +121,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max(0, parseInt(e.target.value) || 0), (q.scaleMax ?? 10) - 1);
                                 update({ scaleMin: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                     <div>
@@ -136,7 +136,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 const v = Math.min(Math.max((q.scaleMin ?? 0) + 1, parseInt(e.target.value) || 10), 20);
                                 update({ scaleMax: v });
                             }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                     </div>
                 </div>
@@ -156,7 +156,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                         {Array.from({ length: displayMax - displayMin + 1 }, (_, i) => displayMin + i).map(n => (
                             <span
                                 key={n}
-                                className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-semibold flex items-center justify-center"
+                                className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#1A2D48] text-slate-500 text-[10px] font-semibold flex items-center justify-center"
                             >
                                 {n}
                             </span>
@@ -175,7 +175,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                             value={q.labels?.[0] || ''}
                             onChange={e => update({ labels: [e.target.value, q.labels?.[1] || ''] })}
                             placeholder={`e.g. None (${displayMin})`}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                         />
                     </div>
                     <div>
@@ -187,7 +187,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                             value={q.labels?.[1] || ''}
                             onChange={e => update({ labels: [q.labels?.[0] || '', e.target.value] })}
                             placeholder={`e.g. Maximum (${displayMax})`}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
+                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                         />
                     </div>
                 </div>
@@ -220,7 +220,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 value={opt}
                                 onChange={e => updateOption(oi, e.target.value)}
                                 placeholder={`Option ${oi + 1}`}
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
+                                className="flex-1 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                             />
                             <div className="flex items-center gap-1 shrink-0">
                                 <span className="text-[9px] font-semibold text-slate-300 uppercase">=</span>
@@ -229,7 +229,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                     value={q.numericMap?.[oi] ?? ''}
                                     onChange={e => updateNumericMap(oi, e.target.value)}
                                     placeholder="val"
-                                    className="w-14 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors text-center"
+                                    className="w-14 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors text-center"
                                 />
                             </div>
                             <button
@@ -273,7 +273,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                                 value={opt}
                                 onChange={e => updateOption(oi, e.target.value)}
                                 placeholder={`Option ${oi + 1}`}
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
+                                className="flex-1 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-bold text-slate-700 dark:text-[#CBD5E1] outline-none focus:border-cyan-400 transition-colors"
                             />
                             <button
                                 type="button"
@@ -304,7 +304,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
     // Text — free response
     if (q.type === 'text') {
         return (
-            <div className="mt-4 px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg">
+            <div className="mt-4 px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-lg">
                 <p className="text-[10px] font-bold text-slate-400 italic">Athletes will type a free text response.</p>
             </div>
         );
@@ -317,7 +317,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-4">
                 {/* Live preview */}
-                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
+                <div className="border border-slate-200 dark:border-[#243A58] rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
                     <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
                     {subType === 'buttons' ? (
                         <BodyMapSelector
@@ -329,11 +329,11 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
                     ) : (
                         <div className="space-y-3">
                             {bmConfig.referenceImageUrl && (
-                                <div className="rounded-xl overflow-hidden border border-slate-100 bg-white">
+                                <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-[#243A58] bg-white dark:bg-[#132338]">
                                     <img src={bmConfig.referenceImageUrl} alt="Reference" className="w-full object-contain max-h-40" />
                                 </div>
                             )}
-                            <div className="px-3 py-2.5 bg-white border border-slate-100 rounded-lg">
+                            <div className="px-3 py-2.5 bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-lg">
                                 <p className="text-[10px] font-bold text-slate-400 italic">
                                     {subType === 'scale' && `Scale input (${bmConfig.subInputScaleMin ?? 0}–${bmConfig.subInputScaleMax ?? 10})`}
                                     {subType === 'multiple_choice' && `Multiple choice · ${(bmConfig.subInputOptions || []).length} options`}
@@ -362,7 +362,7 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
         return (
             <div className="mt-4 space-y-4">
                 {/* Live preview */}
-                <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
+                <div className="border border-slate-200 dark:border-[#243A58] rounded-xl p-4 bg-slate-50/50 dark:bg-[#132338]/40">
                     <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wide mb-3">Athlete Preview</p>
                     <BodyMapSelector
                         value={[]}
@@ -480,7 +480,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             </div>
 
             {wellnessTemplates.length === 0 ? (
-                <div className="p-16 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
+                <div className="p-16 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
                     <ClipboardCheck size={40} className="mx-auto text-slate-200 mb-4" />
                     <p className="text-slate-400 text-sm font-semibold uppercase tracking-wide mb-2">No templates yet</p>
                     <p className="text-slate-300 text-xs font-bold mb-6">Create your first questionnaire or load the default daily wellness template.</p>
@@ -495,7 +495,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {wellnessTemplates.map((t: any) => (
-                        <div key={t.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                        <div key={t.id} className="bg-white dark:bg-[#132338] p-6 rounded-xl border border-slate-100 dark:border-[#243A58] shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
                             <div className="space-y-4">
                                 <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-600 mb-2">
                                     <ClipboardCheck size={24} />
@@ -523,7 +523,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                         .map(type => {
                                             const meta = QUESTION_TYPES.find(qt => qt.value === type);
                                             return (
-                                                <span key={type} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-[9px] font-semibold text-slate-400 uppercase">
+                                                <span key={type} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-lg text-[9px] font-semibold text-slate-400 uppercase">
                                                     {TYPE_ICONS[type]} {meta?.label}
                                                 </span>
                                             );
@@ -549,7 +549,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                     setNewQuestQuestions(t.questions || []);
                                                     setViewMode('create');
                                                 }}
-                                                className="flex-1 py-2 bg-slate-50 text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all flex items-center justify-center gap-1.5"
+                                                className="flex-1 py-2 bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold uppercase hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <Pencil size={12} /> Edit
                                             </button>
@@ -575,7 +575,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
     const renderCreateMode = () => (
         <div className="space-y-8 animate-in zoom-in-95 duration-300 max-w-3xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#243A58] pb-6">
                 <div>
                     <h3 className="text-2xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">
                         {selectedTemplate ? 'Edit Template' : 'New Template'}
@@ -587,7 +587,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                 <button
                     type="button"
                     onClick={() => { setViewMode('list'); setSelectedTemplate(null); }}
-                    className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-semibold uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
+                    className="px-6 py-3 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-xl text-[10px] font-semibold uppercase hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"
                 >
                     Cancel
                 </button>
@@ -601,10 +601,10 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                     value={newQuestTitle}
                     onChange={e => { setNewQuestTitle(e.target.value); setValidationErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
                     placeholder="e.g. Daily Wellness Check"
-                    className={`w-full bg-white rounded-xl px-5 py-4 text-lg font-bold outline-none focus:ring-2 shadow-sm ${
+                    className={`w-full bg-white dark:bg-[#132338] rounded-xl px-5 py-4 text-lg font-bold outline-none focus:ring-2 shadow-sm ${
                         validationErrors.title
                             ? 'border-2 border-red-400 focus:ring-red-500/10'
-                            : 'border border-slate-200 focus:ring-cyan-500/10'
+                            : 'border border-slate-200 dark:border-[#243A58] focus:ring-cyan-500/10'
                     }`}
                 />
                 {validationErrors.title && <p className="text-red-500 text-xs">{validationErrors.title}</p>}
@@ -620,7 +620,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                 )}
 
                 {newQuestQuestions.length === 0 ? (
-                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
+                    <div className="p-10 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-center bg-slate-50/50 dark:bg-[#132338]/40">
                         <p className="text-slate-400 text-sm font-bold mb-4">No questions added yet.</p>
                         <button
                             type="button"
@@ -635,11 +635,11 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                         {newQuestQuestions.map((q, i) => (
                             <div
                                 key={q.id || i}
-                                className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm group transition-all hover:border-cyan-200 hover:shadow-md"
+                                className="bg-white dark:bg-[#132338] p-6 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm group transition-all hover:border-cyan-200 hover:shadow-md"
                             >
                                 {/* Question header */}
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] font-semibold text-slate-400 shrink-0 mt-1">
+                                    <div className="w-6 h-6 bg-slate-100 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center text-[10px] font-semibold text-slate-400 shrink-0 mt-1">
                                         {i + 1}
                                     </div>
                                     <div className="flex-1 space-y-4">
@@ -653,7 +653,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                                                 setNewQuestQuestions(updated);
                                             }}
                                             placeholder="Type your question here..."
-                                            className="w-full text-base font-bold text-slate-800 dark:text-[#E2E8F0] bg-transparent border-b border-slate-200 focus:border-cyan-500 outline-none py-1 transition-colors"
+                                            className="w-full text-base font-bold text-slate-800 dark:text-[#E2E8F0] bg-transparent border-b border-slate-200 dark:border-[#243A58] focus:border-cyan-500 outline-none py-1 transition-colors"
                                         />
 
                                         {/* Type + Required row */}
@@ -774,7 +774,7 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
                         key={type}
                         type="button"
                         onClick={() => addQuestion(type)}
-                        className="px-3 py-2 bg-white/10 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-white/20 transition-all flex items-center gap-1.5"
+                        className="px-3 py-2 bg-white/10 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-white/20 dark:hover:bg-[#1A2D48]/60 transition-all flex items-center gap-1.5"
                     >
                         {icon} {label}
                     </button>

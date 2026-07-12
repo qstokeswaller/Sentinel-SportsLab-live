@@ -8,7 +8,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-5xl h-[80vh] shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col animate-in zoom-in-95">
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                             <EyeIcon size={18} />
@@ -20,7 +20,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all"
+                        aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-all"
                     >
                         <XIcon size={18} />
                     </button>
@@ -45,11 +45,11 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 mb-3">
-                                <div className="p-3 bg-slate-50 rounded-lg">
+                                <div className="p-3 bg-slate-50 dark:bg-[#0F1C30] rounded-lg">
                                     <div className="text-[10px] font-medium text-slate-400 mb-1">Current</div>
                                     <div className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">{item.current}</div>
                                 </div>
-                                <div className="p-3 bg-slate-50 rounded-lg">
+                                <div className="p-3 bg-slate-50 dark:bg-[#0F1C30] rounded-lg">
                                     <div className="text-[10px] font-medium text-slate-400 mb-1">Baseline</div>
                                     <div className="text-lg font-semibold text-slate-600 dark:text-[#CBD5E1]">{item.baseline}</div>
                                 </div>

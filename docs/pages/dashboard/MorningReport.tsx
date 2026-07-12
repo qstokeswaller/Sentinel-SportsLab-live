@@ -259,7 +259,7 @@ export const MorningReport: React.FC<any> = ({
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">All At-Risk Athletes</h3>
                                     <p className="text-[10px] text-slate-500">Click an athlete to see their risk analysis</p>
                                 </div>
-                                <button onClick={() => setIsMorningReportExpanded(false)} aria-label="Close" className="p-1.5 hover:bg-white/60 rounded-lg">
+                                <button onClick={() => setIsMorningReportExpanded(false)} aria-label="Close" className="p-1.5 hover:bg-white/60 dark:hover:bg-[#1A2D48]/60 rounded-lg">
                                     <XIcon size={16} className="text-slate-400" />
                                 </button>
                             </div>

@@ -444,7 +444,7 @@ function TargetRow({ target, phases, onEdit, onDelete }) {
             {/* Actions menu */}
             <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
                 <button onClick={() => setMenuOpen(v => !v)}
-                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors opacity-0 group-hover:opacity-100">
+                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors opacity-0 group-hover:opacity-100">
                     <MoreHorizontal size={13} />
                 </button>
                 {menuOpen && (

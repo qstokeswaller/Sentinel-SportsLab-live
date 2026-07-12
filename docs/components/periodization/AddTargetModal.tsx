@@ -319,7 +319,7 @@ export const AddTargetModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]">
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={!canSubmit}

@@ -508,7 +508,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-2">Check-in Complete!</h1>
                     <p className="text-slate-500 mb-8 max-w-xs">Your wellness data has been recorded. Great work today!</p>
-                    <button onClick={() => window.location.reload()} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
+                    <button onClick={() => window.location.reload()} className="px-6 py-3 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
                         Submit for Another Athlete
                     </button>
                 </>
@@ -518,7 +518,7 @@ const FifaDailyWellnessForm: React.FC = () => {
 
     if (error) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 text-center max-w-sm">
+            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 dark:border-[#243A58] text-center max-w-sm">
                 <AlertCircle size={48} className="text-rose-500 mx-auto mb-4" />
                 <h1 className="text-xl font-bold text-slate-900 mb-2">Something went wrong</h1>
                 <p className="text-slate-500 mb-6">{error}</p>
@@ -534,7 +534,7 @@ const FifaDailyWellnessForm: React.FC = () => {
     return (
         <div className="h-dvh bg-slate-50 flex flex-col overflow-hidden">
             {/* Header */}
-            <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
+            <header className="bg-white border-b border-slate-100 dark:border-[#243A58] sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
                     <div className="flex items-center gap-2">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -621,7 +621,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                     className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
                                         selectedAthleteId === a.id
                                             ? 'bg-cyan-50 border-cyan-500 shadow-md ring-4 ring-cyan-50/50 scale-[1.02]'
-                                            : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
+                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-700 hover:border-slate-200'
                                     }`}>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
@@ -685,7 +685,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                             if (!isNaN(n)) setVal('sleep_hours', Math.min(24, Math.max(0, n)));
                                         }}
                                         placeholder="7"
-                                        className="flex-1 text-center text-4xl font-bold bg-white border-2 border-slate-200 rounded-2xl py-5 outline-none focus:border-cyan-500 transition-colors"
+                                        className="flex-1 text-center text-4xl font-bold bg-white border-2 border-slate-200 dark:border-[#243A58] rounded-2xl py-5 outline-none focus:border-cyan-500 transition-colors"
                                     />
                                     <button type="button" onClick={() => step05(1)}
                                         className="w-14 h-16 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] active:scale-95 text-slate-700 text-3xl font-light flex items-center justify-center transition-all shrink-0 select-none">
@@ -715,7 +715,7 @@ const FifaDailyWellnessForm: React.FC = () => {
             </main>
 
             {/* Navigation footer */}
-            <footer className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 max-w-md mx-auto w-full">
+            <footer className="sticky bottom-0 bg-white border-t border-slate-100 dark:border-[#243A58] px-6 py-4 max-w-md mx-auto w-full">
                 {submitError && (
                     <div className="mb-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">
                         {submitError}
@@ -735,8 +735,8 @@ const FifaDailyWellnessForm: React.FC = () => {
                             canContinue
                                 ? isLastStep
                                     ? 'bg-emerald-500 text-white shadow-lg hover:bg-emerald-600'
-                                    : 'bg-slate-900 text-white shadow-lg hover:bg-slate-800'
-                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    : 'bg-slate-900 dark:bg-indigo-600 text-white shadow-lg hover:bg-slate-800'
+                                : 'bg-slate-100 text-slate-400 dark:text-[#94A3B8] cursor-not-allowed'
                         }`}>
                         {submitting ? (
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

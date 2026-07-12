@@ -10,6 +10,7 @@ import {
 import { useAppState } from '../../context/AppStateContext';
 import { buildAthleteDataProfile, generateInsights, calculateReadinessScore } from '../../utils/performanceIntelligence';
 import { ACWR_UTILS } from '../../utils/constants';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const PerformanceIntelligenceTerminal = ({
     kpiDefinitions,
@@ -486,14 +487,7 @@ export const PerformanceIntelligenceTerminal = ({
                     <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-md px-2.5 py-1">
                         <CalendarIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
                         <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">As of</span>
-                        <input
-                            type="date"
-                            value={asOfDate}
-                            max={todayISO()}
-                            onChange={e => setAsOfDate(e.target.value || todayISO())}
-                            className="text-[11px] text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent w-28 cursor-pointer"
-                            title="Rolling windows (ACWR 7:28, wellness 3-day, etc.) anchor backwards from this date"
-                        />
+                        <DatePicker value={asOfDate} onChange={e => setAsOfDate(e.target.value || todayISO())} max={todayISO()} className="w-28" />
                     </div>
                     <button
                         onClick={() => setExplainOpen(true)}

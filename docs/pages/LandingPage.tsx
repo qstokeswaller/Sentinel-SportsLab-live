@@ -309,7 +309,7 @@ const LandingPage: React.FC = () => {
                         { label: 'Speed Metrics', color: dark ? 'text-cyan-400' : 'text-cyan-600' },
                         { label: 'Acceleration Metrics', color: dark ? 'text-amber-400' : 'text-amber-500' },
                     ].map(r => (
-                        <div key={r.label} className={`flex items-center justify-between px-2 py-1.5 border-b ${dark ? 'border-white/[0.05]' : 'border-slate-200'} last:border-0`}>
+                        <div key={r.label} className={`flex items-center justify-between px-2 py-1.5 border-b ${dark ? 'border-white/[0.05]' : 'border-slate-200 dark:border-[#243A58]'} last:border-0`}>
                             <span className={`text-[8px] font-semibold ${r.color}`}>{r.label}</span>
                             <span className="text-[7px] font-bold text-emerald-400">✓ mapped</span>
                         </div>
@@ -341,14 +341,14 @@ const LandingPage: React.FC = () => {
                         <a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing</a>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        <button onClick={() => setDark(!dark)} aria-label="Toggle theme" className={`p-2 rounded-lg transition-all ${dark ? 'text-slate-500 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
+                        <button onClick={() => setDark(!dark)} aria-label="Toggle theme" className={`p-2 rounded-lg transition-all ${dark ? 'text-slate-500 dark:text-[#CBD5E1] hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'}`}>
                             {dark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
                         </button>
                         <button onClick={() => nav('/login')} className={`hidden sm:block text-[13px] font-medium ${txm} hover:text-indigo-400 transition-colors px-3 py-2`}>Log in</button>
                         <button onClick={() => nav('/login?mode=signup')} className="hidden sm:block text-[13px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30">Get Started</button>
                         {/* Hamburger — visible below md. Replaces the section
                             links + Log in + Get Started on small screens. */}
-                        <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Open menu" className={`md:hidden p-2 rounded-lg transition-all ${dark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+                        <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Open menu" className={`md:hidden p-2 rounded-lg transition-all ${dark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'}`}>
                             {mobileMenuOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
                         </button>
                     </div>
@@ -356,7 +356,7 @@ const LandingPage: React.FC = () => {
 
                 {/* Mobile menu panel — slides down under the nav bar */}
                 {mobileMenuOpen && (
-                    <div className={`md:hidden border-t ${dark ? 'border-white/10 bg-[#06060B]/95' : 'border-slate-200 bg-white/95'} backdrop-blur-lg`}>
+                    <div className={`md:hidden border-t ${dark ? 'border-white/10 bg-[#06060B]/95' : 'border-slate-200 dark:border-[#243A58] bg-white/95'} backdrop-blur-lg`}>
                         <div className="px-4 py-4 flex flex-col gap-1">
                             {[
                                 { href: '#features', label: 'Features' },
@@ -366,13 +366,13 @@ const LandingPage: React.FC = () => {
                                 { href: '#pricing',  label: 'Pricing' },
                             ].map(l => (
                                 <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
-                                   className={`text-[14px] font-medium px-3 py-3 rounded-lg transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'}`}>
+                                   className={`text-[14px] font-medium px-3 py-3 rounded-lg transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}>
                                     {l.label}
                                 </a>
                             ))}
                             <div className={`h-px my-2 ${dark ? 'bg-white/10' : 'bg-slate-200'}`} />
                             <button onClick={() => { setMobileMenuOpen(false); nav('/login'); }}
-                                    className={`text-[14px] font-medium px-3 py-3 rounded-lg text-left transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'}`}>
+                                    className={`text-[14px] font-medium px-3 py-3 rounded-lg text-left transition-colors ${dark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}>
                                 Log in
                             </button>
                             <button onClick={() => { setMobileMenuOpen(false); nav('/login?mode=signup'); }}
@@ -477,7 +477,7 @@ const LandingPage: React.FC = () => {
                                       { l: 'Flagged', v: '3', c: 'from-amber-500/20 to-amber-500/5', tc: 'text-amber-400' },
                                       { l: 'At Risk', v: '1', c: 'from-rose-500/20 to-rose-500/5', tc: 'text-rose-400' }
                                     ].map((c, i) => (
-                                        <div key={i} className={`bg-gradient-to-b ${c.c} rounded-xl px-4 py-3 ${dark ? '' : 'border border-slate-100'}`}>
+                                        <div key={i} className={`bg-gradient-to-b ${c.c} rounded-xl px-4 py-3 ${dark ? '' : 'border border-slate-100 dark:border-[#243A58]'}`}>
                                             <div className={`text-2xl font-bold ${dark ? c.tc : c.tc.replace('400', '600')}`}>{c.v}</div>
                                             <div className={`text-[9px] font-semibold uppercase tracking-wider ${txs}`}>{c.l}</div>
                                         </div>
@@ -512,7 +512,7 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* ═══════ STATS ═══════ */}
-            <section className={`py-12 sm:py-20 border-y ${dark ? 'border-white/[0.05]' : 'border-slate-100'}`}>
+            <section className={`py-12 sm:py-20 border-y ${dark ? 'border-white/[0.05]' : 'border-slate-100 dark:border-[#243A58]'}`}>
                 <div ref={rStats.ref} style={rStats.style} className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 sm:gap-8 text-center">
                     {[
                         { end: 80, s: '+', l: 'Protocol Documents' },
@@ -531,7 +531,7 @@ const LandingPage: React.FC = () => {
             <section id="features" className="py-16 sm:py-32">
                 <div className="max-w-7xl mx-auto px-4 sm:px-8">
                     <div ref={rFeatHead.ref} style={rFeatHead.style} className="text-center mb-16">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${dark ? 'bg-white/[0.05] border-white/[0.08] text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'} border rounded-full text-xs font-semibold mb-5`}>
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${dark ? 'bg-white/[0.05] border-white/[0.08] text-slate-400' : 'bg-slate-100 border-slate-200 dark:border-[#243A58] text-slate-600'} border rounded-full text-xs font-semibold mb-5`}>
                             <LayersIcon size={12} /> Platform
                         </div>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Everything you need</h2>
@@ -578,7 +578,7 @@ const LandingPage: React.FC = () => {
                                         </p>
                                         <h3 className={`text-lg font-bold tracking-tight mb-3 ${dark ? 'text-white' : 'text-slate-900'}`}>{f.title}</h3>
                                         <p className={`text-sm ${txm} leading-relaxed flex-1`}>{f.tagline}</p>
-                                        <div className={`mt-5 pt-4 border-t ${dark ? 'border-white/[0.07]' : 'border-slate-100'} flex items-center gap-1.5`} style={{ color: f.gFrom }}>
+                                        <div className={`mt-5 pt-4 border-t ${dark ? 'border-white/[0.07]' : 'border-slate-100 dark:border-[#243A58]'} flex items-center gap-1.5`} style={{ color: f.gFrom }}>
                                             <span className="text-[11px] font-semibold">Explore feature</span>
                                             <ChevronRightIcon size={13} />
                                         </div>
@@ -587,7 +587,7 @@ const LandingPage: React.FC = () => {
                                     {/* BACK */}
                                     <div
                                         style={{ backfaceVisibility: 'hidden' as any, WebkitBackfaceVisibility: 'hidden' as any, transform: 'rotateY(180deg)', position: 'absolute', inset: 0 }}
-                                        className={`${dark ? 'bg-[#0e0e1a] border-white/[0.09]' : 'bg-slate-50 border-slate-200'} border rounded-2xl p-6 flex flex-col overflow-hidden`}
+                                        className={`${dark ? 'bg-[#0e0e1a] border-white/[0.09]' : 'bg-slate-50 border-slate-200 dark:border-[#243A58]'} border rounded-2xl p-6 flex flex-col overflow-hidden`}
                                     >
                                         <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-2xl" style={{ background: `radial-gradient(circle, ${f.gTo}, transparent)` }} />
                                         <div className="flex items-center gap-2 mb-4">
@@ -769,7 +769,7 @@ const LandingPage: React.FC = () => {
                                 ],
                             },
                         ].map((a, i) => (
-                            <div key={i} className={`group relative rounded-2xl overflow-hidden border ${dark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-slate-200 bg-white'} hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all`}>
+                            <div key={i} className={`group relative rounded-2xl overflow-hidden border ${dark ? 'border-white/[0.07] bg-white/[0.03]' : 'border-slate-200 dark:border-[#243A58] bg-white'} hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all`}>
                                 {/* Photo block — null-safe */}
                                 <div
                                     className="relative h-56 bg-cover bg-center"
@@ -1089,7 +1089,7 @@ const LandingPage: React.FC = () => {
                                     { Icon: HomeIcon,       label: 'Lives on home screen',    sub: 'One tap to open' },
                                 ].map(p => (
                                     <div key={p.label} className="text-center">
-                                        <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl mb-3 ${dark ? 'bg-white/5 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+                                        <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl mb-3 ${dark ? 'bg-white/5 border border-white/10' : 'bg-white border border-slate-200 dark:border-[#243A58] shadow-sm'}`}>
                                             <p.Icon size={18} className="text-indigo-400" />
                                         </div>
                                         <p className={`text-[12.5px] font-semibold ${tx}`}>{p.label}</p>
@@ -1182,10 +1182,10 @@ const LandingPage: React.FC = () => {
                                         t.pop
                                             ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
                                             : t.cust
-                                                ? 'bg-white text-slate-900 hover:bg-slate-100'
+                                                ? 'bg-white text-slate-900 hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
                                                 : dark
                                                     ? 'border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
-                                                    : 'border-2 border-slate-200 text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
+                                                    : 'border-2 border-slate-200 dark:border-[#243A58] text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
                                     }`}>
                                     {t.cust ? 'Get a Quote' : 'Begin Access'}
                                 </button>

@@ -27,6 +27,7 @@ import { processAthleteMatching } from '../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../components/ui/UnmatchedAthleteResolver';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import type { ResolvedEntry } from '../components/ui/UnmatchedAthleteResolver';
+import DatePicker from '../components/ui/DatePicker';
 
 const SECTIONS = [
     { title: 'Questionnaire Data', desc: 'Wellness check-in responses, readiness scores & team trends', icon: ClipboardListIcon },
@@ -828,7 +829,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                 setDrilldownFrom(from);
                                 setDrilldownTo(to);
                             }} className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
+                                drilldownFilter === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60'
                             }`}>{label}</button>
                         ))}
                     </div>
@@ -836,15 +837,9 @@ const ACWRMonitoringHub: React.FC = () => {
                     {/* Custom date pickers */}
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#CBD5E1]">
                         <span className="text-slate-400 dark:text-[#CBD5E1]">From</span>
-                        <input type="date" value={drilldownFrom}
-                            onChange={e => { setDrilldownFrom(e.target.value); setDrilldownFilter('custom'); }}
-                            className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
-                        />
+                        <DatePicker value={drilldownFrom} onChange={e => { setDrilldownFrom(e.target.value); setDrilldownFilter('custom'); }} />
                         <span className="text-slate-400 dark:text-[#CBD5E1]">to</span>
-                        <input type="date" value={drilldownTo}
-                            onChange={e => { setDrilldownTo(e.target.value); setDrilldownFilter('custom'); }}
-                            className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 transition-colors"
-                        />
+                        <DatePicker value={drilldownTo} onChange={e => { setDrilldownTo(e.target.value); setDrilldownFilter('custom'); }} />
                     </div>
                     <div className="ml-auto text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                         {dailyData.length} day{dailyData.length !== 1 ? 's' : ''}
@@ -890,7 +885,7 @@ const ACWRMonitoringHub: React.FC = () => {
                         <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide w-20">Status</span>
                         <button
                             onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60'}`}
                         >
                             {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                         </button>
@@ -905,7 +900,7 @@ const ACWRMonitoringHub: React.FC = () => {
                     ) : (
                         <div className="divide-y divide-slate-50">
                             {dailyData.map((day, i) => (
-                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 dark:bg-[#0F1C30]/40 text-slate-400 dark:text-[#CBD5E1]' : 'hover:bg-slate-50/60 dark:bg-[#132338]/40'}`}>
+                                <div key={i} className={`flex items-center gap-4 px-5 py-2.5 text-sm ${day.isRestDay ? 'bg-slate-50/40 dark:bg-[#0F1C30]/40 text-slate-400 dark:text-[#CBD5E1]' : 'hover:bg-slate-50/60 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40'}`}>
                                     <span className="font-medium text-slate-700 dark:text-[#E2E8F0] flex-1">
                                         {new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}
                                     </span>
@@ -977,17 +972,9 @@ const ACWRMonitoringHub: React.FC = () => {
                         <h4 className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Team ACWR — Custom Range</h4>
                         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-[#CBD5E1]">
                             <span className="text-slate-400 dark:text-[#CBD5E1]">From</span>
-                            <input
-                                type="date" value={historyChartFrom}
-                                onChange={e => setHistoryChartFrom(e.target.value)}
-                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                            <DatePicker value={historyChartFrom} onChange={e => setHistoryChartFrom(e.target.value)} />
                             <span className="text-slate-400 dark:text-[#CBD5E1]">to</span>
-                            <input
-                                type="date" value={historyChartTo}
-                                onChange={e => setHistoryChartTo(e.target.value)}
-                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                            <DatePicker value={historyChartTo} onChange={e => setHistoryChartTo(e.target.value)} />
                         </div>
                     </div>
                     {historyChartData ? (
@@ -1024,18 +1011,14 @@ const ACWRMonitoringHub: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#CBD5E1]">
                             <span>Jump to week:</span>
-                            <input
-                                type="date"
-                                onChange={e => {
+                            <DatePicker value="" onChange={e => {
                                     if (!e.target.value) return;
                                     const d = new Date(e.target.value + 'T00:00:00');
                                     const dow = d.getDay();
                                     const diff = d.getDate() - dow + (dow === 0 ? -6 : 1);
                                     d.setDate(diff);
                                     setHistoryWeekStart(new Date(d));
-                                }}
-                                className="border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                                }} />
                         </div>
                         <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-[#CBD5E1] ml-auto">
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-emerald-100 dark:bg-emerald-900/35" /> Low</span>
@@ -1044,7 +1027,7 @@ const ACWRMonitoringHub: React.FC = () => {
                             <span className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-rose-300" /> Peak</span>
                             <button
                                 onClick={() => { setEditMode(m => !m); setDeleteConfirm(null); }}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-200'}`}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${editMode ? 'bg-amber-100 text-amber-700 dark:text-amber-400 border-amber-300' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60'}`}
                             >
                                 {editMode ? <><CheckIcon size={10} /> Done</> : <><PencilIcon size={10} /> Edit</>}
                             </button>
@@ -1501,14 +1484,14 @@ const ACWRMonitoringHub: React.FC = () => {
                                                         <button title="Return from Injury — resets ACWR to gathering phase" onClick={() => handleExclude(player.id, 'return', player.name)} className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 transition-colors">
                                                             <RotateCcwIcon size={10} /> Return
                                                         </button>
-                                                        <button title="Remove exclusion entirely" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
+                                                        <button title="Remove exclusion entirely" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
                                                             <XCircleIcon size={13} />
                                                         </button>
                                                     </>
                                                 ) : player.returning ? (
                                                     <>
                                                         <span className="text-[9px] font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-full">↩ Returning</span>
-                                                        <button title="Clear return status" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
+                                                        <button title="Clear return status" onClick={() => handleExclude(player.id, 'remove', player.name)} className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
                                                             <XCircleIcon size={13} />
                                                         </button>
                                                     </>
@@ -1591,13 +1574,7 @@ const ACWRMonitoringHub: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-sm px-3 py-1.5">
                             <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide whitespace-nowrap">Import Date</label>
-                            <input
-                                type="date"
-                                value={acwrImportDateOverride}
-                                onChange={e => setAcwrImportDateOverride(e.target.value)}
-                                className="text-xs text-slate-700 dark:text-[#E2E8F0] border-none outline-none bg-transparent cursor-pointer"
-                                title="Override date for all imported rows (leave blank to use dates from CSV)"
-                            />
+                            <DatePicker value={acwrImportDateOverride} onChange={e => setAcwrImportDateOverride(e.target.value)} />
                         </div>
                         <button data-tour="acwr-csv-import" onClick={() => csvRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] hover:border-indigo-300 text-slate-700 dark:text-[#E2E8F0] text-sm font-medium rounded-xl transition-colors shadow-sm">
                             <UploadIcon size={14} /> Import CSV
@@ -1682,7 +1659,7 @@ const ACWRMonitoringHub: React.FC = () => {
                                 <div className="flex gap-1 bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-0.5">
                                     {([['all', 'All Status'], ['at_risk', 'At Risk'], ['underloaded', 'Underloaded'], ['optimal', 'Optimal']] as const).map(([key, label]) => (
                                         <button key={key} onClick={() => setRosterTab(key)}
-                                            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${rosterTab === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
+                                            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${rosterTab === key ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                             {label}
                                             {key !== 'all' && (
                                                 <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
@@ -1706,11 +1683,9 @@ const ACWRMonitoringHub: React.FC = () => {
                                         </button>
                                     )}
                                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${isHistoricalView ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1]'}`}>
-                                        <ChevronLeftIcon size={11} className="text-slate-400 cursor-pointer hover:text-slate-700 dark:text-[#CBD5E1]" onClick={() => { const d = new Date(viewDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); setViewDate(d.toISOString().split('T')[0]); }} />
-                                        <input type="date" value={viewDate} max={realTodayStr}
-                                            onChange={e => e.target.value && setViewDate(e.target.value)}
-                                            className="bg-transparent border-none outline-none text-xs cursor-pointer w-[88px]" />
-                                        <ChevronRightIcon size={11} className={`cursor-pointer transition-colors ${viewDate >= realTodayStr ? 'text-slate-200 dark:text-[#243A58] cursor-not-allowed' : 'text-slate-400 hover:text-slate-700'}`}
+                                        <ChevronLeftIcon size={11} className="text-slate-400 cursor-pointer hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]" onClick={() => { const d = new Date(viewDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); setViewDate(d.toISOString().split('T')[0]); }} />
+                                        <DatePicker value={viewDate} onChange={e => e.target.value && setViewDate(e.target.value)} max={realTodayStr} className="w-[88px]" />
+                                        <ChevronRightIcon size={11} className={`cursor-pointer transition-colors ${viewDate >= realTodayStr ? 'text-slate-200 dark:text-[#243A58] cursor-not-allowed' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                             onClick={() => { if (viewDate < realTodayStr) { const d = new Date(viewDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); setViewDate(d.toISOString().split('T')[0]); } }} />
                                     </div>
                                 </div>
@@ -2107,7 +2082,7 @@ export const WellnessHubPage: React.FC = () => {
                 {!ownsBreadcrumb && (
                     <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                         <div className="flex items-center gap-3">
-                            <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 hover:border-slate-300 transition-all">
+                            <button onClick={() => setActiveSection(null)} className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all">
                                 <ArrowLeftIcon size={16} />
                             </button>
                             <div>

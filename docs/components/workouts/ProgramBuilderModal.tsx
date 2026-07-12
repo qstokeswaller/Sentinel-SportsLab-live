@@ -26,6 +26,7 @@ import { LinkedSessionsPicker, LinkedSession } from '../conditioning/LinkedSessi
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
 import { ProgramAssignModal } from './ProgramAssignModal';
 import { useCollections } from '../../hooks/useCollections';
+import DatePicker from '../../components/ui/DatePicker';
 import {
   PresetSelect, IntensityPillEditor, DisplayOptionsModal, AddSectionPopover,
   SETS_PRESETS, REPS_PRESETS, REST_PRESETS, TEMPO_PRESETS,
@@ -1054,12 +1055,7 @@ export const ProgramBuilderModal = ({
               </div>
               <div className="col-span-6 md:col-span-3">
                 <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] mb-1 block">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-3 text-sm font-bold outline-none focus:border-indigo-500 bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0]"
-                />
+                <DatePicker value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full" />
               </div>
               <div className="col-span-6 md:col-span-3">
                 <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] mb-1 block">Phase</label>
@@ -1092,7 +1088,7 @@ export const ProgramBuilderModal = ({
                     onClick={() => setTrackTonnage((v) => !v)}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-[#243A58]'}`}
                   >
-                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white dark:bg-[#132338] transition-transform ${trackTonnage ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
                   </button>
                 </div>
               </div>
@@ -1179,7 +1175,7 @@ export const ProgramBuilderModal = ({
                   <button
                     type="button"
                     onClick={expandAllInActiveWeek}
-                    className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                    className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
                     title="Expand all days in this week">
                     Expand all
                   </button>
@@ -1187,7 +1183,7 @@ export const ProgramBuilderModal = ({
                   <button
                     type="button"
                     onClick={collapseAllDays}
-                    className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                    className="text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
                     title="Collapse every day">
                     Collapse all
                   </button>
@@ -1297,7 +1293,7 @@ export const ProgramBuilderModal = ({
                           {/* Rest Day display block */}
                           {day.isRestDay && (
                             <div className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] text-center space-y-2">
-                              <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                              <div className="w-10 h-10 bg-slate-100 dark:bg-[#1A2D48] rounded-full flex items-center justify-center">
                                 <MoonIcon size={18} className="text-slate-400" />
                               </div>
                               <p className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1]">Rest Day</p>

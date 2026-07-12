@@ -436,7 +436,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                                 <div className="relative" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setOpenMenuId(openMenuId === phase.id ? null : phase.id)}
-                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                         <MoreHorizontal size={13} />
                                     </button>
                                     {openMenuId === phase.id && (
@@ -487,7 +487,7 @@ export const PeriodsTab = ({ plan, onViewInMicrocycles }) => {
                             </div>
                             <button
                                 onClick={() => { setEditingPlanPhase(selectedPhase); setIsPlanPhaseModalOpen(true); }}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
+                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
                                 <PencilIcon size={12} /> Edit Phase
                             </button>
                         </div>

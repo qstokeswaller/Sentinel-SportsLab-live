@@ -807,7 +807,7 @@ export const ReportingHubPage = () => {
                                     <button
                                         key={status}
                                         onClick={() => setOptOutForm({ ...optOutForm, status })}
-                                        className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-300 hover:bg-indigo-100/50'}`}
+                                        className={`flex-1 py-4 rounded-xl font-black uppercase text-xs transition-all ${optOutForm.status === status ? (status === 'Available' ? 'bg-emerald-500 text-white shadow-lg' : status === 'Modified' ? 'bg-amber-500 text-white shadow-lg' : 'bg-rose-500 text-white shadow-lg') : 'bg-indigo-50 dark:bg-indigo-600 text-indigo-300 hover:bg-indigo-100/50 dark:hover:bg-indigo-500/15'}`}
                                     >
                                         {status}
                                     </button>
@@ -822,7 +822,7 @@ export const ReportingHubPage = () => {
                                 placeholder="e.g. Flu, Ankle Sprain"
                                 value={optOutForm.reason}
                                 onChange={(e) => setOptOutForm({ ...optOutForm, reason: e.target.value })}
-                                className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium"
+                                className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium"
                             />
                         </div>
 
@@ -832,12 +832,12 @@ export const ReportingHubPage = () => {
                                 placeholder="Additional context..."
                                 value={optOutForm.notes}
                                 onChange={(e) => setOptOutForm({ ...optOutForm, notes: e.target.value })}
-                                className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-32 resize-none"
+                                className="w-full p-4 bg-slate-50 dark:bg-[#0F1C30] hover:bg-white dark:hover:bg-[#1A2D48] focus:bg-white border border-transparent focus:border-indigo-500 rounded-xl outline-none transition-all font-bold text-slate-900 dark:text-[#E2E8F0] placeholder:font-medium h-32 resize-none"
                             />
                         </div>
 
                         <div className="pt-4">
-                            <button onClick={handleSaveOptOut} className="w-full py-5 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all">Save Status</button>
+                            <button onClick={handleSaveOptOut} className="w-full py-5 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-black dark:hover:bg-indigo-500 transition-all">Save Status</button>
                         </div>
                     </div>
                 </div>
@@ -952,7 +952,7 @@ export const ReportingHubPage = () => {
                                 <div
                                     onClick={() => entry.timelineType === 'medical' && setInspectingMedicalRecord(entry)}
                                     className={`p-5 rounded-xl border transition-all ${entry.timelineType === 'medical'
-                                        ? 'bg-slate-50/50 dark:bg-[#132338]/40 border-slate-100 dark:border-[#1A2D48] hover:border-indigo-200 dark:border-indigo-600 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
+                                        ? 'bg-slate-50/50 dark:bg-[#132338]/40 border-slate-100 dark:border-[#1A2D48] hover:border-indigo-200 dark:border-indigo-600 hover:bg-white dark:hover:bg-[#1A2D48] hover:shadow-xl hover:shadow-indigo-500/5 cursor-pointer'
                                         : 'bg-white dark:bg-[#132338] border-indigo-50 shadow-sm'
                                         }`}
                                 >

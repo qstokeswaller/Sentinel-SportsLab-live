@@ -121,10 +121,10 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
 
                 {/* ── Header ── */}
-                <div className={`px-6 py-5 border-b border-slate-100 ${accent.bgLight}`}>
+                <div className={`px-6 py-5 border-b border-slate-100 dark:border-[#243A58] ${accent.bgLight}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 ${accent.bg}`}>
@@ -170,7 +170,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                             const hasRequiredMissing = fields.some(f => f.required && !mapping[f.id]);
 
                             return (
-                                <div key={group} className="border border-slate-200 rounded-xl overflow-hidden">
+                                <div key={group} className="border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 bg-slate-50/80">
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">{group}</span>
@@ -228,14 +228,14 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
 
                         {/* Unmapped CSV columns */}
                         {unmappedCsvCols.length > 0 && (
-                            <div className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                 <div className="flex items-center justify-between px-4 py-2 bg-slate-50/80">
                                     <span className="text-xs font-semibold text-slate-500">Unmapped CSV Columns</span>
                                     <span className="text-[10px] font-bold text-slate-400">{unmappedCsvCols.length} skipped</span>
                                 </div>
                                 <div className="px-4 py-2 flex flex-wrap gap-1.5">
                                     {unmappedCsvCols.map(h => (
-                                        <span key={h} className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-medium rounded-md">{h}</span>
+                                        <span key={h} className="px-2 py-0.5 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 text-[10px] font-medium rounded-md">{h}</span>
                                     ))}
                                 </div>
                             </div>
@@ -246,21 +246,21 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                     <div className="px-4 pb-4">
                         <button
                             onClick={() => setShowPreview(!showPreview)}
-                            className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] transition-colors mb-2"
+                            className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors mb-2"
                         >
                             {showPreview ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
                             Data Preview ({Math.min(3, csvRows.length)} of {csvRows.length} rows)
                         </button>
 
                         {showPreview && previewRows.length > 0 && (
-                            <div className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-[10px]">
                                         <thead>
-                                            <tr className="bg-slate-50">
+                                            <tr className="bg-slate-50 dark:bg-[#0F1C30]">
                                                 {/* Show only mapped fields in preview */}
                                                 {schema.fields.filter(f => mapping[f.id]).map(f => (
-                                                    <th key={f.id} className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap border-b border-slate-100">
+                                                    <th key={f.id} className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap border-b border-slate-100 dark:border-[#243A58]">
                                                         {f.label}
                                                         <span className="block text-[9px] font-normal text-slate-400">{mapping[f.id]}</span>
                                                     </th>
@@ -269,7 +269,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                                         </thead>
                                         <tbody>
                                             {previewRows.map((row, i) => (
-                                                <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 dark:bg-[#132338]/40">
+                                                <tr key={i} className="border-t border-slate-50 dark:border-[#1A2D48] hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40">
                                                     {schema.fields.filter(f => mapping[f.id]).map(f => (
                                                         <td key={f.id} className="px-3 py-1.5 text-slate-700 dark:text-[#CBD5E1] whitespace-nowrap">
                                                             {row[mapping[f.id]] || <span className="text-slate-300">—</span>}
@@ -286,7 +286,7 @@ const SmartCsvMapper: React.FC<SmartCsvMapperProps> = ({
                 </div>
 
                 {/* ── Footer ── */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between">
                     <div className="text-[11px] text-slate-500">
                         {csvRows.length} row{csvRows.length !== 1 ? 's' : ''} detected
                     </div>

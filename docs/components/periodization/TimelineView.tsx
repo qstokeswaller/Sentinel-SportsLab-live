@@ -393,7 +393,7 @@ export const TimelineView = ({ plan }) => {
                                             : 'left-1/2 -translate-x-1/2';
                                     return (
                                         <div className={`absolute bottom-full ${horizClass} mb-2 z-50 pointer-events-none`} style={{ width: '200px' }}>
-                                            <div className="bg-slate-900 text-white rounded-xl px-3 py-2.5 shadow-2xl border border-slate-700">
+                                            <div className="bg-slate-900 dark:bg-indigo-600 text-white rounded-xl px-3 py-2.5 shadow-2xl border border-slate-700">
                                                 <div className="flex items-center gap-1.5 mb-1.5">
                                                     <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">{LABELS[type]}</span>
                                                     <span className="text-[9px] text-slate-500">·</span>
@@ -892,7 +892,7 @@ export const TimelineView = ({ plan }) => {
                     </button>
                     {showHelp && (
                         <div className="absolute bottom-full right-0 mb-2 z-50 pointer-events-none" style={{ minWidth: '240px' }}>
-                            <div className="bg-slate-900 text-white rounded-xl px-4 py-3 shadow-2xl border border-slate-700 space-y-1.5">
+                            <div className="bg-slate-900 dark:bg-indigo-600 text-white rounded-xl px-4 py-3 shadow-2xl border border-slate-700 space-y-1.5">
                                 <p className="text-[10px] font-bold text-slate-200 mb-2">Timeline interactions</p>
                                 {[
                                     ['Click phase bar',            'Edit phase details'],

@@ -65,14 +65,14 @@ export const LoadTerminal = ({ loadRegistry, acwrValue, acwrStatus, athleteLoad 
                 </div>
             </div>
 
-            <div className="pt-8 border-t border-slate-50">
+            <div className="pt-8 border-t border-slate-50 dark:border-[#1A2D48]">
                 <div className="flex flex-wrap gap-4">
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
                         const load = athleteLoad[athleteLoad.length - 7 + i]?.sRPE || 0;
                         const h = Math.min((load / 1000) * 100, 100);
                         return (
                             <div key={day} className="flex-1 min-w-[100px] flex flex-col gap-3">
-                                <div className="h-32 bg-slate-50 rounded-xl relative overflow-hidden flex items-end p-1">
+                                <div className="h-32 bg-slate-50 dark:bg-[#0F1C30] rounded-xl relative overflow-hidden flex items-end p-1">
                                     <div
                                         className="w-full bg-indigo-500 rounded-xl opacity-80"
                                         style={{ height: `${h}%` }}

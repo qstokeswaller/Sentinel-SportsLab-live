@@ -124,7 +124,7 @@ const WeightroomSheetPanel = ({
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-xl border border-teal-200 dark:border-teal-800/50 shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+          <div className="bg-white dark:bg-[#132338] rounded-xl border border-teal-200 dark:border-teal-800/50 shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="px-5 py-3 bg-teal-700 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2.5 text-white">
@@ -151,7 +151,7 @@ const WeightroomSheetPanel = ({
                                     className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                                         activeExerciseIds.has(s.exerciseId)
                                             ? 'bg-teal-600 text-white'
-                                            : 'bg-white border border-amber-300 text-amber-700 dark:text-amber-400 hover:bg-amber-100'
+                                            : 'bg-white dark:bg-[#132338] border border-amber-300 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/15'
                                     }`}
                                 >
                                     {activeExerciseIds.has(s.exerciseId) && <CheckIcon size={10} />}
@@ -176,7 +176,7 @@ const WeightroomSheetPanel = ({
                                 className={`px-2.5 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                                     activeExerciseIds.has(name)
                                         ? 'bg-teal-600 text-white'
-                                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:text-[#CBD5E1]'
+                                        : 'bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'
                                 }`}
                             >
                                 {name}
@@ -191,7 +191,7 @@ const WeightroomSheetPanel = ({
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Percentage of 1RM</span>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                             {columns.map(col => (
-                                <div key={col.id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                <div key={col.id} className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] rounded-lg px-3 py-2 border border-slate-100 dark:border-[#243A58]">
                                     <span className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] flex-1 truncate">{col.label}</span>
                                     <input
                                         type="number"
@@ -199,7 +199,7 @@ const WeightroomSheetPanel = ({
                                         onChange={(e) => updatePercentage(col.id, e.target.value)}
                                         onBlur={() => commitPercentage(col.id)}
                                         min={1} max={200}
-                                        className="w-14 bg-white border border-slate-200 rounded px-1.5 py-1 text-xs text-center outline-none focus:border-teal-400"
+                                        className="w-14 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded px-1.5 py-1 text-xs text-center outline-none focus:border-teal-400"
                                     />
                                     <span className="text-[9px] text-slate-400">%</span>
                                     <button onClick={() => removeColumn(col.id)} className="text-slate-300 hover:text-red-400 transition-colors"><Trash2Icon size={11} /></button>
@@ -211,7 +211,7 @@ const WeightroomSheetPanel = ({
 
                 {/* Live Preview Table */}
                 {columns.length > 0 && athletes.length > 0 && (
-                    <div className="border border-dashed border-slate-200 rounded-lg p-4">
+                    <div className="border border-dashed border-slate-200 dark:border-[#243A58] rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Preview</span>
                             <span className="text-[10px] text-slate-400">{athletes.length} athletes</span>
@@ -220,9 +220,9 @@ const WeightroomSheetPanel = ({
                             <table className="w-full border-collapse text-xs">
                                 <thead>
                                     <tr>
-                                        <th className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
+                                        <th className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">Name</th>
                                         {columns.map(col => (
-                                            <th key={col.id} className="px-3 py-2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
+                                            <th key={col.id} className="px-3 py-2 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider text-left border border-slate-700">
                                                 {col.label} ({col.percentage}%)
                                             </th>
                                         ))}
@@ -231,9 +231,9 @@ const WeightroomSheetPanel = ({
                                 <tbody>
                                     {athletes.map(a => (
                                         <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
-                                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[10px] border border-slate-200 whitespace-nowrap">{a.name}</td>
+                                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-[#E2E8F0] uppercase text-[10px] border border-slate-200 dark:border-[#243A58] whitespace-nowrap">{a.name}</td>
                                             {columns.map(col => (
-                                                <td key={col.id} className="px-3 py-1.5 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 text-center">
+                                                <td key={col.id} className="px-3 py-1.5 text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] text-center">
                                                     {getSheetCellValue(col, a.id, maxLookup) || '\u00A0'}
                                                 </td>
                                             ))}
@@ -254,16 +254,16 @@ const WeightroomSheetPanel = ({
                 )}
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#243A58]">
                     <div className="flex items-center gap-2">
                         {/* Orientation */}
-                        <div className="flex rounded-lg overflow-hidden border border-slate-200">
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58]">
                             {['portrait', 'landscape'].map(o => (
                                 <button
                                     key={o}
                                     onClick={() => setOrientation(o)}
                                     className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest transition-all ${
-                                        orientation === o ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 hover:bg-slate-50'
+                                        orientation === o ? 'bg-slate-900 dark:bg-indigo-600 text-white' : 'bg-white text-slate-400 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                     }`}
                                 >
                                     {o}
@@ -271,7 +271,7 @@ const WeightroomSheetPanel = ({
                             ))}
                         </div>
                         {columns.length > 0 && athletes.length > 0 && (
-                            <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1] text-[10px] font-semibold transition-colors">
+                            <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] text-[10px] font-semibold transition-colors">
                                 <PrinterIcon size={11} /> Print Preview
                             </button>
                         )}
@@ -291,11 +291,11 @@ const WeightroomSheetPanel = ({
                             </label>
                         )}
                         {sheetConfig && (
-                            <button onClick={onRemove} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg text-[10px] font-semibold transition-all">
+                            <button onClick={onRemove} className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg text-[10px] font-semibold transition-all">
                                 Remove Sheet
                             </button>
                         )}
-                        <button onClick={onClose} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 rounded-lg text-[10px] font-semibold transition-all">
+                        <button onClick={onClose} className="px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-[10px] font-semibold transition-all">
                             Cancel
                         </button>
                         <button

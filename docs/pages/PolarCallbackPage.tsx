@@ -98,7 +98,7 @@ export default function PolarCallbackPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 w-full max-w-sm text-center">
+            <div className="bg-white rounded-2xl border border-slate-200 dark:border-[#243A58] shadow-sm p-10 w-full max-w-sm text-center">
                 <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-16 w-auto mx-auto mb-5 select-none" />
 
                 {status === 'loading' && (

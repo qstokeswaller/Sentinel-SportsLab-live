@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Dumbbell as DumbbellIcon, XIcon } from 'lucide-react';
+import TimePicker from '../../components/ui/TimePicker';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const EditSessionModal: React.FC<any> = ({
     editingSession,
@@ -17,14 +19,14 @@ export const EditSessionModal: React.FC<any> = ({
                             <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4" onClick={() => setEditingSession(null)}>
                                 <div className="bg-white dark:bg-[#132338] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-md animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                     {/* Header */}
-                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#243A58]">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
                                                 <DumbbellIcon size={16} />
                                             </div>
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">Edit Session</h3>
                                         </div>
-                                        <button onClick={() => setEditingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                                        <button onClick={() => setEditingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors">
                                             <XIcon size={16} />
                                         </button>
                                     </div>
@@ -38,11 +40,11 @@ export const EditSessionModal: React.FC<any> = ({
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className={LABEL}>Date</label>
-                                                <input type="date" value={editingSession.date || ''} onChange={e => setEditingSession(p => ({ ...p, date: e.target.value }))} className={INPUT} />
+                                                <DatePicker value={editingSession.date || ''} onChange={e => setEditingSession(p => ({ ...p, date: e.target.value }))} />
                                             </div>
                                             <div>
                                                 <label className={LABEL}>Time</label>
-                                                <input type="time" value={editingSession.time || ''} onChange={e => setEditingSession(p => ({ ...p, time: e.target.value }))} className={INPUT} />
+                                                <TimePicker value={editingSession.time || ''} onChange={e => setEditingSession(p => ({ ...p, time: e.target.value }))} />
                                             </div>
                                         </div>
                                         {/* Phase & Load */}
@@ -71,8 +73,8 @@ export const EditSessionModal: React.FC<any> = ({
                                         </div>
                                     </div>
                                     {/* Footer */}
-                                    <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
-                                        <button onClick={() => setEditingSession(null)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                                    <div className="flex gap-3 px-6 py-4 border-t border-slate-100 dark:border-[#243A58]">
+                                        <button onClick={() => setEditingSession(null)} className="flex-1 py-2.5 bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                                             Cancel
                                         </button>
                                         <button

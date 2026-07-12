@@ -22,20 +22,20 @@ const LegalLayout: React.FC<Props> = ({ title, lastUpdated, summary, children })
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             {/* Mini nav */}
-            <nav className="border-b border-slate-200 bg-white sticky top-0 z-10">
+            <nav className="border-b border-slate-200 dark:border-[#243A58] bg-white sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
                     <Link to="/" className="flex items-center gap-2.5">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                         <span className="font-semibold text-[15px] text-slate-900 tracking-tight">Sentinel <span className="text-indigo-600">SportsLab</span></span>
                     </Link>
-                    <Link to="/" className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-indigo-600 transition-colors">
+                    <Link to="/" className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 transition-colors">
                         <ArrowLeftIcon size={14} /> Back to home
                     </Link>
                 </div>
             </nav>
 
             {/* Hero */}
-            <header className="bg-white border-b border-slate-100">
+            <header className="bg-white border-b border-slate-100 dark:border-[#243A58]">
                 <div className="max-w-3xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-[10.5px] font-bold uppercase tracking-wider text-indigo-600 mb-5">
                         <ShieldIcon size={11} /> Legal

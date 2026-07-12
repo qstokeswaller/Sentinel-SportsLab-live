@@ -574,7 +574,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                                             return (
                                                 <div key={q.id}>
                                                     <div onClick={() => setExpandedPreviewQ(isExpanded ? null : q.id)}
-                                                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isExpanded ? 'bg-slate-100 dark:bg-[#1A2D48] ring-1 ring-slate-200' : 'bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100'}`}>
+                                                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isExpanded ? 'bg-slate-100 dark:bg-[#1A2D48] ring-1 ring-slate-200' : 'bg-slate-50 dark:bg-[#0F1C30] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'}`}>
                                                         <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] flex items-center justify-center text-[10px] font-bold shrink-0">{i + 1}</div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2">
@@ -733,7 +733,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
 
             {/* ── Bulk Action Floating Bar ── only when Select Mode is on AND items are selected */}
             {isSelectMode && selectedResponseIds.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[9px] font-bold">{selectedResponseIds.size}</div>
                         <span className="text-sm font-semibold">{selectedResponseIds.size === 1 ? '1 response selected' : `${selectedResponseIds.size} responses selected`}</span>

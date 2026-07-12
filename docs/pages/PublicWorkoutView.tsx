@@ -7,7 +7,7 @@ import { useForceLightMode } from '../hooks/useForceLightMode';
 
 // ── Branding Banner (shared across public pages + PDF exports) ───────────────
 const BrandingBanner = () => (
-    <div className="bg-white border-b border-slate-100 py-3 print:py-2 print:border-b print:border-slate-200">
+    <div className="bg-white border-b border-slate-100 dark:border-[#243A58] py-3 print:py-2 print:border-b print:border-slate-200">
         <div className="flex flex-col items-center justify-center gap-0.5">
             <div className="flex items-center gap-2">
                 <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -176,7 +176,7 @@ const ExerciseTable = ({
                             </div>
                             {/* Detail area */}
                             {hasDetail && (
-                                <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 space-y-1.5">
+                                <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 dark:border-[#243A58] space-y-1.5">
                                     {showNotes && <p className="text-xs text-slate-500 italic">{ex.notes}</p>}
                                     {desc && <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>}
                                     {videoUrl && (
@@ -212,7 +212,7 @@ const LinkedSessionsBlock = ({ linked }: { linked: any[] }) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {linked.map((l, i) => (
-                    <div key={l.id || i} className="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <div key={l.id || i} className="bg-white border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 flex items-center gap-2">
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-indigo-50 text-indigo-700 shrink-0">
                             {l.source || l.type || 'Session'}
                         </span>
@@ -365,7 +365,7 @@ const PublicWorkoutView: React.FC = () => {
         const renderDayBody = (d: any) => {
             if (d.is_rest_day) {
                 return (
-                    <div className="flex flex-col items-center justify-center py-16 rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center space-y-4 mt-2 print:py-8 print:border print:border-slate-300">
+                    <div className="flex flex-col items-center justify-center py-16 rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#243A58] bg-white text-center space-y-4 mt-2 print:py-8 print:border print:border-slate-300">
                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center print:w-10 print:h-10">
                             <MoonIcon size={28} className="text-slate-400 print:w-5 print:h-5" />
                         </div>
@@ -375,7 +375,7 @@ const PublicWorkoutView: React.FC = () => {
                             <p className="text-sm text-slate-400 print:text-xs">Sleep well, eat well, hydrate.</p>
                         </div>
                         {d.instructions && (
-                            <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 max-w-sm">
+                            <div className="bg-slate-50 border border-slate-200 dark:border-[#243A58] rounded-xl px-5 py-3 max-w-sm">
                                 <p className="text-xs text-slate-500">{d.instructions}</p>
                             </div>
                         )}
@@ -388,7 +388,7 @@ const PublicWorkoutView: React.FC = () => {
             return (
                 <>
                     {d.instructions && (
-                        <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 mb-4 text-sm text-slate-600 print:bg-transparent">
+                        <div className="bg-white border border-slate-200 dark:border-[#243A58] rounded-lg px-4 py-3 mb-4 text-sm text-slate-600 print:bg-transparent">
                             <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Instructions</span>
                             {d.instructions}
                         </div>
@@ -418,7 +418,7 @@ const PublicWorkoutView: React.FC = () => {
             <div className="bg-[#F8F9FF] print-standalone" id="print-content" style={{minHeight: '100dvh'}}>
                 <BrandingBanner />
                 {/* Header */}
-                <div className="bg-white border-b border-slate-200 px-4 py-3">
+                <div className="bg-white border-b border-slate-200 dark:border-[#243A58] px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">
@@ -444,7 +444,7 @@ const PublicWorkoutView: React.FC = () => {
                 {/* Overview */}
                 {data.overview && (
                     <div className="max-w-3xl mx-auto px-4 mt-4">
-                        <p className="text-sm text-slate-600 bg-white border border-slate-200 rounded-lg px-4 py-3">{data.overview}</p>
+                        <p className="text-sm text-slate-600 bg-white border border-slate-200 dark:border-[#243A58] rounded-lg px-4 py-3">{data.overview}</p>
                     </div>
                 )}
 
@@ -484,7 +484,7 @@ const PublicWorkoutView: React.FC = () => {
                                                 className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all flex items-center gap-1.5 border ${
                                                     isActive
                                                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-700'
+                                                        : 'bg-white text-slate-600 border-slate-200 dark:border-[#243A58] hover:border-indigo-300 hover:text-indigo-700'
                                                 }`}
                                             >
                                                 Week {w}
@@ -496,7 +496,7 @@ const PublicWorkoutView: React.FC = () => {
                                     })}
                                 </div>
                             )}
-                            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar bg-white border border-slate-200 rounded-lg p-1">
+                            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar bg-white border border-slate-200 dark:border-[#243A58] rounded-lg p-1">
                                 {visibleDays.map(({ d, i }) => (
                                     <button
                                         key={d.id || i}
@@ -506,7 +506,7 @@ const PublicWorkoutView: React.FC = () => {
                                                 ? d.is_rest_day
                                                     ? 'bg-slate-600 text-white shadow-sm'
                                                     : 'bg-indigo-600 text-white shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                         }`}
                                     >
                                         {d.name || `Day ${d.day_number}`}
@@ -531,7 +531,7 @@ const PublicWorkoutView: React.FC = () => {
                 <div className="hidden print:block max-w-3xl mx-auto px-4 mt-2">
                     {days.map((d: any, i: number) => (
                         <div key={d.id || i} style={i > 0 ? { pageBreakBefore: 'always' } : undefined}>
-                            <div className="mb-4 pb-2 border-b border-slate-200 flex items-center gap-3">
+                            <div className="mb-4 pb-2 border-b border-slate-200 dark:border-[#243A58] flex items-center gap-3">
                                 <div>
                                     <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                         {totalWeeks > 1 && d.week_number ? `Week ${d.week_number} — ` : ''}{d.name || `Day ${d.day_number}`}
@@ -574,7 +574,7 @@ const PublicWorkoutView: React.FC = () => {
         <div className="bg-[#F8F9FF] print-standalone" id="print-content" style={{minHeight: '100dvh'}}>
             <BrandingBanner />
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 px-4 py-3">
+            <div className="bg-white border-b border-slate-200 dark:border-[#243A58] px-4 py-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 print:hidden">

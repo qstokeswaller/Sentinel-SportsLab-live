@@ -17,6 +17,7 @@ import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
 import { CustomSelect } from '../ui/CustomSelect';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
+import DatePicker from '../../components/ui/DatePicker';
 import {
     TrendingUpIcon, TrendingDownIcon, MinusIcon, ActivityIcon,
     CalendarIcon, ChevronDownIcon,
@@ -181,9 +182,9 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
             <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
                     <CalendarIcon size={13} className="text-slate-400 dark:text-[#CBD5E1]" />
-                    <input type="date" value={blockStart} onChange={e => setBlockStart(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
+                    <DatePicker value={blockStart} onChange={e => setBlockStart(e.target.value)} />
                     <span className="text-slate-300 dark:text-[#475569]">—</span>
-                    <input type="date" value={blockEnd} onChange={e => setBlockEnd(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
+                    <DatePicker value={blockEnd} onChange={e => setBlockEnd(e.target.value)} />
                 </div>
                 {/* Load metric selector — platform CustomSelect (audit fix 11:
                     was the app's last remaining native <select>) */}
@@ -213,7 +214,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                         </div>
                         <div className="text-[10px] font-semibold text-emerald-500 uppercase">Responders</div>
                     </div>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                    <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 text-center">
                         <div className="text-2xl font-bold text-slate-600 dark:text-[#CBD5E1]">
                             {athletesWithResponses.filter(a => a.responses.every(r => r.stable)).length}
                         </div>

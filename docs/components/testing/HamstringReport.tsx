@@ -15,6 +15,7 @@ import { processAthleteMatching } from '../../utils/athleteMatcher';
 import UnmatchedAthleteResolver from '../ui/UnmatchedAthleteResolver';
 import type { ResolvedEntry } from '../ui/UnmatchedAthleteResolver';
 import { CustomSelect } from '../ui/CustomSelect';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const HamstringReport: React.FC = () => {
     const {
@@ -133,9 +134,9 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 shadow-sm">
                         <CalendarIcon size={13} className="text-slate-400 dark:text-[#94A3B8] shrink-0" />
-                        <input type="date" value={hamDateFilterStart} onChange={(e) => setHamDateFilterStart(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
+                        <DatePicker value={hamDateFilterStart} onChange={(e) => setHamDateFilterStart(e.target.value)} className="w-28" />
                         <span className="text-slate-300 dark:text-[#475569] font-bold text-xs">—</span>
-                        <input type="date" value={hamDateFilterEnd} onChange={(e) => setHamDateFilterEnd(e.target.value)} className="text-[10px] font-semibold text-slate-700 dark:text-[#CBD5E1] outline-none w-28 cursor-pointer bg-transparent" />
+                        <DatePicker value={hamDateFilterEnd} onChange={(e) => setHamDateFilterEnd(e.target.value)} className="w-28" />
                         {(hamDateFilterStart || hamDateFilterEnd) && (
                             <button onClick={() => { setHamDateFilterStart(''); setHamDateFilterEnd(''); }} className="ml-1 text-slate-300 dark:text-[#475569] hover:text-rose-500 dark:hover:text-rose-300 transition-colors"><XIcon size={12} /></button>
                         )}
@@ -252,7 +253,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white dark:bg-[#132338] w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
                         <div className="bg-slate-900 px-10 py-8 text-white relative">
-                            <button onClick={() => setInspectHamEntry(null)} aria-label="Close" className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"><XIcon size={24} /></button>
+                            <button onClick={() => setInspectHamEntry(null)} aria-label="Close" className="absolute top-8 right-8 text-slate-400 dark:text-[#94A3B8] hover:text-white transition-colors"><XIcon size={24} /></button>
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white font-semibold text-lg">{inspectHamEntry.athleteName.split(' ').map(n => n[0]).join('')}</div>
                                 <div>
@@ -267,7 +268,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                                 <div className="bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide mb-1">Rel. Strength</span><span className="text-sm font-semibold text-rose-500 dark:text-rose-300">{inspectHamEntry.relativeStrength}</span></div>
                                 <div className="bg-white dark:bg-[#132338] border border-slate-100 dark:border-[#243A58] rounded-xl p-4 text-center"><span className="block text-[8px] font-semibold uppercase text-slate-400 dark:text-[#94A3B8] tracking-wide mb-1">Asymmetry</span><span className="text-sm font-semibold text-slate-800 dark:text-[#E2E8F0]">{inspectHamEntry.asymmetry || '0'}%</span></div>
                             </div>
-                            <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-semibold uppercase tracking-wide text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
+                            <button onClick={() => setInspectHamEntry(null)} className="w-full bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-xl font-semibold uppercase tracking-wide text-xs hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all active:scale-95 shadow-xl shadow-slate-200">Dismiss View</button>
                         </div>
                     </div>
                 </div>
@@ -461,7 +462,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
                             </div>
                             <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2">
                                 <CalendarIcon size={13} className="text-slate-400 dark:text-[#94A3B8]" />
-                                <input type="date" value={teamBatchDate} onChange={(e) => setTeamBatchDate(e.target.value)} className="text-xs font-bold outline-none bg-transparent text-slate-700 dark:text-[#CBD5E1]" />
+                                <DatePicker value={teamBatchDate} onChange={(e) => setTeamBatchDate(e.target.value)} />
                             </div>
                             <div className="ml-auto flex items-center gap-3">
                                 <span className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8]">{savedRows.size}/{allTeamPlayers.length} saved</span>

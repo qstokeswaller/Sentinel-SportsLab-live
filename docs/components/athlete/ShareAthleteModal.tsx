@@ -134,7 +134,7 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
                             <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{athlete?.name}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -236,14 +236,14 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
                                                 onClick={() => handleCopy(s.id)}
                                                 title="Copy link"
                                                 disabled={expired}
-                                                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-30"
+                                                className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors disabled:opacity-30"
                                             >
                                                 {copiedId === s.id ? <CheckIcon size={14} className="text-emerald-500" /> : <CopyIcon size={14} />}
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(s.id)}
                                                 title="Revoke link"
-                                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                                                className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                                             >
                                                 <Trash2Icon size={14} />
                                             </button>

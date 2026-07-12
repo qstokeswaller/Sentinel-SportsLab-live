@@ -48,7 +48,7 @@ const INTENSITY_CLS = {
 function IntensityBadge({ value }) {
     if (!value) return <span className="text-slate-300 dark:text-[#475569] text-[9px]">—</span>;
     return (
-        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INTENSITY_CLS[value] || 'bg-slate-100 text-slate-600 dark:text-[#CBD5E1]'}`}>
+        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${INTENSITY_CLS[value] || 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1]'}`}>
             {value}
         </span>
     );
@@ -454,7 +454,7 @@ export const BlocksTab = ({ plan }) => {
                                 <div className="relative" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setOpenMenuKey(openMenuKey === key ? null : key)}
-                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                         <MoreHorizontal size={13} />
                                     </button>
                                     {openMenuKey === key && (
@@ -512,7 +512,7 @@ export const BlocksTab = ({ plan }) => {
                             </div>
                             <button
                                 onClick={() => { setEditingPlanBlock({ ...selectedBlock, _phaseId: selectedBlock.phaseId }); setIsPlanBlockModalOpenNew(true); }}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
+                                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors border border-slate-200 dark:border-[#243A58]">
                                 <PencilIcon size={12} /> Edit Block
                             </button>
                         </div>

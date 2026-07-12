@@ -86,14 +86,14 @@ export const RosterPage = () => {
         <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-1 gap-0.5">
             <button
                 onClick={() => switchViewMode('list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                 title="List view"
             >
                 <ListIcon size={15} />
             </button>
             <button
                 onClick={() => switchViewMode('grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                 title="Grid view"
             >
                 <LayoutGridIcon size={15} />
@@ -374,14 +374,14 @@ export const RosterPage = () => {
                             <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-1 gap-0.5">
                                 <button
                                     onClick={() => setPlayerLayout('list')}
-                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'list' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                     title="List"
                                 >
                                     <LayoutListIcon size={14} />
                                 </button>
                                 <button
                                     onClick={() => setPlayerLayout('cards')}
-                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700'}`}
+                                    className={`p-1.5 rounded-md transition-all ${playerLayout === 'cards' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}
                                     title="Cards"
                                 >
                                     <LayoutGridIcon size={14} />
@@ -413,7 +413,7 @@ export const RosterPage = () => {
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                             teamDetailTab === 'athletes'
                                 ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]'
-                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'
+                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
                         }`}
                     >
                         <UsersIcon size={13} /> Athletes
@@ -423,7 +423,7 @@ export const RosterPage = () => {
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                             teamDetailTab === 'register'
                                 ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]'
-                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'
+                                : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
                         }`}
                     >
                         <ClipboardListIcon size={13} /> Register

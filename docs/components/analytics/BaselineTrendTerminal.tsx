@@ -257,7 +257,7 @@ export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnaly
                                             style={{ height: `${hH * 1.5}px` }} />
                                     </div>
                                     <div className="text-[7px] text-slate-300 dark:text-[#475569]">{l.date.split('-')[2]}</div>
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 text-white text-[9px] px-2 py-1 rounded shadow z-10 whitespace-nowrap pointer-events-none">
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 dark:bg-indigo-600 text-white text-[9px] px-2 py-1 rounded shadow z-10 whitespace-nowrap pointer-events-none">
                                         {l.date} · {l.sRPE?.toFixed(0) || 0} AU {matchingHabit ? `· R:${matchingHabit.readiness?.toFixed(0)}` : ''}
                                     </div>
                                 </div>

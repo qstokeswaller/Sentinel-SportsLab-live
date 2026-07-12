@@ -442,9 +442,9 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
 
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white dark:bg-[#132338] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50">
+                <div className="px-6 py-5 border-b border-slate-100 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30]">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 ${anomalyMode ? 'bg-amber-500' : 'bg-indigo-600'}`}>
@@ -488,14 +488,14 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                             value={provider}
                             onChange={e => setProvider(e.target.value)}
                             placeholder="Provider (e.g. Catapult, STATSports)"
-                            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-600 dark:text-[#CBD5E1] w-48"
+                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-xs text-slate-600 dark:text-[#CBD5E1] w-48"
                         />
                         <input
                             type="text"
                             value={profileName}
                             onChange={e => setProfileName(e.target.value)}
                             placeholder="Profile name"
-                            className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-600 dark:text-[#CBD5E1] w-40"
+                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-xs text-slate-600 dark:text-[#CBD5E1] w-40"
                         />
                     </div>
 
@@ -507,7 +507,7 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                                 <div key={p.name} className="flex items-center gap-1">
                                     <button
                                         onClick={() => applyProfile(p)}
-                                        className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all"
+                                        className="px-2 py-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-[11px] font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:text-indigo-300 transition-all"
                                     >
                                         {p.name} <span className="text-slate-300">· {p.teamName}</span>
                                     </button>
@@ -529,10 +529,10 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                         const hasRequired = fields.some(f => f.required && !mapping[f.id]);
 
                         return (
-                            <div key={group} className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div key={group} className="border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                 <button
                                     onClick={() => toggleGroup(group)}
-                                    className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50/80 hover:bg-slate-100/80 transition-colors text-left"
+                                    className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50/80 hover:bg-slate-100/80 dark:hover:bg-[#1A2D48]/60 transition-colors text-left"
                                 >
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">{group}</span>
@@ -593,13 +593,13 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
 
                     {/* Unmapped CSV columns */}
                     {unmappedCsvColumns.length > 0 && (
-                        <div className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="px-4 py-3 bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-200 dark:border-[#243A58]">
                             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                                 Skipped CSV Columns ({unmappedCsvColumns.length})
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {unmappedCsvColumns.map(col => (
-                                    <span key={col} className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[11px] text-slate-500">{col}</span>
+                                    <span key={col} className="px-2 py-0.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded text-[11px] text-slate-500">{col}</span>
                                 ))}
                             </div>
                         </div>
@@ -609,10 +609,10 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                     {csvPreviewRows.length > 0 && mappedCount > 0 && (
                         <div>
                             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Preview</p>
-                            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                            <div className="overflow-x-auto border border-slate-200 dark:border-[#243A58] rounded-lg">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200">
+                                        <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
                                             {Object.entries(mapping).slice(0, 8).map(([fieldId]) => (
                                                 <th key={fieldId} className="px-2.5 py-1.5 text-[9px] font-semibold text-slate-500 uppercase whitespace-nowrap">
                                                     {PLATFORM_FIELDS.find(f => f.id === fieldId)?.label || fieldId}
@@ -622,7 +622,7 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                                     </thead>
                                     <tbody>
                                         {csvPreviewRows.slice(0, 3).map((row, i) => (
-                                            <tr key={i} className="border-b border-slate-50">
+                                            <tr key={i} className="border-b border-slate-50 dark:border-[#1A2D48]">
                                                 {Object.entries(mapping).slice(0, 8).map(([fieldId, csvCol]) => (
                                                     <td key={fieldId} className="px-2.5 py-1 text-[11px] text-slate-700 dark:text-[#CBD5E1] whitespace-nowrap">{row[csvCol] || '—'}</td>
                                                 ))}
@@ -636,15 +636,15 @@ const GpsColumnMapper: React.FC<GpsColumnMapperProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between gap-3">
-                    <button onClick={onCancel} className="px-4 py-2.5 bg-white border border-slate-200 text-slate-500 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40 flex items-center justify-between gap-3">
+                    <button onClick={onCancel} className="px-4 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                         Cancel
                     </button>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleConfirm}
                             disabled={requiredMissing.length > 0}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] disabled:opacity-40 text-slate-600 dark:text-[#CBD5E1] text-sm font-medium rounded-xl transition-colors"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] disabled:opacity-40 text-slate-600 dark:text-[#CBD5E1] text-sm font-medium rounded-xl transition-colors"
                         >
                             <UploadIcon size={14} />
                             Import Only

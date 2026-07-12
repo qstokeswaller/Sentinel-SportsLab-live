@@ -192,7 +192,7 @@ const PublicWellnessForm: React.FC = () => {
 
     if (error) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 text-center max-w-sm">
+            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 dark:border-[#243A58] text-center max-w-sm">
                 <AlertCircle size={48} className="text-rose-500 mx-auto mb-4" />
                 <h1 className="text-xl font-bold text-slate-900 mb-2">Expired Link</h1>
                 <p className="text-slate-500 mb-6">{error}</p>
@@ -231,7 +231,7 @@ const PublicWellnessForm: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             {/* Branding + Header */}
-            <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
+            <header className="bg-white border-b border-slate-100 dark:border-[#243A58] sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
                     <div className="flex items-center gap-2">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -269,7 +269,7 @@ const PublicWellnessForm: React.FC = () => {
                                     onClick={() => setSelectedAthleteId(a.id)}
                                     className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${selectedAthleteId === a.id
                                             ? 'bg-cyan-50 border-cyan-500 shadow-md ring-4 ring-cyan-50/50 scale-[1.02]'
-                                            : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
+                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-700 hover:border-slate-200'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
@@ -308,7 +308,7 @@ const PublicWellnessForm: React.FC = () => {
 
                                     {/* Reference image (any question type) */}
                                     {q.imageUrl && (
-                                        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white mb-6">
+                                        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-[#243A58] bg-white mb-6">
                                             <img
                                                 src={q.imageUrl}
                                                 alt="Reference"
@@ -391,7 +391,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                     className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 font-bold transition-all active:scale-[0.98] ${
                                                                         isSelected
                                                                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                     }`}
                                                                 >
                                                                     <span className="text-lg font-black w-7 text-center shrink-0">{val}</span>
@@ -423,7 +423,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                     className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${
                                                                         isSelected
                                                                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                     }`}
                                                                 >
                                                                     {val}
@@ -447,7 +447,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                 onClick={() => setResponses({ ...responses, [rk]: opt })}
                                                                 className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${isSelected
                                                                     ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                    : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                    : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                 }`}
                                                             >
                                                                 {opt}
@@ -475,7 +475,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                         ? (isSelected ? sevStyle.selected : sevStyle.unselected)
                                                                         : (isSelected
                                                                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200')
+                                                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200')
                                                                 }`}
                                                             >
                                                                 {opt}
@@ -513,7 +513,7 @@ const PublicWellnessForm: React.FC = () => {
                                             return (
                                                 <div className="space-y-4">
                                                     {bmc?.referenceImageUrl && (
-                                                        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white">
+                                                        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-[#243A58] bg-white">
                                                             <img src={bmc.referenceImageUrl} alt="Reference" className="w-full object-contain max-h-56" />
                                                         </div>
                                                     )}
@@ -537,7 +537,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                             onClick={() => setResponses({ ...responses, [rk]: val })}
                                                                             className={`${useGrid ? 'aspect-square text-xl' : 'w-full p-5 text-left'} rounded-2xl border-2 font-black transition-all ${responses[rk] === val
                                                                                 ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                                : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                                : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                             }`}
                                                                         >{val}</button>
                                                                     ))}
@@ -555,7 +555,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                         onClick={() => setResponses({ ...responses, [rk]: val })}
                                                                         className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${responses[rk] === val
                                                                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                         }`}
                                                                     >{opt}</button>
                                                                 );
@@ -575,7 +575,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                         }}
                                                                         className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all flex items-center gap-3 ${checked
                                                                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl'
-                                                                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                         }`}
                                                                     >
                                                                         <span className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${checked ? 'bg-white border-white' : 'border-slate-300'}`}>
@@ -595,7 +595,7 @@ const PublicWellnessForm: React.FC = () => {
                                                                     onClick={() => setResponses({ ...responses, [rk]: opt })}
                                                                     className={`w-full p-5 rounded-2xl border-2 text-left font-bold transition-all ${responses[rk] === opt
                                                                         ? 'bg-slate-900 border-slate-900 text-white shadow-xl scale-[1.02]'
-                                                                        : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                                                                        : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-600 hover:border-slate-200'
                                                                     }`}
                                                                 >{opt}</button>
                                                             ))}
@@ -606,7 +606,7 @@ const PublicWellnessForm: React.FC = () => {
                                                         <textarea
                                                             value={responses[rk] || ''}
                                                             onChange={e => setResponses({ ...responses, [rk]: e.target.value })}
-                                                            className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-700 font-semibold min-h-[120px] focus:outline-none focus:border-slate-300 transition-all"
+                                                            className="w-full p-4 rounded-2xl border-2 border-slate-100 dark:border-[#243A58] text-slate-700 font-semibold min-h-[120px] focus:outline-none focus:border-slate-300 transition-all"
                                                             placeholder="Type your answer..."
                                                         />
                                                     )}
@@ -629,7 +629,7 @@ const PublicWellnessForm: React.FC = () => {
             </main>
 
             {/* Sticky Footer Navigation */}
-            <div className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-100">
+            <div className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-100 dark:border-[#243A58]">
                 {submitError && (
                     <div className="px-6 pt-3 max-w-md mx-auto w-full">
                         <div className="px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">{submitError}</div>
@@ -640,7 +640,7 @@ const PublicWellnessForm: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleBack}
-                            className="p-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-bold active:scale-95 transition-all"
+                            className="p-4 bg-white border-2 border-slate-100 dark:border-[#243A58] text-slate-600 rounded-2xl font-bold active:scale-95 transition-all"
                         >
                             <ChevronLeft />
                         </button>

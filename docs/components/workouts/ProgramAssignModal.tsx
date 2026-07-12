@@ -9,6 +9,8 @@ import { useProgramWithDays } from '../../hooks/useWorkoutPrograms';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { computePlannedTonnage } from '../../utils/plannedTonnage';
 import { DatabaseService } from '../../services/databaseService';
+import TimePicker from '../ui/TimePicker';
+import DatePicker from '../../components/ui/DatePicker';
 
 interface ProgramAssignModalProps {
     program: { id: string; name: string; training_phase?: string | null } | null;
@@ -188,21 +190,11 @@ export const ProgramAssignModal: React.FC<ProgramAssignModalProps> = ({ program,
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] mb-1.5 block">Start Date</label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                            <DatePicker value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full" />
                         </div>
                         <div>
                             <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] mb-1.5 block">Time</label>
-                            <input
-                                type="time"
-                                value={time}
-                                onChange={(e) => setTime(e.target.value)}
-                                className="w-full bg-white dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-[#E2E8F0] outline-none focus:border-indigo-400"
-                            />
+                            <TimePicker value={time} onChange={(e) => setTime(e.target.value)} />
                         </div>
                     </div>
 

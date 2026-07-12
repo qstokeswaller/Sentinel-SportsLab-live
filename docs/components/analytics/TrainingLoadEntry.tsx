@@ -9,6 +9,7 @@ import {
     CalendarIcon, ActivityIcon, PauseIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import DatePicker from '../../components/ui/DatePicker';
 
 const inputCls = "w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-sm text-slate-900 dark:text-[#E2E8F0] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors";
 const labelCls = "text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1";
@@ -209,7 +210,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
     return (
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white shrink-0">
                         <ActivityIcon size={16} />
@@ -260,7 +261,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                             <button onClick={() => shiftDate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg shrink-0">
                                 <ChevronLeftIcon size={14} className="text-slate-400" />
                             </button>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls + ' text-center'} />
+                            <DatePicker value={date} onChange={e => setDate(e.target.value)} />
                             <button onClick={() => shiftDate(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg shrink-0">
                                 <ChevronRightIcon size={14} className="text-slate-400" />
                             </button>
@@ -286,7 +287,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
 
                 {/* No team selected */}
                 {!selectedTeamId && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
+                    <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl p-6 text-center">
                         <ActivityIcon size={24} className="mx-auto text-slate-300 mb-2" />
                         <p className="text-sm text-slate-500">Select a team with ACWR enabled to begin logging.</p>
                         <p className="text-[10px] text-slate-400 mt-1">Enable ACWR for teams in Settings → ACWR Monitoring.</p>
@@ -334,7 +335,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                     return (
                                         <div
                                             key={player.id}
-                                            className={`grid gap-2 items-center px-1 py-1.5 rounded-lg bg-slate-50 opacity-50 ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}
+                                            className={`grid gap-2 items-center px-1 py-1.5 rounded-lg bg-slate-50 dark:bg-[#0F1C30] opacity-50 ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
@@ -360,7 +361,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                     <div
                                         key={player.id}
                                         className={`grid gap-2 items-center px-1 py-1.5 rounded-lg transition-all ${
-                                            row.skip ? 'bg-slate-100 opacity-60' : existing ? 'bg-emerald-50/50' : 'hover:bg-slate-50'
+                                            row.skip ? 'bg-slate-100 dark:bg-[#1A2D48] opacity-60' : existing ? 'bg-emerald-50/50' : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                         } ${needsRpeDuration ? 'grid-cols-[1fr_60px_60px_70px_50px]' : 'grid-cols-[1fr_100px_70px_50px]'}`}
                                     >
                                         {/* Athlete name */}
@@ -433,7 +434,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                         </div>
 
                         {/* Summary + Notes */}
-                        <div className="flex items-center gap-4 pt-2 border-t border-slate-100">
+                        <div className="flex items-center gap-4 pt-2 border-t border-slate-100 dark:border-[#243A58]">
                             <span className="text-xs text-slate-500">{filledCount} logged · {skippedCount} rest · {players.length - filledCount - skippedCount} empty</span>
                             <div className="flex-1" />
                             <input
@@ -441,7 +442,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
                                 placeholder="Session notes (optional)"
-                                className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-[#CBD5E1] w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-[#CBD5E1] w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                             />
                         </div>
 

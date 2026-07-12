@@ -80,7 +80,7 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                                 <p className="text-xs text-slate-500">{athlete.position || 'Athlete'}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/60 rounded-lg transition-colors">
+                        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/60 dark:hover:bg-[#1A2D48]/60 rounded-lg transition-colors">
                             <XIcon size={18} className="text-slate-400" />
                         </button>
                     </div>
@@ -155,10 +155,10 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 dark:bg-[#132338]/40">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#132338]/40">
                     <button
                         onClick={onClose}
-                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] text-sm font-medium rounded-xl transition-colors"
+                        className="w-full py-2.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] text-sm font-medium rounded-xl transition-colors"
                     >
                         Close
                     </button>

@@ -495,7 +495,12 @@ export const WorkoutProgramsPage = () => {
                 {/* Week tabs + day list (filtered to the active week) */}
                 <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar">
                     {isLoading ? (
-                        <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] italic text-center py-4">Loading days…</div>
+                        /* Skeleton (Phase 4c): mirrors the day rows */
+                        <div className="space-y-2 py-2 animate-pulse">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-8 rounded-lg bg-slate-200/70 dark:bg-[#1A2D48]" />
+                            ))}
+                        </div>
                     ) : days.length === 0 ? (
                         <div className="text-[10px] text-slate-400 dark:text-[#94A3B8] italic text-center py-4">No days configured</div>
                     ) : (
@@ -768,9 +773,18 @@ export const WorkoutProgramsPage = () => {
                 <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
                     <div className="overflow-y-auto flex-1 custom-scrollbar">
                 {isLoading ? (
-                    <div className="p-12 flex flex-col items-center gap-3">
-                        <div className="w-6 h-6 border-2 border-indigo-200 dark:border-indigo-800/50 border-t-indigo-600 rounded-full animate-spin" />
-                        <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">Loading programs...</span>
+                    /* Skeleton (Phase 4c): mirrors the program list rows */
+                    <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="px-5 py-4 flex items-center gap-3 animate-pulse">
+                                <div className="w-9 h-9 rounded-lg bg-slate-200/70 dark:bg-[#1A2D48] shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3.5 w-48 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                    <div className="h-2.5 w-28 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                </div>
+                                <div className="h-6 w-20 rounded-full bg-slate-200/70 dark:bg-[#1A2D48]" />
+                            </div>
+                        ))}
                     </div>
                 ) : filteredPrograms.length === 0 ? (
                     <div className="py-16 px-5 flex flex-col items-center text-slate-300 dark:text-[#475569] gap-2">

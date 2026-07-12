@@ -112,7 +112,7 @@ export const KpiInfoModal: React.FC<{ which: KpiInfoKey | null; onClose: () => v
                     </div>
                     <button
                         onClick={onClose}
-                        aria-label="Close" className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors shrink-0"
+                        aria-label="Close" className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 dark:hover:bg-[#1A2D48]/60 flex items-center justify-center transition-colors shrink-0"
                     >
                         <XIcon size={15} />
                     </button>

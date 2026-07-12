@@ -498,7 +498,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Safe range toggle */}
                         <button onClick={() => setShowSafeRange(v => !v)}
-                            className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${showSafeRange ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]'}`}>
+                            className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${showSafeRange ? 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50 text-emerald-700' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}>
                             <BarChart2Icon size={11} />
                             Safe Range
                         </button>
@@ -512,7 +512,7 @@ export const ScenarioModellingTerminal = ({
                                     </span>
                                 )}
                                 <button onClick={resetAnchors}
-                                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                     Reset anchors
                                 </button>
                             </div>
@@ -536,7 +536,7 @@ export const ScenarioModellingTerminal = ({
                                             {dbSaving ? 'Saving…' : 'Save'}
                                         </button>
                                         <button onClick={() => { setShowSaveInput(false); setSavingName(''); }}
-                                            className="text-[10px] text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                             Cancel
                                         </button>
                                     </div>
@@ -544,7 +544,7 @@ export const ScenarioModellingTerminal = ({
                                     <button onClick={() => setShowSaveInput(true)}
                                         disabled={savedScenarios.length >= 3}
                                         title={savedScenarios.length >= 3 ? 'Max 3 scenarios saved — delete one to save more' : 'Save this projection as a named scenario'}
-                                        className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200 dark:border-indigo-800/50 disabled:opacity-40 transition-all">
+                                        className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white dark:bg-[#132338] text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200 dark:border-indigo-800/50 disabled:opacity-40 transition-all">
                                         <BookmarkIcon size={11} />
                                         Save Scenario {savedScenarios.length > 0 && `(${savedScenarios.length}/3)`}
                                     </button>
@@ -552,7 +552,7 @@ export const ScenarioModellingTerminal = ({
 
                                 {savedScenarios.length >= 2 && (
                                     <button onClick={() => setCompareMode(v => !v)}
-                                        className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}>
+                                        className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-500 hover:text-indigo-600 dark:text-indigo-300 hover:border-indigo-200'}`}>
                                         <GitCompareIcon size={11} />
                                         Compare
                                     </button>
@@ -600,7 +600,7 @@ export const ScenarioModellingTerminal = ({
                                     {/* Hover tooltip */}
                                     {load > 0 && (
                                         <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-20 whitespace-nowrap">
-                                            <div className="bg-slate-900 text-white text-[9px] px-2 py-1 rounded shadow">
+                                            <div className="bg-slate-900 dark:bg-indigo-600 text-white text-[9px] px-2 py-1 rounded shadow">
                                                 D-{historicalBand.chartBars.length - i} · {load} {metricInfo.unit}
                                             </div>
                                         </div>
@@ -633,8 +633,8 @@ export const ScenarioModellingTerminal = ({
                                     const colorClass = evt.type === 'competition'
                                         ? 'bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100'
                                         : evt.type === 'testing'
-                                            ? 'bg-indigo-50 dark:bg-indigo-600 border-indigo-200 dark:border-indigo-800/50 text-indigo-800 hover:bg-indigo-100'
-                                            : 'bg-slate-50 border-slate-200 text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100';
+                                            ? 'bg-indigo-50 dark:bg-indigo-600 border-indigo-200 dark:border-indigo-800/50 text-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-500/15'
+                                            : 'bg-slate-50 border-slate-200 text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]/60';
                                     return (
                                         <button key={i} onClick={() => anchorPlanEvent(evt.dayOffset)}
                                             title={alreadyPinned ? 'Already anchored' : `Pin D+${evt.dayOffset} as a ${evt.type || 'event'} day with suggested load`}
@@ -662,7 +662,7 @@ export const ScenarioModellingTerminal = ({
                                 </span>
                                 {savedScenarios.length >= 2 && (
                                     <button onClick={() => setCompareMode(v => !v)}
-                                        className={`text-[9px] font-semibold px-2 py-1 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-500 hover:text-indigo-600'}`}>
+                                        className={`text-[9px] font-semibold px-2 py-1 rounded-lg border transition-all ${compareMode ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600'}`}>
                                         {compareMode ? 'Hide Compare' : 'Compare'}
                                     </button>
                                 )}
@@ -745,7 +745,7 @@ export const ScenarioModellingTerminal = ({
 
                                         return (
                                             <tr key={point.day}
-                                                className={`border-t border-slate-50 transition-colors ${isPinned ? 'bg-amber-50/40' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
+                                                className={`border-t border-slate-50 dark:border-[#1A2D48] transition-colors ${isPinned ? 'bg-amber-50/40' : 'hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40'}`}>
                                                 <td className="px-6 py-3">
                                                     <div className="flex items-center gap-1.5">
                                                         {isPinned && <LockIcon size={10} className="text-amber-500" />}
@@ -761,7 +761,7 @@ export const ScenarioModellingTerminal = ({
                                                     <td className="px-2 py-3 text-center">
                                                         <button onClick={() => togglePin(point.day)}
                                                             title={pinnedDays.has(point.day) ? 'Click to unpin (let model solve)' : 'Click to pin this load'}
-                                                            className={`p-1.5 rounded-md transition-all ${pinnedDays.has(point.day) ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                                                            className={`p-1.5 rounded-md transition-all ${pinnedDays.has(point.day) ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-400 dark:text-[#94A3B8] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60'}`}>
                                                             {pinnedDays.has(point.day) ? <LockIcon size={11} /> : <UnlockIcon size={11} />}
                                                         </button>
                                                     </td>
@@ -782,7 +782,7 @@ export const ScenarioModellingTerminal = ({
                                                             onChange={e => setAnchorLoad(point.day, e.target.value)}
                                                             className={`w-24 text-right text-xs font-bold rounded px-2 py-1 outline-none transition-all ${pinnedDays.has(point.day)
                                                                 ? 'bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 text-amber-900 focus:border-amber-500'
-                                                                : 'bg-slate-50 border border-slate-200 text-slate-400 placeholder-slate-400 focus:border-indigo-300 focus:text-slate-700 dark:text-[#CBD5E1]'}`}
+                                                                : 'bg-slate-50 border border-slate-200 dark:border-[#243A58] text-slate-400 placeholder-slate-400 focus:border-indigo-300 focus:text-slate-700 dark:text-[#CBD5E1]'}`}
                                                         />
                                                     ) : (
                                                         <span className={`text-sm font-bold ${outOfRange ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-900 dark:text-indigo-300'}`}>
@@ -822,7 +822,7 @@ export const ScenarioModellingTerminal = ({
 
                         {/* Safe range legend */}
                         {showSafeRange && (
-                            <div className="px-8 py-3 border-t border-slate-50 bg-slate-50/30 dark:bg-[#0F1C30]/30 flex items-center gap-2">
+                            <div className="px-8 py-3 border-t border-slate-50 dark:border-[#1A2D48] bg-slate-50/30 dark:bg-[#0F1C30]/30 flex items-center gap-2">
                                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
                                 <span className="text-[9px] text-slate-500">
                                     Safe Range = load that keeps ACWR between 0.8 and 1.3 for that day. Values outside the range shown in <span className="text-rose-500 font-semibold">red</span>.
@@ -871,7 +871,7 @@ export const ScenarioModellingTerminal = ({
                                         <div className={`w-full max-w-10 rounded-t-lg transition-all ${point.isPinned ? 'bg-amber-400' : getBarColor(point.ratio)}`}
                                             style={{ height: `${h}%` }} />
                                         <div className="text-[8px] font-semibold text-slate-400">D+{point.day}</div>
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded transition-all z-10 whitespace-nowrap">
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-900 dark:bg-indigo-600 text-white text-[10px] font-semibold px-2 py-1 rounded transition-all z-10 whitespace-nowrap">
                                             {point.ratio.toFixed(2)} ACWR · {point.load} {metricInfo.unit}
                                             {point.isPinned ? ' 🔒' : ''}
                                         </div>
@@ -909,7 +909,7 @@ export const ScenarioModellingTerminal = ({
                                     return (
                                         <div key={player.id}>
                                             <button onClick={() => setExpandedPlayer(isExpanded ? null : player.id)}
-                                                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors">
+                                                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40 transition-colors">
                                                 <div className="flex items-center gap-4">
                                                     <AthleteAvatar
                                                         player={player}
@@ -944,7 +944,7 @@ export const ScenarioModellingTerminal = ({
 
                                             {isExpanded && hasPlayerData && (
                                                 <div className="px-8 pb-5">
-                                                    <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                                                    <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-xl border border-slate-100 dark:border-[#243A58] overflow-hidden">
                                                         <table className="w-full">
                                                             <thead>
                                                                 <tr className="bg-slate-100/50">
@@ -956,7 +956,7 @@ export const ScenarioModellingTerminal = ({
                                                             </thead>
                                                             <tbody>
                                                                 {player.projection.map((pt) => (
-                                                                    <tr key={pt.day} className="border-t border-slate-100">
+                                                                    <tr key={pt.day} className="border-t border-slate-100 dark:border-[#243A58]">
                                                                         <td className="px-4 py-2 text-xs font-semibold text-indigo-900 dark:text-indigo-300">D+{pt.day}</td>
                                                                         <td className="px-4 py-2 text-xs text-slate-600 dark:text-[#CBD5E1]">{getDateLabel(pt.day)}</td>
                                                                         <td className="px-4 py-2 text-right text-xs font-bold text-indigo-900 dark:text-indigo-300">
@@ -1052,7 +1052,7 @@ export const ScenarioModellingTerminal = ({
                                                             style={{ height: `${h}%`, backgroundColor: sc.color, opacity: 0.8 }}>
                                                             {/* Per-bar tooltip */}
                                                             <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/bar:block z-20 whitespace-nowrap pointer-events-none">
-                                                                <div className="bg-slate-900 text-white text-[9px] px-2 py-1 rounded shadow">
+                                                                <div className="bg-slate-900 dark:bg-indigo-600 text-white text-[9px] px-2 py-1 rounded shadow">
                                                                     {sc.name} D+{day}: {pt.ratio.toFixed(2)} ACWR · {pt.load} {metricInfo.unit}
                                                                 </div>
                                                             </div>
@@ -1070,7 +1070,7 @@ export const ScenarioModellingTerminal = ({
                             <div className="overflow-x-auto mt-6">
                                 <table className="w-full text-xs">
                                     <thead>
-                                        <tr className="border-b border-slate-100">
+                                        <tr className="border-b border-slate-100 dark:border-[#243A58]">
                                             <th className="text-left text-[9px] font-bold text-slate-400 uppercase py-2 pr-4">Scenario</th>
                                             <th className="text-center text-[9px] font-bold text-slate-400 uppercase py-2 px-3">Mode</th>
                                             <th className="text-center text-[9px] font-bold text-slate-400 uppercase py-2 px-3">Target ACWR</th>
@@ -1083,7 +1083,7 @@ export const ScenarioModellingTerminal = ({
                                         {savedScenarios.map(sc => {
                                             const endRatio = sc.projection[sc.projection.length - 1]?.ratio || 0;
                                             return (
-                                                <tr key={sc.id} className="border-b border-slate-50">
+                                                <tr key={sc.id} className="border-b border-slate-50 dark:border-[#1A2D48]">
                                                     <td className="py-2 pr-4">
                                                         <div className="flex items-center gap-2">
                                                             <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sc.color }} />
@@ -1091,7 +1091,7 @@ export const ScenarioModellingTerminal = ({
                                                         </div>
                                                     </td>
                                                     <td className="py-2 px-3 text-center">
-                                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize">{sc.mode}</span>
+                                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2D48] text-slate-500 capitalize">{sc.mode}</span>
                                                     </td>
                                                     <td className="py-2 px-3 text-center font-semibold text-slate-700 dark:text-[#CBD5E1]">{sc.targetRatio.toFixed(2)}</td>
                                                     <td className="py-2 px-3 text-center text-slate-500">{sc.projectionDays}d</td>

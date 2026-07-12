@@ -255,10 +255,10 @@ const TextBlockCard: React.FC<{
     };
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center gap-1 px-3 py-2 bg-slate-50 border-b border-slate-200">
-                <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5">
+            <div className="flex items-center gap-1 px-3 py-2 bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
+                <div className="flex items-center gap-0.5 bg-white dark:bg-[#132338] rounded-lg border border-slate-200 dark:border-[#243A58] p-0.5">
                     {LINE_TYPES.map(({ type, label, icon: Icon }) => (
                         <button
                             key={type}
@@ -266,7 +266,7 @@ const TextBlockCard: React.FC<{
                             className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
                                 focusedLine?.type === type
                                     ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-sm'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:text-[#CBD5E1]'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'
                             }`}
                             title={label}
                         >
@@ -277,13 +277,13 @@ const TextBlockCard: React.FC<{
                 </div>
                 <div className="flex-1" />
                 <div className="flex items-center gap-0.5">
-                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move up">
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move up">
                         <ChevronUpIcon size={14} />
                     </button>
-                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move down">
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all" title="Move down">
                         <ChevronDownIcon size={14} />
                     </button>
-                    <button onClick={onDelete} className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Delete block">
+                    <button onClick={onDelete} className="p-1 rounded text-slate-400 dark:text-[#94A3B8] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Delete block">
                         <Trash2Icon size={14} />
                     </button>
                 </div>
@@ -368,13 +368,13 @@ const ExerciseBlockCard: React.FC<{
                     value={block.sectionName || ''}
                     onChange={e => onChange({ ...block, sectionName: e.target.value })}
                     placeholder="Section name (e.g., ROM, Isometrics, Plyometrics)"
-                    className="w-full px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800/50 bg-white text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 placeholder:font-normal"
+                    className="w-full px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800/50 bg-white dark:bg-[#132338] text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400 placeholder:font-normal"
                 />
 
                 {exercises.length > 0 && (
                     <div className="space-y-1.5">
                         {exercises.map((ex, idx) => (
-                            <div key={idx} className="flex items-start gap-2 bg-white rounded-lg border border-slate-200 p-2.5">
+                            <div key={idx} className="flex items-start gap-2 bg-white dark:bg-[#132338] rounded-lg border border-slate-200 dark:border-[#243A58] p-2.5">
                                 <span className="text-[10px] font-bold text-indigo-400 mt-2 w-5 shrink-0 text-right">{idx + 1}.</span>
                                 <div className="flex-1 space-y-1.5">
                                     <input
@@ -468,8 +468,8 @@ const PdfBlockCard: React.FC<{
                 <span className="text-[11px] font-semibold text-rose-600 uppercase tracking-wide">PDF Block</span>
                 <div className="flex-1" />
                 <div className="flex items-center gap-0.5">
-                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
-                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
+                    <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/15 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
+                    <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/15 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
                     <button onClick={onDelete} className="p-1 rounded text-rose-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"><Trash2Icon size={14} /></button>
                 </div>
             </div>
@@ -481,12 +481,12 @@ const PdfBlockCard: React.FC<{
                     value={block.pdfTitle || ''}
                     onChange={e => onChange({ ...block, pdfTitle: e.target.value })}
                     placeholder="PDF title (e.g., Clinical Guidelines)"
-                    className="w-full px-3 py-2 rounded-lg border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-white text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 placeholder:text-slate-400 placeholder:font-normal"
+                    className="w-full px-3 py-2 rounded-lg border border-rose-200 dark:border-rose-900/50 dark:border-rose-800/50 bg-white dark:bg-[#132338] text-sm font-semibold text-slate-800 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 placeholder:text-slate-400 placeholder:font-normal"
                 />
 
                 {block.pdfUrl ? (
                     <div className="space-y-3">
-                        <div className="flex items-center gap-3 bg-white rounded-lg border border-slate-200 p-3">
+                        <div className="flex items-center gap-3 bg-white dark:bg-[#132338] rounded-lg border border-slate-200 dark:border-[#243A58] p-3">
                             <FileIcon size={20} className="text-rose-500 shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0] truncate">{block.pdfFileName}</p>
@@ -495,14 +495,14 @@ const PdfBlockCard: React.FC<{
                             <button onClick={() => window.open(block.pdfUrl, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-all" title="Open PDF">
                                 <ExternalLinkIcon size={14} />
                             </button>
-                            <button onClick={handleRemoveFile} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Remove PDF">
+                            <button onClick={handleRemoveFile} className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Remove PDF">
                                 <Trash2Icon size={14} />
                             </button>
                         </div>
                         <iframe
                             src={block.pdfUrl}
                             title={block.pdfTitle || block.pdfFileName}
-                            className="w-full rounded-lg border border-slate-200 h-[70vh] min-h-[550px] bg-white"
+                            className="w-full rounded-lg border border-slate-200 dark:border-[#243A58] h-[70vh] min-h-[550px] bg-white dark:bg-[#132338]"
                         />
                     </div>
                 ) : (
@@ -608,9 +608,9 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
     return (
         <div className="space-y-4">
             {/* Header bar */}
-            <div className="bg-white px-5 py-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                    <button onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <ArrowLeftIcon size={16} />
                     </button>
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">
@@ -632,7 +632,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                         value={name}
                         onChange={e => setName(e.target.value)}
                         placeholder="Protocol title"
-                        className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400"
+                        className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-sm font-medium text-slate-900 dark:text-[#E2E8F0] outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 placeholder:text-slate-400"
                     />
                     <CustomSelect
                         variant="form"
@@ -685,7 +685,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 ))}
 
                 {blocks.length === 0 && (
-                    <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 dark:bg-[#132338]/40">
+                    <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl bg-slate-50/50 dark:bg-[#132338]/40">
                         <FileTextIcon size={28} className="mx-auto text-slate-300 mb-3" />
                         <p className="text-sm text-slate-500 font-medium mb-1">Start building your protocol</p>
                         <p className="text-xs text-slate-400">Add a text or exercise block below to get started</p>
@@ -696,7 +696,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 <div className="grid grid-cols-3 gap-3 pt-1">
                     <button
                         onClick={() => addBlock('text')}
-                        className="flex items-center justify-center gap-2 px-4 py-4 bg-white border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-indigo-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50/50 transition-all"
+                        className="flex items-center justify-center gap-2 px-4 py-4 bg-white dark:bg-[#132338] border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-indigo-400 hover:text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/15 transition-all"
                     >
                         <PlusIcon size={16} />
                         <span className="text-sm font-medium">Text Block</span>
@@ -719,7 +719,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
             </div>
 
             {/* Protocol-level attachments */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5 space-y-3">
                 <div className="flex items-center gap-2">
                     <PaperclipIcon size={14} className="text-slate-500" />
                     <h4 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">Attachments</h4>
@@ -729,7 +729,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                 {attachments.length > 0 && (
                     <div className="space-y-2">
                         {attachments.map(att => (
-                            <div key={att.id} className="flex items-center gap-3 bg-slate-50 rounded-lg border border-slate-200 p-3">
+                            <div key={att.id} className="flex items-center gap-3 bg-slate-50 dark:bg-[#0F1C30] rounded-lg border border-slate-200 dark:border-[#243A58] p-3">
                                 <FileIcon size={16} className="text-rose-500 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-slate-800 dark:text-[#E2E8F0] truncate">{att.title || att.fileName}</p>
@@ -738,7 +738,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
                                 <button onClick={() => window.open(att.url, '_blank')} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:text-white hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-all" title="Open">
                                     <ExternalLinkIcon size={14} />
                                 </button>
-                                <button onClick={() => removeAttachment(att)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Remove">
+                                <button onClick={() => removeAttachment(att)} className="p-1.5 rounded-lg text-slate-400 dark:text-[#94A3B8] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all" title="Remove">
                                     <Trash2Icon size={14} />
                                 </button>
                             </div>

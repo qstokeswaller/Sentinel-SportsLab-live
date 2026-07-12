@@ -118,7 +118,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                             <button
                                 key={s.key}
                                 onClick={() => { setActiveSource(s.key); setSearch(''); }}
-                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-all ${activeSource === s.key ? 'bg-slate-50 dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}
                             >
                                 {s.icon}
                                 {s.label}
@@ -149,7 +149,7 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                             <button
                                 key={item.id}
                                 onClick={() => addSession(activeSrc!, item)}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all text-left border-b border-slate-50 last:border-0"
+                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all text-left border-b border-slate-50 dark:border-[#1A2D48] last:border-0"
                             >
                                 <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${activeSrc?.color} ${activeSrc?.textColor}`}>
                                     {activeSrc?.icon}
@@ -164,8 +164,8 @@ export const LinkedSessionsPicker: React.FC<LinkedSessionsPickerProps> = ({
                     </div>
 
                     {/* Close */}
-                    <div className="border-t border-slate-100 p-2 flex justify-end">
-                        <button onClick={() => setOpen(false)} className="text-[10px] font-medium text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-all px-2 py-1">
+                    <div className="border-t border-slate-100 dark:border-[#243A58] p-2 flex justify-end">
+                        <button onClick={() => setOpen(false)} className="text-[10px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-all px-2 py-1">
                             Done
                         </button>
                     </div>

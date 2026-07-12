@@ -19,6 +19,8 @@ import {
     Clock as ClockIcon,
 } from 'lucide-react';
 import { CustomSelect } from './ui/CustomSelect';
+import TimePicker from './ui/TimePicker';
+import DatePicker from '../components/ui/DatePicker';
 import {
     SteppableTextInput,
     SETS_STEPPER, REPS_STEPPER, SIMPLE_REST_STEPPER, UNIT_STEPPER_CONFIG,
@@ -315,13 +317,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
     // ── Render ─────────────────────────────────────────────────────────────
     return (
         <div className="fixed inset-0 z-[600] bg-black/50 backdrop-blur-sm flex animate-in fade-in duration-200">
-            <div className="flex-1 flex overflow-hidden m-4 bg-white rounded-2xl shadow-2xl border border-slate-200">
+            <div className="flex-1 flex overflow-hidden m-4 bg-white dark:bg-[#132338] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#243A58]">
 
                 {/* ── LEFT: Main Panel ───────────────────────────────────── */}
                 <div className="flex-1 flex flex-col overflow-hidden">
 
                     {/* Header */}
-                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center">
                                 <DumbbellIcon size={16} className="text-white" />
@@ -333,22 +335,22 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                         </div>
                         <div className="flex items-center gap-2">
                             {/* View toggle */}
-                            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                                <button onClick={() => setViewMode('builder')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'builder' ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>Builder</button>
-                                <button onClick={() => setViewMode('templates')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'templates' ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
+                            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg border border-slate-200 dark:border-[#243A58]">
+                                <button onClick={() => setViewMode('builder')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'builder' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>Builder</button>
+                                <button onClick={() => setViewMode('templates')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${viewMode === 'templates' ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
                                     Templates {workoutTemplates.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-white rounded-full text-[8px]">{workoutTemplates.length}</span>}
                                 </button>
                             </div>
                             <button onClick={handleSaveTemplate} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500 border border-emerald-200 dark:border-emerald-600 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-white transition-all" title="Save as template">
                                 <SaveIcon size={12} /> Save Template
                             </button>
-                            <button onClick={handlePrint} disabled={totalExercises === 0} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${totalExercises === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}>
+                            <button onClick={handlePrint} disabled={totalExercises === 0} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${totalExercises === 0 ? 'bg-slate-200 text-slate-400 dark:text-[#94A3B8] cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800 text-white'}`}>
                                 <PrinterIcon size={12} /> Print
                             </button>
                             <button onClick={handleSchedule} disabled={scheduling || !title.trim() || !targetId} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-semibold transition-all shadow-sm ${(scheduling || !title.trim() || !targetId) ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}>
                                 <CalendarPlusIcon size={12} /> {scheduling ? 'Scheduling...' : 'Schedule Workout'}
                             </button>
-                            <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all">
+                            <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-all">
                                 <XIcon size={18} />
                             </button>
                         </div>
@@ -372,7 +374,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         {workoutTemplates.map(tpl => {
                                             const exCount = (tpl.sections?.warmup?.length || 0) + (tpl.sections?.workout?.length || 0) + (tpl.sections?.cooldown?.length || 0);
                                             return (
-                                                <div key={tpl.id} className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group">
+                                                <div key={tpl.id} className="bg-white dark:bg-[#132338] border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-200 dark:border-indigo-800/50 transition-all group">
                                                     <div className="flex items-start justify-between mb-3">
                                                         <div>
                                                             <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 dark:text-indigo-400 transition-colors">{tpl.name}</h4>
@@ -401,7 +403,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             /* ── Builder View ────────────────────────────────── */
                             <>
                                 {/* Session Info Card */}
-                                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-5 space-y-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClockIcon size={14} className="text-indigo-500" />
                                         <h3 className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1] uppercase tracking-wide">Session Details</h3>
@@ -413,18 +415,18 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         placeholder="Workout title (e.g. Upper Body Power)"
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none hover:border-slate-300 focus:border-indigo-400 transition-all placeholder:text-slate-300"
+                                        className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-sm font-medium outline-none hover:border-slate-300 focus:border-indigo-400 transition-all placeholder:text-slate-300"
                                     />
 
                                     {/* Row 2: Date, Time, Phase, Load */}
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Date</label>
-                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <DatePicker value={date} onChange={e => setDate(e.target.value)} className="w-full" />
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Time</label>
-                                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <TimePicker value={time} onChange={e => setTime(e.target.value)} />
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Phase</label>
@@ -434,9 +436,9 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Load</label>
-                                            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-xl border border-slate-200 dark:border-[#243A58]">
                                                 {['Low', 'Medium', 'High'].map(l => (
-                                                    <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
+                                                    <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}>
                                                         {l}
                                                     </button>
                                                 ))}
@@ -448,9 +450,9 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Target Type</label>
-                                            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                            <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-xl border border-slate-200 dark:border-[#243A58]">
                                                 {['Team', 'Individual'].map(tt => (
-                                                    <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
+                                                    <button key={tt} onClick={() => { setTargetType(tt as any); setTargetId(''); }} className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${targetType === tt ? 'bg-white dark:bg-[#132338] shadow-sm text-slate-900 dark:text-[#E2E8F0]' : 'text-slate-500'}`}>
                                                         {tt}
                                                     </button>
                                                 ))}
@@ -472,13 +474,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 </div>
 
                                 {/* Workout Builder */}
-                                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                                <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
                                     {/* Section tabs */}
-                                    <div className="flex border-b border-slate-100">
+                                    <div className="flex border-b border-slate-100 dark:border-[#243A58]">
                                         {SECTIONS.map(sec => (
-                                            <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-white bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                                            <button key={sec} onClick={() => setActiveSection(sec)} className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-wide transition-all border-b-2 ${activeSection === sec ? 'border-indigo-600 text-indigo-600 dark:text-white bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>
                                                 {SECTION_LABELS[sec]}
-                                                {sections[sec].length > 0 && <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 rounded-full text-[8px]">{sections[sec].length}</span>}
+                                                {sections[sec].length > 0 && <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 dark:bg-[#1A2D48] rounded-full text-[8px]">{sections[sec].length}</span>}
                                             </button>
                                         ))}
                                     </div>
@@ -493,7 +495,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                             </div>
                                         ) : (
                                             sections[activeSection].map((row, idx) => (
-                                                <div key={row.tempId} className="bg-slate-50/50 dark:bg-[#132338]/40 border border-slate-100 rounded-xl p-4 hover:border-slate-200 transition-all">
+                                                <div key={row.tempId} className="bg-slate-50/50 dark:bg-[#132338]/40 border border-slate-100 dark:border-[#243A58] rounded-xl p-4 hover:border-slate-200 transition-all">
                                                     {/* Exercise header */}
                                                     <div className="flex items-center justify-between mb-1">
                                                         <div className="flex items-center gap-2">
@@ -552,17 +554,17 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                 </div>
 
                 {/* ── RIGHT: Exercise Picker ─────────────────────────────── */}
-                <div className="w-72 shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col overflow-hidden">
+                <div className="w-72 shrink-0 bg-slate-50 dark:bg-[#0F1C30] border-l border-slate-200 dark:border-[#243A58] flex flex-col overflow-hidden">
                     {/* Header */}
-                    <div className="px-4 py-4 border-b border-slate-200 space-y-3 shrink-0">
+                    <div className="px-4 py-4 border-b border-slate-200 dark:border-[#243A58] space-y-3 shrink-0">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xs font-semibold text-slate-700 dark:text-[#CBD5E1]">Choose Exercise</h3>
                             <span className="text-[9px] text-slate-400">{pickerSource === 'mine' ? displayExercises.length : (exData?.total ?? 0)} total</span>
                         </div>
                         {/* All / Mine toggle */}
-                        <div className="flex bg-slate-100 rounded-lg p-0.5">
-                            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>All</button>
-                            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
+                        <div className="flex bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-0.5">
+                            <button type="button" onClick={() => setPickerSource('all')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all ${pickerSource === 'all' ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>All</button>
+                            <button type="button" onClick={() => setPickerSource('mine')} className={`flex-1 text-[9px] font-bold py-1 rounded-md transition-all flex items-center justify-center gap-1 ${pickerSource === 'mine' ? 'bg-white dark:bg-[#132338] text-amber-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>
                                 Mine
                             </button>
@@ -575,7 +577,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 value={exSearch}
                                 onChange={e => setExSearch(e.target.value)}
                                 placeholder="Search exercises..."
-                                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-400 transition-all"
+                                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-xs font-medium outline-none focus:border-indigo-400 transition-all"
                             />
                         </div>
                         {/* Did you mean? */}
@@ -605,13 +607,13 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             <div className="flex flex-wrap gap-1">
                                 <button
                                     onClick={() => { setExLetter(''); setExSearch(''); }}
-                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
+                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${!exLetter ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
                                 >✕</button>
                                 {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
                                     <button
                                         key={l}
                                         onClick={() => { if (exLetter === l) setExLetter(''); else { setExLetter(l); setExSearch(''); } }}
-                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
+                                        className={`w-6 h-6 rounded text-[9px] font-bold transition-all ${exLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-100 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 hover:text-indigo-700'}`}
                                     >{l}</button>
                                 ))}
                             </div>
@@ -639,7 +641,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                         key={ex.id}
                                         onClick={() => !already && addExercise(ex)}
                                         disabled={already}
-                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/25 cursor-default' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40'}`}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${already ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/25 cursor-default' : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/15'}`}
                                     >
                                         <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${already ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
                                             {already ? <span className="text-[8px]">✓</span> : <PlusIcon size={10} />}
@@ -658,12 +660,12 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
 
                     {/* Pagination */}
                     {(exData?.totalPages || 0) > 1 && (
-                        <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between shrink-0">
-                            <button onClick={() => setExPage(p => Math.max(1, p - 1))} disabled={exPage <= 1} className="p-1.5 hover:bg-white rounded-lg disabled:opacity-30 transition-all">
+                        <div className="px-4 py-3 border-t border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
+                            <button onClick={() => setExPage(p => Math.max(1, p - 1))} disabled={exPage <= 1} className="p-1.5 hover:bg-white dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
                                 <ChevronLeftIcon size={14} className="text-slate-500" />
                             </button>
                             <span className="text-[10px] font-medium text-slate-500">{exPage} / {exData?.totalPages}</span>
-                            <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)} className="p-1.5 hover:bg-white rounded-lg disabled:opacity-30 transition-all">
+                            <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)} className="p-1.5 hover:bg-white dark:hover:bg-[#1A2D48] rounded-lg disabled:opacity-30 transition-all">
                                 <ChevronRightIcon size={14} className="text-slate-500" />
                             </button>
                         </div>

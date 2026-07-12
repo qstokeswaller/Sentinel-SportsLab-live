@@ -80,7 +80,7 @@ export const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: 
                                 <div className="flex items-center justify-center gap-1">
                                     <span className="truncate max-w-[130px]" title={colLabel(k)}>{colLabel(k)}</span>
                                     <button onClick={() => onHideCol(k)} title="Hide column"
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600">
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5 rounded hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]">
                                         <EyeOffIcon size={10} />
                                     </button>
                                 </div>
@@ -161,8 +161,8 @@ export const GpsDateRangeView = React.memo(({ records, cols, colLabel, onHideCol
             <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{dateGroups.length} sessions · {records.length} athlete records</p>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setExpandedDates(new Set())} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Collapse All</button>
-                    <button onClick={() => setExpandedDates(new Set(dateGroups))} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Expand All</button>
+                    <button onClick={() => setExpandedDates(new Set())} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Collapse All</button>
+                    <button onClick={() => setExpandedDates(new Set(dateGroups))} className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] px-2.5 py-1 border border-slate-200 dark:border-[#243A58] rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">Expand All</button>
                 </div>
             </div>
             {dateGroups.map((date, idx) => {

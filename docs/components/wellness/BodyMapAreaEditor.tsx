@@ -117,7 +117,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 type="text"
                 value={area.label}
                 onChange={e => updateArea(idx, { label: e.target.value })}
-                className="flex-1 text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                className="flex-1 text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                 placeholder="Area label"
             />
             <CustomSelect
@@ -148,7 +148,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 <button
                     type="button"
                     onClick={resetToDefaults}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors"
+                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors"
                     title="Reset to default areas"
                 >
                     <RotateCcw size={11} /> Reset Defaults
@@ -204,7 +204,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                                     opts[oi] = e.target.value;
                                     onChange({ ...config, subInputOptions: opts });
                                 }}
-                                className="flex-1 text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                                className="flex-1 text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                                 placeholder={`Option ${oi + 1}`}
                             />
                             {config.subInputType === 'multiple_choice' && (
@@ -216,7 +216,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                                         nums[oi] = e.target.value === '' ? 0 : Number(e.target.value);
                                         onChange({ ...config, subInputNumericMap: nums });
                                     }}
-                                    className="w-12 text-xs px-2 py-1.5 border border-slate-200 rounded-lg text-center focus:outline-none focus:border-cyan-400"
+                                    className="w-12 text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg text-center focus:outline-none focus:border-cyan-400"
                                     placeholder="val"
                                 />
                             )}
@@ -246,7 +246,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                             type="number"
                             value={config.subInputScaleMin ?? 0}
                             onChange={e => onChange({ ...config, subInputScaleMin: parseInt(e.target.value) || 0 })}
-                            className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                            className="w-full text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                         />
                     </div>
                     <div>
@@ -255,7 +255,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                             type="number"
                             value={config.subInputScaleMax ?? 10}
                             onChange={e => onChange({ ...config, subInputScaleMax: parseInt(e.target.value) || 10 })}
-                            className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                            className="w-full text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                         />
                     </div>
                     <div>
@@ -265,7 +265,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                             value={config.subInputLabels?.[0] || ''}
                             onChange={e => onChange({ ...config, subInputLabels: [e.target.value, config.subInputLabels?.[1] || ''] })}
                             placeholder="e.g. None"
-                            className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                            className="w-full text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                         />
                     </div>
                     <div>
@@ -275,7 +275,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                             value={config.subInputLabels?.[1] || ''}
                             onChange={e => onChange({ ...config, subInputLabels: [config.subInputLabels?.[0] || '', e.target.value] })}
                             placeholder="e.g. Maximum"
-                            className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                            className="w-full text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                         />
                     </div>
                 </div>
@@ -293,7 +293,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                 />
                 {config.referenceImageUrl ? (
                     <div className="relative group">
-                        <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]">
                             <img src={config.referenceImageUrl} alt="Reference" className="w-full object-contain max-h-32" />
                         </div>
                         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -322,7 +322,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                         type="button"
                         onClick={() => imgInputRef.current?.click()}
                         disabled={imgUploading}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-semibold text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] hover:border-slate-300 hover:text-slate-500 transition-all"
                     >
                         {imgUploading ? (
                             <><Loader2 size={12} className="animate-spin" /> Uploading...</>
@@ -354,7 +354,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
             <button
                 type="button"
                 onClick={addArea}
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-semibold text-slate-400 hover:border-cyan-300 hover:text-cyan-500 transition-all"
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] hover:border-cyan-300 hover:text-cyan-500 transition-all"
             >
                 <Plus size={12} /> Add Area
             </button>
@@ -367,7 +367,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                     value={config.instructionText || ''}
                     onChange={e => onChange({ ...config, instructionText: e.target.value })}
                     placeholder="Tap an area to mark it..."
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                    className="w-full text-xs px-3 py-2 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                 />
             </div>
 
@@ -388,11 +388,11 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
 
             {/* Severity levels (collapsible) — only shown when severity is enabled */}
             {config.areas.some(a => a.hasSeverity !== false) && (
-            <div className="border border-slate-100 rounded-xl overflow-hidden">
+            <div className="border border-slate-100 dark:border-[#243A58] rounded-xl overflow-hidden">
                 <button
                     type="button"
                     onClick={() => setSeverityOpen(!severityOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 dark:bg-[#0F1C30] text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"
                 >
                     Severity Levels ({config.severityLevels.length})
                     {severityOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -421,7 +421,7 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                                         const label = e.target.value;
                                         updateSeverity(i, { label, shortLabel: label.length > 4 ? label.slice(0, 3) : label });
                                     }}
-                                    className="flex-1 text-xs px-2 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-cyan-400"
+                                    className="flex-1 text-xs px-2 py-1.5 border border-slate-200 dark:border-[#243A58] rounded-lg focus:outline-none focus:border-cyan-400"
                                     placeholder="Level label"
                                 />
                                 <span className="text-[9px] font-mono text-slate-400 shrink-0">= {s.value}</span>
@@ -439,14 +439,14 @@ const BodyMapAreaEditor: React.FC<BodyMapAreaEditorProps> = ({ config, onChange,
                         <button
                             type="button"
                             onClick={addSeverity}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 border-2 border-dashed border-slate-200 rounded-lg text-[10px] font-semibold text-slate-400 hover:border-cyan-300 hover:text-cyan-500 transition-all mt-1"
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-lg text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] hover:border-cyan-300 hover:text-cyan-500 transition-all mt-1"
                         >
                             <Plus size={11} /> Add Level
                         </button>
                         <button
                             type="button"
                             onClick={() => onChange({ ...config, severityLevels: [...DEFAULT_SEVERITY_LEVELS] })}
-                            className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors mt-1"
+                            className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors mt-1"
                         >
                             <RotateCcw size={10} /> Reset Severity Defaults
                         </button>

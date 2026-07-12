@@ -64,7 +64,7 @@ export const KpiTerminal = ({ kpiData, selectedAthlete }) => {
                             </div>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                        <div className="mt-4 pt-4 border-t border-slate-50 dark:border-[#1A2D48] flex items-center justify-between">
                             <span className="text-[8px] font-semibold text-slate-400 uppercase">7-Day Momentum</span>
                             <span className={`text-[8px] font-semibold uppercase ${isStable ? 'text-slate-400' : isPositiveTrend ? 'text-emerald-500' : 'text-rose-500'}`}>
                                 {isStable ? 'Neutral' : isPositiveTrend ? '+ Improvement' : '- Regression'}

@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DatabaseService } from '../../services/databaseService';
 import { AlertTriangleIcon, CheckCircleIcon, ExternalLinkIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon } from 'lucide-react';
+import DatePicker from '../../components/ui/DatePicker';
 
 interface FlagPanelProps {
     teamId: string;
@@ -182,13 +183,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes, default
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1]">
                     <CalendarIcon size={12} />
                     <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#94A3B8]">As of</span>
-                    <input
-                        type="date"
-                        value={asOfDate}
-                        max={localDateStr()}
-                        onChange={e => { e.stopPropagation(); setAsOfDate(e.target.value || localDateStr()); }}
-                        className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all"
-                    />
+                    <DatePicker value={asOfDate} onChange={e => { e.stopPropagation(); setAsOfDate(e.target.value || localDateStr()); }} max={localDateStr()} />
                 </div>
             </div>
 

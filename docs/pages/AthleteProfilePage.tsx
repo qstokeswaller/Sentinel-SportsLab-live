@@ -633,7 +633,7 @@ export const AthleteProfilePage: React.FC = () => {
                                 <div className="bg-rose-200 dark:bg-rose-900/60" style={{ width: '25%' }} />
                                 {/* Marker */}
                                 <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-slate-700 dark:border-white shadow"
+                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white dark:bg-[#132338] border-2 border-slate-700 dark:border-white shadow"
                                     style={{ left: `calc(${Math.min(Math.max(acwrValue, 0), 2) / 2 * 100}% - 6px)` }}
                                 />
                             </div>
@@ -1016,7 +1016,7 @@ export const AthleteProfilePage: React.FC = () => {
                     <div className="flex gap-2">
                         <button
                             onClick={() => { setEditingNotes(false); setNotesDraft({ goals: athlete.goals || '', notes: athlete.notes || '' }); }}
-                            className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700"
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"
                         >
                             <XIcon size={11} /> Cancel
                         </button>

@@ -397,7 +397,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     if (error) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 text-center max-w-sm">
+            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 dark:border-[#243A58] text-center max-w-sm">
                 <AlertCircle size={48} className="text-rose-500 mx-auto mb-4" />
                 <p className="text-slate-500 mb-6">{error}</p>
                 <button onClick={() => window.location.reload()} className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold">Retry</button>
@@ -446,7 +446,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     return (
         <div className="h-dvh bg-slate-50 flex flex-col overflow-hidden">
             {/* Header */}
-            <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
+            <header className="bg-white border-b border-slate-100 dark:border-[#243A58] sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
                     <div className="flex items-center gap-2">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -486,7 +486,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                     className={`w-full p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
                                         selectedAthleteId === a.id
                                             ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 shadow-md ring-4 ring-amber-50/50 scale-[1.02]'
-                                            : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
+                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-700 hover:border-slate-200'
                                     }`}>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
@@ -528,7 +528,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                             {URTI_SYMPTOMS.map(sym => {
                                 const current = responses[sym.key];
                                 return (
-                                    <div key={sym.key} className="bg-white border border-slate-100 rounded-2xl p-3">
+                                    <div key={sym.key} className="bg-white border border-slate-100 dark:border-[#243A58] rounded-2xl p-3">
                                         <p className="text-xs font-semibold text-slate-600 mb-2">{sym.label}</p>
                                         <div className="grid grid-cols-4 gap-1.5">
                                             {URTI_OPTIONS.map((opt, idx) => {
@@ -631,7 +631,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                     className={`w-full p-3.5 rounded-xl border-2 text-left font-semibold transition-all active:scale-[0.98] ${
                                         responses.mechanism === m.toLowerCase()
                                             ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
-                                            : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
+                                            : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-700 hover:border-slate-200'
                                     }`}>
                                     {m}
                                 </button>
@@ -704,7 +704,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                         className={`w-full p-4 rounded-2xl border-2 text-left font-bold transition-all active:scale-[0.98] ${
                                             selected
                                                 ? 'bg-cyan-500 border-cyan-500 text-white shadow-lg scale-[1.02]'
-                                                : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200'
+                                                : 'bg-white border-slate-100 dark:border-[#243A58] text-slate-700 hover:border-slate-200'
                                         }`}>
                                         {s}
                                     </button>
@@ -716,7 +716,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             </main>
 
             {/* Navigation footer */}
-            <footer className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 max-w-md mx-auto w-full">
+            <footer className="sticky bottom-0 bg-white border-t border-slate-100 dark:border-[#243A58] px-6 py-4 max-w-md mx-auto w-full">
                 {submitError && (
                     <div className="mb-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">
                         {submitError}
@@ -735,8 +735,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                             canContinue
                                 ? isLastStep
                                     ? 'bg-emerald-500 text-white shadow-lg hover:bg-emerald-600'
-                                    : 'bg-slate-900 text-white shadow-lg hover:bg-slate-800'
-                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    : 'bg-slate-900 dark:bg-indigo-600 text-white shadow-lg hover:bg-slate-800'
+                                : 'bg-slate-100 text-slate-400 dark:text-[#94A3B8] cursor-not-allowed'
                         }`}>
                         {submitting ? (
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

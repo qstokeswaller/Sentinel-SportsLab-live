@@ -28,7 +28,7 @@ class ErrorBoundary extends Component<Props, State> {
         if (this.state.hasError) {
             return (
                 <div className="min-h-screen bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center p-8">
-                    <div className="bg-white rounded-[2rem] shadow-2xl border-4 border-rose-100 dark:border-rose-900/40 p-12 max-w-2xl w-full text-center">
+                    <div className="bg-white dark:bg-[#132338] rounded-[2rem] shadow-2xl border-4 border-rose-100 dark:border-rose-900/40 p-12 max-w-2xl w-full text-center">
                         <div className="w-20 h-20 bg-rose-600 rounded-3xl flex items-center justify-center text-white mx-auto mb-8 shadow-lg shadow-rose-200">
                             <span className="text-4xl font-black">!</span>
                         </div>
@@ -36,7 +36,7 @@ class ErrorBoundary extends Component<Props, State> {
                         <p className="text-slate-500 font-medium mb-8">
                             Sentinel SportsLab encountered a critical error. This is likely due to the missing database schema we're currently restoring.
                         </p>
-                        <div className="bg-slate-50 rounded-2xl p-6 text-left mb-8 overflow-auto max-h-48">
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-2xl p-6 text-left mb-8 overflow-auto max-h-48">
                             <p className="text-xs font-mono text-rose-600 break-all">
                                 {this.state.error?.toString()}
                             </p>

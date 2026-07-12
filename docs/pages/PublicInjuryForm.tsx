@@ -14,6 +14,7 @@ import {
 } from '../utils/mocks';
 import { uploadQuestionImage } from '../utils/imageUpload';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import DatePicker from '../components/ui/DatePicker';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ const PillRow = ({ options, value, onChange, colorMap }) => (
             const activeColor = colorMap?.[val] || 'bg-cyan-600 text-white';
             return (
                 <button key={val} type="button" onClick={() => onChange(isActive ? undefined : val)}
-                    className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                    className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${isActive ? activeColor + ' shadow-md' : 'bg-white border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}
                 >{label}</button>
             );
         })}
@@ -41,7 +42,7 @@ const MultiPillRow = ({ options, value = [], onChange }) => (
             const isActive = value.includes(opt);
             return (
                 <button key={opt} type="button" onClick={() => onChange(toggleMulti(value, opt))}
-                    className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-cyan-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                    className={`px-3.5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${isActive ? 'bg-cyan-600 text-white shadow-md' : 'bg-white border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#94A3B8] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}
                 >{opt}</button>
             );
         })}
@@ -196,7 +197,7 @@ const PublicInjuryForm = () => {
 
     if (error) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 text-center max-w-sm">
+            <div className="p-8 bg-white rounded-3xl shadow-xl border border-slate-100 dark:border-[#243A58] text-center max-w-sm">
                 <AlertCircle size={48} className="text-rose-500 mx-auto mb-4" />
                 <h1 className="text-xl font-bold text-slate-900 mb-2">Invalid Link</h1>
                 <p className="text-slate-500 mb-6">{error}</p>
@@ -210,7 +211,7 @@ const PublicInjuryForm = () => {
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             {/* Branding + Header */}
-            <header className="bg-white border-b border-slate-100 sticky top-0 z-10">
+            <header className="bg-white border-b border-slate-100 dark:border-[#243A58] sticky top-0 z-10">
                 <div className="flex flex-col items-center justify-center gap-1 py-3 border-b border-slate-50">
                     <div className="flex items-center gap-2">
                         <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-10 w-auto shrink-0 select-none" />
@@ -251,7 +252,7 @@ const PublicInjuryForm = () => {
                         <div className="space-y-3">
                             {athletes.map(a => (
                                 <button key={a.id} onClick={() => setSelectedAthleteId(a.id)}
-                                    className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${selectedAthleteId === a.id ? 'bg-cyan-50 border-cyan-500 shadow-md scale-[1.02]' : 'bg-white border-slate-100 hover:border-slate-200'}`}
+                                    className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${selectedAthleteId === a.id ? 'bg-cyan-50 border-cyan-500 shadow-md scale-[1.02]' : 'bg-white border-slate-100 dark:border-[#243A58] hover:border-slate-200'}`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
@@ -280,11 +281,11 @@ const PublicInjuryForm = () => {
                         )}
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Injury Location</h2>
                         <p className="text-slate-500 font-medium mb-4">Tap the affected body areas and indicate severity.</p>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        <div className="bg-white p-5 rounded-2xl border border-slate-100 dark:border-[#243A58] shadow-sm">
                             <BodyMapSelector value={form.areas} onChange={areas => patch({ areas })} />
                         </div>
                         {form.areas.length > 0 && (
-                            <div className="bg-white p-4 rounded-2xl border border-slate-100 space-y-2">
+                            <div className="bg-white p-4 rounded-2xl border border-slate-100 dark:border-[#243A58] space-y-2">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Selected</p>
                                 {form.areas.map(a => (
                                     <div key={a.area} className="flex items-center justify-between text-sm">
@@ -335,12 +336,11 @@ const PublicInjuryForm = () => {
                     <div className="flex-1 space-y-6">
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Clinical Assessment</h2>
                         <div><Label>Date of Injury</Label>
-                            <input type="date" value={form.dateOfInjury} onChange={e => patch({ dateOfInjury: e.target.value })}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500" />
+                            <DatePicker value={form.dateOfInjury} onChange={e => patch({ dateOfInjury: e.target.value })} className="w-full" />
                         </div>
                         <div><Label>Mechanism — How did it happen?</Label>
                             <textarea placeholder="Describe..." value={form.mechanism} onChange={e => patch({ mechanism: e.target.value })}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-24 resize-none placeholder:font-medium" />
+                                className="w-full p-4 bg-white border border-slate-200 dark:border-[#243A58] rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-24 resize-none placeholder:font-medium" />
                         </div>
                         <div><Label>Perceived Pain (0–10)</Label>
                             <div className="flex gap-1.5 flex-wrap">
@@ -348,7 +348,7 @@ const PublicInjuryForm = () => {
                                     <button key={i} type="button" onClick={() => patch({ painLevel: form.painLevel === i ? undefined : i })}
                                         className={`w-10 h-10 rounded-lg text-sm font-black transition-all ${form.painLevel === i
                                             ? (i <= 3 ? 'bg-emerald-500 text-white shadow-md' : i <= 6 ? 'bg-amber-500 text-white shadow-md' : 'bg-red-600 text-white shadow-md')
-                                            : 'bg-white border border-slate-200 text-slate-400'}`}
+                                            : 'bg-white border border-slate-200 dark:border-[#243A58] text-slate-400'}`}
                                     >{i}</button>
                                 ))}
                             </div>
@@ -398,16 +398,15 @@ const PublicInjuryForm = () => {
                         </div>
                         <div><Label>Recommendations</Label>
                             <textarea placeholder="Rehab protocol, restrictions..." value={form.treatmentRecommendations} onChange={e => patch({ treatmentRecommendations: e.target.value })}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-24 resize-none placeholder:font-medium" />
+                                className="w-full p-4 bg-white border border-slate-200 dark:border-[#243A58] rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-24 resize-none placeholder:font-medium" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div><Label>Follow-up Date</Label>
-                                <input type="date" value={form.followUpDate} onChange={e => patch({ followUpDate: e.target.value })}
-                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500" />
+                                <DatePicker value={form.followUpDate} onChange={e => patch({ followUpDate: e.target.value })} className="w-full" />
                             </div>
                             <div><Label>Expected Time Out</Label>
                                 <input type="text" placeholder="e.g. 2-3 weeks" value={form.expectedTimeOut} onChange={e => patch({ expectedTimeOut: e.target.value })}
-                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 placeholder:font-medium" />
+                                    className="w-full p-4 bg-white border border-slate-200 dark:border-[#243A58] rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 placeholder:font-medium" />
                             </div>
                         </div>
                         <div><Label>Return-to-Play Phase</Label>
@@ -419,7 +418,7 @@ const PublicInjuryForm = () => {
                                     return (
                                         <button key={phase} type="button" onClick={() => patch({ returnToPlayPhase: isActive ? undefined : phase })}
                                             className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'rounded-l-xl' : ''} ${i === RTP_PHASES.length - 1 ? 'rounded-r-xl' : ''}
-                                                ${isActive ? 'bg-cyan-600 text-white shadow-md' : isPast ? 'bg-cyan-100 text-cyan-500' : 'bg-white border border-slate-200 text-slate-400'}`}
+                                                ${isActive ? 'bg-cyan-600 text-white shadow-md' : isPast ? 'bg-cyan-100 text-cyan-500' : 'bg-white border border-slate-200 dark:border-[#243A58] text-slate-400'}`}
                                         >{phase.split(' - ')[1] || phase}</button>
                                     );
                                 })}
@@ -434,7 +433,7 @@ const PublicInjuryForm = () => {
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Notes & Attachments</h2>
                         <div><Label>Comments / Evaluation</Label>
                             <textarea placeholder="Clinical observations, prognosis..." value={form.comments} onChange={e => patch({ comments: e.target.value })}
-                                className="w-full p-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-32 resize-none placeholder:font-medium" />
+                                className="w-full p-4 bg-white border border-slate-200 dark:border-[#243A58] rounded-xl font-bold text-slate-900 outline-none focus:border-cyan-500 h-32 resize-none placeholder:font-medium" />
                         </div>
                         <div>
                             <Label>Scans / Imaging</Label>
@@ -442,7 +441,7 @@ const PublicInjuryForm = () => {
                             {(form.attachmentUrls || []).length > 0 && (
                                 <div className="grid grid-cols-3 gap-2 mb-3">
                                     {form.attachmentUrls.map((url, i) => (
-                                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 h-24">
+                                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] bg-slate-50 h-24">
                                             <img src={url} alt="" className="w-full h-full object-cover" />
                                             <button type="button" onClick={() => patch({ attachmentUrls: form.attachmentUrls.filter(u => u !== url) })}
                                                 className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -453,7 +452,7 @@ const PublicInjuryForm = () => {
                                 </div>
                             )}
                             <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:border-cyan-300 hover:text-cyan-500 transition-all flex items-center justify-center gap-2">
+                                className="w-full py-4 border-2 border-dashed border-slate-200 dark:border-[#243A58] rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#94A3B8] hover:border-cyan-300 hover:text-cyan-500 transition-all flex items-center justify-center gap-2">
                                 {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : <><UploadCloudIcon size={14} /> Upload Image</>}
                             </button>
                         </div>
@@ -466,7 +465,7 @@ const PublicInjuryForm = () => {
                         <h2 className="text-2xl font-black text-slate-900 mb-1">Review & Submit</h2>
                         <p className="text-slate-500 font-medium mb-4">Confirm the details below before submitting.</p>
 
-                        <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100">
+                        <div className="bg-white rounded-2xl border border-slate-100 dark:border-[#243A58] divide-y divide-slate-100">
                             <div className="p-4 flex justify-between"><span className="text-slate-400 text-xs font-bold uppercase">Athlete</span><span className="font-bold text-slate-900">{selectedAthlete?.name}</span></div>
                             <div className="p-4 flex justify-between"><span className="text-slate-400 text-xs font-bold uppercase">Date</span><span className="font-bold text-slate-900">{form.dateOfInjury}</span></div>
                             <div className="p-4 flex justify-between"><span className="text-slate-400 text-xs font-bold uppercase">Areas</span><span className="font-bold text-slate-900 capitalize">{form.areas.map(a => a.area.replace(/_/g, ' ')).join(', ') || '—'}</span></div>
@@ -488,7 +487,7 @@ const PublicInjuryForm = () => {
                 {/* Navigation */}
                 <div className="flex items-center gap-3 pt-8 mt-auto">
                     {step > 0 && (
-                        <button onClick={handleBack} className="px-5 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all flex items-center gap-1">
+                        <button onClick={handleBack} className="px-5 py-3.5 bg-white border border-slate-200 dark:border-[#243A58] text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-all flex items-center gap-1">
                             <ChevronLeft size={16} /> Back
                         </button>
                     )}

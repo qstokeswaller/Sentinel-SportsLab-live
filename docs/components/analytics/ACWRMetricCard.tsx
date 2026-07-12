@@ -31,9 +31,9 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
                 <div className="text-xs font-medium text-slate-400 mb-1">Acute:Chronic Ratio</div>
                 <div className="text-3xl font-bold text-slate-900 dark:text-[#E2E8F0]">{acwrValue.toFixed(2)}</div>
             </div>
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-100 dark:border-[#243A58]">
                 <div className="flex justify-between items-center">
-                    <div className="bg-slate-100 h-1.5 flex-1 rounded-full overflow-hidden mr-3">
+                    <div className="bg-slate-100 dark:bg-[#1A2D48] h-1.5 flex-1 rounded-full overflow-hidden mr-3">
                         <div
                             className={`h-full transition-all duration-1000 ${status.color.replace('text-', 'bg-')}`}
                             style={{ width: `${Math.min((acwrValue / 2) * 100, 100)}%` }}

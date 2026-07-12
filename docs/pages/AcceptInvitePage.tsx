@@ -90,7 +90,7 @@ const AcceptInvitePage: React.FC = () => {
 
     const Shell = ({ children }: { children: React.ReactNode }) => (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-[#243A58] p-8">
                 <Link to="/" className="flex items-center justify-center gap-2.5 mb-6">
                     <img src="/images/sentinel-sportslab-logo.png" alt="Sentinel SportsLab" className="h-12 w-auto select-none" />
                     <span className="font-bold text-slate-900">Sentinel <span className="text-indigo-600">SportsLab</span></span>
@@ -164,7 +164,7 @@ const AcceptInvitePage: React.FC = () => {
                     <p className="text-xs text-slate-400 mb-6">
                         as a <span className="font-semibold uppercase tracking-wider">{info.role}</span>
                     </p>
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-5 text-left">
+                    <div className="bg-slate-50 border border-slate-200 dark:border-[#243A58] rounded-lg p-4 mb-5 text-left">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Invited email</p>
                         <p className="text-sm font-semibold text-slate-900">{info.email}</p>
                         <p className="text-[11px] text-slate-500 mt-1">Sign in or sign up with this email to accept.</p>
@@ -214,7 +214,7 @@ const AcceptInvitePage: React.FC = () => {
                             try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {}
                             navigate('/dashboard');
                         }}
-                        className="w-full py-2 text-[12px] text-slate-500 hover:text-slate-700"
+                        className="w-full py-2 text-[12px] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"
                     >
                         Dismiss this invitation
                     </button>
@@ -268,7 +268,7 @@ const AcceptInvitePage: React.FC = () => {
                             try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch {}
                             navigate('/dashboard');
                         }}
-                        className="w-full mt-2 py-2 text-[12px] text-slate-500 hover:text-slate-700"
+                        className="w-full mt-2 py-2 text-[12px] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"
                     >
                         Dismiss this invitation
                     </button>

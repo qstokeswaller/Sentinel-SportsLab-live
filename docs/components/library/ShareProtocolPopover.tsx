@@ -49,7 +49,7 @@ export const ShareProtocolPopover: React.FC<ShareProtocolPopoverProps> = ({
         <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
             <div
                 ref={ref}
-                className="bg-white rounded-xl border border-slate-200 shadow-2xl w-full max-w-sm p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150"
+                className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-2xl w-full max-w-sm p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -62,13 +62,13 @@ export const ShareProtocolPopover: React.FC<ShareProtocolPopoverProps> = ({
                             <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{protocolName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>
 
                 {/* URL preview */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center gap-2">
+                <div className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-3 flex items-center gap-2">
                     <p className="text-[10px] font-mono text-slate-400 truncate flex-1">{shareUrl}</p>
                     <button
                         onClick={handleCopy}

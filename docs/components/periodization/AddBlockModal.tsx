@@ -4,6 +4,7 @@ import { useAppState } from '../../context/AppStateContext';
 import { X, Trash2, Plus } from 'lucide-react';
 import { BLOCK_COLOR_PRESETS } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
+import DatePicker from '../../components/ui/DatePicker';
 
 const INPUT = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] text-sm text-slate-800 dark:text-[#E2E8F0] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
 const LABEL = 'block text-[11px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1';
@@ -192,11 +193,11 @@ export const AddBlockModal = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className={LABEL}>Start Date</label>
-                            <input type="date" className={INPUT} value={startDate} onChange={e => setStartDate(e.target.value)} />
+                            <DatePicker value={startDate} onChange={e => setStartDate(e.target.value)} />
                         </div>
                         <div>
                             <label className={LABEL}>End Date <span className="text-slate-400 dark:text-[#CBD5E1] normal-case">(optional)</span></label>
-                            <input type="date" className={INPUT} value={endDate} onChange={e => setEndDate(e.target.value)} />
+                            <DatePicker value={endDate} onChange={e => setEndDate(e.target.value)} />
                         </div>
                     </div>
 
@@ -291,7 +292,7 @@ export const AddBlockModal = () => {
                         </button>
                     ) : <div />}
                     <div className="flex gap-2">
-                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700">
+                        <button onClick={handleClose} className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]">
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={!name.trim() || !startDate || !phaseId}

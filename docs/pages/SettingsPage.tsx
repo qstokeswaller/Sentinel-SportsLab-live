@@ -32,6 +32,7 @@ import SettingsWalkthrough from './settings/SettingsWalkthrough';
 import SettingsSupport from './settings/SettingsSupport';
 import SettingsAccount from './settings/SettingsAccount';
 import { CollapsibleSection, inputCls, inputErrorCls, labelCls, GPS_META_NAMES } from './settings/shared';
+import DatePicker from '../components/ui/DatePicker';
 
 
 const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [string, any]) => ({
@@ -66,7 +67,7 @@ const UnsavedChangesModal = ({ isOpen, onSave, onDiscard, onCancel }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">Discard</button>
+          <button onClick={onDiscard} className="flex-1 py-2 text-sm font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">Discard</button>
           <button onClick={onSave} className="flex-1 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors">Save & Continue</button>
         </div>
       </div>
@@ -110,7 +111,7 @@ const GpsColumnRenameModal: React.FC<{
             <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Column Display Names — {profile.teamName}</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">{visible.length} columns · CSV import name (left) → how it appears in GPS Hub (right)</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 transition-colors">
+          <button onClick={onClose} aria-label="Close" className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] transition-colors">
             <XIcon size={14} />
           </button>
         </div>
@@ -137,7 +138,7 @@ const GpsColumnRenameModal: React.FC<{
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#132338]/40">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-[#243A58] flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-[#132338]/40">
           <p className="text-[10px] text-slate-400">Changes apply immediately in GPS Hub after saving.</p>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-white dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#243A58] rounded-lg transition-colors">Cancel</button>
@@ -195,12 +196,12 @@ function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; to
               onClick={() => setPending(false)}
               className={`relative rounded-xl border-2 p-4 text-left transition-all ${!pending ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#1A2D48] bg-white dark:bg-[#1A2D48]'}`}
             >
-              <div className="w-full aspect-video rounded-lg bg-slate-100 border border-slate-200 mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
+              <div className="w-full aspect-video rounded-lg bg-slate-100 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] mb-3 overflow-hidden flex flex-col p-2 gap-1.5">
                 <div className="flex gap-1">
-                  <div className="w-6 h-6 rounded bg-white border border-slate-200" />
-                  <div className="flex-1 h-6 rounded bg-white border border-slate-200" />
+                  <div className="w-6 h-6 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58]" />
+                  <div className="flex-1 h-6 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58]" />
                 </div>
-                <div className="flex-1 rounded bg-white border border-slate-200" />
+                <div className="flex-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58]" />
               </div>
               <div className="flex items-center gap-2">
                 <SunIcon size={13} className="text-amber-500 shrink-0" />
@@ -834,12 +835,7 @@ const SettingsPage: React.FC = () => {
           <label className={labelCls}>Recalculate From Date</label>
           <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mb-2">Historical data is kept. EWMA restarts from this date. Leave blank to use all data.</p>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={acwrRecalcAnchors[key] || ''}
-              onChange={e => setAcwrRecalcAnchors(prev => ({ ...prev, [key]: e.target.value }))}
-              className={inputCls + ' flex-1'}
-            />
+            <DatePicker value={acwrRecalcAnchors[key] || ''} onChange={e => setAcwrRecalcAnchors(prev => ({ ...prev, [key]: e.target.value }))} />
             {acwrRecalcAnchors[key] && (
               <button
                 type="button"

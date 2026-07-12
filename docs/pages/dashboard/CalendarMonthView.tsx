@@ -185,7 +185,7 @@ export const CalendarMonthView: React.FC<any> = ({
                                                                         <div className="p-3 space-y-2">
                                                                             <div className="flex items-start justify-between">
                                                                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                                                                <button onClick={() => setActiveSessionPopover(null)} aria-label="Close" className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                                                                <button onClick={() => setActiveSessionPopover(null)} aria-label="Close" className="p-0.5 text-slate-300 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                                                                     <XIcon size={12} />
                                                                                 </button>
                                                                             </div>
@@ -237,7 +237,7 @@ export const CalendarMonthView: React.FC<any> = ({
                                                                                         setConfirmDeleteItem({ type: 'session', id: session.id, name: session.title || 'this session' });
                                                                                         setActiveSessionPopover(null);
                                                                                     }}
-                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/15 rounded transition-colors"
                                                                                 >
                                                                                     <Trash2Icon size={10} /> Delete
                                                                                 </button>

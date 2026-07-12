@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
 import { SkCard, SkBlock, SkText, SkListCards } from '../ui/Skeleton';
+import DatePicker from '../../components/ui/DatePicker';
 import {
     uploadMedicalDocument,
     deleteMedicalDocument,
@@ -267,12 +268,7 @@ const MedicalReports: React.FC = () => {
                         <div className="grid grid-cols-5 gap-3">
                             <div className="col-span-2">
                                 <label className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Date</label>
-                                <input
-                                    type="date"
-                                    value={medicalForm.date}
-                                    onChange={e => setMedicalForm(prev => ({ ...prev, date: e.target.value }))}
-                                    className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-[#E2E8F0] outline-none hover:border-slate-300 dark:hover:border-[#364E6E] focus:border-indigo-400 transition-all"
-                                />
+                                <DatePicker value={medicalForm.date} onChange={e => setMedicalForm(prev => ({ ...prev, date: e.target.value }))} className="w-full" />
                             </div>
                             <div className="col-span-3">
                                 <label className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Title</label>
@@ -496,7 +492,7 @@ const MedicalReports: React.FC = () => {
                                     <iframe
                                         src={viewableUrl}
                                         title={record.fileName}
-                                        className="mt-3 w-full h-[65vh] min-h-[500px] rounded-lg border border-slate-200 dark:border-[#243A58] bg-white"
+                                        className="mt-3 w-full h-[65vh] min-h-[500px] rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338]"
                                     />
                                 )}
                                 {viewableUrl && !signedUrlLoading && !signedUrlError && isImage && (

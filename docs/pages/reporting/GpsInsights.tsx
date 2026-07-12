@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ActivityIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const GpsInsights: React.FC<any> = ({
     acwrExclusions,
@@ -174,8 +175,8 @@ export const GpsInsights: React.FC<any> = ({
                 <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Scope</span>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
-                        <button onClick={() => setInsightScope('team')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'team' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Team</button>
-                        <button onClick={() => setInsightScope('individual')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'individual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Individual</button>
+                        <button onClick={() => setInsightScope('team')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'team' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>Team</button>
+                        <button onClick={() => setInsightScope('individual')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightScope === 'individual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>Individual</button>
                     </div>
                 </div>
 
@@ -205,8 +206,8 @@ export const GpsInsights: React.FC<any> = ({
                 <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">View</span>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg">
-                        <button onClick={() => setInsightDateMode('range')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'range' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Trend</button>
-                        <button onClick={() => setInsightDateMode('single')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'single' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>Single Day</button>
+                        <button onClick={() => setInsightDateMode('range')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'range' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>Trend</button>
+                        <button onClick={() => setInsightDateMode('single')} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${insightDateMode === 'single' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>Single Day</button>
                     </div>
                 </div>
 
@@ -215,20 +216,17 @@ export const GpsInsights: React.FC<any> = ({
                     <>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">From</span>
-                            <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)}
-                                className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
+                            <DatePicker value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} />
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">To</span>
-                            <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)}
-                                className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
+                            <DatePicker value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} />
                         </div>
                     </>
                 ) : (
                     <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Date</span>
-                        <input type="date" value={insightSingleDate} onChange={e => setInsightSingleDate(e.target.value)}
-                            className="px-3 py-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-xs text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-400 cursor-pointer" />
+                        <DatePicker value={insightSingleDate} onChange={e => setInsightSingleDate(e.target.value)} />
                     </div>
                 )}
 
@@ -287,11 +285,11 @@ export const GpsInsights: React.FC<any> = ({
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <button onClick={() => prevDate && setInsightSingleDate(prevDate)} disabled={!prevDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
                                     </button>
                                     <button onClick={() => nextDate && setInsightSingleDate(nextDate)} disabled={!nextDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
                                     </button>
                                 </div>
@@ -608,11 +606,11 @@ export const GpsInsights: React.FC<any> = ({
                                 </div>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <button onClick={() => prevDate && setInsightSingleDate(prevDate)} disabled={!prevDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
                                     </button>
                                     <button onClick={() => nextDate && setInsightSingleDate(nextDate)} disabled={!nextDate}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
                                     </button>
                                 </div>

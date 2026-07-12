@@ -385,7 +385,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                                 : 'No matching test types found'}
                         </span>
                     </div>
-                    <button onClick={reset} className="text-xs text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1]">Upload different file</button>
+                    <button onClick={reset} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]">Upload different file</button>
                 </div>
 
                 {/* Detection results */}
@@ -401,7 +401,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                                     className={`w-full text-left p-4 rounded-xl border transition-all ${
                                         isSelected
                                             ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-600 ring-1 ring-indigo-200'
-                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                            : 'border-slate-200 dark:border-[#243A58] bg-white hover:border-slate-300'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
@@ -427,7 +427,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                         })}
                     </div>
                 ) : (
-                    <div className="p-6 bg-slate-50 rounded-xl text-center">
+                    <div className="p-6 bg-slate-50 dark:bg-[#0F1C30] rounded-xl text-center">
                         <AlertTriangleIcon size={24} className="mx-auto text-slate-300 mb-2" />
                         <p className="text-sm text-slate-500">Could not match CSV headers to any test type.</p>
                         <p className="text-xs text-slate-400 mt-1">Check your CSV has appropriate column headers.</p>
@@ -436,7 +436,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
 
                 {/* Identity column mapping */}
                 {selectedTest && (
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-3">
                         <p className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1]">Identity Columns</p>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -471,7 +471,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
 
                 {/* Field mapping preview */}
                 {selectedTest && (
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 space-y-2">
                         <p className="text-xs font-semibold text-slate-600 dark:text-[#CBD5E1]">Column Mapping</p>
                         {selectedTest.test.fields.map(field => {
                             const mapped = mapping[field.key];
@@ -501,14 +501,14 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
 
                 {/* Data preview */}
                 {selectedTest && csvRows.length > 0 && (
-                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                        <div className="px-4 py-2 bg-slate-50 text-[10px] font-semibold text-slate-500">
+                    <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl overflow-hidden">
+                        <div className="px-4 py-2 bg-slate-50 dark:bg-[#0F1C30] text-[10px] font-semibold text-slate-500">
                             Preview ({Math.min(3, csvRows.length)} of {csvRows.length} rows)
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-[10px]">
                                 <thead>
-                                    <tr className="border-b border-slate-100">
+                                    <tr className="border-b border-slate-100 dark:border-[#243A58]">
                                         {athleteColumn && <th className="px-3 py-1.5 text-left text-slate-400 font-medium">Athlete</th>}
                                         {selectedTest.test.fields.filter(f => mapping[f.key]).map(f => (
                                             <th key={f.key} className="px-3 py-1.5 text-left text-slate-400 font-medium">{f.label}</th>
@@ -517,7 +517,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                                 </thead>
                                 <tbody>
                                     {csvRows.slice(0, 3).map((row, i) => (
-                                        <tr key={i} className="border-b border-slate-50">
+                                        <tr key={i} className="border-b border-slate-50 dark:border-[#1A2D48]">
                                             {athleteColumn && <td className="px-3 py-1.5 text-slate-700 dark:text-[#CBD5E1] font-medium">{row[athleteColumn] || '—'}</td>}
                                             {selectedTest.test.fields.filter(f => mapping[f.key]).map(f => (
                                                 <td key={f.key} className="px-3 py-1.5 text-slate-600 dark:text-[#CBD5E1]">{row[mapping[f.key]] || '—'}</td>
@@ -538,7 +538,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
                             athleteColumn
                                 ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
-                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                : 'bg-slate-200 text-slate-400 dark:text-[#94A3B8] cursor-not-allowed'
                         }`}
                     >
                         {importing
@@ -563,7 +563,7 @@ const SmartTestImport: React.FC<SmartTestImportProps> = ({ allAthletes, teams, h
                     </p>
                 </div>
                 <button onClick={reset}
-                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] rounded-xl text-sm font-medium transition-all">
+                    className="w-full py-3 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] text-slate-700 dark:text-[#CBD5E1] rounded-xl text-sm font-medium transition-all">
                     Import Another File
                 </button>
             </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { formatDateShort, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
+import DatePicker from '../../components/ui/DatePicker';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MONTHS       = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -891,7 +892,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                             placeholder="Duration (min)" />
                                                         <div className="flex gap-1">
                                                             <button onClick={() => saveSession(session.id)} className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-500">Save</button>
-                                                            <button onClick={() => setEditingSessionId(null)} className="text-[9px] text-slate-400 px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
+                                                            <button onClick={() => setEditingSessionId(null)} className="text-[9px] text-slate-400 dark:text-[#94A3B8] px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
                                                         </div>
                                                         <button onClick={() => deleteSession(session.id)} className="flex items-center gap-1 text-[8px] text-red-400 hover:text-red-600">
                                                             <Trash2 size={8} /> Remove
@@ -957,7 +958,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                     <div className="flex gap-1">
                                                         <button onClick={() => createSession(dateStr)} disabled={!newSD.name.trim()}
                                                             className="flex-1 text-[9px] font-semibold bg-indigo-600 text-white rounded py-0.5 hover:bg-indigo-500 disabled:opacity-40">Add</button>
-                                                        <button onClick={() => setAddingDate(null)} className="text-[9px] text-slate-400 px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
+                                                        <button onClick={() => setAddingDate(null)} className="text-[9px] text-slate-400 dark:text-[#94A3B8] px-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">✕</button>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -1045,7 +1046,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                             {/* Edit */}
                                                             <button
                                                                 onClick={() => startEdit(session, selectedDate)}
-                                                                className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                                                className="shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-300 hover:text-slate-600 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] transition-colors">
                                                                 <PencilIcon size={12} />
                                                             </button>
                                                         </div>
@@ -1126,9 +1127,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                 <div className="px-3.5 pb-3.5 space-y-2 border-t border-slate-100 dark:border-[#243A58] pt-3">
                                     <div>
                                         <label className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-1 block">Date</label>
-                                        <input type="date" value={quickSD.date}
-                                            onChange={e => setQuickSD(d => ({ ...d, date: e.target.value }))}
-                                            className={INPUT_CLS} />
+                                        <DatePicker value={quickSD.date} onChange={e => setQuickSD(d => ({ ...d, date: e.target.value }))} />
                                     </div>
                                     <input value={quickSD.name}
                                         onChange={e => setQuickSD(d => ({ ...d, name: e.target.value }))}
@@ -1200,7 +1199,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     <span className="text-sm font-bold text-slate-700 dark:text-[#E2E8F0]">{weekStats.total}</span>
                                 </div>
                                 {Object.keys(weekStats.byModality).length > 0 && (
-                                    <div className="pt-1.5 border-t border-slate-100 dark:divide-[#243A58] space-y-1">
+                                    <div className="pt-1.5 border-t border-slate-100 dark:border-[#243A58] dark:divide-[#243A58] space-y-1">
                                         {Object.entries(weekStats.byModality).map(([mod, count]) => {
                                             const meta = modalityMeta(mod);
                                             const Icon = meta.icon;

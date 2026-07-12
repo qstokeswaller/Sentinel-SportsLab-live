@@ -502,7 +502,7 @@ export const DashboardPage = () => {
                                         <button
                                             onClick={() => setKpiInfoOpen('flagged')}
                                             title="What is this tile?"
-                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-[#94A3B8] hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                                         >
                                             <InfoIcon size={12} />
                                         </button>
@@ -536,7 +536,7 @@ export const DashboardPage = () => {
                                         <button
                                             onClick={() => setKpiInfoOpen('acwr')}
                                             title="What is this tile?"
-                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-[#94A3B8] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                                         >
                                             <InfoIcon size={12} />
                                         </button>
@@ -570,7 +570,7 @@ export const DashboardPage = () => {
                                         <button
                                             onClick={() => setKpiInfoOpen('sleep')}
                                             title="What is this tile?"
-                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-[#94A3B8] hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
                                         >
                                             <InfoIcon size={12} />
                                         </button>
@@ -612,7 +612,7 @@ export const DashboardPage = () => {
                                         <button
                                             onClick={() => setKpiInfoOpen('readiness')}
                                             title="What is this tile?"
-                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                                            className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-[#94A3B8] hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
                                         >
                                             <InfoIcon size={12} />
                                         </button>

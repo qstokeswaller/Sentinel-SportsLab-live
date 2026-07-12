@@ -370,7 +370,7 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                             {presets.map(p => (
                                 <div key={p.id} className="group flex items-center gap-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-colors">
                                     <button onClick={() => loadPreset(p)} className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0] whitespace-nowrap">{p.name}</button>
-                                    <button onClick={() => deletePreset(p.id)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-all"><TrashIcon size={10} /></button>
+                                    <button onClick={() => deletePreset(p.id)} className="opacity-0 group-hover:opacity-100 text-slate-400 dark:text-[#94A3B8] hover:text-rose-500 transition-all"><TrashIcon size={10} /></button>
                                 </div>
                             ))}
                         </div>

@@ -48,6 +48,8 @@ import {
     type IntensityPill,
 } from '../components/workouts/exerciseRowShared';
 import { buildMaxLookup, computeAthleteWeightOverrides } from '../utils/weightroomUtils';
+import TimePicker from '../components/ui/TimePicker';
+import DatePicker from '../components/ui/DatePicker';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -1238,11 +1240,11 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <>
                                         <div>
                                             <label className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wider mb-0.5 block">Date</label>
-                                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-800 dark:text-[#E2E8F0] rounded-lg px-2.5 py-1.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <DatePicker value={date} onChange={e => setDate(e.target.value)} className="w-full" />
                                         </div>
                                         <div>
                                             <label className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wider mb-0.5 block">Time</label>
-                                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-800 dark:text-[#E2E8F0] rounded-lg px-2.5 py-1.5 text-xs font-medium outline-none focus:border-indigo-400 transition-all" />
+                                            <TimePicker value={time} onChange={e => setTime(e.target.value)} />
                                         </div>
                                     </>
                                 )}
@@ -1256,7 +1258,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <label className="text-[9px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wider mb-0.5 block">Load</label>
                                     <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                         {['Low', 'Medium', 'High'].map(l => (
-                                            <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700 dark:text-[#CBD5E1]'}`}>
+                                            <button key={l} onClick={() => setLoad(l)} className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-all ${load === l ? (l === 'Low' ? 'bg-emerald-500 text-white' : l === 'Medium' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white') : 'text-slate-500 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1]'}`}>
                                                 {l}
                                             </button>
                                         ))}
@@ -1267,7 +1269,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <div className="flex items-center gap-1.5 h-7">
                                         <button type="button" onClick={() => setTrackTonnage(v => !v)}
                                             className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors shrink-0 ${trackTonnage ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-[#243A58]'}`}>
-                                            <span className={`inline-block h-3 w-3 rounded-full bg-white transition-transform ${trackTonnage ? 'translate-x-[16px]' : 'translate-x-[2px]'}`} />
+                                            <span className={`inline-block h-3 w-3 rounded-full bg-white dark:bg-[#132338] transition-transform ${trackTonnage ? 'translate-x-[16px]' : 'translate-x-[2px]'}`} />
                                         </button>
                                         <span className="text-[9px] text-slate-500 dark:text-[#CBD5E1] truncate">
                                             {trackTonnage ? 'On' : 'Off'}

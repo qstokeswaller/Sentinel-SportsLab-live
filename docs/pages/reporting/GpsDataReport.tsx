@@ -9,6 +9,7 @@ import { normaliseDate } from '../../utils/csvSchemas';
 import { fuzzySearch } from '../../utils/fuzzySearch';
 import { GpsDateRangeView, GpsSessionTable, gpsSortCols } from './gpsTables';
 import { ActivityIcon, AlertCircleIcon, AlertTriangleIcon, ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, Edit3Icon, InfoIcon, PlusCircleIcon, SearchIcon, SlidersIcon, Trash2Icon, UploadIcon, XIcon } from 'lucide-react';
+import DatePicker from '../../components/ui/DatePicker';
 
 export const GpsDataReport: React.FC<any> = ({
     acwrSettings,
@@ -474,7 +475,7 @@ export const GpsDataReport: React.FC<any> = ({
                                                     }}
                                                     className="flex-1 bg-white dark:bg-[#132338] border border-indigo-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none focus:border-indigo-500"
                                                 />
-                                                <button onClick={() => { setGpsShowNewCat(false); setGpsNewCatLabel(''); }} className="px-2 py-2 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 text-xs">✕</button>
+                                                <button onClick={() => { setGpsShowNewCat(false); setGpsNewCatLabel(''); }} className="px-2 py-2 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] text-xs">✕</button>
                                             </div>
                                         ) : (
                                             <div className="flex gap-2">
@@ -561,12 +562,7 @@ export const GpsDataReport: React.FC<any> = ({
                                             <p className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Override Import Date</p>
                                             <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">Leave blank to read dates from the selected date column. Set a date to apply it to all rows.</p>
                                         </div>
-                                        <input
-                                            type="date"
-                                            value={gpsImportDateOverride}
-                                            onChange={e => setGpsImportDateOverride(e.target.value)}
-                                            className="text-xs text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1.5 bg-white dark:bg-[#132338] outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
-                                        />
+                                        <DatePicker value={gpsImportDateOverride} onChange={e => setGpsImportDateOverride(e.target.value)} />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">All {gpsSmartDialog.headers.length} columns imported. Nothing discarded.</p>
@@ -671,7 +667,7 @@ export const GpsDataReport: React.FC<any> = ({
                                     <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">{visibleCount}/{mergedColConfig.length} shown</span>
                                     <button onClick={() => toggleAll(true)} className="px-2.5 py-1.5 text-[10px] font-semibold text-indigo-600 dark:text-white border border-indigo-200 dark:border-indigo-600 bg-indigo-50 dark:bg-[#1A2D48] rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/15 transition-colors">Show All</button>
                                     <button onClick={() => toggleAll(false)} className="px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide All</button>
-                                    <button onClick={() => { setGpsColConfigOpen(false); setGpsColSearch(''); }} className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><XIcon size={14} /></button>
+                                    <button onClick={() => { setGpsColConfigOpen(false); setGpsColSearch(''); }} className="p-1.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><XIcon size={14} /></button>
                                 </div>
                             </div>
                             {/* Grouped columns */}
@@ -688,7 +684,7 @@ export const GpsDataReport: React.FC<any> = ({
                                                 <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">{grp.label}</span>
                                                 <div className="flex gap-1.5">
                                                     <button onClick={() => toggleGroup(grp.id, true)} className="text-[9px] font-semibold text-indigo-500 hover:text-indigo-700 dark:text-white px-1.5 py-0.5 rounded hover:bg-indigo-50 dark:bg-[#1A2D48] dark:hover:bg-indigo-500/15 transition-colors">Show</button>
-                                                    <button onClick={() => toggleGroup(grp.id, false)} className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide</button>
+                                                    <button onClick={() => toggleGroup(grp.id, false)} className="text-[9px] font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Hide</button>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-1.5">
@@ -714,13 +710,13 @@ export const GpsDataReport: React.FC<any> = ({
                 <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg">
-                            <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                 <span className="flex items-center gap-1.5"><UploadIcon size={12} />Data Import</span>
                             </button>
-                            <button onClick={() => setGpsTab('manual')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'manual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('manual')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'manual' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                 <span className="flex items-center gap-1.5"><Edit3Icon size={12} />Manual Entry</span>
                             </button>
-                            <button onClick={() => setGpsTab('insights')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'insights' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700'}`}>
+                            <button onClick={() => setGpsTab('insights')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'insights' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                 <span className="flex items-center gap-1.5"><ActivityIcon size={12} />GPS Insights</span>
                             </button>
                         </div>
@@ -731,7 +727,7 @@ export const GpsDataReport: React.FC<any> = ({
                                 </span>
                             )}
                             {historicalColKeys.length > 0 && (
-                                <button onClick={() => setGpsColConfigOpen(v => !v)} className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${gpsColConfigOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50'}`}>
+                                <button onClick={() => setGpsColConfigOpen(v => !v)} className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${gpsColConfigOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}>
                                     <SlidersIcon size={13} />Columns
                                 </button>
                             )}
@@ -764,8 +760,8 @@ export const GpsDataReport: React.FC<any> = ({
 
                                 {/* View mode toggle */}
                                 <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg">
-                                    <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>Session</button>
-                                    <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600'}`}>Range</button>
+                                    <button onClick={() => setGpsFilterDateMode('single')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'single' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Session</button>
+                                    <button onClick={() => setGpsFilterDateMode('range')} className={`px-3 py-1.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all ${gpsFilterDateMode === 'range' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Range</button>
                                 </div>
 
                                 {/* Session mode: date navigation */}
@@ -778,12 +774,7 @@ export const GpsDataReport: React.FC<any> = ({
                                         ><ArrowLeftIcon size={14} /></button>
                                         <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
                                             <CalendarIcon size={13} className="text-slate-400 dark:text-[#CBD5E1] shrink-0" />
-                                            <input
-                                                type="date"
-                                                value={effectiveSessionDate}
-                                                onChange={e => setGpsSpecificDate(e.target.value)}
-                                                className="bg-transparent text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] outline-none"
-                                            />
+                                            <DatePicker value={effectiveSessionDate} onChange={e => setGpsSpecificDate(e.target.value)} />
                                         </div>
                                         <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0]">{fmtSessionDate(effectiveSessionDate)}</span>
                                         {gpsSessionDates.length > 0 && (
@@ -802,9 +793,9 @@ export const GpsDataReport: React.FC<any> = ({
                                 {/* Range mode: date pickers */}
                                 {gpsFilterDateMode === 'range' && (
                                     <div className="flex items-center gap-2">
-                                        <input type="date" value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
+                                        <DatePicker value={gpsRangeStart} onChange={e => setGpsRangeStart(e.target.value)} />
                                         <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">to</span>
-                                        <input type="date" value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
+                                        <DatePicker value={gpsRangeEnd} onChange={e => setGpsRangeEnd(e.target.value)} />
                                     </div>
                                 )}
 
@@ -823,7 +814,7 @@ export const GpsDataReport: React.FC<any> = ({
                                         </button>
                                     )}
                                     {/* Import CSV — always available as fallback */}
-                                    <label className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${isPolarSource ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}>
+                                    <label className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${isPolarSource ? 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}>
                                         <UploadIcon size={13} /> Import CSV
                                         <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
                                     </label>
@@ -860,9 +851,9 @@ export const GpsDataReport: React.FC<any> = ({
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide pl-1">Session Date</label>
-                                    <input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none" />
+                                    <DatePicker value={manualDate} onChange={e => setManualDate(e.target.value)} />
                                 </div>
-                                <button onClick={() => setManualColPickerOpen(v => !v)} className={`px-3 py-2.5 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${manualColPickerOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50'}`}>
+                                <button onClick={() => setManualColPickerOpen(v => !v)} className={`px-3 py-2.5 rounded-lg border text-xs flex items-center gap-1.5 font-semibold transition-all ${manualColPickerOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'}`}>
                                     <PlusCircleIcon size={13} /> Configure Columns
                                 </button>
                                 {manualAthletes.length > 0 && manualColConfig.length > 0 && (
@@ -923,7 +914,7 @@ export const GpsDataReport: React.FC<any> = ({
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
                                             {manualAthletes.map(p => (
-                                                <tr key={p.id} className="hover:bg-indigo-50/20 transition-colors">
+                                                <tr key={p.id} className="hover:bg-indigo-50/20 dark:hover:bg-indigo-500/15 transition-colors">
                                                     <td className="sticky left-0 z-10 bg-slate-50/80 px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] whitespace-nowrap border-r border-slate-200 dark:border-[#243A58] text-left">{p.name}</td>
                                                     {manualColConfig.map(col => (
                                                         <td key={col.key} className="px-4 py-2 text-center border-r border-slate-100 dark:border-[#1A2D48] last:border-r-0">

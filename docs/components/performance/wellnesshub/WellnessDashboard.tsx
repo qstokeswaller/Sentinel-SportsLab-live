@@ -12,6 +12,7 @@ import { AthleteAvatar } from '../../roster/AthleteAvatar';
 import WellnessHeatmap from '../../wellness/WellnessHeatmap';
 import WellnessFlagPanel from '../../wellness/WellnessFlagPanel';
 import WellnessInsightsTab from './WellnessInsightsTab';
+import DatePicker from '../../../components/ui/DatePicker';
 import {
     resolveAvailability, getAthleteStatus, getRpeBadge, STATUS_DOT,
     formatDate, localDateStr, TODAY,
@@ -505,13 +506,7 @@ export const WellnessDashboard: React.FC<any> = ({
                             </button>
                         ))}
                         <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] ml-1">As of</span>
-                        <input
-                            type="date"
-                            value={rundownAsOfDate}
-                            max={TODAY}
-                            onChange={e => setRundownAsOfDate(e.target.value || TODAY)}
-                            className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-1 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all"
-                        />
+                        <DatePicker value={rundownAsOfDate} onChange={e => setRundownAsOfDate(e.target.value || TODAY)} max={TODAY} />
                     </div>
                     {rundownTab === 'daily' && (
                         <button onClick={() => setShowDailyTracker(v => !v)}
@@ -578,9 +573,7 @@ export const WellnessDashboard: React.FC<any> = ({
                             <div className="flex items-center gap-3">
                                 <div className="w-7 h-7 bg-cyan-50 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-400"><Calendar size={14} /></div>
                                 <span className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Who responded on</span>
-                                <input type="date" value={responseViewDate} onChange={e => setResponseViewDate(e.target.value)} max={TODAY}
-                                    className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-[#CBD5E1] outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
-                                />
+                                <DatePicker value={responseViewDate} onChange={e => setResponseViewDate(e.target.value)} max={TODAY} />
                             </div>
                             {(() => {
                                 const respondedSet = new Set(rundownDailyFiltered.filter(r => r.session_date === responseViewDate).map(r => r.athlete_id));
@@ -741,7 +734,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                         const soreness = resp.soreness;
                                         const isChecked = selectedResponseIds.has(res.id);
                                         rows.push(
-                                            <tr key={res.id} className={`group transition-colors border-t border-slate-50 ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:bg-[#132338]/40'}`}>
+                                            <tr key={res.id} className={`group transition-colors border-t border-slate-50 dark:border-[#1A2D48] ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40'}`}>
                                                 {/* First cell ALWAYS rendered so body td-count matches thead
                                                     (9). Without this, when isSelectMode is off, every cell
                                                     shifts left under the wrong header (e.g. 7h under "Availability"). */}
@@ -885,7 +878,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                                     const dt = new Date(fy, fm - 1, fd);
                                                     const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                                                     return (
-                                                        <tr key={r.id} className="border-t border-amber-50 hover:bg-amber-50/30 transition-colors">
+                                                        <tr key={r.id} className="border-t border-amber-50 hover:bg-amber-50/30 dark:hover:bg-amber-500/15 transition-colors">
                                                             <td className="px-6 py-3.5">
                                                                 <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0]">{dateLabel}</span>
                                                             </td>
@@ -961,7 +954,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                                     const dt = new Date(fy, fm - 1, fd);
                                                     const dateLabel = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                                                     return (
-                                                        <tr key={r.id} className="border-t border-slate-50 hover:bg-slate-50/40 dark:bg-[#0F1C30]/40 transition-colors">
+                                                        <tr key={r.id} className="border-t border-slate-50 dark:border-[#1A2D48] hover:bg-slate-50/40 dark:hover:bg-[#1A2D48]/60 dark:bg-[#0F1C30]/40 transition-colors">
                                                             <td className="px-6 py-3.5">
                                                                 <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0]">{dateLabel}</span>
                                                             </td>
@@ -1071,7 +1064,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                             const PATH_STYLES: Record<string,string> = { Injury:'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40', Illness:'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/40', Both:'bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white border-indigo-100 dark:border-indigo-800/40', 'Health Trends':'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
 
                                             return (
-                                                <tr key={dc.id} className="group hover:bg-slate-50/50 dark:bg-[#132338]/40 transition-colors border-t border-slate-50">
+                                                <tr key={dc.id} className="group hover:bg-slate-50/50 dark:hover:bg-[#1A2D48]/60 dark:bg-[#132338]/40 transition-colors border-t border-slate-50 dark:border-[#1A2D48]">
                                                     <td className="px-6 py-4">
                                                         <span className="text-[10px] font-semibold text-slate-700 dark:text-[#E2E8F0]">{dateLabel}</span>
                                                     </td>
@@ -1192,7 +1185,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                     d.setDate(d.getDate() - heatmapDays);
                                     setHeatmapAnchor(d.toISOString().split('T')[0]);
                                 }}
-                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors"
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 dark:hover:text-[#E2E8F0] transition-colors"
                                 title="Previous period"
                             >
                                 <ChevronLeft size={14} />
@@ -1215,7 +1208,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                     setHeatmapAnchor(next > today ? today : next);
                                 }}
                                 disabled={heatmapAnchor >= localDateStr()}
-                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:text-slate-800 dark:hover:text-[#E2E8F0] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                 title="Next period"
                             >
                                 <ChevronRight size={14} />
@@ -1242,7 +1235,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                     className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
                                         heatmapDays === d
                                             ? 'bg-indigo-600 text-white'
-                                            : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200'
+                                            : 'bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#1A2D48]/60'
                                     }`}
                                 >
                                     {d}d
