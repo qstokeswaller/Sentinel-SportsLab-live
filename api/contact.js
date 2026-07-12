@@ -86,18 +86,18 @@ export default async function handler(req, res) {
   // For the support-side notification we don't show a CTA — it's a notification,
   // not actionable. The message body lives in the rich insert.
   const detailsHtml = `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #e0e7ff;border-radius:14px;margin-bottom:14px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#182849;border:1px solid #2A3F6B;border-radius:14px;margin-bottom:14px;">
       <tr><td style="padding:16px 22px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
-          <tr><td style="padding:4px 12px 4px 0;color:#7c3aed;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;width:110px;">From</td>
-              <td style="padding:4px 0;font-size:14px;color:#0f172a;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
-          <tr><td style="padding:4px 12px 4px 0;color:#7c3aed;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Organisation</td>
-              <td style="padding:4px 0;font-size:14px;color:#0f172a;">${safeOrg}</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#A78BFA;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;width:110px;">From</td>
+              <td style="padding:4px 0;font-size:14px;color:#F1F5F9;"><strong>${safeName}</strong> &lt;${safeEmail}&gt;</td></tr>
+          <tr><td style="padding:4px 12px 4px 0;color:#A78BFA;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Organisation</td>
+              <td style="padding:4px 0;font-size:14px;color:#F1F5F9;">${safeOrg}</td></tr>
         </table>
       </td></tr>
     </table>
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:3px solid #4f46e5;padding:16px 20px;border-radius:10px;">
-      <p style="margin:0;color:#0f172a;font-size:14px;line-height:1.65;">${safeMessage}</p>
+    <div style="background-color:#0F1C30;border:1px solid #243A58;border-left:3px solid #6366f1;padding:16px 20px;border-radius:10px;">
+      <p style="margin:0;color:#F1F5F9;font-size:14px;line-height:1.65;">${safeMessage}</p>
     </div>
   `;
 

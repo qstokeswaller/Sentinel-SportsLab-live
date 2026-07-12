@@ -116,17 +116,17 @@ export default async function handler(req, res) {
   // Rich "inviter card" — gradient-bg panel with inviter's initial in a
   // gradient circle, then their name, the org name, and the assigned role.
   const inviterCardHtml = `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #e0e7ff;border-radius:14px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#182849;border:1px solid #2A3F6B;border-radius:14px;">
       <tr><td style="padding:18px 22px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td style="vertical-align:middle;padding-right:14px;">
-              <div style="width:44px;height:44px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;line-height:44px;text-align:center;color:#fff;font-weight:700;font-size:16px;">${inviterInitial}</div>
+              <div style="width:44px;height:44px;background-color:#6366f1;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;line-height:44px;text-align:center;color:#fff;font-weight:700;font-size:16px;">${inviterInitial}</div>
             </td>
             <td style="vertical-align:middle;">
-              <p style="margin:0 0 2px;font-size:14px;color:#475569;line-height:1.4;"><strong style="color:#0f172a;">${safeInviter}</strong> invited you to</p>
-              <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;line-height:1.3;">${safeOrg}</p>
-              <p style="margin:2px 0 0;font-size:12px;color:#7c3aed;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">As ${safeRoleLabel === 'Admin' ? 'an Admin' : 'a Member'}</p>
+              <p style="margin:0 0 2px;font-size:14px;color:#94A3B8;line-height:1.4;"><strong style="color:#F1F5F9;">${safeInviter}</strong> invited you to</p>
+              <p style="margin:0;font-size:15px;font-weight:700;color:#F1F5F9;line-height:1.3;">${safeOrg}</p>
+              <p style="margin:2px 0 0;font-size:12px;color:#A78BFA;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">As ${safeRoleLabel === 'Admin' ? 'an Admin' : 'a Member'}</p>
             </td>
           </tr>
         </table>
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
     subheadingHtml: '', // moved into the rich insert + post-CTA copy below
     richInsertHtml: inviterCardHtml + `
       <div style="text-align:center;padding-top:18px;">
-        <p style="margin:0;font-size:15px;line-height:1.6;color:#475569;">Click the button below to accept. You'll be asked to create a password — your email is already linked to the invitation.</p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#94A3B8;">Click the button below to accept. You'll be asked to create a password — your email is already linked to the invitation.</p>
       </div>
     `,
     cta: { url: acceptUrl, label: 'Accept invitation →' },

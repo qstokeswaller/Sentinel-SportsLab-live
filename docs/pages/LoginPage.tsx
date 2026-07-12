@@ -100,7 +100,9 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                 if (err) setError(err.message);
                 else { setMessage('Password updated. Redirecting…'); clearPasswordUpdate(); }
             } else if (mode === 'signin') {
-                const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+                // Sanitise: stray spaces / uppercase in the email are the classic cause of
+                // "Invalid login credentials" with a correct password.
+                const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
                 if (err) setError(err.message);
             } else if (mode === 'signup') {
                 if (!firstName.trim() || !surname.trim()) { setError('First name and surname are required.'); return; }
@@ -111,7 +113,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                 if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
                 if (!agreedToTerms) { setError('Please agree to the Terms of Service and Privacy Policy to continue.'); return; }
                 const { error: err } = await supabase.auth.signUp({
-                    email,
+                    email: email.trim().toLowerCase(),
                     password,
                     options: {
                         emailRedirectTo: siteUrl,
