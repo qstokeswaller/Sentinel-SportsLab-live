@@ -1,4 +1,3 @@
-// @ts-nocheck — Data-layer typing deferred: Supabase Row<->domain casts + overloads. Needs the dedicated data-layer typing pass.
 // Hooks for the saved-sheets library — mirrors useWorkoutPrograms / useWorkoutTemplates pattern.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -44,7 +43,7 @@ export function useWeightroomSheets() {
                 .select('*')
                 .order('created_at', { ascending: false });
             if (error) throw error;
-            return (data ?? []) as WeightroomSheet[];
+            return (data ?? []) as unknown as WeightroomSheet[];
         },
     });
 }
@@ -59,11 +58,11 @@ export function useCreateSheet() {
             if (!userData.user) throw new Error('Not authenticated');
             const { data, error } = await supabase
                 .from('weightroom_sheets')
-                .insert({ ...payload, user_id: userData.user.id })
+                .insert({ ...payload, user_id: userData.user.id } as any) // organisation_id filled by trg_set_org_on_insert
                 .select()
                 .single();
             if (error) throw error;
-            return data as WeightroomSheet;
+            return data as unknown as WeightroomSheet;
         },
         onSuccess: () => qc.invalidateQueries({ queryKey: ['weightroom-sheets'] }),
     });
@@ -76,12 +75,12 @@ export function useUpdateSheet() {
             const { id, ...updates } = payload;
             const { data, error } = await supabase
                 .from('weightroom_sheets')
-                .update({ ...updates, updated_at: new Date().toISOString() })
+                .update({ ...updates, updated_at: new Date().toISOString() } as any)
                 .eq('id', id)
                 .select()
                 .single();
             if (error) throw error;
-            return data as WeightroomSheet;
+            return data as unknown as WeightroomSheet;
         },
         onSuccess: () => qc.invalidateQueries({ queryKey: ['weightroom-sheets'] }),
     });

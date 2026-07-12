@@ -1,5 +1,3 @@
-
-// @ts-nocheck
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
@@ -14,7 +12,7 @@ import {
     InfoIcon, TargetIcon, UserPlusIcon, XIcon, PlusIcon, FileStackIcon, TrendingUpIcon
 } from 'lucide-react';
 
-import { ACWR_UTILS, BORG_RPE_SCALE, DSI_NORMS, RSI_NORMS, RM_EXERCISE_MAP } from '../utils/constants';
+import { ACWR_UTILS, BORG_RPE_SCALE, RM_EXERCISE_MAP } from '../utils/constants';
 import { DEFAULT_WATTBIKE_SESSIONS } from '../utils/wattbikeSessions';
 import { normalisePlan } from '../utils/periodizationUtils';
 import usePlanHandlers from './appState/usePlanHandlers';
@@ -474,10 +472,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // Debug Hook: Allow manually opening the modal from console
     useEffect(() => {
         const checkForceOpen = setInterval(() => {
-            if (window.WP_FORCE_OPEN) {
+            if ((window as any).WP_FORCE_OPEN) {
                 console.log('--- FORCING WORKOUT PACKET MODAL OPEN ---');
                 setIsWorkoutPacketModalOpen(true);
-                window.WP_FORCE_OPEN = false;
+                (window as any).WP_FORCE_OPEN = false;
             }
         }, 1000);
         return () => clearInterval(checkForceOpen);
@@ -1146,7 +1144,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         };
     };
 
-    const calculateACWR = (athleteId, options) => {
+    const calculateACWR = (athleteId, options?) => {
         const logs = loadRecords || [];
         const opts = options || getAthleteAcwrOptions(athleteId);
         const result = ACWR_UTILS.calculateAthleteACWR(logs, athleteId, opts);
@@ -1182,13 +1180,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const weeklyLoad = athleteLogs
             .filter(l => new Date(l.date) >= start)
             .reduce((acc, l) => acc + (l.value || l.sRPE || 0), 0);
-        const monotony = parseFloat(calculateMonotony(athleteId));
+        const monotony = parseFloat(String(calculateMonotony(athleteId)));
         return (weeklyLoad * monotony).toFixed(0);
     };
 
     const getSmartRecommendation = (athleteId) => {
-        const acwr = parseFloat(calculateACWR(athleteId));
-        const monotony = parseFloat(calculateMonotony(athleteId));
+        const acwr = parseFloat(String(calculateACWR(athleteId)));
+        const monotony = parseFloat(String(calculateMonotony(athleteId)));
         const wellness = wellnessData.filter(d => d.athleteId === athleteId).slice(-1)[0] || { energy: 7, sleep: 8 };
         if (acwr > 1.5) {
             return {

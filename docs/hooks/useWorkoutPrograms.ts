@@ -1,4 +1,3 @@
-// @ts-nocheck — Data-layer typing deferred: Supabase Row<->domain casts + overloads. Needs the dedicated data-layer typing pass.
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
@@ -123,7 +122,7 @@ export function useProgramWithDays(programId: string | null) {
       if (programResult.error) throw programResult.error;
       if (daysResult.error) throw daysResult.error;
       const program = programResult.data;
-      const days = daysResult.data;
+      const days = daysResult.data as unknown as WorkoutDay[];
 
       const dayIds = (days ?? []).map((d: WorkoutDay) => d.id);
       let exercises: WorkoutDayExercise[] = [];
@@ -179,7 +178,7 @@ export function useCreateProgram() {
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('workout_programs')
-        .insert({ ...payload, user_id: userData.user.id })
+        .insert({ ...payload, user_id: userData.user.id } as any) // organisation_id filled by trg_set_org_on_insert
         .select()
         .single();
       if (error) throw error;
@@ -315,7 +314,7 @@ export function useSaveProgramFull() {
             section_meta: d.section_meta ?? null,
             section_order: d.section_order ?? null,
             linked_sessions: d.linked_sessions ?? null,
-          }))
+          })) as any[] // organisation_id filled by trg_set_org_on_insert
         )
         .select();
       if (dayErr) throw dayErr;
@@ -323,7 +322,7 @@ export function useSaveProgramFull() {
       // 3. Insert exercises for each day
       const allExercises: object[] = [];
       days.forEach((d, i) => {
-        const savedDay = (insertedDays as WorkoutDay[])[i];
+        const savedDay = (insertedDays as unknown as WorkoutDay[])[i];
         if (!savedDay) return;
         d.exercises.forEach((ex) => {
           allExercises.push({ ...ex, day_id: savedDay.id, user_id: userId });
@@ -333,7 +332,7 @@ export function useSaveProgramFull() {
       if (allExercises.length > 0) {
         const { error: exErr } = await supabase
           .from('workout_day_exercises')
-          .insert(allExercises);
+          .insert(allExercises as any[]); // organisation_id filled by trg_set_org_on_insert
         if (exErr) throw exErr;
       }
     },
