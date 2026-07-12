@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
@@ -254,7 +253,7 @@ const AddEventModal = () => {
     const canSubmit = !creating;
 
     return (
-        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div role="dialog" aria-modal="true" aria-label="Add event" className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-[#132338] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#243A58]">

@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from WellnessHub.tsx (restructure step 6,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Team selection screen — entry view of the Wellness Hub.
 import React from 'react';

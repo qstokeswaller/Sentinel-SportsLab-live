@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Dose-Response Analysis Terminal
  *
@@ -58,7 +57,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
             const aid = l.athleteId || l.athlete_id;
             return targetAthletes.some(a => a.id === aid) && l.date >= blockStart && l.date <= blockEnd;
         });
-        const found = [...new Set(windowLoads.map(l => l.metric_type || 'srpe').filter(Boolean))];
+        const found: string[] = [...new Set<string>(windowLoads.map(l => (l.metric_type || 'srpe') as string).filter(Boolean))];
         // Always include srpe in the list so it's always an option (may just have 0 data)
         if (!found.includes('srpe')) found.unshift('srpe');
         return found;
@@ -94,7 +93,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
             const responses = [];
 
             // Group metrics by type, find pre-block and post-block values
-            const byType = {};
+            const byType: Record<string, any[]> = {};
             for (const m of metrics) {
                 const t = m.type;
                 if (!byType[t]) byType[t] = [];
@@ -155,7 +154,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                 athlete,
                 totalLoad: Math.round(totalLoad),
                 sessionCount,
-                avgDailyLoad: Math.round(totalLoad / Math.max(1, Math.ceil((new Date(blockEnd) - new Date(blockStart)) / 86400000))),
+                avgDailyLoad: Math.round(totalLoad / Math.max(1, Math.ceil((new Date(blockEnd).getTime() - new Date(blockStart).getTime()) / 86400000))),
                 responses,
                 hasResponses: responses.length > 0,
             });
@@ -201,7 +200,7 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                     </CustomSelect>
                 </div>
                 <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
-                    {Math.ceil((new Date(blockEnd) - new Date(blockStart)) / 86400000)} days · {analysis.length} athlete{analysis.length !== 1 ? 's' : ''} with load data
+                    {Math.ceil((new Date(blockEnd).getTime() - new Date(blockStart).getTime()) / 86400000)} days · {analysis.length} athlete{analysis.length !== 1 ? 's' : ''} with load data
                 </span>
             </div>
 

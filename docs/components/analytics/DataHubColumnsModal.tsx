@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Data Hub: Column Selector Modal ──────────────────────────────────────
 // Large modal for picking which columns the table renders, with:
 //   • Grouped sections (Athlete · Wellness · Availability · ACWR · Performance · GPS)

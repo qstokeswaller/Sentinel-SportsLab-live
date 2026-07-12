@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Data Hub column registry ────────────────────────────────────────────────
 // Single source of truth for every column the Data Hub can render. Each entry
 // declares the group/subsection it belongs to, the kind of data it represents,

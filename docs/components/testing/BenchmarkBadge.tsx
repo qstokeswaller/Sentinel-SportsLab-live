@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BenchmarkBadge — Inline percentile rank for any test result
  *

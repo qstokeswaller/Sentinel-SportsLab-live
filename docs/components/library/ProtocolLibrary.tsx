@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback } from 'react';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
 import { ProtocolEditor } from './ProtocolEditor';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useForceLightMode — guarantees a page renders in light mode regardless
  * of the visitor's browser/app theme state.

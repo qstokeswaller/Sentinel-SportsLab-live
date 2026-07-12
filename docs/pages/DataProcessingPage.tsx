@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DataProcessingPage — sub-processor transparency, cross-border-transfer
  * disclosure, security measures, and breach-notification commitments.

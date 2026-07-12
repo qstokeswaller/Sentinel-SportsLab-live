@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Public read-only Testing report. Loaded by id from /test-share/:shareId.
  * Branches on share_type:

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import {
     XIcon, CopyIcon, CheckIcon, Trash2Icon, Loader2Icon,

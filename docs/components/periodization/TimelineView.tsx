@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useRef, useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -65,7 +64,7 @@ const BlockWeekView = ({ plan, phase, block }) => {
                     <div className="flex flex-wrap gap-2 mt-3">
                         {Object.entries(block.modalities).map(([key, val]) => (
                             <span key={key} className="text-[10px] px-2 py-1 rounded-md bg-slate-50 dark:bg-[#1A2D48] border border-slate-100 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1]">
-                                <span className="font-semibold">{key}:</span> {val}
+                                <span className="font-semibold">{key}:</span> {String(val)}
                             </span>
                         ))}
                     </div>
@@ -141,7 +140,7 @@ const WeekDayView = ({ plan, phase, block, weekNumber }) => {
                                         </p>
                                     </div>
                                 ) : (
-                                    <button className="w-full h-full min-h-[60px] flex items-center justify-center text-slate-300 dark:text-[#475569] hover:text-indigo-400 transition-colors">
+                                    <button aria-label="Add block" className="w-full h-full min-h-[60px] flex items-center justify-center text-slate-300 dark:text-[#475569] hover:text-indigo-400 transition-colors">
                                         <Plus size={14} />
                                     </button>
                                 )}

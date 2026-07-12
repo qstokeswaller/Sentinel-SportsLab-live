@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
@@ -11,7 +10,7 @@ import { formatDateShort, EVENT_TYPE_COLORS } from '../../utils/periodizationUti
 // ── Date helpers ───────────────────────────────────────────────────────────────
 function daysBetween(a, b) {
     if (!a || !b) return 0;
-    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+    return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 
 function getWeeks(startStr, endStr) {
@@ -574,7 +573,7 @@ export const BlocksTab = ({ plan }) => {
                                         {modEntries.map(([mod, desc]) => (
                                             <div key={mod} className="flex items-start gap-2">
                                                 <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] shrink-0">{mod}</span>
-                                                {desc && <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] leading-tight">{desc}</span>}
+                                                {Boolean(desc) && <span className="text-[9px] text-slate-400 dark:text-[#CBD5E1] leading-tight">{String(desc)}</span>}
                                             </div>
                                         ))}
                                     </div>

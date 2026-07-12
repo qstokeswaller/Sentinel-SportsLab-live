@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import {
     FlaskConicalIcon, XIcon, CheckIcon, FileDownIcon, PlusIcon,
@@ -130,8 +129,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
 
     const dsiCategory = useMemo(() => {
         if (!dsiScore) return null;
-        if (dsiScore < 0.60) return { label: 'Ballistic Deficit', color: 'text-orange-500', rec: 'Plyometrics / Power' };
-        if (dsiScore > 0.80) return { label: 'Strength Deficit', color: 'text-indigo-500', rec: 'Maximal Strength' };
+        if (Number(dsiScore) < 0.60) return { label: 'Ballistic Deficit', color: 'text-orange-500', rec: 'Plyometrics / Power' };
+        if (Number(dsiScore) > 0.80) return { label: 'Strength Deficit', color: 'text-indigo-500', rec: 'Maximal Strength' };
         return { label: 'Concurrent / Balanced', color: 'text-emerald-500', rec: 'Train Both' };
     }, [dsiScore]);
 
@@ -249,8 +248,8 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                 if (b && i) {
                     const score = (b / i).toFixed(2);
                     let cat = 'Balanced';
-                    if (score < 0.60) cat = 'Ballistic Deficit';
-                    if (score > 0.80) cat = 'Strength Deficit';
+                    if (Number(score) < 0.60) cat = 'Ballistic Deficit';
+                    if (Number(score) > 0.80) cat = 'Strength Deficit';
                     data = { type: 'dsi', value: score, ballistic: b, isometric: i, category: cat };
                 }
             } else if (type === 'rsi') {
@@ -271,10 +270,10 @@ const PerformanceLab = ({ isOpen, onClose }) => {
     };
 
     const handlePdfUpload = async (file) => {
-        if (!window.pdfjsLib) return showToast("PDF Library not loaded.");
+        if (!(window as any).pdfjsLib) return showToast("PDF Library not loaded.");
         setImportStatus("Scanning PDF... please wait.");
         const buffer = await file.arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument(buffer).promise;
+        const pdf = await (window as any).pdfjsLib.getDocument(buffer).promise;
         let extractedText = "";
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);

@@ -1,8 +1,7 @@
-// @ts-nocheck
 import React from 'react';
 import { XIcon, EyeIcon, ActivityIcon, ArrowUpRightIcon, ArrowDownRightIcon } from 'lucide-react';
 
-export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
+export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems = [] }: { isOpen: boolean; onClose: () => void; watchlistItems?: any[]; [key: string]: any }) => {
     if (!isOpen) return null;
 
     return (

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Landing Page V5 — Flip card features, visual Why Us
  */

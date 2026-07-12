@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import { AthleteAvatar } from './AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';

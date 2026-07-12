@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import {
     ArrowLeftIcon, PencilIcon, Trash2Icon, CalendarIcon,
@@ -206,7 +205,7 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
             {/* Header */}
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-3">
-                    <button
+                    <button aria-label="Back to library"
                         onClick={onBack}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
                     >

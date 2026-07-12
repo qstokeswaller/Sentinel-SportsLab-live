@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WellnessFlagPanel — Shows flagged athletes from the auto-detection engine
  *
@@ -183,7 +182,7 @@ const WellnessFlagPanel: React.FC<FlagPanelProps> = ({ teamId, athletes, default
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1]">
                     <CalendarIcon size={12} />
                     <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-[#94A3B8]">As of</span>
-                    <DatePicker value={asOfDate} onChange={e => { e.stopPropagation(); setAsOfDate(e.target.value || localDateStr()); }} max={localDateStr()} />
+                    <DatePicker value={asOfDate} onChange={e => { setAsOfDate(e.target.value || localDateStr()); }} max={localDateStr()} />
                 </div>
             </div>
 

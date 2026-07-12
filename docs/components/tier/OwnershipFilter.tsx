@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { UserIcon, GlobeIcon } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';

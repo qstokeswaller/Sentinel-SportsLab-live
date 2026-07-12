@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { X, Trash2, Plus } from 'lucide-react';
@@ -173,7 +172,7 @@ export const AddPhaseModal = () => {
                                 onChange={e => setCustomFocusInput(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomFocus(); } }}
                             />
-                            <button type="button" onClick={addCustomFocus}
+                            <button aria-label="Add custom focus" type="button" onClick={addCustomFocus}
                                 disabled={!customFocusInput.trim()}
                                 className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40">
                                 <Plus size={12} />

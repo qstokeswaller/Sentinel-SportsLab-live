@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { XIcon, CheckCircle2Icon, AlertTriangleIcon } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';

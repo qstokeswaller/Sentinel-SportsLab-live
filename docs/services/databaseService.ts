@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from '../lib/supabase';
 import { supabasePublic } from '../lib/supabasePublic';
 
@@ -20,7 +19,7 @@ export const DatabaseService = {
 
         const { data, error } = await supabase
             .from('teams')
-            .insert({
+            .insert(<any>{ // organisation_id filled by trg_set_org_on_insert
                 name,
                 sport,
                 description,
@@ -65,7 +64,7 @@ export const DatabaseService = {
 
         const { data, error } = await supabase
             .from('athletes')
-            .insert({
+            .insert(<any>{ // organisation_id filled by trg_set_org_on_insert
                 ...athleteData,
                 user_id: userData.user.id
             })
@@ -99,7 +98,7 @@ export const DatabaseService = {
 
         const { data, error } = await supabase
             .from('athlete_share_sessions')
-            .insert({
+            .insert(<any>{ // organisation_id filled by trg_set_org_on_insert
                 user_id: userData.user.id,
                 athlete_id: payload.athleteId,
                 athlete_name: payload.athleteName,
@@ -355,7 +354,7 @@ export const DatabaseService = {
             .select('exercise_id')
             .limit(1000);
         if (error) throw error;
-        return [...new Set((data || []).map((r: any) => r.exercise_id).filter(Boolean))];
+        return [...new Set<string>((data || []).map((r: any) => r.exercise_id as string).filter(Boolean))];
     },
 
     // --- WORKOUT TEMPLATES (a.k.a. "Workout Packets" in the UI) ---
@@ -489,7 +488,7 @@ export const DatabaseService = {
 
         const { data, error } = await supabase
             .from('assessments')
-            .insert({
+            .insert(<any>{ // organisation_id filled by trg_set_org_on_insert
                 user_id: userData.user.id,
                 athlete_id: athleteId,
                 test_type: testType,
@@ -548,7 +547,7 @@ export const DatabaseService = {
             metrics: e.metrics,
             date: e.date || new Date().toISOString().split('T')[0],
         }));
-        const { data, error } = await supabase.from('assessments').insert(rows).select();
+        const { data, error } = await supabase.from('assessments').insert(rows as any[]).select(); // organisation_id filled by trg_set_org_on_insert
         if (error) throw error;
         return data;
     },

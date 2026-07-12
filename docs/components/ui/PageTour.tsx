@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PageTour — Per-page + workflow product tours using driver.js
  *

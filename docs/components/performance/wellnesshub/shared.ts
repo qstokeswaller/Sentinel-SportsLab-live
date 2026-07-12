@@ -85,3 +85,6 @@ export const HISTORY_RANGE_OPTIONS: { id: number; label: string }[] = [
     { id: 90,   label: '90d' },
     { id: 9999, label: 'All' },
 ];
+
+// View switcher union used by WellnessHub and its extracted views
+export type WellnessViewMode = 'selection' | 'dashboard' | 'athlete' | 'templates' | 'share';

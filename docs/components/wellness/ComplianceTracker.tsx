@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ComplianceTracker — Daily form completion rate over time
  *

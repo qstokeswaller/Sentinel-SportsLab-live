@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — LEGACY: references the pre-organisation 'clubs' table / 'club_id' column which no longer exist in the DB — the club path would fail at runtime. Page is orphaned (nothing navigates to /onboarding). Needs a product decision: delete or rebuild for orgs.
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';

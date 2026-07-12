@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from WellnessHub.tsx (restructure step 4,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Single-athlete drilldown: daily/weekly response history + flag history with
 // collapsible range-chip sections.
@@ -9,7 +8,7 @@ import {
 import { AthleteAvatar } from '../../roster/AthleteAvatar';
 import WellnessSparklines from '../../wellness/WellnessSparklines';
 import { BodyMapArea } from '../../../types/types';
-import { resolveAvailability, getAthleteStatus, STATUS_DOT, TODAY, HISTORY_RANGE_OPTIONS } from './shared';
+import { resolveAvailability, getAthleteStatus, STATUS_DOT, TODAY, HISTORY_RANGE_OPTIONS, WellnessViewMode } from './shared';
 
 interface Props {
     activeAthlete: any;
@@ -24,12 +23,12 @@ interface Props {
     historyFlagDays: number;
     setHistoryFlagDays: (n: number) => void;
     isDailyHistOpen: boolean;
-    setIsDailyHistOpen: (b: boolean) => void;
+    setIsDailyHistOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isWeeklyHistOpen: boolean;
-    setIsWeeklyHistOpen: (b: boolean) => void;
+    setIsWeeklyHistOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isFlagHistOpen: boolean;
-    setIsFlagHistOpen: (b: boolean) => void;
-    setViewMode: (m: string) => void;
+    setIsFlagHistOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setViewMode: (m: WellnessViewMode) => void;
 }
 
 export const WellnessAthleteView: React.FC<Props> = ({

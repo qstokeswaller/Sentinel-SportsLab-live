@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
     ArrowLeftIcon, SaveIcon, PlusIcon, Trash2Icon,
@@ -470,7 +469,7 @@ const PdfBlockCard: React.FC<{
                 <div className="flex items-center gap-0.5">
                     <button onClick={() => onMove(-1)} disabled={isFirst} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/15 disabled:opacity-30 transition-all"><ChevronUpIcon size={14} /></button>
                     <button onClick={() => onMove(1)} disabled={isLast} className="p-1 rounded text-rose-400 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/15 disabled:opacity-30 transition-all"><ChevronDownIcon size={14} /></button>
-                    <button onClick={onDelete} className="p-1 rounded text-rose-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"><Trash2Icon size={14} /></button>
+                    <button aria-label="Delete step" onClick={onDelete} className="p-1 rounded text-rose-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 dark:hover:text-red-400 transition-all"><Trash2Icon size={14} /></button>
                 </div>
             </div>
 
@@ -610,7 +609,7 @@ export const ProtocolEditor: React.FC<ProtocolEditorProps> = ({ protocol, onSave
             {/* Header bar */}
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                    <button onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button aria-label="Cancel and go back" onClick={onCancel} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <ArrowLeftIcon size={16} />
                     </button>
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-[#CBD5E1]">

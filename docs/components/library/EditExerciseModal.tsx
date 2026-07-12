@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { XIcon, SaveIcon, ImagePlusIcon, Loader2Icon, AlertTriangleIcon } from 'lucide-react';
 import { useCreateExercise, useUpdateExercise } from '../../hooks/useExercises';
@@ -370,7 +369,7 @@ export const EditExerciseModal = ({ isOpen, onClose, exercise, initialForm, show
                                             </>
                                         )}
                                         <input
-                                            ref={el => (fileInputRefs.current[idx] = el)}
+                                            ref={el => { fileInputRefs.current[idx] = el; }}
                                             type="file"
                                             accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                                             className="hidden"

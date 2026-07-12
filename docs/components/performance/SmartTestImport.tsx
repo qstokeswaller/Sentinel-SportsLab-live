@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ═══════════════════════════════════════════════════════════════════════
 // SmartTestImport — Auto-detects test type from CSV headers
 //

@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from DashboardPage.tsx (monolith restructure,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CalendarPopover, EventDetailPopover, DRAG_HINT_SESSION, DRAG_HINT_EVENT } from '../../components/calendar/CalendarPopovers';
@@ -155,7 +154,7 @@ export const CalendarMonthView: React.FC<any> = ({
                                                                             <span className="text-[8px] font-medium uppercase tracking-wide truncate">{session.trainingPhase}</span>
                                                                         </div>
                                                                         <div className="flex items-center gap-0.5 shrink-0">
-                                                                            {(session.linked_sessions?.length > 0) && <Link2Icon size={7} className="opacity-60" title="Has linked sessions" />}
+                                                                            {(session.linked_sessions?.length > 0) && <span title="Has linked sessions" className="leading-none"><Link2Icon size={7} className="opacity-60" /></span>}
                                                                             {session.load && (
                                                                                 <span className={`text-[7px] font-bold uppercase px-1 py-px rounded ${
                                                                                     session.load === 'High' ? 'bg-red-500 text-white' :

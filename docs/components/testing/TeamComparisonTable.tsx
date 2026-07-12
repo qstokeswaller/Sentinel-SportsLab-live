@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
@@ -45,7 +44,7 @@ export const TeamComparisonTable: React.FC<Props> = ({ initialTestId, initialTea
         if (!selectedTest) return [];
         const fields = selectedTest.fields
             .filter(f => f.type !== 'text' && f.key !== 'notes')
-            .map(f => ({ key: f.key, label: f.label, unit: f.unit }));
+            .map(f => ({ key: f.key, label: f.label, unit: f.unit, isCalc: false }));
         const calcs = (selectedTest.calculations || [])
             .map(c => ({ key: c.key, label: c.label, unit: c.unit, isCalc: true }));
         return [...fields, ...calcs].slice(0, 8);

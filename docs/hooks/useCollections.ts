@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
@@ -53,7 +52,7 @@ export function useCollections() {
             if (!user) throw new Error('Not authenticated');
             const { data, error } = await supabase
                 .from('exercise_collections')
-                .insert({ user_id: user.id, name, description: description || null, color: color || 'indigo' })
+                .insert({ user_id: user.id, name, description: description || null, color: color || 'indigo' } as any) // organisation_id filled by trg_set_org_on_insert
                 .select()
                 .single();
             if (error) throw error;

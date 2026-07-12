@@ -274,7 +274,7 @@ const PublicWellnessForm: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
-                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} handled inline />}
+                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} />}
                                     </div>
                                 </button>
                             ))}
@@ -299,7 +299,7 @@ const PublicWellnessForm: React.FC = () => {
                                     {/* Per-area badge (when this is a follow-up for a specific body area) */}
                                     {step.areaContext && (
                                         <div className="mb-3 px-3 py-2 bg-cyan-50 border border-cyan-100 rounded-xl inline-flex items-center gap-2">
-                                            <Activity size={12} handled inline />
+                                            <Activity size={12} />
                                             <span className="text-[11px] font-black text-cyan-700 uppercase tracking-wide">
                                                 {step.areaLabel}
                                             </span>
@@ -637,7 +637,7 @@ const PublicWellnessForm: React.FC = () => {
                 )}
                 <div className="flex gap-4 px-6 py-4 max-w-md mx-auto w-full">
                     {currentStep > 0 && (
-                        <button
+                        <button aria-label="Go back"
                             type="button"
                             onClick={handleBack}
                             className="p-4 bg-white border-2 border-slate-100 dark:border-[#243A58] text-slate-600 rounded-2xl font-bold active:scale-95 transition-all"

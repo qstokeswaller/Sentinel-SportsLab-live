@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ─── HamstringReport ────────────────────────────────────────────────
 // Extracted from ReportingHubPage.tsx — NordBord Hamstring Strength Test
 // 3 tabs: Analysis, Assessment (Individual + Team Batch), Import
@@ -73,7 +72,7 @@ export const HamstringReport: React.FC = () => {
                 inspectHamEntry={inspectHamEntry} setInspectHamEntry={setInspectHamEntry}
             />}
             {hamstringReportTab === 'Assessment' && <AssessmentTab
-                teams={teams} hamEntryMode={hamEntryMode} setHamEntryMode={setHamEntryMode}
+                teams={teams} showToast={showToast} hamEntryMode={hamEntryMode} setHamEntryMode={setHamEntryMode}
                 hamAthleteId={hamAthleteId} setHamAthleteId={setHamAthleteId}
                 hamLeft={hamLeft} setHamLeft={setHamLeft} hamRight={hamRight} setHamRight={setHamRight}
                 hamBodyWeight={hamBodyWeight} setHamBodyWeight={setHamBodyWeight}
@@ -172,7 +171,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                         className={`p-2.5 rounded-xl border transition-all ${isHamstringEditMode ? 'bg-orange-600 border-orange-600 text-white shadow-lg' : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-orange-300 hover:text-orange-500 dark:hover:text-orange-300'}`}>
                         <FileEditIcon size={18} />
                     </button>
-                    <button onClick={handlePrint} className="p-2.5 rounded-xl border bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-300 transition-all shadow-sm"><PrinterIcon size={18} /></button>
+                    <button aria-label="Print report" onClick={handlePrint} className="p-2.5 rounded-xl border bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-300 transition-all shadow-sm"><PrinterIcon size={18} /></button>
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-6 mb-8">
@@ -279,7 +278,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
 
 // ─── ASSESSMENT TAB ─────────────────────────────────────────────────
 
-const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, setHamAthleteId, hamLeft, setHamLeft, hamRight, setHamRight, hamBodyWeight, setHamBodyWeight, hamAggregate, setHamAggregate, hamAssessmentMode, setHamAssessmentMode, hamDate, handleSaveMetric, setHamstringReportTab, hamSelectedTeamId, setHamSelectedTeamId, hamTeamAthleteFilter, setHamTeamAthleteFilter, teamRowData, setTeamRowData, teamBatchMode, setTeamBatchMode, teamBatchDate, setTeamBatchDate, savedRows, setSavedRows }) => {
+const AssessmentTab = ({ teams, showToast, hamEntryMode, setHamEntryMode, hamAthleteId, setHamAthleteId, hamLeft, setHamLeft, hamRight, setHamRight, hamBodyWeight, setHamBodyWeight, hamAggregate, setHamAggregate, hamAssessmentMode, setHamAssessmentMode, hamDate, handleSaveMetric, setHamstringReportTab, hamSelectedTeamId, setHamSelectedTeamId, hamTeamAthleteFilter, setHamTeamAthleteFilter, teamRowData, setTeamRowData, teamBatchMode, setTeamBatchMode, teamBatchDate, setTeamBatchDate, savedRows, setSavedRows }) => {
     const allAthletes = teams.flatMap(t => t.players);
     const currentAthlete = allAthletes.find(p => p.id === hamAthleteId);
     const defaultWeight = currentAthlete?.performanceMetrics?.find(m => m.type === 'biometrics')?.weight || 80;

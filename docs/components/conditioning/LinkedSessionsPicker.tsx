@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { PlusIcon, XIcon, ActivityIcon, TimerIcon, DumbbellIcon, ClockIcon, ChevronDownIcon } from 'lucide-react';
 

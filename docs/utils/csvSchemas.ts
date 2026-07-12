@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ═══════════════════════════════════════════════════════════════════════
 // CSV Import Schemas — Universal field definitions + fuzzy matching
 // Used by SmartCsvMapper across all import sections

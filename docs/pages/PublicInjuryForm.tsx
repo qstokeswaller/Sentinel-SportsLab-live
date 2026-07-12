@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
@@ -20,7 +19,7 @@ import DatePicker from '../components/ui/DatePicker';
 
 const toggleMulti = (arr, value) => arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
 
-const PillRow = ({ options, value, onChange, colorMap }) => (
+const PillRow = ({ options, value, onChange, colorMap }: { options: readonly any[]; value: any; onChange: (v: any) => void; colorMap?: Record<string, string> }) => (
     <div className="flex flex-wrap gap-2">
         {options.map(opt => {
             const label = typeof opt === 'string' ? opt : opt.label;
@@ -256,7 +255,7 @@ const PublicInjuryForm = () => {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
-                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} handled inline />}
+                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} />}
                                     </div>
                                 </button>
                             ))}
@@ -274,7 +273,7 @@ const PublicInjuryForm = () => {
                                     {selectedAthlete.name?.[0]?.toUpperCase() || '?'}
                                 </div>
                                 <div>
-                                    <p handled inline>Injury report for</p>
+                                    <p>Injury report for</p>
                                     <p className="font-black text-slate-900 text-lg leading-tight">{selectedAthlete.name}</p>
                                 </div>
                             </div>

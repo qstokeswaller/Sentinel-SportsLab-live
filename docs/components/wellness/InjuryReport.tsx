@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import BodyMapSelector from './BodyMapSelector';
@@ -54,7 +53,7 @@ const toggleMulti = (arr, value) => arr.includes(value) ? arr.filter(v => v !== 
 
 // ─── Reusable pill button row ───────────────────────────────────────────────
 
-const PillRow = ({ options, value, onChange, colorMap }) => (
+const PillRow = ({ options, value, onChange, colorMap }: { options: readonly any[]; value: any; onChange: (v: any) => void; colorMap?: Record<string, string> }) => (
     <div className="flex flex-wrap gap-2">
         {options.map(opt => {
             const label = typeof opt === 'string' ? opt : opt.label;

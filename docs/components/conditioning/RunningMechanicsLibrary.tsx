@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
 import { useAppState } from '../../context/AppStateContext';

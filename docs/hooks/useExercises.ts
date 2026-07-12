@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useUserProfile } from './useUserProfile';
@@ -14,7 +13,7 @@ export interface Exercise {
   categories: string[];
   equipment: string[] | null;
   video_url: string | null;
-  tracking_type: string | null;
+  tracking_type?: string | null;
   tags: string[] | null;
   images: string[] | null;        // up to 4 public URLs from exercise-images bucket
   safety_cues: string | null;     // safety warnings + coaching cues (renamed from VCP "Cautions")
@@ -24,6 +23,9 @@ export interface Exercise {
     alternating?: boolean;
     movementPattern?: string | null;
     mechanics?: string | null;
+    forceType?: string | null;
+    cnsDemand?: string | null;
+    difficulty?: string | null;
     longVideoUrl?: string | null;
   } | null;
   created_at: string;

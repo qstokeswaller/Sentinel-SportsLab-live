@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SiteFooter — shared public-facing footer for landing, legal, and contact pages.
  *

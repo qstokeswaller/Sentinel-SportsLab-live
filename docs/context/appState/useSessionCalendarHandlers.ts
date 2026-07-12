@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from AppStateContext.tsx (restructure Phase 3,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Session + calendar-event handlers (CRUD, scheduling, custom event types).
 // State stays in the provider; this hook receives it as deps and returns the
@@ -231,7 +230,7 @@ export const useSessionCalendarHandlers = ({
     // drag-to-copy path uses it so the copy shows a single "Event copied" toast
     // instead of two (previously every copy fired both → "do 4 copies, get 8
     // notifications" from the demo feedback).
-    const handleAddCalendarEvent = async (eventData, options = {}) => {
+    const handleAddCalendarEvent = async (eventData, options: { silent?: boolean } = {}) => {
         const gen = addEventModalGenRef.current; // snapshot generation before async work
         try {
             const result = await DatabaseService.createCalendarEvent(eventData);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Shared exercise-row primitives used by BOTH the Packets builder and the Programs builder. ──
 // Keeping these in one place ensures the two pages stay in lock-step for dropdown styling,
 // intensity pill UX, and display-options toggles. CustomSelect is the platform dropdown.

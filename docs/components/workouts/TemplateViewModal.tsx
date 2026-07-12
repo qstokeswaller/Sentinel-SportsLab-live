@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, DumbbellIcon, Share2Icon, ExternalLink, Weight, AlertTriangleIcon } from 'lucide-react';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, CheckCircle2, Share2, Link2, XIcon, Clock } from 'lucide-react';
 

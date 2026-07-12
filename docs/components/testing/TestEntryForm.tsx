@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { SaveIcon, CalculatorIcon, InfoIcon, PaperclipIcon, FileTextIcon, XIcon } from 'lucide-react';
 import type { TestDefinition, TestField } from '../../utils/testRegistry';

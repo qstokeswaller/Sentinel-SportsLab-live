@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * FIFA-Aligned Weekly Deep Check Form (Tier 2)
  *
@@ -295,7 +294,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     // Render helpers
     // ═══════════════════════════════════════════════════════════════════
 
-    const OptionButton = ({ value, label, desc, isSelected, onClick, color = 'slate' }) => {
+    const OptionButton = ({ value, label, desc, isSelected, onClick, color = 'slate' }: { value: string; label: string; desc?: string; isSelected: boolean; onClick: () => void; color?: string }) => {
         const colorMap = {
             emerald: { sel: 'bg-emerald-500 border-emerald-500 text-white shadow-lg scale-[1.02]', un: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800/50' },
             lime: { sel: 'bg-lime-500 border-lime-500 text-white shadow-lg scale-[1.02]', un: 'bg-lime-50 border-lime-200' },
@@ -724,7 +723,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                 )}
                 <div className="flex items-center gap-3">
                     {currentStep > 0 && (
-                        <button onClick={handleBack} className="p-3 bg-slate-100 text-slate-500 rounded-xl active:scale-95 transition-all">
+                        <button aria-label="Go back" onClick={handleBack} className="p-3 bg-slate-100 text-slate-500 rounded-xl active:scale-95 transition-all">
                             <ChevronLeft size={20} />
                         </button>
                     )}

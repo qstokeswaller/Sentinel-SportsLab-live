@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Performance Intelligence Engine
  *
@@ -341,7 +340,7 @@ export function buildAthleteDataProfile(
     // ── Assessment domains ──
     const athleteAssessments = (assessments || []).filter(a =>
         (a.athlete_id === athleteId || a.athleteId === athleteId) && onOrBefore(a.date)
-    ).sort((a, b) => new Date(b.date) - new Date(a.date));
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const assessmentsByType: DataProfile['assessmentsByType'] = {};
     const seenTypes = new Set();

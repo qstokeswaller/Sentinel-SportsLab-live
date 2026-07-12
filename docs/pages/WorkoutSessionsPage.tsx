@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
@@ -127,7 +126,7 @@ export const WorkoutSessionsPage = () => {
     }, [scheduledSessions, assignedTargetFilter]);
 
     const { results: searchedTemplates, hasFuzzyResults, suggestions } = useMemo(
-        () => fuzzySearch(workoutTemplates, search, (t) => [t.name, t.trainingPhase || '', t.load || ''].join(' '), (t) => t.name),
+        () => fuzzySearch(workoutTemplates as any[], search, (t) => [t.name, t.trainingPhase || '', t.load || ''].join(' '), (t) => t.name),
         [workoutTemplates, search]
     );
     // Per-template assignment summary — drives Time-window + Target filters on the Assigned tab.

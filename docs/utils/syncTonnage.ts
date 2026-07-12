@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Tonnage re-sync helpers ───────────────────────────────────────────────
 // Called after a packet/program is edited so future-dated tonnage rows
 // reflect the latest prescription. Past-dated rows are preserved per the

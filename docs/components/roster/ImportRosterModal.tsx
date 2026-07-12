@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import { Upload, X, ChevronRight, CheckCircle2, AlertTriangle, FileSpreadsheet, Users } from 'lucide-react';

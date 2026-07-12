@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
 import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { ACWR_UTILS, ACWR_METRIC_TYPES } from '../../utils/constants';
@@ -114,7 +113,7 @@ export const ScenarioModellingTerminal = ({
                     targetRatio:   row.target_ratio,
                     projectionDays:row.projection_days,
                     mode:          row.mode,
-                    pinnedCount:   (row.pinned_days || []).length,
+                    pinnedCount:   ((row.pinned_days as any[]) || []).length,
                     color:         SCENARIO_COLORS[i % 3],
                     dbId:          row.id,
                 })));
@@ -223,7 +222,7 @@ export const ScenarioModellingTerminal = ({
                 if (!evt.date) continue;
                 const evtDate = new Date(evt.date);
                 evtDate.setHours(0, 0, 0, 0);
-                const dayOffset = Math.round((evtDate - today) / 86400000);
+                const dayOffset = Math.round((evtDate.getTime() - today.getTime()) / 86400000);
                 if (dayOffset >= 1 && dayOffset <= projectionDays) {
                     results.push({ ...evt, dayOffset, planName: plan.name });
                 }
@@ -302,7 +301,7 @@ export const ScenarioModellingTerminal = ({
             };
             const { data, error } = await supabase
                 .from('analytics_scenarios')
-                .insert(row)
+                .insert(row as any)
                 .select()
                 .single();
             if (error) throw error;

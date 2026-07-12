@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // Power × Resistance × Cadence tables — sourced verbatim from the official
 // Wattbike support article:

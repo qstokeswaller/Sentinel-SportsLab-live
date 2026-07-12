@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from AppStateContext.tsx (restructure Phase 3,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Team + athlete handlers (add/update/delete team & athlete, open profile).
 // NOTE: receives initData as a dep — the hook call in the provider sits AFTER

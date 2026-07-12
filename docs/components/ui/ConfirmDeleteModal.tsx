@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { AlertTriangleIcon } from 'lucide-react';
 
@@ -18,7 +17,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+        <div role="dialog" aria-modal="true" aria-label="Confirm delete" className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-150">
             <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl border border-slate-100 dark:border-[#243A58] p-7 w-full max-w-sm animate-in zoom-in-95 duration-200">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center shrink-0">

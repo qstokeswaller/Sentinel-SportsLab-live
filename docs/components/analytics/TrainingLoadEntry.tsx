@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
 import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
@@ -339,7 +338,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
-                                                    {initials}
+                                                    {(player.name || '').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <span className="text-sm font-medium text-slate-400 truncate block">{player.name}</span>

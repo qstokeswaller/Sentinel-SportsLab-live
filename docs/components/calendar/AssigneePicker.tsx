@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { Users as UsersIcon, User as UserIcon, X as XIcon } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';

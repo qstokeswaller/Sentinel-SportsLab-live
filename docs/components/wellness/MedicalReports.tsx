@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
@@ -240,7 +239,7 @@ const MedicalReports: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <button onClick={resetModal} className="p-2 hover:bg-white dark:hover:bg-[#1A2D48] rounded-lg transition-colors"><XIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" /></button>
+                        <button aria-label="Close" onClick={resetModal} className="p-2 hover:bg-white dark:hover:bg-[#1A2D48] rounded-lg transition-colors"><XIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" /></button>
                     </div>
 
                     {/* Body */}
@@ -652,7 +651,7 @@ const MedicalReports: React.FC = () => {
         const timeline = [
             ...filteredReports.map(r => ({ ...r, timelineType: 'medical' })),
             ...filteredOptOuts.map(o => ({ ...o, timelineType: 'optout', title: o.reason, description: o.notes, targetName: allPlayers.find(p => p.id === o.athleteId)?.name || 'Unknown' }))
-        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         // Skeleton (Phase 2): medical documents are background-tier — mirror the
         // Medical Hub layout (action bar + document timeline cards)

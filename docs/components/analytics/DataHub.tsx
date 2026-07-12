@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Athlete Data Hub ─────────────────────────────────────────────────────
 // Container layout: consolidated banner on top, contained-scroll table that
 // fills the viewport. Page itself never scrolls in single-table mode; the
@@ -323,7 +322,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     }, [teams, wellnessResponses, calculateACWR, injuryReports, scheduledSessions, loadRecords, maxHistory, gpsData, exerciseFullMap, plannedTonnageLog]);
 
     // ── Team filter options ──
-    const teamOptions = useMemo(() => ['All', ...new Set((teams || []).map(t => t.name))], [teams]);
+    const teamOptions = useMemo(() => ['All', ...new Set<string>((teams || []).map((t: any): string => t.name))], [teams]);
 
     // ── Per-column quick filters (set of allowed values; empty set = no filter) ──
     // Keys are column.key; values are the set of cell-value strings the user has ticked.

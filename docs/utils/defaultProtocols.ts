@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AUTO-GENERATED from data/complete-protocols-all-67-tests.md
 // Run: node scripts/generate-default-protocols.mjs
 // Do not edit manually — edit the source markdown and regenerate.

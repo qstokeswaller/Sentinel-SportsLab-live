@@ -7,7 +7,7 @@ import {
     X, Plus, Link2, Copy, Share2, Clock, Zap,
 } from 'lucide-react';
 import { DatabaseService } from '../../../services/databaseService';
-import { localDateStr } from './shared';
+import { localDateStr, WellnessViewMode } from './shared';
 
 interface ShareSession { id: string; template_id: string; shared_at: string }
 
@@ -24,7 +24,7 @@ interface Props {
     setCopied: (b: boolean) => void;
     sharingInProgress: boolean;
     setSharingInProgress: (b: boolean) => void;
-    setViewMode: (m: string) => void;
+    setViewMode: (m: WellnessViewMode) => void;
 }
 
 export const WellnessSharePanel: React.FC<Props> = ({

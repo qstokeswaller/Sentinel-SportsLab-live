@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from AppStateContext.tsx (restructure Phase 3,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // All periodization-plan CRUD handlers (plans, phases, blocks, weeks, sessions,
 // targets, events). State stays in the provider; this hook receives it as deps
@@ -112,7 +111,7 @@ export const usePlanHandlers = ({
         const startDate = new Date(blockData.startDate);
         const msPerWeek = 7 * 24 * 60 * 60 * 1000;
         const weekCount = blockData.endDate
-            ? Math.max(1, Math.ceil((new Date(blockData.endDate) - startDate) / msPerWeek))
+            ? Math.max(1, Math.ceil((new Date(blockData.endDate).getTime() - startDate.getTime()) / msPerWeek))
             : 1;
         const weeks = Array.from({ length: weekCount }, (_, i) => {
             const wStart = new Date(startDate.getTime() + i * msPerWeek);

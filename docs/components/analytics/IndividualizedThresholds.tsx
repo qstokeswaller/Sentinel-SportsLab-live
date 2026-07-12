@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Individualized Load Tolerance Thresholds
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ═══════════════════════════════════════════════════════════════════════
 // UnmatchedAthleteResolver — Universal modal for resolving unknown names
 //

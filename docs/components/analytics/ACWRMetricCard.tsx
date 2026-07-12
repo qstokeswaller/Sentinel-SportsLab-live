@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo } from 'react';
 import { ActivityIcon } from 'lucide-react';
 import { ACWR_UTILS } from '../../utils/constants';
@@ -8,7 +7,7 @@ export const ACWRMetricCard = ({ athleteId, loadRecords }) => {
         const athleteSessions = loadRecords.filter(r => r.athleteId === athleteId);
         if (athleteSessions.length < 14) return 0;
 
-        const sorted = [...athleteSessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const sorted = [...athleteSessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const acute = sorted.slice(0, 7).reduce((acc, r) => acc + (r.sRPE || 0), 0);
         const chronic = sorted.slice(0, 28).reduce((acc, r) => acc + (r.sRPE || 0), 0) / 4;
 

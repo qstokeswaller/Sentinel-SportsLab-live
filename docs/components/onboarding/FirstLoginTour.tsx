@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { driver } from 'driver.js';
@@ -195,7 +194,7 @@ export const FirstLoginTour: React.FC = () => {
         if (driverRef.current) return;
         injectTourStyles();
 
-        const steps = [
+        const steps: any[] = [
             {
                 popover: {
                     title: 'Welcome to Sentinel SportsLab',

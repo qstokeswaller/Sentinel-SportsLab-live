@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useRef, useState } from 'react';
 import { CameraIcon, Loader2Icon } from 'lucide-react';
 import { DatabaseService } from '../../services/databaseService';

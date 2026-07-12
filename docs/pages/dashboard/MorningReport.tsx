@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from DashboardPage.tsx (monolith restructure,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Morning Report: at-risk athletes, flagged list, wellness summary rows.
 import React, { useState, useMemo, useEffect } from 'react';

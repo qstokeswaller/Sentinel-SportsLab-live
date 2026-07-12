@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { METRIC_CATALOGUE, EVENT_TYPE_COLORS, formatDateShort } from '../../utils/periodizationUtils';
@@ -12,7 +11,7 @@ import {
 
 function daysBetweenGantt(a, b) {
     if (!a || !b) return 0;
-    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+    return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 
 function getGanttWeeks(startStr, endStr) {
@@ -70,7 +69,7 @@ function GanttPopup({ popup, onClose }) {
                     <p className="text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{item.label || item.name}</p>
                     <p className="text-[9px] text-slate-400 dark:text-[#CBD5E1] capitalize">{kind}</p>
                 </div>
-                <button onClick={onClose} className="shrink-0 p-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                <button aria-label="Close panel" onClick={onClose} className="shrink-0 p-0.5 rounded hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
                     <ChevronRight size={11} className="text-slate-400" />
                 </button>
             </div>

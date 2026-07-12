@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — Data-layer typing deferred: Supabase Row<->domain casts + overloads. Needs the dedicated data-layer typing pass.
 // Hooks for the saved-sheets library — mirrors useWorkoutPrograms / useWorkoutTemplates pattern.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';

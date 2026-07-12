@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WellnessHeatmap — Team × Days matrix
  *

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { DatabaseService } from '../services/databaseService';

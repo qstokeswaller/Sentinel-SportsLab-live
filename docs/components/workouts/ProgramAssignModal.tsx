@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Assign a saved Program to a team or individual on a start date.
 // Creates a scheduled_session per non-rest day, dating Day N to startDate + N-1.
 import React, { useMemo, useState } from 'react';

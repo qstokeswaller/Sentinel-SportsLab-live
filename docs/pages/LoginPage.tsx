@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LoginPage — split-panel auth with sliding indigo overlay.
  *

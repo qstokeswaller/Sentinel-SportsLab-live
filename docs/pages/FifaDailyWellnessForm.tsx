@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * FIFA-Aligned Daily Wellness Form (Tier 1)
  *
@@ -625,7 +624,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                                     }`}>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-lg">{a.name}</span>
-                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} handled inline />}
+                                        {selectedAthleteId === a.id && <CheckCircle2 size={24} />}
                                     </div>
                                 </button>
                             ))}
@@ -723,7 +722,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                 )}
                 <div className="flex items-center gap-3">
                     {currentStep > 0 && (
-                        <button onClick={handleBack}
+                        <button aria-label="Go back" onClick={handleBack}
                             className="p-3 bg-slate-100 text-slate-500 rounded-xl active:scale-95 transition-all">
                             <ChevronLeft size={20} />
                         </button>

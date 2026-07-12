@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useAppState } from '../context/AppStateContext';
 import { ACWRMetricCard } from '../components/analytics/ACWRMetricCard';
@@ -869,7 +868,7 @@ export const ReportingHubPage = () => {
         const timeline = [
             ...filteredReports.map(r => ({ ...r, timelineType: 'medical' })),
             ...filteredOptOuts.map(o => ({ ...o, timelineType: 'optout', title: o.reason, description: o.notes, targetName: teams.flatMap(t => t.players).find(p => p.id === o.athleteId)?.name || 'Unknown' }))
-        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">

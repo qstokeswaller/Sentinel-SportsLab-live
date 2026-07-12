@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from SettingsPage.tsx (monolith restructure,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CollapsibleSection, inputCls, inputErrorCls, labelCls } from './shared';

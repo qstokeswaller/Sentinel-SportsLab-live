@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target, ChevronRight } from 'lucide-react';
@@ -6,7 +5,7 @@ import { formatDateShort, STANDARD_MODALITIES, isStandardModality, getModalityDe
 
 function daysBetween(a, b) {
     if (!a || !b) return 0;
-    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+    return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 
 function getWeeks(startStr, endStr) {
@@ -128,7 +127,7 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
         return teams.flatMap(t => t.players || []).find(p => p.id === plan.targetId)?.name || 'Unknown Athlete';
     };
 
-    const addModality = (preset) => {
+    const addModality = (preset?: string) => {
         const m = (preset || newModality).trim();
         if (!m) return;
         const current = plan.modalities || [];

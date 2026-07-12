@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
@@ -173,6 +172,11 @@ export const WorkoutPacketsPage = () => {
             blockId: string;
             phaseId: string;
             planId: string;
+            // Back-navigation coords sent by MicrocyclesTab.buildAssignCtx
+            returnWeekStart?: string;
+            returnSelectedDate?: string;
+            returnPhaseId?: string;
+            returnBlockId?: string;
         };
     } | null;
 
@@ -738,7 +742,7 @@ export const WorkoutPacketsPage = () => {
             // Match exercise to sheet column by name (sheet columns use canonical 1RM exercise names)
             const overrides = sheetOverrides[r.exerciseName]
                 || Object.entries(sheetOverrides).find(([k]) => r.exerciseName.toLowerCase().includes(k.toLowerCase()))?.[1];
-            if (overrides) base.athlete_weight_overrides = overrides;
+            if (overrides) (base as any).athlete_weight_overrides = overrides;
             return base;
         };
 

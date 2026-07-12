@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from DashboardPage.tsx (monolith restructure,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 
@@ -29,7 +28,7 @@ export const EditEventModal: React.FC<any> = ({
                         const INPUT = 'w-full bg-slate-50 dark:bg-[#1A2D48] border border-slate-200 dark:border-[#243A58] text-slate-900 dark:text-[#E2E8F0] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors';
                         const LABEL = 'text-xs font-medium text-slate-600 dark:text-[#CBD5E1] block mb-1.5';
                         return (
-                            <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingEvent(null)}>
+                            <div role="dialog" aria-modal="true" aria-label="Edit event" className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setEditingEvent(null)}>
                                 <div className="bg-white dark:bg-[#1A2D48] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] w-full max-w-lg animate-in zoom-in-95 fade-in duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#243A58]">

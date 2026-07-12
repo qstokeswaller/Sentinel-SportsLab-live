@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, {
     useState, useRef, useEffect, useLayoutEffect,
     useCallback, Children, isValidElement,
@@ -31,7 +30,7 @@ export interface CustomSelectProps {
     prefixIcon?: React.ReactNode;
     /** Short text label rendered before the value, separated by a divider */
     prefixLabel?: string;
-    minWidth?: string;
+    minWidth?: string | number;
     id?: string;
     name?: string;
 }

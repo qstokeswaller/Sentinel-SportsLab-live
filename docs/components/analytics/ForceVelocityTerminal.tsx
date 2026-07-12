@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Force-Velocity Profile Terminal
  *

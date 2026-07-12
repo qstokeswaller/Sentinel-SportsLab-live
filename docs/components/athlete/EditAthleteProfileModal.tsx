@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { XIcon } from 'lucide-react';
 import { AthleteAvatar } from '../roster/AthleteAvatar';

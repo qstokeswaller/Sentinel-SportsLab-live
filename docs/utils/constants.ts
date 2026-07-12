@@ -1,4 +1,3 @@
-// @ts-nocheck
 export const BORG_RPE_SCALE: Record<number, { label: string; color: string }> = {
             0: { label: 'Nothing at all',  color: 'text-slate-400' },
             1: { label: 'Rest',            color: 'text-emerald-400' },
@@ -34,7 +33,7 @@ export const ACWR_UTILS = {
              * @param {Array} dates - Corresponding date strings for each load entry
              * @returns {Number} Calculated EWMA
              */
-            calculateEWMA: (loads, N, freezeRestDays = false, restDays = new Set(), dates = []) => {
+            calculateEWMA: (loads, N, freezeRestDays = false, restDays = new Set<string>(), dates = []) => {
                 if (!loads || loads.length === 0) return 0;
                 const lambda = 2 / (N + 1);
                 let ewma = loads[0];
@@ -53,11 +52,11 @@ export const ACWR_UTILS = {
              * @param {String} valueField - Field to sum ('value', 'sRPE', etc.)
              * @returns {{ dates: string[], loads: number[], restDays: Set<string> }}
              */
-            buildDailyLoads: (records, valueField = 'value', additionalRestDays = new Set()) => {
-                if (!records || records.length === 0) return { dates: [], loads: [], restDays: new Set() };
-                const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+            buildDailyLoads: (records, valueField = 'value', additionalRestDays = new Set<string>()) => {
+                if (!records || records.length === 0) return { dates: [], loads: [], restDays: new Set<string>() };
+                const sorted = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                 const dailyMap = {};
-                const restDaySet = new Set();
+                const restDaySet = new Set<string>();
                 // Merge in coach-marked rest days (from acwrExclusions.restDays)
                 additionalRestDays.forEach(d => restDaySet.add(d));
                 sorted.forEach(r => {
@@ -90,7 +89,7 @@ export const ACWR_UTILS = {
              * Calculates ACWR for a specific athlete using any metric
              * Supports both legacy sRPE records and new training_loads records
              */
-            calculateAthleteACWR: (records, athleteId, options = {}) => {
+            calculateAthleteACWR: (records, athleteId, options: { metricType?: string; acuteN?: number; chronicN?: number; freezeRestDays?: boolean; recalcAnchorDate?: string; additionalRestDays?: Set<string>; minDataDays?: number; referenceDate?: string } = {}) => {
                 const {
                     metricType, acuteN = 7, chronicN = 28, freezeRestDays = false,
                     recalcAnchorDate,   // string — ignore all records before this date
@@ -102,7 +101,7 @@ export const ACWR_UTILS = {
                 const EMPTY = (extra = {}) => ({
                     acute: 0, chronic: 0, ratio: 0, dates: [], loads: [],
                     acuteHistory: [], chronicHistory: [], ratioHistory: [], phases: [],
-                    restDays: new Set(), dataDays: 0, gatheringPhase: true,
+                    restDays: new Set<string>(), dataDays: 0, gatheringPhase: true,
                     gapDays: 0, gapStatus: 'none', lastDataDate: null,
                     ...extra,
                 });
@@ -118,7 +117,7 @@ export const ACWR_UTILS = {
                 if (athleteRecords.length === 0) return EMPTY();
 
                 const valueField = metricType ? 'value' : 'sRPE';
-                const extraRestDays = additionalRestDays instanceof Set ? additionalRestDays : new Set(additionalRestDays || []);
+                const extraRestDays = additionalRestDays instanceof Set ? additionalRestDays : new Set<string>((additionalRestDays as any) || []);
                 const { dates, loads, restDays } = ACWR_UTILS.buildDailyLoads(athleteRecords, valueField, extraRestDays);
 
                 if (loads.length === 0) return EMPTY();
@@ -196,13 +195,13 @@ export const ACWR_UTILS = {
             /**
              * Calculates team aggregate ACWR (mean of all athletes' daily loads)
              */
-            calculateTeamACWR: (records, athleteIds, options = {}) => {
+            calculateTeamACWR: (records, athleteIds, options: { metricType?: string; acuteN?: number; chronicN?: number; freezeRestDays?: boolean; recalcAnchorDate?: string; additionalRestDays?: Set<string>; minDataDays?: number; referenceDate?: string } = {}) => {
                 const { metricType, acuteN = 7, chronicN = 28, freezeRestDays = false, recalcAnchorDate, minDataDays = 7, referenceDate } = options;
 
                 // Build per-athlete daily load maps + collect rest days
                 let filtered = metricType ? records.filter(r => r.metric_type === metricType) : records;
                 if (recalcAnchorDate) filtered = filtered.filter(r => (r.date || '').split('T')[0] >= recalcAnchorDate);
-                const allDates = new Set();
+                const allDates = new Set<string>();
                 const athleteMaps = {};
                 const allRestDays = new Set();
                 // athleteContributions[date] = count of athletes who actually had data (non-zero)
@@ -228,7 +227,7 @@ export const ACWR_UTILS = {
                 if (sortedDates.length === 0) return {
                     acute: 0, chronic: 0, ratio: 0, dates: [], loads: [],
                     acuteHistory: [], chronicHistory: [], ratioHistory: [], phases: [],
-                    restDays: new Set(), dataDays: 0, gatheringPhase: true,
+                    restDays: new Set<string>(), dataDays: 0, gatheringPhase: true,
                     gapDays: 0, gapStatus: 'none', lastDataDate: null,
                 };
 

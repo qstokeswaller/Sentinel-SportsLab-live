@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { X, Trash2, Trophy, FlaskConical, Star, Plane, Heart, Tent, Flag, Stethoscope, MapPin, AlignLeft, Calendar } from 'lucide-react';

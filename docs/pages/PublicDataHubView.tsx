@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Public Data Hub snapshot viewer ─────────────────────────────────────
 // Read-only render of a frozen Data Hub view. Recipients hit this route
 // without an account; the snapshot JSON was pre-resolved by the scientist's

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -377,7 +376,7 @@ const ACWRMonitoringHub: React.FC = () => {
                 (r.athleteId === player.id || r.athlete_id === player.id) && r.metric_type === teamMetricType
             );
             const lastSession = athleteRecords.length > 0
-                ? [...athleteRecords].sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date
+                ? [...athleteRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.date
                 : null;
 
             // Days without load data (for non-excluded players only)
@@ -758,7 +757,7 @@ const ACWRMonitoringHub: React.FC = () => {
             (r.athleteId === selectedAthleteId || r.athlete_id === selectedAthleteId) &&
             r.metric_type === teamMetricType
         );
-        const sortedLoad = [...athleteLoad].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const sortedLoad = [...athleteLoad].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const filteredLoad = sortedLoad.filter(r => r.date >= drilldownFrom && r.date <= drilldownTo);
 
@@ -999,13 +998,13 @@ const ACWRMonitoringHub: React.FC = () => {
                     {/* Week nav header */}
                     <div className="px-5 py-3 border-b border-slate-100 dark:border-[#1A2D48] flex flex-wrap items-center gap-3 justify-between">
                         <div className="flex items-center gap-2">
-                            <button onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
+                            <button aria-label="Previous week" onClick={goWeekBack} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
                                 <ChevronLeftIcon size={14} />
                             </button>
                             <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-[160px] text-center">
                                 {fmtShort(weekDays[0])} — {fmtShort(weekDays[6])}
                             </span>
-                            <button onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
+                            <button aria-label="Next week" onClick={goWeekForward} className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] transition-colors">
                                 <ChevronRightIcon size={14} />
                             </button>
                         </div>

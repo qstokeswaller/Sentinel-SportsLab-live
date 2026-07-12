@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, LayersIcon, Share2Icon, ExternalLink, Weight, MoonIcon } from 'lucide-react';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
@@ -145,7 +144,7 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
   // Pre-built name→info map for fast fallback when exercise IDs don't match
   const exerciseNameMap = React.useMemo(() => {
     const map: Record<string, any> = {};
-    for (const info of Object.values(exerciseFullMap || {})) {
+    for (const info of Object.values(exerciseFullMap || {}) as any[]) {
       if (info.name) map[info.name.toLowerCase()] = info;
     }
     return map;

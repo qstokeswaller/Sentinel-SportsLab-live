@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {

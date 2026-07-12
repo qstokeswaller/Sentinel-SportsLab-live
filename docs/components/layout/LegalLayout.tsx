@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * LegalLayout — shared chrome for all policy pages (Privacy, Terms, Cookies,
  * Data Processing). Provides: top nav with back-link, page title, last-updated
@@ -14,7 +13,7 @@ import SiteFooter from './SiteFooter';
 interface Props {
     title: string;
     lastUpdated: string;
-    summary?: string;
+    summary?: React.ReactNode;
     children: React.ReactNode;
 }
 

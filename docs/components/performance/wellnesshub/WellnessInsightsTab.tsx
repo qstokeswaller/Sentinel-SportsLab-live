@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from WellnessHub.tsx (restructure step 3,
 // 2026-07-12). Typing this legacy body is Phase 5 work; this step is pure movement.
 // Insights tab: metric picker + 9 chart renderers (bar/avg/distribution/trend/
 // histogram/donut/count/comparison) for daily + weekly wellness responses.

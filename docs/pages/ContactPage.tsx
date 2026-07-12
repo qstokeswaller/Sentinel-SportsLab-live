@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactPage — public contact form. Submits via /api/contact (Vercel serverless
  * function → Resend → support@sentinelsportslab.com). Reply-To is set to the

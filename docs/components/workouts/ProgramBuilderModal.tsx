@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   PlusIcon, Trash2Icon, ChevronDownIcon, SearchIcon,
@@ -64,6 +63,8 @@ interface LocalExRow {
 }
 
 interface LocalDay {
+  // Present when the day was hydrated from an existing DB program row
+  id?: string;
   tempId: string;
   name: string;
   instructions: string;

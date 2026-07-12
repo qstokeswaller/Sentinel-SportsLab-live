@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { X, Trash2, Plus } from 'lucide-react';
@@ -260,7 +259,7 @@ export const AddBlockModal = () => {
                                 onChange={e => setCustomModInput(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomMod(); } }}
                             />
-                            <button type="button" onClick={addCustomMod}
+                            <button aria-label="Add custom modality" type="button" onClick={addCustomMod}
                                 disabled={!customModInput.trim()}
                                 className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40">
                                 <Plus size={12} />

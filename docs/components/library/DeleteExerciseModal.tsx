@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { AlertTriangleIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { useDeleteExercise } from '../../hooks/useExercises';

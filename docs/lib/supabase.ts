@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
@@ -16,6 +15,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     // Bypass the Web Locks API — prevents "lock timed out" errors when multiple
     // tabs are open or the browser lock isn't released cleanly.
-    lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+    lock: async <R,>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => fn(),
   },
 });

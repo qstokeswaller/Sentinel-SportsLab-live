@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ── Planned tonnage compute ─────────────────────────────────────────────
 // Given a set of prescription rows (warmup/workout/cooldown for a packet, or
 // a single program day's exercises), the resolved athlete list, and optional

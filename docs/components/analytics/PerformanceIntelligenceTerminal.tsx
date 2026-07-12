@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo, useState } from 'react';
 import {
     BrainIcon, TrendingUpIcon, TrendingDownIcon, MinusIcon,
@@ -103,7 +102,7 @@ export const PerformanceIntelligenceTerminal = ({
     const teamInsights = useMemo(() => {
         if (!isTeam) return [];
         const all = teamProfiles.flatMap(p => p.insights);
-        const titleCounts = {};
+        const titleCounts: Record<string, number> = {};
         for (const ins of all) { titleCounts[ins.title] = (titleCounts[ins.title] || 0) + 1; }
         const teamWide = [];
         const threshold = teamProfiles.length < 5 ? Math.max(1, Math.ceil(teamProfiles.length * 0.3)) : Math.ceil(teamProfiles.length * 0.3);
@@ -401,7 +400,7 @@ export const PerformanceIntelligenceTerminal = ({
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">Assessment Profile</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {Object.entries(p.assessmentsByType).map(([type, data]) => {
+                    {Object.entries(p.assessmentsByType).map(([type, data]: [string, any]) => {
                         const m = data.latest?.metrics || {};
                         const pm = data.previous?.metrics || {};
                         const val = Number(m.value) || Number(m.weight) || Number(m.relativeStrength) || null;

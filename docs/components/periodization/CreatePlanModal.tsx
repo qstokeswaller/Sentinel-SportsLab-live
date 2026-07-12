@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { X, Users, User, CalendarDays, Plus } from 'lucide-react';
@@ -125,7 +124,7 @@ export const CreatePlanModal = () => {
                         <div className="flex gap-2">
                             <input className={`${INPUT} flex-1`} placeholder="Add modality..." value={newModality}
                                 onChange={e => setNewModality(e.target.value)} onKeyDown={e => e.key === 'Enter' && addModality()} />
-                            <button onClick={addModality} className="px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] rounded-lg text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
+                            <button aria-label="Add modality" onClick={addModality} className="px-3 py-2 bg-slate-100 dark:bg-[#1A2D48] rounded-lg text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
                                 <Plus size={14} />
                             </button>
                         </div>

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { XIcon, PlayCircleIcon, AlertTriangleIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';

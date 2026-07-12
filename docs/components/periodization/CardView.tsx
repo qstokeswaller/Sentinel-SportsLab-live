@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
@@ -127,7 +126,7 @@ export const CardView = ({ plan }) => {
                                         onKeyDown={e => { if (e.key === 'Enter') saveWeekEdit(); if (e.key === 'Escape') setEditingWeekId(null); }}
                                         className="text-base font-bold text-slate-900 dark:text-[#E2E8F0] bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-0.5 outline-none focus:border-indigo-400 flex-1"
                                         placeholder="e.g. Loading, Deload, Peak..." />
-                                    <button onClick={saveWeekEdit} className="p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"><Check size={14} /></button>
+                                    <button aria-label="Save week" onClick={saveWeekEdit} className="p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"><Check size={14} /></button>
                                     <button onClick={() => setEditingWeekId(null)} aria-label="Close" className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]"><X size={14} /></button>
                                 </div>
                             ) : (

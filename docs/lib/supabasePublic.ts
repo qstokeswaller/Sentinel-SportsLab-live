@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
@@ -37,6 +36,6 @@ export const supabasePublic = createClient<Database>(supabaseUrl, supabaseAnonKe
     autoRefreshToken: false,
     detectSessionInUrl: false,
     storageKey: 'sb-public-noauth',
-    lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+    lock: async <R,>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => fn(),
   },
 });

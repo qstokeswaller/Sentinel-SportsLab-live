@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AcceptInvitePage — landing page for /accept-invite/:token magic links.
  *

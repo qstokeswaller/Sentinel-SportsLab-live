@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ─── Test Registry ─────────────────────────────────────────────────
 // Data-driven definitions for all sports science tests.
 // Each test is a config object; the generic TestEntryForm renders any test.
@@ -339,11 +338,6 @@ const musculoskeletalTests: TestDefinition[] = [
       { key: 'step_down', label: 'Step Down', type: 'number', min: 1, max: 3 },
       { key: 'twist', label: 'Twist', type: 'number', min: 1, max: 3 },
     ],
-    computeTotal: (vals: Record<string, any>) =>
-      ['overhead_squat', 'single_leg_squat', 'push_up', 'lunge', 'bend_and_lift', 'step_down', 'twist']
-        .reduce((s, k) => s + (Number(vals[k]) || 0), 0),
-    maxTotal: 21,
-    norms: { elite: 19, good: 16, average: 13, belowAverage: 10 },
     estimatedDuration: '10 min',
   },
   // 9. Y-Balance Test

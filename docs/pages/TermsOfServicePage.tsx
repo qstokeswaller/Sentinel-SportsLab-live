@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * TermsOfServicePage — platform terms governing access to and use of
  * Sentinel SportsLab. Covers: acceptance, accounts, acceptable use, the

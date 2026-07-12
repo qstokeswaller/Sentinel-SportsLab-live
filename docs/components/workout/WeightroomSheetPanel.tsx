@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { useCreateSheet, useUpdateSheet } from '../../hooks/useWeightroomSheets';

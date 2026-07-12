@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { CalendarIcon, UserIcon, Trash2Icon } from 'lucide-react';
 import type { TestDefinition } from '../../utils/testRegistry';

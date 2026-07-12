@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { ActivityIcon, TrendingUpIcon, AlertCircleIcon, ZapIcon } from 'lucide-react';
 

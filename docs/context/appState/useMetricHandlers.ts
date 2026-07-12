@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from AppStateContext.tsx (restructure Phase 3,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // KPI-metric handlers: import commit, save (typed + generic), delete + undo.
 import { DatabaseService } from '../../services/databaseService';
@@ -22,13 +21,6 @@ export const useMetricHandlers = ({
     showToast,
     teams,
 }: any) => {
-    // Legacy 1RM / DSI / RSI branches of handleSaveMetricWithType reference form
-    // state that was NEVER declared in the provider (pre-existing dead code —
-    // calling those types would have thrown ReferenceError in production too;
-    // the only UI caller uses type 'hamstring'). Declared undefined here so the
-    // guards (`if (!oneRmAthleteId ...) return showSaveStatus('error')`) fail
-    // safely instead of crashing. Remove the branches in Phase 5.
-    const dsiAthleteId = undefined, dsiBallistic = undefined, dsiCategory = undefined, dsiIsometric = undefined, dsiScore = undefined, oneRepMax = undefined, oneRmAthleteId = undefined, oneRmExerciseId = undefined, rsiAthleteId = undefined, rsiContactTime = undefined, rsiHeight = undefined, rsiScore = undefined;
     const handleCommitImport = () => {
         let successCount = 0;
         importStaging.forEach(item => {
@@ -47,19 +39,9 @@ export const useMetricHandlers = ({
         let data = null;
         let athleteId = null;
 
-        if (type === '1rm') {
-            if (!oneRmAthleteId || !oneRmExerciseId || !oneRepMax) return showSaveStatus('error');
-            athleteId = oneRmAthleteId;
-            data = { type: '1rm', exerciseId: oneRmExerciseId, value: oneRepMax };
-        } else if (type === 'dsi') {
-            if (!dsiAthleteId || !dsiScore) return showSaveStatus('error');
-            athleteId = dsiAthleteId;
-            data = { type: 'dsi', value: dsiScore, ballistic: dsiBallistic, isometric: dsiIsometric, category: dsiCategory.label };
-        } else if (type === 'rsi') {
-            if (!rsiAthleteId || !rsiScore) return showSaveStatus('error');
-            athleteId = rsiAthleteId;
-            data = { type: 'rsi', value: rsiScore, height: rsiHeight, contactTime: rsiContactTime };
-        } else if (type === 'hamstring') {
+        // 1RM / DSI / RSI branches removed (dead legacy code — their form state
+        // never existed; the only caller is HamstringPage with type 'hamstring').
+        if (type === 'hamstring') {
             const hamResults = calculateHamstringResults();
             if (!hamAthleteId || !hamResults) return showSaveStatus('error');
             athleteId = hamAthleteId;
@@ -171,7 +153,7 @@ export const useMetricHandlers = ({
                 if (p.id === athleteId) {
                     return {
                         ...p,
-                        performanceMetrics: [...(p.performanceMetrics || []), record].sort((a, b) => new Date(b.date) - new Date(a.date))
+                        performanceMetrics: [...(p.performanceMetrics || []), record].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     };
                 }
                 return p;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo } from 'react';
 import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { ACWR_UTILS } from '../../utils/constants';
@@ -37,7 +36,7 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
     const safeAthleteId = athlete?.id || '';
 
     const acwrResult = useMemo(() => {
-        if (!safeAthleteId) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [] };
+        if (!safeAthleteId) return { acute: 0, chronic: 0, ratio: 0, dates: [], loads: [], acuteHistory: [], chronicHistory: [], ratioHistory: [], restDays: new Set<string>() };
         return ACWR_UTILS.calculateAthleteACWR(loadRecords || [], safeAthleteId, acwrOptions);
     }, [loadRecords, safeAthleteId, acwrOptions]);
 

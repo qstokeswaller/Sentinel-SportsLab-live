@@ -1,13 +1,12 @@
-// @ts-nocheck
 import React from 'react';
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon, InfoIcon, ActivityIcon, HeartPulseIcon, ZapIcon } from 'lucide-react';
 
 export const BaselineTrendTerminal = ({ habitRecords, loadRecords, selectedAnalyticsAthleteId, subjectAthleteIds }) => {
-    const aggregateByDate = (data, fields) => {
+    const aggregateByDate = (data: any[], fields: string[]) => {
         const dates = [...new Set(data.map(r => r.date))].sort();
         return dates.map(date => {
             const daily = data.filter(r => r.date === date);
-            const obj = { date };
+            const obj: Record<string, any> = { date };
             fields.forEach(f => {
                 obj[f] = daily.reduce((acc, r) => acc + (r[f] || 0), 0) / (daily.length || 1);
             });

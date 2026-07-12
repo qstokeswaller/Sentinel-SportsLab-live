@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DatabaseService } from '../services/databaseService';
@@ -383,7 +382,7 @@ const PublicWorkoutView: React.FC = () => {
                 );
             }
             // Build the actual section order from the day's saved metadata
-            const presentSections = Array.from(new Set((d.exercises || []).map((e: any) => e.section).filter(Boolean)));
+            const presentSections = Array.from(new Set<string>((d.exercises || []).map((e: any): string => e.section).filter(Boolean)));
             const sectionOrder = resolveSectionOrder(d.section_order, presentSections);
             return (
                 <>

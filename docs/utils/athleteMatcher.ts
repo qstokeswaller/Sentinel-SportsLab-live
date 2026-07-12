@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ═══════════════════════════════════════════════════════════════════════
 // Athlete Name Matcher — shared fuzzy matching + unmatched detection
 // Used by all CSV import flows across the platform

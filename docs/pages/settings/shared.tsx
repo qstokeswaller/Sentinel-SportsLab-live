@@ -1,4 +1,3 @@
-// @ts-nocheck — shared Settings page pieces, moved verbatim from SettingsPage.tsx
 // (monolith restructure, 2026-07-12).
 import React from 'react';
 import { ChevronDownIcon } from 'lucide-react';

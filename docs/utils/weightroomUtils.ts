@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { WEIGHTROOM_1RM_EXERCISES } from './constants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CookiePolicyPage — describes the (minimal) cookies and browser-storage
  * mechanisms used by Sentinel SportsLab. Kept deliberately short because

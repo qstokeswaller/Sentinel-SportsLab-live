@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import type { NormativeConfig } from '../../utils/testRegistry';
 import { getNormBands } from '../../utils/testRegistry';

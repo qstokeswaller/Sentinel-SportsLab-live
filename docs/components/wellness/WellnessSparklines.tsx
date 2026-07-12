@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * WellnessSparklines — Individual athlete wellness metric trends
  *

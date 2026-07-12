@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
@@ -154,7 +153,7 @@ export const RosterPage = () => {
                             className="px-4 py-2.5 bg-slate-50/60 dark:bg-[#132338]/40 border-b border-slate-100 dark:border-[#1A2D48] flex items-center gap-2 group/team cursor-pointer select-none"
                             onClick={toggleCollapse}
                         >
-                            <button className="p-0.5 text-slate-400 dark:text-[#CBD5E1] transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                            <button aria-label="Toggle team details" className="p-0.5 text-slate-400 dark:text-[#CBD5E1] transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
                                 <ChevronDownIcon size={14} />
                             </button>
                             <ShieldIcon size={12} className="text-indigo-400" />

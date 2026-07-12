@@ -1,4 +1,3 @@
-// @ts-nocheck — moved verbatim from WellnessHub.tsx (restructure step 5,
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Main dashboard view: KPI strip, daily rundown, alerts, response list,
 // heatmap, compliance — hosts the Responses/Insights tab switch.

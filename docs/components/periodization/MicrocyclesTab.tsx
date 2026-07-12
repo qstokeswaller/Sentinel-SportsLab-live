@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../../context/AppStateContext';
@@ -52,7 +51,7 @@ function dayDate(weekStartStr, offset) {
 
 function daysBetween(a, b) {
     if (!a || !b) return 0;
-    return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000));
+    return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 
 function getWeeks(startStr, endStr) {
@@ -686,7 +685,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                     )}
                     {currentWeekStart && (
                         <div className="flex items-center gap-2 ml-auto">
-                            <button onClick={goToPrev}
+                            <button aria-label="Previous week" onClick={goToPrev}
                                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                                 <ChevronLeft size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
                             </button>
@@ -696,7 +695,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     ({formatDateShort(currentWeekStart)} — {formatDateShort(weekEndStr)})
                                 </span>
                             </span>
-                            <button onClick={goToNext}
+                            <button aria-label="Next week" onClick={goToNext}
                                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                                 <ChevronRight size={14} className="text-slate-500 dark:text-[#CBD5E1]" />
                             </button>
@@ -777,7 +776,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                         onKeyDown={e => { if (e.key === 'Enter') saveWeekIntent(); if (e.key === 'Escape') setEditingWeekId(null); }}
                                         className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1 outline-none focus:border-indigo-400 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0]"
                                         placeholder="e.g. High Load, Deload, Peak..." />
-                                    <button onClick={saveWeekIntent} className="text-indigo-600 hover:text-indigo-700"><Check size={13} /></button>
+                                    <button aria-label="Save week intent" onClick={saveWeekIntent} className="text-indigo-600 hover:text-indigo-700"><Check size={13} /></button>
                                     <button onClick={() => setEditingWeekId(null)} aria-label="Close" className="text-slate-400"><X size={13} /></button>
                                 </div>
                             ) : (
@@ -1209,7 +1208,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                         <Icon size={7} />
                                                         <span className="text-[8px] font-semibold truncate">{mod}</span>
                                                     </div>
-                                                    <span className="text-[9px] font-semibold text-slate-600 dark:text-[#CBD5E1] shrink-0">{count}</span>
+                                                    <span className="text-[9px] font-semibold text-slate-600 dark:text-[#CBD5E1] shrink-0">{String(count)}</span>
                                                 </div>
                                             );
                                         })}
@@ -1237,7 +1236,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                         <Icon size={7} />
                                                         <span className="text-[8px] font-semibold truncate">{mod}</span>
                                                     </div>
-                                                    <span className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] shrink-0">{level}</span>
+                                                    <span className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] shrink-0">{String(level)}</span>
                                                 </div>
                                             );
                                         })}

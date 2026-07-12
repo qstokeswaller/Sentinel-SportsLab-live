@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — Data-layer typing deferred: Supabase Row<->domain casts + LEGACY club_id references (column no longer exists in DB). Needs the dedicated data-layer typing pass.
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useUserProfile } from './useUserProfile';

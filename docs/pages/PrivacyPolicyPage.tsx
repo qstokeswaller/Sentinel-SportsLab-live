@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * PrivacyPolicyPage — POPIA-compliant privacy policy for Sentinel SportsLab.
  *
