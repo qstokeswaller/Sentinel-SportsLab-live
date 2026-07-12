@@ -147,7 +147,7 @@ export const AddTargetModal = () => {
                     <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
                         {isEditing ? 'Edit Target' : 'Add Target'}
                     </h3>
-                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                    <button onClick={handleClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
                         <X size={14} className="text-slate-400" />
                     </button>
                 </div>

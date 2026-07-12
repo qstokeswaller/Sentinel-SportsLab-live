@@ -26,9 +26,35 @@ const SUBJECT_LABELS = {
 const FROM_ADDRESS = 'Sentinel SportsLab <noreply@sentinelsportslab.com>';
 const SUPPORT_INBOX = 'support@sentinelsportslab.com';
 
+// Lightweight burst limiter: max N submissions per IP per window, per warm
+// serverless instance. Not bulletproof (instances don't share memory) but it
+// stops naive spam loops from burning the Resend quota / flooding the inbox.
+const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 5 };
+const hits = new Map(); // ip -> [timestamps]
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const arr = (hits.get(ip) || []).filter(t => now - t < RATE_LIMIT.windowMs);
+  if (arr.length >= RATE_LIMIT.max) { hits.set(ip, arr); return true; }
+  arr.push(now);
+  hits.set(ip, arr);
+  // Opportunistic cleanup so the map can't grow unbounded
+  if (hits.size > 5000) {
+    for (const [k, v] of hits) {
+      if (v.every(t => now - t >= RATE_LIMIT.windowMs)) hits.delete(k);
+    }
+  }
+  return false;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Too many messages — please wait a few minutes and try again.' });
   }
 
   const apiKey = process.env.RESEND_API_KEY;

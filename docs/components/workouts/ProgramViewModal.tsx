@@ -98,7 +98,7 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
             <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-500/15">
               <Trash2Icon size={13} className="mr-1.5" /> Delete
             </Button>
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+            <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>

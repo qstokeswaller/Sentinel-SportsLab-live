@@ -564,7 +564,13 @@ export const DatabaseService = {
             .order('created_at', { ascending: false });
 
         if (teamId) {
-            query = query.or(`team_id.eq.${teamId},team_id.is.null`);
+            // Guard: teamId is interpolated into a PostgREST filter string, so
+            // only accept a well-formed UUID — never raw/unchecked input.
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teamId)) {
+                console.error('fetchQuestionnaireTemplates: invalid teamId, ignoring filter:', teamId);
+            } else {
+                query = query.or(`team_id.eq.${teamId},team_id.is.null`);
+            }
         }
 
         const { data, error } = await query;

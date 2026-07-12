@@ -132,7 +132,7 @@ const UnmatchedAthleteResolver: React.FC<Props> = ({
                                 </p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
+                        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                             <XIcon size={16} className="text-slate-400" />
                         </button>
                     </div>

@@ -265,7 +265,7 @@ const AddEventModal = () => {
                             <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Schedule an appointment, meeting, or note</p>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors">
+                    <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#94A3B8] transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>

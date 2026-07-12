@@ -420,7 +420,7 @@ const MedicalReports: React.FC = () => {
                                 <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{isUpload ? 'Document' : 'Medical Log'} — {new Date(record.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                             </div>
                         </div>
-                        <button onClick={() => setInspectingMedicalRecord(null)} className="p-2 hover:bg-white dark:hover:bg-[#243A58] rounded-lg transition-colors"><XIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" /></button>
+                        <button onClick={() => setInspectingMedicalRecord(null)} aria-label="Close" className="p-2 hover:bg-white dark:hover:bg-[#243A58] rounded-lg transition-colors"><XIcon size={16} className="text-slate-400 dark:text-[#94A3B8]" /></button>
                     </div>
 
                     {/* Body — flex-1 + overflow-y-auto so the content scrolls when tall

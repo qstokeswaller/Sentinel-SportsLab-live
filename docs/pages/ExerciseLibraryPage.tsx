@@ -72,7 +72,7 @@ function NewCollectionModal({ onClose, onSave }: { onClose: () => void; onSave: 
             <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-sm shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48] flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 dark:text-[#E2E8F0] text-sm">New Collection</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"><XIcon size={14} /></button>
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors"><XIcon size={14} /></button>
                 </div>
                 <div className="px-5 py-4 space-y-4">
                     <div>

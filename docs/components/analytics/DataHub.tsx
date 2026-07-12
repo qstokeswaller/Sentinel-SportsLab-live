@@ -141,6 +141,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         maxHistory,
         gpsData,
         plannedTonnageLog,
+        showToast,
     } = useAppState();
     // Exercise metadata lookup — provides body_parts/categories for per-region tonnage
     const { exerciseFullMap } = useExerciseMap();
@@ -498,7 +499,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         } catch (err: any) {
             console.error('Share failed', err);
             setShareUrl(null);
-            alert('Failed to create share link. Check console.');
+            showToast?.('Failed to create share link.', 'error');
         } finally {
             setShareWorking(false);
         }
@@ -746,7 +747,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                                 <div className="absolute right-0 top-full mt-1.5 w-72 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl z-[100] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">New snapshot</h4>
-                                        <button onClick={() => setAddSnapshotOpen(false)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                                        <button onClick={() => setAddSnapshotOpen(false)} aria-label="Close" className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
                                     </div>
                                     <label className="block">
                                         <span className="block text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] mb-1 uppercase tracking-wide">Date</span>
@@ -846,7 +847,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                             <div className="absolute right-0 top-full mt-1.5 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-2xl z-[100] p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">Share Data Hub snapshot</h4>
-                                    <button onClick={() => setSharePopoverOpen(false)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                                    <button onClick={() => setSharePopoverOpen(false)} aria-label="Close" className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
                                 </div>
                                 <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] leading-snug">
                                     Freezes the current view (columns, filters, dates, athlete order) and gives you a read-only link. Recipients don't need a Sentinel account.
@@ -1081,7 +1082,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                                 <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">
                                     Lock slot {slotIdx + 1} of {findColumn(colKey)?.label || colKey}
                                 </h4>
-                                <button onClick={() => setActiveSlotPicker(null)} className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                                <button onClick={() => setActiveSlotPicker(null)} aria-label="Close" className="p-0.5 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
                             </div>
                             <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] leading-snug">
                                 Pick a date to lock this sub-column to. The cell will only show values collected on that exact date (blank otherwise) — like a "precise" filter on this slot.
@@ -1169,7 +1170,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                         >
                             <div className="px-3 py-2 border-b border-slate-200 dark:border-[#243A58] flex items-center justify-between">
                                 <h4 className="text-[10px] font-bold uppercase tracking-wide text-slate-700 dark:text-[#E2E8F0]">{col.label}</h4>
-                                <button onClick={() => setOpenMenuColKey(null)} className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
+                                <button onClick={() => setOpenMenuColKey(null)} aria-label="Close" className="p-1 text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]"><XIcon size={12} /></button>
                             </div>
                             {/* Sort options */}
                             <div className="p-2 border-b border-slate-100 dark:border-[#243A58] space-y-1">

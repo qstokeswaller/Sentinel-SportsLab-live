@@ -93,7 +93,7 @@ export const EditAthleteProfileModal: React.FC<Props> = ({ isOpen, onClose, athl
                         <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Edit athlete profile</h3>
                         <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5">Identity, biometrics, sport &amp; notes</p>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>

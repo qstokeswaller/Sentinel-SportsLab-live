@@ -252,7 +252,7 @@ const AnalysisTab = ({ teams, hamAnalysisTeamFilter, setHamAnalysisTeamFilter, h
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white dark:bg-[#132338] w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
                         <div className="bg-slate-900 px-10 py-8 text-white relative">
-                            <button onClick={() => setInspectHamEntry(null)} className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"><XIcon size={24} /></button>
+                            <button onClick={() => setInspectHamEntry(null)} aria-label="Close" className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors"><XIcon size={24} /></button>
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white font-semibold text-lg">{inspectHamEntry.athleteName.split(' ').map(n => n[0]).join('')}</div>
                                 <div>
@@ -293,7 +293,7 @@ const AssessmentTab = ({ teams, hamEntryMode, setHamEntryMode, hamAthleteId, set
     const indRel = indWeight > 0 ? ((hamAssessmentMode === 'split' ? indAvg : indAverage) / indWeight) : 0;
 
     const handleSaveIndividual = () => {
-        if (!hamAthleteId) { alert('Please select an athlete'); return; }
+        if (!hamAthleteId) { showToast?.('Please select an athlete', 'error'); return; }
         const record = {
             type: 'hamstring', mode: hamAssessmentMode,
             value: hamAssessmentMode === 'split' ? indAvg : indAverage,

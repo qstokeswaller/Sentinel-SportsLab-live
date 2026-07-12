@@ -135,7 +135,7 @@ const GpsColumnRenameModal: React.FC<{
             <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">Column Display Names — {profile.teamName}</h2>
             <p className="text-[10px] text-slate-400 mt-0.5">{visible.length} columns · CSV import name (left) → how it appears in GPS Hub (right)</p>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 transition-colors">
+          <button onClick={onClose} aria-label="Close" className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:hover:bg-[#1A2D48] flex items-center justify-center text-slate-500 transition-colors">
             <XIcon size={14} />
           </button>
         </div>
@@ -706,9 +706,16 @@ const SettingsPage: React.FC = () => {
         (user?.email as string | undefined) ||
         'A teammate';
       try {
+        // The email endpoint requires proof the caller is a signed-in org admin
+        // (same rule the DB enforces for creating the invitation itself).
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
         const emailRes = await fetch('/api/send-org-invite', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({
             to: email,
             role: inviteRole,
@@ -996,8 +1003,12 @@ const SettingsPage: React.FC = () => {
     const clientId = import.meta.env.VITE_POLAR_CLIENT_ID;
     const redirectUri = `${window.location.origin}/polar/callback`;
     const scope = type === 'team_pro' ? 'team_read' : 'accesslink.read_all';
-    // Pass type via OAuth state param so callback knows which type was used
-    const state = encodeURIComponent(JSON.stringify({ type }));
+    // Pass type via OAuth state param so callback knows which type was used.
+    // The random nonce is verified on return (standard CSRF protection) so a
+    // crafted callback link can't complete a connection this user never started.
+    const nonce = crypto.randomUUID();
+    try { sessionStorage.setItem('polar_oauth_nonce', nonce); } catch {}
+    const state = encodeURIComponent(JSON.stringify({ type, nonce }));
     const authBase = type === 'team_pro'
       ? 'https://auth.polar.com/oauth/authorize'
       : 'https://flow.polar.com/oauth2/authorization';

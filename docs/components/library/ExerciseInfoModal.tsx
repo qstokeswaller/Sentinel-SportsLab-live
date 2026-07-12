@@ -65,7 +65,7 @@ export const ExerciseInfoModal = ({ exercise, isOpen, onClose }: ExerciseInfoMod
         <div className="px-6 py-5 border-b border-slate-100 dark:border-[#243A58] shrink-0">
           <div className="flex items-start justify-between gap-4">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight min-w-0">{exercise.name}</h2>
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors shrink-0">
+            <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors shrink-0">
               <XIcon size={16} />
             </button>
           </div>

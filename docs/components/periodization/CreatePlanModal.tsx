@@ -53,7 +53,7 @@ export const CreatePlanModal = () => {
                         <CalendarDays size={18} className="text-indigo-500" />
                         <h3 className="text-base font-bold text-slate-900 dark:text-[#E2E8F0]">Create Periodization Plan</h3>
                     </div>
-                    <button onClick={() => setIsCreatePlanModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={() => setIsCreatePlanModalOpen(false)} aria-label="Close" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         <X size={16} className="text-slate-400" />
                     </button>
                 </div>

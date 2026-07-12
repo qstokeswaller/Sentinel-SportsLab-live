@@ -11,6 +11,8 @@ import BodyMapAreaEditor from '../wellness/BodyMapAreaEditor';
 import ImageAttachment from '../wellness/ImageAttachment';
 import { uploadQuestionImage, deleteQuestionImage } from '../../utils/imageUpload';
 import { CustomSelect } from '../ui/CustomSelect';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
+import { useAppState } from '../../context/AppStateContext';
 import { CreatorBadge } from '../tier/CreatorBadge';
 import { useAuth } from '../../context/AuthContext';
 
@@ -386,6 +388,8 @@ const QuestionConfig = ({ q, idx, questions, setQuestions }: {
 // ─── Main component ───────────────────────────────────────────────────────────
 const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) => {
     const { user: authUser } = useAuth();
+    const { showToast } = useAppState();
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState('list'); // list | create
     const [newQuestTitle, setNewQuestTitle] = useState('');
     const [newQuestQuestions, setNewQuestQuestions] = useState<any[]>([]);
@@ -428,20 +432,25 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
             setSelectedTemplate(null);
         } catch (err) {
             console.error(err);
-            alert('Failed to save template.');
+            showToast?.('Failed to save template.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDeleteTemplate = async (id: string) => {
-        if (!window.confirm('Are you sure? This will hide the template.')) return;
+    // Delete goes through the styled ConfirmDeleteModal (audit fix 11).
+    const handleDeleteTemplate = (id: string) => setConfirmDeleteId(id);
+    const confirmDeleteTemplate = async () => {
+        const id = confirmDeleteId;
+        setConfirmDeleteId(null);
+        if (!id) return;
         try {
             await DatabaseService.deleteQuestionnaireTemplate(id);
             const updated = await DatabaseService.fetchQuestionnaireTemplates();
             setWellnessTemplates(updated);
+            showToast?.('Template deleted');
         } catch (err) {
-            alert('Failed to delete.');
+            showToast?.('Failed to delete.', 'error');
         }
     };
 
@@ -788,6 +797,13 @@ const QuestionnaireManager = ({ wellnessTemplates, setWellnessTemplates }: any) 
         <div className="h-full">
             {viewMode === 'list' && renderListMode()}
             {viewMode === 'create' && renderCreateMode()}
+            <ConfirmDeleteModal
+                isOpen={!!confirmDeleteId}
+                title="Delete template?"
+                message="The template will be hidden from your library."
+                onConfirm={confirmDeleteTemplate}
+                onCancel={() => setConfirmDeleteId(null)}
+            />
         </div>
     );
 };

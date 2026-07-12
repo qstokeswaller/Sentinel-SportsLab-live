@@ -5,6 +5,7 @@ import {
     Link2Icon, ClockIcon, Share2Icon, InfoIcon,
 } from 'lucide-react';
 import { DatabaseService } from '../../services/databaseService';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 
 interface Props {
     isOpen: boolean;
@@ -99,8 +100,13 @@ export const ShareTestReportModal: React.FC<Props> = ({ isOpen, onClose, shareTy
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Revoke this share link? It will stop working immediately.')) return;
+    // Revoke via styled ConfirmDeleteModal (audit fix 11 — no native confirm).
+    const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
+    const handleDelete = (id: string) => setConfirmRevokeId(id);
+    const confirmRevoke = async () => {
+        const id = confirmRevokeId;
+        setConfirmRevokeId(null);
+        if (!id) return;
         try {
             await DatabaseService.deleteTestShare(id);
             await refresh();
@@ -137,7 +143,7 @@ export const ShareTestReportModal: React.FC<Props> = ({ isOpen, onClose, shareTy
                             <p className="text-xs text-slate-500 dark:text-[#CBD5E1] truncate">{title}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors shrink-0">
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors shrink-0">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -239,6 +245,13 @@ export const ShareTestReportModal: React.FC<Props> = ({ isOpen, onClose, shareTy
                     </div>
                 </div>
             </div>
+            <ConfirmDeleteModal
+                isOpen={!!confirmRevokeId}
+                title="Revoke share link?"
+                message="It will stop working immediately for anyone who has it."
+                onConfirm={confirmRevoke}
+                onCancel={() => setConfirmRevokeId(null)}
+            />
         </div>
     );
 };

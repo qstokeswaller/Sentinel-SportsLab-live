@@ -126,7 +126,7 @@ const WattbikeMapCalculator = ({ inline = false }) => {
                     {!inline && (
                         <button
                             onClick={() => setIsWattbikeMapCalculatorOpen(false)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-all"
+                            aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-all"
                         >
                             <XIcon size={18} />
                         </button>

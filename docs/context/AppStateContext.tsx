@@ -347,6 +347,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const exercisesLoadedRef = useRef(false); // Prevents re-fetching 3,242 exercises on every initData() call
     const dataLoadedRef = useRef(false); // Guards ALL save effects — prevents writing empty data during stale session
     const [isLoading, setIsLoading] = useState(true);
+    // Audit fix 10: names of data areas that failed to load at boot. Previously
+    // these failures were silent (user saw empty lists with no explanation).
+    const [initLoadErrors, setInitLoadErrors] = useState<string[]>([]);
     const [saveStatus, setSaveStatus] = useState(null);
 
     const showSaveStatus = (status) => {
@@ -392,7 +395,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const handleSaveMetric = async (athleteId: string, data: any) => {
         if (!athleteId) {
-            alert("No athlete selected. Please select an athlete first.");
+            showToast("No athlete selected. Please select an athlete first.", 'error');
             return;
         }
         try {
@@ -422,7 +425,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             showToast?.(`${data.type.toUpperCase()} saved successfully`);
         } catch (err) {
             console.error("Error saving metric:", err);
-            alert("Failed to save metric. Check Supabase connection.");
+            showToast("Failed to save metric. Check your connection.", 'error');
         }
     };
 
@@ -1552,7 +1555,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         } catch (err) {
             console.error("Error adding team:", err);
             const msg = err instanceof Error ? err.message : String(err);
-            alert(`Failed to add team: ${msg}`);
+            showToast(`Failed to add team: ${msg}`, 'error');
         }
     };
 
@@ -1599,7 +1602,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setTeams(prev => prev.filter(t => t.id !== teamId));
         } catch (err) {
             console.error("Error deleting team:", err);
-            alert("Failed to delete team. Make sure all athletes are removed first.");
+            showToast("Failed to delete team. Make sure all athletes are removed first.", 'error');
         }
     };
 
@@ -2264,6 +2267,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             const localDate = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const wrFrom = localDate(new Date(Date.now() - 30 * 86400000));
 
+            // Audit fix 10: record which core data areas fail so the UI can show a
+            // "some data failed to load — Retry" banner instead of silently
+            // rendering empty lists.
+            const failedDomains: string[] = [];
+            const trackFail = (label: string) => { if (!failedDomains.includes(label)) failedDomains.push(label); };
+
             const [
                 // Core DB
                 teamsResult, athletesResult, sessionsResult, assessmentsResult, exercisesResult,
@@ -2283,13 +2292,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 savedVis, savedTour, savedPolar, savedGdsSrc, wrRecords,
             ] = await Promise.all([
                 // Core DB
-                DatabaseService.fetchTeams().catch(e => { console.warn("fetchTeams failed:", e.message); return null; }),
-                DatabaseService.fetchAthletes().catch(e => { console.warn("fetchAthletes failed:", e.message); return null; }),
-                DatabaseService.fetchSessions().catch(e => { console.warn("fetchSessions failed:", e.message); return null; }),
-                DatabaseService.fetchAssessments().catch(e => { console.warn("fetchAssessments failed:", e.message); return null; }),
-                exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises().catch(() => null),
+                DatabaseService.fetchTeams().catch(e => { console.warn("fetchTeams failed:", e.message); trackFail('Teams'); return null; }),
+                DatabaseService.fetchAthletes().catch(e => { console.warn("fetchAthletes failed:", e.message); trackFail('Athletes'); return null; }),
+                DatabaseService.fetchSessions().catch(e => { console.warn("fetchSessions failed:", e.message); trackFail('Sessions'); return null; }),
+                DatabaseService.fetchAssessments().catch(e => { console.warn("fetchAssessments failed:", e.message); trackFail('Assessments'); return null; }),
+                exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises().catch(() => { trackFail('Exercises'); return null; }),
                 // Calendar
-                DatabaseService.fetchCalendarEvents().catch(e => { console.warn("fetchCalendarEvents failed:", e.message); return []; }),
+                DatabaseService.fetchCalendarEvents().catch(e => { console.warn("fetchCalendarEvents failed:", e.message); trackFail('Calendar'); return []; }),
                 StorageService.getCustomEventTypes().catch(() => []),
                 // Legacy storage
                 StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
@@ -2299,17 +2308,17 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
                 StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
                 // Secondary DB + storage
-                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("fetchWorkoutTemplates failed:", e.message); return null; }),
+                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("fetchWorkoutTemplates failed:", e.message); trackFail('Workouts'); return null; }),
                 StorageService.getPersonalExercises().catch(() => []),
-                DatabaseService.fetchInjuryReports().catch(e => { console.warn("fetchInjuryReports failed:", e.message); return null; }),
-                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("fetchQuestionnaireTemplates failed:", e); return null; }),
+                DatabaseService.fetchInjuryReports().catch(e => { console.warn("fetchInjuryReports failed:", e.message); trackFail('Injury reports'); return null; }),
+                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("fetchQuestionnaireTemplates failed:", e); trackFail('Wellness templates'); return null; }),
                 StorageService.getWattbikeSessions().catch(() => []),
                 StorageService.getConditioningSessions().catch(() => []),
                 StorageService.getLoadRecords().catch(() => []),
                 StorageService.getWellnessData().catch(() => []),
                 StorageService.getBiometrics().catch(() => []),
                 StorageService.getWorkoutLog().catch(() => []),
-                DatabaseService.fetchTrainingLoads().catch(e => { console.error("[ACWR] fetchTrainingLoads failed:", e); return null; }),
+                DatabaseService.fetchTrainingLoads().catch(e => { console.error("[ACWR] fetchTrainingLoads failed:", e); trackFail('Training loads'); return null; }),
                 // Tertiary
                 StorageService.getPeriodizationPlans().catch(e => { console.warn("getPeriodizationPlans failed:", e.message); return []; }),
                 DatabaseService.fetchAssessments('evaluation').catch(() => null),
@@ -2323,8 +2332,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 StorageService.getTourState().catch(() => null),
                 StorageService.getPolarIntegration().catch(() => null),
                 StorageService.getGpsDataSources().catch(() => null),
-                DatabaseService.fetchAllWellnessResponses(wrFrom, localDate()).catch(() => []),
+                DatabaseService.fetchAllWellnessResponses(wrFrom, localDate()).catch(() => { trackFail('Wellness check-ins'); return []; }),
             ]);
+
+            // Surface any boot-load failures to the UI banner (audit fix 10).
+            setInitLoadErrors(failedDomains);
 
             // ── Process core DB results ──
             let dbTeams = [];
@@ -2645,6 +2657,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         location,
         activeTab,
         setActiveTab,
+        // Boot-load failure banner (audit fix 10)
+        initLoadErrors,
+        retryInitData: initData,
         isPerformanceLabOpen,
         setIsPerformanceLabOpen,
         // Organisation context (Phase B)

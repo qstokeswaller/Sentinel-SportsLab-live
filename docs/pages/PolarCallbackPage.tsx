@@ -30,10 +30,12 @@ export default function PolarCallbackPage() {
         const error = params.get('error');
         const stateParam = params.get('state');
         let connectionType: 'team_pro' | 'individual' = 'team_pro';
+        let stateNonce: string | null = null;
         try {
             if (stateParam) {
                 const parsed = JSON.parse(decodeURIComponent(stateParam));
                 connectionType = parsed.type || 'team_pro';
+                stateNonce = parsed.nonce || null;
             }
         } catch { /* default to team_pro */ }
 
@@ -42,6 +44,19 @@ export default function PolarCallbackPage() {
             setMessage(error === 'access_denied' ? 'Access denied — you cancelled the Polar connection.' : 'No authorisation code received from Polar.');
             return;
         }
+
+        // CSRF check: the nonce placed in the OAuth state when the user clicked
+        // "Connect" must come back unchanged. A missing/mismatched nonce means
+        // this callback wasn't started from this browser session — reject it.
+        // (Nonce set in SettingsPage handleConnectPolar.)
+        let expectedNonce: string | null = null;
+        try { expectedNonce = sessionStorage.getItem('polar_oauth_nonce'); } catch {}
+        if (!expectedNonce || stateNonce !== expectedNonce) {
+            setStatus('error');
+            setMessage('Connection request could not be verified. Please start the Polar connection again from Settings.');
+            return;
+        }
+        try { sessionStorage.removeItem('polar_oauth_nonce'); } catch {}
 
         (async () => {
             try {

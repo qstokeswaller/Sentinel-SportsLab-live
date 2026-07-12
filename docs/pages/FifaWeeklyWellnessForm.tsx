@@ -143,6 +143,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [athletes, setAthletes] = useState<{ id: string; name: string }[]>([]);
@@ -230,6 +231,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const handleSubmit = async () => {
         if (!athleteId || !teamId) return;
         setSubmitting(true);
+        setSubmitError(null);
         try {
             const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
@@ -283,7 +285,7 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             setSubmitted(true);
         } catch (err) {
             console.error(err);
-            alert('Failed to submit. Please try again.');
+            setSubmitError('Could not submit — please check your connection and try again.');
         } finally {
             setSubmitting(false);
         }
@@ -715,6 +717,11 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
             {/* Navigation footer */}
             <footer className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 max-w-md mx-auto w-full">
+                {submitError && (
+                    <div className="mb-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">
+                        {submitError}
+                    </div>
+                )}
                 <div className="flex items-center gap-3">
                     {currentStep > 0 && (
                         <button onClick={handleBack} className="p-3 bg-slate-100 text-slate-500 rounded-xl active:scale-95 transition-all">

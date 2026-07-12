@@ -195,7 +195,7 @@ function ExerciseViewModal({
                         <h2 className="text-xl font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight min-w-0">{exercise.name}</h2>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
+                            aria-label="Close" className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
                         >
                             <XIcon size={16} />
                         </button>
@@ -411,7 +411,7 @@ export function ExerciseDetailPanel({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
+                        aria-label="Close" className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
                     >
                         <XIcon size={14} />
                     </button>

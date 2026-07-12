@@ -91,7 +91,8 @@ const countBlocks = (blocks: ProtocolBlock[]) => blocks.length;
 
 // All 95 testing protocols generated from the complete protocol reference document.
 // These appear for every user by default — merged on first load if not already present.
-import { DEFAULT_PROTOCOLS } from '../../utils/defaultProtocols';
+// Loaded dynamically (audit fix 9): the 14k-line defaults file no longer bloats the
+// page bundle; it downloads only when the protocol list actually loads.
 
 const ViewToggle: React.FC<{ view: 'grid' | 'list'; setView: (v: 'grid' | 'list') => void }> = ({ view, setView }) => (
     <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
@@ -134,7 +135,10 @@ export const ProtocolLibrary: React.FC = () => {
     useEffect(() => {
         (async () => {
             try {
-                const data = await StorageService.getProtocols();
+                const [{ DEFAULT_PROTOCOLS }, data] = await Promise.all([
+                    import('../../utils/defaultProtocols'),
+                    StorageService.getProtocols(),
+                ]);
                 const userProtocols = Array.isArray(data) ? data : [];
 
                 // Build name lookup of defaults (normalised to lowercase for matching)

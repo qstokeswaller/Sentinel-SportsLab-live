@@ -1,14 +1,25 @@
+/// <reference types="vite/client" />
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import LogRocket from 'logrocket';
 import * as Sentry from '@sentry/react';
 import posthog from 'posthog-js';
 import './styles.css';
 
-LogRocket.init('wpqus2/sentinel-sportslab');
+// Audit fix 13 (2026-07-12): in production, silence debug output so internal
+// messages (occasionally including data) aren't readable in every user's
+// browser console. Real errors still use console.error and reach Sentry.
+// During local development everything logs as normal.
+if (!import.meta.env.DEV) {
+  console.log = () => {};
+  console.debug = () => {};
+  console.warn = () => {};
+}
 
+// Monitoring stack (audit fix 9, 2026-07-12): LogRocket removed — PostHog
+// covers product analytics/replay and Sentry covers errors. One less ~300KB
+// SDK in the critical bundle.
 posthog.init('phc_vRxXGZt75W53r3539DQ2ani9DqmckdmMwYF43AVpzhuQ', {
   api_host: 'https://us.i.posthog.com',
   defaults: '2026-01-30',
@@ -23,13 +34,11 @@ Sentry.init({
   ],
   tracesSampleRate: 1.0,
   tracePropagationTargets: ['localhost'],
-  replaysSessionSampleRate: 0,      // LogRocket handles normal session replay
-  replaysOnErrorSampleRate: 1.0,    // Sentry captures replay on errors
+  replaysSessionSampleRate: 0,      // no always-on replay — Sentry captures replay on errors only
+  replaysOnErrorSampleRate: 1.0,
   enableLogs: true,
 });
 
-// TEMP: remove after Sentry connection is confirmed
-Sentry.captureMessage('Sentry connection test — Sentinel SportsLab');
 import { AuthProvider } from './context/AuthContext';
 import { AppStateProvider } from './context/AppStateContext';
 import ErrorBoundary from './components/ErrorBoundary';

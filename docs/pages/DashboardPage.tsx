@@ -108,7 +108,7 @@ const EventDetailPopover = React.forwardRef(function EventDetailPopover(
             <div className="p-3 space-y-2">
                 <div className="flex items-start justify-between">
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{event.title}</h4>
-                    <button onClick={onClose} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                         <XIcon size={12} />
                     </button>
                 </div>
@@ -275,7 +275,7 @@ const KpiInfoModal: React.FC<{ which: KpiInfoKey | null; onClose: () => void }> 
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors shrink-0"
+                        aria-label="Close" className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors shrink-0"
                     >
                         <XIcon size={15} />
                     </button>
@@ -911,7 +911,7 @@ export const DashboardPage = () => {
                                     <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">All At-Risk Athletes</h3>
                                     <p className="text-[10px] text-slate-500">Click an athlete to see their risk analysis</p>
                                 </div>
-                                <button onClick={() => setIsMorningReportExpanded(false)} className="p-1.5 hover:bg-white/60 rounded-lg">
+                                <button onClick={() => setIsMorningReportExpanded(false)} aria-label="Close" className="p-1.5 hover:bg-white/60 rounded-lg">
                                     <XIcon size={16} className="text-slate-400" />
                                 </button>
                             </div>
@@ -1694,7 +1694,7 @@ export const DashboardPage = () => {
                                                                                     <div className="p-3 space-y-2">
                                                                                         <div className="flex items-start justify-between">
                                                                                             <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                                                                            <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                                                                            <button onClick={() => setActiveSessionPopover(null)} aria-label="Close" className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                                                                                 <XIcon size={12} />
                                                                                             </button>
                                                                                         </div>
@@ -2116,7 +2116,7 @@ export const DashboardPage = () => {
                                                                         <div className="p-3 space-y-2">
                                                                             <div className="flex items-start justify-between">
                                                                                 <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] leading-tight">{session.title}</h4>
-                                                                                <button onClick={() => setActiveSessionPopover(null)} className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
+                                                                                <button onClick={() => setActiveSessionPopover(null)} aria-label="Close" className="p-0.5 text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] transition-colors">
                                                                                     <XIcon size={12} />
                                                                                 </button>
                                                                             </div>
@@ -2423,7 +2423,7 @@ export const DashboardPage = () => {
                                                 <p className="text-[10px] text-slate-400 mt-0.5">Update event details</p>
                                             </div>
                                         </div>
-                                        <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                                        <button onClick={() => setEditingEvent(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                                             <XIcon size={18} />
                                         </button>
                                     </div>
@@ -2593,7 +2593,7 @@ export const DashboardPage = () => {
                                             </div>
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0]">Edit Session</h3>
                                         </div>
-                                        <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                                        <button onClick={() => setEditingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                                             <XIcon size={16} />
                                         </button>
                                     </div>

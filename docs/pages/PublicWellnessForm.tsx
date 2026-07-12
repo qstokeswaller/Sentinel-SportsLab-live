@@ -28,6 +28,7 @@ const PublicWellnessForm: React.FC = () => {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -134,6 +135,7 @@ const PublicWellnessForm: React.FC = () => {
     const handleSubmit = async () => {
         if (!selectedAthleteId || !template) return;
         setSubmitting(true);
+        setSubmitError(null);
         try {
             // Auto-resolve share session for permalink responses (no ?s= param)
             let resolvedSessionId = shareSessionId;
@@ -157,7 +159,7 @@ const PublicWellnessForm: React.FC = () => {
             setSubmitted(true);
         } catch (err) {
             console.error(err);
-            alert("Failed to submit. Please try again.");
+            setSubmitError('Could not submit — please check your connection and try again.');
         } finally {
             setSubmitting(false);
         }
@@ -628,6 +630,11 @@ const PublicWellnessForm: React.FC = () => {
 
             {/* Sticky Footer Navigation */}
             <div className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-100">
+                {submitError && (
+                    <div className="px-6 pt-3 max-w-md mx-auto w-full">
+                        <div className="px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">{submitError}</div>
+                    </div>
+                )}
                 <div className="flex gap-4 px-6 py-4 max-w-md mx-auto w-full">
                     {currentStep > 0 && (
                         <button

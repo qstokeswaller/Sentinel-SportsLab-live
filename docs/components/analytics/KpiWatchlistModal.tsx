@@ -20,7 +20,7 @@ export const KpiWatchlistModal = ({ isOpen, onClose, watchlistItems }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all"
+                        aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-all"
                     >
                         <XIcon size={18} />
                     </button>

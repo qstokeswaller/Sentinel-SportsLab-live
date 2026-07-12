@@ -227,7 +227,7 @@ export const TestEntryForm: React.FC<Props> = ({ test, athleteId, athleteGender,
             <FileTextIcon size={14} className="text-indigo-500 dark:text-indigo-300 shrink-0" />
             <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 truncate max-w-[200px]">{attachedFile.name}</span>
             <span className="text-[10px] text-indigo-400 dark:text-indigo-300/70">{(attachedFile.size / 1024).toFixed(0)}KB</span>
-            <button onClick={() => setAttachedFile(null)} className="p-0.5 text-indigo-300 dark:text-indigo-300/70 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
+            <button onClick={() => setAttachedFile(null)} aria-label="Close" className="p-0.5 text-indigo-300 dark:text-indigo-300/70 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
               <XIcon size={12} />
             </button>
           </div>

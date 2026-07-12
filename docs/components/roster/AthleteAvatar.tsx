@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { CameraIcon, Loader2Icon } from 'lucide-react';
 import { DatabaseService } from '../../services/databaseService';
+import { useAppState } from '../../context/AppStateContext';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -47,6 +48,7 @@ export const AthleteAvatar: React.FC<AthleteAvatarProps> = ({
     fallbackTextSize,
 }) => {
     const fileRef = useRef<HTMLInputElement>(null);
+    const { showToast } = useAppState();
     const [uploading, setUploading] = useState(false);
     const dims = SIZE_MAP[size];
     const rounded = shape ?? dims.rounded;
@@ -65,7 +67,7 @@ export const AthleteAvatar: React.FC<AthleteAvatarProps> = ({
             onChange?.(url);
         } catch (err) {
             console.error('Avatar upload failed:', err);
-            alert(err instanceof Error ? err.message : 'Failed to upload photo — please try again.');
+            showToast?.(err instanceof Error ? err.message : 'Failed to upload photo — please try again.', 'error');
         } finally {
             setUploading(false);
             if (fileRef.current) fileRef.current.value = '';

@@ -5,6 +5,8 @@ import {
     Link2Icon, ClockIcon, Share2Icon, InfoIcon,
 } from 'lucide-react';
 import { DatabaseService } from '../../services/databaseService';
+import { useAppState } from '../../context/AppStateContext';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 
 interface Props {
     isOpen: boolean;
@@ -22,11 +24,13 @@ const computeExpiryISO = (e: Expiry): string | null => {
 };
 
 export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, buildSnapshot }) => {
+    const { showToast } = useAppState();
     const [shares, setShares] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [creating, setCreating] = useState(false);
     const [expiry, setExpiry] = useState<Expiry>('30d');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
     const refresh = async () => {
         if (!athlete?.id) return;
@@ -71,7 +75,7 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
             } catch {}
         } catch (e) {
             console.error('Create share failed:', e);
-            alert('Failed to create share link.');
+            showToast?.('Failed to create share link.', 'error');
         } finally {
             setCreating(false);
         }
@@ -89,14 +93,21 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Revoke this share link? It will stop working immediately.')) return;
+    // Revoke goes through the styled ConfirmDeleteModal (audit fix 11 — no
+    // native window.confirm). handleDelete opens it; confirmRevoke executes.
+    const handleDelete = (id: string) => setConfirmRevokeId(id);
+
+    const confirmRevoke = async () => {
+        const id = confirmRevokeId;
+        setConfirmRevokeId(null);
+        if (!id) return;
         try {
             await DatabaseService.deleteAthleteShare(id);
             await refresh();
+            showToast?.('Share link revoked');
         } catch (e) {
             console.error('Delete share failed:', e);
-            alert('Failed to revoke link.');
+            showToast?.('Failed to revoke link.', 'error');
         }
     };
 
@@ -123,7 +134,7 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
                             <span className="text-xs text-slate-500 dark:text-[#CBD5E1]">{athlete?.name}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors">
                         <XIcon size={18} />
                     </button>
                 </div>
@@ -244,6 +255,13 @@ export const ShareAthleteModal: React.FC<Props> = ({ isOpen, onClose, athlete, b
                     </div>
                 </div>
             </div>
+            <ConfirmDeleteModal
+                isOpen={!!confirmRevokeId}
+                title="Revoke share link?"
+                message="It will stop working immediately for anyone who has it."
+                onConfirm={confirmRevoke}
+                onCancel={() => setConfirmRevokeId(null)}
+            />
         </div>
     );
 };

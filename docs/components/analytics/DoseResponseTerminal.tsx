@@ -15,6 +15,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AthleteAvatar } from '../roster/AthleteAvatar';
 import { useAppState } from '../../context/AppStateContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { ACWR_METRIC_TYPES } from '../../utils/constants';
 import {
     TrendingUpIcon, TrendingDownIcon, MinusIcon, ActivityIcon,
@@ -184,20 +185,19 @@ const DoseResponseTerminal = ({ selectedAnalyticsAthleteId, subjectAthleteIds, a
                     <span className="text-slate-300 dark:text-[#475569]">—</span>
                     <input type="date" value={blockEnd} onChange={e => setBlockEnd(e.target.value)} className="text-xs font-medium text-slate-700 dark:text-[#E2E8F0] outline-none bg-transparent cursor-pointer" />
                 </div>
-                {/* Load metric selector */}
-                <div className="relative flex items-center gap-1.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg px-3 py-2">
+                {/* Load metric selector — platform CustomSelect (audit fix 11:
+                    was the app's last remaining native <select>) */}
+                <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Load:</span>
-                    <select
+                    <CustomSelect
                         value={selectedMetric}
                         onChange={e => setSelectedMetric(e.target.value)}
-                        className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] bg-transparent outline-none cursor-pointer pr-4 appearance-none"
                     >
                         {availableMetrics.map(m => {
                             const meta = ACWR_METRIC_TYPES[m] || { label: m, unit: '?' };
                             return <option key={m} value={m}>{meta.label} ({meta.unit})</option>;
                         })}
-                    </select>
-                    <ChevronDownIcon size={11} className="text-slate-400 dark:text-[#CBD5E1] pointer-events-none absolute right-2" />
+                    </CustomSelect>
                 </div>
                 <span className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
                     {Math.ceil((new Date(blockEnd) - new Date(blockStart)) / 86400000)} days · {analysis.length} athlete{analysis.length !== 1 ? 's' : ''} with load data

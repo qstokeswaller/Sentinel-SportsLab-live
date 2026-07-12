@@ -51,9 +51,11 @@ export default async function handler(req, res) {
     });
 
     if (!tokenRes.ok) {
+      // Log the upstream detail server-side only — don't echo third-party error
+      // internals back to the browser.
       const err = await tokenRes.text();
       console.error('Polar token exchange failed:', err);
-      return res.status(400).json({ error: 'Token exchange failed', detail: err });
+      return res.status(400).json({ error: 'Token exchange failed' });
     }
 
     const tokenData = await tokenRes.json();

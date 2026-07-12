@@ -105,6 +105,7 @@ const FifaDailyWellnessForm: React.FC = () => {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [athletes, setAthletes] = useState<{ id: string; name: string }[]>([]);
@@ -246,6 +247,7 @@ const FifaDailyWellnessForm: React.FC = () => {
     const handleSubmit = async () => {
         if (!selectedAthleteId || !teamId) return;
         setSubmitting(true);
+        setSubmitError(null);
         try {
             const availability = responses.availability?.startsWith('unavailable') ? 'unavailable' : responses.availability;
 
@@ -320,7 +322,7 @@ const FifaDailyWellnessForm: React.FC = () => {
 
         } catch (err) {
             console.error(err);
-            alert('Failed to submit. Please try again.');
+            setSubmitError('Could not submit — please check your connection and try again.');
         } finally {
             setSubmitting(false);
         }
@@ -714,6 +716,11 @@ const FifaDailyWellnessForm: React.FC = () => {
 
             {/* Navigation footer */}
             <footer className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 max-w-md mx-auto w-full">
+                {submitError && (
+                    <div className="mb-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">
+                        {submitError}
+                    </div>
+                )}
                 <div className="flex items-center gap-3">
                     {currentStep > 0 && (
                         <button onClick={handleBack}

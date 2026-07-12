@@ -80,7 +80,7 @@ const InterventionModal: React.FC<InterventionModalProps> = ({
                                 <p className="text-xs text-slate-500">{athlete.position || 'Athlete'}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-white/60 rounded-lg transition-colors">
+                        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/60 rounded-lg transition-colors">
                             <XIcon size={18} className="text-slate-400" />
                         </button>
                     </div>

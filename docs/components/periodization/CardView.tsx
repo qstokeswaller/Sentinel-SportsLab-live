@@ -128,7 +128,7 @@ export const CardView = ({ plan }) => {
                                         className="text-base font-bold text-slate-900 dark:text-[#E2E8F0] bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg px-2 py-0.5 outline-none focus:border-indigo-400 flex-1"
                                         placeholder="e.g. Loading, Deload, Peak..." />
                                     <button onClick={saveWeekEdit} className="p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"><Check size={14} /></button>
-                                    <button onClick={() => setEditingWeekId(null)} className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]"><X size={14} /></button>
+                                    <button onClick={() => setEditingWeekId(null)} aria-label="Close" className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1]"><X size={14} /></button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 group/edit">

@@ -64,7 +64,7 @@ export const ShareWorkoutPopover: React.FC<ShareWorkoutPopoverProps> = ({
                             <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] truncate max-w-[200px]">{workoutName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-all">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#243A58] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>

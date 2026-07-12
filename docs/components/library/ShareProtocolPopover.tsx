@@ -62,7 +62,7 @@ export const ShareProtocolPopover: React.FC<ShareProtocolPopoverProps> = ({
                             <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{protocolName}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-300 hover:text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
                         <XIcon size={14} />
                     </button>
                 </div>

@@ -510,7 +510,7 @@ table { width: 100%; border-collapse: collapse; }
                                         {activeFilterCount > 0 && (
                                             <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Clear all</button>
                                         )}
-                                        <button onClick={() => setFilterPopoverOpen(false)} className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                                        <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
                                             <XIcon size={12} />
                                         </button>
                                     </div>

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SupabaseStorageService as StorageService } from '../../services/storageService';
+import { useAppState } from '../../context/AppStateContext';
 import { uploadPdf, deletePdf } from '../../utils/pdfUpload';
 import {
     UploadIcon, FileTextIcon, Trash2Icon, ExternalLinkIcon,
@@ -18,6 +19,7 @@ interface RunningMechanicsDoc {
 
 export const RunningMechanicsLibrary: React.FC = () => {
     const [docs, setDocs] = useState<RunningMechanicsDoc[]>([]);
+    const { showToast } = useAppState();
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [title, setTitle] = useState('');
@@ -68,7 +70,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
             if (fileRef.current) fileRef.current.value = '';
         } catch (err) {
             console.error('Upload error:', err);
-            alert('Failed to upload PDF. Make sure the storage bucket exists in Supabase.');
+            showToast?.('Failed to upload PDF. Please try again.', 'error');
         } finally {
             setUploading(false);
         }

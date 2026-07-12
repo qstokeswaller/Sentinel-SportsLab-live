@@ -23,7 +23,7 @@ const ImportResolverModal = () => {
             <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                     <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0]">Import Resolution</h3>
-                    <button onClick={() => setIsImportResolverOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors">
+                    <button onClick={() => setIsImportResolverOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 transition-colors">
                         <XIcon size={20} />
                     </button>
                 </div>

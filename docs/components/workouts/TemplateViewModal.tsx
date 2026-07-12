@@ -125,7 +125,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                 <Trash2Icon size={13} /> Delete
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+            <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>

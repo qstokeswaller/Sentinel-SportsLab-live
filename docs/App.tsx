@@ -251,7 +251,7 @@ const AddAthleteModal = () => {
                             </span>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={handleClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Mode toggle */}
@@ -430,7 +430,10 @@ const App = () => {
     const {
         isPerformanceLabOpen, setIsPerformanceLabOpen,
         tourState, setTourState,
+        initLoadErrors, retryInitData,
     } = useAppState();
+    // Boot-load failure banner (audit fix 10): dismissible per session.
+    const [loadBannerDismissed, setLoadBannerDismissed] = useState(false);
 
     // Prefetch all page chunks in the background after the app mounts so
     // navigation to any page is instant — no spinner on subsequent visits.
@@ -498,6 +501,30 @@ const App = () => {
                 <TopBar />
                 <main className="flex-1 overflow-y-auto no-scrollbar relative pb-4">
                     <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 lg:py-5">
+                    {/* Boot-load failure banner (audit fix 10) — previously these
+                        failures were silent and pages just looked empty. */}
+                    {initLoadErrors?.length > 0 && !loadBannerDismissed && (
+                        <div className="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200">
+                            <svg className="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div className="flex-1 min-w-0 text-sm">
+                                <span className="font-semibold">Some data failed to load:</span>{' '}
+                                {initLoadErrors.join(', ')}. Affected pages may look empty — this is a loading problem, not missing data.
+                            </div>
+                            <button
+                                onClick={() => { setLoadBannerDismissed(false); retryInitData?.(); }}
+                                className="shrink-0 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white transition-colors"
+                            >
+                                Retry
+                            </button>
+                            <button
+                                onClick={() => setLoadBannerDismissed(true)}
+                                aria-label="Dismiss"
+                                className="shrink-0 p-1 rounded-lg text-amber-500 hover:text-amber-700 dark:hover:text-amber-100 transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    )}
                     <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>}>
                     <Routes>
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -678,7 +705,7 @@ table { width: 100%; border-collapse: collapse; }
                         <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shrink-0"><PrinterIcon size={16} /></div>
                         <h3 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Weightroom Sheets</h3>
                     </div>
-                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsWeightroomSheetModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Body */}
@@ -891,7 +918,7 @@ const AddSessionModal = () => {
                             <p className="text-xs text-slate-500">Quick schedule</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsAddSessionModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setIsAddSessionModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* TAB SWITCHER */}
@@ -1184,7 +1211,7 @@ const SessionModal = () => {
                             <p className="text-xs text-slate-400 mt-0.5">{typeLabel}</p>
                         </div>
                     </div>
-                    <button onClick={() => setViewingSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
+                    <button onClick={() => setViewingSession(null)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 transition-colors"><XIcon size={18} /></button>
                 </div>
 
                 {/* Details */}
@@ -1455,7 +1482,7 @@ const AthleteProfileModal = () => {
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setViewingPlayer(null)} className="p-2 bg-slate-50 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
+                    <button onClick={() => setViewingPlayer(null)} aria-label="Close" className="p-2 bg-slate-50 dark:bg-[#1A2D48] text-slate-400 dark:text-[#CBD5E1] rounded-lg hover:bg-slate-100 dark:hover:bg-[#243A58] transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>
@@ -1603,7 +1630,7 @@ const ACWRDetailModal = () => {
                             <div className={`px-3 py-1.5 rounded-lg ${status.bgColor} border ${status.color.replace('text-', 'border-')}`}>
                                 <span className={`text-sm font-semibold ${status.color}`}>{status.status}</span>
                             </div>
-                            <button onClick={() => setAcwrDetailAthlete(null)} className="w-9 h-9 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] rounded-lg flex items-center justify-center transition-colors">
+                            <button onClick={() => setAcwrDetailAthlete(null)} aria-label="Close" className="w-9 h-9 bg-slate-100 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] rounded-lg flex items-center justify-center transition-colors">
                                 <XIcon size={16} />
                             </button>
                         </div>

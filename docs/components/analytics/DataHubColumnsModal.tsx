@@ -223,7 +223,7 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                             {draftVisible.length} column{draftVisible.length === 1 ? '' : 's'} selected · dates shown beside each column are for selector use only and never appear in the export
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         <XIcon size={16} />
                     </button>
                 </div>

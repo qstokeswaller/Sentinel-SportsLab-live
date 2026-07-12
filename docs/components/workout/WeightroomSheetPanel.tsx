@@ -132,7 +132,7 @@ const WeightroomSheetPanel = ({
                     <span className="text-xs font-black uppercase tracking-widest">Weightroom Sheet</span>
                     {sheetConfig && <span className="px-2 py-0.5 bg-teal-500 rounded text-[8px] font-bold uppercase">Attached</span>}
                 </div>
-                <button onClick={onClose} className="text-teal-200 hover:text-white transition-colors"><XIcon size={16} /></button>
+                <button onClick={onClose} aria-label="Close" className="text-teal-200 hover:text-white transition-colors"><XIcon size={16} /></button>
             </div>
 
             <div className="p-5 space-y-4 overflow-y-auto flex-1">

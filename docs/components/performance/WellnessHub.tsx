@@ -98,6 +98,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
         wellnessDateRange,
         setWellnessDateRange,
         isDarkMode,
+        showToast,
     } = useAppState();
 
     // Chart palette — matches ACWRLineChart for visual consistency
@@ -257,7 +258,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
             setSelectedResponseIds(prev => { const n = new Set(prev); n.delete(id); return n; });
             if (selectedTeamId) handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
         } catch {
-            alert('Failed to delete response.');
+            showToast?.('Failed to delete response.', 'error');
         }
     };
 
@@ -269,7 +270,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
             setShowBulkConfirm(false);
             if (selectedTeamId) handleLoadWellnessResponses(selectedTeamId, wellnessDateRange);
         } catch {
-            alert('Failed to delete some responses.');
+            showToast?.('Failed to delete some responses.', 'error');
         } finally {
             setIsBulkDeleting(false);
         }
@@ -1827,7 +1828,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                                                                 <p className="text-[10px] text-rose-500 font-bold uppercase mt-0.5">{flagged.length} athlete{flagged.length !== 1 ? 's' : ''} flagged today</p>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => setAlertsModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-colors">
+                                                        <button onClick={() => setAlertsModalOpen(false)} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-colors">
                                                             <X size={16} />
                                                         </button>
                                                     </div>
@@ -3583,7 +3584,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                                             <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">{previewTemplate === 'daily' ? 'Daily · 8 questions · <2 min' : 'Deep check · FIFA/IOC · 2–5 min'}</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
+                                    <button onClick={() => setPreviewTemplate(null)} aria-label="Close" className="p-2 hover:bg-slate-200 dark:hover:bg-[#1A2D48] rounded-lg transition-colors">
                                         <X size={16} className="text-slate-400 dark:text-[#CBD5E1]" />
                                     </button>
                                 </div>

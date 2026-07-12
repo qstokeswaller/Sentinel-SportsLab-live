@@ -26,9 +26,26 @@ const FROM_ADDRESS = 'Sentinel SportsLab <noreply@sentinelsportslab.com>';
 function isValidEmail(s) {
   return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
-function isHttpUrl(s) {
-  try { const u = new URL(s); return u.protocol === 'http:' || u.protocol === 'https:'; }
-  catch { return false; }
+
+// Only allow accept links that point at OUR app. Without this, the endpoint
+// could be abused to send legitimate-looking branded emails whose button leads
+// anywhere (phishing relay). Allowed: production domains, Vercel previews, and
+// localhost for dev — and the path must be the real accept-invite route.
+function isAllowedAcceptUrl(s) {
+  try {
+    const u = new URL(s);
+    if (!u.pathname.startsWith('/accept-invite/')) return false;
+    const h = u.hostname;
+    const isLocal = h === 'localhost' || h === '127.0.0.1';
+    if (u.protocol === 'http:' && !isLocal) return false;
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    return (
+      h === 'sentinelsportslab.com' ||
+      h === 'www.sentinelsportslab.com' ||
+      h.endsWith('.vercel.app') ||
+      isLocal
+    );
+  } catch { return false; }
 }
 
 export default async function handler(req, res) {
@@ -42,11 +59,51 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Email service not configured' });
   }
 
+  // ── Authentication: only signed-in org admins may trigger invite emails. ──
+  // Mirrors the create_org_invitation RPC's own rule (current_user_is_org_admin),
+  // so anyone who could create the invitation row can always send the email.
+  const authHeader = req.headers.authorization || '';
+  const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!jwt) {
+    return res.status(401).json({ error: 'Sign-in required to send invitations' });
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('[send-org-invite] Supabase env vars not set');
+    return res.status(500).json({ error: 'Auth service not configured' });
+  }
+
+  try {
+    // Validates the JWT (PostgREST rejects bad/expired tokens with 401) and runs
+    // the same SECURITY DEFINER admin check the database uses for invitations.
+    const adminCheck = await fetch(`${supabaseUrl}/rest/v1/rpc/current_user_is_org_admin`, {
+      method: 'POST',
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${jwt}`,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+    if (!adminCheck.ok) {
+      return res.status(401).json({ error: 'Invalid or expired session' });
+    }
+    const isAdmin = await adminCheck.json();
+    if (isAdmin !== true) {
+      return res.status(403).json({ error: 'Only organisation admins can send invitations' });
+    }
+  } catch (err) {
+    console.error('[send-org-invite] Auth check failed:', err);
+    return res.status(500).json({ error: 'Could not verify session' });
+  }
+
   const { to, role, acceptUrl, orgName, inviterName } = req.body || {};
 
   if (!isValidEmail(to))    return res.status(400).json({ error: 'Invalid recipient email' });
   if (role !== 'admin' && role !== 'member') return res.status(400).json({ error: 'Invalid role' });
-  if (!isHttpUrl(acceptUrl)) return res.status(400).json({ error: 'Invalid acceptUrl' });
+  if (!isAllowedAcceptUrl(acceptUrl)) return res.status(400).json({ error: 'Invalid acceptUrl' });
   if (!orgName?.trim())     return res.status(400).json({ error: 'orgName required' });
   if (!inviterName?.trim()) return res.status(400).json({ error: 'inviterName required' });
 

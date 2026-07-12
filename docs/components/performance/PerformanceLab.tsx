@@ -305,7 +305,7 @@ const PerformanceLab = ({ isOpen, onClose }) => {
                         <FlaskConicalIcon size={24} className="text-indigo-600 dark:text-indigo-300" />
                         Performance Lab
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={20} /></button>
+                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={20} /></button>
                 </div>
 
                 <div className="flex border-b border-slate-100 dark:border-[#243A58] px-6 gap-6 overflow-x-auto no-scrollbar shrink-0">

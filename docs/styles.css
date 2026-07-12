@@ -13,6 +13,15 @@
   --border: 226 232 240;      /* slate-200 */
   --text-primary: 15 23 42;   /* slate-900 */
   --text-secondary: 100 116 139; /* slate-500 */
+  color-scheme: light;
+}
+
+/* Audit fix 11 (2026-07-12): tell the browser we're in dark mode so every
+   NATIVE control follows the theme — the popup calendars of date/time inputs,
+   dropdown option lists, scrollbars. Without this they render as light-mode
+   browser defaults on the dark canvas (the "generic browser dropdown" look). */
+.dark {
+  color-scheme: dark;
 }
 
 /* Sentinel SportsLab - Base Styles */

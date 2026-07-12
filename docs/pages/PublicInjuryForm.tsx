@@ -62,6 +62,7 @@ const PublicInjuryForm = () => {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(null);
     const [athletes, setAthletes] = useState([]);
@@ -151,6 +152,7 @@ const PublicInjuryForm = () => {
     const handleSubmit = async () => {
         if (!selectedAthleteId || form.areas.length === 0) return;
         setSubmitting(true);
+        setSubmitError(null);
         try {
             await DatabaseService.saveInjuryReport({
                 team_id: teamId,
@@ -162,7 +164,7 @@ const PublicInjuryForm = () => {
             setSubmitted(true);
         } catch (err) {
             console.error(err);
-            alert('Failed to submit. Please try again.');
+            setSubmitError('Could not submit — please check your connection and try again.');
         } finally {
             setSubmitting(false);
         }
@@ -478,6 +480,11 @@ const PublicInjuryForm = () => {
                     </div>
                 )}
 
+                {submitError && (
+                    <div className="mt-6 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold text-center">
+                        {submitError}
+                    </div>
+                )}
                 {/* Navigation */}
                 <div className="flex items-center gap-3 pt-8 mt-auto">
                     {step > 0 && (

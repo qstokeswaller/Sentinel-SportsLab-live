@@ -106,7 +106,7 @@ export const AddPhaseModal = () => {
             <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-md shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-[#243A58]">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">{isEditing ? 'Edit Phase' : 'Add Phase'}</h3>
-                    <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><X size={14} className="text-slate-400" /></button>
+                    <button onClick={handleClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2D48]"><X size={14} className="text-slate-400" /></button>
                 </div>
 
                 <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">

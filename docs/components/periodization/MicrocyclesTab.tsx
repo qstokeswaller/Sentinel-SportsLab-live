@@ -88,7 +88,7 @@ function GanttPopup({ popup, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-[#243A58]"
                 style={{ borderLeftWidth: '3px', borderLeftColor: popup.accent }}>
                 <p className="flex-1 text-[10px] font-bold text-slate-800 dark:text-[#E2E8F0] truncate">{popup.title}</p>
-                <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
+                <button onClick={onClose} aria-label="Close" className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-[#CBD5E1] dark:hover:text-slate-300"><X size={11} /></button>
             </div>
             <div className="px-3 py-2 space-y-1.5">
                 {popup.rows.filter(([, v]) => v).map(([label, val]) => (
@@ -777,7 +777,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                         className="flex-1 text-xs border border-slate-200 dark:border-[#243A58] rounded-lg px-2.5 py-1 outline-none focus:border-indigo-400 bg-white dark:bg-[#0F1C30] text-slate-800 dark:text-[#E2E8F0]"
                                         placeholder="e.g. High Load, Deload, Peak..." />
                                     <button onClick={saveWeekIntent} className="text-indigo-600 hover:text-indigo-700"><Check size={13} /></button>
-                                    <button onClick={() => setEditingWeekId(null)} className="text-slate-400"><X size={13} /></button>
+                                    <button onClick={() => setEditingWeekId(null)} aria-label="Close" className="text-slate-400"><X size={13} /></button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 flex-1 group/edit">
@@ -994,7 +994,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                                 {DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1]} {d.getDate()} {MONTHS[d.getMonth()]} — {daySessions.length} session{daySessions.length !== 1 ? 's' : ''}
                                             </span>
                                         </div>
-                                        <button onClick={() => setSelectedDate(null)} className="p-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/20 text-indigo-400">
+                                        <button onClick={() => setSelectedDate(null)} aria-label="Close" className="p-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/20 text-indigo-400">
                                             <X size={11} />
                                         </button>
                                     </div>

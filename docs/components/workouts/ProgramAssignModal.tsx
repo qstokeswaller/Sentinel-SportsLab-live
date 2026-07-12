@@ -146,7 +146,7 @@ export const ProgramAssignModal: React.FC<ProgramAssignModalProps> = ({ program,
                         <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Assign Program</h3>
                         <p className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 truncate max-w-[260px]">{program.name}</p>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+                    <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
                         <XIcon size={14} />
                     </button>
                 </div>
