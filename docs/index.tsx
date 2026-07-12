@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react';
 import posthog from 'posthog-js';
 import './styles.css';
+import { UpdateBanner } from './components/ui/UpdateBanner';
 
 // Audit fix 13 (2026-07-12): in production, silence debug output so internal
 // messages (occasionally including data) aren't readable in every user's
@@ -67,6 +68,7 @@ root.render(
         </ErrorBoundary>
       </QueryClientProvider>
     </BrowserRouter>
+    <UpdateBanner />
     <Analytics />
     <SpeedInsights />
   </React.StrictMode>

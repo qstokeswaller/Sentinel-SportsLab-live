@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import App from './App';
 import LoginPage from './pages/LoginPage';
-import OnboardingPage from './pages/OnboardingPage';
 import PublicWellnessForm from './pages/PublicWellnessForm';
 import FifaDailyWellnessForm from './pages/FifaDailyWellnessForm';
 import FifaWeeklyWellnessForm from './pages/FifaWeeklyWellnessForm';
@@ -104,14 +103,6 @@ const AppRouter: React.FC = () => {
       <Route
         path="/login"
         element={loading ? null : user ? (pendingInviteToken ? <Navigate to={`/accept-invite/${pendingInviteToken}`} replace /> : <Navigate to="/dashboard" replace />) : <LoginPage />}
-      />
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute>
-            <OnboardingPage />
-          </ProtectedRoute>
-        }
       />
 
       {/* APP CATCH-ALL */}
