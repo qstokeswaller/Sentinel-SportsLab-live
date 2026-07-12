@@ -7,6 +7,7 @@ import {
     PencilIcon, Loader2Icon, AlertCircleIcon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
+import { SkCard, SkBlock, SkText, SkListCards } from '../ui/Skeleton';
 import {
     uploadMedicalDocument,
     deleteMedicalDocument,
@@ -17,6 +18,7 @@ const MedicalReports: React.FC = () => {
     const {
         teams,
         medicalReports, setMedicalReports, medicalFilterAthleteId, setMedicalFilterAthleteId,
+        isSecondaryLoading,
         isMedicalModalOpen, setIsMedicalModalOpen, medicalModalMode, setMedicalModalMode,
         inspectingMedicalRecord, setInspectingMedicalRecord,
         medicalForm, setMedicalForm,
@@ -655,6 +657,26 @@ const MedicalReports: React.FC = () => {
             ...filteredReports.map(r => ({ ...r, timelineType: 'medical' })),
             ...filteredOptOuts.map(o => ({ ...o, timelineType: 'optout', title: o.reason, description: o.notes, targetName: allPlayers.find(p => p.id === o.athleteId)?.name || 'Unknown' }))
         ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Skeleton (Phase 2): medical documents are background-tier — mirror the
+        // Medical Hub layout (action bar + document timeline cards)
+        if (isSecondaryLoading && medicalReports.length === 0) {
+            return (
+                <div className="space-y-10">
+                    <SkCard className="flex items-center justify-between p-5">
+                        <div className="flex items-center gap-4">
+                            <SkBlock className="w-10 h-10 rounded-xl" />
+                            <div className="space-y-2">
+                                <SkText w="w-28" />
+                                <SkText w="w-40" className="h-2.5" />
+                            </div>
+                        </div>
+                        <SkBlock className="h-10 w-48 rounded-xl" />
+                    </SkCard>
+                    <SkListCards count={3} />
+                </div>
+            );
+        }
 
         return (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-500">

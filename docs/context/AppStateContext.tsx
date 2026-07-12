@@ -17,6 +17,10 @@ import {
 import { ACWR_UTILS, BORG_RPE_SCALE, DSI_NORMS, RSI_NORMS, RM_EXERCISE_MAP } from '../utils/constants';
 import { DEFAULT_WATTBIKE_SESSIONS } from '../utils/wattbikeSessions';
 import { normalisePlan } from '../utils/periodizationUtils';
+import usePlanHandlers from './appState/usePlanHandlers';
+import useSessionCalendarHandlers from './appState/useSessionCalendarHandlers';
+import useTeamHandlers from './appState/useTeamHandlers';
+import useMetricHandlers from './appState/useMetricHandlers';
 import {
     MOCK_INDIVIDUAL_PLAN_BLOCKS,
     MOCK_TEAMS,
@@ -201,68 +205,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
 
 
-    const handleCommitImport = () => {
-        let successCount = 0;
-        importStaging.forEach(item => {
-            let targetId = item.matchedId;
-            if (targetId && item.data) {
-                handleSaveMetric(targetId, item.data);
-                successCount++;
-            }
-        });
-        setIsImportResolverOpen(false);
-        setImportStaging([]);
-        showToast(`Successfully imported ${successCount} records.`);
-    };
 
-    const handleSaveMetricWithType = (type) => {
-        let data = null;
-        let athleteId = null;
-
-        if (type === '1rm') {
-            if (!oneRmAthleteId || !oneRmExerciseId || !oneRepMax) return showSaveStatus('error');
-            athleteId = oneRmAthleteId;
-            data = { type: '1rm', exerciseId: oneRmExerciseId, value: oneRepMax };
-        } else if (type === 'dsi') {
-            if (!dsiAthleteId || !dsiScore) return showSaveStatus('error');
-            athleteId = dsiAthleteId;
-            data = { type: 'dsi', value: dsiScore, ballistic: dsiBallistic, isometric: dsiIsometric, category: dsiCategory.label };
-        } else if (type === 'rsi') {
-            if (!rsiAthleteId || !rsiScore) return showSaveStatus('error');
-            athleteId = rsiAthleteId;
-            data = { type: 'rsi', value: rsiScore, height: rsiHeight, contactTime: rsiContactTime };
-        } else if (type === 'hamstring') {
-            const hamResults = calculateHamstringResults();
-            if (!hamAthleteId || !hamResults) return showSaveStatus('error');
-            athleteId = hamAthleteId;
-            if (hamAssessmentMode === 'split') {
-                data = {
-                    type: 'hamstring',
-                    mode: 'split',
-                    left: hamLeft,
-                    right: hamRight,
-                    asymmetry: hamResults.asymmetry,
-                    avgForce: hamResults.avg.toFixed(1),
-                    bodyWeight: hamBodyWeight,
-                    relativeStrength: hamResults.relativeStrength
-                };
-            } else {
-                data = {
-                    type: 'hamstring',
-                    mode: 'aggregate',
-                    aggregate: hamAggregate,
-                    avgForce: hamResults.avg.toFixed(1),
-                    bodyWeight: hamBodyWeight,
-                    relativeStrength: hamResults.relativeStrength
-                };
-            }
-        }
-
-        if (athleteId && data) {
-            handleSaveMetric(athleteId, data);
-            showSaveStatus('success');
-        }
-    };
 
     const calculateHamstringResults = () => {
         const bw = parseFloat(hamBodyWeight);
@@ -347,6 +290,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const exercisesLoadedRef = useRef(false); // Prevents re-fetching 3,242 exercises on every initData() call
     const dataLoadedRef = useRef(false); // Guards ALL save effects — prevents writing empty data during stale session
     const [isLoading, setIsLoading] = useState(true);
+    // Phase 2 (2026-07-12): tier-2 (background) domains still loading. Pages
+    // consuming non-critical data (exercises, templates, GPS, medical, plans…)
+    // show skeletons while this is true instead of empty states.
+    const [isSecondaryLoading, setIsSecondaryLoading] = useState(true);
     // Audit fix 10: names of data areas that failed to load at boot. Previously
     // these failures were silent (user saw empty lists with no explanation).
     const [initLoadErrors, setInitLoadErrors] = useState<string[]>([]);
@@ -393,94 +340,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             StorageService.saveConditioningSessions(conditioningSessions);
     }, [conditioningSessions, isLoading]);
 
-    const handleSaveMetric = async (athleteId: string, data: any) => {
-        if (!athleteId) {
-            showToast("No athlete selected. Please select an athlete first.", 'error');
-            return;
-        }
-        try {
-            const saved = await DatabaseService.logAssessment(data.type, athleteId, data);
-            // Reload assessments for this athlete
-            const records = await DatabaseService.fetchAssessmentsByAthlete(athleteId);
-            setAthleteAssessments(records);
 
-            // Also update local teams state so AnalysisTab/views reflect the new data immediately
-            const newMetric = {
-                ...data,
-                id: saved?.id || `local_${Date.now()}`,
-                date: data.date || new Date().toISOString().split('T')[0],
-                type: data.type,
-            };
-            setTeams(prev => prev.map(t => ({
-                ...t,
-                players: t.players.map(p => {
-                    if (p.id !== athleteId) return p;
-                    return {
-                        ...p,
-                        performanceMetrics: [newMetric, ...(p.performanceMetrics || [])],
-                    };
-                }),
-            })));
 
-            showToast?.(`${data.type.toUpperCase()} saved successfully`);
-        } catch (err) {
-            console.error("Error saving metric:", err);
-            showToast("Failed to save metric. Check your connection.", 'error');
-        }
-    };
-
-    const handleDeleteMetric = async (athleteId, metricId) => {
-        if (!metricId)
-            return;
-        // Find the record to delete and store it in history
-        const athlete = teams.flatMap(t => t.players).find(p => p.id === athleteId);
-        const recordToDelete = athlete?.performanceMetrics?.find(m => m.id === metricId);
-        if (recordToDelete) {
-            setRecentDeletions(prev => [{ athleteId, ...recordToDelete }, ...prev].slice(0, 10));
-            showToast(`Deleted ${recordToDelete.metric || recordToDelete.type}`, 'Undo', handleUndoDelete);
-        }
-        // Remove from local state
-        const newTeams = teams.map(t => ({
-            ...t,
-            players: t.players.map(p => {
-                if (p.id === athleteId) {
-                    return {
-                        ...p,
-                        performanceMetrics: (p.performanceMetrics || []).filter(m => m.id && m.id !== metricId)
-                    };
-                }
-                return p;
-            })
-        }));
-        setTeams(newTeams);
-        // Also delete from Supabase so it doesn't return on refresh
-        try {
-            await DatabaseService.deleteAssessment(metricId);
-        } catch (err) {
-            console.warn('Failed to delete assessment from DB:', err);
-        }
-    };
-
-    const handleUndoDelete = () => {
-        if (recentDeletions.length === 0)
-            return;
-        const lastDeleted = recentDeletions[0];
-        const { athleteId, ...record } = lastDeleted;
-        const newTeams = teams.map(t => ({
-            ...t,
-            players: t.players.map(p => {
-                if (p.id === athleteId) {
-                    return {
-                        ...p,
-                        performanceMetrics: [...(p.performanceMetrics || []), record].sort((a, b) => new Date(b.date) - new Date(a.date))
-                    };
-                }
-                return p;
-            })
-        }));
-        setTeams(newTeams);
-        setRecentDeletions(prev => prev.slice(1));
-    };
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -1455,14 +1316,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         }
     };
 
-    const handleOpenPlayerProfile = (name) => {
-        const player = teams.flatMap(t => t.players).find(p => p.name.toLowerCase().includes(name.toLowerCase()) ||
-            name.toLowerCase().includes(p.name.toLowerCase()));
-        if (player) {
-            setViewingPlayer(player);
-        }
-    };
-
     const dashboardCalendarDays = useMemo(() => {
         const year = dashboardCalendarDate.getFullYear();
         const month = dashboardCalendarDate.getMonth();
@@ -1496,389 +1349,33 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         document.body.removeChild(link);
     };
 
-    const handleAddAthlete = async (keepOpen = false) => {
-        if (!newAthleteName.trim()) return false;
-        try {
-            if (addAthleteMode === 'athlete') {
-                const resolvedTeamId = newAthleteTeam && newAthleteTeam !== 'All' && newAthleteTeam !== 't_private' ? newAthleteTeam : null;
-                const newAthlete = await DatabaseService.createAthlete({
-                    name: newAthleteName,
-                    team_id: resolvedTeamId,
-                    age: newAthleteProfile.age ? parseInt(newAthleteProfile.age) : undefined,
-                    gender: newAthleteProfile.gender || undefined,
-                    height_cm: newAthleteProfile.height_cm ? parseFloat(newAthleteProfile.height_cm) : undefined,
-                    weight_kg: newAthleteProfile.weight_kg ? parseFloat(newAthleteProfile.weight_kg) : undefined,
-                    sport: newAthleteProfile.sport || undefined,
-                    position: newAthleteProfile.position || undefined,
-                    goals: newAthleteProfile.goals || undefined,
-                    notes: newAthleteProfile.notes || undefined,
-                    image_url: newAthleteProfile.image_url || undefined,
-                });
-                // Optimistically add to local state — no full reload, no loading flash
-                if (newAthlete) {
-                    const athleteRecord = { ...newAthlete, performanceMetrics: [], performanceHistory: [] };
-                    setTeams(prev => prev.map(t => {
-                        if (t.id === resolvedTeamId) {
-                            const players = [...(t.players || []), athleteRecord]
-                                .sort((a, b) => a.name.localeCompare(b.name));
-                            return { ...t, players };
-                        }
-                        return t;
-                    }));
-                }
-                showToast(`${newAthleteName} added to roster`, 'success');
-            } else {
-                const createdTeam = await DatabaseService.createTeam(newAthleteName, 'Football');
-                showToast(`Team "${newAthleteName}" created`, 'success');
-                if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
-            }
-            if (!keepOpen) setIsAddAthleteModalOpen(false);
-            setNewAthleteName('');
-            setNewAthleteProfile({ age: '', gender: 'Male', height_cm: '', weight_kg: '', sport: '', position: '', goals: '', notes: '', image_url: '' });
-            return true;
-        } catch (err) {
-            console.error("Error adding athlete/team:", err);
-            showToast('Failed to add athlete — please try again', 'error');
-            return false;
-        }
-    };
+    // KPI-metric handlers — extracted to appState/useMetricHandlers.ts (Phase 3).
+    const {
+        handleCommitImport,
+        handleSaveMetricWithType,
+        handleSaveMetric,
+        handleDeleteMetric,
+        handleUndoDelete,
+    } = useMetricHandlers({
+        calculateHamstringResults, hamAggregate, hamAssessmentMode, hamAthleteId, hamBodyWeight, hamLeft, hamRight, importStaging, recentDeletions, setAthleteAssessments, setImportStaging, setIsImportResolverOpen, setRecentDeletions, setTeams, showSaveStatus, showToast, teams,
+    });
 
-    const handleAddTeam = async () => {
-        if (!newTeamName.trim()) return;
-        try {
-            const createdTeam = await DatabaseService.createTeam(newTeamName, 'Football');
-            if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
-            showToast(`Team "${newTeamName}" created`, 'success');
-            setIsAddTeamModalOpen(false);
-            setNewTeamName('');
-            setAddAthleteMode('athlete'); // auto-switch back so user can add athlete to new team
-        } catch (err) {
-            console.error("Error adding team:", err);
-            const msg = err instanceof Error ? err.message : String(err);
-            showToast(`Failed to add team: ${msg}`, 'error');
-        }
-    };
+    // Session + calendar handlers — extracted to appState/useSessionCalendarHandlers.ts
+    // (Phase 3). Same handlers, same behaviour; state stays here.
+    const {
+        handleAddSession,
+        scheduleWorkoutSession,
+        handleUpdateSession,
+        handleDeleteSession,
+        addEventModalGenRef,
+        handleAddCalendarEvent,
+        handleUpdateCalendarEvent,
+        handleDeleteCalendarEvent,
+        handleSaveCustomEventTypes,
+    } = useSessionCalendarHandlers({
+        calendarEvents, exercises, isAddEventModalOpen, isLoading, newSession, scheduledSessions, setAddSessionCategory, setAddSessionSearch, setAddSessionTab, setCalendarEvents, setCustomEventTypes, setIsAddEventModalOpen, setIsAddSessionModalOpen, setIsLoading, setNewSession, setPeriodizationPlans, setPlannedTonnageLog, setScheduledSessions, showToast,
+    });
 
-    const handleUpdateAthlete = async (athleteId: string, updates: Record<string, any>) => {
-        // Optimistic local update
-        setTeams(prev => prev.map(t => ({
-            ...t,
-            players: (t.players || []).map(p => p.id === athleteId ? { ...p, ...updates } : p),
-        })));
-        setViewingPlayer(prev => (prev && prev.id === athleteId) ? { ...prev, ...updates } : prev);
-        try {
-            const updated = await DatabaseService.updateAthlete(athleteId, updates);
-            return updated;
-        } catch (err) {
-            console.error('Error updating athlete:', err);
-            showToast('Failed to update athlete — please try again', 'error');
-            initData();
-            throw err;
-        }
-    };
-
-    const handleDeleteAthlete = async (athleteId: string) => {
-        // Capture name before removing from state for the toast message
-        const deletedName = teams.flatMap(t => t.players || []).find(p => p.id === athleteId)?.name;
-        // Optimistically remove from local state immediately — no loading flash
-        setTeams(prev => prev.map(t => ({
-            ...t,
-            players: (t.players || []).filter(p => p.id !== athleteId),
-        })));
-        try {
-            await DatabaseService.deleteAthlete(athleteId);
-            showToast(deletedName ? `${deletedName} removed from roster` : 'Athlete removed', 'success');
-        } catch (err) {
-            console.error("Error deleting athlete:", err);
-            // Roll back the optimistic removal by reloading
-            initData();
-            showToast('Failed to delete athlete — please try again', 'error');
-        }
-    };
-
-    const handleDeleteTeam = async (teamId: string) => {
-        try {
-            await DatabaseService.deleteTeam(teamId);
-            setTeams(prev => prev.filter(t => t.id !== teamId));
-        } catch (err) {
-            console.error("Error deleting team:", err);
-            showToast("Failed to delete team. Make sure all athletes are removed first.", 'error');
-        }
-    };
-
-    const handleAddSession = async () => {
-        if (!newSession.title || !newSession.targetId) {
-            setAddSessionTab('info');
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            const sessionData = {
-                title: newSession.title,
-                date: newSession.date,
-                target_type: newSession.targetType,
-                target_id: newSession.targetId,
-                training_phase: newSession.trainingPhase,
-                load: newSession.load,
-                status: 'Scheduled',
-                planned_duration: 60,
-                exercises: newSession.exercises // Assuming the DB table can handle this JSONB or similar
-            };
-
-            const savedSession = await DatabaseService.createSession(sessionData);
-            if (savedSession) {
-                setScheduledSessions(prev => [...prev, {
-                    ...savedSession,
-                    trainingPhase: savedSession.training_phase,
-                    targetType: savedSession.target_type,
-                    targetId: savedSession.target_id,
-                    plannedDuration: savedSession.planned_duration,
-                }]);
-            }
-
-            setIsAddSessionModalOpen(false);
-            setNewSession({
-                title: '',
-                date: new Date().toISOString().split('T')[0],
-                targetType: 'Team',
-                targetId: '',
-                trainingPhase: 'Strength',
-                load: 'Medium',
-                exercises: []
-            });
-            setAddSessionTab('info');
-            setAddSessionSearch('');
-            setAddSessionCategory('All');
-            showToast("Session created successfully", "success");
-        } catch (err) {
-            console.error("Error creating session:", err);
-            showToast("Failed to create session", "error");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const scheduleWorkoutSession = async (sessionPayload) => {
-        try {
-            setIsLoading(true);
-            const savedSession = await DatabaseService.createSession(sessionPayload);
-            if (savedSession) {
-                setScheduledSessions(prev => [...prev, {
-                    ...savedSession,
-                    trainingPhase: savedSession.training_phase,
-                    targetType: savedSession.target_type,
-                    targetId: savedSession.target_id,
-                    plannedDuration: savedSession.planned_duration,
-                }]);
-            }
-            showToast("Workout scheduled successfully", "success");
-            // Return the saved session so callers can write planned tonnage rows
-            // referencing its id.
-            return savedSession;
-        } catch (err) {
-            console.error("Error scheduling workout:", err);
-            showToast("Failed to schedule workout", "error");
-            throw err;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleUpdateSession = async (sessionId, updates) => {
-        // Compute date delta once so we can shift dependent rows (planned_tonnage_log
-        // + the program's derived end-date) by the same number of days.
-        const oldSession = scheduledSessions.find(s => s.id === sessionId);
-        let deltaDays = 0;
-        let newProgramEndDate: string | null = null;
-        if (updates.date !== undefined && oldSession?.date && oldSession.date !== updates.date) {
-            const oldD = new Date(oldSession.date + 'T00:00:00');
-            const newD = new Date(updates.date + 'T00:00:00');
-            deltaDays = Math.round((newD.getTime() - oldD.getTime()) / 86400000);
-            // Programs: keep program_end_date in lockstep with the start so the
-            // calendar popup ("ends X") stays truthful after the drag.
-            if (oldSession.session_type === 'program' && oldSession.program_end_date) {
-                const oldEnd = new Date(oldSession.program_end_date + 'T00:00:00');
-                oldEnd.setDate(oldEnd.getDate() + deltaDays);
-                newProgramEndDate = oldEnd.toISOString().split('T')[0];
-            }
-        }
-        const isProgram = oldSession?.session_type === 'program' || !!oldSession?.program_id;
-        const tonnageSourceId = isProgram ? oldSession?.program_id : sessionId;
-
-        try {
-            // Optimistic: update local state immediately
-            setScheduledSessions(prev => prev.map(s => s.id === sessionId
-                ? { ...s, ...updates, ...(newProgramEndDate ? { program_end_date: newProgramEndDate } : {}) }
-                : s));
-            // Optimistic: shift local tonnage rows so Tracking/Data Hub update instantly
-            if (deltaDays !== 0 && tonnageSourceId) {
-                setPlannedTonnageLog((prev: any[]) => prev.map(r => {
-                    if (r.source_id !== tonnageSourceId) return r;
-                    const d = new Date(r.date + 'T00:00:00');
-                    d.setDate(d.getDate() + deltaDays);
-                    return { ...r, date: d.toISOString().split('T')[0] };
-                }));
-            }
-            // Map camelCase → snake_case for DB
-            const dbUpdates: any = {};
-            if (updates.date !== undefined) dbUpdates.date = updates.date;
-            if (updates.time !== undefined) dbUpdates.time = updates.time;
-            if (updates.title !== undefined) dbUpdates.title = updates.title;
-            if (updates.trainingPhase !== undefined) dbUpdates.training_phase = updates.trainingPhase;
-            if (updates.load !== undefined) dbUpdates.load = updates.load;
-            if (updates.targetType !== undefined) dbUpdates.target_type = updates.targetType;
-            if (updates.targetId !== undefined) dbUpdates.target_id = updates.targetId;
-            if (updates.status !== undefined) dbUpdates.status = updates.status;
-            if (newProgramEndDate) dbUpdates.program_end_date = newProgramEndDate;
-            await DatabaseService.updateSession(sessionId, dbUpdates);
-            // Shift DB tonnage rows. Non-fatal: a failure here leaves the calendar
-            // accurate but the tonnage charts misaligned — we surface a warning
-            // rather than rolling back the visible move.
-            if (deltaDays !== 0 && tonnageSourceId) {
-                try {
-                    await DatabaseService.shiftTonnageDatesForSource(tonnageSourceId, deltaDays);
-                } catch (tErr) {
-                    console.warn('Tonnage date shift failed (non-fatal):', tErr);
-                    showToast('Session moved — tonnage charts may need a refresh', 'info');
-                    // Resync local tonnage with DB reality so we don't show shifted
-                    // rows in memory while the DB still has the old dates.
-                    try {
-                        const tonnage = await DatabaseService.fetchPlannedTonnage();
-                        if (tonnage) setPlannedTonnageLog(tonnage);
-                    } catch (_) {}
-                }
-            }
-            showToast("Session updated", "success");
-        } catch (err) {
-            console.error("Error updating session:", err);
-            showToast("Failed to update session", "error");
-            // Rollback: refetch sessions AND tonnage so optimistic shifts unwind
-            try {
-                const sessions = await DatabaseService.fetchSessions();
-                if (sessions) setScheduledSessions(sessions.map(s => ({ ...s, trainingPhase: s.training_phase, targetType: s.target_type, targetId: s.target_id, plannedDuration: s.planned_duration })));
-                const tonnage = await DatabaseService.fetchPlannedTonnage();
-                if (tonnage) setPlannedTonnageLog(tonnage);
-            } catch (_) {}
-        }
-    };
-
-    const handleDeleteSession = async (sessionId) => {
-        // Optimistic — no global isLoading toggle (which would flash the dashboard
-        // skeletons, incl. the Performance Report, on every calendar delete).
-        // Capture pre-delete shape so we know if this was a program assignment and
-        // so we can roll back if the DB delete fails.
-        const sessionBeingDeleted = scheduledSessions.find(s => s.id === sessionId);
-        const prevSessions = scheduledSessions;
-        setScheduledSessions(prev => prev.filter(s => s.id !== sessionId));
-        try {
-            await DatabaseService.deleteSession(sessionId);
-
-            // Drop future-dated tonnage rows belonging to this session/program. Past
-            // rows stay frozen as a historical record (per the "before the assigned
-            // date" rule). Errors here are non-fatal — the session is already gone.
-            try {
-                const today = new Date();
-                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                const isProgram = sessionBeingDeleted?.session_type === 'program' || !!sessionBeingDeleted?.program_id;
-                const sourceId = isProgram ? sessionBeingDeleted?.program_id : sessionId;
-                if (sourceId) {
-                    await DatabaseService.deleteFutureTonnageForSource(sourceId, todayStr);
-                    // Optimistic local prune
-                    setPlannedTonnageLog((prev: any[]) => prev.filter(r => !(r.source_id === sourceId && r.date > todayStr)));
-                }
-            } catch (tonnageErr) {
-                console.warn('Tonnage cleanup on session delete failed (non-fatal):', tonnageErr);
-            }
-
-            showToast("Session deleted", "success");
-        } catch (err) {
-            console.error("Error deleting session:", err);
-            showToast("Failed to delete session", "error");
-            setScheduledSessions(prevSessions); // rollback the optimistic removal
-        }
-    };
-
-    // --- CALENDAR EVENT HANDLERS ---
-    const addEventModalGenRef = useRef(0); // increments each time modal opens — prevents stale close
-    useEffect(() => {
-        if (isAddEventModalOpen) addEventModalGenRef.current += 1;
-    }, [isAddEventModalOpen]);
-
-    // `options.silent` skips the built-in "Event created successfully" toast. The
-    // drag-to-copy path uses it so the copy shows a single "Event copied" toast
-    // instead of two (previously every copy fired both → "do 4 copies, get 8
-    // notifications" from the demo feedback).
-    const handleAddCalendarEvent = async (eventData, options = {}) => {
-        const gen = addEventModalGenRef.current; // snapshot generation before async work
-        try {
-            const result = await DatabaseService.createCalendarEvent(eventData);
-            // Optimistic: append to local state so calendar updates instantly
-            if (result) {
-                setCalendarEvents(prev => [...prev, ...(Array.isArray(result) ? result : [result])]);
-            }
-            if (!options.silent) showToast("Event created successfully", "success");
-            // Close modal only if user hasn't reopened it since this save started
-            if (addEventModalGenRef.current === gen) {
-                setIsAddEventModalOpen(false);
-            }
-            // Refresh calendar events in background
-            DatabaseService.fetchCalendarEvents().then(events => {
-                if (events) setCalendarEvents(events);
-            }).catch(() => {});
-        } catch (err) {
-            console.error("Error creating calendar event:", err);
-            showToast("Failed to create event", "error");
-        }
-    };
-
-    const handleUpdateCalendarEvent = async (id, updates) => {
-        // Optimistic — mirror handleUpdateSession's pattern. The previous version
-        // flipped the global isLoading flag which made every dashboard skeleton
-        // (Performance Report, Wellness Summary, ACWR tiles…) blink during the
-        // DB round-trip on every event drag. Local state moves first; DB catches
-        // up; on failure we refetch to unwind the optimistic write.
-        const prevSnapshot = calendarEvents;
-        setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
-        try {
-            const updatedEvent = await DatabaseService.updateCalendarEvent(id, updates);
-            if (updatedEvent) {
-                setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updatedEvent } : e));
-            }
-            showToast("Event updated", "success");
-        } catch (err) {
-            console.error("Error updating calendar event:", err);
-            showToast("Failed to update event", "error");
-            // Rollback the optimistic write
-            setCalendarEvents(prevSnapshot);
-        }
-    };
-
-    const handleDeleteCalendarEvent = async (id) => {
-        // Optimistic — same pattern as handleUpdateCalendarEvent. The old version
-        // flipped the global isLoading flag, which forced the Performance Report
-        // skeleton to render (always in its expanded form + light background) for
-        // the duration of the DB round-trip — so deleting an event made a collapsed
-        // report flash open with a white tinge before snapping back. Removing the
-        // isLoading toggle removes the flash; on failure we restore the snapshot.
-        const prevSnapshot = calendarEvents;
-        setCalendarEvents(prev => prev.filter(e => e.id !== id));
-        try {
-            await DatabaseService.deleteCalendarEvent(id);
-            showToast("Event deleted", "success");
-        } catch (err) {
-            console.error("Error deleting calendar event:", err);
-            showToast("Failed to delete event", "error");
-            setCalendarEvents(prevSnapshot); // rollback
-        }
-    };
-
-    const handleSaveCustomEventTypes = async (types) => {
-        setCustomEventTypes(types);
-        await StorageService.saveCustomEventTypes(types);
-    };
-
-    // --- PERIODIZATION PLAN CRUD HANDLERS ---
     const _uid = () => `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
     const savePlans = async (updated) => {
@@ -1889,360 +1386,183 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         await StorageService.savePeriodizationPlans(normalised);
     };
 
-    const handleCreatePlan = async (planData) => {
-        const plan = {
-            id: _uid(),
-            name: planData.name || 'Untitled Plan',
-            targetType: planData.targetType || 'Team',
-            targetId: planData.targetId || '',
-            startDate: planData.startDate || new Date().toISOString().split('T')[0],
-            endDate: planData.endDate || undefined,
-            status: planData.status || 'draft',
-            viewMode: planData.viewMode || 'timeline',
-            modalities: planData.modalities || ['Strength', 'Plyometrics', 'Speed', 'Conditioning', 'Loaded Power'],
-            phases: [],
-            events: [],
-            volumeOverrides: {},
-            intensityOverrides: {},
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        const updated = [...periodizationPlans, plan];
-        await savePlans(updated);
-        setActivePlanId(plan.id);
-        setPlanDrillPath([]);
-        setIsCreatePlanModalOpen(false);
-        return plan;
-    };
+    // Periodization-plan handlers — extracted to appState/usePlanHandlers.ts
+    // (Phase 3). Same handlers, same behaviour; state stays here.
+    const {
+        handleCreatePlan,
+        handleUpdatePlan,
+        handleDeletePlan,
+        handleAddPlanPhase,
+        handleUpdatePlanPhase,
+        handleDeletePlanPhase,
+        handleAddPlanBlock,
+        handleUpdatePlanBlock,
+        handleDeletePlanBlock,
+        handleAddPlanTarget,
+        handleUpdatePlanTarget,
+        handleDeletePlanTarget,
+        handleUpdateBlockModality,
+        handleUpdatePlanWeek,
+        handleAddPlanWeek,
+        handleAddSessionWithWeek,
+        handleAddPlanSession,
+        handleUpdatePlanSession,
+        handleDeletePlanSession,
+        handleAddPlanEvent,
+        handleUpdatePlanEvent,
+        handleDeletePlanEvent,
+    } = usePlanHandlers({
+        _uid, activePlanId, periodizationPlans, savePlans, setActivePlanId, setEditingPlanBlock, setEditingPlanEvent, setEditingPlanPhase, setEditingPlanTarget, setIsCreatePlanModalOpen, setIsPlanBlockModalOpenNew, setIsPlanEventModalOpen, setIsPlanPhaseModalOpen, setIsPlanTargetModalOpen, setPlanDrillPath,
+    });
 
-    const handleUpdatePlan = async (planId, updates) => {
-        const updated = periodizationPlans.map(p =>
-            p.id === planId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
-        );
-        await savePlans(updated);
-    };
+    // ── TIER 2 loader (Phase 2, 2026-07-12): non-critical domains fetched in the
+    // background AFTER first paint. Consumer pages show skeletons while
+    // `isSecondaryLoading` is true. Setters use keep-if-already-populated guards
+    // so a user edit made during the gap is never clobbered by arriving data.
+    const loadSecondaryData = useCallback(async () => {
+        setIsSecondaryLoading(true);
+        const failedDomains: string[] = [];
+        const trackFail = (label: string) => { if (!failedDomains.includes(label)) failedDomains.push(label); };
+        try {
+            const [
+                exercisesResult,
+                loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsCategories,
+                dbTemplatesResult, loadedPersonalExercises, dbInjuryResult, dbWellnessTemplates,
+                loadedWattbike, loadedConditioning,
+                loadedWellness, loadedBiometrics, loadedWorkoutLog,
+                loadedPlans, dbEvaluations, dbMaxHistory,
+                tonnageRows,
+            ] = await Promise.all([
+                exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises().catch(() => { trackFail('Exercises'); return null; }),
+                StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
+                StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); trackFail('GPS data'); return []; }),
+                StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
+                StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
+                StorageService.getGpsCategories().catch(() => []),
+                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("fetchWorkoutTemplates failed:", e.message); trackFail('Workouts'); return null; }),
+                StorageService.getPersonalExercises().catch(() => []),
+                DatabaseService.fetchInjuryReports().catch(e => { console.warn("fetchInjuryReports failed:", e.message); trackFail('Injury reports'); return null; }),
+                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("fetchQuestionnaireTemplates failed:", e); trackFail('Wellness templates'); return null; }),
+                StorageService.getWattbikeSessions().catch(() => []),
+                StorageService.getConditioningSessions().catch(() => []),
+                StorageService.getWellnessData().catch(() => []),
+                StorageService.getBiometrics().catch(() => []),
+                StorageService.getWorkoutLog().catch(() => []),
+                StorageService.getPeriodizationPlans().catch(e => { console.warn("getPeriodizationPlans failed:", e.message); trackFail('Periodization plans'); return []; }),
+                DatabaseService.fetchAssessments('evaluation').catch(() => null),
+                DatabaseService.fetchRmAssessments().catch(() => null),
+                DatabaseService.fetchPlannedTonnage(new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0]).catch(e => { console.warn('Planned tonnage fetch failed (non-fatal):', e); return null; }),
+            ]);
 
-    const handleDeletePlan = async (planId) => {
-        const updated = periodizationPlans.filter(p => p.id !== planId);
-        await savePlans(updated);
-        if (activePlanId === planId) {
-            setActivePlanId(null);
-            setPlanDrillPath([]);
+            // ── Exercises (first load only; fallback to bundled JSON/mocks) ──
+            if (!exercisesLoadedRef.current) {
+                let finalExercises = exercisesResult || [];
+                if (finalExercises.length === 0) {
+                    try {
+                        const response = await fetch('./exercises_data.json');
+                        finalExercises = response.ok ? await response.json() : MOCK_EXERCISES;
+                    } catch { finalExercises = MOCK_EXERCISES; }
+                }
+                setExercises(finalExercises.sort((a, b) => a.name.localeCompare(b.name)));
+                exercisesLoadedRef.current = true;
+            }
+
+            // ── GPS categories ──
+            if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
+                try { localStorage.setItem('gps_categories', JSON.stringify(loadedGpsCategories)); } catch {}
+            }
+
+            setQuestionnaires(prev => (prev && prev.length ? prev : (loadedQuestionnaires || [])));
+            setGpsData(prev => (prev && prev.length ? prev : (loadedGps || [])));
+            const rawHr = StorageService.getHrData();
+            setHrData(Array.isArray(rawHr) ? rawHr : []);
+            setMedicalReports(prev => (prev && prev.length ? prev : (loadedMedical || [])));
+
+            // ── Workout templates ──
+            const incomingTemplates = (dbTemplatesResult && dbTemplatesResult.length > 0)
+                ? dbTemplatesResult.map(t => ({
+                    id: t.id, name: t.name, trainingPhase: t.training_phase,
+                    load: t.load, sections: t.sections || { warmup: [], workout: [], cooldown: [] },
+                    createdAt: t.created_at,
+                    user_id: t.user_id,
+                    visibility: t.visibility,
+                    organisation_id: t.organisation_id,
+                }))
+                : (loadedTemplates || []);
+            setWorkoutTemplates(prev => (prev && prev.length ? prev : incomingTemplates));
+
+            setPersonalExerciseIds(loadedPersonalExercises || []);
+
+            // ── Injury reports ──
+            if (dbInjuryResult && dbInjuryResult.length > 0) {
+                setInjuryReports(prev => (prev && prev.length ? prev : dbInjuryResult.map(r => ({
+                    id: r.id, athleteId: r.athlete_id, athleteName: r.athlete_name,
+                    teamId: r.team_id, dateOfInjury: r.date_of_injury,
+                    ...(r.report_data || {}), createdAt: r.created_at, updatedAt: r.updated_at,
+                }))));
+            } else {
+                const loadedInjuryReports = await StorageService.getInjuryReports();
+                setInjuryReports(prev => (prev && prev.length ? prev : (loadedInjuryReports?.length ? loadedInjuryReports : MOCK_INJURY_REPORTS)));
+            }
+
+            setWellnessTemplates(prev => (prev && prev.length ? prev : (dbWellnessTemplates || [])));
+
+            // ── Wattbike & Conditioning ──
+            setWattbikeSessions(prev => {
+                if (!loadedWattbike || loadedWattbike.length === 0) return prev;
+                const existingIds = new Set(loadedWattbike.map(s => s.id));
+                return [...loadedWattbike, ...prev.filter(s => !existingIds.has(s.id))];
+            });
+            if (loadedConditioning && loadedConditioning.length > 0) {
+                setConditioningSessions(prev => (prev && prev.length ? prev : loadedConditioning));
+            }
+
+            setWellnessData(prev => (prev && prev.length ? prev : (loadedWellness || [])));
+            setBiometricsRecords(prev => (prev && prev.length ? prev : (loadedBiometrics || [])));
+            setWorkoutLog(prev => (prev && prev.length ? prev : (loadedWorkoutLog || [])));
+
+            // ── Periodization plans + evaluations + RM history ──
+            // Normalise on the way in so every nested array (phases / blocks /
+            // weeks / sessions / sections / exercises) is guaranteed to exist.
+            setPeriodizationPlans(prev => (prev && prev.length ? prev : (loadedPlans || []).map(normalisePlan)));
+
+            if (dbEvaluations) {
+                setEvaluationData(dbEvaluations.map(raw => ({
+                    athleteId: raw.athlete_id,
+                    date: raw.date,
+                    ...(raw.metrics || {})
+                })));
+            }
+
+            if (dbMaxHistory) {
+                setMaxHistory(dbMaxHistory.map(raw => {
+                    const m = raw.metrics || {};
+                    let exerciseName, maxWeight;
+                    if (raw.test_type === '1rm') {
+                        // Performance Lab: exerciseLabel has the name, value has the estimated 1RM
+                        exerciseName = m.exerciseLabel || RM_EXERCISE_MAP[m.exerciseId] || 'Unknown';
+                        maxWeight = m.value || 0;
+                    } else {
+                        // Testing Hub: test_type is the key (e.g. 'rm_back_squat'), metrics.weight is actual 1RM
+                        exerciseName = RM_EXERCISE_MAP[raw.test_type] || raw.test_type;
+                        maxWeight = m.weight || 0;
+                    }
+                    return { athleteId: raw.athlete_id, date: raw.date, exercise: exerciseName, weight: maxWeight };
+                }));
+            }
+
+            // Planned tonnage log — Tracking Hub + Data Hub read this from state.
+            if (tonnageRows) setPlannedTonnageLog(tonnageRows);
+        } catch (error) {
+            console.error("Error in loadSecondaryData:", error);
+        } finally {
+            if (failedDomains.length > 0) {
+                setInitLoadErrors(prev => [...prev, ...failedDomains.filter(f => !prev.includes(f))]);
+            }
+            setIsSecondaryLoading(false);
         }
-    };
+    }, []);
 
-    const _updateActivePlan = async (updater) => {
-        const updated = periodizationPlans.map(p => {
-            if (p.id !== activePlanId) return p;
-            return { ...updater(p), updatedAt: new Date().toISOString() };
-        });
-        await savePlans(updated);
-    };
-
-    const handleAddPlanPhase = async (phaseData) => {
-        const focuses = phaseData.focuses?.length ? phaseData.focuses : [phaseData.trainingPhase || 'General Preparation'];
-        const phase = {
-            id: _uid(),
-            name: phaseData.name || 'New Phase',
-            startDate: phaseData.startDate,
-            endDate: phaseData.endDate,
-            color: phaseData.color || '#6366f1',
-            trainingPhase: focuses[0] || 'General Preparation',
-            focuses,
-            goals: phaseData.goals || '',
-            notes: phaseData.notes || '',
-            blocks: [],
-        };
-        await _updateActivePlan(p => ({ ...p, phases: [...p.phases, phase] }));
-        setIsPlanPhaseModalOpen(false);
-        setEditingPlanPhase(null);
-    };
-
-    const handleUpdatePlanPhase = async (phaseId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId ? { ...ph, ...updates } : ph)
-        }));
-        setIsPlanPhaseModalOpen(false);
-        setEditingPlanPhase(null);
-    };
-
-    const handleDeletePlanPhase = async (phaseId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.filter(ph => ph.id !== phaseId)
-        }));
-        setIsPlanPhaseModalOpen(false);
-        setEditingPlanPhase(null);
-    };
-
-    const handleAddPlanBlock = async (phaseId, blockData) => {
-        const startDate = new Date(blockData.startDate);
-        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-        const weekCount = blockData.endDate
-            ? Math.max(1, Math.ceil((new Date(blockData.endDate) - startDate) / msPerWeek))
-            : 1;
-        const weeks = Array.from({ length: weekCount }, (_, i) => {
-            const wStart = new Date(startDate.getTime() + i * msPerWeek);
-            return {
-                id: _uid(),
-                weekNumber: i + 1,
-                startDate: wStart.toISOString().split('T')[0],
-                intent: '',
-                sessions: [],
-            };
-        });
-        const block = {
-            id: _uid(),
-            name: blockData.name || 'New Period',
-            label: blockData.label || '',
-            intensityLevel: blockData.intensityLevel || 'Moderate',
-            volumeLevel: blockData.volumeLevel || 'Moderate',
-            startDate: blockData.startDate,
-            endDate: blockData.endDate,
-            color: blockData.color || '#8b5cf6',
-            blockType: blockData.blockType || 'General',
-            goals: blockData.goals || '',
-            modalities: blockData.modalities || {},
-            weeks,
-        };
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? { ...ph, blocks: [...ph.blocks, block] }
-                : ph
-            )
-        }));
-        setIsPlanBlockModalOpenNew(false);
-        setEditingPlanBlock(null);
-    };
-
-    const handleUpdatePlanBlock = async (phaseId, blockId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? { ...ph, blocks: ph.blocks.map(b => b.id === blockId ? { ...b, ...updates } : b) }
-                : ph
-            )
-        }));
-        setIsPlanBlockModalOpenNew(false);
-        setEditingPlanBlock(null);
-    };
-
-    const handleDeletePlanBlock = async (phaseId, blockId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? { ...ph, blocks: ph.blocks.filter(b => b.id !== blockId) }
-                : ph
-            )
-        }));
-        setIsPlanBlockModalOpenNew(false);
-        setEditingPlanBlock(null);
-    };
-
-    const handleAddPlanTarget = async (targetData) => {
-        const target = { id: _uid(), ...targetData };
-        await _updateActivePlan(p => ({ ...p, targets: [...(p.targets || []), target] }));
-        setIsPlanTargetModalOpen(false);
-        setEditingPlanTarget(null);
-    };
-
-    const handleUpdatePlanTarget = async (targetId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            targets: (p.targets || []).map(t => t.id === targetId ? { ...t, ...updates } : t),
-        }));
-        setIsPlanTargetModalOpen(false);
-        setEditingPlanTarget(null);
-    };
-
-    const handleDeletePlanTarget = async (targetId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            targets: (p.targets || []).filter(t => t.id !== targetId),
-        }));
-    };
-
-    const handleUpdateBlockModality = async (phaseId, blockId, modality, value) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
-                        ? { ...b, modalities: { ...b.modalities, [modality]: value } }
-                        : b
-                    )
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleUpdatePlanWeek = async (phaseId, blockId, weekId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
-                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId ? { ...w, ...updates } : w) }
-                        : b
-                    )
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleAddPlanWeek = async (phaseId, blockId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => {
-                        if (b.id !== blockId) return b;
-                        const lastWeek = b.weeks[b.weeks.length - 1];
-                        const nextStart = lastWeek
-                            ? new Date(new Date(lastWeek.startDate).getTime() + 7 * 86400000).toISOString().split('T')[0]
-                            : b.startDate;
-                        const newWeek = {
-                            id: _uid(),
-                            weekNumber: (lastWeek?.weekNumber || 0) + 1,
-                            startDate: nextStart,
-                            intent: '',
-                            sessions: [],
-                        };
-                        return { ...b, weeks: [...b.weeks, newWeek] };
-                    })
-                }
-                : ph
-            )
-        }));
-    };
-
-    // Creates a week at weekStartDate if it doesn't exist, then adds the session
-    const handleAddSessionWithWeek = async (phaseId, blockId, weekStartDate, sessionData) => {
-        const session = {
-            id: _uid(),
-            date: sessionData.date,
-            name: sessionData.name || 'New Session',
-            sections: [],
-            plannedDuration: sessionData.plannedDuration || null,
-            plannedRPE: null,
-            load: sessionData.load || null,
-            modality: sessionData.modality || null,
-            workoutTemplateId: null,
-            notes: '',
-        };
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => {
-                        if (b.id !== blockId) return b;
-                        const existing = b.weeks.find(w => w.startDate === weekStartDate);
-                        if (existing) {
-                            return { ...b, weeks: b.weeks.map(w => w.id === existing.id ? { ...w, sessions: [...w.sessions, session] } : w) };
-                        }
-                        const newWeek = { id: _uid(), weekNumber: 0, startDate: weekStartDate, intent: '', sessions: [session] };
-                        const sorted = [...b.weeks, newWeek].sort((a, z) => a.startDate.localeCompare(z.startDate));
-                        return { ...b, weeks: sorted.map((w, i) => ({ ...w, weekNumber: i + 1 })) };
-                    })
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleAddPlanSession = async (phaseId, blockId, weekId, sessionData) => {
-        const session = {
-            id: _uid(),
-            date: sessionData.date,
-            name: sessionData.name || 'New Session',
-            sections: sessionData.sections || [],
-            plannedDuration: sessionData.plannedDuration || null,
-            plannedRPE: sessionData.plannedRPE || null,
-            load: sessionData.load || null,
-            modality: sessionData.modality || null,
-            workoutTemplateId: sessionData.workoutTemplateId || null,
-            notes: sessionData.notes || '',
-        };
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
-                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId ? { ...w, sessions: [...w.sessions, session] } : w) }
-                        : b
-                    )
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleUpdatePlanSession = async (phaseId, blockId, weekId, sessionId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
-                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId
-                            ? { ...w, sessions: w.sessions.map(s => s.id === sessionId ? { ...s, ...updates } : s) }
-                            : w
-                        ) }
-                        : b
-                    )
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleDeletePlanSession = async (phaseId, blockId, weekId, sessionId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            phases: p.phases.map(ph => ph.id === phaseId
-                ? {
-                    ...ph, blocks: ph.blocks.map(b => b.id === blockId
-                        ? { ...b, weeks: b.weeks.map(w => w.id === weekId
-                            ? { ...w, sessions: w.sessions.filter(s => s.id !== sessionId) }
-                            : w
-                        ) }
-                        : b
-                    )
-                }
-                : ph
-            )
-        }));
-    };
-
-    const handleAddPlanEvent = async (eventData) => {
-        const event = { id: _uid(), ...eventData };
-        await _updateActivePlan(p => ({ ...p, events: [...p.events, event] }));
-        setIsPlanEventModalOpen(false);
-        setEditingPlanEvent(null);
-    };
-
-    const handleUpdatePlanEvent = async (eventId, updates) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            events: p.events.map(e => e.id === eventId ? { ...e, ...updates } : e)
-        }));
-        setIsPlanEventModalOpen(false);
-        setEditingPlanEvent(null);
-    };
-
-    const handleDeletePlanEvent = async (eventId) => {
-        await _updateActivePlan(p => ({
-            ...p,
-            events: p.events.filter(e => e.id !== eventId)
-        }));
-        setIsPlanEventModalOpen(false);
-        setEditingPlanEvent(null);
-    };
-
-    // --- DATA LOADING ---
     const initData = useCallback(async () => {
         // Skip initialization entirely for public form routes — they don't need app state
         const path = window.location.pathname;
@@ -2252,6 +1572,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             path.startsWith('/data-hub/snapshot') ||
             path.startsWith('/athlete-share/') || path.startsWith('/test-share/')) {
             setIsLoading(false);
+            setIsSecondaryLoading(false);
             return;
         }
 
@@ -2273,21 +1594,22 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             const failedDomains: string[] = [];
             const trackFail = (label: string) => { if (!failedDomains.includes(label)) failedDomains.push(label); };
 
+            // ── PHASE 2 (2026-07-12): two-tier boot ──
+            // TIER 1 (below, gates first paint): only what the shell + Dashboard
+            // need — teams/athletes/sessions/assessments, calendar, training
+            // loads, wellness check-ins, and the (cheap) settings bundle.
+            // TIER 2 (loadSecondaryData, fired after paint): everything else —
+            // exercises, workout templates, GPS, medical, wattbike/conditioning,
+            // plans, evaluations… Pages that consume tier-2 data show skeletons
+            // while `isSecondaryLoading` is true.
             const [
                 // Core DB
-                teamsResult, athletesResult, sessionsResult, assessmentsResult, exercisesResult,
+                teamsResult, athletesResult, sessionsResult, assessmentsResult,
                 // Calendar
                 calEventsResult, storedCustomTypes,
-                // Legacy storage
-                loadedSessions, loadedQuestionnaires, loadedGps, loadedMedical, loadedTemplates, loadedGpsCategories,
-                // Secondary DB + storage
-                dbTemplatesResult, loadedPersonalExercises, dbInjuryResult, dbWellnessTemplates,
-                loadedWattbike, loadedConditioning,
-                loadedLoad, loadedWellness, loadedBiometrics, loadedWorkoutLog,
-                dbTrainingLoadsResult,
-                // Tertiary
-                loadedPlans, dbEvaluations, dbMaxHistory,
-                // Settings + wellness heatmap (was sequential finally block)
+                // Legacy storage sessions + load records
+                loadedSessions, loadedLoad, dbTrainingLoadsResult,
+                // Settings + wellness heatmap
                 savedGpsProfiles, savedAcwr, savedEx, savedAnchors,
                 savedVis, savedTour, savedPolar, savedGdsSrc, wrRecords,
             ] = await Promise.all([
@@ -2296,33 +1618,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 DatabaseService.fetchAthletes().catch(e => { console.warn("fetchAthletes failed:", e.message); trackFail('Athletes'); return null; }),
                 DatabaseService.fetchSessions().catch(e => { console.warn("fetchSessions failed:", e.message); trackFail('Sessions'); return null; }),
                 DatabaseService.fetchAssessments().catch(e => { console.warn("fetchAssessments failed:", e.message); trackFail('Assessments'); return null; }),
-                exercisesLoadedRef.current ? Promise.resolve(null) : DatabaseService.fetchExercises().catch(() => { trackFail('Exercises'); return null; }),
                 // Calendar
                 DatabaseService.fetchCalendarEvents().catch(e => { console.warn("fetchCalendarEvents failed:", e.message); trackFail('Calendar'); return []; }),
                 StorageService.getCustomEventTypes().catch(() => []),
-                // Legacy storage
+                // Legacy storage sessions + load records
                 StorageService.getSessions().catch(e => { console.warn('Sessions load failed:', e.message); return []; }),
-                StorageService.getQuestionnaires().catch(e => { console.warn('Questionnaires load failed:', e.message); return []; }),
-                StorageService.getGpsData().catch(e => { console.warn('GPS data load failed:', e.message); return []; }),
-                StorageService.getMedicalReports().catch(e => { console.warn('Medical reports load failed:', e.message); return []; }),
-                StorageService.getWorkoutTemplates().catch(e => { console.warn('Workout templates load failed:', e.message); return []; }),
-                StorageService.getGpsCategories().catch(e => { console.warn('GPS categories load failed:', e.message); return []; }),
-                // Secondary DB + storage
-                DatabaseService.fetchWorkoutTemplates().catch(e => { console.warn("fetchWorkoutTemplates failed:", e.message); trackFail('Workouts'); return null; }),
-                StorageService.getPersonalExercises().catch(() => []),
-                DatabaseService.fetchInjuryReports().catch(e => { console.warn("fetchInjuryReports failed:", e.message); trackFail('Injury reports'); return null; }),
-                DatabaseService.fetchQuestionnaireTemplates().catch(e => { console.error("fetchQuestionnaireTemplates failed:", e); trackFail('Wellness templates'); return null; }),
-                StorageService.getWattbikeSessions().catch(() => []),
-                StorageService.getConditioningSessions().catch(() => []),
                 StorageService.getLoadRecords().catch(() => []),
-                StorageService.getWellnessData().catch(() => []),
-                StorageService.getBiometrics().catch(() => []),
-                StorageService.getWorkoutLog().catch(() => []),
                 DatabaseService.fetchTrainingLoads().catch(e => { console.error("[ACWR] fetchTrainingLoads failed:", e); trackFail('Training loads'); return null; }),
-                // Tertiary
-                StorageService.getPeriodizationPlans().catch(e => { console.warn("getPeriodizationPlans failed:", e.message); return []; }),
-                DatabaseService.fetchAssessments('evaluation').catch(() => null),
-                DatabaseService.fetchRmAssessments().catch(() => null),
                 // Settings
                 StorageService.getGpsProfiles().catch(() => null),
                 StorageService.getAcwrSettings().catch(() => null),
@@ -2341,7 +1643,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             // ── Process core DB results ──
             let dbTeams = [];
             let dbAthletes = [];
-            let dbExercises = [];
             let dbSessions = [];
             let allAssessments = [];
 
@@ -2368,11 +1669,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                         bikeModel: a.metrics?.bikeModel,
                     }));
                 setKpiRecords(dbAssessments);
-                dbExercises = exercisesResult || [];
             } else {
                 console.warn("Core DB fetch failed — falling back to mocks");
                 dbTeams = MOCK_TEAMS;
-                dbExercises = MOCK_EXERCISES;
             }
 
             // ── Calendar events (retry once on cold-start empty response) ──
@@ -2432,24 +1731,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             });
             setTeams(mappedTeams);
 
-            // ── Exercises (first load only) ──
-            if (!exercisesLoadedRef.current) {
-                let finalExercises = dbExercises;
-                if (finalExercises.length === 0) {
-                    try {
-                        const response = await fetch('./exercises_data.json');
-                        finalExercises = response.ok ? await response.json() : MOCK_EXERCISES;
-                    } catch { finalExercises = MOCK_EXERCISES; }
-                }
-                setExercises(finalExercises.sort((a, b) => a.name.localeCompare(b.name)));
-                exercisesLoadedRef.current = true;
-            }
-
-            // ── GPS categories ──
-            if (Array.isArray(loadedGpsCategories) && loadedGpsCategories.length > 0) {
-                try { localStorage.setItem('gps_categories', JSON.stringify(loadedGpsCategories)); } catch {}
-            }
-
             // ── Merge sessions (DB takes precedence over legacy) ──
             const mergedSessions = [...dbSessions];
             if (loadedSessions && loadedSessions.length > 0) {
@@ -2457,54 +1738,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 loadedSessions.forEach(ls => { if (!dbIds.has(ls.id)) mergedSessions.push(ls); });
             }
             setScheduledSessions(mergedSessions);
-            setQuestionnaires(loadedQuestionnaires || []);
-            setGpsData(loadedGps || []);
-            const rawHr = StorageService.getHrData();
-            setHrData(Array.isArray(rawHr) ? rawHr : []);
-            setMedicalReports(loadedMedical || []);
-
-            // ── Workout templates ──
-            if (dbTemplatesResult && dbTemplatesResult.length > 0) {
-                // Keep user_id + visibility + organisation_id on the in-memory row so
-                // OwnershipFilter (Mine / Org) can match. Dropping them here silently
-                // made both filters return zero matches regardless of the underlying data.
-                setWorkoutTemplates(dbTemplatesResult.map(t => ({
-                    id: t.id, name: t.name, trainingPhase: t.training_phase,
-                    load: t.load, sections: t.sections || { warmup: [], workout: [], cooldown: [] },
-                    createdAt: t.created_at,
-                    user_id: t.user_id,
-                    visibility: t.visibility,
-                    organisation_id: t.organisation_id,
-                })));
-            } else if (dbTemplatesResult !== null && loadedTemplates && loadedTemplates.length > 0) {
-                setWorkoutTemplates(loadedTemplates);
-            } else {
-                setWorkoutTemplates(loadedTemplates || []);
-            }
-
-            setPersonalExerciseIds(loadedPersonalExercises || []);
-
-            // ── Injury reports ──
-            if (dbInjuryResult && dbInjuryResult.length > 0) {
-                setInjuryReports(dbInjuryResult.map(r => ({
-                    id: r.id, athleteId: r.athlete_id, athleteName: r.athlete_name,
-                    teamId: r.team_id, dateOfInjury: r.date_of_injury,
-                    ...(r.report_data || {}), createdAt: r.created_at, updatedAt: r.updated_at,
-                })));
-            } else {
-                const loadedInjuryReports = await StorageService.getInjuryReports();
-                setInjuryReports(loadedInjuryReports?.length ? loadedInjuryReports : MOCK_INJURY_REPORTS);
-            }
-
-            setWellnessTemplates(dbWellnessTemplates || []);
-
-            // ── Wattbike & Conditioning ──
-            setWattbikeSessions(prev => {
-                if (!loadedWattbike || loadedWattbike.length === 0) return prev;
-                const existingIds = new Set(loadedWattbike.map(s => s.id));
-                return [...loadedWattbike, ...prev.filter(s => !existingIds.has(s.id))];
-            });
-            if (loadedConditioning && loadedConditioning.length > 0) setConditioningSessions(loadedConditioning);
 
             // ── Training loads (merge DB + local, deduplicated) ──
             let mergedLoadRecords = loadedLoad || [];
@@ -2525,42 +1758,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
                 ];
             }
             setLoadRecords(mergedLoadRecords);
-            setWellnessData(loadedWellness || []);
-            setBiometricsRecords(loadedBiometrics || []);
-            setWorkoutLog(loadedWorkoutLog || []);
-
-            // ── Periodization plans + evaluations + RM history ──
-            // Normalise on the way in so every nested array (phases / blocks /
-            // weeks / sessions / sections / exercises) is guaranteed to exist.
-            // This protects TimelineView, MicrocyclesTab and the volume/intensity
-            // calcs from "X is not iterable" crashes regardless of how the plan
-            // was authored or which legacy version of the structure was saved.
-            setPeriodizationPlans((loadedPlans || []).map(normalisePlan));
-
-            if (dbEvaluations) {
-                setEvaluationData(dbEvaluations.map(raw => ({
-                    athleteId: raw.athlete_id,
-                    date: raw.date,
-                    ...(raw.metrics || {})
-                })));
-            }
-
-            if (dbMaxHistory) {
-                setMaxHistory(dbMaxHistory.map(raw => {
-                    const m = raw.metrics || {};
-                    let exerciseName, maxWeight;
-                    if (raw.test_type === '1rm') {
-                        // Performance Lab: exerciseLabel has the name, value has the estimated 1RM
-                        exerciseName = m.exerciseLabel || RM_EXERCISE_MAP[m.exerciseId] || 'Unknown';
-                        maxWeight = m.value || 0;
-                    } else {
-                        // Testing Hub: test_type is the key (e.g. 'rm_back_squat'), metrics.weight is actual 1RM
-                        exerciseName = RM_EXERCISE_MAP[raw.test_type] || raw.test_type;
-                        maxWeight = m.weight || 0;
-                    }
-                    return { athleteId: raw.athlete_id, date: raw.date, exercise: exerciseName, weight: maxWeight };
-                }));
-            }
 
             // ── Settings (results from the main Promise.all above) ──
             if (Array.isArray(savedGpsProfiles) && savedGpsProfiles.length > 0) {
@@ -2590,16 +1787,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             if (savedGdsSrc && Object.keys(savedGdsSrc).length > 0) setGpsDataSources(savedGdsSrc);
             setWellnessResponses(wrRecords || []);
 
-            // Planned tonnage log — pulled into state so Tracking Hub + Data Hub
-            // can read tonnage without a per-render fetch. Last 365 days.
-            try {
-                const from = new Date(Date.now() - 365 * 86400000).toISOString().split('T')[0];
-                const tonnageRows = await DatabaseService.fetchPlannedTonnage(from);
-                setPlannedTonnageLog(tonnageRows || []);
-            } catch (e) {
-                console.warn('Planned tonnage fetch failed (non-fatal):', e);
-            }
-
             // If we got here, the try block succeeded
             dataLoadedRef.current = true;
         } catch (error) {
@@ -2608,7 +1795,23 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         } finally {
             setIsLoading(false);
         }
-    }, [setIsLoading, setTeams, setExercises, setScheduledSessions, setQuestionnaires, setGpsData, setMedicalReports, setWattbikeSessions, setLoadRecords, setWellnessData, setBiometricsRecords, setEvaluationData, setMaxHistory, setWorkoutLog, setGpsProfiles, setPolarIntegration, setGpsDataSources]);
+
+        // ── TIER 2: everything else loads in the background after first paint ──
+        loadSecondaryData();
+    }, [setIsLoading, setTeams, setScheduledSessions, setLoadRecords, setGpsProfiles, setPolarIntegration, setGpsDataSources]);
+
+    // Team + athlete handlers — extracted to appState/useTeamHandlers.ts
+    // (Phase 3). Placed AFTER initData so passing it as a dep is TDZ-safe.
+    const {
+        handleAddAthlete,
+        handleAddTeam,
+        handleDeleteAthlete,
+        handleDeleteTeam,
+        handleOpenPlayerProfile,
+        handleUpdateAthlete,
+    } = useTeamHandlers({
+        addAthleteMode, athletes, initData, newAthleteName, newAthleteProfile, newAthleteTeam, newTeamName, setAddAthleteMode, setIsAddAthleteModalOpen, setIsAddTeamModalOpen, setNewAthleteName, setNewAthleteProfile, setNewTeamName, setTeams, setViewingPlayer, showToast, teams,
+    });
 
     const handleLoadWellnessResponses = useCallback(async (teamId: string, rangeOrStart?: any, endDate?: string) => {
         if (!teamId || teamId === 'all') return;
@@ -2660,6 +1863,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         // Boot-load failure banner (audit fix 10)
         initLoadErrors,
         retryInitData: initData,
+        // Phase 2: background-tier loading flag (pages key skeletons off this)
+        isSecondaryLoading,
         isPerformanceLabOpen,
         setIsPerformanceLabOpen,
         // Organisation context (Phase B)

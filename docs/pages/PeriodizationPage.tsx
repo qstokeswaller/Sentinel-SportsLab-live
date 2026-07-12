@@ -20,6 +20,7 @@ import { TargetsTab } from '../components/periodization/TargetsTab';
 import { AddTargetModal } from '../components/periodization/AddTargetModal';
 import { formatDateShort } from '../utils/periodizationUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { SkCard, SkBlock, SkText, SkListCards } from '../components/ui/Skeleton';
 
 type TabId = 'overview' | 'timeline' | 'periods' | 'blocks' | 'microcycles' | 'targets';
 
@@ -51,6 +52,7 @@ export const PeriodizationPage = () => {
         setIsPlanEventModalOpen, setEditingPlanEvent,
         setIsPlanTargetModalOpen, setEditingPlanTarget,
         handleDeletePlan, teams, isLoading,
+        isSecondaryLoading,
     } = useAppState();
 
     const activePlan = periodizationPlans.find(p => p.id === activePlanId);
@@ -110,6 +112,33 @@ export const PeriodizationPage = () => {
         }
         return unique;
     }, [periodizationPlans, filterType, teams]);
+
+    // ─── SKELETON (Phase 2): plans are background-tier data — mirror the real
+    // layout (header card + filter bar + plan cards) while they load ───────
+    if (isSecondaryLoading && periodizationPlans.length === 0 && !activePlan) {
+        return (
+            <div className="space-y-4">
+                <SkCard className="flex items-center justify-between px-5 py-4">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <SkBlock className="w-5 h-5 rounded" />
+                            <SkBlock className="h-6 w-32" />
+                        </div>
+                        <SkText w="w-40" className="ml-7 h-2.5" />
+                    </div>
+                    <SkBlock className="h-10 w-28 rounded-lg" />
+                </SkCard>
+                <SkCard className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                        <SkText w="w-12" className="h-2.5" />
+                        <SkBlock className="h-8 w-44 rounded-lg" />
+                        <SkBlock className="h-8 w-36 rounded-lg" />
+                    </div>
+                </SkCard>
+                <SkListCards count={3} />
+            </div>
+        );
+    }
 
     // ─── PLAN LIST VIEW ──────────────────────────────────────────────
     if (!activePlan) {

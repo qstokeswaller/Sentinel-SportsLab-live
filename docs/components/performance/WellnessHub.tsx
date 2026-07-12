@@ -24,6 +24,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
         teams,
         athletes,
         wellnessTemplates,
+        isSecondaryLoading,
         setWellnessTemplates,
         wellnessResponses,
         handleLoadWellnessResponses,
@@ -439,6 +440,7 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
                     selectedTeamId={selectedTeamId}
                     activeTeamName={activeTeam?.name}
                     wellnessTemplates={wellnessTemplates}
+                    isSecondaryLoading={isSecondaryLoading}
                     shareSessions={shareSessions}
                     setShareSessions={setShareSessions}
                     copied={copied}

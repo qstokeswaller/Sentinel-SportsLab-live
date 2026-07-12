@@ -17,6 +17,7 @@ interface Props {
     selectedTeamId: string | null;
     activeTeamName?: string;
     wellnessTemplates: any[];
+    isSecondaryLoading?: boolean;
     shareSessions: ShareSession[];
     setShareSessions: React.Dispatch<React.SetStateAction<ShareSession[]>>;
     copied: boolean;
@@ -28,7 +29,7 @@ interface Props {
 
 export const WellnessSharePanel: React.FC<Props> = ({
     selectedTemplate, setSelectedTemplate, selectedTeamId, activeTeamName,
-    wellnessTemplates, shareSessions, setShareSessions,
+    wellnessTemplates, isSecondaryLoading, shareSessions, setShareSessions,
     copied, setCopied, sharingInProgress, setSharingInProgress, setViewMode,
 }) => {
     const previewLink = selectedTemplate
@@ -138,6 +139,18 @@ export const WellnessSharePanel: React.FC<Props> = ({
                         </div>
 
                         {/* Custom templates */}
+                        {/* Skeleton (Phase 2): custom templates are background-tier */}
+                        {isSecondaryLoading && wellnessTemplates.length === 0 && (
+                            <div className="p-5 rounded-xl border-2 border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338]">
+                                <div className="flex items-center gap-4 animate-pulse">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                    <div className="space-y-2">
+                                        <div className="h-3 w-36 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                        <div className="h-2.5 w-20 rounded bg-slate-200/70 dark:bg-[#1A2D48]" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {wellnessTemplates.map((t: any) => {
                             const isSelected = selectedTemplate?.id === t.id;
                             return (

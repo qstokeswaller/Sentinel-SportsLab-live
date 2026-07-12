@@ -43,6 +43,7 @@ import { GPS_META_COLS, GPS_COL_PRIORITY, gpsSortCols, fmtGpsCell, GpsSessionTab
 import GpsDataReport from './reporting/GpsDataReport';
 import GpsInsights from './reporting/GpsInsights';
 import TrackingHub from './reporting/TrackingHub';
+import { SkStatCards, SkChart, SkTable } from '../components/ui/Skeleton';
 
 export const ReportingHubPage = () => {
     const {
@@ -63,6 +64,7 @@ export const ReportingHubPage = () => {
         isLoading,
         polarIntegration, gpsDataSources,
         plannedTonnageLog,
+        isSecondaryLoading,
     } = useAppState();
 
     // --- Local state for GPS Data report ---
@@ -1084,8 +1086,24 @@ export const ReportingHubPage = () => {
                             <span className="text-xs font-medium text-slate-400 dark:text-[#CBD5E1]">Loading {activeReport?.toLowerCase()} data...</span>
                         </div>
                     )}
-                    {activeReport === 'Tracking Hub' && <TrackingHub {...{ BODY_PART_BG, BODY_PART_COLORS_MAP, REGION_BG, REGION_COLORS_MAP, TrackingSortIcon, TrackingTrendArrow, allTrackingAthletes, handleTrackingSort, setTrackingDateRange, setTrackingLoadCustomRange, setTrackingLoadPeriod, setTrackingLoadView, setTrackingPeriod, setTrackingSelectedAthlete, setTrackingSelectedTeam, setTrackingTab, teams, trackingAthleteData, trackingDateRange, trackingExerciseBreakdown, trackingKpis, trackingLoadCustomRange, trackingLoadData, trackingLoadPeriod, trackingLoadView, trackingPeriod, trackingSelectedAthlete, trackingSelectedTeam, trackingSessionTonnage, trackingSortedTeamStats, trackingTab }} />}
-                    {activeReport === 'GPS Data' && <GpsDataReport {...{ acwrSettings, gpsChangeDateCategory, gpsColConfigOpen, gpsColLabel, gpsColSearch, gpsData, gpsDataSources, gpsDialogAthleteCol, gpsDialogCategories, gpsDialogDateCol, gpsDialogPhaseCol, gpsFilterDateMode, gpsFilterTarget, gpsFilteredRecords, gpsHideCol, gpsHistoricalColKeys, gpsImportCategory, gpsImportDateOverride, gpsImportMessage, gpsImportStatus, gpsImportTeamId, gpsMatchedProfile, gpsMergedColConfig, gpsMissingColWarning, gpsNewCatLabel, gpsNewColumns, gpsRangeEnd, gpsRangeStart, gpsSaveColConfig, gpsSessionDates, gpsShowNewCat, gpsSmartDialog, gpsSpecificDate, gpsTab, gpsUnlinkedDialog, gpsVisibleColKeys, manualColConfig, manualColPickerOpen, manualDate, manualRows, manualTeamId, newManualColName, polarIntegration, polarSyncMessage, polarSyncStatus, renderGpsInsights, setGpsColConfigOpen, setGpsColSearch, setGpsData, setGpsDialogAthleteCol, setGpsDialogCategories, setGpsDialogDateCol, setGpsDialogPhaseCol, setGpsFilterDateMode, setGpsFilterTarget, setGpsImportCategory, setGpsImportDateOverride, setGpsImportMessage, setGpsImportStatus, setGpsImportTeamId, setGpsMatchedProfile, setGpsMissingColWarning, setGpsNewCatLabel, setGpsNewColumns, setGpsRangeEnd, setGpsRangeStart, setGpsShowNewCat, setGpsSmartDialog, setGpsSpecificDate, setGpsTab, setGpsUnlinkedDialog, setManualColConfig, setManualColPickerOpen, setManualDate, setManualRows, setManualTeamId, setNewManualColName, setPolarSyncMessage, setPolarSyncStatus, showToast, syncGpsToLoadRecords, teams }} />}
+                    {/* Skeleton (Phase 2): tonnage log is background-tier — mirror the
+                        Tracking Hub layout (KPI tiles + chart + athlete table) */}
+                    {activeReport === 'Tracking Hub' && isSecondaryLoading && (plannedTonnageLog || []).length === 0 && (
+                        <div className="space-y-4">
+                            <SkStatCards count={4} />
+                            <SkChart />
+                            <SkTable rows={6} cols={5} />
+                        </div>
+                    )}
+                    {activeReport === 'Tracking Hub' && !(isSecondaryLoading && (plannedTonnageLog || []).length === 0) && <TrackingHub {...{ BODY_PART_BG, BODY_PART_COLORS_MAP, REGION_BG, REGION_COLORS_MAP, TrackingSortIcon, TrackingTrendArrow, allTrackingAthletes, handleTrackingSort, setTrackingDateRange, setTrackingLoadCustomRange, setTrackingLoadPeriod, setTrackingLoadView, setTrackingPeriod, setTrackingSelectedAthlete, setTrackingSelectedTeam, setTrackingTab, teams, trackingAthleteData, trackingDateRange, trackingExerciseBreakdown, trackingKpis, trackingLoadCustomRange, trackingLoadData, trackingLoadPeriod, trackingLoadView, trackingPeriod, trackingSelectedAthlete, trackingSelectedTeam, trackingSessionTonnage, trackingSortedTeamStats, trackingTab }} />}
+                    {/* Skeleton (Phase 2): GPS records are background-tier */}
+                    {activeReport === 'GPS Data' && isSecondaryLoading && (gpsData || []).length === 0 && (
+                        <div className="space-y-4">
+                            <SkStatCards count={3} />
+                            <SkTable rows={8} cols={6} />
+                        </div>
+                    )}
+                    {activeReport === 'GPS Data' && !(isSecondaryLoading && (gpsData || []).length === 0) && <GpsDataReport {...{ acwrSettings, gpsChangeDateCategory, gpsColConfigOpen, gpsColLabel, gpsColSearch, gpsData, gpsDataSources, gpsDialogAthleteCol, gpsDialogCategories, gpsDialogDateCol, gpsDialogPhaseCol, gpsFilterDateMode, gpsFilterTarget, gpsFilteredRecords, gpsHideCol, gpsHistoricalColKeys, gpsImportCategory, gpsImportDateOverride, gpsImportMessage, gpsImportStatus, gpsImportTeamId, gpsMatchedProfile, gpsMergedColConfig, gpsMissingColWarning, gpsNewCatLabel, gpsNewColumns, gpsRangeEnd, gpsRangeStart, gpsSaveColConfig, gpsSessionDates, gpsShowNewCat, gpsSmartDialog, gpsSpecificDate, gpsTab, gpsUnlinkedDialog, gpsVisibleColKeys, manualColConfig, manualColPickerOpen, manualDate, manualRows, manualTeamId, newManualColName, polarIntegration, polarSyncMessage, polarSyncStatus, renderGpsInsights, setGpsColConfigOpen, setGpsColSearch, setGpsData, setGpsDialogAthleteCol, setGpsDialogCategories, setGpsDialogDateCol, setGpsDialogPhaseCol, setGpsFilterDateMode, setGpsFilterTarget, setGpsImportCategory, setGpsImportDateOverride, setGpsImportMessage, setGpsImportStatus, setGpsImportTeamId, setGpsMatchedProfile, setGpsMissingColWarning, setGpsNewCatLabel, setGpsNewColumns, setGpsRangeEnd, setGpsRangeStart, setGpsShowNewCat, setGpsSmartDialog, setGpsSpecificDate, setGpsTab, setGpsUnlinkedDialog, setManualColConfig, setManualColPickerOpen, setManualDate, setManualRows, setManualTeamId, setNewManualColName, setPolarSyncMessage, setPolarSyncStatus, showToast, syncGpsToLoadRecords, teams }} />}
                     {activeReport === 'Running Mechanics' && <RunningMechanicsLibrary />}
                 </div>
             </div>

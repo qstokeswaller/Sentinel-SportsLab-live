@@ -12,6 +12,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsPicker';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { fuzzySearch } from '../utils/fuzzySearch';
+import { SkTileGrid, SkListCards } from '../components/ui/Skeleton';
 
 const ICON_MAP = {
     'Activity': ActivityIcon,
@@ -28,6 +29,7 @@ const ICON_MAP = {
 export const ConditioningHubPage = () => {
     const {
         activeConditioningModule, setActiveConditioningModule, isLoading,
+        isSecondaryLoading,
         wattbikeView, setWattbikeView,
         selectedWattbikeSession, setSelectedWattbikeSession,
         newWattbikeSession, setNewWattbikeSession,
@@ -879,6 +881,11 @@ ${sectionsHtml}
                                 </div>
                             )}
 
+                            {/* Skeleton (Phase 2): wattbike sessions are background-tier —
+                                mirror the real session-card grid while they load */}
+                            {isSecondaryLoading && wattbikeSessions.length === 0 && (
+                                <SkTileGrid count={4} />
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredWattbikeSessions.map(session => (
                                     <div
@@ -1015,6 +1022,10 @@ ${sectionsHtml}
                                 </div>
                             )}
 
+                            {/* Skeleton (Phase 2): conditioning sessions are background-tier */}
+                            {isSecondaryLoading && conditioningSessions.length === 0 && (
+                                <SkTileGrid count={4} />
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {filteredConditioningSessions.map(session => {
                                     const ec = energyColor(session.energySystem);
