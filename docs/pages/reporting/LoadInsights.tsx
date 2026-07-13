@@ -103,9 +103,9 @@ export const LoadInsights: React.FC<Props> = ({ teams, loadRecords, plannedTonna
     if (mode === 'dashboards') {
         return (
             <div className="space-y-4">
-                {modeToggle}
                 <GpsDashboardsView
                     source="load"
+                    toolbarLeft={modeToggle}
                     rows={rows}
                     teams={teams}
                     colLabel={colLabel}
@@ -118,8 +118,8 @@ export const LoadInsights: React.FC<Props> = ({ teams, loadRecords, plannedTonna
 
     return (
         <div className="space-y-4">
-            {modeToggle}
             <GpsChartBuilder
+                toolbarLeft={modeToggle}
                 config={config}
                 onChange={setConfig}
                 rows={rows}

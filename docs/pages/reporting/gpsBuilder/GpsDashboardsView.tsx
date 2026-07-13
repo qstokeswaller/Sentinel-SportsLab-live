@@ -27,9 +27,11 @@ interface Props {
     /** Per-chart row resolver — surfaces whose rows depend on the chart's
      *  dataFilter (e.g. Testing pulls per test type) override the shared rows. */
     rowsForChart?: (chart: GpsChartConfig) => GpsRow[];
+    /** Mode toggles / pickers rendered inline in the header row. */
+    toolbarLeft?: React.ReactNode;
 }
 
-export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isExcluded, onEditChart, showToast, source = 'gps', rowsForChart }) => {
+export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isExcluded, onEditChart, showToast, source = 'gps', rowsForChart, toolbarLeft }) => {
     const { data: dashboards = [], isLoading } = useGpsDashboards(source);
     const createDashboard = useCreateGpsDashboard();
     const updateDashboard = useUpdateGpsDashboard();
@@ -58,7 +60,8 @@ export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isEx
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-wrap min-w-0">
+                        {toolbarLeft}
                         <button onClick={() => setOpenId(null)} aria-label="Back to dashboards"
                             className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                             <ChevronLeftIcon size={14} />
@@ -125,7 +128,10 @@ export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isEx
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">Saved chart collections — open one to see it with the latest data.</p>
+                <div className="flex items-center gap-3 flex-wrap min-w-0">
+                    {toolbarLeft}
+                    <p className="text-xs text-slate-500 dark:text-[#CBD5E1]">Saved chart collections — open one to see it with the latest data.</p>
+                </div>
                 {!creating ? (
                     <button onClick={() => setCreating(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors">

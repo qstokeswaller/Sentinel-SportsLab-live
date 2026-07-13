@@ -27,6 +27,9 @@ interface Props {
     actions?: React.ReactNode;
     /** Preset templates for this surface. Defaults to the GPS set; pass [] to hide. */
     presets?: PresetDef[];
+    /** Left side of the single toolbar row (mode toggles, surface pickers).
+     *  Keeps every insights surface to ONE compact header line. */
+    toolbarLeft?: React.ReactNode;
 }
 
 const CHART_TYPES: { type: ChartType; label: string; Icon: any }[] = [
@@ -77,7 +80,7 @@ const ColumnSelect: React.FC<{ value: string; onChange: (v: string) => void; col
     );
 };
 
-export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams, colLabel, numericGpsCols, isExcluded, actions, presets = GPS_PRESETS }) => {
+export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams, colLabel, numericGpsCols, isExcluded, actions, presets = GPS_PRESETS, toolbarLeft }) => {
     const previewRef = useRef<HTMLDivElement>(null);
     const [notice, setNotice] = React.useState<string | null>(null);
     const patch = (p: Partial<GpsChartConfig>) => onChange({ ...config, ...p });
@@ -93,6 +96,29 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
     };
 
     return (
+        <div className="space-y-3">
+        {/* ── Single toolbar row: toggles/pickers left, save + exports right ── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap min-w-0">{toolbarLeft}</div>
+            <div className="flex items-center justify-end gap-2 flex-wrap">
+                {actions}
+                <button onClick={() => downloadChartPng(previewRef.current!, config.title).catch(err => flash(err.message))}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
+                    <ImageIcon size={14} /> PNG
+                </button>
+                <button onClick={() => exportChartPdf(previewRef.current!, config.title).catch(err => flash(err.message))}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
+                    <FileDownIcon size={14} /> PDF
+                </button>
+                <button onClick={() => { try { downloadChartCsv(config, rows, teams, colLabel, isExcluded); } catch (err: any) { flash(err.message); } }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
+                    <FileTextIcon size={14} /> CSV
+                </button>
+            </div>
+        </div>
+        {notice && (
+            <div className="px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-700 dark:text-amber-300">{notice}</div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
             {/* ── Config panel ──────────────────────────────────────────── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-4 max-h-[720px] overflow-y-auto no-scrollbar">
@@ -317,28 +343,11 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
             </div>
 
             {/* ── Live preview ──────────────────────────────────────────── */}
-            <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-end gap-2 flex-wrap">
-                    {actions}
-                    <button onClick={() => downloadChartPng(previewRef.current!, config.title).catch(err => flash(err.message))}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
-                        <ImageIcon size={14} /> PNG
-                    </button>
-                    <button onClick={() => exportChartPdf(previewRef.current!, config.title).catch(err => flash(err.message))}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
-                        <FileDownIcon size={14} /> PDF
-                    </button>
-                    <button onClick={() => { try { downloadChartCsv(config, rows, teams, colLabel, isExcluded); } catch (err: any) { flash(err.message); } }}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
-                        <FileTextIcon size={14} /> CSV
-                    </button>
-                </div>
-                {notice && (
-                    <div className="px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-700 dark:text-amber-300">{notice}</div>
-                )}
+            <div className="min-w-0">
                 <GpsChartRenderer ref={previewRef} config={config} rows={rows} teams={teams} colLabel={colLabel}
                     isExcluded={config.excludeInjured ? isExcluded : undefined} height={420} enablePeriodNav />
             </div>
+        </div>
         </div>
     );
 };

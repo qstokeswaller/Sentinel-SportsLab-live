@@ -163,8 +163,8 @@ export const TestingInsights: React.FC<Props> = ({ teams, visibleTests, showToas
     if (mode === 'dashboards') {
         return (
             <div className="space-y-4">
-                {modeToggle}
                 <TestingDashboards
+                    toolbarLeft={modeToggle}
                     teams={teams}
                     cache={cache}
                     athleteName={athleteName}
@@ -182,23 +182,29 @@ export const TestingInsights: React.FC<Props> = ({ teams, visibleTests, showToas
         );
     }
 
+    // Test picker — the source of chartable columns
+    const testPicker = (
+        <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Test</span>
+            <CustomSelect value={testId} onChange={e => pickTest(e.target.value)} variant="form" size="xs" placeholder="Choose a test" minWidth={220}>
+                <option value="">Choose a test…</option>
+                {TEST_CATEGORIES.filter(cat => testsByCategory[cat.id]?.length).map(cat => (
+                    <optgroup key={cat.id} label={cat.name}>
+                        {testsByCategory[cat.id].map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </optgroup>
+                ))}
+            </CustomSelect>
+        </div>
+    );
+
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                {modeToggle}
-                {/* Test picker — the source of chartable columns */}
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">Test</span>
-                    <CustomSelect value={testId} onChange={e => pickTest(e.target.value)} variant="form" size="xs" placeholder="Choose a test" minWidth={220}>
-                        <option value="">Choose a test…</option>
-                        {TEST_CATEGORIES.filter(cat => testsByCategory[cat.id]?.length).map(cat => (
-                            <optgroup key={cat.id} label={cat.name}>
-                                {testsByCategory[cat.id].map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </optgroup>
-                        ))}
-                    </CustomSelect>
+            {!testId && (
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                    {modeToggle}
+                    {testPicker}
                 </div>
-            </div>
+            )}
 
             {!testId ? (
                 <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-14 flex flex-col items-center gap-3 text-center">
@@ -215,6 +221,7 @@ export const TestingInsights: React.FC<Props> = ({ teams, visibleTests, showToas
                     colLabel={colLabel}
                     numericGpsCols={numericCols}
                     presets={[]}
+                    toolbarLeft={<>{modeToggle}{testPicker}</>}
                     actions={
                         <SaveToDashboardButton
                             config={config}
@@ -237,7 +244,8 @@ const TestingDashboards: React.FC<{
     preloadForCharts: (charts: GpsChartConfig[]) => void;
     onEditChart: (dashboardId: string, chart: GpsChartConfig) => void;
     showToast?: (msg: string, type?: string) => void;
-}> = ({ teams, cache, athleteName, preloadForCharts, onEditChart, showToast }) => {
+    toolbarLeft?: React.ReactNode;
+}> = ({ teams, cache, athleteName, preloadForCharts, onEditChart, showToast, toolbarLeft }) => {
     const rowsForChart = (chart: GpsChartConfig): GpsRow[] => {
         const t = chart.dataFilter?.testType || '';
         return toRows(cache[t] || [], t ? getTestById(t) || null : null, athleteName);
@@ -267,6 +275,7 @@ const TestingDashboards: React.FC<{
     return (
         <GpsDashboardsView
             source="testing"
+            toolbarLeft={toolbarLeft}
             rows={[]}
             teams={teams}
             colLabel={globalLabel}

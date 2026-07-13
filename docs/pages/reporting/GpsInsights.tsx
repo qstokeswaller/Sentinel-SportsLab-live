@@ -182,7 +182,6 @@ export const GpsInsights: React.FC<any> = ({
         if (viewMode === 'builder') {
             return (
                 <div className="space-y-4">
-                    {modeToggle}
                     <GpsChartBuilder
                         config={builderConfig}
                         onChange={setBuilderConfig}
@@ -191,6 +190,7 @@ export const GpsInsights: React.FC<any> = ({
                         colLabel={gpsColLabel}
                         numericGpsCols={numericGpsCols}
                         isExcluded={wasExcludedOnDate}
+                        toolbarLeft={modeToggle}
                         actions={
                             <SaveToDashboardButton
                                 config={builderConfig}
@@ -207,8 +207,8 @@ export const GpsInsights: React.FC<any> = ({
         if (viewMode === 'dashboards') {
             return (
                 <div className="space-y-4">
-                    {modeToggle}
                     <GpsDashboardsView
+                        toolbarLeft={modeToggle}
                         rows={allGps}
                         teams={teams}
                         colLabel={gpsColLabel}

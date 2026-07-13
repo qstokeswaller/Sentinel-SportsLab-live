@@ -1300,23 +1300,24 @@ const InsightsTabShell: React.FC<{
     activeTeam: any; athletes: any[]; dailyResponses: any[]; weeklyResponses: any[]; standard: React.ReactNode;
 }> = ({ activeTeam, athletes, dailyResponses, weeklyResponses, standard }) => {
     const [mode, setMode] = useState<'standard' | 'custom'>('standard');
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
-                <button onClick={() => setMode('standard')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'standard' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
-                    Standard
-                </button>
-                <button onClick={() => setMode('custom')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'custom' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
-                    Custom builder
-                </button>
-            </div>
-            {mode === 'custom'
-                ? <WellnessCustomInsights activeTeam={activeTeam} athletes={athletes} dailyResponses={dailyResponses} weeklyResponses={weeklyResponses} />
-                : standard}
+    const switchEl = (
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
+            <button onClick={() => setMode('standard')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'standard' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                Standard
+            </button>
+            <button onClick={() => setMode('custom')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'custom' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                Custom builder
+            </button>
         </div>
     );
+    // Custom mode: the switch rides inline in the builder's own toolbar row
+    // (one compact header line); standard keeps it as its own row above the
+    // original charts, which manage their own controls.
+    return mode === 'custom'
+        ? <WellnessCustomInsights activeTeam={activeTeam} athletes={athletes} dailyResponses={dailyResponses} weeklyResponses={weeklyResponses} modeSwitch={switchEl} />
+        : <div className="space-y-4">{switchEl}{standard}</div>;
 };
 
 export default WellnessDashboard;

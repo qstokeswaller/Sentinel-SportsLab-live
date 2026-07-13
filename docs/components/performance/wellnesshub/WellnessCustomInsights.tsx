@@ -16,6 +16,8 @@ interface Props {
     dailyResponses: any[];
     weeklyResponses: any[];
     showToast?: (msg: string, type?: string) => void;
+    /** The hub's Standard | Custom switch, rendered inline in our toolbar row. */
+    modeSwitch?: React.ReactNode;
 }
 
 // Numeric questionnaire metrics (categorical ones like availability/readiness
@@ -59,7 +61,7 @@ function buildRows(daily: any[], weekly: any[], athletes: any[]): { rows: GpsRow
     return { rows: [...map.values()], cols };
 }
 
-export const WellnessCustomInsights: React.FC<Props> = ({ activeTeam, athletes, dailyResponses, weeklyResponses, showToast }) => {
+export const WellnessCustomInsights: React.FC<Props> = ({ activeTeam, athletes, dailyResponses, weeklyResponses, showToast, modeSwitch }) => {
     const [mode, setMode] = useState<'builder' | 'dashboards'>('builder');
     const [editingSource, setEditingSource] = useState<string | null>(null);
 
@@ -91,9 +93,9 @@ export const WellnessCustomInsights: React.FC<Props> = ({ activeTeam, athletes, 
     if (mode === 'dashboards') {
         return (
             <div className="space-y-4">
-                {modeToggle}
                 <GpsDashboardsView
                     source="questionnaire"
+                    toolbarLeft={<>{modeSwitch}{modeToggle}</>}
                     rows={rows}
                     teams={teams}
                     colLabel={colLabel}
@@ -106,8 +108,8 @@ export const WellnessCustomInsights: React.FC<Props> = ({ activeTeam, athletes, 
 
     return (
         <div className="space-y-4">
-            {modeToggle}
             <GpsChartBuilder
+                toolbarLeft={<>{modeSwitch}{modeToggle}</>}
                 config={config}
                 onChange={setConfig}
                 rows={rows}
