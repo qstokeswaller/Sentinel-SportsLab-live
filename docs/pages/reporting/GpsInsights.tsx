@@ -4,6 +4,9 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ActivityIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import DatePicker from '../../components/ui/DatePicker';
+import { LayoutDashboardIcon, SlidersHorizontalIcon } from 'lucide-react';
+import GpsChartBuilder from './gpsBuilder/GpsChartBuilder';
+import { newChartConfig, type GpsChartConfig } from './gpsBuilder/types';
 
 export const GpsInsights: React.FC<any> = ({
     acwrExclusions,
@@ -35,6 +38,18 @@ export const GpsInsights: React.FC<any> = ({
 }) => {
         const CHART_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#a855f7','#64748b'];
         const CAT_COLORS: Record<string, string> = { match: '#ef4444', recovery: '#10b981', training: '#6366f1' };
+
+        // Insights view mode: the original opinionated quick view, or the
+        // configurable chart builder (Phase A of the GPS Chart Builder).
+        const [viewMode, setViewMode] = useState<'quick' | 'builder'>('quick');
+        const [builderConfig, setBuilderConfig] = useState<GpsChartConfig>(() => newChartConfig());
+        // Backfill a sensible default metric once GPS columns are known.
+        useEffect(() => {
+            if (viewMode === 'builder' && builderConfig.metric.kind === 'column' && !builderConfig.metric.column && numericGpsCols.length) {
+                const col = numericGpsCols.find(k => /total distance/i.test(k)) || numericGpsCols[0];
+                setBuilderConfig(c => ({ ...c, metric: { kind: 'column', column: col } }));
+            }
+        }, [viewMode, numericGpsCols, builderConfig.metric]);
 
         const fmtDate = (d: string) => {
             try { return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
@@ -142,6 +157,38 @@ export const GpsInsights: React.FC<any> = ({
             );
         }
 
+        // ── Quick View ↔ Builder mode switch (shared across both modes) ───────
+        const modeToggle = (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
+                <button onClick={() => setViewMode('quick')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'quick' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                    <SlidersHorizontalIcon size={13} /> Quick View
+                </button>
+                <button onClick={() => setViewMode('builder')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'builder' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                    <LayoutDashboardIcon size={13} /> Builder
+                </button>
+            </div>
+        );
+
+        // ── Builder mode — configurable chart studio ──────────────────────────
+        if (viewMode === 'builder') {
+            return (
+                <div className="space-y-4">
+                    {modeToggle}
+                    <GpsChartBuilder
+                        config={builderConfig}
+                        onChange={setBuilderConfig}
+                        rows={allGps}
+                        teams={teams}
+                        colLabel={gpsColLabel}
+                        numericGpsCols={numericGpsCols}
+                        isExcluded={wasExcludedOnDate}
+                    />
+                </div>
+            );
+        }
+
         // Helper: toggle switch
         const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
             <label className="flex items-center gap-2 cursor-pointer self-end pb-[2px]">
@@ -154,6 +201,8 @@ export const GpsInsights: React.FC<any> = ({
 
         // ── Controls bar ─────────────────────────────────────────────────────
         const controlsBar = (
+            <>
+            {modeToggle}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-wrap items-end gap-3">
                 {/* Team filter */}
                 <div className="flex flex-col gap-1">
@@ -239,6 +288,7 @@ export const GpsInsights: React.FC<any> = ({
                     <Toggle on={insightRollingAvg} onToggle={() => setInsightRollingAvg(v => !v)} label="7-day rolling avg" />
                 )}
             </div>
+            </>
         );
 
         // ── CHART: Team — Single Day Bar Chart (P10: compare=bar) ────────────
