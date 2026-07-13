@@ -63,6 +63,9 @@ export interface GpsChartConfig {
     /** Custom colours: column key → hex. Special key '__primary' colours the
      *  main series on single-metric charts (bar/line/scatter). */
     seriesColors?: Record<string, string>;
+    /** Source-specific context a surface needs to re-derive this chart's rows,
+     *  e.g. { testType: 'cmj' } for Testing insights. Opaque to the engine. */
+    dataFilter?: Record<string, string>;
 }
 
 export interface GpsDashboard {

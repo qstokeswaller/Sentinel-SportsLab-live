@@ -22,10 +22,15 @@ interface Props {
     /** Open a chart config in the Builder for editing (switches mode). */
     onEditChart: (dashboardId: string, chart: GpsChartConfig) => void;
     showToast?: (msg: string, type?: string) => void;
+    /** Which insights surface owns the dashboards (default 'gps'). */
+    source?: string;
+    /** Per-chart row resolver — surfaces whose rows depend on the chart's
+     *  dataFilter (e.g. Testing pulls per test type) override the shared rows. */
+    rowsForChart?: (chart: GpsChartConfig) => GpsRow[];
 }
 
-export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isExcluded, onEditChart, showToast }) => {
-    const { data: dashboards = [], isLoading } = useGpsDashboards();
+export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isExcluded, onEditChart, showToast, source = 'gps', rowsForChart }) => {
+    const { data: dashboards = [], isLoading } = useGpsDashboards(source);
     const createDashboard = useCreateGpsDashboard();
     const updateDashboard = useUpdateGpsDashboard();
     const deleteDashboard = useDeleteGpsDashboard();
@@ -42,7 +47,7 @@ export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isEx
         const name = newName.trim();
         if (!name) return;
         try {
-            const d = await createDashboard.mutateAsync({ name });
+            const d = await createDashboard.mutateAsync({ name, source });
             setNewName(''); setCreating(false); setOpenId(d.id);
             showToast?.('Dashboard created', 'success');
         } catch (e: any) { showToast?.(e.message || 'Could not create dashboard', 'error'); }
@@ -84,7 +89,7 @@ export const GpsDashboardsView: React.FC<Props> = ({ rows, teams, colLabel, isEx
                 ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                         {open.charts.map(chart => (
-                            <DashboardTile key={chart.id} chart={chart} dashboard={open} rows={rows} teams={teams} colLabel={colLabel}
+                            <DashboardTile key={chart.id} chart={chart} dashboard={open} rows={rowsForChart ? rowsForChart(chart) : rows} teams={teams} colLabel={colLabel}
                                 isExcluded={isExcluded} onEdit={() => onEditChart(open.id, chart)}
                                 onRemove={() => setRemoveChart({ dash: open, chart })} />
                         ))}

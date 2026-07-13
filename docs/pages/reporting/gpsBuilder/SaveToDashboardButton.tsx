@@ -12,10 +12,12 @@ interface Props {
     /** Set when the chart was opened from a dashboard tile — Save updates in place. */
     editingDashboardId?: string | null;
     onSaved?: () => void;
+    /** Which insights surface owns the dashboards (default 'gps'). */
+    source?: string;
 }
 
-export const SaveToDashboardButton: React.FC<Props> = ({ config, editingDashboardId, onSaved }) => {
-    const { data: dashboards = [] } = useGpsDashboards();
+export const SaveToDashboardButton: React.FC<Props> = ({ config, editingDashboardId, onSaved, source = 'gps' }) => {
+    const { data: dashboards = [] } = useGpsDashboards(source);
     const createDashboard = useCreateGpsDashboard();
     const updateDashboard = useUpdateGpsDashboard();
 
@@ -49,7 +51,7 @@ export const SaveToDashboardButton: React.FC<Props> = ({ config, editingDashboar
     const saveIntoNew = async () => {
         const name = newName.trim();
         if (!name) return;
-        await createDashboard.mutateAsync({ name, charts: [config] });
+        await createDashboard.mutateAsync({ name, charts: [config], source });
         setNewName(''); setOpen(false); flashSaved(); onSaved?.();
     };
 

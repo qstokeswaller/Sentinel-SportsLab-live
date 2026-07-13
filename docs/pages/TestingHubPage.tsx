@@ -14,6 +14,7 @@ import { TrendChart } from '../components/testing/TrendChart';
 import { TeamComparisonTable } from '../components/testing/TeamComparisonTable';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TestSessionExport } from '../components/testing/TestSessionExport';
+import TestingInsights from '../components/testing/TestingInsights';
 import DatePicker from '../components/ui/DatePicker';
 import {
     ArrowLeftIcon, ActivityIcon, DumbbellIcon, ZapIcon, MoveIcon, HeartIcon,
@@ -33,7 +34,7 @@ const ICON_MAP: Record<string, React.FC<any>> = {
     Trophy: TrophyIcon,
 };
 
-type HubView = 'categories' | 'compare' | 'export';
+type HubView = 'categories' | 'compare' | 'export' | 'insights';
 
 export const TestingHubPage: React.FC = () => {
     const {
@@ -417,6 +418,29 @@ export const TestingHubPage: React.FC = () => {
 
     // ─── RENDER: Hub home ────────────────────────────────────────────
 
+    // Insights view — chart builder + saved dashboards over test data
+    if (hubView === 'insights') {
+        return (
+            <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setHubView('categories')}
+                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 dark:hover:border-[#364E6E] transition-all"
+                        >
+                            <ArrowLeftIcon size={16} />
+                        </button>
+                        <div>
+                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Testing</div>
+                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">Insights</h2>
+                        </div>
+                    </div>
+                </div>
+                <TestingInsights teams={teams} visibleTests={searchableTests} showToast={showToast} />
+            </div>
+        );
+    }
+
     // Team Comparison view
     if (hubView === 'compare') {
         return (
@@ -538,6 +562,13 @@ export const TestingHubPage: React.FC = () => {
                 >
                     <BarChart3Icon size={14} className="text-indigo-500" />
                     Team Comparison
+                </button>
+                <button
+                    onClick={() => setHubView('insights')}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-sm font-medium text-slate-700 dark:text-[#E2E8F0] hover:border-indigo-200 dark:hover:border-[#364E6E] hover:shadow-sm transition-all"
+                >
+                    <ActivityIcon size={14} className="text-indigo-500" />
+                    Insights
                 </button>
                 <button
                     onClick={() => setHubView('export')}

@@ -763,6 +763,7 @@ export type Database = {
           id: string
           name: string
           organisation_id: string
+          source: string
           team_id: string | null
           updated_at: string
           user_id: string
@@ -774,6 +775,7 @@ export type Database = {
           id?: string
           name: string
           organisation_id: string
+          source?: string
           team_id?: string | null
           updated_at?: string
           user_id: string
@@ -785,6 +787,7 @@ export type Database = {
           id?: string
           name?: string
           organisation_id?: string
+          source?: string
           team_id?: string | null
           updated_at?: string
           user_id?: string

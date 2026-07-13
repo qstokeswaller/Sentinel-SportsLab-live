@@ -12,7 +12,7 @@ import {
 import type { GpsChartConfig, GpsRow, ChartType, MetricDef } from './types';
 import { GPS_CHART_COLORS } from './types';
 import GpsChartRenderer from './GpsChartRenderer';
-import { GPS_PRESETS } from './presets';
+import { GPS_PRESETS, type PresetDef } from './presets';
 import { downloadChartPng, downloadChartCsv, exportChartPdf } from './exportChart';
 
 interface Props {
@@ -25,6 +25,8 @@ interface Props {
     isExcluded?: (athleteId: string, date: string) => boolean;
     /** Optional action slot (Save / Export buttons) rendered in the preview header. */
     actions?: React.ReactNode;
+    /** Preset templates for this surface. Defaults to the GPS set; pass [] to hide. */
+    presets?: PresetDef[];
 }
 
 const CHART_TYPES: { type: ChartType; label: string; Icon: any }[] = [
@@ -75,7 +77,7 @@ const ColumnSelect: React.FC<{ value: string; onChange: (v: string) => void; col
     );
 };
 
-export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams, colLabel, numericGpsCols, isExcluded, actions }) => {
+export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams, colLabel, numericGpsCols, isExcluded, actions, presets = GPS_PRESETS }) => {
     const previewRef = useRef<HTMLDivElement>(null);
     const [notice, setNotice] = React.useState<string | null>(null);
     const patch = (p: Partial<GpsChartConfig>) => onChange({ ...config, ...p });
@@ -95,9 +97,10 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
             {/* ── Config panel ──────────────────────────────────────────── */}
             <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 flex flex-col gap-4 max-h-[720px] overflow-y-auto no-scrollbar">
                 {/* Presets */}
+                {presets.length > 0 && (
                 <Section label="Start from a preset">
                     <div className="flex flex-wrap gap-1.5">
-                        {GPS_PRESETS.map(p => (
+                        {presets.map(p => (
                             <button key={p.id} title={p.description}
                                 onClick={() => { const c = p.build(numericGpsCols); if (c) onChange({ ...c, id: config.id, teamFilter: config.teamFilter }); }}
                                 className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
@@ -106,6 +109,7 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                         ))}
                     </div>
                 </Section>
+                )}
 
                 {/* Title */}
                 <Section label="Chart title">
