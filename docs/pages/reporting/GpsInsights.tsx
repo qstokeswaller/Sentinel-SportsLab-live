@@ -6,6 +6,8 @@ import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceL
 import DatePicker from '../../components/ui/DatePicker';
 import { LayoutDashboardIcon, SlidersHorizontalIcon } from 'lucide-react';
 import GpsChartBuilder from './gpsBuilder/GpsChartBuilder';
+import GpsDashboardsView from './gpsBuilder/GpsDashboardsView';
+import SaveToDashboardButton from './gpsBuilder/SaveToDashboardButton';
 import { newChartConfig, type GpsChartConfig } from './gpsBuilder/types';
 
 export const GpsInsights: React.FC<any> = ({
@@ -39,10 +41,13 @@ export const GpsInsights: React.FC<any> = ({
         const CHART_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#a855f7','#64748b'];
         const CAT_COLORS: Record<string, string> = { match: '#ef4444', recovery: '#10b981', training: '#6366f1' };
 
-        // Insights view mode: the original opinionated quick view, or the
-        // configurable chart builder (Phase A of the GPS Chart Builder).
-        const [viewMode, setViewMode] = useState<'quick' | 'builder'>('quick');
+        // Insights view mode: the original quick view, the configurable chart
+        // builder, or saved dashboards (GPS Chart Builder Phases A–C).
+        const [viewMode, setViewMode] = useState<'quick' | 'builder' | 'dashboards'>('quick');
         const [builderConfig, setBuilderConfig] = useState<GpsChartConfig>(() => newChartConfig());
+        // When editing a chart that lives in a dashboard, remember where it came
+        // from so "Save" updates that dashboard instead of duplicating.
+        const [editingSource, setEditingSource] = useState<string | null>(null);
         // Backfill a sensible default metric once GPS columns are known.
         useEffect(() => {
             if (viewMode === 'builder' && builderConfig.metric.kind === 'column' && !builderConfig.metric.column && numericGpsCols.length) {
@@ -157,17 +162,19 @@ export const GpsInsights: React.FC<any> = ({
             );
         }
 
-        // ── Quick View ↔ Builder mode switch (shared across both modes) ───────
+        // ── Quick View / Builder / Dashboards mode switch ─────────────────────
         const modeToggle = (
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
-                <button onClick={() => setViewMode('quick')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'quick' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
-                    <SlidersHorizontalIcon size={13} /> Quick View
-                </button>
-                <button onClick={() => setViewMode('builder')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === 'builder' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
-                    <LayoutDashboardIcon size={13} /> Builder
-                </button>
+                {([
+                    ['quick', 'Quick View', SlidersHorizontalIcon],
+                    ['builder', 'Builder', SlidersHorizontalIcon],
+                    ['dashboards', 'Dashboards', LayoutDashboardIcon],
+                ] as const).map(([mode, label, Icon]) => (
+                    <button key={mode} onClick={() => setViewMode(mode)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${viewMode === mode ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                        <Icon size={13} /> {label}
+                    </button>
+                ))}
             </div>
         );
 
@@ -184,6 +191,33 @@ export const GpsInsights: React.FC<any> = ({
                         colLabel={gpsColLabel}
                         numericGpsCols={numericGpsCols}
                         isExcluded={wasExcludedOnDate}
+                        actions={
+                            <SaveToDashboardButton
+                                config={builderConfig}
+                                editingDashboardId={editingSource}
+                                onSaved={() => { setEditingSource(null); setViewMode('dashboards'); }}
+                            />
+                        }
+                    />
+                </div>
+            );
+        }
+
+        // ── Dashboards mode — saved chart collections, live data ──────────────
+        if (viewMode === 'dashboards') {
+            return (
+                <div className="space-y-4">
+                    {modeToggle}
+                    <GpsDashboardsView
+                        rows={allGps}
+                        teams={teams}
+                        colLabel={gpsColLabel}
+                        isExcluded={wasExcludedOnDate}
+                        onEditChart={(dashboardId, chart) => {
+                            setBuilderConfig(chart);
+                            setEditingSource(dashboardId);
+                            setViewMode('builder');
+                        }}
                     />
                 </div>
             );

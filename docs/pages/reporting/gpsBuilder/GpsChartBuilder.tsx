@@ -10,6 +10,7 @@ import {
     ImageIcon, FileTextIcon, FileDownIcon,
 } from 'lucide-react';
 import type { GpsChartConfig, GpsRow, ChartType, MetricDef } from './types';
+import { GPS_CHART_COLORS } from './types';
 import GpsChartRenderer from './GpsChartRenderer';
 import { GPS_PRESETS } from './presets';
 import { downloadChartPng, downloadChartCsv, exportChartPdf } from './exportChart';
@@ -274,13 +275,21 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                     </Section>
                 </div>
 
+                {/* Labels & colours — rename any used column (e.g. "zone 5" → "HSR")
+                    and pick series colours. Renames are display-only: data still
+                    reads the raw column, so this works for API/CSV/manual alike. */}
+                <LabelsAndColours config={config} patch={patch} colLabel={colLabel} />
+
                 {/* Options */}
                 <div className="flex flex-col gap-2">
                     {(config.chartType === 'bar' || config.chartType === 'horizontalBar') && (
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={config.colorBy === 'category'} onChange={e => patch({ colorBy: e.target.checked ? 'category' : 'none' })} className="accent-indigo-600" />
-                            <span className="text-[11px] text-slate-600 dark:text-[#CBD5E1]">Colour bars by session type (match/training/recovery)</span>
-                        </label>
+                        <Section label="Bar colours">
+                            <CustomSelect value={config.colorBy || 'none'} onChange={e => patch({ colorBy: e.target.value as any })} variant="form" size="xs">
+                                <option value="none">Single colour</option>
+                                <option value="category">By session type (match/training/recovery)</option>
+                                <option value="multi">Each bar its own colour</option>
+                            </CustomSelect>
+                        </Section>
                     )}
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" checked={config.excludeInjured} onChange={e => patch({ excludeInjured: e.target.checked })} className="accent-indigo-600" />
@@ -336,6 +345,93 @@ const SpecificDates: React.FC<{ dates: string[]; onChange: (d: string[]) => void
                 {dates.length === 0 && <span className="text-[10px] text-slate-400">No dates picked yet</span>}
             </div>
         </div>
+    );
+};
+
+/**
+ * Labels & colours — rename any column the chart uses (display-only alias,
+ * e.g. "Distance in speed zone 5" → "HSR (>25 km/h)") and pick its colour.
+ * Only the columns the CURRENT chart uses are listed, so it stays simple.
+ */
+const LabelsAndColours: React.FC<{ config: GpsChartConfig; patch: (p: Partial<GpsChartConfig>) => void; colLabel: (k: string) => string }> = ({ config, patch, colLabel }) => {
+    const [pickerFor, setPickerFor] = React.useState<string | null>(null);
+
+    // Which raw columns does this chart actually use?
+    const usedCols: string[] = [];
+    if (config.metric.kind === 'column' && config.metric.column) usedCols.push(config.metric.column);
+    if (config.metric.kind === 'ratio') {
+        if (config.metric.numerator) usedCols.push(config.metric.numerator);
+        if (config.metric.denominator) usedCols.push(config.metric.denominator);
+    }
+    if (config.chartType === 'scatter' && config.metricY2?.kind === 'column' && config.metricY2.column) usedCols.push(config.metricY2.column);
+    if (config.chartType === 'stackedBar' || config.chartType === 'pie') for (const c of config.seriesColumns || []) usedCols.push(c);
+    const unique = [...new Set(usedCols)];
+
+    // Colour applies per-column on stacked/pie; single primary colour otherwise.
+    const perColumnColor = config.chartType === 'stackedBar' || config.chartType === 'pie';
+    const showPrimary = !perColumnColor;
+
+    if (unique.length === 0) return null;
+
+    const setLabel = (col: string, v: string) => {
+        const next = { ...(config.labelOverrides || {}) };
+        if (v.trim()) next[col] = v; else delete next[col];
+        patch({ labelOverrides: next });
+    };
+    const setColor = (key: string, v: string) => {
+        patch({ seriesColors: { ...(config.seriesColors || {}), [key]: v } });
+        setPickerFor(null);
+    };
+
+    const Swatch: React.FC<{ colorKey: string; fallback: string }> = ({ colorKey, fallback }) => (
+        <button type="button" aria-label="Pick colour"
+            onClick={() => setPickerFor(pickerFor === colorKey ? null : colorKey)}
+            className="w-6 h-6 rounded-md border border-slate-200 dark:border-[#243A58] shrink-0 transition-transform hover:scale-110"
+            style={{ backgroundColor: config.seriesColors?.[colorKey] || fallback }} />
+    );
+
+    const Palette: React.FC<{ colorKey: string }> = ({ colorKey }) => (
+        <div className="flex items-center gap-1.5 flex-wrap py-1">
+            {GPS_CHART_COLORS.map(c => (
+                <button key={c} type="button" aria-label={`Colour ${c}`} onClick={() => setColor(colorKey, c)}
+                    className="w-5 h-5 rounded-full border border-white/40 hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
+            ))}
+            <input type="color" aria-label="Custom colour"
+                value={config.seriesColors?.[colorKey] || '#6366f1'}
+                onChange={e => setColor(colorKey, e.target.value)}
+                className="w-6 h-6 rounded cursor-pointer border border-slate-200 dark:border-[#243A58] bg-transparent p-0" />
+        </div>
+    );
+
+    return (
+        <Section label="Labels & colours">
+            <div className="flex flex-col gap-2">
+                {showPrimary && (
+                    <div className="flex items-center gap-2">
+                        <Swatch colorKey="__primary" fallback="#6366f1" />
+                        <span className="text-[11px] text-slate-600 dark:text-[#CBD5E1]">Chart colour</span>
+                    </div>
+                )}
+                {showPrimary && pickerFor === '__primary' && <Palette colorKey="__primary" />}
+                {unique.map(col => (
+                    <React.Fragment key={col}>
+                        <div className="flex items-center gap-2">
+                            {perColumnColor && <Swatch colorKey={col} fallback={GPS_CHART_COLORS[unique.indexOf(col) % GPS_CHART_COLORS.length]} />}
+                            <input
+                                value={config.labelOverrides?.[col] || ''}
+                                onChange={e => setLabel(col, e.target.value)}
+                                placeholder={colLabel(col)}
+                                title={`Raw column: ${col}`}
+                                className="flex-1 min-w-0 text-[11px] rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] px-2 py-1.5 text-slate-800 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#64748B] outline-none focus:ring-1 focus:ring-indigo-300" />
+                        </div>
+                        {perColumnColor && pickerFor === col && <Palette colorKey={col} />}
+                    </React.Fragment>
+                ))}
+                <p className="text-[10px] text-slate-400 dark:text-[#64748B] leading-snug">
+                    Rename how a column appears on this chart (e.g. zone 5 → "HSR"). Data still comes from the original column.
+                </p>
+            </div>
+        </Section>
     );
 };
 

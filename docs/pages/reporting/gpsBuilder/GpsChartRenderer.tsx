@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { ActivityIcon } from 'lucide-react';
 import type { GpsChartConfig, GpsRow } from './types';
-import { GPS_CATEGORY_COLORS } from './types';
+import { GPS_CATEGORY_COLORS, GPS_CHART_COLORS } from './types';
 import { buildChartData } from './compute';
 
 interface Props {
@@ -119,9 +119,14 @@ function renderChart(config: GpsChartConfig, data: any, xTitle: string, yTitle: 
                     label={{ value: yTitle, angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: theme.axisTitle, textAnchor: 'middle' } }} width={60} />
                 <ZAxis range={[90, 90]} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={theme.tooltip} itemStyle={{ color: theme.tooltip.color }}
-                    formatter={(v: any, n: any) => [fmt(v), n === 'x' ? xTitle : yTitle]} labelFormatter={() => ''} />
-                <Scatter data={points} fill="#6366f1">
-                    {points.map((p: any, i: number) => <Cell key={i} fill={GPS_CATEGORY_COLORS[p.category] || '#6366f1'} />)}
+                    labelStyle={{ color: theme.tooltip.color, fontWeight: 600 }}
+                    formatter={(v: any, n: any) => [fmt(v), n === 'x' ? xTitle : yTitle]}
+                    labelFormatter={(_l: any, payload: any) => payload?.[0]?.payload?.fullName || ''} />
+                <Scatter data={points} fill={config.seriesColors?.__primary || '#6366f1'}>
+                    {points.map((p: any, i: number) => <Cell key={i} fill={
+                        config.colorBy === 'category' ? (GPS_CATEGORY_COLORS[p.category] || config.seriesColors?.__primary || '#6366f1')
+                        : (config.seriesColors?.__primary || '#6366f1')
+                    } />)}
                 </Scatter>
             </ScatterChart>
         );
@@ -139,7 +144,7 @@ function renderChart(config: GpsChartConfig, data: any, xTitle: string, yTitle: 
                 <Tooltip contentStyle={theme.tooltip} itemStyle={{ color: theme.tooltip.color }} labelStyle={{ color: theme.tooltip.color, fontWeight: 600 }} formatter={(v: any) => [`${fmt(v)}${unit ? ` ${unit}` : ''}`, data.metricLabel]} />
                 {data.stats.avg != null && <ReferenceLine y={data.stats.avg} stroke={theme.refLine} strokeDasharray="4 4" strokeWidth={1}
                     label={{ value: `Avg ${fmt(data.stats.avg)}`, fontSize: 9, fill: theme.refLine, position: 'insideTopRight' }} />}
-                <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name={data.metricLabel} />
+                <Line type="monotone" dataKey="value" stroke={config.seriesColors?.__primary || '#6366f1'} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name={data.metricLabel} />
             </LineChart>
         );
     }
@@ -182,12 +187,16 @@ function renderChart(config: GpsChartConfig, data: any, xTitle: string, yTitle: 
             <Tooltip contentStyle={theme.tooltip} itemStyle={{ color: theme.tooltip.color }} formatter={(v: any, _n: any, p: any) => [`${fmt(v)}${unit ? ` ${unit}` : ''}`, p?.payload?.fullName || data.metricLabel]} labelStyle={{ display: 'none' }} />
             {data.stats.avg != null && (
                 <ReferenceLine {...(horizontal ? { x: data.stats.avg } : { y: data.stats.avg })} stroke={theme.refLine} strokeDasharray="4 3" strokeWidth={1.5}
-                    label={{ value: `Avg ${fmt(data.stats.avg)}`, fontSize: 9, fill: theme.refLine, position: horizontal ? 'insideTopRight' : 'insideTopRight' }} />
+                    label={{ value: `Avg ${fmt(data.stats.avg)}`, fontSize: 9, fill: theme.refLine, position: horizontal ? 'insideBottomRight' : 'insideTopRight' }} />
             )}
             <Bar dataKey="value" radius={horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} maxBarSize={horizontal ? 20 : 52} name={data.metricLabel}>
-                {points.map((p: any, i: number) => (
-                    <Cell key={i} fill={config.colorBy === 'category' ? (GPS_CATEGORY_COLORS[p.category] || '#6366f1') : '#6366f1'} fillOpacity={0.9} />
-                ))}
+                {points.map((p: any, i: number) => {
+                    const primary = config.seriesColors?.__primary || '#6366f1';
+                    const fill = config.colorBy === 'category' ? (GPS_CATEGORY_COLORS[p.category] || primary)
+                        : config.colorBy === 'multi' ? GPS_CHART_COLORS[i % GPS_CHART_COLORS.length]
+                        : primary;
+                    return <Cell key={i} fill={fill} fillOpacity={0.9} />;
+                })}
             </Bar>
         </BarChart>
     );
@@ -196,6 +205,9 @@ function renderChart(config: GpsChartConfig, data: any, xTitle: string, yTitle: 
 function computeYTitle(config: GpsChartConfig, data: any): string {
     if (config.chartType === 'scatter') return stripUnit(data.metricLabel.split(' vs ')[1] || 'Value');
     if (config.chartType === 'stackedBar') return data.unit ? `Distance (${data.unit})` : 'Total';
+    // A user rename is used verbatim — they typed exactly what they want to see
+    // (and it may already include a unit, e.g. "Total Load (km)").
+    if (config.metric.kind === 'column' && config.labelOverrides?.[config.metric.column]?.trim()) return data.metricLabel;
     return data.unit ? `${stripUnit(data.metricLabel)} (${data.unit})` : data.metricLabel;
 }
 

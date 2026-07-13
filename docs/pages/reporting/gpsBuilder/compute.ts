@@ -133,9 +133,12 @@ export function buildChartData(
     config: GpsChartConfig,
     allRows: GpsRow[],
     teams: any[],
-    colLabel: (k: string) => string,
+    baseColLabel: (k: string) => string,
     isExcluded: ExcludedPredicate = () => false,
 ): ChartData {
+    // Display renames apply everywhere a label is shown; data still reads raw keys.
+    const colLabel = (k: string) => config.labelOverrides?.[k]?.trim() || baseColLabel(k);
+    const seriesColor = (key: string, i: number) => config.seriesColors?.[key] || GPS_CHART_COLORS[i % GPS_CHART_COLORS.length];
     const rows = scopeRows(Array.isArray(allRows) ? allRows : [], config.teamFilter, teams);
     const label = metricLabel(config.metric, colLabel);
     const unit = metricUnit(config.metric);
@@ -169,7 +172,7 @@ export function buildChartData(
             return pt;
         });
         if (config.sort !== 'none') points.sort((a, b) => config.sort === 'desc' ? b.__total - a.__total : a.__total - b.__total);
-        const series: SeriesDef[] = cols.map((c, i) => ({ key: c, label: colLabel(c), color: GPS_CHART_COLORS[i % GPS_CHART_COLORS.length] }));
+        const series: SeriesDef[] = cols.map((c, i) => ({ key: c, label: colLabel(c), color: seriesColor(c, i) }));
         return { points, series, xKey: 'label', unit, metricLabel: label, count: points.length, stats: { avg: null, max: null, min: null }, empty: points.length === 0 };
     }
 
@@ -182,7 +185,7 @@ export function buildChartData(
                 if (!inWindow(r)) continue;
                 for (const c of cols) { const v = parseFloat((r.rawColumns || {})[c]); if (!isNaN(v)) totals[c] = (totals[c] || 0) + v; }
             }
-            const points = cols.map((c, i) => ({ label: colLabel(c), value: parseFloat((totals[c] || 0).toFixed(2)), color: GPS_CHART_COLORS[i % GPS_CHART_COLORS.length] }))
+            const points = cols.map((c, i) => ({ label: colLabel(c), value: parseFloat((totals[c] || 0).toFixed(2)), color: seriesColor(c, i) }))
                 .filter(p => p.value > 0);
             return { points, series: [{ key: 'value', label, color: '#6366f1' }], xKey: 'label', unit, metricLabel: label, count: points.length, stats: { avg: null, max: null, min: null }, empty: points.length === 0 };
         }

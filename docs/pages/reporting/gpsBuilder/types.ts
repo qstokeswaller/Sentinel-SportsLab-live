@@ -55,7 +55,14 @@ export interface GpsChartConfig {
     sort: 'none' | 'asc' | 'desc';
     excludeInjured: boolean;
     axis: { x?: string; y?: string };   // custom axis titles ('' = auto)
-    colorBy?: 'category' | 'none';
+    colorBy?: 'category' | 'none' | 'multi';
+    /** Display renames: raw column key → label shown everywhere (chart, axes,
+     *  tooltips, legend, CSV headers). Data still reads the raw column.
+     *  e.g. { 'Distance in speed zone 5 [m]': 'HSR (>25 km/h)' } */
+    labelOverrides?: Record<string, string>;
+    /** Custom colours: column key → hex. Special key '__primary' colours the
+     *  main series on single-metric charts (bar/line/scatter). */
+    seriesColors?: Record<string, string>;
 }
 
 export interface GpsDashboard {
@@ -78,11 +85,14 @@ export function newChartConfig(partial: Partial<GpsChartConfig> = {}): GpsChartC
         teamFilter: 'All Athletes',
         metric: { kind: 'column', column: '' },
         dateSpec: { mode: 'single', date: new Date().toISOString().split('T')[0] },
-        aggregation: 'raw',
+        aggregation: 'average',
         sort: 'desc',
         excludeInjured: true,
         axis: {},
-        colorBy: 'category',
+        // Colour encodes MEANING: same-family data (athletes on one metric) stays
+        // one colour; category/multi colouring is opt-in for when it distinguishes
+        // genuinely different data (session types, mixed comparisons).
+        colorBy: 'none',
         ...partial,
     };
 }

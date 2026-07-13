@@ -756,6 +756,57 @@ export type Database = {
           },
         ]
       }
+      gps_dashboards: {
+        Row: {
+          charts: Json
+          created_at: string
+          id: string
+          name: string
+          organisation_id: string
+          team_id: string | null
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          charts?: Json
+          created_at?: string
+          id?: string
+          name: string
+          organisation_id: string
+          team_id?: string | null
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          charts?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          organisation_id?: string
+          team_id?: string | null
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_dashboards_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_dashboards_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       injury_classifications: {
         Row: {
           athlete_id: string
