@@ -4,8 +4,12 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CalendarIcon, DumbbellIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import DatePicker from '../../components/ui/DatePicker';
+import LoadInsights from './LoadInsights';
 
 export const TrackingHub: React.FC<any> = ({
+    loadRecords,
+    plannedTonnageLog,
+    showToast,
     BODY_PART_BG,
     BODY_PART_COLORS_MAP,
     REGION_BG,
@@ -38,7 +42,7 @@ export const TrackingHub: React.FC<any> = ({
     trackingSortedTeamStats,
     trackingTab,
 }) => {
-        const tabs = ['Tonnage Trends', 'Team Overview', 'Load Distribution'];
+        const tabs = ['Tonnage Trends', 'Team Overview', 'Load Distribution', 'Insights'];
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 {/* Tab pills */}
@@ -221,6 +225,10 @@ export const TrackingHub: React.FC<any> = ({
                 )}
 
                 {/* ═══ TAB 3: LOAD DISTRIBUTION ═══ */}
+                {trackingTab === 'Insights' && (
+                    <LoadInsights teams={teams} loadRecords={loadRecords || []} plannedTonnageLog={plannedTonnageLog || []} showToast={showToast} />
+                )}
+
                 {trackingTab === 'Load Distribution' && (
                     <div className="space-y-6 animate-in fade-in duration-300">
                         {/* Controls */}

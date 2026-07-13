@@ -11,6 +11,8 @@ import { AthleteAvatar } from '../../roster/AthleteAvatar';
 import WellnessHeatmap from '../../wellness/WellnessHeatmap';
 import WellnessFlagPanel from '../../wellness/WellnessFlagPanel';
 import WellnessInsightsTab from './WellnessInsightsTab';
+import WellnessCustomInsights from './WellnessCustomInsights';
+import { useState } from 'react';
 import DatePicker from '../../../components/ui/DatePicker';
 import {
     resolveAvailability, getAthleteStatus, getRpeBadge, STATUS_DOT,
@@ -1257,6 +1259,12 @@ export const WellnessDashboard: React.FC<any> = ({
             </div>{/* /2-col overview body */}
             </>)}
             {dashboardTab === 'insights' && (
+                <InsightsTabShell
+                    activeTeam={activeTeam}
+                    athletes={athletes}
+                    dailyResponses={dailyResponses}
+                    weeklyResponses={weeklyResponses}
+                    standard={
                 <WellnessInsightsTab
                     activeTeam={activeTeam}
                     athletes={athletes}
@@ -1279,8 +1287,34 @@ export const WellnessDashboard: React.FC<any> = ({
                     chartAxisColor={chartAxisColor}
                     openAthlete={openAthlete}
                 />
+                    }
+                />
             )}
 
+        </div>
+    );
+};
+
+/** Insights tab shell: Standard (original charts) vs Custom builder toggle. */
+const InsightsTabShell: React.FC<{
+    activeTeam: any; athletes: any[]; dailyResponses: any[]; weeklyResponses: any[]; standard: React.ReactNode;
+}> = ({ activeTeam, athletes, dailyResponses, weeklyResponses, standard }) => {
+    const [mode, setMode] = useState<'standard' | 'custom'>('standard');
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit">
+                <button onClick={() => setMode('standard')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'standard' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                    Standard
+                </button>
+                <button onClick={() => setMode('custom')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mode === 'custom' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                    Custom builder
+                </button>
+            </div>
+            {mode === 'custom'
+                ? <WellnessCustomInsights activeTeam={activeTeam} athletes={athletes} dailyResponses={dailyResponses} weeklyResponses={weeklyResponses} />
+                : standard}
         </div>
     );
 };

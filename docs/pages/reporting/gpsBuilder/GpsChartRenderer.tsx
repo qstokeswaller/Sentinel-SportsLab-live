@@ -12,7 +12,7 @@ import {
 import { ActivityIcon } from 'lucide-react';
 import type { GpsChartConfig, GpsRow } from './types';
 import { GPS_CATEGORY_COLORS, GPS_CHART_COLORS } from './types';
-import { buildChartData } from './compute';
+import { buildChartData, isNavigable, describeWindow, scopeRows, computeMetricValue } from './compute';
 
 interface Props {
     config: GpsChartConfig;
@@ -22,6 +22,8 @@ interface Props {
     isExcluded?: (athleteId: string, date: string) => boolean;
     height?: number;
     showTitle?: boolean;
+    /** Show the period-cycling arrows for single-day / rolling charts. */
+    enablePeriodNav?: boolean;
 }
 
 /** Reactively track the app's dark-mode class so charts theme themselves. */
@@ -39,13 +41,50 @@ function useIsDark(): boolean {
 interface Theme { grid: string; tick: string; axisTitle: string; tooltip: React.CSSProperties; refLine: string; }
 
 export const GpsChartRenderer = forwardRef<HTMLDivElement, Props>(function GpsChartRenderer(
-    { config, rows, teams, colLabel, isExcluded, height = 320, showTitle = true }, ref,
+    { config, rows, teams, colLabel, isExcluded, height = 320, showTitle = true, enablePeriodNav = false }, ref,
 ) {
     const dark = useIsDark();
+    // View-time period offset (0 = current window). Not persisted; resets when
+    // the chart's date spec changes.
+    const [offset, setOffset] = useState(0);
+    useEffect(() => { setOffset(0); }, [JSON.stringify(config.dateSpec)]); // eslint-disable-line
+    const navigable = enablePeriodNav && isNavigable(config.dateSpec);
+
     const data = useMemo(
-        () => buildChartData(config, rows, teams, colLabel, isExcluded),
-        [config, rows, teams, colLabel, isExcluded],
+        () => buildChartData(config, rows, teams, colLabel, isExcluded, navigable ? offset : 0),
+        [config, rows, teams, colLabel, isExcluded, offset, navigable],
     );
+
+    // Dates with data for the metric, within team/athlete scope — used for the
+    // window label and to know when stepping further back is pointless.
+    const scopedDates = useMemo(() => {
+        if (!navigable) return [] as string[];
+        let scoped = scopeRows(rows, config.teamFilter, teams);
+        if (config.athleteIds?.length) { const s = new Set(config.athleteIds); scoped = scoped.filter(rr => s.has(rr.athleteId)); }
+        return [...new Set(scoped.filter(rr => computeMetricValue(rr, config.metric) !== null).map(rr => rr.date))].sort();
+    }, [navigable, rows, teams, config.teamFilter, config.athleteIds, config.metric]);
+
+    const windowLabel = navigable ? describeWindow(config.dateSpec, offset, scopedDates) : '';
+    // Stop stepping back when the previous window is empty or identical
+    // (single-session modes clamp at the first session). Floor -520 = safety net.
+    const prevLabel = navigable ? describeWindow(config.dateSpec, offset - 1, scopedDates) : '';
+    const canPrev = navigable && scopedDates.length > 0 && offset > -520 &&
+        prevLabel !== 'No data' && prevLabel !== windowLabel;
+    const canNext = navigable && offset < 0;
+
+    const periodNav = navigable ? (
+        <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => setOffset(o => o - 1)} disabled={!canPrev} aria-label="Previous period"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span className="text-[10px] font-medium text-slate-500 dark:text-[#94A3B8] min-w-[86px] text-center whitespace-nowrap">{windowLabel}</span>
+            <button onClick={() => setOffset(o => Math.min(0, o + 1))} disabled={!canNext} aria-label="Next period"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-50 dark:hover:bg-[#1A2D48] disabled:opacity-30 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+    ) : null;
 
     const theme: Theme = dark
         ? { grid: '#243A58', tick: '#94A3B8', axisTitle: '#94A3B8', refLine: '#818CF8',
@@ -65,6 +104,7 @@ export const GpsChartRenderer = forwardRef<HTMLDivElement, Props>(function GpsCh
                 <ActivityIcon size={32} className="text-slate-200 dark:text-[#334155]" />
                 <p className="text-sm font-semibold text-slate-600 dark:text-[#CBD5E1]">{emptyReason(config)}</p>
                 <p className="text-xs text-slate-400 dark:text-[#CBD5E1]">Adjust the metric, dates, or team on the left.</p>
+                {periodNav && <div className="mt-1">{periodNav}</div>}
             </div>
         );
     }
@@ -74,11 +114,14 @@ export const GpsChartRenderer = forwardRef<HTMLDivElement, Props>(function GpsCh
     return (
         <div ref={ref} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-5">
             {showTitle && (
-                <div className="mb-3">
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">{config.title || data.metricLabel}</h3>
-                    <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
-                        {config.teamFilter} · {data.count} {noun}{data.unit && ` · ${data.unit}`}
-                    </p>
+                <div className="mb-3 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{config.title || data.metricLabel}</h3>
+                        <p className="text-[11px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                            {config.teamFilter} · {data.count} {noun}{data.unit && ` · ${data.unit}`}
+                        </p>
+                    </div>
+                    {periodNav}
                 </div>
             )}
             <ResponsiveContainer width="100%" height={effHeight}>

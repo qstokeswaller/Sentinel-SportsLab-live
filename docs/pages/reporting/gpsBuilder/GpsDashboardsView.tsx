@@ -207,7 +207,7 @@ const DashboardTile: React.FC<{
                     <Trash2Icon size={13} />
                 </button>
             </div>
-            <GpsChartRenderer ref={tileRef} config={chart} rows={rows} teams={teams} colLabel={colLabel} isExcluded={excl} height={280} />
+            <GpsChartRenderer ref={tileRef} config={chart} rows={rows} teams={teams} colLabel={colLabel} isExcluded={excl} height={280} enablePeriodNav />
         </div>
     );
 };

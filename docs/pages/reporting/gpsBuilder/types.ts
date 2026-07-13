@@ -30,7 +30,7 @@ export type DateSpec =
     | { mode: 'specific'; dates: string[] }
     | { mode: 'relative'; window: RelativeWindow; n?: number };
 
-export type RelativeWindow = 'last7' | 'last14' | 'last28' | 'last90' | 'lastN' | 'lastSession';
+export type RelativeWindow = 'last7' | 'last14' | 'last28' | 'last90' | 'lastN' | 'lastSession' | 'thisWeek';
 
 /** How multiple sessions collapse into one number (per athlete, or per date). */
 export type Aggregation = 'raw' | 'average' | 'sum' | 'max' | 'min';
@@ -46,6 +46,9 @@ export interface GpsChartConfig {
     chartType: ChartType;
     dimension: Dimension;
     teamFilter: string;                 // team name | 'All Athletes'
+    /** Optional subset: only these athletes are charted (empty/undefined = whole scope).
+     *  Lets a dashboard be built for chosen individuals, not just full teams. */
+    athleteIds?: string[];
     athleteId?: string;                 // required when dimension='date' + single athlete
     metric: MetricDef;                  // primary Y
     metricY2?: MetricDef;               // scatter Y2
@@ -54,6 +57,12 @@ export interface GpsChartConfig {
     aggregation: Aggregation;
     sort: 'none' | 'asc' | 'desc';
     excludeInjured: boolean;
+    /** Skip recorded zero values so empty/placeholder entries don't drag
+     *  averages down (a day with NO entry is always skipped regardless).
+     *  Untick to chart true zeros. */
+    excludeZeros?: boolean;
+    /** Skip values below this threshold (e.g. partial sessions). */
+    minValue?: number;
     axis: { x?: string; y?: string };   // custom axis titles ('' = auto)
     colorBy?: 'category' | 'none' | 'multi';
     /** Display renames: raw column key → label shown everywhere (chart, axes,
@@ -91,6 +100,7 @@ export function newChartConfig(partial: Partial<GpsChartConfig> = {}): GpsChartC
         aggregation: 'average',
         sort: 'desc',
         excludeInjured: true,
+        excludeZeros: true,
         axis: {},
         // Colour encodes MEANING: same-family data (athletes on one metric) stays
         // one colour; category/multi colouring is opt-in for when it distinguishes

@@ -137,6 +137,9 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                     </CustomSelect>
                 </Section>
 
+                {/* Athlete subset — chart only chosen individuals (default: everyone) */}
+                <AthleteSubset config={config} patch={patch} rows={rows} teams={teams} />
+
                 {/* Compare axis (bar/line only) */}
                 {(config.chartType === 'bar' || config.chartType === 'line' || config.chartType === 'horizontalBar') && (
                     <Section label="Compare by">
@@ -232,6 +235,7 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                         <div className="flex flex-col gap-1.5">
                             <CustomSelect value={config.dateSpec.window} onChange={e => patch({ dateSpec: { mode: 'relative', window: e.target.value as any, n: (config.dateSpec as any).n } })} variant="form" size="xs">
                                 <option value="lastSession">Most recent session</option>
+                                <option value="thisWeek">This week (Mon-Sun, live)</option>
                                 <option value="last7">Last 7 days</option>
                                 <option value="last14">Last 14 days</option>
                                 <option value="last28">Last 28 days</option>
@@ -299,6 +303,16 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                         <input type="checkbox" checked={config.excludeInjured} onChange={e => patch({ excludeInjured: e.target.checked })} className="accent-indigo-600" />
                         <span className="text-[11px] text-slate-600 dark:text-[#CBD5E1]">Exclude injured / excluded athletes</span>
                     </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={config.excludeZeros !== false} onChange={e => patch({ excludeZeros: e.target.checked })} className="accent-indigo-600" />
+                        <span className="text-[11px] text-slate-600 dark:text-[#CBD5E1]">Ignore zero values (placeholder entries don't drag averages)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-600 dark:text-[#CBD5E1] whitespace-nowrap">Ignore values below</span>
+                        <input type="number" value={config.minValue ?? ''} placeholder="—"
+                            onChange={e => patch({ minValue: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
+                            className="w-20 text-[11px] rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] px-2 py-1.5 text-slate-800 dark:text-[#E2E8F0] outline-none focus:ring-1 focus:ring-indigo-300" />
+                    </div>
                 </div>
             </div>
 
@@ -323,7 +337,7 @@ export const GpsChartBuilder: React.FC<Props> = ({ config, onChange, rows, teams
                     <div className="px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-700 dark:text-amber-300">{notice}</div>
                 )}
                 <GpsChartRenderer ref={previewRef} config={config} rows={rows} teams={teams} colLabel={colLabel}
-                    isExcluded={config.excludeInjured ? isExcluded : undefined} height={420} />
+                    isExcluded={config.excludeInjured ? isExcluded : undefined} height={420} enablePeriodNav />
             </div>
         </div>
     );
@@ -349,6 +363,47 @@ const SpecificDates: React.FC<{ dates: string[]; onChange: (d: string[]) => void
                 {dates.length === 0 && <span className="text-[10px] text-slate-400">No dates picked yet</span>}
             </div>
         </div>
+    );
+};
+
+/**
+ * Athlete subset picker: by default a chart includes every athlete in the
+ * selected team; expanding this lets the coach tick specific individuals so
+ * charts/dashboards can be built for chosen athletes only.
+ */
+const AthleteSubset: React.FC<{ config: GpsChartConfig; patch: (p: Partial<GpsChartConfig>) => void; rows: GpsRow[]; teams: any[] }> = ({ config, patch, rows, teams }) => {
+    const [open, setOpen] = React.useState(false);
+    const athletes = athletesOf(rows, teams, config.teamFilter);
+    if (athletes.length === 0) return null;
+    const selected = new Set(config.athleteIds || []);
+    const toggle = (id: string) => {
+        const next = new Set(selected);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        patch({ athleteIds: next.size ? [...next] : undefined });
+    };
+    const summary = selected.size === 0 ? 'All athletes' : `${selected.size} selected`;
+    return (
+        <Section label="Athletes">
+            <button type="button" onClick={() => setOpen(v => !v)}
+                className="flex items-center justify-between w-full text-xs rounded-lg border border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#0F1C30] px-2.5 py-2 text-slate-700 dark:text-[#E2E8F0] hover:border-slate-300 dark:hover:border-[#364E6E] transition-colors">
+                <span>{summary}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            {open && (
+                <div className="max-h-44 overflow-y-auto no-scrollbar border border-slate-200 dark:border-[#243A58] rounded-lg divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                    <button type="button" onClick={() => patch({ athleteIds: undefined })}
+                        className="w-full text-left px-2.5 py-1.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
+                        Select all (default)
+                    </button>
+                    {athletes.map(a => (
+                        <label key={a.id} className="flex items-center gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48]">
+                            <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} className="accent-indigo-600" />
+                            <span className="text-[11px] text-slate-700 dark:text-[#CBD5E1] truncate">{a.name}</span>
+                        </label>
+                    ))}
+                </div>
+            )}
+        </Section>
     );
 };
 

@@ -61,40 +61,89 @@ export function aggregate(values: number[], agg: Aggregation): number | null {
     }
 }
 
+const isoShift = (iso: string, days: number): string => {
+    const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+};
+const todayIso = (): string => new Date().toISOString().split('T')[0];
+/** Monday of the calendar week containing `iso`. */
+const weekStart = (iso: string): string => {
+    const d = new Date(iso + 'T12:00:00');
+    const dow = (d.getDay() + 6) % 7; // Mon=0
+    return isoShift(iso, -dow);
+};
+
 /**
  * Resolve a DateSpec into the concrete set of dates to include, given the
  * dates that actually have data (ascending). Rolling windows are anchored on
  * the latest available session date so they stay meaningful for imported /
  * historical datasets, not just "today".
+ *
+ * `offset` steps the window through time at VIEW time (0 = current, -1 = one
+ * period back, ...) without changing the saved chart -- this powers the
+ * period cycling arrows on dashboards ("last week", "previous session").
+ * Fixed specs (range / specific) are once-off by definition and ignore it.
  */
-export function resolveDates(spec: DateSpec, availableDates: string[]): Set<string> {
+export function resolveDates(spec: DateSpec, availableDates: string[], offset = 0): Set<string> {
     const sorted = [...availableDates].sort();
     if (sorted.length === 0) return new Set();
     const latest = sorted[sorted.length - 1];
 
     switch (spec.mode) {
-        case 'single':
-            return new Set([spec.date]);
+        case 'single': {
+            if (offset === 0) return new Set([spec.date]);
+            // Step through actual session dates around the chosen one.
+            let idx = sorted.indexOf(spec.date);
+            if (idx === -1) { idx = sorted.findIndex(d => d > spec.date); if (idx === -1) idx = sorted.length - 1; }
+            const target = sorted[Math.min(sorted.length - 1, Math.max(0, idx + offset))];
+            return new Set(target ? [target] : []);
+        }
         case 'range':
             return new Set(sorted.filter(d => d >= spec.start && d <= spec.end));
         case 'specific':
             return new Set(spec.dates);
         case 'relative': {
-            if (spec.window === 'lastSession') return new Set([latest]);
+            if (spec.window === 'lastSession') {
+                const target = sorted[Math.min(sorted.length - 1, Math.max(0, sorted.length - 1 + offset))];
+                return new Set(target ? [target] : []);
+            }
             if (spec.window === 'lastN') {
                 const n = Math.max(1, spec.n || 5);
-                return new Set(sorted.slice(-n));
+                const end = sorted.length + offset * n;
+                return new Set(sorted.slice(Math.max(0, end - n), Math.max(0, end)));
+            }
+            if (spec.window === 'thisWeek') {
+                // Calendar week (Mon-Sun) containing TODAY, shifted by offset
+                // weeks. Mid-week this naturally shows "the week so far".
+                const start = isoShift(weekStart(todayIso()), offset * 7);
+                const end = isoShift(start, 6);
+                return new Set(sorted.filter(d => d >= start && d <= end));
             }
             const days = spec.window === 'last7' ? 7 : spec.window === 'last14' ? 14 : spec.window === 'last90' ? 90 : 28;
-            const anchor = new Date(latest + 'T12:00:00');
-            const cutoff = new Date(anchor);
-            cutoff.setDate(anchor.getDate() - (days - 1));
-            const cutoffStr = cutoff.toISOString().split('T')[0];
-            return new Set(sorted.filter(d => d >= cutoffStr && d <= latest));
+            const anchorStr = isoShift(latest, offset * days);
+            const cutoffStr = isoShift(anchorStr, -(days - 1));
+            return new Set(sorted.filter(d => d >= cutoffStr && d <= anchorStr));
         }
         default:
             return new Set();
     }
+}
+
+/** Can this spec be cycled through time at view time? */
+export function isNavigable(spec: DateSpec): boolean {
+    return spec.mode === 'single' || spec.mode === 'relative';
+}
+
+/** Human label for the window a (spec, offset) pair resolves to. */
+export function describeWindow(spec: DateSpec, offset: number, availableDates: string[]): string {
+    if (spec.mode === 'relative' && spec.window === 'thisWeek') {
+        const start = isoShift(weekStart(todayIso()), offset * 7);
+        return offset === 0 ? `This week (${fmtDate(start)} -)` : `Week of ${fmtDate(start)}`;
+    }
+    const dates = [...resolveDates(spec, availableDates, offset)].sort();
+    if (dates.length === 0) return 'No data';
+    if (dates.length === 1) return fmtDate(dates[0]);
+    return `${fmtDate(dates[0])} - ${fmtDate(dates[dates.length - 1])}`;
 }
 
 /** Filter rows to a team (by name) or all athletes. */
@@ -135,20 +184,35 @@ export function buildChartData(
     teams: any[],
     baseColLabel: (k: string) => string,
     isExcluded: ExcludedPredicate = () => false,
+    dateOffset = 0,
 ): ChartData {
     // Display renames apply everywhere a label is shown; data still reads raw keys.
     const colLabel = (k: string) => config.labelOverrides?.[k]?.trim() || baseColLabel(k);
     const seriesColor = (key: string, i: number) => config.seriesColors?.[key] || GPS_CHART_COLORS[i % GPS_CHART_COLORS.length];
-    const rows = scopeRows(Array.isArray(allRows) ? allRows : [], config.teamFilter, teams);
+    let rows = scopeRows(Array.isArray(allRows) ? allRows : [], config.teamFilter, teams);
+    // Optional individual scoping: chart only the chosen athletes.
+    if (config.athleteIds?.length) {
+        const subset = new Set(config.athleteIds);
+        rows = rows.filter(r => subset.has(r.athleteId));
+    }
+    // Data-quality guard: optionally drop recorded zeros / sub-threshold values
+    // so placeholder entries don't corrupt averages. Missing entries are always
+    // skipped by computeMetricValue anyway.
+    const passes = (v: number | null): v is number =>
+        v !== null && !(config.excludeZeros && v === 0) && !(config.minValue != null && v < config.minValue);
+    const metricVal = (r: GpsRow, m: MetricDef): number | null => {
+        const v = computeMetricValue(r, m);
+        return passes(v) ? v : null;
+    };
     const label = metricLabel(config.metric, colLabel);
     const unit = metricUnit(config.metric);
     const empty: ChartData = { points: [], series: [], xKey: 'label', unit, metricLabel: label, count: 0, stats: { avg: null, max: null, min: null }, empty: true };
 
     // Dates that actually have data for the primary metric, within scope.
     const datesWithData = [...new Set(
-        rows.filter(r => !isExcluded(r.athleteId, r.date) && computeMetricValue(r, config.metric) !== null).map(r => r.date)
+        rows.filter(r => !isExcluded(r.athleteId, r.date) && metricVal(r, config.metric) !== null).map(r => r.date)
     )].sort();
-    const activeDates = resolveDates(config.dateSpec, datesWithData);
+    const activeDates = resolveDates(config.dateSpec, datesWithData, dateOffset);
     const inWindow = (r: GpsRow) => activeDates.has(r.date) && !isExcluded(r.athleteId, r.date);
 
     // ── Stacked bar: series are seriesColumns, X is athletes (or single date) ──
@@ -161,7 +225,7 @@ export function buildChartData(
             const entry = byAthlete.get(r.athleteId)!;
             for (const c of cols) {
                 const v = parseFloat((r.rawColumns || {})[c]);
-                if (isNaN(v)) continue;
+                if (!passes(isNaN(v) ? null : v)) continue;
                 (entry.sums[c] ||= []).push(v);
             }
         }
@@ -183,14 +247,14 @@ export function buildChartData(
             const totals: Record<string, number> = {};
             for (const r of rows) {
                 if (!inWindow(r)) continue;
-                for (const c of cols) { const v = parseFloat((r.rawColumns || {})[c]); if (!isNaN(v)) totals[c] = (totals[c] || 0) + v; }
+                for (const c of cols) { const v = parseFloat((r.rawColumns || {})[c]); if (passes(isNaN(v) ? null : v)) totals[c] = (totals[c] || 0) + v; }
             }
             const points = cols.map((c, i) => ({ label: colLabel(c), value: parseFloat((totals[c] || 0).toFixed(2)), color: seriesColor(c, i) }))
                 .filter(p => p.value > 0);
             return { points, series: [{ key: 'value', label, color: '#6366f1' }], xKey: 'label', unit, metricLabel: label, count: points.length, stats: { avg: null, max: null, min: null }, empty: points.length === 0 };
         }
         // slices = athletes, value = aggregated metric
-        const per = aggregatePerAthlete(rows, config, inWindow);
+        const per = aggregatePerAthlete(rows, config, inWindow, metricVal);
         const points = per.map((a, i) => ({ label: a.name.split(' ')[0] || a.name, fullName: a.name, value: a.value, color: GPS_CHART_COLORS[i % GPS_CHART_COLORS.length] }));
         return { points, series: [{ key: 'value', label, color: '#6366f1' }], xKey: 'label', unit, metricLabel: label, count: points.length, stats: statsOf(per.map(a => a.value)), empty: points.length === 0 };
     }
@@ -201,8 +265,8 @@ export function buildChartData(
         const byA = new Map<string, { name: string; xs: number[]; ys: number[]; category?: string }>();
         for (const r of rows) {
             if (!inWindow(r)) continue;
-            const x = computeMetricValue(r, config.metric);
-            const y = computeMetricValue(r, config.metricY2!);
+            const x = metricVal(r, config.metric);
+            const y = metricVal(r, config.metricY2!);
             if (x === null || y === null) continue;
             if (!byA.has(r.athleteId)) byA.set(r.athleteId, { name: rowName(r), xs: [], ys: [], category: r.category });
             const e = byA.get(r.athleteId)!; e.xs.push(x); e.ys.push(y);
@@ -222,7 +286,7 @@ export function buildChartData(
         for (const r of rows) {
             if (!inWindow(r)) continue;
             if (config.athleteId && r.athleteId !== config.athleteId) continue;
-            const v = computeMetricValue(r, config.metric);
+            const v = metricVal(r, config.metric);
             if (v === null) continue;
             if (!dateMap.has(r.date)) dateMap.set(r.date, []);
             dateMap.get(r.date)!.push(v);
@@ -236,7 +300,7 @@ export function buildChartData(
     }
 
     // ── Compare athletes (dimension = athlete) — bar / horizontalBar / line ────
-    const per = aggregatePerAthlete(rows, config, inWindow);
+    const per = aggregatePerAthlete(rows, config, inWindow, metricVal);
     if (per.length === 0) return empty;
     const points = per.map(a => ({ label: a.name.split(' ')[0] || a.name, fullName: a.name, value: a.value, category: a.category || 'training' }));
     return {
@@ -249,11 +313,12 @@ export function buildChartData(
     };
 }
 
-function aggregatePerAthlete(rows: GpsRow[], config: GpsChartConfig, inWindow: (r: GpsRow) => boolean) {
+function aggregatePerAthlete(rows: GpsRow[], config: GpsChartConfig, inWindow: (r: GpsRow) => boolean, metricVal?: (r: GpsRow, m: MetricDef) => number | null) {
     const byA = new Map<string, { name: string; vals: number[]; category?: string }>();
+    const evaluate = metricVal || ((r: GpsRow, m: MetricDef) => computeMetricValue(r, m));
     for (const r of rows) {
         if (!inWindow(r)) continue;
-        const v = computeMetricValue(r, config.metric);
+        const v = evaluate(r, config.metric);
         if (v === null) continue;
         if (!byA.has(r.athleteId)) byA.set(r.athleteId, { name: rowName(r), vals: [], category: r.category });
         byA.get(r.athleteId)!.vals.push(v);
