@@ -27,11 +27,11 @@ interface PlanTier {
     popular?: boolean;
 }
 
+// Self-serve tiers only. Elite + Custom are onboarded personally by the team
+// (contact-first flow) — they don't appear in the signup selector.
 const PLANS: PlanTier[] = [
-    { id: 'basic',       label: 'Basic',       price: 'R1,449/mo',  seats: '1 user',      seatCap: 1 },
-    { id: 'performance', label: 'Performance', price: 'R5,449/mo',  seats: 'Up to 3',     seatCap: 3, popular: true },
-    { id: 'elite',       label: 'Elite',       price: 'R12,499/mo', seats: 'Up to 4',     seatCap: 4 },
-    { id: 'custom',      label: 'Custom',      price: 'Contact us', seats: 'Custom seats', seatCap: null },
+    { id: 'basic',       label: 'Basic',       price: 'R599/mo',   seats: '1 user',  seatCap: 1 },
+    { id: 'performance', label: 'Performance', price: 'R3,499/mo', seats: 'Up to 3', seatCap: 3, popular: true },
 ];
 
 const inputCls = 'w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/15 focus:bg-white transition-all';
@@ -322,6 +322,10 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                             );
                                         })}
                                     </div>
+                                    <p className="text-[10.5px] text-slate-400 mt-2 leading-snug">
+                                        Need <span className="font-semibold text-slate-600">Elite</span> (full platform) or a <span className="font-semibold text-slate-600">Custom</span> package?{' '}
+                                        <a href="/contact?subject=elite" className="text-indigo-600 font-semibold hover:underline">Contact us</a> — we onboard those personally, with staff training and a guided 21-day setup.
+                                    </p>
                                 </div>
                             </>
                         )}

@@ -1172,32 +1172,32 @@ const LandingPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
                         {[
                             {
-                                name: 'Basic', price: 'R1,449', per: '/month',
+                                name: 'Basic', price: 'R599', per: '/month',
                                 seats: '1 user',
                                 desc: 'Core platform for individual practitioners',
                                 features: ['Dashboard & squad readiness','Athlete roster management','Workout builder (3,700+ exercises)','Tonnage & session tracking','Testing Hub — 80+ protocols','Exercise library & catalogues','Session calendar & scheduling'],
                                 pop: false, cust: false,
                             },
                             {
-                                name: 'Performance', price: 'R5,449', per: '/month',
+                                name: 'Performance', price: 'R3,499', per: '/month',
                                 seats: 'Up to 3 users',
                                 desc: 'Everything in Basic, plus welfare & conditioning',
                                 features: ['Everything in Basic','Wellness Hub — daily & weekly forms','FIFA/IOC wellness surveillance','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
                                 pop: true, cust: false,
                             },
                             {
-                                name: 'Elite', price: 'R12,499', per: '/month',
-                                seats: 'Up to 4 users · Organisational',
-                                desc: 'Full platform — built for performance staff',
-                                features: ['Everything in Performance','ACWR load monitoring (EWMA)','GPS & load intelligence','Reporting Hub with GPS Insights','Analytics Hub (5 terminals)','Scenario modelling & F-V profiling','Periodization planner'],
-                                pop: false, cust: false,
+                                name: 'Elite', price: "Let's talk", per: '',
+                                seats: 'Full platform access · Organisational',
+                                desc: 'The complete platform — and we onboard your whole staff personally',
+                                features: ['Everything in Performance','Full access: GPS, ACWR, Analytics, Insights, Periodization','Guided 21-day onboarding with our team','Hands-on training sessions for your staff','We configure the platform around your programme','Direct line to our sport-science team'],
+                                pop: false, cust: false, elite: true,
                             },
                             {
                                 name: 'Custom', price: 'Contact us', per: '',
                                 seats: 'Custom seat count',
                                 desc: 'Pick exactly the features you need — we quote accordingly',
                                 features: ['Choose any combination of features','Pay only for what you use','Dedicated onboarding session','Priority support channel','Custom integrations on request','White-label options available'],
-                                pop: false, cust: true,
+                                pop: false, cust: true, elite: false,
                             },
                         ].map((t, i) => (
                             <div key={i} className={`relative rounded-2xl p-6 flex flex-col transition-all duration-300 ${
@@ -1230,7 +1230,7 @@ const LandingPage: React.FC = () => {
                                     ))}
                                 </ul>
                                 <button
-                                    onClick={() => t.cust ? nav('/contact') : nav('/login?mode=signup')}
+                                    onClick={() => (t as any).elite ? nav('/contact?subject=elite') : t.cust ? nav('/contact') : nav('/login?mode=signup')}
                                     className={`w-full py-3 font-semibold rounded-xl text-sm transition-all ${
                                         t.pop
                                             ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
@@ -1240,8 +1240,13 @@ const LandingPage: React.FC = () => {
                                                     ? 'border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
                                                     : 'border-2 border-slate-200 dark:border-[#243A58] text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
                                     }`}>
-                                    {t.cust ? 'Get a Quote' : 'Begin Access'}
+                                    {(t as any).elite ? 'Contact us' : t.cust ? 'Get a Quote' : 'Begin Access'}
                                 </button>
+                                {(t as any).elite && (
+                                    <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        Speak to us — we set you up, train your staff,<br />and take you through the 21-day onboarding.
+                                    </p>
+                                )}
                                 {t.cust && (
                                     <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
                                         Tell us which features you need.<br />We'll build a package around your program.

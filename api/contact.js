@@ -17,6 +17,7 @@ import { Resend } from 'resend';
 import { renderEmail, escapeHtml, ICONS } from './_email-template.js';
 
 const SUBJECT_LABELS = {
+  elite:   'Elite package enquiry',
   sales:   'Sales / Pilot enquiry',
   support: 'Support request',
   bug:     'Report a bug',

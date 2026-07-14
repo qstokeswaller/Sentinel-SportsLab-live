@@ -10,6 +10,7 @@ import { ActivityIcon, ArrowLeftIcon, MailIcon, MessageSquareIcon, AlertCircleIc
 import SiteFooter from '../components/layout/SiteFooter';
 
 const SUBJECTS = [
+    { id: 'elite',    label: 'Elite package enquiry',  icon: MessageSquareIcon },
     { id: 'sales',    label: 'Sales / Pilot enquiry',  icon: MessageSquareIcon },
     { id: 'support',  label: 'Support request',         icon: MailIcon },
     { id: 'bug',      label: 'Report a bug',            icon: AlertCircleIcon },
@@ -24,7 +25,13 @@ const inputCls = 'w-full px-3.5 py-2.5 bg-white border-[1.5px] border-slate-200 
 const labelCls = 'block text-[10.5px] font-bold uppercase tracking-[0.04em] text-slate-500 mb-1.5';
 
 const ContactPage: React.FC = () => {
-    const [subject, setSubject] = useState<typeof SUBJECTS[number]['id']>('sales');
+    const [subject, setSubject] = useState<typeof SUBJECTS[number]['id']>(() => {
+        // Deep-link preselect, e.g. /contact?subject=elite from the pricing section
+        try {
+            const q = new URLSearchParams(window.location.search).get('subject');
+            return (SUBJECTS.some(s => s.id === q) ? q : 'sales') as typeof SUBJECTS[number]['id'];
+        } catch { return 'sales'; }
+    });
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [organisation, setOrganisation] = useState('');
