@@ -85,6 +85,14 @@ const LandingPage: React.FC = () => {
     // Install buttons trigger the native one-click install dialog on
     // Chromium (desktop, Android, Edge, Brave, Samsung Internet).
     const [installStubMessage, setInstallStubMessage] = useState<string | null>(null);
+    const installMsgRef = useRef<HTMLDivElement>(null);
+    // Show a message AND bring it on-screen — on phones the banner sits below
+    // the three cards, off-viewport when a card button is tapped.
+    const flashInstallMessage = (msg: string, ms = 8000) => {
+        setInstallStubMessage(msg);
+        setTimeout(() => installMsgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+        setTimeout(() => setInstallStubMessage(null), ms);
+    };
     const deferredPromptRef = React.useRef<any>(null);
     const [installState, setInstallState] = useState<'idle' | 'available' | 'installed'>('idle');
     useEffect(() => {
@@ -96,8 +104,7 @@ const LandingPage: React.FC = () => {
         const onInstalled = () => {
             deferredPromptRef.current = null;
             setInstallState('installed');
-            setInstallStubMessage('Installed! Find Sentinel SportsLab in your dock, taskbar, or home screen.');
-            setTimeout(() => setInstallStubMessage(null), 8000);
+            flashInstallMessage('Installed! Find Sentinel SportsLab in your dock, taskbar, or home screen.');
         };
         // Pick up an event that fired before this component mounted
         if ((window as any).__sslInstallPrompt) {
@@ -116,10 +123,7 @@ const LandingPage: React.FC = () => {
         if (source === 'ios') {
             // iOS never fires beforeinstallprompt — the card's inline steps are
             // the flow. Scroll to the section + restate the steps.
-            const el = document.getElementById('install');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            setInstallStubMessage('Tap the Share icon in Safari, then choose "Add to Home Screen" to install.');
-            setTimeout(() => setInstallStubMessage(null), 6000);
+            flashInstallMessage('Tap the Share icon at the bottom of Safari, then scroll down and choose "Add to Home Screen" — the app icon lands on your home screen.', 9000);
             return;
         }
         const dp = deferredPromptRef.current;
@@ -129,28 +133,24 @@ const LandingPage: React.FC = () => {
             try {
                 const choice = await dp.userChoice;
                 if (choice?.outcome === 'accepted') {
-                    setInstallStubMessage('Installing… find Sentinel SportsLab in your dock, taskbar, or home screen.');
+                    flashInstallMessage('Installing… find Sentinel SportsLab in your dock, taskbar, or home screen.');
                 } else {
-                    setInstallStubMessage('No problem — you can install any time from this page or the browser menu.');
+                    flashInstallMessage('No problem — you can install any time from this page or the browser menu.');
                 }
             } catch { /* dialog dismissed */ }
             deferredPromptRef.current = null;   // Chromium only allows one use per event
             (window as any).__sslInstallPrompt = null;
             setInstallState('idle');
-            setTimeout(() => setInstallStubMessage(null), 8000);
             return;
         }
         if (installCtx.isStandalone || installState === 'installed') {
-            setInstallStubMessage('You\'re already using the installed app on this device.');
-            setTimeout(() => setInstallStubMessage(null), 6000);
+            flashInstallMessage('You\'re already using the installed app on this device.');
             return;
         }
         // No prompt available: already installed previously, or a browser
         // without one-click install (Firefox / Safari) — give the manual path.
-        setInstallStubMessage(
-            'If Sentinel SportsLab is already installed, open it from your dock or home screen. Otherwise: in Chrome, Edge or Brave open the browser menu (⋮) and choose "Install Sentinel SportsLab…" / "Add to Home screen". Firefox and desktop Safari don\'t support app installs — use Chrome or Edge for the app experience.'
-        );
-        setTimeout(() => setInstallStubMessage(null), 12000);
+        flashInstallMessage(
+            'If Sentinel SportsLab is already installed, open it from your dock or home screen. Otherwise: in Chrome, Edge or Brave open the browser menu (⋮) and choose "Install Sentinel SportsLab…" / "Add to Home screen". Firefox and desktop Safari don\'t support app installs — use Chrome or Edge for the app experience.', 12000);
     };
 
     // Hash-scroll handler: when arriving via a hash anchor from another page
