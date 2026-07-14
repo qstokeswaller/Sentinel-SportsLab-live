@@ -17,7 +17,7 @@ const TermsOfServicePage: React.FC = () => {
     return (
         <LegalLayout
             title="Terms of Service"
-            lastUpdated="30 May 2026"
+            lastUpdated="14 July 2026"
             summary={
                 <span>
                     <strong>Governing law:</strong> Republic of South Africa. <strong>Operator:</strong> Sentinel SportsLab (Pty) Ltd. By creating an account or otherwise using the Sentinel SportsLab platform, you agree to be bound by these terms.
@@ -129,6 +129,17 @@ const TermsOfServicePage: React.FC = () => {
             <h2 id="t9">9. Intellectual Property</h2>
             <p>The Platform — including its software, design, brand marks, documentation, and original content — is owned by Sentinel SportsLab (Pty) Ltd and is protected by South African and international intellectual property laws. Nothing in these terms transfers any IP rights to you, save for the limited, revocable, non-exclusive licence to access and use the Platform for the duration of your subscription.</p>
             <p>You may not use our brand marks (including "Sentinel SportsLab" and the Sentinel logo) without our prior written consent, save as necessary to factually describe your use of the service.</p>
+
+            <h3>9.1 Publicity &amp; Customer Reference</h3>
+            <p>You grant us a limited, non-exclusive, royalty-free right to use your organisation's name and, where you have supplied one, your logo, to identify you as a customer of Sentinel SportsLab. This may include listing your organisation on our website, in a "trusted by" or client showcase, and in marketing or sales materials, solely to factually indicate that your organisation uses the Platform.</p>
+            <p>This right is subject to the following:</p>
+            <ul>
+                <li>We will only use your name and logo to state, in substance, that you use Sentinel SportsLab. We will not imply any endorsement, partnership, or representation beyond that fact without your separate written consent.</li>
+                <li>We will never publish athlete data, performance results, or any confidential information about your organisation as part of this use.</li>
+                <li>We will use your logo in line with any reasonable brand guidelines you provide to us.</li>
+                <li>You may <strong>opt out at any time</strong> — or ask us to remove an existing reference — by emailing <strong>hello@sentinelsportslab.com</strong>. We will remove your name and logo from materials we control within a reasonable period (and from the live website promptly).</li>
+            </ul>
+            <p>This clause does not grant you any right to use our brand marks; that is governed by the paragraph above.</p>
 
             <h2 id="t10">10. Your Data &amp; Export</h2>
             <p>Your organisation owns the data you upload, enter, or submit to the Platform ("Your Data"). You grant us a limited licence to host, process, and display Your Data solely to provide the Platform to you and to perform our obligations under these terms.</p>
