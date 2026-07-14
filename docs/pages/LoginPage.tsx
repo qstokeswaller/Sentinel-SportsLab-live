@@ -14,6 +14,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ActivityIcon, ArrowRightIcon, CheckIcon, ShieldIcon, UsersIcon, MailIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isInstalledApp } from '../utils/appMode';
 
 type Mode = 'signin' | 'signup' | 'reset' | 'update-password';
 
@@ -184,6 +185,16 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
             {/* Vignette overlay — darkens edges so the card has clean separation */}
             <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(10,22,40,0) 30%, rgba(10,22,40,0.55) 100%)' }} />
 
+            <div className="relative w-full max-w-5xl flex flex-col items-center">
+            {/* Installed-app welcome — shown only in the standalone app window */}
+            {isInstalledApp() && (
+                <div className="w-full max-w-2xl mb-5 px-5 py-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm text-center">
+                    <p className="text-sm font-bold text-white">Welcome to the Sentinel SportsLab app</p>
+                    <p className="text-xs text-white/75 mt-0.5">
+                        Your athlete monitoring & performance workspace. Sign in to your team, or create an account to get started — your data stays in sync with the web platform.
+                    </p>
+                </div>
+            )}
             <div className="relative w-full max-w-5xl min-h-[640px] bg-white rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col lg:flex-row">
 
                 {/* ── SIGN IN FORM (always left half on lg+) ───────────────────────
@@ -390,6 +401,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

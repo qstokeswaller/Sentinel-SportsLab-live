@@ -20,6 +20,7 @@ import CookiePolicyPage from './pages/CookiePolicyPage';
 import DataProcessingPage from './pages/DataProcessingPage';
 import ContactPage from './pages/ContactPage';
 import AcceptInvitePage from './pages/AcceptInvitePage';
+import { isInstalledApp } from './utils/appMode';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -35,7 +36,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (!user) return <Navigate to="/" replace />;
+  // In the installed app, unauthenticated users go to sign-in — the
+  // marketing landing page is a browser-only surface.
+  if (!user) return <Navigate to={isInstalledApp() ? '/login' : '/'} replace />;
   return <>{children}</>;
 };
 
@@ -98,7 +101,7 @@ const AppRouter: React.FC = () => {
       {/* AUTH ROUTES */}
       <Route
         path="/"
-        element={loading ? null : user ? (pendingInviteToken ? <Navigate to={`/accept-invite/${pendingInviteToken}`} replace /> : <Navigate to="/dashboard" replace />) : <LandingPage />}
+        element={loading ? null : user ? (pendingInviteToken ? <Navigate to={`/accept-invite/${pendingInviteToken}`} replace /> : <Navigate to="/dashboard" replace />) : (isInstalledApp() ? <Navigate to="/login" replace /> : <LandingPage />)}
       />
       <Route
         path="/login"
