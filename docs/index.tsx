@@ -8,6 +8,14 @@ import posthog from 'posthog-js';
 import './styles.css';
 import { UpdateBanner } from './components/ui/UpdateBanner';
 
+// Capture the PWA install prompt as early as possible — Chromium can fire it
+// before React mounts, and a missed event means the landing page's Install
+// buttons can't trigger the native dialog. LandingPage reads this stash.
+window.addEventListener('beforeinstallprompt', (e: any) => {
+  e.preventDefault();
+  (window as any).__sslInstallPrompt = e;
+});
+
 // Audit fix 13 (2026-07-12): in production, silence debug output so internal
 // messages (occasionally including data) aren't readable in every user's
 // browser console. Real errors still use console.error and reach Sentry.
