@@ -53,8 +53,12 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,ico,svg,woff2}', '*.png'],
           globIgnores: ['images/**', 'body-image.jpeg'],
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+          cleanupOutdatedCaches: true,
           navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/api\//],
+          // Never serve the HTML shell for API calls or asset requests — a
+          // missing hashed file must 404, not return index.html (which would
+          // break as "not a valid JavaScript MIME type").
+          navigateFallbackDenylist: [/^\/api\//, /\/assets\//, /\.[a-z0-9]+$/i],
           runtimeCaching: [
             {
               // App images (logo, landing shots) — cache after first view.

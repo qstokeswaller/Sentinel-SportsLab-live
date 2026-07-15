@@ -7,6 +7,15 @@ import * as Sentry from '@sentry/react';
 import posthog from 'posthog-js';
 import './styles.css';
 import { UpdateBanner } from './components/ui/UpdateBanner';
+import { isStaleAssetError, recoverFromStaleAssets, clearRecoveryGuardOnLoad } from './utils/pwaRecovery';
+
+// Self-heal stale-asset crashes (installed PWA still referencing hashed files a
+// newer deploy replaced — the browser gets HTML where JS was expected). Catch
+// it at every layer and silently clear caches + service worker + reload once.
+window.addEventListener('vite:preloadError', (e: any) => { e.preventDefault(); recoverFromStaleAssets(); });
+window.addEventListener('error', (e: any) => { if (isStaleAssetError(e?.error || e?.message)) recoverFromStaleAssets(); });
+window.addEventListener('unhandledrejection', (e: any) => { if (isStaleAssetError(e?.reason)) recoverFromStaleAssets(); });
+clearRecoveryGuardOnLoad();
 
 // Capture the PWA install prompt as early as possible — Chromium can fire it
 // before React mounts, and a missed event means the landing page's Install

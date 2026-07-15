@@ -104,7 +104,7 @@ const LandingPage: React.FC = () => {
         const onInstalled = () => {
             deferredPromptRef.current = null;
             setInstallState('installed');
-            flashInstallMessage('Installed! Find Sentinel SportsLab in your dock, taskbar, or home screen.');
+            flashInstallMessage("You're all set — Sentinel SportsLab is on your device now. Look for it in your dock, taskbar, or home screen.");
         };
         // Pick up an event that fired before this component mounted
         if ((window as any).__sslInstallPrompt) {
@@ -133,9 +133,9 @@ const LandingPage: React.FC = () => {
             try {
                 const choice = await dp.userChoice;
                 if (choice?.outcome === 'accepted') {
-                    flashInstallMessage('Installing… find Sentinel SportsLab in your dock, taskbar, or home screen.');
+                    flashInstallMessage('Nice — adding it to your device now. It will be in your dock, taskbar, or home screen in a moment.');
                 } else {
-                    flashInstallMessage('No problem — you can install any time from this page or the browser menu.');
+                    flashInstallMessage("All good — you can add it any time you're ready, right from this page.");
                 }
             } catch { /* dialog dismissed */ }
             deferredPromptRef.current = null;   // Chromium only allows one use per event
@@ -150,7 +150,7 @@ const LandingPage: React.FC = () => {
         // No prompt available: already installed previously, or a browser
         // without one-click install (Firefox / Safari) — give the manual path.
         flashInstallMessage(
-            'If Sentinel SportsLab is already installed, open it from your dock or home screen. Otherwise: in Chrome, Edge or Brave open the browser menu (⋮) and choose "Install Sentinel SportsLab…" / "Add to Home screen". Firefox and desktop Safari don\'t support app installs — use Chrome or Edge for the app experience.', 12000);
+            "Looks like your browser didn't pop the one-tap install this time. If it's already installed, just open it from your dock or home screen. Otherwise Chrome, Edge and Brave can add it from their menu — or keep using the full site in your browser, it's identical.", 12000);
     };
 
     // Hash-scroll handler: when arriving via a hash anchor from another page
@@ -474,20 +474,20 @@ const LandingPage: React.FC = () => {
                         <SparklesIcon size={13} /> Sports Science Intelligence Platform
                     </div>
                     <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-[-0.03em] leading-[0.95]">
-                        Monitor athletes.
+                        Data drives decisions.
                         <br />
                         <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                            Optimise performance.
+                            Decisions drive performance.
                         </span>
                     </h1>
                     <p className={`mt-8 text-lg md:text-xl ${txm} max-w-2xl mx-auto leading-relaxed`}>
-                        ACWR load monitoring, research-grade wellness surveillance, 80+ protocols, and GPS intelligence.
-                        Built on published research. Accessible from day one.
+                        The complete athlete-monitoring platform — load management, daily wellness, 80+ testing protocols,
+                        and GPS analytics in one place. Grounded in published sport science, and ready the moment you sign in.
                     </p>
                     <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
                         <button onClick={() => nav('/login?mode=signup')}
                             className="group flex items-center gap-2.5 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-2xl shadow-indigo-600/25 hover:shadow-indigo-500/35 transition-all active:scale-[0.97] text-[15px]">
-                            Activate 21-day Access <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
+                            Start your 21-day pilot <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                         <a href="#features" className={`flex items-center gap-2 px-6 py-4 ${txm} font-medium hover:text-indigo-400 transition-colors text-[15px]`}>
                             Explore Features <ChevronRightIcon size={16} />
@@ -496,7 +496,7 @@ const LandingPage: React.FC = () => {
                     <div className={`mt-14 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-sm ${txs}`}>
                         <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> 21-day guided pilot</span>
                         <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> No credit card</span>
-                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> Direct onboarding support</span>
+                        <span className="flex items-center gap-2"><CheckIcon size={15} className="text-emerald-500" /> We set you up personally</span>
                     </div>
 
                     {/* Sport list strip — Catapult-style "Built for" row.
@@ -568,9 +568,9 @@ const LandingPage: React.FC = () => {
             <section className={`py-12 sm:py-20 border-y ${dark ? 'border-white/[0.05]' : 'border-slate-100 dark:border-[#243A58]'}`}>
                 <div ref={rStats.ref} style={rStats.style} className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-3 gap-4 sm:gap-8 text-center">
                     {[
-                        { end: 80, s: '+', l: 'Protocol Documents' },
-                        { end: 3700, s: '+', l: 'Exercise Library' },
-                        { end: 6, s: '', l: 'Intelligence Hubs' },
+                        { end: 80, s: '+', l: 'Testing, screening & more protocols' },
+                        { end: 3700, s: '+', l: 'Ready-to-use exercise library' },
+                        { end: 6, s: '', l: 'Connected intelligence hubs' },
                     ].map((s, i) => (
                         <div key={i} className="min-w-0">
                             <div className="text-3xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent"><Counter end={s.end} suffix={s.s} /></div>
@@ -696,7 +696,7 @@ const LandingPage: React.FC = () => {
                                 title: 'F-V Profiling Without Hardware',
                                 sub: 'Analytics',
                                 desc: 'Force-velocity profiles derived from your existing test results — no force plate or specialised equipment. Works with CMJ and sprint data you already collect.',
-                                proof: 'Available in the Performance Intelligence hub',
+                                proof: 'A force-velocity profile for each athlete, built from a handful of routine tests',
                             },
                             {
                                 icon: BarChart3Icon,
@@ -1001,7 +1001,8 @@ const LandingPage: React.FC = () => {
                                 </h2>
                                 <p className={`mt-6 text-base sm:text-lg ${txm} max-w-xl mx-auto leading-relaxed`}>
                                     Install Sentinel SportsLab as an app on your phone, tablet, or computer.
-                                    No app store. No download wait. Same login, same data, fullscreen experience.
+                                    No app store, no waiting — it's the same login and the same data as the website, just in its own fullscreen window.
+                                    For the full workspace, a desktop or tablet gives the best experience — especially on the Elite tier.
                                 </p>
                             </div>
 

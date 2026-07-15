@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { isStaleAssetError, recoverFromStaleAssets, hardReset } from "../utils/pwaRecovery";
 
 interface Props {
     children: ReactNode;
@@ -7,47 +8,72 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
+    isStale: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
-        error: null
+        error: null,
+        isStale: false,
     };
 
     public static getDerivedStateFromError(error: Error): State {
-        return { hasError: true, error };
+        return { hasError: true, error, isStale: isStaleAssetError(error) };
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("Uncaught error:", error, errorInfo);
+        // A stale-asset crash (installed app pointing at replaced files after a
+        // deploy) self-heals: clear caches + service worker + reload once.
+        if (isStaleAssetError(error)) recoverFromStaleAssets();
     }
 
     public render() {
         if (this.state.hasError) {
-            return (
-                <div className="min-h-screen bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center p-8">
-                    <div className="bg-white dark:bg-[#132338] rounded-[2rem] shadow-2xl border-4 border-rose-100 dark:border-rose-900/40 p-12 max-w-2xl w-full text-center">
-                        <div className="w-20 h-20 bg-rose-600 rounded-3xl flex items-center justify-center text-white mx-auto mb-8 shadow-lg shadow-rose-200">
-                            <span className="text-4xl font-black">!</span>
-                        </div>
-                        <h1 className="text-3xl font-black text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tighter mb-4">Application Crash</h1>
-                        <p className="text-slate-500 font-medium mb-8">
-                            Sentinel SportsLab encountered a critical error. This is likely due to the missing database schema we're currently restoring.
-                        </p>
-                        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-2xl p-6 text-left mb-8 overflow-auto max-h-48">
-                            <p className="text-xs font-mono text-rose-600 break-all">
-                                {this.state.error?.toString()}
+            // ── Stale-version case: we're already auto-recovering. Show a calm
+            //    "updating" screen instead of a scary crash. ─────────────────
+            if (this.state.isStale) {
+                return (
+                    <div className="min-h-screen bg-slate-50 dark:bg-[#0D1829] flex items-center justify-center p-8">
+                        <div className="text-center max-w-sm">
+                            <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+                            <h1 className="text-lg font-bold text-slate-900 dark:text-[#E2E8F0] mb-2">Updating to the latest version</h1>
+                            <p className="text-sm text-slate-500 dark:text-[#94A3B8] mb-6">
+                                A newer version of Sentinel SportsLab is available. We're refreshing it for you now — this only takes a moment.
                             </p>
-                            <p className="text-[10px] font-mono text-slate-400 mt-2">
-                                {this.state.error?.stack}
+                            <button
+                                onClick={() => hardReset()}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition-colors"
+                            >
+                                Taking too long? Tap to refresh
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ── Genuine unexpected error ─────────────────────────────────────
+            return (
+                <div className="min-h-screen bg-slate-50 dark:bg-[#0D1829] flex items-center justify-center p-6">
+                    <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-xl border border-slate-200 dark:border-[#243A58] p-8 sm:p-10 max-w-md w-full text-center">
+                        <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/25 rounded-2xl flex items-center justify-center text-rose-600 dark:text-rose-400 mx-auto mb-6">
+                            <span className="text-3xl font-black">!</span>
+                        </div>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-[#E2E8F0] mb-2">Something went wrong</h1>
+                        <p className="text-sm text-slate-500 dark:text-[#94A3B8] mb-6">
+                            Sentinel SportsLab hit an unexpected error and couldn't finish loading. Refreshing usually clears it — if it keeps happening, email <a href="mailto:support@sentinelsportslab.com" className="text-indigo-600 dark:text-indigo-300 font-semibold hover:underline">support@sentinelsportslab.com</a> and we'll take a look.
+                        </p>
+                        <div className="bg-slate-50 dark:bg-[#0F1C30] rounded-xl p-4 text-left mb-6 overflow-auto max-h-40 border border-slate-100 dark:border-[#243A58]">
+                            <p className="text-[11px] font-mono text-rose-600 dark:text-rose-400 break-all">
+                                {this.state.error?.toString()}
                             </p>
                         </div>
                         <button
-                            onClick={() => window.location.reload()}
-                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-100"
+                            onClick={() => hardReset()}
+                            className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors"
                         >
-                            Reload Application
+                            Refresh &amp; try again
                         </button>
                     </div>
                 </div>
