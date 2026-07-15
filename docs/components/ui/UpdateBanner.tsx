@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 import { RefreshCwIcon, XIcon } from 'lucide-react';
+import { isInstalledApp } from '../../utils/appMode';
 
 /**
- * UpdateBanner — non-blocking "new version available" toast (bottom-right),
- * per plans/VERSION-DETECTION-AND-AUTO-REFRESH.md mechanism B. Rendered at the
- * app root, outside all providers, so it works even if the app state crashes.
- * Never uses window.confirm (house rule) — custom buttons only.
+ * UpdateBanner — new-version handling, split by surface:
  *
- * "Refresh now" activates the waiting service worker and reloads.
- * "Later" dismisses for this tab; the new version still applies on the next
- * full page load.
+ *  • Installed app (PWA)  → shows a non-blocking "Update available" toast so the
+ *    user chooses when to refresh (app-like behaviour; per VERSION-DETECTION
+ *    mechanism B). Never uses window.confirm (house rule).
+ *  • Website (browser tab) → NO toast. The new version is applied silently the
+ *    next time the tab is backgrounded, so the site "just updates" as people
+ *    use it, without ever interrupting an active session. A website shouldn't
+ *    nag about refreshing.
+ *
+ * Rendered at the app root, outside all providers, so it works even if the app
+ * state crashes.
  */
 export const UpdateBanner: React.FC = () => {
     const [needRefresh, setNeedRefresh] = useState(false);
@@ -21,13 +26,32 @@ export const UpdateBanner: React.FC = () => {
         // registerSW is a no-op-safe call; in dev (no SW) nothing happens.
         const updateSW = registerSW({
             onNeedRefresh() {
-                setNeedRefresh(true);
+                if (isInstalledApp()) {
+                    // App: let the user pick the moment via the toast.
+                    setNeedRefresh(true);
+                    return;
+                }
+                // Website: update silently. Apply the new version the next time
+                // the tab is hidden (they switched away / navigated) so the
+                // reload is invisible and never interrupts what they're doing.
+                const applyWhenHidden = () => {
+                    if (document.visibilityState === 'hidden') {
+                        document.removeEventListener('visibilitychange', applyWhenHidden);
+                        updateSW(true); // skipWaiting + reload
+                    }
+                };
+                if (document.visibilityState === 'hidden') {
+                    updateSW(true);
+                } else {
+                    document.addEventListener('visibilitychange', applyWhenHidden);
+                }
             },
         });
         setDoUpdate(() => () => updateSW(true));
     }, []);
 
-    if (!needRefresh || dismissed) return null;
+    // Toast only ever renders in the installed app.
+    if (!needRefresh || dismissed || !isInstalledApp()) return null;
 
     return (
         <div className="fixed bottom-4 right-4 z-[1200] max-w-sm bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-lg p-4 flex items-start gap-3 animate-in slide-in-from-bottom-2 fade-in duration-300">

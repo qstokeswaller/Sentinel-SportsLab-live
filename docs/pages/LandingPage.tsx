@@ -216,7 +216,7 @@ const LandingPage: React.FC = () => {
             gFrom: '#ef4444', gTo: '#ec4899',
             shadowColor: 'rgba(239,68,68,0.25)',
             cat: 'Athlete Welfare',
-            title: 'Wellness Surveillance',
+            title: 'Wellness Monitoring',
             tagline: '60-second daily IOC check-in. Flags at-risk athletes before they step on the field.',
             bullets: [
                 'FIFA/IOC wellness form auto-scored against published reference norms',
@@ -1183,7 +1183,7 @@ const LandingPage: React.FC = () => {
                                 name: 'Performance', price: 'R3,499', per: '/month',
                                 seats: 'Up to 3 users',
                                 desc: 'Everything in Basic, plus welfare & conditioning',
-                                features: ['Everything in Basic','Wellness Hub — daily & weekly forms','FIFA/IOC wellness surveillance','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
+                                features: ['Everything in Basic','Wellness Hub — daily & weekly forms','FIFA/IOC wellness monitoring','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
                                 pop: true, cust: false,
                             },
                             {
