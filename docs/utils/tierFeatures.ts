@@ -44,7 +44,7 @@ export const FEATURE_TIER: Record<Feature, Tier> = {
     roster:        'basic',
     workouts:      'basic',
     library:       'basic',
-    testing:       'basic',
+    testing:       'performance',
     calendar:      'basic',
     planner:       'elite',          // periodization planner is Elite per pricing page
     wellness:      'performance',

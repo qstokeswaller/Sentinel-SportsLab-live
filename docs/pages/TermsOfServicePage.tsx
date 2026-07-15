@@ -97,7 +97,7 @@ const TermsOfServicePage: React.FC = () => {
                 <thead><tr><th>Tier</th><th>Price</th><th>User seats</th><th>Notes</th></tr></thead>
                 <tbody>
                     <tr><td>Basic</td><td>R599 / month</td><td>1</td><td>Single-practitioner access to the core platform</td></tr>
-                    <tr><td>Performance</td><td>R3,499 / month</td><td>Up to 3</td><td>Wellness, conditioning, and core platform</td></tr>
+                    <tr><td>Performance</td><td>R3,499 / month</td><td>Up to 3</td><td>Testing, wellness, conditioning, and the core platform</td></tr>
                     <tr><td>Elite</td><td>By arrangement — contact us</td><td>Per agreement</td><td>Full platform — organisational tier, personally onboarded</td></tr>
                     <tr><td>Custom</td><td>By quotation</td><td>Custom</td><td>Bespoke seat count and feature selection</td></tr>
                 </tbody>
