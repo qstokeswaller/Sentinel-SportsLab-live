@@ -228,7 +228,7 @@ const TrainingLoadEntry: React.FC<TrainingLoadEntryProps> = ({ teamId: preSelect
 
             <div className="p-5 space-y-4">
                 {/* Team selector + Date + Session Type */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label className={labelCls}>Team / Group</label>
                         <CustomSelect

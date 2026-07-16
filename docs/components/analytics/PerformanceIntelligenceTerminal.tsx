@@ -787,7 +787,7 @@ export const PerformanceIntelligenceTerminal = ({
                                         </div>
                                         {isExp && (
                                             <div className="px-6 pb-4 space-y-2">
-                                                <div className="grid grid-cols-5 gap-2">
+                                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                                     {r.domains.filter(d => d.available).map(d => (
                                                         <div key={d.name} className="text-center">
                                                             <div className="text-[8px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase truncate">{d.name}</div>

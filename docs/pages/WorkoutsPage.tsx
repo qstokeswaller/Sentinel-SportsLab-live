@@ -69,7 +69,7 @@ const ShellHeader = () => {
             {/* Row 1 — title (left)  ·  flex spacer (empty middle)  ·  search + view + create (right cluster).
                 Search is anchored next to the actions on the right; the middle is intentionally empty
                 because workout/packet/sheet names are short and a long search input wasted space. */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
                 {/* Title block — allow it to shrink so long taglines (e.g. Sheets:
                     "Saved weightroom sheets — load, print and reuse with any squad")
                     truncate via the inner min-w-0 + truncate rather than pushing the
@@ -85,9 +85,10 @@ const ShellHeader = () => {
                     </div>
                 </div>
 
-                <div className="flex-1" />
+                <div className="hidden md:block md:flex-1" />
 
-                <div className="relative w-64 shrink-0">
+                <div className="flex items-center gap-2 w-full md:contents">
+                <div className="relative flex-1 md:flex-none md:w-64 shrink-0 min-w-0">
                     <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                     <input
                         type="text"
@@ -124,6 +125,7 @@ const ShellHeader = () => {
                     >
                         <PlusIcon size={13} /> {theme.createLabel}
                     </button>
+                </div>
                 </div>
             </div>
 
@@ -195,11 +197,11 @@ const Shell = () => {
     return (
         <div className="animate-in fade-in duration-300 h-[calc(100vh-40px)] flex flex-col gap-4">
             {/* Top row — header (left) + Overview tile (right), height-matched via `items-stretch` */}
-            <div className={hideShell ? 'hidden' : 'flex items-stretch gap-5 shrink-0'}>
+            <div className={hideShell ? 'hidden' : 'flex flex-col lg:flex-row lg:items-stretch gap-3 lg:gap-5 shrink-0'}>
                 <div className="flex-1 min-w-0">
                     <ShellHeader />
                 </div>
-                <div className="w-80 shrink-0 flex">
+                <div className="hidden lg:flex w-80 shrink-0">
                     {overviewRows.length > 0 && <OverviewTile rows={overviewRows} />}
                 </div>
             </div>
@@ -207,13 +209,13 @@ const Shell = () => {
             {/* Body row — page main content (left) + sidebar extras (right).
                 Both columns share the same row height (via items-stretch on the row + min-h-0
                 so flex children can shrink). Internal scrolling lives inside each column. */}
-            <div className="flex items-stretch gap-5 flex-1 min-h-0">
+            <div className="flex flex-col lg:flex-row lg:items-stretch gap-4 lg:gap-5 flex-1 min-h-0">
                 <div className="flex-1 min-w-0 min-h-0 flex flex-col">
                     {activeTab === 'programs' && <WorkoutProgramsPage />}
                     {activeTab === 'packets'  && <WorkoutSessionsPage />}
                     {activeTab === 'sheets'   && <WeightroomSheetsPage />}
                 </div>
-                <div className={hideShell ? 'hidden' : 'w-80 shrink-0 min-h-0 flex flex-col gap-4'}>
+                <div className={hideShell ? 'hidden' : 'w-full lg:w-80 lg:shrink-0 min-h-0 flex flex-col gap-4 max-h-[45vh] lg:max-h-none'}>
                     {sidebarExtra}
                 </div>
             </div>

@@ -778,7 +778,7 @@ table { width: 100%; border-collapse: collapse; }
             </div>
 
             {/* Main Content: Preview + Sidebar */}
-            <div className="flex gap-4 items-start">
+            <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
                 {/* Left: Live Preview */}
                 <div className="flex-1 min-w-0">
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
@@ -849,7 +849,7 @@ table { width: 100%; border-collapse: collapse; }
                 </div>
 
                 {/* Right Sidebar */}
-                <div className="w-64 shrink-0 space-y-4">
+                <div className="w-full lg:w-64 lg:shrink-0 space-y-4">
                     {/* Sheet Ready Card */}
                     <div className="bg-teal-700 dark:bg-teal-700/80 rounded-xl p-5 text-white space-y-4">
                         <div className="flex items-center gap-2.5">

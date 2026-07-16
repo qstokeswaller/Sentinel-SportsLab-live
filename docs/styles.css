@@ -34,6 +34,18 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Global horizontal-overflow guard ──────────────────────────────────────
+   Nothing should ever make the page scroll sideways / cut content off at the
+   edges on mobile or tablet. Uses `clip` rather than `hidden` so it never
+   creates a scroll container that would break position: sticky. Genuinely wide
+   content (tables, chart strips) keeps its own local `overflow-x-auto` wrapper
+   and scrolls internally. Print mode resets overflow via .printing-standalone
+   below, so PDF/print exports are unaffected. */
+html,
+body {
+    overflow-x: clip;
+}
+
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }

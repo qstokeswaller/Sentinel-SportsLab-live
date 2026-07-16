@@ -119,7 +119,8 @@ export const TrackingHub: React.FC<any> = ({
                             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">Exercise Breakdown</h4>
                             </div>
-                            <table className="w-full">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[520px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
                                         <th className="px-5 py-3 text-left text-[10px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Exercise</th>
@@ -150,6 +151,7 @@ export const TrackingHub: React.FC<any> = ({
                                     )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -189,7 +191,8 @@ export const TrackingHub: React.FC<any> = ({
 
                         {/* Table */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                            <table className="w-full">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[520px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
                                         {[
@@ -220,6 +223,7 @@ export const TrackingHub: React.FC<any> = ({
                                     )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 )}

@@ -499,7 +499,7 @@ const App = () => {
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                 <TopBar />
-                <main className="flex-1 overflow-y-auto no-scrollbar relative pb-4">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar relative pb-4">
                     <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 lg:py-5">
                     {/* Boot-load failure banner (audit fix 10) — previously these
                         failures were silent and pages just looked empty. */}
