@@ -8,6 +8,7 @@ import { TemplateViewModal } from '../components/workouts/TemplateViewModal';
 import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
 import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { useAuth } from '../context/AuthContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { fuzzySearch } from '../utils/fuzzySearch';
@@ -74,6 +75,8 @@ export const WorkoutSessionsPage = () => {
     const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
     // search + view live in the Workouts shell layout (persistent across tab switches).
     const { search, setSearch, view, registerCreate, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
+    // Mobile has no right-rail panel — tapping a packet opens the full-view modal directly.
+    const isMobile = useIsMobile();
 
     // Tabs mirror Programs: Templates = all saved; Assigned = templates with at least one scheduled session
     const [activeTab, setActiveTab] = useState<'templates' | 'assigned'>('templates');
@@ -555,8 +558,8 @@ export const WorkoutSessionsPage = () => {
 
                 {/* Sub-tabs row — Tabs (left) · Team/Individual pill (centered, Assigned only) · Filter button (right) */}
                 <div className="bg-white dark:bg-[#132338] px-5 pt-2 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-end gap-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
-                        <div className="flex gap-0 shrink-0">
+                    <div className="flex flex-wrap items-end gap-x-3 gap-y-2 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
+                        <div className="flex gap-0 shrink-0 w-full sm:w-auto">
                             {[
                                 { key: 'templates', label: 'Templates', count: workoutTemplates.length },
                                 { key: 'assigned',  label: 'Assigned',  count: assignedTemplateIds.size },
@@ -579,7 +582,7 @@ export const WorkoutSessionsPage = () => {
                                 </button>
                             ))}
                         </div>
-                        <div className="flex-1 flex justify-center mb-1.5">
+                        <div className="flex justify-start sm:flex-1 sm:justify-center mb-1.5">
                             {activeTab === 'assigned' && (
                                 <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                     {(['all', 'Team', 'Individual'] as const).map(opt => (
@@ -746,7 +749,7 @@ export const WorkoutSessionsPage = () => {
                                             ? 'border-emerald-400 dark:border-emerald-500/60 ring-2 ring-emerald-500/15'
                                             : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E]'
                                     }`}
-                                    onClick={() => setSelectedTemplate(tpl)}
+                                    onClick={() => (isMobile ? setViewModalTemplate(tpl) : setSelectedTemplate(tpl))}
                                 >
                                     <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors truncate mb-2">
                                         {tpl.name}
@@ -795,7 +798,7 @@ export const WorkoutSessionsPage = () => {
                                                     ? 'bg-emerald-50/60 dark:bg-emerald-500/10'
                                                     : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                             }`}
-                                            onClick={() => setSelectedTemplate(tpl)}
+                                            onClick={() => (isMobile ? setViewModalTemplate(tpl) : setSelectedTemplate(tpl))}
                                         >
                                             <td className="px-5 py-3.5">
                                                 <div className={`font-medium text-sm transition-colors ${

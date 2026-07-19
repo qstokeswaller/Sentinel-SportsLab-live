@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { useSmartSearch } from '../hooks/useSmartSearch';
 
 import { useCollections } from '../hooks/useCollections';
@@ -223,10 +225,18 @@ function ExerciseRow({
                     )}
                 </div>
                 {(ex.tags || []).length > 0 && (
-                    <div className="flex flex-wrap gap-0.5 mt-1">
-                        {ex.tags.map((t: string) => (
+                    <div className="flex flex-nowrap xl:flex-wrap items-center gap-0.5 mt-1">
+                        {/* Just the first tag + a "+N" badge below xl (keeps rows short); the
+                            rest reveal on xl+. Full tag set is always visible in the detail panel. */}
+                        {ex.tags.slice(0, 1).map((t: string) => (
                             <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-600 dark:text-[#CBD5E1]">{t}</span>
                         ))}
+                        {ex.tags.slice(1).map((t: string) => (
+                            <span key={t} className="hidden xl:inline-block text-[9px] px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-600 dark:text-[#CBD5E1]">{t}</span>
+                        ))}
+                        {ex.tags.length > 1 && (
+                            <span className="xl:hidden text-[9px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-500/20 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#94A3B8] font-semibold">+{ex.tags.length - 1}</span>
+                        )}
                     </div>
                 )}
             </td>
@@ -330,6 +340,10 @@ export const ExerciseLibraryPage = () => {
     // ── View state ────────────────────────────────────────────────────────
     const [libraryViewMode, setLibraryViewMode] = useState<'exercises' | 'myLibrary' | 'protocols'>('exercises');
     const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
+    // <lg: no side detail panel — tapping an exercise opens it full-screen (mobile
+    // takeover) instead. >=lg: proportional side panel so the left list keeps ~62%
+    // and never starves when the nav sidebar expands (tablet landscape).
+    const isMobile = useIsMobile();
     const [alphabetLetter, setAlphabetLetter] = useState('All');
     const [selectedClassification, setSelectedClassification] = useState('All');
     const [personalPage, setPersonalPage] = useState(1);
@@ -612,27 +626,29 @@ export const ExerciseLibraryPage = () => {
                                     </button>
                                 )}
                             </div>
-                            <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
-                                <option value="All">All</option>
-                                {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
-                            </CustomSelect>
-                            <CustomSelect value={filterEquipment} onChange={e => { setFilterEquipment(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Equipment">
-                                <option value="All">All</option>
-                                {EQUIPMENT_LIST.filter(e => e !== 'Unsorted').map(e => <option key={e} value={e}>{e}</option>)}
-                            </CustomSelect>
-                            <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
-                                <option value="All">All</option>
-                                {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
-                            </CustomSelect>
-                            {/* Collection filter removed from Exercises tab — collections are browsed from My Library. */}
-                            <button
-                                onClick={() => { setCustomOnly(v => !v); setLibraryPage(1); }}
-                                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${customOnly ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-violet-300'}`}
-                                title={customOnly ? 'Showing only your customised exercises' : 'Show only exercises your org has customised or created'}
-                            >
-                                <StarIcon size={11} fill={customOnly ? 'currentColor' : 'none'} />
-                                Customised
-                            </button>
+                            {/* Primary filters — inline on desktop; on phones they move into the More panel below. */}
+                            <div className="hidden lg:flex items-center gap-2 flex-wrap">
+                                <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
+                                    <option value="All">All</option>
+                                    {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
+                                </CustomSelect>
+                                <CustomSelect value={filterEquipment} onChange={e => { setFilterEquipment(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Equipment">
+                                    <option value="All">All</option>
+                                    {EQUIPMENT_LIST.filter(e => e !== 'Unsorted').map(e => <option key={e} value={e}>{e}</option>)}
+                                </CustomSelect>
+                                <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
+                                    <option value="All">All</option>
+                                    {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
+                                </CustomSelect>
+                                <button
+                                    onClick={() => { setCustomOnly(v => !v); setLibraryPage(1); }}
+                                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${customOnly ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-violet-300'}`}
+                                    title={customOnly ? 'Showing only your customised exercises' : 'Show only exercises your org has customised or created'}
+                                >
+                                    <StarIcon size={11} fill={customOnly ? 'currentColor' : 'none'} />
+                                    Customised
+                                </button>
+                            </div>
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
                                 className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
@@ -640,7 +656,7 @@ export const ExerciseLibraryPage = () => {
                                 <SlidersHorizontalIcon size={11} />
                                 More
                             </button>
-                            <div className="flex items-center gap-2 ml-auto">
+                            <div className="flex items-center gap-2 sm:ml-auto">
                                 {hasActiveFilters && (
                                     <button onClick={clearAllFilters} className="flex items-center gap-1 text-[11px] text-rose-500 hover:text-rose-700 font-medium transition-colors">
                                         <XIcon size={10} /> Clear
@@ -653,6 +669,29 @@ export const ExerciseLibraryPage = () => {
                         </div>
                         {showMoreFilters && (
                             <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
+                                {/* Phone-only: the primary filters that sit inline on desktop live here on small screens */}
+                                <div className="contents lg:hidden">
+                                    <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
+                                        <option value="All">All</option>
+                                        {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
+                                    </CustomSelect>
+                                    <CustomSelect value={filterEquipment} onChange={e => { setFilterEquipment(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Equipment">
+                                        <option value="All">All</option>
+                                        {EQUIPMENT_LIST.filter(e => e !== 'Unsorted').map(e => <option key={e} value={e}>{e}</option>)}
+                                    </CustomSelect>
+                                    <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
+                                        <option value="All">All</option>
+                                        {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
+                                    </CustomSelect>
+                                    <button
+                                        onClick={() => { setCustomOnly(v => !v); setLibraryPage(1); }}
+                                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${customOnly ? 'bg-violet-600 text-white border-violet-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-violet-300'}`}
+                                        title={customOnly ? 'Showing only your customised exercises' : 'Show only exercises your org has customised or created'}
+                                    >
+                                        <StarIcon size={11} fill={customOnly ? 'currentColor' : 'none'} />
+                                        Customised
+                                    </button>
+                                </div>
                                 <CustomSelect value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Region">
                                     <option value="All">All</option>
                                     {BODY_REGIONS.filter(r => r !== 'Unsorted').map(r => <option key={r} value={r}>{r}</option>)}
@@ -667,7 +706,7 @@ export const ExerciseLibraryPage = () => {
                                 </CustomSelect>
                             </div>
                         )}
-                        <div className="flex items-center gap-1 flex-wrap">
+                        <div className="flex items-center gap-1 flex-nowrap overflow-x-auto no-scrollbar">
                             <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
                                 className={`px-1.5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                 All
@@ -714,23 +753,44 @@ export const ExerciseLibraryPage = () => {
                 </div>
             </div>
 
-            <div className="w-[400px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
-                {selectedExercise ? (
-                    <ExerciseDetailPanel
-                        exercise={selectedExercise}
-                        onClose={() => setSelectedExercise(null)}
-                        onAddToLibrary={handleTogglePersonal}
-                        isInLibrary={isInPersonalLibrary}
-                        collections={collections}
-                        isInCollection={isInCollection}
-                        onAddToCollection={handleAddToCollection}
-                        onSelectRelated={ex => setSelectedExercise(ex)}
-                        onEdit={openEditModal}
-                    />
-                ) : (
-                    <ExerciseDetailEmptyState />
-                )}
-            </div>
+            {isMobile ? (
+                selectedExercise && createPortal(
+                    <div className="fixed inset-0 z-[900] bg-white dark:bg-[#0D1829] flex flex-col">
+                        <div className="flex-1 min-h-0">
+                            <ExerciseDetailPanel
+                                exercise={selectedExercise}
+                                onClose={() => setSelectedExercise(null)}
+                                onAddToLibrary={handleTogglePersonal}
+                                isInLibrary={isInPersonalLibrary}
+                                collections={collections}
+                                isInCollection={isInCollection}
+                                onAddToCollection={handleAddToCollection}
+                                onSelectRelated={ex => setSelectedExercise(ex)}
+                                onEdit={openEditModal}
+                            />
+                        </div>
+                    </div>,
+                    document.body
+                )
+            ) : (
+                <div className="hidden lg:block lg:w-[38%] lg:min-w-[300px] lg:max-w-[420px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
+                    {selectedExercise ? (
+                        <ExerciseDetailPanel
+                            exercise={selectedExercise}
+                            onClose={() => setSelectedExercise(null)}
+                            onAddToLibrary={handleTogglePersonal}
+                            isInLibrary={isInPersonalLibrary}
+                            collections={collections}
+                            isInCollection={isInCollection}
+                            onAddToCollection={handleAddToCollection}
+                            onSelectRelated={ex => setSelectedExercise(ex)}
+                            onEdit={openEditModal}
+                        />
+                    ) : (
+                        <ExerciseDetailEmptyState />
+                    )}
+                </div>
+            )}
         </div>
     );
 
@@ -804,31 +864,52 @@ export const ExerciseLibraryPage = () => {
                     </div>
 
                     {/* Right column — exercise descriptor (same component as Exercises tab) */}
-                    <div className="w-[400px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
-                        {selectedExercise ? (
-                            <ExerciseDetailPanel
-                                exercise={selectedExercise}
-                                onClose={() => setSelectedExercise(null)}
-                                onAddToLibrary={handleTogglePersonal}
-                                isInLibrary={isInPersonalLibrary}
-                                collections={collections}
-                                isInCollection={isInCollection}
-                                onAddToCollection={handleAddToCollection}
-                                onSelectRelated={ex => setSelectedExercise(ex)}
-                                onEdit={openEditModal}
-                            />
-                        ) : (
-                            <ExerciseDetailEmptyState />
-                        )}
-                    </div>
+                    {isMobile ? (
+                        selectedExercise && createPortal(
+                            <div className="fixed inset-0 z-[900] bg-white dark:bg-[#0D1829] flex flex-col">
+                                <div className="flex-1 min-h-0">
+                                    <ExerciseDetailPanel
+                                        exercise={selectedExercise}
+                                        onClose={() => setSelectedExercise(null)}
+                                        onAddToLibrary={handleTogglePersonal}
+                                        isInLibrary={isInPersonalLibrary}
+                                        collections={collections}
+                                        isInCollection={isInCollection}
+                                        onAddToCollection={handleAddToCollection}
+                                        onSelectRelated={ex => setSelectedExercise(ex)}
+                                        onEdit={openEditModal}
+                                    />
+                                </div>
+                            </div>,
+                            document.body
+                        )
+                    ) : (
+                        <div className="hidden lg:block lg:w-[38%] lg:min-w-[300px] lg:max-w-[420px] shrink-0 rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm">
+                            {selectedExercise ? (
+                                <ExerciseDetailPanel
+                                    exercise={selectedExercise}
+                                    onClose={() => setSelectedExercise(null)}
+                                    onAddToLibrary={handleTogglePersonal}
+                                    isInLibrary={isInPersonalLibrary}
+                                    collections={collections}
+                                    isInCollection={isInCollection}
+                                    onAddToCollection={handleAddToCollection}
+                                    onSelectRelated={ex => setSelectedExercise(ex)}
+                                    onEdit={openEditModal}
+                                />
+                            ) : (
+                                <ExerciseDetailEmptyState />
+                            )}
+                        </div>
+                    )}
                 </div>
             );
         }
 
         // ── Main My Library view ──
         return (
-            <div className="flex gap-3 flex-1 min-h-0">
-                <div className="flex flex-col flex-1 min-w-0 min-h-0 gap-2">
+            <div className="flex flex-col lg:flex-row gap-3 flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:overflow-visible">
+                <div className="flex flex-col lg:flex-1 min-w-0 lg:min-h-0 gap-2">
 
                     {/* Collections strip — compact horizontal row */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm px-3 py-2.5 shrink-0">
@@ -859,7 +940,7 @@ export const ExerciseLibraryPage = () => {
                         {collections.length === 0 ? (
                             <p className="text-[11px] text-slate-300 dark:text-[#475569] py-1">No collections yet — create one to organise your exercises.</p>
                         ) : (
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                            <div className="flex gap-2 flex-wrap lg:flex-nowrap lg:overflow-x-auto no-scrollbar pb-0.5">
                                 {collections.map(col => {
                                     const c = getColColor(col.color);
                                     return (
@@ -921,7 +1002,7 @@ export const ExerciseLibraryPage = () => {
                     </div>
 
                     {/* All Saved Exercises — primary content */}
-                    <div data-tour="library-personal" className="flex flex-col flex-1 min-h-0">
+                    <div data-tour="library-personal" className="flex flex-col lg:flex-1 lg:min-h-0">
                         <div className="flex items-center justify-between mb-1.5 shrink-0 px-0.5">
                             <h3 className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">
                                 All Saved Exercises
@@ -1005,9 +1086,10 @@ export const ExerciseLibraryPage = () => {
                     </div>
                 </div>
 
-                {/* Right sidebar — Smart Suggestions stretches to fill so Quick Actions sits flush with the bottom */}
-                <div className="w-[220px] shrink-0 flex flex-col gap-2 min-h-0">
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3 flex-1 flex flex-col min-h-0">
+                {/* Right sidebar — Smart Suggestions stretches to fill so Quick Actions sits flush with the bottom.
+                    On phones it drops below the collections/saved-exercises (which become the main focus), capped so it doesn't dominate. */}
+                <div className="w-full lg:w-[220px] lg:shrink-0 flex flex-col gap-2 lg:min-h-0">
+                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3 lg:flex-1 flex flex-col lg:min-h-0">
                         <div className="flex items-center gap-2 mb-2.5 shrink-0">
                             <ClockIcon size={11} className="text-amber-500" />
                             <h3 className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Smart Suggestions</h3>
@@ -1015,7 +1097,7 @@ export const ExerciseLibraryPage = () => {
                         {recentNotInPersonal.length === 0 ? (
                             <p className="text-[11px] text-slate-300 dark:text-[#475569] text-center py-3">Recently used exercises will appear here</p>
                         ) : (
-                            <div className="space-y-1.5 flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5">
+                            <div className="space-y-1.5 lg:flex-1 lg:min-h-0 lg:overflow-y-auto custom-scrollbar pr-0.5 max-h-64 overflow-y-auto lg:max-h-none">
                                 {recentNotInPersonal.map(ex => (
                                     <div key={ex.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">
                                         <div className="min-w-0 flex-1">
@@ -1075,14 +1157,14 @@ export const ExerciseLibraryPage = () => {
             <div className="space-y-2 animate-in fade-in duration-300 h-[calc(100vh-40px)] flex flex-col">
                 {/* Header */}
                 <div className="bg-white dark:bg-[#132338] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm shrink-0">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="hidden lg:flex items-center gap-3">
                             <div className="w-7 h-7 bg-slate-800 dark:bg-[#1A2D48] rounded-lg flex items-center justify-center text-white shrink-0">
                                 <DumbbellIcon size={14} />
                             </div>
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0]">Library</h2>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                 <button
                                     onClick={() => { setLibraryViewMode('exercises'); setSelectedExercise(null); }}
@@ -1148,6 +1230,8 @@ export const ExerciseLibraryPage = () => {
                                     </button>
                                 )}
                             </div>
+                            {/* Primary filters — inline on desktop; on phones they move into the More panel below. */}
+                            <div className="hidden lg:flex items-center gap-2 flex-wrap">
                             <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
                                 <option value="All">All</option>
                                 {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
@@ -1160,6 +1244,7 @@ export const ExerciseLibraryPage = () => {
                                 <option value="All">All</option>
                                 {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
                             </CustomSelect>
+                            </div>
                             <button
                                 onClick={() => setShowMoreFilters(v => !v)}
                                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${showMoreFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58] hover:border-indigo-300'}`}
@@ -1167,7 +1252,7 @@ export const ExerciseLibraryPage = () => {
                                 <SlidersHorizontalIcon size={12} />
                                 More Filters
                             </button>
-                            <div className="flex items-center gap-2 ml-auto">
+                            <div className="flex items-center gap-2 sm:ml-auto">
                                 {hasActiveFilters && (
                                     <button onClick={clearAllFilters} className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 font-medium transition-colors">
                                         <XIcon size={11} /> Clear
@@ -1180,6 +1265,21 @@ export const ExerciseLibraryPage = () => {
                         </div>
                         {showMoreFilters && (
                             <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
+                                {/* Phone-only: the primary filters that sit inline on desktop live here on small screens */}
+                                <div className="contents lg:hidden">
+                                    <CustomSelect value={filterMovement} onChange={e => { setFilterMovement(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Movement">
+                                        <option value="All">All</option>
+                                        {MOVEMENT_PATTERNS.filter(m => m !== 'Unsorted').map(m => <option key={m} value={m}>{m}</option>)}
+                                    </CustomSelect>
+                                    <CustomSelect value={filterEquipment} onChange={e => { setFilterEquipment(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Equipment">
+                                        <option value="All">All</option>
+                                        {EQUIPMENT_LIST.filter(e => e !== 'Unsorted').map(e => <option key={e} value={e}>{e}</option>)}
+                                    </CustomSelect>
+                                    <CustomSelect value={filterForceType} onChange={e => { setFilterForceType(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Force Type">
+                                        <option value="All">All</option>
+                                        {FORCE_TYPES.filter(f => f !== 'Unsorted').map(f => <option key={f} value={f}>{f}</option>)}
+                                    </CustomSelect>
+                                </div>
                                 <CustomSelect value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setLibraryPage(1); }} variant="filter" size="xs" prefixLabel="Region">
                                     <option value="All">All</option>
                                     {BODY_REGIONS.filter(r => r !== 'Unsorted').map(r => <option key={r} value={r}>{r}</option>)}
@@ -1197,7 +1297,7 @@ export const ExerciseLibraryPage = () => {
                         <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
                             <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] shrink-0">A–Z</span>
                             <div className="h-3 w-px bg-slate-200 dark:bg-[#243A58] shrink-0" />
-                            <div className="flex flex-wrap gap-0.5">
+                            <div className="flex flex-nowrap gap-0.5 overflow-x-auto no-scrollbar min-w-0 flex-1">
                                 <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
                                     className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                     All

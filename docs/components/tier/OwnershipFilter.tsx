@@ -46,7 +46,10 @@ export const OwnershipFilter: React.FC<OwnershipFilterProps> = ({
     );
 };
 
-/** Predicate to apply the active scope to a row that has user_id + visibility. */
+/** Predicate to apply the active scope to a row that has user_id.
+ *  All  = everything the user can see (own + org-shared by others).
+ *  Mine = created by the current user.
+ *  Org  = created by anyone OTHER than the current user (i.e. not mine). */
 export function matchesOwnershipScope(
     row: { user_id?: string; visibility?: string },
     scope: OwnershipScope,
@@ -54,6 +57,6 @@ export function matchesOwnershipScope(
 ): boolean {
     if (scope === 'all') return true;
     if (scope === 'mine') return !!currentUserId && row.user_id === currentUserId;
-    if (scope === 'org') return row.visibility === 'org';
+    if (scope === 'org') return !!currentUserId && !!row.user_id && row.user_id !== currentUserId;
     return true;
 }

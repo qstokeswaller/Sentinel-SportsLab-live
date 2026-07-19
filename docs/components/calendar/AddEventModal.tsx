@@ -272,7 +272,7 @@ const AddEventModal = () => {
                 </div>
 
                 {/* Form Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 space-y-4">
                     {/* Event Name */}
                     <div ref={titleRef}>
                         <label className={LABEL}>Event Name <span className="text-red-400">*</span></label>

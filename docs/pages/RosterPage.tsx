@@ -104,12 +104,12 @@ export const RosterPage = () => {
     const renderListView = () => (
         <>
             {/* Page header */}
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="hidden lg:block">
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
                     <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
-                <div data-tour="add-athlete" className="flex items-center gap-2">
+                <div data-tour="add-athlete" className="flex items-center gap-2 flex-wrap">
                     <ViewToggle />
                     <Button variant="outline" onClick={() => setShowImport(true)}>
                         <FileSpreadsheetIcon size={14} /> Import CSV
@@ -125,10 +125,10 @@ export const RosterPage = () => {
 
             <div data-tour="team-list" className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 {/* Table header */}
-                <div className="grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
+                <div className="grid grid-cols-[1fr_110px] sm:grid-cols-[2fr_1fr_1fr_120px] px-4 py-2.5 border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50 dark:bg-[#0F1C30]">
                     <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Athlete</span>
-                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Team</span>
-                    <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Sport</span>
+                    <span className="hidden sm:block text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Team</span>
+                    <span className="hidden sm:block text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide">Sport</span>
                     <span className="text-[10px] font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-wide text-right">Actions</span>
                 </div>
 
@@ -161,7 +161,7 @@ export const RosterPage = () => {
                             <span className="text-xs text-slate-400 dark:text-[#CBD5E1]">· {(team.players || []).length} athletes</span>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
-                                className="ml-auto p-1 rounded text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover/team:opacity-100"
+                                className="ml-auto p-1 rounded text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover/team:opacity-100 reveal-on-touch"
                                 title="Delete team"
                             >
                                 <Trash2Icon size={12} />
@@ -173,7 +173,7 @@ export const RosterPage = () => {
                                 <div
                                     key={player.id}
                                     {...(playerIdx === 0 && teamIdx === 0 ? { 'data-tour': 'athlete-row' } : {})}
-                                    className={`grid grid-cols-[2fr_1fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group ${
+                                    className={`grid grid-cols-[1fr_110px] sm:grid-cols-[2fr_1fr_1fr_120px] px-4 py-3 items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors group ${
                                         playerIdx < (team.players || []).length - 1 || teamIdx < teams.length - 1 ? 'border-b border-slate-100 dark:border-[#1A2D48]' : ''
                                     }`}
                                     onClick={() => openAthlete(player)}
@@ -182,19 +182,19 @@ export const RosterPage = () => {
                                         <AthleteAvatar player={player} size="sm" />
                                         <span className="text-sm font-medium text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:text-indigo-300 transition-colors">{player.name}</span>
                                     </div>
-                                    <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{team.name}</span>
-                                    <span className="text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
+                                    <span className="hidden sm:block text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{team.name}</span>
+                                    <span className="hidden sm:block text-sm text-slate-500 dark:text-[#CBD5E1] truncate">{player.sport || <span className="text-slate-300 dark:text-[#475569]">—</span>}</span>
                                     <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                                         <button
                                             onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
-                                            className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
+                                            className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100 reveal-on-touch"
                                             title="Delete athlete"
                                         >
                                             <Trash2Icon size={13} />
                                         </button>
                                         <span
                                             onClick={() => openAthlete(player)}
-                                            className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                            className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 reveal-on-touch transition-opacity cursor-pointer"
                                         >
                                             View <ChevronRightIcon size={12} />
                                         </span>
@@ -227,12 +227,12 @@ export const RosterPage = () => {
     const renderTeamsGrid = () => (
         <>
             {/* Page header */}
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="hidden lg:block">
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-[#E2E8F0]">Athlete Roster</h1>
                     <p className="text-sm text-slate-500 dark:text-[#CBD5E1] mt-0.5">Manage athletes and squads across your organisation.</p>
                 </div>
-                <div data-tour="add-athlete" className="flex items-center gap-2">
+                <div data-tour="add-athlete" className="flex items-center gap-2 flex-wrap">
                     <ViewToggle />
                     <button
                         onClick={() => { setIsAddAthleteModalOpen(true); setNewAthleteName(''); }}
@@ -271,7 +271,7 @@ export const RosterPage = () => {
                             {/* Delete team */}
                             <button
                                 onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
-                                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
+                                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100 reveal-on-touch"
                                 title="Delete team"
                             >
                                 <Trash2Icon size={13} />
@@ -448,7 +448,7 @@ export const RosterPage = () => {
                             >
                                 <button
                                     onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'athlete', id: player.id, name: player.name }); }}
-                                    className="absolute top-2 right-2 p-1 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
+                                    className="absolute top-2 right-2 p-1 rounded-lg text-slate-200 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100 reveal-on-touch"
                                     title="Delete athlete"
                                 >
                                     <Trash2Icon size={13} />
@@ -495,14 +495,14 @@ export const RosterPage = () => {
                                 <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                                     <button
                                         onClick={() => setConfirmDelete({ type: 'athlete', id: player.id, name: player.name })}
-                                        className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-lg text-slate-300 dark:text-[#475569] hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100 reveal-on-touch"
                                         title="Delete athlete"
                                     >
                                         <Trash2Icon size={13} />
                                     </button>
                                     <span
                                         onClick={() => openAthlete(player)}
-                                        className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                        className="text-xs text-indigo-600 dark:text-indigo-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 reveal-on-touch transition-opacity cursor-pointer"
                                     >
                                         View <ChevronRightIcon size={12} />
                                     </span>

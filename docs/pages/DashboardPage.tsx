@@ -21,8 +21,10 @@ import { KpiInfoModal, type KpiInfoKey } from './dashboard/KpiInfoModal';
 import MorningReport from './dashboard/MorningReport';
 import CalendarWeekView from './dashboard/CalendarWeekView';
 import CalendarMonthView from './dashboard/CalendarMonthView';
+import CalendarMobileView from './dashboard/CalendarMobileView';
 import EditEventModal from './dashboard/EditEventModal';
 import EditSessionModal from './dashboard/EditSessionModal';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export const DashboardPage = () => {
     const {
@@ -196,6 +198,9 @@ export const DashboardPage = () => {
         return { acwrHighRisk, sleepRiskCount, readinessLabel, readinessSubLabel, readinessColor, readinessPct };
     }, [loadRecords, teams, acwrEnabledAthleteIds, acwrExclusions, calculateACWR, wellnessSummary]);
 
+    // <lg the calendar uses a dedicated agenda-style mobile view (dot-grid month +
+    // vertical week agenda + bottom-sheet detail). Desktop keeps the grid views.
+    const isMobile = useIsMobile();
     const [activePopover, setActivePopover] = React.useState(null);
     // Which KPI tile's "What is this?" modal is currently open: null | 'flagged' | 'acwr' | 'sleep' | 'readiness'
     const [kpiInfoOpen, setKpiInfoOpen] = React.useState<null | 'flagged' | 'acwr' | 'sleep' | 'readiness'>(null);
@@ -1034,11 +1039,18 @@ export const DashboardPage = () => {
                                     </div>
                                 )}
 
+                                {/* ── Mobile (<lg): agenda-style view for both week & month ── */}
+                                {isMobile ? (
+                                    <CalendarMobileView {...{ calendarViewMode, weekDays, dashboardCalendarDays, filteredCalendarEventsForView, filteredSessionsForCalendar, getEventAssignees, getTargetColor, resolveTargetName, setEditingEvent, setEditingSession, setConfirmDeleteItem, setViewingSession }} />
+                                ) : (
+                                <>
                                 {/* ── Week View ── */}
                                 {calendarViewMode === 'week' && <CalendarWeekView {...{ activePopover, activeSessionPopover, darkenHex, dragOverDate, filteredCalendarEventsForView, filteredSessionsForCalendar, getEventAssignees, getTargetColor, handleDragEnd, handleDragLeave, handleDragOver, handleDragStart, handleDrop, isDark, overflowDay, overflowRef, popoverRef, resolveTargetName, sessionPopoverRef, setActivePopover, setActiveSessionPopover, setAddEventPresetDate, setConfirmDeleteItem, setEditingEvent, setEditingSession, setIsAddEventModalOpen, setOverflowDay, setViewingSession, weekDays }} />}
 
                                 {/* ── Month View ── */}
                                 {calendarViewMode === 'month' && <CalendarMonthView {...{ activePopover, activeSessionPopover, darkenHex, dashboardCalendarDays, dragOverDate, filteredCalendarEventsForView, filteredSessionsForCalendar, getEventAssignees, getTargetColor, handleDragEnd, handleDragLeave, handleDragOver, handleDragStart, handleDrop, isDark, overflowDay, overflowRef, popoverRef, resolveTargetName, sessionPopoverRef, setActivePopover, setActiveSessionPopover, setAddEventPresetDate, setConfirmDeleteItem, setEditingEvent, setEditingSession, setIsAddEventModalOpen, setOverflowDay, setViewingSession }} />}
+                                </>
+                                )}
                             </div>
                         </div>
                     </div>

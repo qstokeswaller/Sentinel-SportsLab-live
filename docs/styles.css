@@ -34,6 +34,18 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Touch devices: reveal hover-only controls ─────────────────────────────
+   Buttons that are hidden until hover (opacity-0 group-hover:opacity-100) are
+   unreachable on touch screens (phones AND tablets like iPad, which have no
+   hover even in landscape ≥1024px). Add `reveal-on-touch` to such a control and
+   it stays visible on any device that can't hover. Mouse devices keep the
+   hover-reveal behaviour untouched. */
+@media (hover: none) {
+    .reveal-on-touch {
+        opacity: 1 !important;
+    }
+}
+
 /* ── Global horizontal-overflow guard ──────────────────────────────────────
    Nothing should ever make the page scroll sideways / cut content off at the
    edges on mobile or tablet. Uses `clip` rather than `hidden` so it never

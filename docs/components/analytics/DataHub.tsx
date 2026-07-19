@@ -694,11 +694,10 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
                     {/* Latest mode: snapshot date picker (date the table resolves to; blank = today) */}
                     {viewMode === 'latest' && (
-                        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg" title="Show data as-of this date. Leave blank for today's most-recent.">
-                            <CalendarIcon size={12} className="text-slate-400 dark:text-[#CBD5E1]" />
-                            <DatePicker value={snapshotDate} onChange={e => setSnapshotDate(e.target.value)} className="w-28" />
+                        <div className="flex items-center gap-1" title="Show data as-of this date. Leave blank for today's most-recent.">
+                            <DatePicker value={snapshotDate} onChange={e => setSnapshotDate(e.target.value)} className="w-36" placeholder="As-of date" />
                             {snapshotDate && (
-                                <button onClick={() => setSnapshotDate('')} className="text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1]" title="Clear date"><XIcon size={11} /></button>
+                                <button onClick={() => setSnapshotDate('')} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors" title="Clear date"><XIcon size={13} /></button>
                             )}
                         </div>
                     )}

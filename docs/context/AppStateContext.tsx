@@ -56,6 +56,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/data-hub/snapshot') ||
         path.startsWith('/athlete-share/') ||
         path.startsWith('/test-share/') ||
+        path.startsWith('/session-share/') ||
         path.startsWith('/accept-invite/') ||
         path.startsWith('/login') || path.startsWith('/settings') ||
         path === '/';
@@ -72,7 +73,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         path.startsWith('/injury-form') || path.startsWith('/protocol/') ||
         path.startsWith('/data-hub/snapshot') ||
         path.startsWith('/athlete-share/') ||
-        path.startsWith('/test-share/');
+        path.startsWith('/test-share/') ||
+        path.startsWith('/session-share/');
 
     // Sync URL → activeTab when user navigates back/forward
     useEffect(() => {
@@ -1568,7 +1570,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             path.startsWith('/wellness-form') || path.startsWith('/injury-form') ||
             path.startsWith('/workout/') || path.startsWith('/protocol/') ||
             path.startsWith('/data-hub/snapshot') ||
-            path.startsWith('/athlete-share/') || path.startsWith('/test-share/')) {
+            path.startsWith('/athlete-share/') || path.startsWith('/test-share/') ||
+            path.startsWith('/session-share/')) {
             setIsLoading(false);
             setIsSecondaryLoading(false);
             return;

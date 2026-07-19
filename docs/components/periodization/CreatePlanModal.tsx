@@ -58,7 +58,7 @@ export const CreatePlanModal = () => {
                     </button>
                 </div>
 
-                <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
+                <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto overflow-x-hidden">
                     {/* Plan Name */}
                     <div>
                         <label className={LABEL}>Plan Name</label>

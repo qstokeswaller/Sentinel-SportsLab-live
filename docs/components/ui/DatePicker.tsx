@@ -8,6 +8,7 @@
 // Drop-in compatible with the native input contract:
 //   <DatePicker value="2026-07-03" onChange={e => setDate(e.target.value)} />
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DatePickerProps {
@@ -36,13 +37,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     value, onChange, min, max, disabled = false, className = '', placeholder = 'Select date',
 }) => {
     const [open, setOpen] = useState(false);
-    const [openUp, setOpenUp] = useState(false);
-    const [alignRight, setAlignRight] = useState(false);
+    const [pos, setPos] = useState<React.CSSProperties>({});
     const selected = parseIso(value);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     // The month shown in the grid — follows the selection, else today.
     const [view, setView] = useState<Date>(() => selected || today);
     const wrapRef = useRef<HTMLDivElement>(null);
+    const popRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { if (open) setView(parseIso(value) || today); }, [open]); // eslint-disable-line
 
@@ -50,7 +51,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     useEffect(() => {
         if (!open) return;
         const onDown = (e: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+            const t = e.target as Node;
+            // Popover is portaled outside the wrapper, so check both.
+            if (!wrapRef.current?.contains(t) && !popRef.current?.contains(t)) setOpen(false);
         };
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
         document.addEventListener('mousedown', onDown);
@@ -58,12 +61,34 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
     }, [open]);
 
-    // Collision-aware placement.
+    // Collision-aware placement. The popover is portaled to <body> with fixed
+    // positioning so it can never be clipped by a modal's overflow — it always
+    // appears fully, flipping above the field when there's no room below, and
+    // clamped within the viewport horizontally. Tracks the field on scroll/resize.
     useLayoutEffect(() => {
-        if (!open || !wrapRef.current) return;
-        const r = wrapRef.current.getBoundingClientRect();
-        setOpenUp(window.innerHeight - r.bottom < 360 && r.top > 360);
-        setAlignRight(r.left + 288 > window.innerWidth - 8);
+        if (!open) return;
+        const place = () => {
+            const el = wrapRef.current;
+            if (!el) return;
+            const r = el.getBoundingClientRect();
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const width = 288; // w-72
+            const openUp = vh - r.bottom < 360 && r.top > 360;
+            const left = Math.min(Math.max(8, r.left), vw - width - 8);
+            setPos({
+                position: 'fixed',
+                width,
+                left,
+                ...(openUp ? { bottom: vh - r.top + 4 } : { top: r.bottom + 4 }),
+            });
+        };
+        place();
+        window.addEventListener('scroll', place, true); // capture: also catches modal-body scroll
+        window.addEventListener('resize', place);
+        return () => {
+            window.removeEventListener('scroll', place, true);
+            window.removeEventListener('resize', place);
+        };
     }, [open]);
 
     const minD = min ? parseIso(min) : null;
@@ -106,9 +131,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 <CalendarIcon size={14} className="text-slate-400 dark:text-[#94A3B8] shrink-0" />
             </button>
 
-            {/* Calendar popover */}
-            {open && (
-                <div className={`absolute z-[600] ${alignRight ? 'right-0' : 'left-0'} ${openUp ? 'bottom-full mb-1' : 'top-full mt-1'} w-72 bg-white dark:bg-[#1A2D48] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] p-4 animate-in fade-in zoom-in-95 duration-150`}>
+            {/* Calendar popover — portaled to <body> so it's never clipped by a modal's overflow */}
+            {open && createPortal(
+                <div ref={popRef} style={pos} className="z-[1300] bg-white dark:bg-[#1A2D48] rounded-xl shadow-xl border border-slate-200 dark:border-[#243A58] p-4 animate-in fade-in zoom-in-95 duration-150">
                     {/* Month header + nav */}
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
@@ -175,7 +200,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                             Clear
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

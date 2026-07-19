@@ -75,20 +75,20 @@ const ShellHeader = () => {
                     truncate via the inner min-w-0 + truncate rather than pushing the
                     search/view-toggle/Create button past the column boundary into the
                     Overview tile. shrink-0 here previously clipped "Create Sheet" → "Create Sh". */}
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="hidden lg:flex items-center gap-3 min-w-0">
                     <div className={`w-9 h-9 ${theme.iconBg} rounded-lg flex items-center justify-center shrink-0 transition-colors`}>
                         <Icon size={18} className="text-white" />
                     </div>
                     <div className="min-w-0">
                         <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] truncate leading-tight">{theme.title}</h2>
-                        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5 truncate">{theme.description}</p>
+                        <p className="hidden xl:block text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5 truncate">{theme.description}</p>
                     </div>
                 </div>
 
                 <div className="hidden md:block md:flex-1" />
 
                 <div className="flex items-center gap-2 w-full md:contents">
-                <div className="relative flex-1 md:flex-none md:w-64 shrink-0 min-w-0">
+                <div className="relative flex-1 md:flex-none md:w-44 lg:w-52 xl:w-64 shrink-0 min-w-0">
                     <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#CBD5E1]" />
                     <input
                         type="text"
@@ -201,7 +201,7 @@ const Shell = () => {
                 <div className="flex-1 min-w-0">
                     <ShellHeader />
                 </div>
-                <div className="hidden lg:flex w-80 shrink-0">
+                <div className="hidden lg:flex lg:w-[36%] lg:min-w-[280px] lg:max-w-[340px] shrink-0">
                     {overviewRows.length > 0 && <OverviewTile rows={overviewRows} />}
                 </div>
             </div>
@@ -215,7 +215,7 @@ const Shell = () => {
                     {activeTab === 'packets'  && <WorkoutSessionsPage />}
                     {activeTab === 'sheets'   && <WeightroomSheetsPage />}
                 </div>
-                <div className={hideShell ? 'hidden' : 'w-full lg:w-80 lg:shrink-0 min-h-0 flex flex-col gap-4 max-h-[45vh] lg:max-h-none'}>
+                <div className={hideShell ? 'hidden' : 'hidden lg:flex lg:flex-col lg:w-[36%] lg:min-w-[280px] lg:max-w-[340px] lg:shrink-0 min-h-0 gap-4'}>
                     {sidebarExtra}
                 </div>
             </div>

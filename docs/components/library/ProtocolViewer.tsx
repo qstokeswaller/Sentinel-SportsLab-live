@@ -204,10 +204,11 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
         <div className="space-y-4">
             {/* Header */}
             <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 sm:flex-1">
                     <button aria-label="Back to library"
                         onClick={onBack}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-[#E2E8F0] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all shrink-0"
                     >
                         <ArrowLeftIcon size={16} />
                     </button>
@@ -230,8 +231,9 @@ export const ProtocolViewer: React.FC<ProtocolViewerProps> = ({ protocol, onBack
                             )}
                         </div>
                     </div>
+                    </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                         <button
                             onClick={onShare}
                             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-[#CBD5E1] bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#1A2D48] transition-all"

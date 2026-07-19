@@ -201,6 +201,42 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
+    // --- CONDITIONING / WATTBIKE SESSION SHARES (snapshot-based, like test shares) ---
+    // These sessions live in localStorage, so we snapshot the session JSON into a
+    // share row; the public page reads it by id (anon, non-expired).
+    async createConditioningShare(payload: {
+        shareType: 'wattbike' | 'conditioning';
+        title: string;
+        snapshotData: any;
+        expiresAt?: string | null;
+    }) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('User not authenticated');
+        const { data, error } = await supabase
+            .from('conditioning_share_sessions')
+            .insert({
+                user_id: userData.user.id,
+                share_type: payload.shareType,
+                title: payload.title,
+                snapshot_data: payload.snapshotData,
+                expires_at: payload.expiresAt ?? null,
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async fetchConditioningShare(shareId: string) {
+        const { data, error } = await supabase
+            .from('conditioning_share_sessions')
+            .select('*')
+            .eq('id', shareId)
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    },
+
     async uploadAthleteAvatar(file: File): Promise<string> {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');

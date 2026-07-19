@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, DumbbellIcon, Share2Icon, ExternalLink, Weight, AlertTriangleIcon } from 'lucide-react';
 import { ShareWorkoutPopover } from './ShareWorkoutPopover';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
@@ -84,12 +85,16 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-3xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
+  return createPortal(
+    <div className="fixed inset-0 z-[700] flex items-stretch justify-center lg:items-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-200">
+      <div className="relative bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full max-w-full lg:max-w-3xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col h-full max-h-full lg:h-auto lg:max-h-[90vh] animate-in zoom-in-95">
+        {/* Mobile close — top-right X (consistent with the library exercise view) */}
+        <button onClick={onClose} aria-label="Close" className="lg:hidden absolute top-3 right-3 z-10 p-2 rounded-lg bg-slate-100/80 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
+          <XIcon size={18} />
+        </button>
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-start justify-between shrink-0">
-          <div className="space-y-1.5">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between shrink-0">
+          <div className="space-y-1.5 min-w-0 pr-10 lg:pr-0">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-none">{template.name}</h2>
             <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-[#CBD5E1]">
               <span className="flex items-center gap-1.5">
@@ -110,7 +115,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 ml-4 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:ml-4 shrink-0">
             <button onClick={() => setShowShare(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#1A2D48] hover:bg-slate-200 dark:hover:bg-[#243A58] text-slate-600 dark:text-[#CBD5E1] rounded-lg text-xs font-medium transition-colors">
               <Share2Icon size={13} /> Share
             </button>
@@ -124,14 +129,14 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
                 <Trash2Icon size={13} /> Delete
               </button>
             )}
-            <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+            <button onClick={onClose} aria-label="Close" className="hidden lg:inline-flex p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-5">
           {sectionOrder.map((sec: string) => {
             const exercises = sections[sec] || [];
             if (exercises.length === 0) return null;
@@ -256,6 +261,7 @@ export const TemplateViewModal = ({ template, isOpen, onClose, onEdit, onDelete 
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
       />
-    </div>
+    </div>,
+    document.body
   );
 };

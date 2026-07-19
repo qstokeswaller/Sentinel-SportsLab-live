@@ -5,7 +5,9 @@ import {
     ActivityIcon, ZapIcon, PlusIcon, Trash2Icon, SaveIcon, PrinterIcon,
     ClockIcon, FileEditIcon, Calculator as CalculatorIcon, ArrowLeftIcon,
     TimerIcon, HeartPulseIcon, RepeatIcon, CopyIcon, CalendarPlusIcon, SearchIcon,
+    Share2 as Share2Icon,
 } from 'lucide-react';
+import { ShareConditioningPopover } from '../components/conditioning/ShareConditioningPopover';
 import { SupabaseStorageService as StorageService } from '../services/storageService';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { LinkedSessionsPicker } from '../components/conditioning/LinkedSessionsPicker';
@@ -76,6 +78,7 @@ export const ConditioningHubPage = () => {
 
     // --- SCHEDULING STATE ---
     const [scheduleOpen, setScheduleOpen] = React.useState<null | { type: 'wattbike' | 'conditioning'; session: any }>(null);
+    const [shareTarget, setShareTarget] = React.useState<null | { type: 'wattbike' | 'conditioning'; session: any }>(null);
     const [schedDate, setSchedDate] = React.useState(new Date().toISOString().split('T')[0]);
     const [schedTime, setSchedTime] = React.useState('09:00');
     const [schedTargetType, setSchedTargetType] = React.useState<'Team' | 'Individual'>('Team');
@@ -441,12 +444,14 @@ ${setsHtml}
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="secondary" size="sm" onClick={() => handlePrintCondSession(session)}><PrinterIcon size={13} className="mr-1.5" /> Print</Button>
+                        <Button variant="secondary" size="sm" onClick={() => setShareTarget({ type: 'conditioning', session })}><Share2Icon size={13} className="mr-1.5" /> Share</Button>
                         <Button variant="secondary" size="sm" onClick={() => setScheduleOpen({ type: 'conditioning', session })}><CalendarPlusIcon size={13} className="mr-1.5" /> Schedule</Button>
-                        <Button variant="secondary" size="sm" onClick={() => setConditioningView('grid')}>Back</Button>
                     </div>
                 </div>
                 {scheduleOpen?.type === 'conditioning' && renderScheduleInline()}
+                {shareTarget?.type === 'conditioning' && (
+                    <ShareConditioningPopover shareType="conditioning" session={session} onDownloadPdf={() => handlePrintCondSession(session)} onClose={() => setShareTarget(null)} />
+                )}
                 {session.notes && (
                     <div className="bg-slate-50 dark:bg-[#0F1C30] px-5 py-3 rounded-xl border border-slate-200 dark:border-[#243A58] text-sm text-slate-600 dark:text-[#CBD5E1] italic">{session.notes}</div>
                 )}
@@ -695,12 +700,14 @@ ${sectionsHtml}
                         <div className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Total duration: {session.duration}</div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="secondary" size="sm" onClick={() => handlePrintSession(session)}><PrinterIcon size={13} className="mr-1.5" /> Print</Button>
+                        <Button variant="secondary" size="sm" onClick={() => setShareTarget({ type: 'wattbike', session })}><Share2Icon size={13} className="mr-1.5" /> Share</Button>
                         <Button variant="secondary" size="sm" onClick={() => setScheduleOpen({ type: 'wattbike', session })}><CalendarPlusIcon size={13} className="mr-1.5" /> Schedule</Button>
-                        <Button variant="secondary" size="sm" onClick={() => setWattbikeView('grid')}>Back</Button>
                     </div>
                 </div>
                 {scheduleOpen?.type === 'wattbike' && renderScheduleInline()}
+                {shareTarget?.type === 'wattbike' && (
+                    <ShareConditioningPopover shareType="wattbike" session={session} onDownloadPdf={() => handlePrintSession(session)} onClose={() => setShareTarget(null)} />
+                )}
                 <div className="space-y-2">
                     {Array.isArray(session.sections) && session.sections.map((section, idx) => {
                         const isWarmup = section.name?.toLowerCase().includes('warm') || section.name?.toLowerCase().includes('recovery');
@@ -819,7 +826,17 @@ ${sectionsHtml}
                 <div className="space-y-5 animate-in slide-in-from-bottom-3">
                     {/* Hub Header */}
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm gap-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    if (wattbikeView === 'grid') setActiveConditioningModule(null);
+                                    else { setWattbikeView('grid'); setNewWattbikeSession({ title: '', duration: '', type: 'Conditioning', sections: [], linkedSessions: [] }); }
+                                }}
+                                aria-label="Back"
+                                className="p-2 -ml-1 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
+                            >
+                                <ArrowLeftIcon size={18} />
+                            </button>
                             <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-white shrink-0">
                                 <ActivityIcon size={20} />
                             </div>
@@ -831,12 +848,6 @@ ${sectionsHtml}
                         <div className="flex items-center gap-2.5">
                             <Button size="sm" onClick={() => setIsWattbikeMapCalculatorOpen(true)}>
                                 <CalculatorIcon size={13} className="mr-1.5" /> MAP Calculator
-                            </Button>
-                            <Button variant="secondary" size="sm" onClick={() => {
-                                if (wattbikeView === 'grid') setActiveConditioningModule(null);
-                                else { setWattbikeView('grid'); setNewWattbikeSession({ title: '', duration: '', type: 'Conditioning', sections: [], linkedSessions: [] }); }
-                            }}>
-                                {wattbikeView === 'grid' ? 'Back to Hub' : 'Back to List'}
                             </Button>
                         </div>
                     </div>
@@ -950,7 +961,17 @@ ${sectionsHtml}
                 <div className="space-y-5 animate-in slide-in-from-bottom-3">
                     {/* Hub Header */}
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm gap-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    if (conditioningView === 'grid') setActiveConditioningModule(null);
+                                    else { setConditioningView('grid'); setNewConditioningSession({ ...emptyConditioningSession }); }
+                                }}
+                                aria-label="Back"
+                                className="p-2 -ml-1 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
+                            >
+                                <ArrowLeftIcon size={18} />
+                            </button>
                             <div className="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center text-white shrink-0">
                                 <TimerIcon size={20} />
                             </div>
@@ -958,14 +979,6 @@ ${sectionsHtml}
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0]">Conditioning Session Planner</h3>
                                 <p className="text-xs text-slate-400 dark:text-[#CBD5E1] mt-0.5">Create interval prescriptions with energy system targeting</p>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-2.5">
-                            <Button variant="secondary" size="sm" onClick={() => {
-                                if (conditioningView === 'grid') setActiveConditioningModule(null);
-                                else { setConditioningView('grid'); setNewConditioningSession({ ...emptyConditioningSession }); }
-                            }}>
-                                {conditioningView === 'grid' ? 'Back to Hub' : 'Back to List'}
-                            </Button>
                         </div>
                     </div>
 

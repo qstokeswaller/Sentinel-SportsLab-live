@@ -37,6 +37,11 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     const hRef = useRef<HTMLInputElement>(null);
     const mRef = useRef<HTMLInputElement>(null);
     const lastEmitted = useRef(value);
+    // True when the next digit should START a fresh segment (just focused or stepped).
+    // Lets us accumulate "1" then "1" → "11" without depending on the browser's
+    // text-selection state, which could otherwise make each keystroke REPLACE the
+    // segment (typing "11" would collapse to "01").
+    const freshRef = useRef(true);
 
     // External value changed (e.g. form reset) → resync segments.
     useEffect(() => {
@@ -61,6 +66,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         const nh = pad((((hh === '' ? (d > 0 ? 8 : 10) : curH()) + d) % 24 + 24) % 24);
         const nm = mm === '' ? '00' : pad(curM());
         setHh(nh); setMm(nm); emit(nh, nm);
+        freshRef.current = true;
     };
     const stepMinute = (d: number) => {
         const base = curM();
@@ -71,16 +77,51 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         if (nmv < 0)   { nmv += 60; nhv = (nhv + 23) % 24; }
         const nh = pad(nhv), nm = pad(nmv);
         setHh(nh); setMm(nm); emit(nh, nm);
+        freshRef.current = true;
     };
 
     // ── Typing ──
+    // Digit entry is driven from onKeyDown (below) so accumulation never depends on
+    // the browser's selection state. typeDigit builds the 2-char segment ourselves:
+    // first digit since focus starts fresh, the next appends, then we clamp + advance.
+    const typeDigit = (which: 'h' | 'm', digit: string) => {
+        const cur = which === 'h' ? hh : mm;
+        const startFresh = freshRef.current || cur.length >= 2;
+        const next = startFresh ? digit : cur + digit;
+        freshRef.current = false;
+        if (which === 'h') {
+            if (next.length >= 2) {
+                const h = pad(clamp(parseInt(next, 10), 23));
+                setHh(h);
+                if (mm !== '') emit(h, mm);
+                freshRef.current = true;
+                mRef.current?.focus(); mRef.current?.select();
+            } else {
+                setHh(next);
+            }
+        } else {
+            if (next.length >= 2) {
+                const m = pad(clamp(parseInt(next, 10), 59));
+                setMm(m);
+                if (hh !== '') emit(pad(clamp(parseInt(hh, 10) || 0, 23)), m);
+                freshRef.current = true;
+            } else {
+                setMm(next);
+            }
+        }
+    };
+
+    // Fallback for inputs that don't emit usable digit keydowns (some Android IMEs)
+    // and for paste — the value here is already what the browser produced.
     const onHhChange = (raw: string) => {
         const t = raw.replace(/\D/g, '').slice(0, 2);
+        freshRef.current = false;
         setHh(t);
         if (t.length === 2) {
             const h = pad(clamp(parseInt(t, 10), 23));
             setHh(h);
             if (mm !== '') emit(h, mm);
+            freshRef.current = true;
             mRef.current?.focus(); mRef.current?.select();
         } else if (t === '' && mm === '') {
             emit('', '');
@@ -88,12 +129,14 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     };
     const onMmChange = (raw: string) => {
         const t = raw.replace(/\D/g, '').slice(0, 2);
+        freshRef.current = false;
         setMm(t);
         if (t.length === 2 && hh !== '') emit(hh === '' ? '' : pad(clamp(parseInt(hh, 10) || 0, 23)), pad(clamp(parseInt(t, 10), 59)));
         else if (t === '' && hh === '') emit('', '');
     };
     const commitBlur = () => {
         // Normalise partial entries on blur: '9' → '09'; lone segment pairs with 00.
+        freshRef.current = true;
         let h = hh, m = mm;
         if (h === '' && m === '') { emit('', ''); return; }
         if (h === '') h = '00';
@@ -103,8 +146,20 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         setHh(h); setMm(m); emit(h, m);
     };
     const onKey = (which: 'h' | 'm') => (e: React.KeyboardEvent) => {
-        if (e.key === 'ArrowUp')   { e.preventDefault(); which === 'h' ? stepHour(1)  : stepMinute(1); }
-        if (e.key === 'ArrowDown') { e.preventDefault(); which === 'h' ? stepHour(-1) : stepMinute(-1); }
+        if (e.key === 'ArrowUp')   { e.preventDefault(); which === 'h' ? stepHour(1)  : stepMinute(1); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); which === 'h' ? stepHour(-1) : stepMinute(-1); return; }
+        if (/^[0-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault(); typeDigit(which, e.key); return;
+        }
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            const cur = which === 'h' ? hh : mm;
+            const next = cur.slice(0, -1);
+            which === 'h' ? setHh(next) : setMm(next);
+            freshRef.current = false;
+            if (next === '' && (which === 'h' ? mm : hh) === '') emit('', '');
+            return;
+        }
     };
 
     // Slim stacked chevrons (like the reference design)
@@ -131,12 +186,12 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         >
             <input ref={hRef} type="text" inputMode="numeric" value={hh} placeholder="––"
                 onChange={e => onHhChange(e.target.value)} onBlur={commitBlur} onKeyDown={onKey('h')}
-                onFocus={e => e.target.select()} disabled={disabled} aria-label="Hours" className={seg} />
+                onFocus={e => { freshRef.current = true; e.target.select(); }} disabled={disabled} aria-label="Hours" className={seg} />
             <Chevrons label="hours" onUp={() => stepHour(1)} onDown={() => stepHour(-1)} />
             <span className="text-slate-300 dark:text-[#475569] text-sm font-semibold px-0.5">:</span>
             <input ref={mRef} type="text" inputMode="numeric" value={mm} placeholder="––"
                 onChange={e => onMmChange(e.target.value)} onBlur={commitBlur} onKeyDown={onKey('m')}
-                onFocus={e => e.target.select()} disabled={disabled} aria-label="Minutes" className={seg} />
+                onFocus={e => { freshRef.current = true; e.target.select(); }} disabled={disabled} aria-label="Minutes" className={seg} />
             <Chevrons label="minutes" onUp={() => stepMinute(1)} onDown={() => stepMinute(-1)} />
             <ClockIcon size={13} className="ml-1 text-slate-400 dark:text-[#94A3B8] shrink-0" />
         </div>

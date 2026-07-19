@@ -637,6 +637,36 @@ export type Database = {
           },
         ]
       }
+      conditioning_share_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          share_type: string
+          snapshot_data: Json
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          share_type: string
+          snapshot_data: Json
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          share_type?: string
+          snapshot_data?: Json
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercise_collections: {
         Row: {
           color: string | null

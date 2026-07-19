@@ -201,7 +201,21 @@ export const ProtocolLibrary: React.FC = () => {
     // ── Sub-Views ─────────────────────────────────────────────────────────────
 
     if (loading) {
-        return <div className="text-center py-12 text-sm text-slate-400 dark:text-[#CBD5E1]">Loading protocols...</div>;
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+                    <div key={i} className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] p-4 animate-pulse">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#1A2D48]" />
+                            <div className="h-3.5 w-2/3 bg-slate-100 dark:bg-[#1A2D48] rounded" />
+                        </div>
+                        <div className="h-2.5 w-1/3 bg-slate-100 dark:bg-[#1A2D48] rounded mb-3" />
+                        <div className="h-2.5 w-full bg-slate-100 dark:bg-[#1A2D48] rounded mb-1.5" />
+                        <div className="h-2.5 w-4/5 bg-slate-100 dark:bg-[#1A2D48] rounded" />
+                    </div>
+                ))}
+            </div>
+        );
     }
 
     if (pageView === 'create') {

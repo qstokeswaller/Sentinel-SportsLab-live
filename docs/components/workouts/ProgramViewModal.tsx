@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, LayersIcon, Share2Icon, ExternalLink, Weight, MoonIcon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { XIcon, PencilIcon, Trash2Icon, TagIcon, CalendarIcon, CalendarPlus, LayersIcon, Share2Icon, ExternalLink, Weight, MoonIcon } from 'lucide-react';
 import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 import { useProgramWithDays, useDeleteProgram, type WorkoutProgram } from '../../hooks/useWorkoutPrograms';
 import { ProgramBuilderModal } from './ProgramBuilderModal';
@@ -8,6 +9,7 @@ import { useExerciseMap } from '../../hooks/useExerciseMap';
 import { useAppState } from '../../context/AppStateContext';
 import { todayLocalDate } from '../../utils/syncTonnage';
 import { Button } from '@/components/ui/button';
+import { CustomSelect } from '../ui/CustomSelect';
 
 type Section = string; // dynamic — drops the warmup/workout/cooldown enum
 
@@ -30,9 +32,11 @@ interface ProgramViewModalProps {
   program: WorkoutProgram | null;
   isOpen: boolean;
   onClose: () => void;
+  /** When provided, an Assign action is shown in the header (opens the parent's assign modal). */
+  onAssign?: () => void;
 }
 
-export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalProps) => {
+export const ProgramViewModal = ({ program, isOpen, onClose, onAssign }: ProgramViewModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -64,12 +68,16 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-4xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
+  return createPortal(
+    <div className="fixed inset-0 z-[700] flex items-stretch justify-center lg:items-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-0 lg:p-4 animate-in fade-in duration-200">
+      <div className="relative bg-white dark:bg-[#132338] rounded-none lg:rounded-xl w-full max-w-full lg:max-w-4xl shadow-xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col h-full max-h-full lg:h-auto lg:max-h-[90vh] animate-in zoom-in-95">
+        {/* Mobile close — top-right X (consistent with the library exercise view) */}
+        <button onClick={onClose} aria-label="Close" className="lg:hidden absolute top-3 right-3 z-10 p-2 rounded-lg bg-slate-100/80 dark:bg-[#1A2D48] text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-200 dark:hover:bg-[#243A58] transition-colors">
+          <XIcon size={18} />
+        </button>
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex items-start justify-between shrink-0">
-          <div className="space-y-1.5">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-[#243A58] flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between shrink-0">
+          <div className="space-y-1.5 min-w-0 pr-10 lg:pr-0">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] leading-none">{program.name}</h2>
             <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-[#CBD5E1]">
               <span className="flex items-center gap-1.5">
@@ -87,7 +95,12 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
               <p className="text-sm text-slate-500 dark:text-[#CBD5E1] max-w-2xl">{program.overview}</p>
             )}
           </div>
-          <div className="flex items-center gap-2 ml-4 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:ml-4 shrink-0">
+            {onAssign && (
+              <Button variant="secondary" size="sm" onClick={onAssign}>
+                <CalendarPlus size={13} className="mr-1.5" /> Assign
+              </Button>
+            )}
             <Button variant="secondary" size="sm" onClick={() => setShowShare(true)}>
               <Share2Icon size={13} className="mr-1.5" /> Share
             </Button>
@@ -97,14 +110,14 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
             <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-500/15">
               <Trash2Icon size={13} className="mr-1.5" /> Delete
             </Button>
-            <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
+            <button onClick={onClose} aria-label="Close" className="hidden lg:inline-flex p-2 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
               <XIcon size={16} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {isLoading ? (
             <div className="p-12 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">Loading program...</div>
           ) : !fullProgram || (fullProgram.days ?? []).length === 0 ? (
@@ -134,7 +147,8 @@ export const ProgramViewModal = ({ program, isOpen, onClose }: ProgramViewModalP
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -154,23 +168,21 @@ const DayTabs = ({ program, exerciseMap, exerciseFullMap }) => {
 
   return (
     <div>
-      <div className="flex items-center gap-0.5 px-5 pt-3 border-b border-slate-100 dark:border-[#243A58] overflow-x-auto no-scrollbar">
-        {days.map((d, i) => (
-          <button
-            key={d.id}
-            onClick={() => setActiveDay(i)}
-            className={`px-4 py-2 text-xs font-medium whitespace-nowrap transition-all border-b-2 -mb-px flex items-center gap-1.5 ${
-              activeDay === i
-                ? d.is_rest_day ? 'border-slate-400 text-slate-500 dark:text-[#CBD5E1]' : 'border-indigo-600 text-indigo-600 dark:text-indigo-300'
-                : 'border-transparent text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'
-            }`}
-          >
-            {d.name ?? `Day ${d.day_number}`}
-            {d.is_rest_day && (
-              <span className="w-3.5 h-3.5 bg-slate-100 dark:bg-[#243A58] text-slate-400 dark:text-[#CBD5E1] rounded-full flex items-center justify-center text-[7px] font-black shrink-0">R</span>
-            )}
-          </button>
-        ))}
+      {/* Day selector — a dropdown scales to any number of days without an
+          unreachable, cut-off horizontal tab strip. */}
+      <div className="px-5 pt-3 pb-2.5 border-b border-slate-100 dark:border-[#243A58]">
+        <CustomSelect
+          value={String(activeDay)}
+          onChange={e => setActiveDay(Number(e.target.value))}
+          variant="form"
+          size="sm"
+        >
+          {days.map((d, i) => (
+            <option key={d.id} value={String(i)}>
+              {(d.name ?? `Day ${d.day_number}`)}{d.is_rest_day ? ' · Rest day' : ''}
+            </option>
+          ))}
+        </CustomSelect>
       </div>
 
       {day && (

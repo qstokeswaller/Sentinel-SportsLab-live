@@ -13,6 +13,7 @@ import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover'
 import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
 import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { useAuth } from '../context/AuthContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
@@ -67,6 +68,9 @@ export const WorkoutProgramsPage = () => {
     // search + view live in the Workouts shell layout (persistent across tab switches).
     // We register our "Create" handler with the shell so its Create Program button can fire it.
     const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
+    // On mobile there is no right-rail quick-view panel; tapping a row opens the
+    // full-view modal directly (mobile drill-in) instead of selecting into the panel.
+    const isMobile = useIsMobile();
 
     // Tabs:
     //  - 'templates' (formerly 'active'): every saved program — they're all reusable templates regardless of assignment
@@ -631,8 +635,8 @@ export const WorkoutProgramsPage = () => {
 
                 {/* Sub-tabs row — Tabs (left) · Team/Individual pill (centered, Assigned only) · Filter button (right) */}
                 <div className="bg-white dark:bg-[#132338] px-5 pt-2 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-end gap-3 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
-                        <div className="flex gap-0 shrink-0">
+                    <div className="flex flex-wrap items-end gap-x-3 gap-y-2 border-b border-slate-100 dark:border-[#1A2D48] -mx-5 px-5">
+                        <div className="flex gap-0 shrink-0 w-full sm:w-auto">
                             {[
                                 { key: 'templates', label: 'Templates', count: programs.length },
                                 { key: 'assigned',  label: 'Assigned',  count: assignedProgramIds.size },
@@ -655,7 +659,7 @@ export const WorkoutProgramsPage = () => {
                                 </button>
                             ))}
                         </div>
-                        <div className="flex-1 flex justify-center mb-1.5">
+                        <div className="flex justify-start sm:flex-1 sm:justify-center mb-1.5">
                             {activeTab === 'assigned' && (
                                 <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58]">
                                     {(['all', 'Team', 'Individual'] as const).map(opt => (
@@ -811,7 +815,7 @@ export const WorkoutProgramsPage = () => {
                             return (
                             <div
                                 key={p.id}
-                                onClick={() => setSelectedProgram(p)}
+                                onClick={() => (isMobile ? setViewModalProgram(p) : setSelectedProgram(p))}
                                 className={`bg-white dark:bg-[#132338] rounded-xl border p-5 flex flex-col hover:shadow-md transition-all relative overflow-hidden group cursor-pointer ${
                                     isSelected
                                         ? 'border-indigo-400 dark:border-indigo-500/60 ring-2 ring-indigo-500/15'
@@ -865,7 +869,7 @@ export const WorkoutProgramsPage = () => {
                                                 ? 'bg-indigo-50/60 dark:bg-indigo-500/10'
                                                 : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                         }`}
-                                        onClick={() => setSelectedProgram(p)}
+                                        onClick={() => (isMobile ? setViewModalProgram(p) : setSelectedProgram(p))}
                                     >
                                         <td className="px-5 py-3.5">
                                             <div className={`font-medium text-sm transition-colors ${
@@ -901,6 +905,7 @@ export const WorkoutProgramsPage = () => {
                 program={viewModalProgram}
                 isOpen={!!viewModalProgram}
                 onClose={() => setViewModalProgram(null)}
+                onAssign={viewModalProgram ? () => setAssignTarget({ id: viewModalProgram.id, name: viewModalProgram.name, training_phase: (viewModalProgram as any).training_phase }) : undefined}
             />
             <ConfirmDeleteModal
                 isOpen={!!confirmDeleteId}

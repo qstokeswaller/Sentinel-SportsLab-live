@@ -14,6 +14,7 @@ import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../
 import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { ShareToOrgToggle } from '../components/tier/ShareToOrgToggle';
 import { useAuth } from '../context/AuthContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import {
     ArrowLeft as ArrowLeftIcon,
@@ -93,6 +94,9 @@ export const WeightroomSheetsPage = () => {
     // search + view live in the Workouts shell layout (persistent across tab switches).
     // The shell's "Create Sheet" button opens our local builder via registerCreate.
     const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
+    // Mobile has no right-rail panel. Sheets have no read-only modal view, so
+    // tapping a sheet opens the full-screen builder (its editable full view).
+    const isMobile = useIsMobile();
 
     // ── Builder state ──────────────────────────────────────────────────────
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
@@ -484,7 +488,7 @@ table { width: 100%; border-collapse: collapse; }
             <>
                 <div className="flex-1 min-h-0 flex flex-col gap-4">
                     {/* Filter button — Sheets has no sub-tab strip, so this lives in its own thin row above the list */}
-                    <div className="flex items-center justify-end gap-2 shrink-0 relative" ref={filterPopoverRef}>
+                    <div className="flex flex-wrap items-center justify-end gap-2 shrink-0 relative" ref={filterPopoverRef}>
                         <OwnershipFilter value={ownershipScope} onChange={setOwnershipScope} />
                         <button
                             onClick={() => setFilterPopoverOpen(v => !v)}
@@ -589,7 +593,7 @@ table { width: 100%; border-collapse: collapse; }
                                                 ? 'border-teal-400 dark:border-teal-500/60 ring-2 ring-teal-500/15'
                                                 : 'border-slate-200 dark:border-[#243A58] hover:border-slate-300 dark:hover:border-[#364E6E]'
                                         }`}
-                                        onClick={() => setSelectedSheet(s)}
+                                        onClick={() => (isMobile ? openExistingSheet(s) : setSelectedSheet(s))}
                                     >
                                         <div className="flex items-center gap-1.5 min-w-0 mb-2">
                                             {s.source_context && (
@@ -644,7 +648,7 @@ table { width: 100%; border-collapse: collapse; }
                                                         ? 'bg-teal-50/60 dark:bg-teal-500/10'
                                                         : 'hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                                                 }`}
-                                                onClick={() => setSelectedSheet(s)}
+                                                onClick={() => (isMobile ? openExistingSheet(s) : setSelectedSheet(s))}
                                             >
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex items-center gap-1.5">
