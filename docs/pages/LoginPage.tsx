@@ -9,8 +9,8 @@
  * Signup additionally captures: first name, surname, organisation, plan tier.
  */
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ActivityIcon, ArrowRightIcon, CheckIcon, ShieldIcon, UsersIcon, MailIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -42,6 +42,7 @@ const labelCls = 'block text-[10.5px] font-bold uppercase tracking-[0.04em] text
 const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) => {
     const { clearPasswordUpdate } = useAuth();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     // Initial mode: forceMode wins (password recovery), then ?mode=signup
     // from the URL (used by "Get Started" CTAs in the nav, footer, hero, and
@@ -81,6 +82,9 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
     // hides the plan picker — no pricing shown, same signup/email flow otherwise.
     const isElitePlan = searchParams.get('plan') === 'elite';
     const [selectedPlan, setSelectedPlan] = useState<PlanTier['id']>(isElitePlan ? 'elite' : 'performance');
+    // Keep the chosen plan in sync when Elite mode is toggled — either via the URL
+    // (?plan=elite from the pricing page) or the in-page Elite/standard sign-up links.
+    useEffect(() => { setSelectedPlan(isElitePlan ? 'elite' : 'performance'); }, [isElitePlan]);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const [loading, setLoading] = useState(false);
@@ -277,21 +281,32 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                 : 'Start managing your program smarter today.'}
                     </p>
 
-                    {/* Elite-only notice — this page is for clients our team has onboarded. */}
-                    {isElitePlan && (
-                        <div className="mb-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-                            <div className="flex items-start gap-2.5">
-                                <ShieldIcon size={16} className="text-indigo-600 shrink-0 mt-0.5" />
-                                <div className="text-[12px] leading-relaxed text-slate-700">
-                                    <p className="font-bold text-slate-900 mb-0.5">Elite access — onboarded clients only</p>
-                                    <p>This sign-up is for organisations our team has personally onboarded onto the Elite plan. If you've completed that process with us, create your account below.</p>
-                                    <p className="mt-1.5">
-                                        Haven't started yet? <a href="/contact?subject=elite" className="font-semibold text-indigo-600 hover:underline">Contact our team</a> to begin — we'll be in touch within 24 hours.
-                                    </p>
+                    {/* Elite signup → onboarded-only notice + a way back to standard sign-up.
+                        Standard signup → a prompt for onboarded Elite clients to switch over. */}
+                    {isElitePlan ? (
+                        <>
+                            <div className="mb-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+                                <div className="flex items-start gap-2.5">
+                                    <ShieldIcon size={16} className="text-indigo-600 shrink-0 mt-0.5" />
+                                    <div className="text-[12px] leading-relaxed text-slate-700">
+                                        <p className="font-bold text-slate-900 mb-0.5">Elite access — onboarded clients only</p>
+                                        <p>This sign-up is for organisations our team has personally onboarded onto the Elite plan. If you've completed that process with us, create your account below.</p>
+                                        <p className="mt-1.5">
+                                            Haven't started yet? <a href="/contact?subject=elite" className="font-semibold text-indigo-600 hover:underline">Contact our team</a> to begin — we'll be in touch within 24 hours.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                            <button type="button" onClick={() => navigate('/login?mode=signup')} className="mb-5 text-[12px] font-medium text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 transition-colors">
+                                ← Not an Elite client? Use the standard sign-up
+                            </button>
+                        </>
+                    ) : (!isInviteSignup && (
+                        <button type="button" onClick={() => navigate('/login?mode=signup&plan=elite')} className="mb-5 w-full flex items-center gap-2.5 rounded-lg border border-indigo-200 bg-indigo-50/60 px-3.5 py-2.5 text-left hover:bg-indigo-50 transition-colors">
+                            <ShieldIcon size={15} className="text-indigo-500 shrink-0" />
+                            <span className="text-[12px] text-slate-600">Have <span className="font-semibold text-slate-800">Elite</span> access from our team? <span className="font-semibold text-indigo-600">Sign up here →</span></span>
+                        </button>
+                    ))}
 
                     {isSignup && error && <div className="bg-rose-50 border border-rose-200 rounded-lg px-3.5 py-3 text-[12px] text-rose-700 font-medium mb-4">{error}</div>}
                     {isSignup && message && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3.5 py-3 text-[12px] text-emerald-700 font-medium mb-4">{message}</div>}
