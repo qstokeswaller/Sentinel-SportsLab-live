@@ -1161,8 +1161,9 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             )}
                         </div>
 
-                        {/* Key information */}
-                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3.5">
+                        {/* Key information — hidden on mobile (Phase/Block/Week/Dates already
+                            shown in the header up top); keeps the mobile view compact. */}
+                        <div className="hidden lg:block bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-3.5">
                             <h4 className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide mb-2.5">Key Information</h4>
                             <div className="space-y-2">
                                 {[

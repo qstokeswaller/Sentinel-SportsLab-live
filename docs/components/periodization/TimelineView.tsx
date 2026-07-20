@@ -5,13 +5,13 @@ import {
     Trophy, FlaskConical, Target, Zap, Dumbbell, Wind, Footprints,
     TrendingUp, TrendingDown, Plus, ChevronRight, Star,
     ArrowLeft, Clock, HelpCircle, Calendar,
-    Plane, Heart, Tent, Flag, Stethoscope, AlertTriangle,
+    Plane, Heart, Tent, Flag, Stethoscope,
 } from 'lucide-react';
 import {
     dateToWeekIndex, weekIndexToDate, calculateTotalWeeks,
     getMonthLabels, calculateWeeklyVolume, calculateWeeklyIntensity,
     calculatePeakingIndex, formatDateShort, EVENT_TYPE_COLORS, EVENT_TYPE_LABELS,
-    isStandardModality, getModalityLevels, getModalityDescription, getOverlappingBlockIds,
+    isStandardModality, getModalityLevels, getModalityDescription,
 } from '../../utils/periodizationUtils';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
@@ -182,9 +182,6 @@ export const TimelineView = ({ plan }) => {
     const allBlocks = useMemo(() =>
         plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, _phaseId: ph.id, _phaseColor: ph.color })))
     , [plan]);
-
-    // Blocks whose dates genuinely overlap another block's — flagged on the timeline.
-    const overlappingBlockIds = useMemo(() => getOverlappingBlockIds(plan), [plan]);
 
     // Today marker
     const todayStr    = new Date().toISOString().split('T')[0];
@@ -523,12 +520,6 @@ export const TimelineView = ({ plan }) => {
     // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-            {overlappingBlockIds.size > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-t-xl bg-rose-50 dark:bg-rose-900/20 border-b border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">
-                    <AlertTriangle size={13} className="shrink-0" />
-                    {overlappingBlockIds.size} training block{overlappingBlockIds.size !== 1 ? 's have' : ' has'} overlapping dates — see the highlighted bars.
-                </div>
-            )}
             <div className="flex overflow-hidden rounded-t-xl">
 
                 {/* ── STICKY LEFT SIDEBAR ─────────────────────────────────── */}
@@ -720,15 +711,12 @@ export const TimelineView = ({ plan }) => {
                                     : sOff + Math.max(block.weeks?.length || 1, 1) * 7 - 1;
                                 const { left, width } = geomOff(sOff, eOff);
                                 const isNarrow = width < 90;
-                                const isOverlapping = overlappingBlockIds.has(block.id);
                                 return (
                                     <div key={block.id}
                                         onClick={e => handleBlockClick(e, { id: block._phaseId }, block)}
                                         onContextMenu={e => handleBlockContextMenu(e, { id: block._phaseId }, block)}
-                                        title={isOverlapping ? 'This block’s dates overlap another block' : undefined}
-                                        className={`absolute top-1.5 bottom-1.5 rounded-lg border-2 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden ${isOverlapping ? 'ring-2 ring-rose-500 ring-inset z-10' : ''}`}
+                                        className="absolute top-1.5 bottom-1.5 rounded-lg border-2 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden"
                                         style={{ left: `${left}px`, width: `${width}px`, ...hexToTailwind(block.color || block._phaseColor || '#6366f1', 0.18) }}>
-                                        {isOverlapping && <AlertTriangle size={11} className="absolute top-0.5 right-0.5 text-rose-500 pointer-events-none" />}
                                         <span className="text-[10px] font-bold truncate min-w-0 w-full text-center px-1.5"
                                             style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.label || block.name}</span>
                                         {!isNarrow && block.label && block.name && (

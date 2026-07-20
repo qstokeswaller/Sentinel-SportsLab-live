@@ -13,32 +13,6 @@ export const getMonday = (date: Date): Date => {
     return d;
 };
 
-/**
- * Set of block IDs whose date ranges genuinely overlap another block's in the plan.
- * Used to flag data-entry mistakes on the timeline (e.g. one block ending Jun 5 while
- * the next starts Jun 4). Inclusive day-range comparison; blocks with no endDate fall
- * back to their week count. Adjacent ranges (end Sun / start Mon) do NOT count.
- */
-export const getOverlappingBlockIds = (plan: PeriodizationPlan): Set<string> => {
-    const MS = 86400000;
-    const off = (s: string) => Math.round(new Date(s + 'T00:00:00Z').getTime() / MS);
-    const arr = (plan.phases || [])
-        .flatMap(ph => ph.blocks || [])
-        .filter(b => b.startDate)
-        .map(b => {
-            const s = off(b.startDate);
-            const e = b.endDate ? off(b.endDate) : s + Math.max(b.weeks?.length || 1, 1) * 7 - 1;
-            return { id: b.id, s, e: Math.max(s, e) };
-        });
-    const ids = new Set<string>();
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = i + 1; j < arr.length; j++) {
-            if (arr[i].s <= arr[j].e && arr[j].s <= arr[i].e) { ids.add(arr[i].id); ids.add(arr[j].id); }
-        }
-    }
-    return ids;
-};
-
 /** Convert a date string to a week index relative to plan start date (0-based) */
 export const dateToWeekIndex = (dateStr: string, planStartDate: string): number => {
     const planStart = getMonday(new Date(planStartDate));
