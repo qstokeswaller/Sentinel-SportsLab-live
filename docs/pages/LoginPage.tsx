@@ -22,6 +22,8 @@ interface PlanTier {
     id: 'basic' | 'performance' | 'elite' | 'custom';
     label: string;
     price: string;
+    origPrice?: string;     // Pre-sale price shown struck through (launch sale)
+    save?: string;          // e.g. "60% OFF"
     seats: string;          // Display label shown in the tile, e.g. "1 user"
     seatCap: number | null; // Numeric cap saved to user_metadata (null = custom)
     popular?: boolean;
@@ -30,8 +32,8 @@ interface PlanTier {
 // Self-serve tiers only. Elite + Custom are onboarded personally by the team
 // (contact-first flow) — they don't appear in the signup selector.
 const PLANS: PlanTier[] = [
-    { id: 'basic',       label: 'Basic',       price: 'R599/mo',   seats: '1 user',  seatCap: 1 },
-    { id: 'performance', label: 'Performance', price: 'R3,499/mo', seats: 'Up to 3', seatCap: 3, popular: true },
+    { id: 'basic',       label: 'Basic',       price: 'R599/mo',   origPrice: 'R1,449/mo', save: '60% OFF', seats: '1 user',  seatCap: 1 },
+    { id: 'performance', label: 'Performance', price: 'R3,499/mo', origPrice: 'R5,449/mo', save: '35% OFF', seats: 'Up to 3', seatCap: 3, popular: true },
 ];
 
 const inputCls = 'w-full px-3.5 py-2.5 bg-slate-50 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/15 focus:bg-white transition-all';
@@ -74,7 +76,11 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
     const [firstName, setFirstName] = useState('');
     const [surname, setSurname] = useState('');
     const [organisation, setOrganisation] = useState('');
-    const [selectedPlan, setSelectedPlan] = useState<PlanTier['id']>('performance');
+    // Elite self-signup: opened via /login?mode=signup&plan=elite (the "already
+    // onboarded for Elite" link on the pricing page). Forces the Elite tier and
+    // hides the plan picker — no pricing shown, same signup/email flow otherwise.
+    const isElitePlan = searchParams.get('plan') === 'elite';
+    const [selectedPlan, setSelectedPlan] = useState<PlanTier['id']>(isElitePlan ? 'elite' : 'performance');
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const [loading, setLoading] = useState(false);
@@ -266,8 +272,27 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                     <p className="text-[13px] sm:text-sm text-slate-500 mb-5 sm:mb-6">
                         {isInviteSignup
                             ? 'Just set your name and password — your organisation and plan are inherited from the invitation.'
-                            : 'Start managing your program smarter today.'}
+                            : isElitePlan
+                                ? 'For clubs onboarded onto the Elite plan by our team.'
+                                : 'Start managing your program smarter today.'}
                     </p>
+
+                    {/* Elite-only notice — this page is for clients our team has onboarded. */}
+                    {isElitePlan && (
+                        <div className="mb-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+                            <div className="flex items-start gap-2.5">
+                                <ShieldIcon size={16} className="text-indigo-600 shrink-0 mt-0.5" />
+                                <div className="text-[12px] leading-relaxed text-slate-700">
+                                    <p className="font-bold text-slate-900 mb-0.5">Elite access — onboarded clients only</p>
+                                    <p>This sign-up is for organisations our team has personally onboarded onto the Elite plan. If you've completed that process with us, create your account below.</p>
+                                    <p className="mt-1.5">
+                                        Haven't started yet? <a href="/contact?subject=elite" className="font-semibold text-indigo-600 hover:underline">Contact our team</a> to begin — we'll be in touch within 24 hours.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {isSignup && error && <div className="bg-rose-50 border border-rose-200 rounded-lg px-3.5 py-3 text-[12px] text-rose-700 font-medium mb-4">{error}</div>}
                     {isSignup && message && <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3.5 py-3 text-[12px] text-emerald-700 font-medium mb-4">{message}</div>}
 
@@ -292,7 +317,20 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                             <>
                                 <div><label className={labelCls}>Organisation *</label><input type="text" value={organisation} onChange={e => setOrganisation(e.target.value)} required={!isInviteSignup} className={inputCls} placeholder="e.g. Tuks FC, Northside Academy" autoComplete="organization" /></div>
 
-                                {/* Plan picker */}
+                                {/* Plan — Elite self-signup hides the picker (no pricing shown);
+                                    otherwise the two self-serve tiers with launch-sale pricing. */}
+                                {isElitePlan ? (
+                                    <div>
+                                        <label className={labelCls}>Your plan</label>
+                                        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-[1.5px] border-indigo-500 bg-indigo-50">
+                                            <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0"><ShieldIcon size={16} /></span>
+                                            <div className="min-w-0">
+                                                <span className="block text-[12.5px] font-bold text-slate-900 leading-tight">Elite — Full platform access</span>
+                                                <span className="block text-[10.5px] text-slate-500">Your onboarded plan · all features unlocked</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
                                 <div>
                                     <label className={labelCls}>Choose your plan</label>
                                     <div className="grid grid-cols-2 gap-2">
@@ -303,7 +341,7 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                                     key={p.id}
                                                     type="button"
                                                     onClick={() => setSelectedPlan(p.id)}
-                                                    className={`relative text-left px-3 py-2.5 rounded-lg border-[1.5px] transition-all ${
+                                                    className={`relative text-left px-3 py-2.5 rounded-lg border-[1.5px] overflow-hidden transition-all ${
                                                         isSel ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
                                                     }`}
                                                 >
@@ -316,17 +354,27 @@ const LoginPage: React.FC<{ forceMode?: 'update-password' }> = ({ forceMode }) =
                                                         </span>
                                                     )}
                                                     <span className="block text-[12.5px] font-bold text-slate-900 leading-tight">{p.label}</span>
-                                                    <span className={`block text-[11px] ${isSel ? 'text-indigo-700 font-semibold' : 'text-slate-500'}`}>{p.price}</span>
-                                                    <span className={`block text-[9.5px] font-bold uppercase tracking-wider mt-0.5 ${isSel ? 'text-indigo-600/80' : 'text-slate-400'}`}>{p.seats}</span>
+                                                    {p.origPrice && (
+                                                        <span className="block text-[10px] text-slate-400 line-through leading-tight mt-0.5">{p.origPrice}</span>
+                                                    )}
+                                                    <span className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                                        <span className={`text-[11px] font-bold ${isSel ? 'text-indigo-700' : 'text-slate-700'}`}>{p.price}</span>
+                                                        {p.save && (
+                                                            <span className="px-1.5 py-0.5 rounded bg-rose-500 text-white text-[8px] font-bold uppercase tracking-wide">{p.save}</span>
+                                                        )}
+                                                    </span>
+                                                    <span className={`block text-[9.5px] font-bold uppercase tracking-wider mt-1 ${isSel ? 'text-indigo-600/80' : 'text-slate-400'}`}>{p.seats}</span>
                                                 </button>
                                             );
                                         })}
                                     </div>
                                     <p className="text-[10.5px] text-slate-400 mt-2 leading-snug">
+                                        <span className="font-semibold text-rose-500">Launch pricing — limited time.</span>{' '}
                                         Need <span className="font-semibold text-slate-600">Elite</span> (full platform) or a <span className="font-semibold text-slate-600">Custom</span> package?{' '}
-                                        <a href="/contact?subject=elite" className="text-indigo-600 font-semibold hover:underline">Contact us</a> — we onboard those personally, with staff training and a guided 21-day setup.
+                                        <a href="/contact?subject=elite" className="text-indigo-600 font-semibold hover:underline">Contact us</a>.
                                     </p>
                                 </div>
+                                )}
                             </>
                         )}
 

@@ -398,7 +398,7 @@ const LandingPage: React.FC = () => {
                             {dark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
                         </button>
                         <button onClick={() => nav('/login')} className={`hidden sm:block text-[13px] font-medium ${txm} hover:text-indigo-400 transition-colors px-3 py-2`}>Log in</button>
-                        <button onClick={() => nav('/login?mode=signup')} className="hidden sm:block text-[13px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30">Get Started</button>
+                        <button onClick={() => nav('/login?mode=signup')} className="hidden sm:block text-[13px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg transition-all duration-200 shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">Get Started</button>
                         {/* Hamburger — visible below md. Replaces the section
                             links + Log in + Get Started on small screens. */}
                         <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Open menu" className={`md:hidden p-2 rounded-lg transition-all ${dark ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'}`}>
@@ -429,7 +429,7 @@ const LandingPage: React.FC = () => {
                                 Log in
                             </button>
                             <button onClick={() => { setMobileMenuOpen(false); nav('/login?mode=signup'); }}
-                                    className="text-[14px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-3 rounded-lg transition-all mt-1">
+                                    className="text-[14px] font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-3 rounded-lg transition-all duration-200 mt-1 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
                                 Get Started
                             </button>
                         </div>
@@ -486,7 +486,7 @@ const LandingPage: React.FC = () => {
                     </p>
                     <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
                         <button onClick={() => nav('/login?mode=signup')}
-                            className="group flex items-center gap-2.5 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-2xl shadow-indigo-600/25 hover:shadow-indigo-500/35 transition-all active:scale-[0.97] text-[15px]">
+                            className="group flex items-center gap-2.5 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-2xl shadow-indigo-600/25 hover:shadow-indigo-500/35 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-[15px]">
                             Start your 21-day pilot <ArrowRightIcon size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                         <a href="#features" className={`flex items-center gap-2 px-6 py-4 ${txm} font-medium hover:text-indigo-400 transition-colors text-[15px]`}>
@@ -1040,7 +1040,7 @@ const LandingPage: React.FC = () => {
                                     </ol>
                                     <button
                                         onClick={() => handleInstallClick('ios')}
-                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${dark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                                     >
                                         <ShareIcon size={14} />
                                         Show me how
@@ -1079,7 +1079,7 @@ const LandingPage: React.FC = () => {
                                     </ul>
                                     <button
                                         onClick={() => handleInstallClick('android')}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                                     >
                                         <DownloadIcon size={14} />
                                         Install on Android
@@ -1118,7 +1118,7 @@ const LandingPage: React.FC = () => {
                                     </ul>
                                     <button
                                         onClick={() => handleInstallClick('desktop')}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                                     >
                                         <DownloadIcon size={14} />
                                         Install on Desktop
@@ -1168,6 +1168,9 @@ const LandingPage: React.FC = () => {
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Simple, transparent pricing</h2>
                         <p className={`mt-5 text-lg ${txm} max-w-lg mx-auto`}>Begin with a 21-day guided pilot on any tier. Pick the one that fits your program.</p>
+                        <p className={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${tx}`}>
+                            <CheckIcon size={15} className="text-emerald-400" /> No credit card needed
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
@@ -1205,7 +1208,7 @@ const LandingPage: React.FC = () => {
                         ].map((t, i) => (
                             <div key={i} className={`relative rounded-2xl p-6 flex flex-col transition-all duration-300 ${
                                 t.pop
-                                    ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20 md:scale-[1.03] z-10 ring-1 ring-indigo-500'
+                                    ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20 z-10 ring-1 ring-indigo-500'
                                     : t.cust
                                         ? `${dark ? 'bg-gradient-to-b from-white/[0.05] to-white/[0.01] border border-white/[0.08]' : 'bg-slate-950 text-white'}`
                                         : `${card} border ${cardH}`
@@ -1254,26 +1257,34 @@ const LandingPage: React.FC = () => {
                                 </ul>
                                 <button
                                     onClick={() => (t as any).elite ? nav('/contact?subject=elite') : t.cust ? nav('/contact') : nav('/login?mode=signup')}
-                                    className={`w-full py-3 font-semibold rounded-xl text-sm transition-all ${
+                                    className={`w-full py-3 font-semibold rounded-xl text-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${
                                         t.pop
-                                            ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50'
+                                            // White pill on the indigo card — stays white on hover (never fades), just lifts.
+                                            ? 'bg-white text-indigo-600 hover:bg-indigo-50 hover:shadow-lg hover:shadow-black/25'
                                             : t.cust
-                                                ? 'bg-white text-slate-900 hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                                                // Custom card is dark in both themes → outline that colours in on hover (like Basic).
+                                                ? 'border-[1.5px] border-white/20 text-white hover:border-indigo-400 hover:text-indigo-300 hover:shadow-lg hover:shadow-indigo-500/20'
                                                 : dark
-                                                    ? 'border border-white/10 hover:border-indigo-500/40 hover:text-indigo-400'
-                                                    : 'border-2 border-slate-200 dark:border-[#243A58] text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
+                                                    ? 'border border-white/10 text-slate-200 hover:border-indigo-500/50 hover:text-indigo-300 hover:shadow-lg hover:shadow-indigo-500/15'
+                                                    : 'border-2 border-slate-200 text-slate-700 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-lg hover:shadow-indigo-500/10'
                                     }`}>
                                     {(t as any).elite ? 'Contact us' : t.cust ? 'Get a Quote' : 'Begin Access'}
                                 </button>
                                 {(t as any).elite && (
-                                    <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                        Speak to us — we set you up, train your staff,<br />and take you through the 21-day onboarding.
-                                    </p>
-                                )}
-                                {t.cust && (
-                                    <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                        Tell us which features you need.<br />We'll build a package around your program.
-                                    </p>
+                                    <>
+                                        <p className={`text-[10px] text-center mt-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                            Speak to us — we set you up, train your staff,<br />and take you through the 21-day onboarding.
+                                        </p>
+                                        {/* Already-onboarded Elite clients: dedicated sign-up (no pricing). */}
+                                        <div className={`mt-3 pt-3 border-t ${dark ? 'border-white/10' : 'border-slate-200/70'}`}>
+                                            <button
+                                                onClick={() => nav('/login?mode=signup&plan=elite')}
+                                                className={`w-full py-2.5 rounded-xl text-[11px] font-semibold border transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${dark ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/20' : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100 hover:shadow-lg hover:shadow-indigo-500/15'}`}
+                                            >
+                                                Already onboarded? Create your Elite account →
+                                            </button>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         ))}
