@@ -582,11 +582,11 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                     {plan.phases.map(ph => {
                                         if (!ph.startDate) return null;
                                         const isSel = ph.id === selPhaseId;
-                                        // Week-aligned to match Timeline tab — phases extend to end of containing week
-                                        const sWk = Math.floor(daysBetween(ganttStart, ph.startDate) / 7);
-                                        const eWk = ph.endDate ? Math.floor(daysBetween(ganttStart, ph.endDate) / 7) : sWk;
-                                        const lPx = sWk * WEEK_W;
-                                        const wPx = Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W);
+                                        // Day-precise: bars sit edge-to-edge; only genuinely overlapping dates overlap.
+                                        const s = daysBetween(ganttStart, ph.startDate);
+                                        const e = Math.max(s, ph.endDate ? daysBetween(ganttStart, ph.endDate) : s);
+                                        const lPx = (s / 7) * WEEK_W;
+                                        const wPx = Math.max(((e - s + 1) / 7) * WEEK_W, 4);
                                         return (
                                             <button key={ph.id}
                                                 onClick={() => jumpToPhase(ph)}
@@ -609,10 +609,10 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                         if (!b.startDate) return null;
                                         const isSel = b.id === selBlockId;
                                         const bColor = b.color || b.phaseColor;
-                                        const sWk = Math.floor(daysBetween(ganttStart, b.startDate) / 7);
-                                        const eWk = b.endDate ? Math.floor(daysBetween(ganttStart, b.endDate) / 7) : sWk;
-                                        const lPx = sWk * WEEK_W;
-                                        const wPx = Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W);
+                                        const s = daysBetween(ganttStart, b.startDate);
+                                        const e = Math.max(s, b.endDate ? daysBetween(ganttStart, b.endDate) : s);
+                                        const lPx = (s / 7) * WEEK_W;
+                                        const wPx = Math.max(((e - s + 1) / 7) * WEEK_W, 4);
                                         return (
                                             <button key={b.id}
                                                 onClick={() => jumpToBlock(b.phaseId, b)}
@@ -761,7 +761,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
             )}
 
             {currentWeekStart ? (
-                <div className="flex gap-3 items-start">
+                <div className="flex flex-col lg:flex-row gap-3 lg:items-start">
                     {/* ── Left: focus bar + 7-day grid ────────────────────── */}
                     <div className="flex-1 min-w-0 space-y-3">
 
@@ -805,8 +805,9 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                             )}
                         </div>
 
-                        {/* 7-day session grid */}
-                        <div className="grid grid-cols-7 gap-1.5" onClick={e => { if (e.target === e.currentTarget) setSelectedDate(null); }}>
+                        {/* Day grid — single-column agenda on phones/tablet-portrait (the
+                            7-across layout is unusable at that width), 7 columns on desktop. */}
+                        <div className="grid grid-cols-1 lg:grid-cols-7 gap-1.5" onClick={e => { if (e.target === e.currentTarget) setSelectedDate(null); }}>
                             {DAYS.map((dayName, i) => {
                                 const dateStr     = weekDates[i];
                                 const d           = dateStr ? dayDate(currentWeekStart, i) : null;
@@ -819,7 +820,7 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                                 const isSelDay = selectedDate === dateStr;
                                 return (
                                     <div key={i}
-                                        className={`rounded-xl border shadow-sm overflow-hidden flex flex-col min-h-[140px] transition-all
+                                        className={`rounded-xl border shadow-sm overflow-hidden flex flex-col lg:min-h-[140px] transition-all
                                             ${isSelDay
                                                 ? 'border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200 dark:ring-indigo-800'
                                                 : isMatch
@@ -828,16 +829,16 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
 
                                         <button
                                             onClick={() => setSelectedDate(isSelDay ? null : dateStr)}
-                                            className={`px-2 py-1.5 border-b flex flex-col gap-0.5 w-full text-left transition-colors
+                                            className={`px-2.5 py-2 lg:py-1.5 border-b flex flex-row lg:flex-col items-center lg:items-start gap-2 lg:gap-0.5 w-full text-left transition-colors
                                                 ${isSelDay
                                                     ? 'border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
                                                     : isMatch
                                                         ? 'border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/20'
                                                         : 'border-slate-100 dark:border-[#243A58] bg-slate-50/50 dark:bg-[#0F1C30]/30 hover:bg-slate-100 dark:hover:bg-[#1A2D48]/50'}`}>
-                                            <span className={`text-[9px] font-bold uppercase ${isSelDay ? 'text-indigo-600 dark:text-indigo-400' : isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
+                                            <span className={`text-[11px] lg:text-[9px] font-bold uppercase ${isSelDay ? 'text-indigo-600 dark:text-indigo-400' : isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-[#CBD5E1]'}`}>
                                                 {dayName}
                                             </span>
-                                            {d && <span className={`text-[8px] ${isSelDay ? 'text-indigo-500 dark:text-indigo-400' : isMatch ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
+                                            {d && <span className={`text-[10px] lg:text-[8px] ${isSelDay ? 'text-indigo-500 dark:text-indigo-400' : isMatch ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                 {d.getDate()} {MONTHS[d.getMonth()]}
                                             </span>}
                                             {mdLabel && <span className={`text-[8px] font-bold ${isMatch ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>{mdLabel}</span>}
@@ -1107,8 +1108,8 @@ export const MicrocyclesTab = ({ plan, initialPhaseId = null, initialBlockId = n
                         })()}
                     </div>
 
-                    {/* ── Right sidebar ─────────────────────────────────────── */}
-                    <div className="w-44 shrink-0 space-y-3">
+                    {/* ── Right sidebar (stacks below the week on mobile) ─────── */}
+                    <div className="w-full lg:w-44 lg:shrink-0 space-y-3">
 
                         {/* Quick Add Session */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">

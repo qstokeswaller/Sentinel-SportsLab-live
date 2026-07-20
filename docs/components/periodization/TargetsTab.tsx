@@ -126,9 +126,10 @@ function PlanGanttStrip({ plan }) {
     const pxWidth    = (s, e) => Math.max(4, ((daysBetweenGantt(s, e || s) + 1) / totalDays) * ganttW);
     const weekRect   = (startDate, endDate) => {
         if (!startDate) return null;
-        const sWk = Math.floor(daysBetweenGantt(ganttStart, startDate) / 7);
-        const eWk = endDate ? Math.floor(daysBetweenGantt(ganttStart, endDate) / 7) : sWk;
-        return { left: sWk * WEEK_W, width: Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W) };
+        // Day-precise: bars sit edge-to-edge; only genuinely overlapping dates overlap.
+        const s = daysBetweenGantt(ganttStart, startDate);
+        const e = Math.max(s, endDate ? daysBetweenGantt(ganttStart, endDate) : s);
+        return { left: (s / 7) * WEEK_W, width: Math.max(((e - s + 1) / 7) * WEEK_W, 4) };
     };
 
     const openPopup = (e, kind, item) => {

@@ -175,9 +175,10 @@ export const BlocksTab = ({ plan }) => {
     const pxWidth   = (s, e) => Math.max(4, (daysBetween(s, e || s) + 1) / totalDays * ganttW);
     const weekRect = (startDate, endDate) => {
         if (!startDate) return null;
-        const sWk = Math.floor(daysBetween(ganttDates.start, startDate) / 7);
-        const eWk = endDate ? Math.floor(daysBetween(ganttDates.start, endDate) / 7) : sWk;
-        return { left: sWk * WEEK_W, width: Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W) };
+        // Day-precise: bars sit edge-to-edge; only genuinely overlapping dates overlap.
+        const s = daysBetween(ganttDates.start, startDate);
+        const e = Math.max(s, endDate ? daysBetween(ganttDates.start, endDate) : s);
+        return { left: (s / 7) * WEEK_W, width: Math.max(((e - s + 1) / 7) * WEEK_W, 4) };
     };
 
     const selectedBlock = allBlocks.find(b => `${b.phaseId}:${b.id}` === selectedKey);
@@ -203,7 +204,9 @@ export const BlocksTab = ({ plan }) => {
     }
 
     return (
-        <div className="space-y-4" onClick={() => setOpenMenuKey(null)}>
+        // flex-col + order lets us place the selected-block detail ABOVE the full
+        // Training Blocks list without moving the JSX (keeps all logic/features intact).
+        <div className="flex flex-col gap-4" onClick={() => setOpenMenuKey(null)}>
 
             {/* ── Stat cards ──────────────────────────────────────────────── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -356,8 +359,8 @@ export const BlocksTab = ({ plan }) => {
                 <GanttPopup popup={popup} onClose={() => setPopup(null)} /></>
             )}
 
-            {/* ── Blocks table ─────────────────────────────────────────────── */}
-            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+            {/* ── Blocks table (moved below the selected-block detail via order-2) ── */}
+            <div className="order-2 bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-[#243A58]">
                     <h4 className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Training Blocks</h4>
                     <button onClick={() => { setEditingPlanBlock(null); setIsPlanBlockModalOpenNew(true); }}
@@ -493,7 +496,8 @@ export const BlocksTab = ({ plan }) => {
                 const modEntries    = Object.entries(selectedBlock.modalities || {});
 
                 return (
-                    <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
+                    // order-1 → sits directly under the gantt, above the Training Blocks list.
+                    <div className="order-1 bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
                         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-[#243A58]">
                             <div className="flex items-center gap-2.5">
                                 <div className="w-1.5 h-5 rounded-full shrink-0" style={{ backgroundColor: selectedBlock.color || '#6366f1' }} />

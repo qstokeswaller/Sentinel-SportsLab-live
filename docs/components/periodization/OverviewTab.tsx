@@ -113,9 +113,10 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
     // Week-aligned rect — phases/blocks extend to end of containing week (matches Timeline tab behavior)
     const weekRect = (startDate, endDate) => {
         if (!startDate) return null;
-        const sWk = Math.floor(daysBetween(ganttDates.start, startDate) / 7);
-        const eWk = endDate ? Math.floor(daysBetween(ganttDates.start, endDate) / 7) : sWk;
-        return { left: sWk * WEEK_W, width: Math.max(WEEK_W, (eWk - sWk + 1) * WEEK_W) };
+        // Day-precise: bars sit edge-to-edge; only genuinely overlapping dates overlap.
+        const s = daysBetween(ganttDates.start, startDate);
+        const e = Math.max(s, endDate ? daysBetween(ganttDates.start, endDate) : s);
+        return { left: (s / 7) * WEEK_W, width: Math.max(((e - s + 1) / 7) * WEEK_W, 4) };
     };
 
     const showToday    = ganttDates.start && today >= ganttDates.start && today <= ganttDates.end;

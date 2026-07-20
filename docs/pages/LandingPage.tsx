@@ -1174,6 +1174,7 @@ const LandingPage: React.FC = () => {
                         {[
                             {
                                 name: 'Basic', price: 'R599', per: '/month',
+                                origPrice: 'R1,449', save: '60% OFF', sale: true,   // Launch sale: R1,449 → R599
                                 seats: '1 user',
                                 desc: 'Core platform for individual practitioners',
                                 features: ['Dashboard & squad readiness','Athlete roster management','Workout builder (3,700+ exercises)','Tonnage & session tracking','Exercise library & catalogues','Session calendar & scheduling'],
@@ -1181,6 +1182,7 @@ const LandingPage: React.FC = () => {
                             },
                             {
                                 name: 'Performance', price: 'R3,499', per: '/month',
+                                origPrice: 'R5,449', save: '35% OFF', sale: true,   // Launch sale: R5,449 → R3,499
                                 seats: 'Up to 3 users',
                                 desc: 'Everything in Basic, plus testing, welfare & conditioning',
                                 features: ['Everything in Basic','Testing Hub — 80+ protocols','Wellness Hub — daily & weekly forms','FIFA/IOC wellness monitoring','Auto-flag & medical alert system','Conditioning Hub','Wattbike & HR monitoring','Injury & illness tracking'],
@@ -1209,12 +1211,32 @@ const LandingPage: React.FC = () => {
                                         : `${card} border ${cardH}`
                             }`}>
                                 {t.pop && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest rounded-full">Most Popular</div>}
+                                {/* Diagonal launch-sale ribbon — clipped to the card's top-right corner */}
+                                {(t as any).sale && (
+                                    <div className="absolute top-0 right-0 w-[108px] h-[108px] overflow-hidden rounded-tr-2xl pointer-events-none z-20">
+                                        <div
+                                            className="absolute rotate-45 bg-rose-500 text-white text-[8px] font-bold uppercase tracking-widest text-center shadow-md py-[3px]"
+                                            style={{ width: 152, top: 23, right: -44 }}
+                                        >
+                                            Launch Sale
+                                        </div>
+                                    </div>
+                                )}
                                 <h3 className="text-lg font-semibold">{t.name}</h3>
                                 <p className={`text-sm mt-1 mb-4 leading-snug ${t.pop ? 'text-indigo-200' : t.cust ? 'text-slate-400' : txm}`}>{t.desc}</p>
                                 <div className="mb-5">
-                                    <div>
+                                    {/* Original ("was") price — struck through as the anchor */}
+                                    {(t as any).origPrice && (
+                                        <div className={`text-sm font-medium line-through ${t.pop ? 'text-indigo-200/70' : 'text-slate-400 dark:text-slate-500'}`}>
+                                            {(t as any).origPrice}{t.per}
+                                        </div>
+                                    )}
+                                    <div className="flex items-baseline gap-x-1.5 gap-y-1 flex-wrap">
                                         <span className="text-2xl font-bold">{t.price}</span>
-                                        {t.per && <span className={`text-sm ml-1 ${t.pop ? 'text-indigo-200' : txm}`}>{t.per}</span>}
+                                        {t.per && <span className={`text-sm ${t.pop ? 'text-indigo-200' : txm}`}>{t.per}</span>}
+                                        {(t as any).save && (
+                                            <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-bold uppercase tracking-wide shadow-sm">{(t as any).save}</span>
+                                        )}
                                     </div>
                                     {t.seats && (
                                         <p className={`text-[10px] font-bold uppercase tracking-wider mt-1.5 ${t.pop ? 'text-indigo-200' : t.cust ? 'text-slate-400' : 'text-indigo-500/80 dark:text-indigo-400/80'}`}>
@@ -1256,7 +1278,10 @@ const LandingPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    <p className={`text-center text-xs mt-10 ${txs}`}>All prices exclude VAT. 21-day guided pilot on all tiers — no credit card required.</p>
+                    <p className={`text-center text-xs mt-10 ${txs}`}>
+                        <span className="font-semibold text-rose-500">Launch pricing — introductory rates for a limited time.</span>
+                        {' '}All prices exclude VAT. 21-day guided pilot on all tiers — no credit card required.
+                    </p>
                 </div>
             </section>
 

@@ -5,13 +5,13 @@ import {
     Trophy, FlaskConical, Target, Zap, Dumbbell, Wind, Footprints,
     TrendingUp, TrendingDown, Plus, ChevronRight, Star,
     ArrowLeft, Clock, HelpCircle, Calendar,
-    Plane, Heart, Tent, Flag, Stethoscope,
+    Plane, Heart, Tent, Flag, Stethoscope, AlertTriangle,
 } from 'lucide-react';
 import {
     dateToWeekIndex, weekIndexToDate, calculateTotalWeeks,
     getMonthLabels, calculateWeeklyVolume, calculateWeeklyIntensity,
     calculatePeakingIndex, formatDateShort, EVENT_TYPE_COLORS, EVENT_TYPE_LABELS,
-    isStandardModality, getModalityLevels, getModalityDescription,
+    isStandardModality, getModalityLevels, getModalityDescription, getOverlappingBlockIds,
 } from '../../utils/periodizationUtils';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
@@ -183,11 +183,37 @@ export const TimelineView = ({ plan }) => {
         plan.phases.flatMap(ph => ph.blocks.map(b => ({ ...b, _phaseId: ph.id, _phaseColor: ph.color })))
     , [plan]);
 
+    // Blocks whose dates genuinely overlap another block's — flagged on the timeline.
+    const overlappingBlockIds = useMemo(() => getOverlappingBlockIds(plan), [plan]);
+
     // Today marker
     const todayStr    = new Date().toISOString().split('T')[0];
     const todayWkIdx  = dateToWeekIndex(todayStr, plan.startDate);
     const showToday   = todayWkIdx >= 0 && todayWkIdx < totalWeeks;
     const todayLeft   = todayWkIdx * WEEK_WIDTH + Math.floor(WEEK_WIDTH / 2);
+
+    // ── Day-precise bar geometry ──────────────────────────────────────────────
+    // Phase/block bars are positioned by exact day offset (÷7 × week width) rather
+    // than by whole-week index, anchored to the SAME Monday the week grid uses
+    // (weekIndexToDate(0)). This is what stops bars that merely fall in the same
+    // week column — e.g. one ending Sun, the next starting Mon — from overlapping:
+    // they now sit exactly edge-to-edge. Truly-overlapping dates still overlap.
+    const MS_DAY    = 86400000;
+    const gridStart = weekIndexToDate(0, plan.startDate); // Monday of week 0 (ISO)
+    const dayOffset = (dateStr) => {
+        if (!dateStr) return 0;
+        const a = new Date(gridStart + 'T00:00:00Z').getTime();
+        const b = new Date(dateStr  + 'T00:00:00Z').getTime();
+        return Math.round((b - a) / MS_DAY);
+    };
+    // sOff..eOff are inclusive day offsets → { left, width } in px.
+    const geomOff = (sOff, eOff) => {
+        const s = sOff, e = Math.max(sOff, eOff);
+        return {
+            left:  (s / 7) * WEEK_WIDTH,
+            width: Math.max(((e - s + 1) / 7) * WEEK_WIDTH, 6),
+        };
+    };
 
     // ── Drill-down guard (after all hooks) ──────────────────────────────────
     if (planDrillPath.length >= 2) {
@@ -497,6 +523,12 @@ export const TimelineView = ({ plan }) => {
     // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
+            {overlappingBlockIds.size > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-t-xl bg-rose-50 dark:bg-rose-900/20 border-b border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">
+                    <AlertTriangle size={13} className="shrink-0" />
+                    {overlappingBlockIds.size} training block{overlappingBlockIds.size !== 1 ? 's have' : ' has'} overlapping dates — see the highlighted bars.
+                </div>
+            )}
             <div className="flex overflow-hidden rounded-t-xl">
 
                 {/* ── STICKY LEFT SIDEBAR ─────────────────────────────────── */}
@@ -657,14 +689,13 @@ export const TimelineView = ({ plan }) => {
                         <div className="border-b border-slate-100 dark:border-[#243A58] relative overflow-hidden" style={{ height: `${H_PHASE}px` }}
                             onClick={handlePhaseRowClick}>
                             {plan.phases.map(phase => {
-                                const startWk = dateToWeekIndex(phase.startDate, plan.startDate);
+                                const sOff = dayOffset(phase.startDate);
                                 const phaseEndDate = phase.endDate
                                     || (phase.blocks.length > 0
                                         ? phase.blocks.reduce((latest, b) => (b.endDate && b.endDate > latest) ? b.endDate : latest, phase.startDate)
                                         : undefined);
-                                const endWk = phaseEndDate ? dateToWeekIndex(phaseEndDate, plan.startDate) : startWk + 3;
-                                const left  = startWk * WEEK_WIDTH;
-                                const width = Math.max((endWk - startWk + 1) * WEEK_WIDTH, WEEK_WIDTH);
+                                const eOff = phaseEndDate ? dayOffset(phaseEndDate) : sOff + 27; // fallback ≈ 4 weeks
+                                const { left, width } = geomOff(sOff, eOff);
                                 return (
                                     <div key={phase.id} data-phase-bar
                                         onClick={e => handlePhaseClick(e, phase)}
@@ -683,19 +714,21 @@ export const TimelineView = ({ plan }) => {
                         <div className="border-b border-slate-200 dark:border-[#243A58] relative overflow-hidden" style={{ height: `${H_PHASE}px` }}
                             onClick={handleBlockRowClick}>
                             {allBlocks.map(block => {
-                                const startWk = dateToWeekIndex(block.startDate, plan.startDate);
-                                const endWk   = block.endDate
-                                    ? dateToWeekIndex(block.endDate, plan.startDate)
-                                    : startWk + Math.max(block.weeks?.length || 1, 1) - 1;
-                                const left    = startWk * WEEK_WIDTH;
-                                const width   = Math.max((endWk - startWk + 1) * WEEK_WIDTH, WEEK_WIDTH);
+                                const sOff = dayOffset(block.startDate);
+                                const eOff = block.endDate
+                                    ? dayOffset(block.endDate)
+                                    : sOff + Math.max(block.weeks?.length || 1, 1) * 7 - 1;
+                                const { left, width } = geomOff(sOff, eOff);
                                 const isNarrow = width < 90;
+                                const isOverlapping = overlappingBlockIds.has(block.id);
                                 return (
                                     <div key={block.id}
                                         onClick={e => handleBlockClick(e, { id: block._phaseId }, block)}
                                         onContextMenu={e => handleBlockContextMenu(e, { id: block._phaseId }, block)}
-                                        className="absolute top-1.5 bottom-1.5 rounded-lg border-2 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden"
+                                        title={isOverlapping ? 'This block’s dates overlap another block' : undefined}
+                                        className={`absolute top-1.5 bottom-1.5 rounded-lg border-2 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden ${isOverlapping ? 'ring-2 ring-rose-500 ring-inset z-10' : ''}`}
                                         style={{ left: `${left}px`, width: `${width}px`, ...hexToTailwind(block.color || block._phaseColor || '#6366f1', 0.18) }}>
+                                        {isOverlapping && <AlertTriangle size={11} className="absolute top-0.5 right-0.5 text-rose-500 pointer-events-none" />}
                                         <span className="text-[10px] font-bold truncate min-w-0 w-full text-center px-1.5"
                                             style={{ color: block.color || block._phaseColor || '#6366f1' }}>{block.label || block.name}</span>
                                         {!isNarrow && block.label && block.name && (
@@ -715,12 +748,11 @@ export const TimelineView = ({ plan }) => {
                         {modalities.map(mod => (
                             <div key={mod} className="border-b border-slate-100 dark:border-[#243A58] relative" style={{ height: `${H_MOD}px` }}>
                                 {allBlocks.map(block => {
-                                    const startWk = dateToWeekIndex(block.startDate, plan.startDate);
-                                    const endWk   = block.endDate
-                                        ? dateToWeekIndex(block.endDate, plan.startDate)
-                                        : startWk + Math.max(block.weeks?.length || 1, 1) - 1;
-                                    const left    = startWk * WEEK_WIDTH;
-                                    const width   = Math.max((endWk - startWk + 1) * WEEK_WIDTH, WEEK_WIDTH);
+                                    const sOff = dayOffset(block.startDate);
+                                    const eOff = block.endDate
+                                        ? dayOffset(block.endDate)
+                                        : sOff + Math.max(block.weeks?.length || 1, 1) * 7 - 1;
+                                    const { left, width } = geomOff(sOff, eOff);
                                     const val     = block.modalities?.[mod] || '';
                                     const isEditing = editingModality?.blockId === block.id && editingModality?.modality === mod;
                                     return (
