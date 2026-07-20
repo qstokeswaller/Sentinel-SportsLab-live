@@ -17,6 +17,7 @@ import { ShareToOrgToggle } from '../tier/ShareToOrgToggle';
 import { useSmartSearch } from '../../hooks/useSmartSearch';
 
 import { useExerciseMap } from '../../hooks/useExerciseMap';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { useAppState } from '../../context/AppStateContext';
 import { DatabaseService } from '../../services/databaseService';
 import { buildFutureProgramTonnageRows, todayLocalDate } from '../../utils/syncTonnage';
@@ -399,6 +400,10 @@ export const ProgramBuilderModal = ({
   // Programs start with a single day — users add more via the "Add Day" button
   const [days, setDays]               = useState<LocalDay[]>(() => [newDay(1, 0)]);
   const [activeDayIdx, setActiveDayIdx] = useState(0);
+  // Mobile / tablet-portrait (< lg): the right-hand picker is replaced by a
+  // full-screen exercise picker opened from a per-day "Add Exercise" button.
+  const isMobile = useIsMobile();
+  const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
   // Per-row collapse state — collapsed rows render header-only to save vertical space
   const [collapsedRows, setCollapsedRows] = useState<Set<string>>(new Set());
   const toggleRowCollapsed = (tempId: string) => setCollapsedRows(prev => {
@@ -962,18 +967,20 @@ export const ProgramBuilderModal = ({
       {/* ── Main Panel ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] shrink-0">
+        {/* Header — on mobile/tablet-portrait the title is dropped and the action
+            buttons wrap so nothing clips. */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-4 lg:px-6 py-3 border-b border-slate-200 dark:border-[#243A58] bg-white dark:bg-[#132338] shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors text-sm font-bold">
+            <button onClick={onClose} className="flex items-center gap-2 text-slate-600 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors text-sm font-bold shrink-0">
               <ArrowLeftIcon size={18} /> Back
             </button>
-            <div className="h-5 w-px bg-slate-200 dark:bg-[#243A58]" />
+            <div className="hidden lg:block h-5 w-px bg-slate-200 dark:bg-[#243A58]" />
             <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] uppercase tracking-tight">
-              {editingProgram ? 'Edit Program' : 'Create a Program'}
+              <span className="lg:hidden">{editingProgram ? 'Edit Program' : 'New Program'}</span>
+              <span className="hidden lg:inline">{editingProgram ? 'Edit Program' : 'Create a Program'}</span>
             </h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             {/* Save Template — saves the program as a template without assigning. Visible whether creating or editing. */}
             <button
               onClick={handleSaveAsNew}
@@ -1421,6 +1428,17 @@ export const ProgramBuilderModal = ({
                                 )}
                               </div>
 
+                              {/* Mobile: Add Exercise to this day's active section (opens the
+                                  full-screen picker; sits above the exercise list so it's always visible). */}
+                              {isMobile && (
+                                <button
+                                  onClick={() => { setActiveDayIdx(globalIdx); setMobilePickerOpen(true); }}
+                                  className="w-full flex items-center justify-center gap-2 py-2.5 border-b border-slate-100 dark:border-[#243A58] bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all active:scale-[0.99]"
+                                >
+                                  <PlusIcon size={14} /> Add Exercise to {day.sectionMeta[day.activeSection]?.label || day.activeSection}
+                                </button>
+                              )}
+
                               {/* Active section exercises — drop zone for drag-from-picker and cross-section/day moves */}
                               {(() => {
                                 const sec = day.activeSection;
@@ -1515,7 +1533,7 @@ export const ProgramBuilderModal = ({
                                     {rows.length === 0 ? (
                                       <div className="py-6 flex flex-col items-center text-slate-300 gap-1.5">
                                         <p className="text-[10px] font-medium text-slate-400">No exercises in {day.sectionMeta[sec]?.label || sec}</p>
-                                        <p className="text-[9px] text-slate-300">Click or drag an exercise from the right panel</p>
+                                        <p className="text-[9px] text-slate-300">{isMobile ? 'Tap “Add Exercise” above to get started' : 'Click or drag an exercise from the right panel'}</p>
                                       </div>
                                     ) : rows.map((row, idx) => (
                                       <ExRow
@@ -1653,8 +1671,29 @@ export const ProgramBuilderModal = ({
         </div>
       </div>
 
-      {/* ── Right Panel: Exercise Chooser ── */}
-      <div className="w-96 shrink-0 bg-white dark:bg-[#132338] border-l border-slate-200 dark:border-[#243A58] flex flex-col overflow-hidden">
+      {/* ── Right Panel: Exercise Chooser ──
+          Desktop (lg+): fixed side panel. Mobile/tablet-portrait: hidden until the
+          user taps a day's "Add Exercise", then it takes over the full screen. */}
+      <div className={`bg-white dark:bg-[#132338] flex-col overflow-hidden ${
+        isMobile
+          ? (mobilePickerOpen ? 'fixed inset-0 z-[900] flex' : 'hidden')
+          : 'flex w-96 shrink-0 border-l border-slate-200 dark:border-[#243A58]'
+      }`}>
+
+        {/* Mobile picker top bar — close + context + Done */}
+        {isMobile && (
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200 dark:border-[#243A58] shrink-0">
+            <button onClick={() => setMobilePickerOpen(false)} className="p-1.5 -ml-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+              <XIcon size={18} />
+            </button>
+            <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">
+              Add to {days[clampedActiveDayIdx]?.name || 'Day'}
+            </span>
+            <button onClick={() => setMobilePickerOpen(false)} className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shrink-0">
+              Done
+            </button>
+          </div>
+        )}
 
         {/* Header / filters */}
         <div className="px-4 py-4 border-b border-slate-200 dark:border-[#243A58] space-y-3 shrink-0">
@@ -1874,6 +1913,15 @@ export const ProgramBuilderModal = ({
                 className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors"
               >
                 <ChevronRightIcon size={12} />
+              </button>
+            </div>
+          )}
+
+          {/* Mobile: sticky Done bar at the bottom of the full-screen picker */}
+          {isMobile && (
+            <div className="shrink-0 border-t border-slate-200 dark:border-[#243A58] p-3 bg-white dark:bg-[#132338]" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)' }}>
+              <button onClick={() => setMobilePickerOpen(false)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                Done · {days[clampedActiveDayIdx]?.name || 'Day'}
               </button>
             </div>
           )}

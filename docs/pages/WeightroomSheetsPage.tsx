@@ -5,6 +5,7 @@ import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
 import { buildMaxLookup, getSheetCellValue, roundTo2_5, printSheet } from '../utils/weightroomUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import {
     useWeightroomSheets, useCreateSheet, useUpdateSheet, useDeleteSheet,
     type WeightroomSheet,
@@ -25,6 +26,7 @@ import {
     Pencil as PencilIcon,
     Link2 as LinkIcon,
     ChevronRight as ChevronRightIcon,
+    ChevronDown as ChevronDownIcon,
     Eye as EyeIcon,
     SlidersHorizontal as SlidersHorizontalIcon,
     X as XIcon,
@@ -99,6 +101,11 @@ export const WeightroomSheetsPage = () => {
     const isMobile = useIsMobile();
 
     // ── Builder state ──────────────────────────────────────────────────────
+    // Mobile-only collapse toggles for the builder cards (space optimisation on
+    // small screens; desktop always shows everything). Visibility starts collapsed.
+    const [visibilityCollapsed, setVisibilityCollapsed] = useState(true);
+    const [setupCollapsed, setSetupCollapsed] = useState(false);
+    const [columnsCollapsed, setColumnsCollapsed] = useState(false);
     const [wrSelectedTeam, setWrSelectedTeam] = useState('All');
     const [wsMode, setWsMode] = useState('blank');
     const [wsColumns, setWsColumns] = useState(defaultColumns);
@@ -173,8 +180,10 @@ export const WeightroomSheetsPage = () => {
         setSourceFilter('All');
     };
 
+    // Desktop only — on mobile the filter renders in a BottomSheet, which handles
+    // its own backdrop/Escape dismissal.
     useEffect(() => {
-        if (!filterPopoverOpen) return;
+        if (!filterPopoverOpen || isMobile) return;
         const onDocClick = (e: MouseEvent) => {
             if (filterPopoverRef.current && !filterPopoverRef.current.contains(e.target as Node)) {
                 setFilterPopoverOpen(false);
@@ -182,7 +191,61 @@ export const WeightroomSheetsPage = () => {
         };
         document.addEventListener('mousedown', onDocClick);
         return () => document.removeEventListener('mousedown', onDocClick);
-    }, [filterPopoverOpen]);
+    }, [filterPopoverOpen, isMobile]);
+
+    // Filter panel body — shared between the desktop popover and the mobile
+    // BottomSheet so both surfaces stay in sync.
+    const filterPanelInner = (
+        <>
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
+                <div className="flex items-center gap-2">
+                    {activeFilterCount > 0 && (
+                        <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Clear all</button>
+                    )}
+                    <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                        <XIcon size={12} />
+                    </button>
+                </div>
+            </div>
+            <div>
+                <CustomSelect value={modeFilter} onChange={(e: any) => setModeFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Mode">
+                    <option value="All">All modes</option>
+                    {WS_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </CustomSelect>
+            </div>
+            <div>
+                <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
+                    <option value="All">Any target</option>
+                    <option value="__STANDALONE__">All Teams (standalone)</option>
+                    <option value="__BLANK__">No names (handwritten)</option>
+                    {sheetTeamOptions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </CustomSelect>
+            </div>
+            <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Source</label>
+                <div className="grid grid-cols-3 gap-1">
+                    {([
+                        { v: 'All', label: 'All' },
+                        { v: 'Standalone', label: 'Standalone' },
+                        { v: 'FromPacket', label: 'From packet' },
+                    ] as const).map(opt => (
+                        <button
+                            key={opt.v}
+                            onClick={() => setSourceFilter(opt.v as any)}
+                            className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                sourceFilter === opt.v
+                                    ? 'bg-teal-600 text-white shadow-sm'
+                                    : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </>
+    );
 
     const athletes = useMemo(() => {
         // Blank/handwritten sheet — render a fixed number of empty rows for hand-filling
@@ -505,62 +568,25 @@ table { width: 100%; border-collapse: collapse; }
                             )}
                         </button>
 
-                        {filterPopoverOpen && (
+                        {filterPopoverOpen && !isMobile && (
                             <div className="absolute top-full right-0 mt-1.5 w-80 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-30 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
-                                    <div className="flex items-center gap-2">
-                                        {activeFilterCount > 0 && (
-                                            <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Clear all</button>
-                                        )}
-                                        <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
-                                            <XIcon size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <CustomSelect value={modeFilter} onChange={(e: any) => setModeFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Mode">
-                                        <option value="All">All modes</option>
-                                        {WS_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-                                    </CustomSelect>
-                                </div>
-                                <div>
-                                    <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
-                                        <option value="All">Any target</option>
-                                        <option value="__STANDALONE__">All Teams (standalone)</option>
-                                        <option value="__BLANK__">No names (handwritten)</option>
-                                        {sheetTeamOptions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                    </CustomSelect>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Source</label>
-                                    <div className="grid grid-cols-3 gap-1">
-                                        {([
-                                            { v: 'All', label: 'All' },
-                                            { v: 'Standalone', label: 'Standalone' },
-                                            { v: 'FromPacket', label: 'From packet' },
-                                        ] as const).map(opt => (
-                                            <button
-                                                key={opt.v}
-                                                onClick={() => setSourceFilter(opt.v as any)}
-                                                className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                                    sourceFilter === opt.v
-                                                        ? 'bg-teal-600 text-white shadow-sm'
-                                                        : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
-                                                }`}
-                                            >
-                                                {opt.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                {filterPanelInner}
                             </div>
                         )}
                     </div>
+                    {/* Mobile: same filters in a viewport-anchored bottom sheet so the
+                        panel can never be clipped off the edge of a small screen. */}
+                    {isMobile && (
+                        <BottomSheet isOpen={filterPopoverOpen} onClose={() => setFilterPopoverOpen(false)}>
+                            <div className="px-4 pb-4 space-y-3">
+                                {filterPanelInner}
+                            </div>
+                        </BottomSheet>
+                    )}
 
                     {/* Persistent list container — fills available height, scrolls internally. */}
                     <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
-                        <div className="overflow-y-auto flex-1 custom-scrollbar">
+                        <div className="overflow-y-auto overflow-x-hidden lg:overflow-x-visible flex-1 custom-scrollbar">
                         {filteredSheets.length === 0 ? (
                             <div className="py-20 px-5 text-center">
                                 <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -623,12 +649,12 @@ table { width: 100%; border-collapse: collapse; }
                                 })}
                             </div>
                         ) : (
-                            <table className="w-full text-left">
+                            <table className="w-full text-left table-fixed lg:table-auto">
                                     <thead className="sticky top-0 bg-slate-50 dark:bg-[#0F1C30] z-10">
                                         <tr className="border-b border-slate-200 dark:border-[#243A58]">
                                             <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Sheet</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Target</th>
-                                            <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Mode</th>
+                                            <th className="px-5 py-3 w-28 lg:w-auto text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Target</th>
+                                            <th className="px-5 py-3 w-20 lg:w-auto text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Mode</th>
                                             <th className="px-3 py-3 w-8" />
                                         </tr>
                                     </thead>
@@ -655,7 +681,7 @@ table { width: 100%; border-collapse: collapse; }
                                                         {s.source_context && (
                                                             <LinkIcon size={12} className="shrink-0 text-teal-500 dark:text-teal-400" />
                                                         )}
-                                                        <div className={`font-medium text-sm transition-colors ${
+                                                        <div className={`font-medium text-sm break-words min-w-0 transition-colors ${
                                                             isSelected
                                                                 ? 'text-teal-700 dark:text-teal-400'
                                                                 : 'text-slate-800 dark:text-[#E2E8F0] group-hover:text-teal-700 dark:group-hover:text-teal-400'
@@ -663,7 +689,7 @@ table { width: 100%; border-collapse: collapse; }
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-3.5">
-                                                    <span className="text-xs text-slate-600 dark:text-[#E2E8F0]">{targetLabel}</span>
+                                                    <span className="text-xs text-slate-600 dark:text-[#E2E8F0] break-words">{targetLabel}</span>
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/25 text-slate-500 dark:text-[#CBD5E1] rounded-md text-[10px] font-medium uppercase">
@@ -725,16 +751,51 @@ table { width: 100%; border-collapse: collapse; }
                         <SaveIcon size={13} /> {editingSheetId ? 'Save Changes' : 'Save Sheet'}
                     </button>
                 </div>
-                <div className="mt-3 max-w-md">
-                    <ShareToOrgToggle value={sheetVisibility} onChange={setSheetVisibility} />
-                </div>
+                {isMobile ? (
+                    <div className="mt-3">
+                        <button
+                            type="button"
+                            onClick={() => setVisibilityCollapsed(v => !v)}
+                            className="w-full flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]"
+                        >
+                            <span className="flex items-center gap-2">
+                                Visibility
+                                {visibilityCollapsed && (
+                                    <span className="normal-case tracking-normal font-medium text-slate-400 dark:text-[#94A3B8]">
+                                        · {sheetVisibility === 'org' ? 'Shared with Org' : 'Personal'}
+                                    </span>
+                                )}
+                            </span>
+                            <ChevronDownIcon size={14} className={`transition-transform ${visibilityCollapsed ? '' : 'rotate-180'}`} />
+                        </button>
+                        {!visibilityCollapsed && (
+                            <div className="mt-2">
+                                <ShareToOrgToggle value={sheetVisibility} onChange={setSheetVisibility} />
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="mt-3 max-w-md">
+                        <ShareToOrgToggle value={sheetVisibility} onChange={setSheetVisibility} />
+                    </div>
+                )}
             </div>
 
             {/* Top Controls */}
-            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
-                <div className="flex items-start gap-5 flex-wrap">
+            <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-4 lg:p-5">
+                {isMobile && (
+                    <button
+                        type="button"
+                        onClick={() => setSetupCollapsed(v => !v)}
+                        className="w-full flex items-center justify-between gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]"
+                    >
+                        <span>Sheet Setup</span>
+                        <ChevronDownIcon size={14} className={`transition-transform ${setupCollapsed ? '' : 'rotate-180'}`} />
+                    </button>
+                )}
+                <div className={`flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-5 sm:flex-wrap ${isMobile && setupCollapsed ? 'hidden' : ''}`}>
                     {/* Target Squad */}
-                    <div className="space-y-1.5 min-w-[180px]">
+                    <div className="space-y-1.5 w-full sm:w-auto sm:min-w-[180px]">
                         <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Target Squad</label>
                         <CustomSelect value={wrSelectedTeam} onChange={(e) => setWrSelectedTeam(e.target.value)} variant="form">
                             <option value="All">All Athletes</option>
@@ -749,9 +810,9 @@ table { width: 100%; border-collapse: collapse; }
                     </div>
 
                     {/* Sheet Mode */}
-                    <div className="space-y-1.5 flex-1">
+                    <div className="space-y-1.5 w-full sm:flex-1">
                         <label className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Sheet Mode</label>
-                        <div className="grid grid-cols-4 gap-1.5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                             {WS_MODES.map(m => (
                                 <button
                                     key={m.id}
@@ -769,11 +830,11 @@ table { width: 100%; border-collapse: collapse; }
                     </div>
 
                     {/* Add Column */}
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-semibold text-transparent uppercase tracking-widest">Action</label>
+                    <div className="space-y-1.5 w-full sm:w-auto">
+                        <label className="hidden sm:block text-[10px] font-semibold text-transparent uppercase tracking-widest">Action</label>
                         <button
                             onClick={addColumn}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-500 transition-colors shadow-sm"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-teal-500 transition-colors shadow-sm"
                         >
                             <PlusIcon size={14} /> Add Column
                         </button>
@@ -781,8 +842,11 @@ table { width: 100%; border-collapse: collapse; }
                 </div>
             </div>
 
-            {/* Main Content: Preview + Sidebar */}
-            <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
+            {/* Main Content: Preview + Sidebar.
+                On mobile we reverse (config/columns/print above, preview below) so building
+                a sheet doesn't require scrolling past the full-height preview table to reach
+                the column editor and Print button. Desktop keeps preview-left / sidebar-right. */}
+            <div className="flex flex-col-reverse lg:flex-row gap-4 lg:items-start">
                 {/* Left: Live Preview */}
                 <div className="flex-1 min-w-0">
                     <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm p-5">
@@ -875,7 +939,7 @@ table { width: 100%; border-collapse: collapse; }
                         </div>
                         <button
                             onClick={handlePrint}
-                            className="w-full py-3 bg-white dark:bg-[#132338] text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors flex items-center justify-center gap-2 shadow-lg"
+                            className="w-full py-3 bg-white text-teal-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-teal-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
                         >
                             <PrinterIcon size={14} /> Print Sheet
                         </button>
@@ -883,8 +947,19 @@ table { width: 100%; border-collapse: collapse; }
 
                     {/* Active Columns */}
                     <div className="border border-slate-200 dark:border-[#243A58] rounded-xl bg-white dark:bg-[#132338] p-4 space-y-3 shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
-                        <div className="space-y-2.5 max-h-[400px] overflow-y-auto no-scrollbar">
+                        {isMobile ? (
+                            <button
+                                type="button"
+                                onClick={() => setColumnsCollapsed(v => !v)}
+                                className="w-full flex items-center justify-between gap-2 text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest"
+                            >
+                                <span>Active Columns ({wsColumns.length})</span>
+                                <ChevronDownIcon size={14} className={`transition-transform ${columnsCollapsed ? '' : 'rotate-180'}`} />
+                            </button>
+                        ) : (
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-widest">Active Columns ({wsColumns.length})</p>
+                        )}
+                        <div className={`space-y-2.5 max-h-[400px] overflow-y-auto no-scrollbar ${isMobile && columnsCollapsed ? 'hidden' : ''}`}>
                             {wsColumns.map((col, i) => (
                                 <div key={col.id} className="border border-slate-100 dark:border-[#1A2D48] rounded-lg p-3 space-y-2 bg-slate-50/40 dark:bg-[#0F1C30]/40">
                                     <div className="flex items-center justify-between">

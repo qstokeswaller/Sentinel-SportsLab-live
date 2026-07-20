@@ -64,6 +64,29 @@ const ShellHeader = () => {
     } = useWorkoutsLayout();
     const Icon = theme.icon;
 
+    // Top-level tab buttons — rendered in two spots (Row 1 on tablet-portrait,
+    // Row 2 on phones + laptop). data-tour is only attached to the canonical
+    // (Row 2) instance so the onboarding tour never targets a hidden duplicate.
+    const tabButtons = (withTour: boolean) => (Object.values(TAB_THEMES) as any[]).map(t => {
+        const TIcon = t.icon;
+        const isActive = activeTab === t.id;
+        return (
+            <button
+                key={t.id}
+                onClick={() => navigate(t.path)}
+                {...(withTour ? { 'data-tour': `workouts-tab-${t.id}` } : {})}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    isActive
+                        ? `${t.activeTabBg} text-white shadow-sm`
+                        : 'text-slate-600 dark:text-[#CBD5E1] hover:bg-white dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
+                }`}
+            >
+                <TIcon size={13} />
+                {t.label}
+            </button>
+        );
+    });
+
     return (
         <div className="bg-white dark:bg-[#132338] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
             {/* Row 1 — title (left)  ·  flex spacer (empty middle)  ·  search + view + create (right cluster).
@@ -83,6 +106,14 @@ const ShellHeader = () => {
                         <h2 className="text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] truncate leading-tight">{theme.title}</h2>
                         <p className="hidden xl:block text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5 truncate">{theme.description}</p>
                     </div>
+                </div>
+
+                {/* Tablet-portrait (md → below lg): no room for the desktop title but too
+                    wide to stack like a phone. The top-level tabs move up into this header
+                    row — where the title lives on desktop — so they align with the search /
+                    actions cluster instead of dropping to a second row and leaving a gap. */}
+                <div className="hidden md:flex lg:hidden items-center gap-1 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58] w-fit shrink-0">
+                    {tabButtons(false)}
                 </div>
 
                 <div className="hidden md:block md:flex-1" />
@@ -129,27 +160,11 @@ const ShellHeader = () => {
                 </div>
             </div>
 
-            {/* Row 2 — top-level tabs, left-aligned under the title */}
-            <div data-tour="workouts-tabs" className="flex items-center gap-1 mt-3 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58] w-fit">
-                {(Object.values(TAB_THEMES) as any[]).map(t => {
-                    const TIcon = t.icon;
-                    const isActive = activeTab === t.id;
-                    return (
-                        <button
-                            key={t.id}
-                            onClick={() => navigate(t.path)}
-                            data-tour={`workouts-tab-${t.id}`}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                                isActive
-                                    ? `${t.activeTabBg} text-white shadow-sm`
-                                    : 'text-slate-600 dark:text-[#CBD5E1] hover:bg-white dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0]'
-                            }`}
-                        >
-                            <TIcon size={13} />
-                            {t.label}
-                        </button>
-                    );
-                })}
+            {/* Row 2 — top-level tabs, left-aligned under the title. Shown on phones
+                (stacked) and laptop (under the title); hidden on tablet-portrait, where
+                the tabs live inline in Row 1 above. */}
+            <div data-tour="workouts-tabs" className="flex md:hidden lg:flex items-center gap-1 mt-3 bg-slate-100 dark:bg-[#0F1C30] p-0.5 rounded-lg border border-slate-200 dark:border-[#243A58] w-fit">
+                {tabButtons(true)}
             </div>
         </div>
     );

@@ -9,6 +9,7 @@ import { ProgramViewModal } from '../components/workouts/ProgramViewModal';
 import { ProgramAssignModal } from '../components/workouts/ProgramAssignModal';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import { ShareWorkoutPopover } from '../components/workouts/ShareWorkoutPopover';
 import { OwnershipFilter, matchesOwnershipScope, type OwnershipScope } from '../components/tier/OwnershipFilter';
 import { CreatorBadge } from '../components/tier/CreatorBadge';
@@ -259,9 +260,10 @@ export const WorkoutProgramsPage = () => {
         setTargetFilter('All');
     };
 
-    // Click outside the popover closes it
+    // Click outside the popover closes it (desktop only — on mobile the filter
+    // renders in a BottomSheet, which handles its own backdrop/Escape dismissal).
     useEffect(() => {
-        if (!filterPopoverOpen) return;
+        if (!filterPopoverOpen || isMobile) return;
         const onDocClick = (e: MouseEvent) => {
             if (filterPopoverRef.current && !filterPopoverRef.current.contains(e.target as Node)) {
                 setFilterPopoverOpen(false);
@@ -269,7 +271,78 @@ export const WorkoutProgramsPage = () => {
         };
         document.addEventListener('mousedown', onDocClick);
         return () => document.removeEventListener('mousedown', onDocClick);
-    }, [filterPopoverOpen]);
+    }, [filterPopoverOpen, isMobile]);
+
+    // Filter panel body — shared between the desktop popover and the mobile
+    // BottomSheet so both surfaces stay in sync.
+    const filterPanelInner = (
+        <>
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
+                <div className="flex items-center gap-2">
+                    {activeFilterCount > 0 && (
+                        <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Clear all</button>
+                    )}
+                    <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                        <XIcon size={12} />
+                    </button>
+                </div>
+            </div>
+            <div>
+                <CustomSelect value={phaseFilter} onChange={(e: any) => setPhaseFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Phase">
+                    <option value="All">All phases</option>
+                    {availablePhases.map(p => <option key={p} value={p}>{p}</option>)}
+                </CustomSelect>
+            </div>
+            <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Duration</label>
+                <div className="grid grid-cols-4 gap-1">
+                    {(['All', 'Short', 'Medium', 'Long'] as const).map(opt => (
+                        <button
+                            key={opt}
+                            onClick={() => setDurationFilter(opt)}
+                            className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                durationFilter === opt
+                                    ? 'bg-indigo-600 text-white shadow-sm'
+                                    : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                            }`}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+                <div className="text-[9px] text-slate-400 dark:text-[#94A3B8] mt-1.5 leading-snug">Short ≤ 2 wk · Medium 3–6 wk · Long ≥ 7 wk</div>
+            </div>
+            {activeTab === 'assigned' && (
+                <>
+                    <div>
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Status</label>
+                        <div className="grid grid-cols-4 gap-1">
+                            {(['All', 'Active', 'Upcoming', 'Past'] as const).map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => setStatusFilter(opt)}
+                                    className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                        statusFilter === opt
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                                    }`}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
+                            <option value="All">Any team or athlete</option>
+                            {targetOptions.map(t => <option key={t.id} value={t.id}>{t.type === 'Team' ? '🟦 ' : '👤 '}{t.label}</option>)}
+                        </CustomSelect>
+                    </div>
+                </>
+            )}
+        </>
+    );
 
     const handleDelete = async (id: string) => {
         const name = programs.find(p => p.id === id)?.name;
@@ -699,82 +772,28 @@ export const WorkoutProgramsPage = () => {
                                 )}
                             </button>
 
-                            {filterPopoverOpen && (
+                            {filterPopoverOpen && !isMobile && (
                                 <div className="absolute top-full right-0 mt-1.5 w-80 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-30 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
-                                        <div className="flex items-center gap-2">
-                                            {activeFilterCount > 0 && (
-                                                <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Clear all</button>
-                                            )}
-                                            <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
-                                                <XIcon size={12} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <CustomSelect value={phaseFilter} onChange={(e: any) => setPhaseFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Phase">
-                                            <option value="All">All phases</option>
-                                            {availablePhases.map(p => <option key={p} value={p}>{p}</option>)}
-                                        </CustomSelect>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Duration</label>
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {(['All', 'Short', 'Medium', 'Long'] as const).map(opt => (
-                                                <button
-                                                    key={opt}
-                                                    onClick={() => setDurationFilter(opt)}
-                                                    className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                                        durationFilter === opt
-                                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                                            : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
-                                                    }`}
-                                                >
-                                                    {opt}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="text-[9px] text-slate-400 dark:text-[#94A3B8] mt-1.5 leading-snug">Short ≤ 2 wk · Medium 3–6 wk · Long ≥ 7 wk</div>
-                                    </div>
-                                    {activeTab === 'assigned' && (
-                                        <>
-                                            <div>
-                                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Status</label>
-                                                <div className="grid grid-cols-4 gap-1">
-                                                    {(['All', 'Active', 'Upcoming', 'Past'] as const).map(opt => (
-                                                        <button
-                                                            key={opt}
-                                                            onClick={() => setStatusFilter(opt)}
-                                                            className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                                                statusFilter === opt
-                                                                    ? 'bg-indigo-600 text-white shadow-sm'
-                                                                    : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
-                                                            }`}
-                                                        >
-                                                            {opt}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
-                                                    <option value="All">Any team or athlete</option>
-                                                    {targetOptions.map(t => <option key={t.id} value={t.id}>{t.type === 'Team' ? '🟦 ' : '👤 '}{t.label}</option>)}
-                                                </CustomSelect>
-                                            </div>
-                                        </>
-                                    )}
+                                    {filterPanelInner}
                                 </div>
                             )}
                         </div>
+                        {/* Mobile: same filters in a viewport-anchored bottom sheet so the
+                            panel can never be clipped off the edge of a small screen. */}
+                        {isMobile && (
+                            <BottomSheet isOpen={filterPopoverOpen} onClose={() => setFilterPopoverOpen(false)}>
+                                <div className="px-4 pb-4 space-y-3">
+                                    {filterPanelInner}
+                                </div>
+                            </BottomSheet>
+                        )}
                     </div>
                 </div>
 
                 {/* Persistent list container — fills available height, scrolls internally.
                     Empty / loading states render INSIDE the container so the shell stays present. */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
-                    <div className="overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="overflow-y-auto overflow-x-hidden lg:overflow-x-visible flex-1 custom-scrollbar">
                 {isLoading ? (
                     /* Skeleton (Phase 4c): mirrors the program list rows */
                     <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
@@ -850,11 +869,11 @@ export const WorkoutProgramsPage = () => {
                         })}
                     </div>
                 ) : (
-                    <table className="w-full text-left">
+                    <table className="w-full text-left table-fixed lg:table-auto">
                             <thead className="sticky top-0 bg-slate-50 dark:bg-[#0F1C30] z-10">
                                 <tr className="border-b border-slate-200 dark:border-[#243A58]">
                                     <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Program</th>
-                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Phase</th>
+                                    <th className="px-5 py-3 w-24 lg:w-auto text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Phase</th>
                                     <th className="px-3 py-3 w-8" />
                                 </tr>
                             </thead>
@@ -872,12 +891,12 @@ export const WorkoutProgramsPage = () => {
                                         onClick={() => (isMobile ? setViewModalProgram(p) : setSelectedProgram(p))}
                                     >
                                         <td className="px-5 py-3.5">
-                                            <div className={`font-medium text-sm transition-colors ${
+                                            <div className={`font-medium text-sm break-words transition-colors ${
                                                 isSelected
                                                     ? 'text-indigo-700 dark:text-indigo-400'
                                                     : 'text-slate-800 dark:text-[#E2E8F0] group-hover:text-indigo-700 dark:group-hover:text-indigo-400'
                                             }`}>{p.name}</div>
-                                            {p.overview && <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate max-w-xs">{p.overview}</div>}
+                                            {p.overview && <div className="text-[10px] text-slate-400 dark:text-[#CBD5E1] mt-0.5 truncate lg:max-w-xs">{p.overview}</div>}
                                         </td>
                                         <td className="px-5 py-3.5">
                                             {p.training_phase ? (

@@ -252,9 +252,9 @@ const WeightroomSheetPanel = ({
                     <p className="text-[10px] text-amber-600 text-center py-3">Select a target team/athlete above to preview 1RM values.</p>
                 )}
 
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#243A58]">
-                    <div className="flex items-center gap-2">
+                {/* Footer — stacks on phones so the button cluster never cramps */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-slate-100 dark:border-[#243A58]">
+                    <div className="flex items-center flex-wrap gap-2">
                         {/* Orientation */}
                         <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-[#243A58]">
                             {['portrait', 'landscape'].map(o => (
@@ -275,7 +275,7 @@ const WeightroomSheetPanel = ({
                             </button>
                         )}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center flex-wrap gap-3 sm:justify-end">
                         {sourceContext && (
                             <label className="flex items-center gap-1.5 cursor-pointer select-none">
                                 <input

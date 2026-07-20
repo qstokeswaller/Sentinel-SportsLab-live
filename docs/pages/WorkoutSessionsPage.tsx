@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import { fuzzySearch } from '../utils/fuzzySearch';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
@@ -215,9 +216,10 @@ export const WorkoutSessionsPage = () => {
         setTargetFilter('All');
     };
 
-    // Click outside the popover closes it
+    // Click outside the popover closes it (desktop only — on mobile the filter
+    // renders in a BottomSheet, which handles its own backdrop/Escape dismissal).
     useEffect(() => {
-        if (!filterPopoverOpen) return;
+        if (!filterPopoverOpen || isMobile) return;
         const onDocClick = (e: MouseEvent) => {
             if (filterPopoverRef.current && !filterPopoverRef.current.contains(e.target as Node)) {
                 setFilterPopoverOpen(false);
@@ -225,7 +227,82 @@ export const WorkoutSessionsPage = () => {
         };
         document.addEventListener('mousedown', onDocClick);
         return () => document.removeEventListener('mousedown', onDocClick);
-    }, [filterPopoverOpen]);
+    }, [filterPopoverOpen, isMobile]);
+
+    // Filter panel body — shared between the desktop popover and the mobile
+    // BottomSheet so both surfaces stay in sync.
+    const filterPanelInner = (
+        <>
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
+                <div className="flex items-center gap-2">
+                    {activeFilterCount > 0 && (
+                        <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Clear all</button>
+                    )}
+                    <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                        <XIcon size={12} />
+                    </button>
+                </div>
+            </div>
+            <div>
+                <CustomSelect value={phaseFilter} onChange={(e: any) => setPhaseFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Phase">
+                    <option value="All">All phases</option>
+                    {availablePhases.map(p => <option key={p} value={p}>{p}</option>)}
+                </CustomSelect>
+            </div>
+            <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Load</label>
+                <div className="grid grid-cols-4 gap-1">
+                    {(['All', 'Low', 'Medium', 'High'] as const).map(opt => (
+                        <button
+                            key={opt}
+                            onClick={() => setLoadFilter(opt)}
+                            className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                loadFilter === opt
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                            }`}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            {activeTab === 'assigned' && (
+                <>
+                    <div>
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Time window</label>
+                        <div className="grid grid-cols-4 gap-1">
+                            {([
+                                { v: 'All', label: 'All' },
+                                { v: 'Upcoming', label: 'Upcoming' },
+                                { v: 'ThisWeek', label: 'This wk' },
+                                { v: 'Past', label: 'Past' },
+                            ] as const).map(opt => (
+                                <button
+                                    key={opt.v}
+                                    onClick={() => setTimeWindowFilter(opt.v as any)}
+                                    className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
+                                        timeWindowFilter === opt.v
+                                            ? 'bg-emerald-600 text-white shadow-sm'
+                                            : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
+                            <option value="All">Any team or athlete</option>
+                            {targetOptions.map(t => <option key={t.id} value={t.id}>{t.type === 'Team' ? '🟦 ' : '👤 '}{t.label}</option>)}
+                        </CustomSelect>
+                    </div>
+                </>
+            )}
+        </>
+    );
 
     // ── Sidebar stats ──────────────────────────────────────────────────────
     // Drafts = templates with zero scheduled sessions referencing them.
@@ -621,79 +698,21 @@ export const WorkoutSessionsPage = () => {
                                 )}
                             </button>
 
-                            {filterPopoverOpen && (
+                            {filterPopoverOpen && !isMobile && (
                                 <div className="absolute top-full right-0 mt-1.5 w-80 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl shadow-xl z-30 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-100">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-[#CBD5E1]">Filters</span>
-                                        <div className="flex items-center gap-2">
-                                            {activeFilterCount > 0 && (
-                                                <button onClick={clearAllFilters} className="text-[10px] font-semibold text-slate-500 dark:text-[#CBD5E1] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Clear all</button>
-                                            )}
-                                            <button onClick={() => setFilterPopoverOpen(false)} aria-label="Close" className="p-1 rounded text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
-                                                <XIcon size={12} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <CustomSelect value={phaseFilter} onChange={(e: any) => setPhaseFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Phase">
-                                            <option value="All">All phases</option>
-                                            {availablePhases.map(p => <option key={p} value={p}>{p}</option>)}
-                                        </CustomSelect>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Load</label>
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {(['All', 'Low', 'Medium', 'High'] as const).map(opt => (
-                                                <button
-                                                    key={opt}
-                                                    onClick={() => setLoadFilter(opt)}
-                                                    className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                                        loadFilter === opt
-                                                            ? 'bg-emerald-600 text-white shadow-sm'
-                                                            : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
-                                                    }`}
-                                                >
-                                                    {opt}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {activeTab === 'assigned' && (
-                                        <>
-                                            <div>
-                                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#CBD5E1] block mb-1">Time window</label>
-                                                <div className="grid grid-cols-4 gap-1">
-                                                    {([
-                                                        { v: 'All', label: 'All' },
-                                                        { v: 'Upcoming', label: 'Upcoming' },
-                                                        { v: 'ThisWeek', label: 'This wk' },
-                                                        { v: 'Past', label: 'Past' },
-                                                    ] as const).map(opt => (
-                                                        <button
-                                                            key={opt.v}
-                                                            onClick={() => setTimeWindowFilter(opt.v as any)}
-                                                            className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                                                                timeWindowFilter === opt.v
-                                                                    ? 'bg-emerald-600 text-white shadow-sm'
-                                                                    : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'
-                                                            }`}
-                                                        >
-                                                            {opt.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <CustomSelect value={targetFilter} onChange={(e: any) => setTargetFilter(e.target.value)} variant="filter" size="xs" prefixLabel="Target">
-                                                    <option value="All">Any team or athlete</option>
-                                                    {targetOptions.map(t => <option key={t.id} value={t.id}>{t.type === 'Team' ? '🟦 ' : '👤 '}{t.label}</option>)}
-                                                </CustomSelect>
-                                            </div>
-                                        </>
-                                    )}
+                                    {filterPanelInner}
                                 </div>
                             )}
                         </div>
+                        {/* Mobile: same filters in a viewport-anchored bottom sheet so the
+                            panel can never be clipped off the edge of a small screen. */}
+                        {isMobile && (
+                            <BottomSheet isOpen={filterPopoverOpen} onClose={() => setFilterPopoverOpen(false)}>
+                                <div className="px-4 pb-4 space-y-3">
+                                    {filterPanelInner}
+                                </div>
+                            </BottomSheet>
+                        )}
                     </div>
                 </div>
 
@@ -701,7 +720,7 @@ export const WorkoutSessionsPage = () => {
                 {/* Persistent list container — fills available height, scrolls internally (Library pattern).
                     Empty / loading states render INSIDE the white container so the shell never collapses. */}
                 <div className="bg-white dark:bg-[#132338] rounded-xl overflow-hidden border border-slate-200 dark:border-[#243A58] shadow-sm flex flex-col flex-1 min-h-0">
-                    <div className="overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="overflow-y-auto overflow-x-hidden lg:overflow-x-visible flex-1 custom-scrollbar">
                 {(isLoading || isSecondaryLoading) && workoutTemplates.length === 0 ? (
                     /* Skeleton (Phase 4c): mirrors the packet list rows */
                     <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
@@ -778,12 +797,12 @@ export const WorkoutSessionsPage = () => {
                     </div>
                 ) : (
                     /* List view */
-                    <table className="w-full text-left">
+                    <table className="w-full text-left table-fixed lg:table-auto">
                             <thead className="sticky top-0 bg-slate-50 dark:bg-[#0F1C30] z-10">
                                 <tr className="border-b border-slate-200 dark:border-[#243A58]">
                                     <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Packet Name</th>
-                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Phase</th>
-                                    <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Load</th>
+                                    <th className="px-5 py-3 w-24 lg:w-auto text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Phase</th>
+                                    <th className="px-5 py-3 w-20 lg:w-auto text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#CBD5E1]">Load</th>
                                     <th className="px-5 py-3 w-8" />
                                 </tr>
                             </thead>
@@ -801,7 +820,7 @@ export const WorkoutSessionsPage = () => {
                                             onClick={() => (isMobile ? setViewModalTemplate(tpl) : setSelectedTemplate(tpl))}
                                         >
                                             <td className="px-5 py-3.5">
-                                                <div className={`font-medium text-sm transition-colors ${
+                                                <div className={`font-medium text-sm break-words transition-colors ${
                                                     isSelected
                                                         ? 'text-emerald-700 dark:text-emerald-400'
                                                         : 'text-slate-800 dark:text-[#E2E8F0] group-hover:text-emerald-700 dark:group-hover:text-emerald-400'

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
-    UsersIcon, UserIcon, CalendarIcon, HeartPulseIcon,
+    UsersIcon, UserIcon, HeartPulseIcon,
     UploadIcon, CheckIcon, AlertCircleIcon, Trash2 as Trash2Icon,
 } from 'lucide-react';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -179,11 +179,12 @@ export const HeartRateMetricsReport: React.FC = () => {
                         {allPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </CustomSelect>
                 )}
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#0F1C30] px-4 py-2 rounded-xl border border-slate-200 dark:border-[#243A58]">
-                    <CalendarIcon size={14} className="text-slate-400 dark:text-[#CBD5E1]" />
-                    <DatePicker value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })} className="w-24" />
-                    <span className="text-slate-300 dark:text-[#475569]">-</span>
-                    <DatePicker value={hrReportDateRange.end} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })} className="w-24" />
+                {/* Each DatePicker renders its own calendar icon + border, so no outer
+                    icon/box wrapper (that produced the doubled-calendar look). */}
+                <div className="flex items-center gap-1.5">
+                    <DatePicker value={hrReportDateRange.start} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, start: e.target.value })} className="w-32" placeholder="Start date" />
+                    <span className="text-slate-400 dark:text-[#475569] text-xs shrink-0">–</span>
+                    <DatePicker value={hrReportDateRange.end} onChange={(e) => setHrReportDateRange({ ...hrReportDateRange, end: e.target.value })} className="w-32" placeholder="End date" />
                 </div>
                 <div className="flex items-center gap-2">
                     <input ref={hrFileRef} type="file" accept=".csv" className="hidden" onChange={handleHrFileUpload} />

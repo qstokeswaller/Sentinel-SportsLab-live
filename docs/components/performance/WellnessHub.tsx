@@ -408,8 +408,8 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
 
     // ── ROOT ─────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-slate-50/30 dark:bg-[#0F1C30]/30 p-8 pt-4">
-            {viewMode === 'selection' && <WellnessTeamSelection {...{ handleLoadWellnessResponses, setSelectedTeamId, setViewMode, teams, wellnessResponses }} />}
+        <div className="min-h-screen bg-slate-50/30 dark:bg-[#0F1C30]/30 p-4 lg:p-8 pt-4">
+            {viewMode === 'selection' && <WellnessTeamSelection {...{ handleLoadWellnessResponses, setSelectedTeamId, setViewMode, teams, wellnessResponses, onBackToSections }} />}
             {viewMode === 'dashboard'  && <WellnessDashboard {...{ onBackToSections, chartTextColor, chartAxisColor, activeTeam, alertsModalOpen, athletes, chartGridColor, chartLabelColor, compliance, dailyResponses, dashboardTab, heatmapAnchor, heatmapDays, insightCompareMetric, insightDate, insightMetric, insightPeriodMode, insightView, isHeatmapOpen, isKpiExpanded, isRundownOpen, isSelectMode, kpi, latestPerAthlete, openAthlete, responseViewDate, rundownAsOfDate, rundownDailyFiltered, rundownDeepChecks, rundownRangeDays, rundownTab, searchQuery, selectedResponseIds, selectedTeamId, setAlertsModalOpen, setDashboardTab, setHeatmapAnchor, setHeatmapDays, setInsightCompareMetric, setInsightDate, setInsightMetric, setInsightPeriodMode, setInsightView, setIsHeatmapOpen, setIsKpiExpanded, setIsRundownOpen, setIsSelectMode, setResponseViewDate, setRundownAsOfDate, setRundownRangeDays, setRundownTab, setSearchQuery, setSelectedResponseIds, setShowBulkConfirm, setShowDailyTracker, setViewMode, setWellnessDateRange, showDailyTracker, teamAverages, teams, triggeredIncomplete, triggeredNoChange, weeklyResponses, wellnessDateRange, wellnessResponses }} />}
             {viewMode === 'athlete'    && (
                 <WellnessAthleteView

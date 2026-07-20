@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { useSmartSearch } from '../hooks/useSmartSearch';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { useExerciseMap } from '../hooks/useExerciseMap';
 import { computePlannedTonnage } from '../utils/plannedTonnage';
 import { DatabaseService } from '../services/databaseService';
@@ -203,6 +204,10 @@ export const WorkoutPacketsPage = () => {
     // ── Workout builder state ──────────────────────────────────────────────
     const [sections, setSections] = useState<Record<string, ExRow[]>>({ warmup: [], workout: [], cooldown: [] });
     const [activeSection, setActiveSection] = useState<string>('workout');
+    // Mobile / tablet-portrait (< lg): the right-hand picker panel is replaced by a
+    // full-screen exercise picker opened from an "Add Exercise" button.
+    const isMobile = useIsMobile();
+    const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
     const [linkedSessions, setLinkedSessions] = useState<LinkedSession[]>([]);
 
     // ── Exercise picker state ──────────────────────────────────────────────
@@ -976,25 +981,32 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                 {/* ── LEFT: Main Panel ───────────────────────────────────── */}
                 <div className="flex-1 flex flex-col overflow-hidden">
 
-                    {/* Header */}
-                    <div className="px-6 py-3 bg-white dark:bg-[#132338] border-b border-slate-200 dark:border-[#243A58] flex items-center justify-between shrink-0">
+                    {/* Header — on mobile/tablet-portrait the icon+title banner is dropped
+                        (the app already shows "Workouts" up top) and the action buttons wrap. */}
+                    <div className="px-4 lg:px-6 py-3 bg-white dark:bg-[#132338] border-b border-slate-200 dark:border-[#243A58] flex flex-col lg:flex-row lg:items-center justify-between gap-2 shrink-0">
                         <div className="flex items-center gap-3">
-                            <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all" title="Back">
+                            <button onClick={() => navigate(returnTo)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-lg text-slate-400 dark:text-[#CBD5E1] transition-all shrink-0" title="Back">
                                 <ArrowLeftIcon size={18} />
                             </button>
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-600">
-                                <PackageIcon size={14} className="text-white" />
+                            <div className="hidden lg:flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-600">
+                                    <PackageIcon size={14} className="text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
+                                        {isAssigning ? 'Assign Workout to Plan' : isEditing ? 'Edit Workout Packet' : 'New Workout Packet'}
+                                    </h2>
+                                    <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
+                                        {isAssigning ? 'Build a workout and assign it to your periodization plan session' : 'Build, schedule & print one-off workouts'}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0]">
-                                    {isAssigning ? 'Assign Workout to Plan' : isEditing ? 'Edit Workout Packet' : 'New Workout Packet'}
-                                </h2>
-                                <p className="text-[10px] text-slate-400 dark:text-[#CBD5E1]">
-                                    {isAssigning ? 'Build a workout and assign it to your periodization plan session' : 'Build, schedule & print one-off workouts'}
-                                </p>
-                            </div>
+                            {/* Mobile-only inline title so the bar isn't just a lone back arrow */}
+                            <span className="lg:hidden text-sm font-bold text-slate-900 dark:text-[#E2E8F0] truncate">
+                                {isAssigning ? 'Assign Workout' : isEditing ? 'Edit Packet' : 'New Packet'}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center flex-wrap gap-2">
                             {isAssigning ? (
                                 <>
                                     <button onClick={handleSaveAsNew} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 border border-emerald-200 dark:border-emerald-500/30 rounded-lg text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all" title="Save as template without assigning">
@@ -1389,6 +1401,18 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                 </button>
                             </div>
 
+                            {/* Mobile: primary Add Exercise action — opens the full-screen picker.
+                                Sits above the scrolling list (outside its overflow) so it's always
+                                reachable without scrolling to the bottom. */}
+                            {isMobile && (
+                                <button
+                                    onClick={() => setMobilePickerOpen(true)}
+                                    className="shrink-0 m-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all active:scale-[0.99]"
+                                >
+                                    <PlusIcon size={14} /> Add Exercise to {sectionMeta[activeSection]?.label || SECTION_LABELS[activeSection] || activeSection}
+                                </button>
+                            )}
+
                             {/* Add Section popover */}
                             {addSectionOpen && (
                                 <AddSectionPopover
@@ -1498,7 +1522,7 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                                     <div className="py-12 flex flex-col items-center text-slate-300 gap-2">
                                         <DumbbellIcon size={28} className="opacity-30" />
                                         <p className="text-[10px] text-slate-400">No exercises in {sectionMeta[activeSection]?.label || activeSection}</p>
-                                        <p className="text-[9px] text-slate-300">Drag from the right panel or click to add</p>
+                                        <p className="text-[9px] text-slate-300">{isMobile ? 'Tap “Add Exercise” above to get started' : 'Drag from the right panel or click to add'}</p>
                                     </div>
                                 ) : (
                                     (sections[activeSection] || []).map((row, idx) => {
@@ -1743,12 +1767,33 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                     </div>
                 </div>
 
-                {/* ── RIGHT: Exercise Picker + Session Summary ───────────── */}
-                <div className="w-96 shrink-0 bg-white dark:bg-[#132338] border-l border-slate-200 dark:border-[#243A58] flex flex-col overflow-hidden">
+                {/* ── RIGHT: Exercise Picker + Session Summary ─────────────
+                    Desktop (lg+): fixed side panel. Mobile/tablet-portrait: hidden until
+                    the user taps "Add Exercise", then it takes over the full screen. */}
+                <div className={`bg-white dark:bg-[#132338] flex-col overflow-hidden ${
+                    isMobile
+                        ? (mobilePickerOpen ? 'fixed inset-0 z-[900] flex' : 'hidden')
+                        : 'flex w-96 shrink-0 border-l border-slate-200 dark:border-[#243A58]'
+                }`}>
 
-                    {/* Session Summary — shown when exercises added */}
+                    {/* Mobile picker top bar — close + context (desktop uses the inline title below) */}
+                    {isMobile && (
+                        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200 dark:border-[#243A58] shrink-0">
+                            <button onClick={() => setMobilePickerOpen(false)} className="p-1.5 -ml-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-all">
+                                <XIcon size={18} />
+                            </button>
+                            <span className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">
+                                Add to {sectionMeta[activeSection]?.label || SECTION_LABELS[activeSection] || activeSection}
+                            </span>
+                            <button onClick={() => setMobilePickerOpen(false)} className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shrink-0">
+                                Done
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Session Summary — shown when exercises added (desktop only) */}
                     {totalExercises > 0 && (
-                        <div className="border-b border-slate-200 dark:border-[#243A58] shrink-0 bg-slate-50 dark:bg-[#1A2D48]">
+                        <div className="hidden lg:block border-b border-slate-200 dark:border-[#243A58] shrink-0 bg-slate-50 dark:bg-[#1A2D48]">
                             <button
                                 type="button"
                                 onClick={() => setIsSessionSummaryCollapsed(v => !v)}
@@ -2011,6 +2056,15 @@ ${body || '<p style="color:#94a3b8">No exercises added.</p>'}
                             <button onClick={() => setExPage(p => Math.min(exData?.totalPages || 1, p + 1))} disabled={exPage >= (exData?.totalPages || 1)}
                                 className="p-1 rounded bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#1A2D48] transition-colors">
                                 <ChevronRightIcon size={12} />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Mobile: sticky Done bar at the bottom of the full-screen picker */}
+                    {isMobile && (
+                        <div className="shrink-0 border-t border-slate-200 dark:border-[#243A58] p-3 bg-white dark:bg-[#132338]" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)' }}>
+                            <button onClick={() => setMobilePickerOpen(false)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                                Done · {sections[activeSection]?.length || 0} in {sectionMeta[activeSection]?.label || SECTION_LABELS[activeSection] || activeSection}
                             </button>
                         </div>
                     )}

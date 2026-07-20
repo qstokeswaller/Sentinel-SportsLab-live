@@ -1,7 +1,7 @@
 // 2026-07-12). Typing is Phase 5 work; this step is pure movement.
 // Team selection screen — entry view of the Wellness Hub.
 import React from 'react';
-import { Users, ChevronRight, ClipboardList, AlertTriangle, Activity, Zap } from 'lucide-react';
+import { Users, ChevronRight, ClipboardList, AlertTriangle, Activity, Zap, ArrowLeft } from 'lucide-react';
 import { resolveAvailability, formatDate, TODAY } from './shared';
 
 export const WellnessTeamSelection: React.FC<any> = ({
@@ -10,17 +10,29 @@ export const WellnessTeamSelection: React.FC<any> = ({
     setViewMode,
     teams,
     wellnessResponses,
+    onBackToSections,
 }) => {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-                <div>
-                    <h2 className="text-4xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">Questionnaire Data</h2>
-                    <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[11px] tracking-[0.2em] mt-2 flex items-center gap-2">
-                        <Activity size={14} className="text-cyan-500" />
-                        {formatDate(TODAY)} — Real-time Readiness Monitoring
-                    </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
+                <div className="flex items-start gap-3 min-w-0">
+                    {onBackToSections && (
+                        <button
+                            onClick={onBackToSections}
+                            title="Back to Wellness Hub"
+                            className="mt-1 w-9 h-9 shrink-0 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 dark:hover:border-[#364E6E] transition-all"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                    )}
+                    <div className="min-w-0">
+                        <h2 className="text-3xl lg:text-4xl font-semibold text-slate-900 dark:text-[#E2E8F0] tracking-tighter">Questionnaire Data</h2>
+                        <p className="text-slate-400 dark:text-[#CBD5E1] font-bold uppercase text-[11px] tracking-[0.2em] mt-2 flex items-center gap-2">
+                            <Activity size={14} className="text-cyan-500 shrink-0" />
+                            {formatDate(TODAY)} — Real-time Readiness Monitoring
+                        </p>
+                    </div>
                 </div>
                 <button
                     data-tour="wellness-templates"
