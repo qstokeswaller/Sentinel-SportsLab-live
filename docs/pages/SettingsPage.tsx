@@ -40,13 +40,15 @@ const METHOD_OPTIONS = Object.entries(ACWR_METRIC_TYPES).map(([id, info]: [strin
 
 const DEFAULT_TEAM_SETTINGS = { enabled: false, method: 'sprint_distance', acuteWindow: 7, chronicWindow: 28, freezeRestDays: true, sprintThreshold: 25 };
 
-const SETTINGS_TABS = [
+// `short` = compact label used only in the mobile tab grid so the two long
+// tabs ("Feature Settings", "Help & Support") stay on one line beside their icon.
+const SETTINGS_TABS: Array<{ id: string; label: string; icon: any; desc: string; short?: string }> = [
   { id: 'account',     label: 'Account',          icon: ShieldIcon,           desc: 'Profile, security' },
   { id: 'organisation',label: 'Organisation',     icon: UsersIcon,            desc: 'Tier, members, billing' },
   { id: 'appearance',  label: 'Appearance',        icon: SunIcon,              desc: 'Theme, display' },
-  { id: 'features',   label: 'Feature Settings',  icon: SlidersHorizontalIcon,desc: 'ACWR, Heatmap, Testing, GPS' },
+  { id: 'features',   label: 'Feature Settings',  icon: SlidersHorizontalIcon,desc: 'ACWR, Heatmap, Testing, GPS', short: 'Features' },
   { id: 'walkthrough',label: 'Walkthrough',        icon: MapIcon,              desc: 'Page tours' },
-  { id: 'support',    label: 'Help & Support',     icon: LifeBuoyIcon,         desc: 'Contact us, report a bug' },
+  { id: 'support',    label: 'Help & Support',     icon: LifeBuoyIcon,         desc: 'Contact us, report a bug', short: 'Support' },
 ];
 
 // ── Collapsible Section wrapper ──────────────────────────────────────
@@ -865,18 +867,20 @@ const SettingsPage: React.FC = () => {
     <div className="flex flex-col md:flex-row gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
       {/* Sidebar — vertical list on md+, horizontal pill tabs on mobile */}
       <div className="md:w-56 md:shrink-0">
-        {/* Mobile: horizontal tab strip */}
-        <div className="flex md:hidden gap-1 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-1 shadow-sm mb-2">
+        {/* Mobile: same 3×2 tab grid, but each cell lays the icon + label
+            side-by-side (instead of stacked) so the strip is ~half the height.
+            Short labels keep the two long tabs on a single line. */}
+        <div className="grid grid-cols-3 gap-1 md:hidden bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-1 shadow-sm mb-2">
           {SETTINGS_TABS.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  isActive ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
+                className={`flex items-center justify-center gap-1.5 px-1.5 py-2 rounded-lg text-[11px] font-medium leading-tight transition-all ${
+                  isActive ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:bg-slate-50 dark:hover:bg-[#1A2D48]'
                 }`}
               >
-                <tab.icon size={14} />
-                <span>{tab.label}</span>
+                <tab.icon size={14} className="shrink-0" />
+                <span className="truncate min-w-0">{tab.short ?? tab.label}</span>
               </button>
             );
           })}

@@ -13,7 +13,7 @@ import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { Button } from '@/components/ui/button';
 import {
     DumbbellIcon, SearchIcon, PlusIcon, XIcon,
-    ChevronRightIcon, ChevronLeftIcon,
+    ChevronRightIcon, ChevronLeftIcon, ChevronDownIcon,
     Trash2Icon, PencilIcon, StarIcon, ClockIcon,
     FolderIcon, FolderPlusIcon, CheckIcon, SlidersHorizontalIcon,
     ArrowLeftIcon, MoreHorizontalIcon,
@@ -345,6 +345,10 @@ export const ExerciseLibraryPage = () => {
     // and never starves when the nav sidebar expands (tablet landscape).
     const isMobile = useIsMobile();
     const [alphabetLetter, setAlphabetLetter] = useState('All');
+    // Mobile only: the A–Z index is collapsed by default so it doesn't eat rows.
+    // Desktop always shows the inline strip (lg:flex overrides this). Matches the
+    // collapsible "Browse A–Z" pattern used in the packet/program exercise pickers.
+    const [alphabetExpanded, setAlphabetExpanded] = useState(false);
     const [selectedClassification, setSelectedClassification] = useState('All');
     const [personalPage, setPersonalPage] = useState(1);
 
@@ -706,18 +710,37 @@ export const ExerciseLibraryPage = () => {
                                 </CustomSelect>
                             </div>
                         )}
-                        <div className="flex items-center gap-1 flex-nowrap overflow-x-auto no-scrollbar">
-                            <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
-                                className={`px-1.5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
-                                All
+                        {/* A–Z index. Mobile: collapsed behind a one-row toggle so it
+                            doesn't take multiple rows; tap to expand a wrapped letter grid.
+                            Desktop: lg:flex keeps the original inline strip always visible. */}
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => setAlphabetExpanded(v => !v)}
+                                className="lg:hidden w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1]"
+                            >
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-[9px] font-semibold uppercase tracking-wide">A–Z</span>
+                                    <span className="text-[11px] font-medium">Browse letters</span>
+                                    {alphabetLetter !== 'All' && (
+                                        <span className="px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[9px] font-bold">{alphabetLetter}</span>
+                                    )}
+                                </span>
+                                <ChevronDownIcon size={14} className={`transition-transform ${alphabetExpanded ? 'rotate-180' : ''}`} />
                             </button>
-                            {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
-                                <button key={l}
-                                    onClick={() => { setAlphabetLetter(alphabetLetter === l ? 'All' : l); setLibraryPage(1); setPersonalPage(1); }}
-                                    className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
-                                    {l}
+                            <div className={`${alphabetExpanded ? 'flex' : 'hidden'} lg:flex flex-wrap lg:flex-nowrap items-center gap-1 lg:overflow-x-auto no-scrollbar mt-1.5 lg:mt-0`}>
+                                <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
+                                    className={`px-2 lg:px-1.5 h-7 lg:h-5 rounded text-[11px] lg:text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                    All
                                 </button>
-                            ))}
+                                {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
+                                    <button key={l}
+                                        onClick={() => { setAlphabetLetter(alphabetLetter === l ? 'All' : l); setLibraryPage(1); setPersonalPage(1); }}
+                                        className={`w-7 h-7 lg:w-5 lg:h-5 rounded text-[11px] lg:text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                        {l}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     <div className="overflow-y-auto flex-1 custom-scrollbar">
@@ -1294,18 +1317,35 @@ export const ExerciseLibraryPage = () => {
                                 </CustomSelect>
                             </div>
                         )}
-                        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
-                            <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] shrink-0">A–Z</span>
-                            <div className="h-3 w-px bg-slate-200 dark:bg-[#243A58] shrink-0" />
-                            <div className="flex flex-nowrap gap-0.5 overflow-x-auto no-scrollbar min-w-0 flex-1">
+                        {/* A–Z index — collapsible on mobile (one-row toggle → wrapped grid),
+                            original inline label + strip on desktop (lg:). */}
+                        <div className="block lg:flex lg:items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-[#1A2D48]">
+                            <span className="hidden lg:inline text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1] shrink-0">A–Z</span>
+                            <div className="hidden lg:block h-3 w-px bg-slate-200 dark:bg-[#243A58] shrink-0" />
+                            {/* Mobile toggle */}
+                            <button
+                                type="button"
+                                onClick={() => setAlphabetExpanded(v => !v)}
+                                className="lg:hidden w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1]"
+                            >
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-[9px] font-semibold uppercase tracking-wide">A–Z</span>
+                                    <span className="text-[11px] font-medium">Browse letters</span>
+                                    {alphabetLetter !== 'All' && (
+                                        <span className="px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[9px] font-bold">{alphabetLetter}</span>
+                                    )}
+                                </span>
+                                <ChevronDownIcon size={14} className={`transition-transform ${alphabetExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                            <div className={`${alphabetExpanded ? 'flex' : 'hidden'} lg:flex flex-wrap lg:flex-nowrap gap-1 lg:gap-0.5 lg:overflow-x-auto no-scrollbar min-w-0 flex-1 mt-1.5 lg:mt-0`}>
                                 <button onClick={() => { setAlphabetLetter('All'); setLibraryPage(1); setPersonalPage(1); }}
-                                    className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                    className={`px-2 lg:px-0 w-auto lg:w-5 h-7 lg:h-5 rounded text-[11px] lg:text-[8px] font-bold transition-all ${alphabetLetter === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                     All
                                 </button>
                                 {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => (
                                     <button key={l}
                                         onClick={() => { setAlphabetLetter(alphabetLetter === l ? 'All' : l); setLibraryPage(1); setPersonalPage(1); }}
-                                        className={`w-5 h-5 rounded text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
+                                        className={`w-7 h-7 lg:w-5 lg:h-5 rounded text-[11px] lg:text-[8px] font-bold transition-all ${alphabetLetter === l ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-[#0F1C30] text-slate-500 dark:text-[#CBD5E1] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 border border-slate-200 dark:border-[#243A58]'}`}>
                                         {l}
                                     </button>
                                 ))}
