@@ -7,7 +7,7 @@ import { SupabaseStorageService as StorageService } from '../../services/storage
 import { normaliseDate } from '../../utils/csvSchemas';
 import { fuzzySearch } from '../../utils/fuzzySearch';
 import { GpsDateRangeView, GpsSessionTable, gpsSortCols } from './gpsTables';
-import { ActivityIcon, AlertCircleIcon, AlertTriangleIcon, ArrowLeftIcon, ArrowRightIcon, CalendarIcon, CheckCircleIcon, CheckIcon, Edit3Icon, InfoIcon, PlusCircleIcon, SearchIcon, SlidersIcon, Trash2Icon, UploadIcon, XIcon } from 'lucide-react';
+import { ActivityIcon, AlertCircleIcon, AlertTriangleIcon, ArrowLeftIcon, ArrowRightIcon, CalendarIcon, ChevronDown as ChevronDownIcon, CheckCircleIcon, CheckIcon, Edit3Icon, InfoIcon, PlusCircleIcon, SearchIcon, SlidersIcon, Trash2Icon, UploadIcon, XIcon } from 'lucide-react';
 import DatePicker from '../../components/ui/DatePicker';
 
 export const GpsDataReport: React.FC<any> = ({
@@ -94,6 +94,10 @@ export const GpsDataReport: React.FC<any> = ({
     syncGpsToLoadRecords,
     teams,
 }) => {
+        // Mobile only: collapse the import filter/date/CSV group behind one toggle
+        // so it doesn't eat the screen. Tabs + primary actions stay visible; the
+        // group's internal layout (Session/Range → dates underneath) is unchanged.
+        const [gpsToolsOpen, setGpsToolsOpen] = useState(false);
 
         // ── Helper: fuzzy detect a column from headers ──────────────────────
         const normStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -706,7 +710,7 @@ export const GpsDataReport: React.FC<any> = ({
                 })()}
 
                 {/* ── Top bar: tabs + status + actions ────────────────────── */}
-                <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
+                <div className="bg-white dark:bg-[#132338] p-3 lg:p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg max-w-full overflow-x-auto no-scrollbar">
                             <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
@@ -719,7 +723,12 @@ export const GpsDataReport: React.FC<any> = ({
                                 <span className="flex items-center gap-1.5"><ActivityIcon size={12} />GPS Insights</span>
                             </button>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                            {gpsTab === 'import' && (
+                                <button onClick={() => setGpsToolsOpen(v => !v)} className="lg:hidden flex items-center gap-1 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] text-xs font-semibold">
+                                    Filters <ChevronDownIcon size={13} className={`transition-transform ${gpsToolsOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                            )}
                             {gpsImportStatus && (
                                 <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${gpsImportStatus === 'success' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50' : 'text-amber-700 dark:text-amber-400 bg-amber-50'}`}>
                                     {gpsImportMessage}
@@ -746,7 +755,7 @@ export const GpsDataReport: React.FC<any> = ({
                             return dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                         };
                         return (
-                        <div className="space-y-4 pt-1">
+                        <div className={`space-y-4 pt-1 ${gpsToolsOpen ? '' : 'hidden'} lg:block`}>
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Squad / Athlete filter */}
                                 <CustomSelect value={gpsFilterTarget} onChange={e => setGpsFilterTarget(e.target.value)} variant="filter" size="xs">

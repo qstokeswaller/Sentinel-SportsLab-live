@@ -58,6 +58,17 @@ export const DatabaseService = {
         if (error) throw error;
     },
 
+    async updateTeam(teamId: string, updates: Partial<{ name: string; sport: string; description: string }>) {
+        const { data, error } = await supabase
+            .from('teams')
+            .update(<any>updates)
+            .eq('id', teamId)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
     async createAthlete(athleteData: { name: string; team_id?: string; gender?: string; age?: number; height_cm?: number; weight_kg?: number; sport?: string; position?: string; goals?: string; notes?: string; image_url?: string }) {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error('User not authenticated');

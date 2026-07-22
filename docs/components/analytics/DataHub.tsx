@@ -691,7 +691,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     next to the heading. The button group has its own internal
                     flex-wrap so buttons themselves still wrap into 2+ rows when they
                     don't all fit horizontally. */}
-                <div className="flex items-start gap-3 px-4 py-3">
+                <div className="flex items-start gap-3 px-3 py-2.5 lg:px-4 lg:py-3">
                     {onBack && (
                         <button
                             onClick={onBack}
@@ -702,7 +702,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                         </button>
                     )}
                     <div className="min-w-0">
-                        <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8]">Reporting Hub</p>
+                        <p className="hidden lg:block text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8]">Reporting Hub</p>
                         <h2 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] leading-tight">Athlete Data Hub</h2>
                         <p className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8] mt-0.5">
                             {filteredCtxs.length} athlete{filteredCtxs.length === 1 ? '' : 's'} · {totalCols} column{totalCols === 1 ? '' : 's'}

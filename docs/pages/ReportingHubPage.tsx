@@ -1071,18 +1071,21 @@ export const ReportingHubPage = () => {
             );
         }
         return (
-            <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between bg-white dark:bg-[#132338] px-5 py-3.5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm">
-                    <div className="flex items-center gap-3">
+            <div className="space-y-2 lg:space-y-5 animate-in fade-in duration-300">
+                {/* On mobile this is a bare "← Title" nav line (no card chrome) sitting
+                    right above the toolbar, so it doesn't waste a whole boxed banner on
+                    just a back button. Desktop keeps the full card. */}
+                <div className="flex items-center justify-between px-1 py-0.5 lg:bg-white lg:dark:bg-[#132338] lg:px-5 lg:py-3.5 lg:rounded-xl lg:border lg:border-slate-200 lg:dark:border-[#243A58] lg:shadow-sm">
+                    <div className="flex items-center gap-2 lg:gap-3">
                         <button
                             onClick={() => { setActiveReport(null); setReportMode('analytics'); }}
-                            className="p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all"
+                            className="p-1.5 lg:p-2 bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg flex items-center justify-center text-slate-500 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] hover:border-slate-300 transition-all shrink-0"
                         >
                             <ArrowLeftIcon size={16} />
                         </button>
                         <div>
-                            <div className="text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Reporting</div>
-                            <h2 className="text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeReport}</h2>
+                            <div className="hidden lg:block text-[10px] font-medium text-slate-700 dark:text-[#E2E8F0] uppercase tracking-wide">Reporting</div>
+                            <h2 className="text-sm lg:text-base font-semibold text-slate-900 dark:text-[#E2E8F0]">{activeReport}</h2>
                         </div>
                     </div>
                 </div>

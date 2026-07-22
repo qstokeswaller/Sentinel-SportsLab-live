@@ -5,12 +5,13 @@ import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon, PlusIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
     ArrowLeftIcon, LayoutListIcon, ClipboardListIcon,
-    ChevronDownIcon, ChevronUpIcon, FileSpreadsheetIcon,
+    ChevronDownIcon, ChevronUpIcon, FileSpreadsheetIcon, PencilIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TrainingRegister from '../components/roster/TrainingRegister';
 import { ConfirmDeleteModal } from '../components/ui/ConfirmDeleteModal';
 import { ImportRosterModal } from '../components/roster/ImportRosterModal';
+import { EditTeamModal } from '../components/roster/EditTeamModal';
 import { AthleteAvatar } from '../components/roster/AthleteAvatar';
 
 type ViewMode     = 'list' | 'grid';
@@ -26,6 +27,7 @@ export const RosterPage = () => {
         setAddAthleteMode,
         handleDeleteAthlete,
         handleDeleteTeam,
+        handleUpdateTeam,
         isLoading,
     } = useAppState();
 
@@ -40,6 +42,7 @@ export const RosterPage = () => {
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
     const [showImport, setShowImport]       = useState(false);
+    const [editingTeam, setEditingTeam]     = useState<{ id: string; name: string; sport?: string } | null>(null);
 
     // Keep newly-loaded teams collapsed on first data load
     React.useEffect(() => {
@@ -268,6 +271,14 @@ export const RosterPage = () => {
                             {/* Coloured top strip */}
                             <div className="h-1.5 bg-gradient-to-r from-indigo-500 to-indigo-400" />
 
+                            {/* Edit team */}
+                            <button
+                                onClick={e => { e.stopPropagation(); setEditingTeam({ id: team.id, name: team.name, sport: team.sport }); }}
+                                className="absolute top-3 right-10 p-1.5 rounded-lg text-slate-200 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-[#1A2D48] transition-all opacity-0 group-hover:opacity-100 reveal-on-touch"
+                                title="Edit team"
+                            >
+                                <PencilIcon size={13} />
+                            </button>
                             {/* Delete team */}
                             <button
                                 onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'team', id: team.id, name: team.name }); }}
@@ -611,6 +622,14 @@ export const RosterPage = () => {
                 loading={deleting}
             />
             {showImport && <ImportRosterModal onClose={() => setShowImport(false)} />}
+
+            {editingTeam && (
+                <EditTeamModal
+                    team={editingTeam}
+                    onSave={async (updates) => { await handleUpdateTeam(editingTeam.id, updates); }}
+                    onClose={() => setEditingTeam(null)}
+                />
+            )}
         </div>
     );
 };

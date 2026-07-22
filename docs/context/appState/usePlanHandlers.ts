@@ -2,6 +2,7 @@
 // All periodization-plan CRUD handlers (plans, phases, blocks, weeks, sessions,
 // targets, events). State stays in the provider; this hook receives it as deps
 // and returns the handlers — the context API is unchanged.
+import { shiftPlanDates } from '../../utils/periodizationUtils';
 
 export const usePlanHandlers = ({
     _uid,
@@ -49,6 +50,15 @@ export const usePlanHandlers = ({
     const handleUpdatePlan = async (planId, updates) => {
         const updated = periodizationPlans.map(p =>
             p.id === planId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+        );
+        await savePlans(updated);
+    };
+
+    // Shift the whole plan — and every phase/block/week/session/event — by N days.
+    const handleShiftPlan = async (planId, days) => {
+        if (!days) return;
+        const updated = periodizationPlans.map(p =>
+            p.id === planId ? { ...shiftPlanDates(p, days), updatedAt: new Date().toISOString() } : p
         );
         await savePlans(updated);
     };
@@ -376,6 +386,7 @@ export const usePlanHandlers = ({
     return {
         handleCreatePlan,
         handleUpdatePlan,
+        handleShiftPlan,
         handleDeletePlan,
         handleAddPlanPhase,
         handleUpdatePlanPhase,

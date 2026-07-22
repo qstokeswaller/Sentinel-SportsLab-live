@@ -4,7 +4,7 @@ import { useAppState } from '../context/AppStateContext';
 import {
     CalendarDays, Plus, ArrowLeft, Trash2,
     Users, User, GanttChart, Clock, Filter, X,
-    LayoutList, Layers2, BarChart3, Target, Crosshair
+    LayoutList, Layers2, BarChart3, Target, Crosshair, Pencil
 } from 'lucide-react';
 import { CreatePlanModal } from '../components/periodization/CreatePlanModal';
 import { TimelineView } from '../components/periodization/TimelineView';
@@ -17,7 +17,8 @@ import { BlocksTab } from '../components/periodization/BlocksTab';
 import { MicrocyclesTab } from '../components/periodization/MicrocyclesTab';
 import { TargetsTab } from '../components/periodization/TargetsTab';
 import { AddTargetModal } from '../components/periodization/AddTargetModal';
-import { formatDateShort } from '../utils/periodizationUtils';
+import { EditPlanModal } from '../components/periodization/EditPlanModal';
+import { formatDateShort, getPlanDisplayStatus } from '../utils/periodizationUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { SkCard, SkBlock, SkText, SkListCards } from '../components/ui/Skeleton';
 
@@ -28,8 +29,9 @@ const PLAN_STATUS_STYLES = {
     draft:    'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]',
     upcoming: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40',
     at_risk:  'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40',
+    completed:'bg-slate-200 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600/50',
 };
-const PLAN_STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk' };
+const PLAN_STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk', completed: 'Completed' };
 
 const TABS: { id: TabId; label: string; icon: React.FC<any> }[] = [
     { id: 'overview',    label: 'Overview',    icon: Target },
@@ -50,9 +52,11 @@ export const PeriodizationPage = () => {
         setIsPlanBlockModalOpenNew, setEditingPlanBlock,
         setIsPlanEventModalOpen, setEditingPlanEvent,
         setIsPlanTargetModalOpen, setEditingPlanTarget,
-        handleDeletePlan, teams, isLoading,
+        handleDeletePlan, handleUpdatePlan, handleShiftPlan, teams, isLoading,
         isSecondaryLoading,
     } = useAppState();
+
+    const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
 
     const activePlan = periodizationPlans.find(p => p.id === activePlanId);
 
@@ -234,8 +238,9 @@ export const PeriodizationPage = () => {
                 ) : (
                     <div data-tour="planner-main" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredPlans.map(plan => {
-                            const statusStyle = PLAN_STATUS_STYLES[plan.status] || PLAN_STATUS_STYLES.draft;
-                            const statusLabel = PLAN_STATUS_LABELS[plan.status] || 'Draft';
+                            const _ds = getPlanDisplayStatus(plan);
+                            const statusStyle = PLAN_STATUS_STYLES[_ds] || PLAN_STATUS_STYLES.draft;
+                            const statusLabel = PLAN_STATUS_LABELS[_ds] || 'Draft';
                             const periodCount = plan.phases.reduce((s, ph) => s + ph.blocks.length, 0);
                             return (
                                 <div key={plan.id}
@@ -303,8 +308,9 @@ export const PeriodizationPage = () => {
     }
 
     // ─── ACTIVE PLAN VIEW ────────────────────────────────────────────
-    const statusStyle = PLAN_STATUS_STYLES[activePlan.status] || PLAN_STATUS_STYLES.draft;
-    const statusLabel = PLAN_STATUS_LABELS[activePlan.status] || 'Draft';
+    const _activeDs = getPlanDisplayStatus(activePlan);
+    const statusStyle = PLAN_STATUS_STYLES[_activeDs] || PLAN_STATUS_STYLES.draft;
+    const statusLabel = PLAN_STATUS_LABELS[_activeDs] || 'Draft';
 
     // Context-sensitive action button per tab
     const renderTabAction = () => {
@@ -380,6 +386,13 @@ export const PeriodizationPage = () => {
                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide border whitespace-nowrap ${statusStyle}`}>
                                 {statusLabel}
                             </span>
+                            <button
+                                onClick={() => setIsEditPlanOpen(true)}
+                                title="Edit plan — name, dates, status, shift"
+                                className="p-1 rounded-md text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-[#1A2D48] transition-colors shrink-0"
+                            >
+                                <Pencil size={12} />
+                            </button>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
                             <span className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-[#CBD5E1]">
@@ -455,6 +468,14 @@ export const PeriodizationPage = () => {
             <AddBlockModal />
             <AddPlanEventModal />
             <AddTargetModal />
+            {isEditPlanOpen && activePlan && (
+                <EditPlanModal
+                    plan={activePlan}
+                    onSave={(updates) => handleUpdatePlan(activePlan.id, updates)}
+                    onShift={(days) => handleShiftPlan(activePlan.id, days)}
+                    onClose={() => setIsEditPlanOpen(false)}
+                />
+            )}
         </div>
     );
 };

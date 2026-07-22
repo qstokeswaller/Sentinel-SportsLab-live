@@ -333,7 +333,7 @@ export interface InjuryReport {
 
 export type PlanViewMode = 'timeline' | 'cards';
 export type PlanEventType = 'competition' | 'testing' | 'custom' | 'travel' | 'recovery' | 'camp' | 'deadline' | 'medical';
-export type PlanStatus = 'active' | 'draft' | 'upcoming' | 'at_risk';
+export type PlanStatus = 'active' | 'draft' | 'upcoming' | 'at_risk' | 'completed';
 export type LoadIntensity = 'Low' | 'Moderate' | 'High' | 'Very High';
 
 export interface PeriodizationPlan {
@@ -344,6 +344,9 @@ export interface PeriodizationPlan {
   startDate: string;
   endDate?: string;
   status?: PlanStatus;
+  /** When not false, a non-draft plan derives its badge from dates
+   *  (Upcoming → Active → Completed). false = the manual status sticks. */
+  autoProgress?: boolean;
   viewMode: PlanViewMode;
   modalities: string[];
   phases: PlanPhase[];

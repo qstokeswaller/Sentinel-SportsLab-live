@@ -1,4 +1,4 @@
-import type { PeriodizationPlan } from '../types/types';
+import type { PeriodizationPlan, PlanStatus } from '../types/types';
 
 /** Generate a unique ID */
 export const uid = (): string => `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -55,6 +55,83 @@ export const calculateTotalWeeks = (plan: PeriodizationPlan): number => {
 
     const weeks = dateToWeekIndex(latestDate, plan.startDate) + 2; // +2 for padding
     return Math.max(weeks, 8); // minimum 8 weeks visible
+};
+
+/** Today as a local YYYY-MM-DD (timezone-safe, matches the stored date format). */
+export const localTodayStr = (): string => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Latest date the plan actually covers: explicit plan.endDate, else the max
+ *  phase/block end date. Used to derive Completed and for the Gantt span. */
+export const getPlanEndDate = (plan: PeriodizationPlan): string | undefined => {
+    if (plan.endDate) return plan.endDate;
+    let latest = '';
+    for (const phase of plan.phases || []) {
+        if (phase.endDate && phase.endDate > latest) latest = phase.endDate;
+        for (const block of phase.blocks || []) {
+            if (block.endDate && block.endDate > latest) latest = block.endDate;
+        }
+    }
+    return latest || undefined;
+};
+
+/** The status to SHOW for a plan. Draft is always manual; a manual override
+ *  (autoProgress === false) shows the stored status; otherwise the badge is
+ *  derived from the dates: Upcoming (before start) → Active → Completed (past end). */
+export const getPlanDisplayStatus = (plan: PeriodizationPlan, todayStr: string = localTodayStr()): PlanStatus => {
+    if (plan.status === 'draft') return 'draft';
+    const derive = (): PlanStatus => {
+        const start = plan.startDate;
+        const end = getPlanEndDate(plan);
+        if (start && todayStr < start) return 'upcoming';
+        if (end && todayStr > end) return 'completed';
+        return 'active';
+    };
+    if (plan.autoProgress === true) return derive();
+    if (plan.autoProgress === false) return (plan.status as PlanStatus) || 'active';
+    // Legacy plans (autoProgress unset): auto-derive only the default active/unset
+    // case so a stale "Active" becomes truthful, but never clobber a deliberately
+    // chosen at_risk / upcoming / completed badge.
+    if (!plan.status || plan.status === 'active') return derive();
+    return plan.status as PlanStatus;
+};
+
+/** Add N days to a YYYY-MM-DD string (local, DST-safe). Negative moves earlier. */
+export const addDaysToDate = (dateStr: string, days: number): string => {
+    if (!dateStr) return dateStr;
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, (m || 1) - 1, d || 1);
+    dt.setDate(dt.getDate() + days);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+
+/** Shift EVERY date in a plan — plan start/end, phases, blocks, weeks, sessions,
+ *  and events — by N days. Returns a new plan (pure). */
+export const shiftPlanDates = (plan: PeriodizationPlan, days: number): PeriodizationPlan => {
+    const sd = (d?: string) => (d ? addDaysToDate(d, days) : d);
+    return {
+        ...plan,
+        startDate: sd(plan.startDate) as string,
+        endDate: sd(plan.endDate),
+        phases: (plan.phases || []).map(ph => ({
+            ...ph,
+            startDate: sd(ph.startDate) as string,
+            endDate: sd(ph.endDate),
+            blocks: (ph.blocks || []).map(b => ({
+                ...b,
+                startDate: sd(b.startDate) as string,
+                endDate: sd(b.endDate),
+                weeks: (b.weeks || []).map(w => ({
+                    ...w,
+                    startDate: sd(w.startDate) as string,
+                    sessions: (w.sessions || []).map(s => ({ ...s, date: sd(s.date) as string })),
+                })),
+            })),
+        })),
+        events: (plan.events || []).map(e => ({ ...e, date: sd(e.date) as string, endDate: sd(e.endDate) })),
+    };
 };
 
 /** Generate month labels for a date range */

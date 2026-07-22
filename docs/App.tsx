@@ -11,6 +11,7 @@ import { TopBar } from './components/layout/TopBar';
 import { TierGate } from './components/tier/TierGate';
 import { CustomSelect } from './components/ui/CustomSelect';
 import { AthleteAvatar } from './components/roster/AthleteAvatar';
+import { SportPicker } from './components/roster/SportPicker';
 // Pages are lazy-loaded so each is its own JS chunk — only downloaded on first visit
 const DashboardPage      = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const RosterPage         = lazy(() => import('./pages/RosterPage').then(m => ({ default: m.RosterPage })));
@@ -200,10 +201,11 @@ const AddAthleteModal = () => {
 
     const [step, setStep] = useState(1);
     const [addingNext, setAddingNext] = useState(false);
+    const [newTeamSport, setNewTeamSport] = useState('');
 
     // Reset to step 1 before paint every time the modal opens — useLayoutEffect prevents flash of step 2
     useLayoutEffect(() => {
-        if (isAddAthleteModalOpen) setStep(1);
+        if (isAddAthleteModalOpen) { setStep(1); setNewTeamSport(''); }
     }, [isAddAthleteModalOpen]);
 
     // Auto-select newest real team when teams list changes (e.g. after creating a team)
@@ -273,10 +275,16 @@ const AddAthleteModal = () => {
 
                     {/* TEAM mode */}
                     {addAthleteMode === 'team' && (
-                        <div className="space-y-1.5">
-                            <label className={LABEL}>Team Name</label>
-                            <input type="text" value={newTeamName} onChange={e => setNewTeamName(e.target.value)}
-                                className={INPUT} placeholder="Enter team name..." />
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className={LABEL}>Team Name</label>
+                                <input type="text" value={newTeamName} onChange={e => setNewTeamName(e.target.value)}
+                                    className={INPUT} placeholder="Enter team name..." autoFocus />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className={LABEL}>Sport</label>
+                                <SportPicker value={newTeamSport} onChange={setNewTeamSport} />
+                            </div>
                         </div>
                     )}
 
@@ -412,7 +420,7 @@ const AddAthleteModal = () => {
                                     </button>
                                 )}
                                 <button
-                                    onClick={addAthleteMode === 'athlete' ? () => handleAddAthlete() : handleAddTeam}
+                                    onClick={addAthleteMode === 'athlete' ? () => handleAddAthlete() : () => handleAddTeam(newTeamSport)}
                                     className="px-5 py-2 bg-slate-900 dark:bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-black dark:hover:bg-indigo-500 transition-colors flex items-center gap-2"
                                 >
                                     <UserPlusIcon size={14} /> {addAthleteMode === 'athlete' ? 'Add Athlete' : 'Create Team'}

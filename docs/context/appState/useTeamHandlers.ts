@@ -78,10 +78,10 @@ export const useTeamHandlers = ({
         }
     };
 
-    const handleAddTeam = async () => {
+    const handleAddTeam = async (sport?: string) => {
         if (!newTeamName.trim()) return;
         try {
-            const createdTeam = await DatabaseService.createTeam(newTeamName, 'Football');
+            const createdTeam = await DatabaseService.createTeam(newTeamName, (sport || '').trim() || 'Football');
             if (createdTeam) setTeams(prev => [...prev, { ...createdTeam, players: [] }]);
             showToast(`Team "${newTeamName}" created`, 'success');
             setIsAddTeamModalOpen(false);
@@ -91,6 +91,20 @@ export const useTeamHandlers = ({
             console.error("Error adding team:", err);
             const msg = err instanceof Error ? err.message : String(err);
             showToast(`Failed to add team: ${msg}`, 'error');
+        }
+    };
+
+    const handleUpdateTeam = async (teamId: string, updates: { name?: string; sport?: string }) => {
+        // Optimistic local update; revert via initData on failure.
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));
+        try {
+            await DatabaseService.updateTeam(teamId, updates);
+            showToast('Team updated', 'success');
+        } catch (err) {
+            console.error('Error updating team:', err);
+            showToast('Failed to update team — please try again', 'error');
+            initData();
+            throw err;
         }
     };
 
@@ -145,6 +159,7 @@ export const useTeamHandlers = ({
         handleOpenPlayerProfile,
         handleAddAthlete,
         handleAddTeam,
+        handleUpdateTeam,
         handleUpdateAthlete,
         handleDeleteAthlete,
         handleDeleteTeam,

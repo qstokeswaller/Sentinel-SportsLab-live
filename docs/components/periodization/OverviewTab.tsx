@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { CalendarDays, Users, User, Clock, Layers, Plus, X, Target, ChevronRight } from 'lucide-react';
-import { formatDateShort, STANDARD_MODALITIES, isStandardModality, getModalityDescription, EVENT_TYPE_COLORS } from '../../utils/periodizationUtils';
+import { formatDateShort, STANDARD_MODALITIES, isStandardModality, getModalityDescription, EVENT_TYPE_COLORS, getPlanDisplayStatus } from '../../utils/periodizationUtils';
 
 function daysBetween(a, b) {
     if (!a || !b) return 0;
@@ -28,8 +28,9 @@ const STATUS_STYLES = {
     draft:    'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]',
     upcoming: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40',
     at_risk:  'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40',
+    completed:'bg-slate-200 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600/50',
 };
-const STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk' };
+const STATUS_LABELS = { active: 'Active', draft: 'Draft', upcoming: 'Upcoming', at_risk: 'At Risk', completed: 'Completed' };
 
 function GanttPopup({ popup, onClose }) {
     if (!popup) return null;
@@ -184,11 +185,14 @@ export const OverviewTab = ({ plan, teams, onSwitchToTab }) => {
                                 </span>
                             </div>
                         </div>
-                        {plan.status && (
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border ${STATUS_STYLES[plan.status] || STATUS_STYLES.draft}`}>
-                                {STATUS_LABELS[plan.status] || plan.status}
-                            </span>
-                        )}
+                        {(() => {
+                            const ds = getPlanDisplayStatus(plan);
+                            return (
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border ${STATUS_STYLES[ds] || STATUS_STYLES.draft}`}>
+                                    {STATUS_LABELS[ds] || ds}
+                                </span>
+                            );
+                        })()}
                     </div>
 
                     {/* Stats row */}

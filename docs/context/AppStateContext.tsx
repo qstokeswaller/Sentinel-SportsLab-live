@@ -1391,6 +1391,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const {
         handleCreatePlan,
         handleUpdatePlan,
+        handleShiftPlan,
         handleDeletePlan,
         handleAddPlanPhase,
         handleUpdatePlanPhase,
@@ -1806,6 +1807,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     const {
         handleAddAthlete,
         handleAddTeam,
+        handleUpdateTeam,
         handleDeleteAthlete,
         handleDeleteTeam,
         handleOpenPlayerProfile,
@@ -2348,6 +2350,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         handleOpenPlayerProfile,
         handleAddAthlete,
         handleAddTeam,
+        handleUpdateTeam,
         handleUpdateAthlete,
         handleDeleteAthlete,
         handleDeleteTeam,
@@ -2404,6 +2407,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setEditingPlanTarget,
         handleCreatePlan,
         handleUpdatePlan,
+        handleShiftPlan,
         handleDeletePlan,
         handleAddPlanPhase,
         handleUpdatePlanPhase,
