@@ -844,7 +844,7 @@ export const WellnessInsightsTab: React.FC<Props> = ({
                         <div className="px-6 py-3 border-b border-slate-50 dark:border-[#1A2D48] bg-slate-50/40 dark:bg-[#0F1C30]/40">
                             <h4 className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#CBD5E1]">Individual Breakdown — {periodLabel}</h4>
                         </div>
-                        <div className="overflow-x-auto">
+                        <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full text-[11px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/30 dark:bg-[#0F1C30]/30">
@@ -893,6 +893,45 @@ export const WellnessInsightsTab: React.FC<Props> = ({
                                     })}
                                 </tbody>
                             </table>
+                        </div>
+                        {/* Mobile cards (<lg) — same data + colour rules as the table above.
+                            Charts/gauges above are untouched (they stay in graph form). */}
+                        <div className="lg:hidden p-3 space-y-2">
+                            {dateResponses.length === 0 ? (
+                                <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">No responses for this day</div>
+                            ) : dateResponses.map(r => {
+                                const a = athletes.find(att => att.id === r.athlete_id);
+                                const resp = r.responses || {};
+                                const avail = resolveAvailability(r);
+                                return (
+                                    <div key={r.id} onClick={() => openAthlete(r.athlete_id)}
+                                        className="p-3 rounded-xl border border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1A2D48]/60 transition-colors">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{a?.name || 'Unknown'}</span>
+                                            <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[9px] uppercase shrink-0 ${
+                                                avail === 'available' ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600' :
+                                                avail === 'modified' ? 'bg-amber-100 text-amber-600' :
+                                                'bg-rose-100 text-rose-600'
+                                            }`}>{avail}</span>
+                                        </div>
+                                        <div className="flex items-center flex-wrap gap-1.5 mt-2">
+                                            {METRIC_DEFS.filter(m => m.type === 'scale').map(m => {
+                                                const v = resp[m.key];
+                                                if (v == null) return null;
+                                                const bg = m.negative
+                                                    ? v <= 3 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : v <= 6 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+                                                    : v >= 7 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : v >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
+                                                return (
+                                                    <span key={m.key} className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold ${bg}`}>{m.label} {v}</span>
+                                                );
+                                            })}
+                                            {resp.sleep_hours != null && (
+                                                <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold ${resp.sleep_hours >= 7 ? 'bg-emerald-100 dark:bg-emerald-900/35 text-emerald-700' : resp.sleep_hours >= 5 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>Sleep {resp.sleep_hours}h</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

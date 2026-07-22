@@ -670,7 +670,7 @@ export const GpsDataReport: React.FC<any> = ({
                                 </div>
                             </div>
                             {/* Grouped columns */}
-                            <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-50">
+                            <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-50 dark:divide-[#1A2D48]">
                                 {mergedColConfig.length === 0 ? (
                                     <p className="text-xs text-slate-400 dark:text-[#CBD5E1] text-center py-8">No columns yet — import a CSV first</p>
                                 ) : COL_GROUPS.map(grp => {
@@ -688,7 +688,7 @@ export const GpsDataReport: React.FC<any> = ({
                                             </div>
                                             <div className="grid grid-cols-2 gap-1.5">
                                                 {grpCols.map(col => (
-                                                    <label key={col.key} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all text-xs ${col.visible !== false ? 'border-indigo-200 dark:border-indigo-600 bg-indigo-50/60 text-slate-700 dark:text-[#E2E8F0]' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#CBD5E1]'}`}>
+                                                    <label key={col.key} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all text-xs ${col.visible !== false ? 'border-indigo-200 dark:border-indigo-600 bg-indigo-50/60 dark:bg-indigo-500/15 text-slate-700 dark:text-[#E2E8F0]' : 'border-slate-200 dark:border-[#243A58] bg-slate-50 dark:bg-[#0F1C30] text-slate-400 dark:text-[#CBD5E1]'}`}>
                                                         <input type="checkbox" checked={col.visible !== false} onChange={() => {
                                                             saveColConfig(mergedColConfig.map(c => c.key === col.key ? { ...c, visible: c.visible === false } : c));
                                                         }} className="rounded accent-indigo-600 shrink-0" />
@@ -707,8 +707,8 @@ export const GpsDataReport: React.FC<any> = ({
 
                 {/* ── Top bar: tabs + status + actions ────────────────────── */}
                 <div className="bg-white dark:bg-[#132338] p-5 rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2D48] p-1 rounded-lg max-w-full overflow-x-auto no-scrollbar">
                             <button onClick={() => setGpsTab('import')} className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${gpsTab === 'import' ? 'bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm' : 'text-slate-500 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0]'}`}>
                                 <span className="flex items-center gap-1.5"><UploadIcon size={12} />Data Import</span>
                             </button>
@@ -765,7 +765,7 @@ export const GpsDataReport: React.FC<any> = ({
 
                                 {/* Session mode: date navigation */}
                                 {gpsFilterDateMode === 'single' && (
-                                    <div className="flex items-center gap-2 flex-1">
+                                    <div className="flex items-center flex-wrap gap-2 flex-1">
                                         <button
                                             disabled={effectiveIdx >= gpsSessionDates.length - 1}
                                             onClick={() => setGpsSpecificDate(gpsSessionDates[effectiveIdx + 1])}
@@ -840,6 +840,10 @@ export const GpsDataReport: React.FC<any> = ({
                     {/* ── TAB: MANUAL ENTRY ── */}
                     {gpsTab === 'manual' && (
                         <div className="space-y-4 pt-1">
+                            <div className="lg:hidden flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-700 dark:text-amber-300">
+                                <AlertCircleIcon size={14} className="shrink-0 mt-0.5" />
+                                <span>Manual GPS entry has many columns per athlete — it's much easier on a larger screen. You can still enter data here; the grid scrolls sideways.</span>
+                            </div>
                             <div className="flex flex-wrap items-end gap-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide pl-1">Team</label>
@@ -1003,7 +1007,7 @@ export const GpsDataReport: React.FC<any> = ({
                                         ))}
                                     </CustomSelect>
                                 </div>
-                                <GpsSessionTable rows={records} cols={cols} colLabel={gpsColLabel} onHideCol={gpsHideCol} />
+                                <GpsSessionTable rows={records} cols={cols} colLabel={gpsColLabel} onHideCol={gpsHideCol} mobileCards />
                             </div>
                         );
                     }

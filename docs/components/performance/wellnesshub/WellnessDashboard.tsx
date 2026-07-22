@@ -610,7 +610,10 @@ export const WellnessDashboard: React.FC<any> = ({
                         </div>
                     </div>
                 )}
-                <div className="overflow-x-auto relative">
+                {/* Desktop rundown table — hidden on mobile (<lg), which shows the
+                    card list below instead. REVERT: drop `hidden lg:block` here and
+                    delete the "MOBILE RUNDOWN CARDS" block further down. */}
+                <div className="hidden lg:block overflow-x-auto relative">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 dark:bg-[#0F1C30] text-[9px] text-slate-400 dark:text-[#CBD5E1] uppercase tracking-[0.15em] font-semibold">
                             <tr>
@@ -837,6 +840,154 @@ export const WellnessDashboard: React.FC<any> = ({
                             })()}
                         </tbody>
                     </table>
+                </div>
+
+                {/* ── MOBILE RUNDOWN CARDS (<lg) ─────────────────────────────
+                    Replaces the horizontal-scroll table on phones/tablet-portrait
+                    with a stacked card list. Mirrors the desktop table's data +
+                    grouping exactly. Fully additive — REVERT by deleting this whole
+                    block and removing `hidden lg:block` from the table div above. */}
+                <div className="lg:hidden">
+                    {(() => {
+                        const playerMap = Object.fromEntries((activeTeam?.players || []).map(p => [p.id, p]));
+                        const sorted = [...rundownDailyFiltered]
+                            .sort((a, b) => (b.session_date || '').localeCompare(a.session_date || '') || (b.submitted_at || '').localeCompare(a.submitted_at || ''));
+                        const visible = sorted.filter(res => {
+                            if (!searchQuery) return true;
+                            return playerMap[res.athlete_id]?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                        });
+
+                        if (visible.length === 0) return (
+                            <div className="px-4 py-12 text-center text-slate-300 dark:text-[#475569] text-xs">
+                                No responses in this date range
+                            </div>
+                        );
+
+                        const allVisibleIds = visible.map(r => r.id);
+                        const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedResponseIds.has(id));
+                        const someSelected = allVisibleIds.some(id => selectedResponseIds.has(id));
+
+                        const groups: { date: string; items: typeof visible }[] = [];
+                        visible.forEach(res => {
+                            const last = groups[groups.length - 1];
+                            if (last && last.date === res.session_date) last.items.push(res);
+                            else groups.push({ date: res.session_date, items: [res] });
+                        });
+
+                        const fmtDate = (dateStr: string) => {
+                            const [y, m, d] = dateStr.split('-').map(Number);
+                            const dt = new Date(y, m - 1, d);
+                            const todayStr = localDateStr(new Date());
+                            const yest = new Date(); yest.setDate(yest.getDate() - 1);
+                            const label = `${dt.toLocaleDateString('en-GB', { weekday: 'short' })} ${dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+                            const badge = dateStr === todayStr ? 'Today' : dateStr === localDateStr(yest) ? 'Yesterday' : null;
+                            return { label, badge };
+                        };
+
+                        return (
+                            <div className="p-3 space-y-4">
+                                {/* Select-all (only in Select Mode) */}
+                                {isSelectMode && (
+                                    <label className="flex items-center gap-2 px-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                                            onChange={e => { if (e.target.checked) setSelectedResponseIds(new Set(allVisibleIds)); else setSelectedResponseIds(new Set()); }}
+                                            className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 w-4 h-4"
+                                        />
+                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-[#CBD5E1]">
+                                            {allSelected ? `All ${allVisibleIds.length} selected` : someSelected ? `${selectedResponseIds.size} selected` : 'Select all'}
+                                        </span>
+                                    </label>
+                                )}
+                                {groups.map(({ date, items }) => {
+                                    const { label, badge } = fmtDate(date);
+                                    return (
+                                        <div key={date} className="space-y-2">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-[#CBD5E1]">{label}</span>
+                                                {badge && <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-800/50">{badge}</span>}
+                                                <span className="ml-auto text-[8px] font-semibold text-slate-300 dark:text-[#475569] uppercase tracking-wide">{items.length} response{items.length !== 1 ? 's' : ''}</span>
+                                            </div>
+                                            {items.map(res => {
+                                                const player = playerMap[res.athlete_id];
+                                                const status = getAthleteStatus(res);
+                                                const injuryCount = res?.injury_report?.areas?.length || 0;
+                                                const resp = res?.responses || {};
+                                                const sleepH = resp.sleep_hours;
+                                                const soreness = resp.soreness;
+                                                const fatigue = resp.fatigue || res?.rpe;
+                                                const avail = resolveAvailability(res);
+                                                const isChecked = selectedResponseIds.has(res.id);
+                                                const complaint = resp.health_complaint;
+                                                const hasInjury = injuryCount > 0 || complaint === 'injury' || complaint === 'both';
+                                                const hasIllness = complaint === 'illness' || complaint === 'both';
+                                                const noMetrics = sleepH == null && !fatigue && soreness == null && !hasInjury && !hasIllness;
+
+                                                const availBadge = avail === 'available'
+                                                    ? <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-100 dark:border-emerald-800/40 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase shrink-0">Full</span>
+                                                    : avail === 'modified'
+                                                    ? <span className="text-amber-600 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase shrink-0">Modified</span>
+                                                    : avail === 'unavailable'
+                                                    ? <span className="text-rose-600 bg-rose-50 dark:bg-rose-700 border border-rose-100 dark:border-rose-900/40 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase shrink-0">Out</span>
+                                                    : null;
+
+                                                const onCardClick = isSelectMode
+                                                    ? () => setSelectedResponseIds(prev => { const n = new Set(prev); if (n.has(res.id)) n.delete(res.id); else n.add(res.id); return n; })
+                                                    : () => { if (player?.id) openAthlete(player.id); };
+
+                                                return (
+                                                    <div
+                                                        key={res.id}
+                                                        onClick={onCardClick}
+                                                        className={`p-3 rounded-xl border cursor-pointer transition-colors ${isChecked ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50' : 'bg-white dark:bg-[#132338] border-slate-100 dark:border-[#1A2D48] hover:bg-slate-50 dark:hover:bg-[#1A2D48]/60'}`}
+                                                    >
+                                                        <div className="flex items-center gap-2.5">
+                                                            {isSelectMode && (
+                                                                <input type="checkbox" checked={isChecked} readOnly className="rounded border-slate-300 dark:border-[#243A58] accent-indigo-500 w-4 h-4 shrink-0 pointer-events-none" />
+                                                            )}
+                                                            {status
+                                                                ? <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />
+                                                                : <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-slate-200 dark:bg-[#243A58]" />}
+                                                            <AthleteAvatar
+                                                                player={player || { name: '?' }}
+                                                                size="sm"
+                                                                className="w-8 h-8 border border-slate-200 dark:border-[#243A58] shrink-0"
+                                                                fallbackClass="bg-indigo-100 dark:bg-indigo-600 text-indigo-600 dark:text-indigo-300"
+                                                                fallbackTextSize="text-[10px]"
+                                                            />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{player?.name || 'Unknown athlete'}</div>
+                                                                {player?.subsection && <div className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-tighter truncate">{player.subsection}</div>}
+                                                            </div>
+                                                            {availBadge}
+                                                            {!isSelectMode && <ChevronRight size={15} className="text-slate-300 dark:text-[#475569] shrink-0" />}
+                                                        </div>
+                                                        {/* Metric chips */}
+                                                        <div className="flex items-center flex-wrap gap-1.5 mt-2.5">
+                                                            {sleepH != null && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${sleepH >= 7 ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : sleepH >= 6 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40'}`}>Sleep {sleepH}h</span>
+                                                            )}
+                                                            {fatigue && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getRpeBadge(fatigue)}`}>Fatigue {fatigue}/10</span>
+                                                            )}
+                                                            {soreness != null && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${soreness >= 7 ? 'bg-rose-50 dark:bg-rose-700 text-rose-700 dark:text-white border-rose-100 dark:border-rose-900/40' : soreness >= 4 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40'}`}>Soreness {soreness}/10</span>
+                                                            )}
+                                                            {hasInjury && <span className="flex items-center gap-1 text-rose-500 text-[10px] font-semibold"><AlertTriangle size={11} />Injury{injuryCount > 0 ? ` (${injuryCount})` : ''}</span>}
+                                                            {hasIllness && <span className="flex items-center gap-1 text-sky-500 text-[10px] font-semibold"><Thermometer size={11} />Illness</span>}
+                                                            {noMetrics && <span className="text-slate-300 dark:text-[#475569] text-[10px]">No metrics logged</span>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })()}
                 </div>
                 </>)}
 
@@ -1229,7 +1380,7 @@ export const WellnessDashboard: React.FC<any> = ({
                                 ))}
                             </div>
                             <div className="w-px h-4 bg-slate-200 dark:bg-[#243A58]" />
-                            {([7, 14, 30] as const).map(d => (
+                            {([3, 7, 14, 30] as const).map(d => (
                                 <button
                                     key={d}
                                     onClick={() => setHeatmapDays(d)}

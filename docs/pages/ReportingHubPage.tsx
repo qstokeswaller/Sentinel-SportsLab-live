@@ -449,10 +449,19 @@ export const ReportingHubPage = () => {
         } else {
             periodStart = trackingDateRange.start;
             periodEnd = trackingDateRange.end;
-            const days = Math.max(1, (new Date(periodEnd).getTime() - new Date(periodStart).getTime()) / 86400000);
-            const ps = new Date(new Date(periodStart).getTime() - days * 86400000);
-            priorStart = ps.toISOString().split('T')[0];
-            priorEnd = new Date(new Date(periodStart).getTime() - 86400000).toISOString().split('T')[0];
+            // A Custom range can be mid-edit or cleared (empty/invalid date). Guard the
+            // prior-period math so `new Date(NaN).toISOString()` can't throw
+            // "RangeError: Invalid time value" and crash the whole page.
+            const startMs = new Date(periodStart).getTime();
+            const endMs = new Date(periodEnd).getTime();
+            if (Number.isFinite(startMs) && Number.isFinite(endMs)) {
+                const days = Math.max(1, (endMs - startMs) / 86400000);
+                priorStart = new Date(startMs - days * 86400000).toISOString().split('T')[0];
+                priorEnd = new Date(startMs - 86400000).toISOString().split('T')[0];
+            } else {
+                priorStart = periodStart;
+                priorEnd = periodEnd;
+            }
         }
         return { periodStart, periodEnd, priorStart, priorEnd };
     }, [trackingPeriod, trackingDateRange]);

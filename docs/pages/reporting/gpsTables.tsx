@@ -2,8 +2,9 @@
 // ReportingHubPage.tsx (restructure step 8, 2026-07-12). Already module-level
 // and self-contained; now importable by the GPS report slices.
 import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, ChevronDown as ChevronDownIcon, EyeOff as EyeOffIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown as ChevronDownIcon, EyeOff as EyeOffIcon, ChevronRight as ChevronRightIcon, ArrowUp as ArrowUpIcon, ArrowDown as ArrowDownIcon } from 'lucide-react';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import BottomSheet from '../../components/ui/BottomSheet';
 
 // ── GPS meta-columns: handled specially, never shown as data columns ──────────
 export const GPS_META_COLS = new Set([
@@ -55,14 +56,111 @@ export const fmtGpsCell = (v: any): string => {
     return isNaN(n) ? String(v) : n.toLocaleString(undefined, { maximumFractionDigits: 1 });
 };
 
+// Mobile (<lg) ranked-athlete cards for a SINGLE GPS session — the Data-Hub
+// pattern: pick one metric, rank athletes by it, tap a card for every metric.
+// GPS values are raw numbers with no universal good/bad thresholds, so cards
+// stay uncoloured (unlike the ACWR/wellness chips).
+const GpsSessionCards: React.FC<{
+    rows: any[];
+    cols: string[];
+    colLabel: (k: string) => string;
+    avgs: Record<string, string>;
+}> = ({ rows, cols, colLabel, avgs }) => {
+    const [metric, setMetric] = useState<string>('');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+    const [drill, setDrill] = useState<any | null>(null);
+    const activeCol = metric && cols.includes(metric) ? metric : (cols[0] || '');
+
+    const ranked = useMemo(() => {
+        const list = rows.map((r: any) => {
+            const num = parseFloat(r.rawColumns?.[activeCol]);
+            return { r, num: isNaN(num) ? null : num };
+        });
+        list.sort((a, b) => {
+            const an = a.r.matchedName || a.r.playerName || '';
+            const bn = b.r.matchedName || b.r.playerName || '';
+            if (a.num == null && b.num == null) return an.localeCompare(bn);
+            if (a.num == null) return 1;
+            if (b.num == null) return -1;
+            return sortDir === 'desc' ? b.num - a.num : a.num - b.num;
+        });
+        return list;
+    }, [rows, activeCol, sortDir]);
+
+    if (cols.length === 0) {
+        return <div className="lg:hidden p-4 text-center text-xs text-slate-400 dark:text-[#CBD5E1]">No metrics to show.</div>;
+    }
+
+    return (
+        <div className="lg:hidden p-3 space-y-2">
+            <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                    <CustomSelect value={activeCol} onChange={e => setMetric(e.target.value)} variant="filter" size="sm" prefixLabel="Metric">
+                        {cols.map(k => <option key={k} value={k}>{colLabel(k)}</option>)}
+                    </CustomSelect>
+                </div>
+                <button onClick={() => setSortDir(d => (d === 'desc' ? 'asc' : 'desc'))}
+                    className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] shrink-0">
+                    {sortDir === 'desc' ? <ArrowDownIcon size={13} /> : <ArrowUpIcon size={13} />}
+                    {sortDir === 'desc' ? 'High' : 'Low'}
+                </button>
+            </div>
+            <div className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8] px-1">
+                Squad avg <span className="font-bold text-slate-600 dark:text-[#CBD5E1]">{avgs[activeCol] ?? '—'}</span>
+            </div>
+            {ranked.map(({ r }, i) => (
+                <button key={r.id} onClick={() => setDrill(r)}
+                    className="w-full flex items-center gap-3 p-3 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-left hover:bg-slate-50 dark:hover:bg-[#1A2D48]/60 transition-colors">
+                    <span className="w-5 text-center text-[11px] font-bold text-slate-400 dark:text-[#475569] tabular-nums shrink-0">{i + 1}</span>
+                    <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">
+                            {r.matchedName || r.playerName}
+                            {r.rawColumns?.['Player number'] && <span className="text-[10px] font-bold text-slate-400 dark:text-[#CBD5E1] ml-1">#{r.rawColumns['Player number']}</span>}
+                        </div>
+                        <span className={`text-[9px] font-bold uppercase tracking-wide ${r.athleteId === 'unknown' ? 'text-rose-400 dark:text-rose-300' : 'text-emerald-500 dark:text-emerald-400'}`}>
+                            {r.athleteId === 'unknown' ? 'unlinked' : 'verified'}
+                        </span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0] tabular-nums shrink-0">{fmtGpsCell(r.rawColumns?.[activeCol])}</span>
+                    <ChevronRightIcon size={14} className="text-slate-300 dark:text-[#475569] shrink-0" />
+                </button>
+            ))}
+
+            <BottomSheet isOpen={!!drill} onClose={() => setDrill(null)}>
+                {drill && (
+                    <div className="px-4 pb-2">
+                        <div className="mb-3">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] truncate">
+                                {drill.matchedName || drill.playerName}
+                                {drill.rawColumns?.['Player number'] && <span className="text-xs font-bold text-slate-400 dark:text-[#CBD5E1] ml-1">#{drill.rawColumns['Player number']}</span>}
+                            </h3>
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                            {cols.map(k => (
+                                <div key={k} className="flex items-center justify-between gap-3 py-2">
+                                    <span className="text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1] min-w-0 truncate">{colLabel(k)}</span>
+                                    <span className="text-xs font-semibold text-slate-800 dark:text-[#E2E8F0] tabular-nums shrink-0">{fmtGpsCell(drill.rawColumns?.[k])}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </BottomSheet>
+        </div>
+    );
+};
+
 interface GpsSessionTableProps {
     rows: any[];
     cols: string[];
     colLabel: (k: string) => string;
     onHideCol: (k: string) => void;
+    /** When true, render ranked athlete cards below <lg (single-session view).
+     *  Omitted for the date-range view, which keeps the frozen-column scroll. */
+    mobileCards?: boolean;
 }
 
-export const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: GpsSessionTableProps) => {
+export const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol, mobileCards }: GpsSessionTableProps) => {
     const avgs: Record<string, string> = {};
     for (const k of cols) {
         const nums = rows.map((r: any) => parseFloat(r.rawColumns?.[k])).filter((n: number) => !isNaN(n));
@@ -70,7 +168,8 @@ export const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: 
     }
     const sorted = [...rows].sort((a: any, b: any) => (a.matchedName || a.playerName).localeCompare(b.matchedName || b.playerName));
     return (
-        <div className="overflow-x-auto">
+        <>
+            <div className={`${mobileCards ? 'hidden lg:block ' : ''}overflow-x-auto`}>
             <table className="w-full" style={{ minWidth: `${Math.max(640, (cols.length + 1) * 110)}px` }}>
                 <thead>
                     <tr className="bg-slate-50 dark:bg-[#0F1C30] border-b border-slate-200 dark:border-[#243A58]">
@@ -122,7 +221,9 @@ export const GpsSessionTable = React.memo(({ rows, cols, colLabel, onHideCol }: 
                     </tr>
                 </tbody>
             </table>
-        </div>
+            </div>
+            {mobileCards && <GpsSessionCards rows={rows} cols={cols} colLabel={colLabel} avgs={avgs} />}
+        </>
     );
 });
 

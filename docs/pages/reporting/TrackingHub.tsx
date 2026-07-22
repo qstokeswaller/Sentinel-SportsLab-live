@@ -46,10 +46,10 @@ export const TrackingHub: React.FC<any> = ({
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 {/* Tab pills */}
-                <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit border border-slate-200 dark:border-[#243A58]">
+                <div className="flex bg-slate-100 dark:bg-[#1A2D48] p-0.5 rounded-lg w-fit max-w-full overflow-x-auto no-scrollbar border border-slate-200 dark:border-[#243A58]">
                     {tabs.map(tab => (
                         <button key={tab} onClick={() => setTrackingTab(tab)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]"}`}>
+                            className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-md text-xs font-medium transition-all ${trackingTab === tab ? "bg-white dark:bg-[#132338] text-slate-900 dark:text-[#E2E8F0] shadow-sm" : "text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]"}`}>
                             {tab}
                         </button>
                     ))}
@@ -119,7 +119,7 @@ export const TrackingHub: React.FC<any> = ({
                             <div className="px-5 py-4 border-b border-slate-100 dark:border-[#1A2D48]">
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-[#E2E8F0]">Exercise Breakdown</h4>
                             </div>
-                            <div className="overflow-x-auto">
+                            <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full min-w-[520px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
@@ -151,6 +151,36 @@ export const TrackingHub: React.FC<any> = ({
                                     )}
                                 </tbody>
                             </table>
+                            </div>
+                            {/* Mobile cards (<lg) — replaces the scroll table */}
+                            <div className="lg:hidden p-3 space-y-2">
+                                {trackingExerciseBreakdown.length === 0 ? (
+                                    <div className="text-center py-8 text-sm text-slate-400 dark:text-[#CBD5E1]">No data for selected range</div>
+                                ) : (
+                                    <>
+                                        {trackingExerciseBreakdown.map(row => (
+                                            <div key={row.exercise} className="p-3 rounded-xl border border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338]">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] min-w-0 truncate">{row.exercise}</span>
+                                                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 shrink-0">{row.tonnage.toLocaleString()} kg</span>
+                                                </div>
+                                                <div className="flex items-center flex-wrap gap-1.5 mt-2">
+                                                    {[`${row.sets} sets`, `${row.reps} reps`, `${row.avgWeight} kg avg`].map(chip => (
+                                                        <span key={chip} className="px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-500 dark:text-[#CBD5E1] bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">{chip}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="p-3 rounded-xl border border-indigo-100 dark:border-indigo-800/40 bg-indigo-50/50 dark:bg-indigo-900/20 flex items-center justify-between gap-2">
+                                            <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300">Total</span>
+                                            <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
+                                                <span>{trackingExerciseBreakdown.reduce((s, r) => s + r.sets, 0)} sets</span>
+                                                <span>{trackingExerciseBreakdown.reduce((s, r) => s + r.reps, 0)} reps</span>
+                                                <span className="text-xs font-black text-indigo-900 dark:text-indigo-200">{trackingExerciseBreakdown.reduce((s, r) => s + r.tonnage, 0).toLocaleString()} kg</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -191,7 +221,7 @@ export const TrackingHub: React.FC<any> = ({
 
                         {/* Table */}
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-slate-200 dark:border-[#243A58] shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
+                            <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full min-w-[520px]">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-[#1A2D48] bg-slate-50/50 dark:bg-[#132338]/40">
@@ -223,6 +253,42 @@ export const TrackingHub: React.FC<any> = ({
                                     )}
                                 </tbody>
                             </table>
+                            </div>
+                            {/* Mobile cards (<lg) — sort chips + ranked athlete cards */}
+                            <div className="lg:hidden">
+                                {trackingSortedTeamStats.length > 0 ? (
+                                    <>
+                                        <div className="flex items-center gap-1.5 px-3 pt-3 flex-wrap">
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-[#CBD5E1] tracking-wide">Sort</span>
+                                            {([['sessions', 'Sessions'], ['totalTonnage', 'Tonnage'], ['avgPerSession', 'Avg'], ['trend', 'Trend']] as const).map(([key, label]) => (
+                                                <button key={key} onClick={() => handleTrackingSort(key)}
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1] bg-white dark:bg-[#132338]">
+                                                    {label} <TrackingSortIcon col={key} />
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="p-3 space-y-2">
+                                            {trackingSortedTeamStats.map((row, i) => (
+                                                <div key={row.id} className="p-3 rounded-xl border border-slate-100 dark:border-[#1A2D48] bg-white dark:bg-[#132338]">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <span className="w-5 text-center text-[11px] font-bold text-slate-400 dark:text-[#475569] tabular-nums shrink-0">{i + 1}</span>
+                                                            <span className="text-xs font-semibold text-slate-700 dark:text-[#E2E8F0] truncate">{row.name}</span>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 shrink-0">{row.totalTonnage.toLocaleString()} kg</span>
+                                                    </div>
+                                                    <div className="flex items-center flex-wrap gap-2 mt-2 text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                                        <span className="px-2 py-0.5 rounded-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">{row.sessions} sessions</span>
+                                                        <span className="px-2 py-0.5 rounded-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#1A2D48]">{row.avgPerSession.toLocaleString()} kg avg</span>
+                                                        <TrackingTrendArrow value={row.trend} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="px-5 py-12 text-center text-sm text-slate-400 dark:text-[#CBD5E1]">Select a team to view tonnage data</div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import {
     UploadIcon, FileTextIcon, Trash2Icon, ExternalLinkIcon,
     CalendarIcon, PlusIcon,
 } from 'lucide-react';
+import { ConfirmDeleteModal } from '../ui/ConfirmDeleteModal';
 
 interface RunningMechanicsDoc {
     id: string;
@@ -24,6 +25,9 @@ export const RunningMechanicsLibrary: React.FC = () => {
     const [title, setTitle] = useState('');
     const [showUpload, setShowUpload] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
+    // Styled in-app delete confirmation (replaces the native window.confirm).
+    const [docToDelete, setDocToDelete] = useState<RunningMechanicsDoc | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Load docs on mount
     useEffect(() => {
@@ -75,15 +79,18 @@ export const RunningMechanicsLibrary: React.FC = () => {
         }
     }, [title, docs, saveDocs]);
 
-    const handleDelete = useCallback(async (doc: RunningMechanicsDoc) => {
-        if (!confirm(`Delete "${doc.title}"?`)) return;
+    const confirmDelete = useCallback(async () => {
+        if (!docToDelete) return;
+        setDeleting(true);
         try {
-            await deletePdf(doc.url);
+            await deletePdf(docToDelete.url);
         } catch (err) {
             console.error('Delete from storage error:', err);
         }
-        await saveDocs(docs.filter(d => d.id !== doc.id));
-    }, [docs, saveDocs]);
+        await saveDocs(docs.filter(d => d.id !== docToDelete.id));
+        setDeleting(false);
+        setDocToDelete(null);
+    }, [docToDelete, docs, saveDocs]);
 
     const formatFileSize = (bytes: number) => {
         if (bytes < 1024) return bytes + ' B';
@@ -178,7 +185,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
                                     <h4 className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                                         {doc.title}
                                     </h4>
-                                    <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400 dark:text-[#CBD5E1] mt-0.5">
                                         <span className="flex items-center gap-1">
                                             <CalendarIcon size={10} />
                                             {formatDate(doc.uploadedAt)}
@@ -197,7 +204,7 @@ export const RunningMechanicsLibrary: React.FC = () => {
                                     <ExternalLinkIcon size={14} />
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(doc)}
+                                    onClick={() => setDocToDelete(doc)}
                                     className="p-2 text-slate-300 hover:text-red-500 transition-colors"
                                     title="Delete"
                                 >
@@ -208,6 +215,15 @@ export const RunningMechanicsLibrary: React.FC = () => {
                     ))}
                 </div>
             )}
+
+            <ConfirmDeleteModal
+                isOpen={!!docToDelete}
+                title="Delete document?"
+                message={docToDelete ? `"${docToDelete.title}" will be permanently removed from your library.` : ''}
+                onConfirm={confirmDelete}
+                onCancel={() => setDocToDelete(null)}
+                loading={deleting}
+            />
         </div>
     );
 };

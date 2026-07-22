@@ -19,10 +19,12 @@ import {
     Shield, ShieldAlert, ArrowLeft as ArrowLeftIcon, GripVertical as GripIcon,
     AlertCircle, X as XIcon, Filter as FilterIcon, Share2 as Share2Icon,
     ArrowUp as ArrowUpIcon, ArrowDown as ArrowDownIcon, RotateCcw as RotateCcwIcon,
-    Copy as CopyIcon, CheckCircle2 as CheckCircle2Icon,
+    Copy as CopyIcon, CheckCircle2 as CheckCircle2Icon, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { useExerciseMap } from '../../hooks/useExerciseMap';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import BottomSheet from '../ui/BottomSheet';
 import { CustomSelect } from '../ui/CustomSelect';
 import { COLUMNS, ColumnDef, DEFAULT_VISIBLE_KEYS, findColumn, ResolveCtx, DataPoint } from './dataHubColumns';
 import { DataHubColumnsModal, ColumnsConfig } from './DataHubColumnsModal';
@@ -145,6 +147,8 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     } = useAppState();
     // Exercise metadata lookup — provides body_parts/categories for per-region tonnage
     const { exerciseFullMap } = useExerciseMap();
+    // <lg the 40-column grid is replaced by a ranked-athletes card view.
+    const isMobile = useIsMobile();
 
     // ── Selection state ──
     const [config, setConfig] = useState<ColumnsConfig>({
@@ -157,6 +161,12 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [modalOpen, setModalOpen] = useState(false);
     const [showLegend, setShowLegend] = useState(false);
+
+    // ── Mobile-only "ranked athletes by one metric" view (<lg). The desktop
+    //    power-grid is hidden below lg and replaced by these cards. ──
+    const [mobileMetricKey, setMobileMetricKey] = useState<string>('acwr');
+    const [mobileSortDir, setMobileSortDir] = useState<'asc' | 'desc'>('desc');
+    const [mobileDrillCtx, setMobileDrillCtx] = useState<any | null>(null);
 
     // ── Display mode ──
     //   • latest    — one column per metric, latest value or as-of snapshotDate
@@ -415,6 +425,36 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
         else { setSortKey(key); setSortDir('asc'); }
     };
+
+    // ── Mobile: whether a column's data source is configured for this athlete's
+    //    team (drives "Not configured" vs em-dash in renderCellValue). ──
+    const colHasConfig = (col: ColumnDef, rc: any) =>
+        col.requiresConfig === 'gps' ? !!rc.ctx.teamConfig?.hasGPS
+        : col.requiresConfig === 'acwr' ? !!rc.ctx.teamConfig?.hasACWR
+        : true;
+
+    // ── Mobile ranked list: resolve one chosen metric per athlete and sort
+    //    numerically. Non-numeric / missing values sink to the bottom (then
+    //    alpha by name). Falls back to the first meaningful visible column. ──
+    const mobileRanked = useMemo(() => {
+        const col = visibleCols.find(c => c.key === mobileMetricKey)
+            || visibleCols.find(c => !['squad', 'position', 'lastCheckin', 'activeInjury'].includes(c.key))
+            || visibleCols[0] || null;
+        if (!col) return { col: null as ColumnDef | null, rows: [] as { rc: any; point: DataPoint; num: number | null }[] };
+        const rows = filteredCtxs.map(rc => {
+            const point = col.resolve(rc.ctx, 0);
+            const raw = point.value;
+            const num = typeof raw === 'number' ? raw : parseFloat(raw);
+            return { rc, point, num: Number.isFinite(num) ? num : null };
+        });
+        rows.sort((a, b) => {
+            if (a.num == null && b.num == null) return String(a.rc.player.name).localeCompare(String(b.rc.player.name));
+            if (a.num == null) return 1;
+            if (b.num == null) return -1;
+            return mobileSortDir === 'desc' ? b.num - a.num : a.num - b.num;
+        });
+        return { col, rows };
+    }, [filteredCtxs, visibleCols, mobileMetricKey, mobileSortDir]);
 
     // ── Last-data resolver for the column-modal display ──
     // For each column, the modal shows the most recent date across the
@@ -694,7 +734,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
                     {/* Latest mode: snapshot date picker (date the table resolves to; blank = today) */}
                     {viewMode === 'latest' && (
-                        <div className="flex items-center gap-1" title="Show data as-of this date. Leave blank for today's most-recent.">
+                        <div className="hidden lg:flex items-center gap-1" title="Show data as-of this date. Leave blank for today's most-recent.">
                             <DatePicker value={snapshotDate} onChange={e => setSnapshotDate(e.target.value)} className="w-36" placeholder="As-of date" />
                             {snapshotDate && (
                                 <button onClick={() => setSnapshotDate('')} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors" title="Clear date"><XIcon size={13} /></button>
@@ -704,7 +744,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
                     {/* Latest mode: precise vs most-recent toggle */}
                     {viewMode === 'latest' && (
-                        <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
+                        <div className="hidden lg:flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
                             {([
                                 { id: 'most_recent', label: 'Most recent', title: 'Show each athlete’s latest value on or before the selected date' },
                                 { id: 'precise',     label: 'Precise',     title: 'Show only data collected exactly on the selected date' },
@@ -723,14 +763,16 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
                     {/* Compare mode: uniform "show last N entries" override */}
                     {viewMode === 'compare' && (
+                        <div className="hidden lg:block">
                         <CustomSelect variant="filter" size="xs" value={String(compareN)} onChange={e => setCompareN(parseInt(e.target.value, 10))} prefixLabel="Last">
                             {[2, 3, 4, 5, 7, 10].map(n => <option key={n} value={n}>{n} entries</option>)}
                         </CustomSelect>
+                        </div>
                     )}
 
                     {/* Snapshots mode: add-snapshot button */}
                     {viewMode === 'snapshots' && (
-                        <div className="relative">
+                        <div className="hidden lg:block relative">
                             <button
                                 onClick={() => setAddSnapshotOpen(o => !o)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-semibold transition-colors shadow-sm"
@@ -780,7 +822,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     )}
 
                     {/* View mode tabs */}
-                    <div className="flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
+                    <div className="hidden lg:flex bg-slate-100 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-lg p-0.5">
                         {([
                             { id: 'latest',    label: 'Latest',    title: 'One row per athlete — latest values (or as-of a chosen date)' },
                             { id: 'compare',   label: 'Compare',   title: 'Split each history column into N sub-columns to compare entries side-by-side' },
@@ -924,8 +966,72 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 )}
             </div>
 
-            {/* ─── Mode dispatch ─── */}
-            {viewMode === 'latest' && (
+            {/* ── MOBILE: ranked-athletes card view (<lg) ─────────────────────
+                Replaces the 40-column power grid on phones. Pick one metric →
+                athletes ranked by it; tap a card for every metric (BottomSheet).
+                REVERT: delete this block + the BottomSheet near the bottom, and
+                remove `!isMobile &&` from the three mode-dispatch blocks below. */}
+            {isMobile && (
+                <div className="flex flex-col gap-3">
+                    {/* Metric selector + sort direction */}
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                            <CustomSelect
+                                variant="filter"
+                                size="sm"
+                                value={mobileRanked.col?.key || ''}
+                                onChange={e => setMobileMetricKey(e.target.value)}
+                                prefixLabel="Metric"
+                            >
+                                {visibleCols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                            </CustomSelect>
+                        </div>
+                        <button
+                            onClick={() => setMobileSortDir(d => (d === 'desc' ? 'asc' : 'desc'))}
+                            className="flex items-center gap-1 px-3 py-2 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-lg text-[11px] font-semibold text-slate-600 dark:text-[#CBD5E1] shrink-0"
+                            title="Toggle sort direction"
+                        >
+                            {mobileSortDir === 'desc' ? <ArrowDownIcon size={13} /> : <ArrowUpIcon size={13} />}
+                            {mobileSortDir === 'desc' ? 'High→Low' : 'Low→High'}
+                        </button>
+                    </div>
+
+                    {/* Ranked athlete cards */}
+                    {mobileRanked.rows.length === 0 ? (
+                        <div className="bg-white dark:bg-[#132338] rounded-xl border border-dashed border-slate-300 dark:border-[#243A58] px-6 py-10 text-center">
+                            <p className="text-[12px] font-semibold text-slate-500 dark:text-[#CBD5E1]">No athletes match</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5">Adjust the search or team filter above.</p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-2">
+                            {mobileRanked.rows.map(({ rc, point }, i) => (
+                                <button
+                                    key={rc.player.id ?? i}
+                                    onClick={() => setMobileDrillCtx(rc)}
+                                    className="flex items-center gap-3 p-3 bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl text-left hover:bg-slate-50 dark:hover:bg-[#1A2D48]/60 transition-colors"
+                                >
+                                    <span className="w-5 text-center text-[11px] font-bold text-slate-400 dark:text-[#475569] shrink-0 tabular-nums">{i + 1}</span>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-xs font-semibold text-slate-900 dark:text-[#E2E8F0] truncate">{rc.player.name}</div>
+                                        {rc.squad && <div className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8] truncate">{rc.squad}</div>}
+                                    </div>
+                                    <div className="shrink-0">
+                                        {mobileRanked.col && renderCellValue(mobileRanked.col, point, { hasConfig: colHasConfig(mobileRanked.col, rc) })}
+                                    </div>
+                                    <ChevronRightIcon size={14} className="text-slate-300 dark:text-[#475569] shrink-0" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] text-center px-4 leading-relaxed">
+                        Tap an athlete to see every metric · the full multi-column grid is available on a larger screen.
+                    </p>
+                </div>
+            )}
+
+            {/* ─── Mode dispatch (desktop tables; mobile uses the card view above) ─── */}
+            {!isMobile && viewMode === 'latest' && (
                 <DataHubTable
                     cols={visibleCols}
                     ctxs={sortedCtxs}
@@ -955,7 +1061,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 />
             )}
 
-            {viewMode === 'compare' && (
+            {!isMobile && viewMode === 'compare' && (
                 <DataHubTable
                     cols={visibleCols}
                     ctxs={sortedCtxs}
@@ -992,7 +1098,7 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 />
             )}
 
-            {viewMode === 'snapshots' && (
+            {!isMobile && viewMode === 'snapshots' && (
                 <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1">
                     {snapshots.length === 0 ? (
                         <div className="bg-white dark:bg-[#132338] rounded-xl border border-dashed border-slate-300 dark:border-[#243A58] px-6 py-10 text-center">
@@ -1213,6 +1319,31 @@ export const DataHub: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                     </div>
                 );
             })()}
+
+            {/* MOBILE: athlete drill-in — every visible metric for one athlete,
+                opened by tapping a ranked card. Reuses renderCellValue so chips
+                match the desktop grid exactly. */}
+            <BottomSheet isOpen={!!mobileDrillCtx} onClose={() => setMobileDrillCtx(null)}>
+                {mobileDrillCtx && (
+                    <div className="px-4 pb-2">
+                        <div className="mb-3">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-[#E2E8F0] truncate">{mobileDrillCtx.player.name}</h3>
+                            {mobileDrillCtx.squad && <p className="text-[10px] font-medium text-slate-400 dark:text-[#94A3B8]">{mobileDrillCtx.squad}</p>}
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-[#1A2D48]">
+                            {visibleCols.map(col => {
+                                const point = col.resolve(mobileDrillCtx.ctx, 0);
+                                return (
+                                    <div key={col.key} className="flex items-center justify-between gap-3 py-2">
+                                        <span className="text-[11px] font-medium text-slate-500 dark:text-[#CBD5E1] min-w-0 truncate">{col.label}</span>
+                                        <span className="shrink-0">{renderCellValue(col, point, { hasConfig: colHasConfig(col, mobileDrillCtx) })}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </BottomSheet>
 
             {/* Selector modal */}
             <DataHubColumnsModal

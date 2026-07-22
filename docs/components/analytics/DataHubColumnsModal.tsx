@@ -167,7 +167,7 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                 {/* Per-column # of dates picker */}
                 {col.supportsHistory && checked && (
                     <div className="flex items-center gap-1 shrink-0">
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Dates</span>
+                        <span className="hidden sm:inline text-[9px] font-bold text-slate-400 dark:text-[#CBD5E1] uppercase tracking-wide">Dates</span>
                         {[1, 2, 3, 4, 5].map(n => (
                             <button
                                 key={n}
@@ -211,15 +211,15 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/40 dark:bg-black/70 backdrop-blur-sm p-6">
-            <div className="bg-white dark:bg-[#132338] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#243A58] w-full max-w-5xl h-[80vh] flex flex-col animate-in zoom-in-95 fade-in duration-150">
+        <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/40 dark:bg-black/70 backdrop-blur-sm p-0 sm:p-6">
+            <div className="bg-white dark:bg-[#132338] rounded-none sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-[#243A58] w-full max-w-5xl h-full sm:h-[80vh] flex flex-col animate-in zoom-in-95 fade-in duration-150">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-[#243A58] shrink-0">
                     <div>
                         <h3 className="text-sm font-bold uppercase tracking-wide text-slate-900 dark:text-[#E2E8F0]">Configure Data Hub Columns</h3>
                         <p className="text-[10px] text-slate-500 dark:text-[#CBD5E1] mt-0.5">
-                            {draftVisible.length} column{draftVisible.length === 1 ? '' : 's'} selected · dates shown beside each column are for selector use only and never appear in the export
+                            {draftVisible.length} column{draftVisible.length === 1 ? '' : 's'} selected<span className="hidden sm:inline"> · dates shown beside each column are for selector use only and never appear in the export</span>
                         </p>
                     </div>
                     <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg text-slate-400 dark:text-[#CBD5E1] hover:text-slate-700 dark:hover:text-[#E2E8F0] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">
@@ -247,11 +247,34 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                     </button>
                 </div>
 
-                {/* Body — left rail + right pane */}
-                <div className="flex-1 min-h-0 flex overflow-hidden">
-                    {/* Left rail — groups */}
+                {/* Body — left rail + right pane. Stacks on mobile: the vertical rail
+                    becomes a wrapping chip bar above the pane. */}
+                <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+                    {/* Mobile group chips (<lg) — replaces the vertical rail */}
                     {!globalSearchResults && (
-                        <div className="w-56 shrink-0 border-r border-slate-200 dark:border-[#243A58] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-[#0F1C30]/40 p-2 space-y-1">
+                        <div className="lg:hidden shrink-0 border-b border-slate-200 dark:border-[#243A58] p-2 flex flex-wrap gap-1.5 bg-slate-50/50 dark:bg-[#0F1C30]/40">
+                            {GROUP_ORDER.map(g => {
+                                const { total, on } = groupCount(g);
+                                const isActive = activeGroup === g;
+                                return (
+                                    <button
+                                        key={g}
+                                        onClick={() => setActiveGroup(g)}
+                                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+                                            isActive
+                                                ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                : 'bg-white dark:bg-[#132338] border-slate-200 dark:border-[#243A58] text-slate-600 dark:text-[#CBD5E1]'
+                                        }`}
+                                    >
+                                        {g} <span className={`ml-0.5 ${isActive ? 'text-indigo-100' : 'text-slate-400 dark:text-[#94A3B8]'}`}>{on}/{total}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {/* Left rail — groups (desktop only) */}
+                    {!globalSearchResults && (
+                        <div className="hidden lg:block w-56 shrink-0 border-r border-slate-200 dark:border-[#243A58] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-[#0F1C30]/40 p-2 space-y-1">
                             {GROUP_ORDER.map(g => {
                                 const { total, on } = groupCount(g);
                                 const isActive = activeGroup === g;
@@ -360,7 +383,7 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                 </div>
 
                 {/* Footer — presets + actions */}
-                <div className="border-t border-slate-200 dark:border-[#243A58] px-5 py-3 shrink-0 flex items-center justify-between gap-3 bg-slate-50 dark:bg-[#0F1C30]/40 rounded-b-2xl">
+                <div className="border-t border-slate-200 dark:border-[#243A58] px-5 py-3 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-[#0F1C30]/40 rounded-b-none sm:rounded-b-2xl">
                     {/* Presets cluster */}
                     <div className="flex items-center gap-2 min-w-0">
                         <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-[#94A3B8] shrink-0">Presets</span>
@@ -394,11 +417,11 @@ export const DataHubColumnsModal: React.FC<Props> = ({ isOpen, onClose, onCommit
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-2">
-                        <button onClick={onClose} className="px-4 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                        <button onClick={onClose} className="flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-[#CBD5E1] border border-slate-200 dark:border-[#243A58] sm:border-0 hover:bg-slate-100 dark:hover:bg-[#1A2D48] transition-colors">Cancel</button>
                         <button
                             onClick={() => { onCommit({ visibleKeys: draftVisible, dateCounts: draftDates }); onClose(); }}
-                            className="px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors"
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors"
                         >
                             Apply
                         </button>

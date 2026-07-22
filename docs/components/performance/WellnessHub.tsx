@@ -145,7 +145,13 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
         })();
         return () => { cancelled = true; };
     }, [viewMode, selectedTeamId, selectedAthleteId]);
-    const [heatmapDays, setHeatmapDays] = useState<number>(7);
+    // Default the heatmap window to 3 days on phones/tablet-portrait (<1024px) so
+    // the athlete×day grid fits without horizontal scroll and the cells stay big
+    // enough to read; desktop keeps the 7-day default. Coaches can still pick any
+    // window (3/7/14/30d) from the selector. Lazy init = one-time at mount.
+    const [heatmapDays, setHeatmapDays] = useState<number>(
+        () => (typeof window !== 'undefined' && window.innerWidth < 1024 ? 3 : 7)
+    );
     const [heatmapAnchor, setHeatmapAnchor] = useState<string>(() => localDateStr());
 
     // Resolve wellnessDateRange to local dateFrom/dateTo
