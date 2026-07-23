@@ -10,6 +10,8 @@ interface BodyMapSelectorProps {
     readOnly?: boolean;
     /** When true: tap toggles selected/deselected only — no severity cycling (severity set separately) */
     selectOnly?: boolean;
+    /** Buttons per row within each group (default 2). Athlete forms use 3 to reduce scroll. */
+    columns?: 2 | 3;
 }
 
 // ── AreaButton defined BEFORE BodyMapSelector to avoid any bundler TDZ ──
@@ -33,7 +35,7 @@ const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOn
             type="button"
             onClick={() => onToggle(area.key)}
             disabled={ro}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl border-2 text-[11px] font-semibold transition-all ${ro ? '' : 'active:scale-95'} ${
+            className={`w-full flex items-center justify-between gap-1 px-2.5 py-2 rounded-xl border-2 text-[11px] font-semibold text-left transition-all ${ro ? '' : 'active:scale-95'} ${
                 isSimpleSelected
                     ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
                     : selected && useSeverity
@@ -42,17 +44,17 @@ const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOn
             } ${ro ? 'cursor-default' : 'cursor-pointer'}`}
             style={sevColor ? { backgroundColor: sevColor, borderColor: sevColor } : undefined}
         >
-            <span className="flex items-center gap-1.5 min-w-0">
+            <span className="flex items-center gap-1.5 min-w-0 flex-1">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
-                <span className="truncate">{area.label}</span>
+                <span className="leading-tight break-words">{area.label}</span>
             </span>
             {selected && useSeverity && (
-                <span className="text-[9px] font-bold opacity-80 ml-1 shrink-0">
+                <span className="text-[9px] font-bold opacity-80 shrink-0">
                     {severityLabelMap[selected.severity]}
                 </span>
             )}
             {isSimpleSelected && (
-                <span className="text-[10px] font-bold opacity-80 ml-1 shrink-0">✓</span>
+                <span className="text-[10px] font-bold opacity-80 shrink-0">✓</span>
             )}
         </button>
     );
@@ -60,7 +62,7 @@ const AreaButton: FC<AreaButtonProps> = memo(({ area, selected, onToggle, readOn
 AreaButton.displayName = 'AreaButton';
 
 // ── Main component ──────────────────────────────────────────────────────
-const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, config, readOnly, selectOnly }) => {
+const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, config, readOnly, selectOnly, columns = 2 }) => {
     const cfg = config ?? DEFAULT_BODY_MAP_CONFIG;
     const maxSeverity = Math.max(...cfg.severityLevels.map(s => s.value));
 
@@ -127,31 +129,56 @@ const BodyMapSelector: React.FC<BodyMapSelectorProps> = ({ value, onChange, conf
     const frontGroups = groupAreas(frontAreas);
     const backGroups = groupAreas(backAreas);
 
-    const renderGroups = (groups: ReturnType<typeof groupAreas>) => (
-        <div className="space-y-3">
-            {groups.map(g => (
-                <div key={g.label}>
-                    {g.label && (
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-[#94A3B8] mb-1.5">{g.label}</p>
-                    )}
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {g.areas.map(area => (
-                            <AreaButton
-                                key={area.key}
-                                area={area}
-                                selected={value.find(v => v.area === area.key)}
-                                onToggle={toggleArea}
-                                readOnly={readOnly}
-                                selectOnlyMode={selectOnly}
-                                severityColorMap={severityColorMap}
-                                severityLabelMap={severityLabelMap}
-                            />
-                        ))}
-                    </div>
-                </div>
-            ))}
-        </div>
+    const renderAreaButton = (area: BodyMapAreaDef) => (
+        <AreaButton
+            key={area.key}
+            area={area}
+            selected={value.find(v => v.area === area.key)}
+            onToggle={toggleArea}
+            readOnly={readOnly}
+            selectOnlyMode={selectOnly}
+            severityColorMap={severityColorMap}
+            severityLabelMap={severityLabelMap}
+        />
     );
+
+    const renderGroups = (groups: ReturnType<typeof groupAreas>) => {
+        // 3-column mode: lay the GROUPS out as side-by-side columns (e.g.
+        // Torso | Arms | Legs) with their buttons stacked underneath — this is
+        // much shorter vertically than stacking the groups on top of each other.
+        if (columns === 3) {
+            // Athlete view: fixed left→right column order Legs · Arms · Torso.
+            const order = ['Legs', 'Arms', 'Torso'];
+            const cols = [...groups].sort((a, b) => order.indexOf(a.label) - order.indexOf(b.label));
+            return (
+                <div className="grid grid-cols-3 gap-2 items-start">
+                    {cols.map(g => (
+                        <div key={g.label} className="space-y-1.5">
+                            {g.label && (
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-[#94A3B8] mb-0.5">{g.label}</p>
+                            )}
+                            {g.areas.map(renderAreaButton)}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        // Default: groups stacked vertically, buttons in a 2-column grid.
+        return (
+            <div className="space-y-3">
+                {groups.map(g => (
+                    <div key={g.label}>
+                        {g.label && (
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-[#94A3B8] mb-1.5">{g.label}</p>
+                        )}
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {g.areas.map(renderAreaButton)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-4">

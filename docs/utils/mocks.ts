@@ -478,39 +478,39 @@ export const DEFAULT_WELLNESS_QUESTIONS = [
 // Body map areas — matches the anatomical image (docs/public/body-map.png)
 // Each area has: key, label, view (front/back), colour matching the image
 export const BODY_MAP_AREAS = [
-    // ── Front ───────────────────────────────────────────────────────────
-    { key: 'head_front',     label: 'Head / Face',              view: 'front', color: '#64748b', group: 'Head & Neck' },
-    { key: 'neck_front',     label: 'Neck (front)',             view: 'front', color: '#94a3b8', group: 'Head & Neck' },
+    // ── Front — grouped Torso / Arms / Legs (top-down) ──────────────────
+    { key: 'head_front',     label: 'Head / Face',              view: 'front', color: '#64748b', group: 'Torso' },
+    { key: 'neck_front',     label: 'Neck',                     view: 'front', color: '#94a3b8', group: 'Torso' },
     { key: 'chest',          label: 'Chest / Pectorals',        view: 'front', color: '#f97316', group: 'Torso' },
     { key: 'ribs',           label: 'Ribs / Side',              view: 'front', color: '#fb923c', group: 'Torso' },
     { key: 'abs',            label: 'Abs / Core',               view: 'front', color: '#22d3ee', group: 'Torso' },
-    { key: 'shoulders',      label: 'Shoulders',                view: 'front', color: '#a855f7', group: 'Arm & Shoulder' },
-    { key: 'biceps',         label: 'Biceps / Upper Arm',       view: 'front', color: '#a855f7', group: 'Arm & Shoulder' },
-    { key: 'elbow_front',    label: 'Elbow (front)',            view: 'front', color: '#a855f7', group: 'Arm & Shoulder' },
-    { key: 'forearms',       label: 'Forearms',                 view: 'front', color: '#a855f7', group: 'Arm & Shoulder' },
-    { key: 'wrist_front',    label: 'Wrist / Hand (front)',     view: 'front', color: '#a855f7', group: 'Arm & Shoulder' },
-    { key: 'hip_flexors',    label: 'Hip Flexors / Groin',      view: 'front', color: '#ec4899', group: 'Hip & Thigh' },
-    { key: 'adductors',      label: 'Adductors / Inner Thigh',  view: 'front', color: '#f472b6', group: 'Hip & Thigh' },
-    { key: 'quads',          label: 'Quadriceps',               view: 'front', color: '#eab308', group: 'Hip & Thigh' },
-    { key: 'it_band',        label: 'IT Band / Outer Thigh',    view: 'front', color: '#f59e0b', group: 'Hip & Thigh' },
-    { key: 'knee',           label: 'Knee (front)',             view: 'front', color: '#3b82f6', group: 'Knee & Lower Leg' },
-    { key: 'shin',           label: 'Shin / Tibialis',          view: 'front', color: '#22c55e', group: 'Knee & Lower Leg' },
-    { key: 'ankle_foot',     label: 'Ankle / Foot',             view: 'front', color: '#3b82f6', group: 'Knee & Lower Leg' },
+    { key: 'shoulders',      label: 'Shoulders',                view: 'front', color: '#a855f7', group: 'Arms' },
+    { key: 'biceps',         label: 'Biceps / Upper Arm',       view: 'front', color: '#a855f7', group: 'Arms' },
+    { key: 'elbow_front',    label: 'Elbow',                    view: 'front', color: '#a855f7', group: 'Arms' },
+    { key: 'forearms',       label: 'Forearms',                 view: 'front', color: '#a855f7', group: 'Arms' },
+    { key: 'wrist_front',    label: 'Wrist / Hand',             view: 'front', color: '#a855f7', group: 'Arms' },
+    { key: 'hip_flexors',    label: 'Hip Flexors / Groin',      view: 'front', color: '#ec4899', group: 'Legs' },
+    { key: 'adductors',      label: 'Adductors / Inner Thigh',  view: 'front', color: '#f472b6', group: 'Legs' },
+    { key: 'quads',          label: 'Quadriceps',               view: 'front', color: '#eab308', group: 'Legs' },
+    { key: 'it_band',        label: 'IT Band / Outer Thigh',    view: 'front', color: '#f59e0b', group: 'Legs' },
+    { key: 'knee',           label: 'Knee',                     view: 'front', color: '#3b82f6', group: 'Legs' },
+    { key: 'shin',           label: 'Shin / Tibialis',          view: 'front', color: '#22c55e', group: 'Legs' },
+    { key: 'ankle_foot',     label: 'Ankle / Foot',             view: 'front', color: '#3b82f6', group: 'Legs' },
 
-    // ── Back ────────────────────────────────────────────────────────────
-    { key: 'head_back',      label: 'Head (back)',              view: 'back',  color: '#64748b', group: 'Head & Neck' },
-    { key: 'neck_back',      label: 'Neck (back)',              view: 'back',  color: '#94a3b8', group: 'Head & Neck' },
-    { key: 'rear_shoulders', label: 'Rear Shoulders / Delts',   view: 'back',  color: '#a855f7', group: 'Upper Back & Arm' },
-    { key: 'upper_back',     label: 'Upper Back / Traps',       view: 'back',  color: '#f97316', group: 'Upper Back & Arm' },
-    { key: 'triceps',        label: 'Triceps',                  view: 'back',  color: '#a855f7', group: 'Upper Back & Arm' },
-    { key: 'elbow_back',     label: 'Elbow (back)',             view: 'back',  color: '#a855f7', group: 'Upper Back & Arm' },
-    { key: 'wrist_back',     label: 'Wrist / Hand (back)',      view: 'back',  color: '#a855f7', group: 'Upper Back & Arm' },
-    { key: 'lower_back',     label: 'Lower Back',               view: 'back',  color: '#a855f7', group: 'Upper Back & Arm' },
-    { key: 'glutes',         label: 'Glutes',                   view: 'back',  color: '#ef4444', group: 'Posterior Leg' },
-    { key: 'hamstrings',     label: 'Hamstrings',               view: 'back',  color: '#ec4899', group: 'Posterior Leg' },
-    { key: 'knee_back',      label: 'Back of Knee',             view: 'back',  color: '#3b82f6', group: 'Posterior Leg' },
-    { key: 'calves',         label: 'Calves / Achilles',        view: 'back',  color: '#22c55e', group: 'Posterior Leg' },
-    { key: 'heel',           label: 'Heel / Plantar',           view: 'back',  color: '#3b82f6', group: 'Posterior Leg' },
+    // ── Back — grouped Torso / Arms / Legs (top-down) ───────────────────
+    { key: 'head_back',      label: 'Head',                     view: 'back',  color: '#64748b', group: 'Torso' },
+    { key: 'neck_back',      label: 'Neck',                     view: 'back',  color: '#94a3b8', group: 'Torso' },
+    { key: 'upper_back',     label: 'Upper Back / Traps',       view: 'back',  color: '#f97316', group: 'Torso' },
+    { key: 'lower_back',     label: 'Lower Back',               view: 'back',  color: '#a855f7', group: 'Torso' },
+    { key: 'rear_shoulders', label: 'Rear Shoulders / Delts',   view: 'back',  color: '#a855f7', group: 'Arms' },
+    { key: 'triceps',        label: 'Triceps',                  view: 'back',  color: '#a855f7', group: 'Arms' },
+    { key: 'elbow_back',     label: 'Elbow',                    view: 'back',  color: '#a855f7', group: 'Arms' },
+    { key: 'wrist_back',     label: 'Wrist / Hand',             view: 'back',  color: '#a855f7', group: 'Arms' },
+    { key: 'glutes',         label: 'Glutes',                   view: 'back',  color: '#ef4444', group: 'Legs' },
+    { key: 'hamstrings',     label: 'Hamstrings',               view: 'back',  color: '#ec4899', group: 'Legs' },
+    { key: 'knee_back',      label: 'Back of Knee',             view: 'back',  color: '#3b82f6', group: 'Legs' },
+    { key: 'calves',         label: 'Calves / Achilles',        view: 'back',  color: '#22c55e', group: 'Legs' },
+    { key: 'heel',           label: 'Heel / Plantar',           view: 'back',  color: '#3b82f6', group: 'Legs' },
 ];
 
 // Default severity levels for body map questions
@@ -522,7 +522,7 @@ export const DEFAULT_SEVERITY_LEVELS: import('../types/types').SeverityLevel[] =
 
 // Default body map config — derived from BODY_MAP_AREAS for backward compat
 export const DEFAULT_BODY_MAP_CONFIG: import('../types/types').BodyMapConfig = {
-    areas: BODY_MAP_AREAS.map(a => ({ key: a.key, label: a.label, view: a.view as 'front' | 'back', color: a.color, hasSeverity: true })),
+    areas: BODY_MAP_AREAS.map(a => ({ key: a.key, label: a.label, view: a.view as 'front' | 'back', color: a.color, hasSeverity: true, group: a.group })),
     severityLevels: DEFAULT_SEVERITY_LEVELS,
     referenceImageUrl: '/body-image.jpeg',
     instructionText: '1. Tap an area to mark it\n2. Tap again to increase severity of injury\n3. Tap a third time to clear',

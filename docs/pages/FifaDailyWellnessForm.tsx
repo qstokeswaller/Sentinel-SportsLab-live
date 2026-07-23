@@ -704,6 +704,7 @@ const FifaDailyWellnessForm: React.FC = () => {
                             onChange={(areas) => setVal('complaint_areas', areas)}
                             config={DEFAULT_BODY_MAP_CONFIG}
                             selectOnly
+                            columns={3}
                         />
                     )}
 

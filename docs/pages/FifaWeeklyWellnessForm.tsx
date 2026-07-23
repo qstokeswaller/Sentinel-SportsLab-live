@@ -14,9 +14,9 @@ import { supabase } from '../lib/supabase';
 import { clearStalePublicFormSession } from '../utils/publicFormSession';
 import { CheckCircle2, AlertCircle, Activity, ChevronRight, ChevronLeft, Send, ShieldAlert } from 'lucide-react';
 import BodyMapSelector from '../components/wellness/BodyMapSelector';
+import { DEFAULT_BODY_MAP_CONFIG } from '../utils/mocks';
 import type { BodyMapConfig } from '../types/types';
 import { useForceLightMode } from '../hooks/useForceLightMode';
-// DEFAULT_BODY_MAP_CONFIG retained in case other components need it, but this form uses FIFA_BODY_MAP_CONFIG
 
 
 // FIFA-aligned body map config — areas match Waldén et al. (2023) Table 4
@@ -100,7 +100,7 @@ const TIME_LOSS_BINS = [
 ];
 
 const WELLNESS_TRENDS = ['Improving', 'Stable', 'Worsening'];
-const STRESS_SOURCES = ['Football / Sport', 'Work / School', 'Personal', 'None'];
+const STRESS_SOURCES = ['Sport', 'Work / School', 'Personal', 'None'];
 
 // ═══════════════════════════════════════════════════════════════════════
 // Steps
@@ -149,6 +149,9 @@ const FifaWeeklyWellnessForm: React.FC = () => {
     const [selectedAthleteId, setSelectedAthleteId] = useState(urlAthleteId || '');
     const [athleteName, setAthleteName] = useState('');
     const [currentStep, setCurrentStep] = useState(0);
+    // Severity sub-flow (deep-check-only path): null = not rating; 0..N-1 = which area
+    const [severityStepIdx, setSeverityStepIdx] = useState<number | null>(null);
+    const [areaSeverities, setAreaSeverities] = useState<Record<string, number>>({});
     // Pre-fill problem_type from daily form if passed via URL
     const [responses, setResponses] = useState<Record<string, any>>(
         preFilledComplaint ? { problem_type: preFilledComplaint } : {}
@@ -209,10 +212,28 @@ const FifaWeeklyWellnessForm: React.FC = () => {
 
     const stepId = visibleSteps[currentStep];
     const totalSteps = visibleSteps.length;
-    const progress = ((currentStep + 1) / totalSteps) * 100;
-    const isLastStep = currentStep === totalSteps - 1;
+
+    // ── Severity sub-flow (matches the daily form) ──────────────────────────
+    // After the body-area step, insert one severity page per selected area so the
+    // deep-check-only path rates severity on the next screen (not on the map).
+    const selectedAreas = (responses.body_areas || []) as { area: string; severity: number }[];
+    const bodyAreaStepIdx = visibleSteps.indexOf('body_area');
+    const severityAreaCount = bodyAreaStepIdx >= 0 ? selectedAreas.length : 0;
+    const totalVirtualSteps = totalSteps + severityAreaCount;
+    const virtualCurrentStep = severityStepIdx !== null
+        ? bodyAreaStepIdx + 1 + severityStepIdx
+        : bodyAreaStepIdx >= 0 && currentStep > bodyAreaStepIdx
+            ? currentStep + severityAreaCount
+            : currentStep;
+    const progress = ((virtualCurrentStep + 1) / Math.max(1, totalVirtualSteps)) * 100;
+    const isLastStep = severityStepIdx === null && currentStep === totalSteps - 1;
+    const areaLabelFor = (key: string) => DEFAULT_BODY_MAP_CONFIG.areas.find(a => a.key === key)?.label || key;
 
     const canContinue = (() => {
+        if (severityStepIdx !== null) {
+            const a = selectedAreas[severityStepIdx];
+            return a ? !!areaSeverities[a.area] : false;
+        }
         if (stepId === 'athlete_select') return !!selectedAthleteId;
         if (stepId === 'intro') return true;
         if (stepId === 'body_area') return (responses.body_areas || []).length > 0;
@@ -224,8 +245,40 @@ const FifaWeeklyWellnessForm: React.FC = () => {
         return responses[stepId] !== undefined && responses[stepId] !== null && responses[stepId] !== '';
     })();
 
-    const handleNext = () => { if (canContinue) { setCurrentStep(prev => Math.min(totalSteps - 1, prev + 1)); window.scrollTo(0, 0); } };
-    const handleBack = () => setCurrentStep(prev => Math.max(0, prev - 1));
+    const handleNext = () => {
+        if (!canContinue) return;
+        // In severity sub-flow: advance to next area, or merge severities and exit
+        if (severityStepIdx !== null) {
+            if (severityStepIdx + 1 < selectedAreas.length) {
+                setSeverityStepIdx(severityStepIdx + 1);
+            } else {
+                const updated = selectedAreas.map(a => ({ ...a, severity: areaSeverities[a.area] ?? a.severity }));
+                setVal('body_areas', updated);
+                setSeverityStepIdx(null);
+                setCurrentStep(prev => Math.min(totalSteps - 1, prev + 1));
+            }
+            window.scrollTo(0, 0);
+            return;
+        }
+        // Leaving body-area with selections → enter the severity sub-flow
+        if (stepId === 'body_area' && selectedAreas.length > 0) {
+            setAreaSeverities({});
+            setSeverityStepIdx(0);
+            window.scrollTo(0, 0);
+            return;
+        }
+        setCurrentStep(prev => Math.min(totalSteps - 1, prev + 1));
+        window.scrollTo(0, 0);
+    };
+    const handleBack = () => {
+        if (severityStepIdx !== null) {
+            if (severityStepIdx > 0) setSeverityStepIdx(severityStepIdx - 1);
+            else setSeverityStepIdx(null);
+            window.scrollTo(0, 0);
+            return;
+        }
+        setCurrentStep(prev => Math.max(0, prev - 1));
+    };
 
     const handleSubmit = async () => {
         if (!athleteId || !teamId) return;
@@ -456,8 +509,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                     <span className="text-[9px] text-slate-400 tracking-wide uppercase">Deep Health Check</span>
                 </div>
                 <div className="px-6 py-2 flex items-center justify-between">
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{sh.heading}</div>
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{currentStep + 1} / {totalSteps}</div>
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{severityStepIdx !== null ? 'Injury Severity' : sh.heading}</div>
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{virtualCurrentStep + 1} / {totalVirtualSteps}</div>
                 </div>
             </header>
 
@@ -466,9 +519,43 @@ const FifaWeeklyWellnessForm: React.FC = () => {
             </div>
 
             <main className="flex-1 overflow-y-auto px-4 pt-4 pb-2 max-w-md mx-auto w-full bg-slate-50">
-                <div key={stepId} className="animate-in fade-in duration-150 bg-slate-50 min-h-full">
-                    <h2 className="text-xl font-bold text-slate-900 leading-tight">{sh.heading}</h2>
-                    <p className="text-slate-500 text-sm font-medium mt-1 mb-3">{sh.instruction}</p>
+                <div key={severityStepIdx !== null ? `sev-${severityStepIdx}` : stepId} className="animate-in fade-in duration-150 bg-slate-50 min-h-full">
+                    <h2 className="text-xl font-bold text-slate-900 leading-tight">{severityStepIdx !== null ? 'Injury Severity' : sh.heading}</h2>
+                    <p className="text-slate-500 text-sm font-medium mt-1 mb-3">
+                        {severityStepIdx !== null && selectedAreas[severityStepIdx]
+                            ? <>How severe is the pain or discomfort in your <strong className="text-slate-700">{areaLabelFor(selectedAreas[severityStepIdx].area)}</strong>?</>
+                            : sh.instruction}
+                    </p>
+
+                    {/* Severity sub-flow — one page per selected area (matches daily form) */}
+                    {severityStepIdx !== null && selectedAreas[severityStepIdx] && (() => {
+                        const currentArea = selectedAreas[severityStepIdx];
+                        const picked = areaSeverities[currentArea.area];
+                        return (
+                            <div>
+                                {severityAreaCount > 1 && (
+                                    <p className="text-[11px] text-slate-400 mb-3 -mt-1 font-medium">Area {severityStepIdx + 1} of {severityAreaCount}</p>
+                                )}
+                                <div className="space-y-3">
+                                    {[
+                                        { value: 1, label: 'Mild', desc: 'Noticeable but not limiting — I can train normally', color: 'bg-amber-400 border-amber-400', unsel: 'bg-amber-50 border-amber-200 text-amber-800' },
+                                        { value: 2, label: 'Moderate', desc: 'Uncomfortable — training may need to be modified', color: 'bg-orange-500 border-orange-500', unsel: 'bg-orange-50 border-orange-200 text-orange-800' },
+                                        { value: 3, label: 'Severe', desc: 'Significant pain — I cannot train or am very limited', color: 'bg-rose-600 border-rose-600', unsel: 'bg-rose-50 border-rose-200 text-rose-800' },
+                                    ].map(opt => {
+                                        const isSelected = picked === opt.value;
+                                        return (
+                                            <button key={opt.value} type="button"
+                                                onClick={() => setAreaSeverities(prev => ({ ...prev, [currentArea.area]: opt.value }))}
+                                                className={`w-full px-4 py-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${isSelected ? `${opt.color} text-white shadow-lg scale-[1.02]` : `${opt.unsel} hover:border-slate-300`}`}>
+                                                <div className="font-bold text-base">{opt.label}</div>
+                                                <div className={`text-xs mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>{opt.desc}</div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* Intro */}
                     {/* Athlete selection (team-wide mode) */}
@@ -597,8 +684,8 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Body area */}
-                    {stepId === 'body_area' && (
+                    {/* Body area — detailed map, select-only (severity rated on next screens) */}
+                    {stepId === 'body_area' && severityStepIdx === null && (
                         <BodyMapSelector
                             value={responses.body_areas || []}
                             onChange={(areas) => {
@@ -607,7 +694,9 @@ const FifaWeeklyWellnessForm: React.FC = () => {
                                 if (areas.length > 0) setVal('body_area', areas[0].area);
                                 else setVal('body_area', '');
                             }}
-                            config={FIFA_BODY_MAP_CONFIG}
+                            config={DEFAULT_BODY_MAP_CONFIG}
+                            selectOnly
+                            columns={3}
                         />
                     )}
 
