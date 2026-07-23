@@ -1,642 +1,692 @@
 import React, { useState, useMemo } from 'react';
 import {
-    FlaskConicalIcon, XIcon, CheckIcon, FileDownIcon, PlusIcon,
-    MonitorIcon
+    FlaskConicalIcon, XIcon, ArrowLeftIcon, InfoIcon,
+    DumbbellIcon, GaugeIcon, LayersIcon, TrendingUpIcon,
+    ZapIcon, ArrowRightLeftIcon, HeartPulseIcon, ActivityIcon, BikeIcon,
 } from 'lucide-react';
-import { useAppState } from '../../context/AppStateContext';
-import SmartTestImport from './SmartTestImport';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { CustomSelect } from '../ui/CustomSelect';
-
-const ONE_RM_EXERCISES = {
-    'Lower Body': [
-        { id: 'back_squat', name: 'Back Squat' },
-        { id: 'front_squat', name: 'Front Squat' },
-        { id: 'trap_bar_deadlift', name: 'Trap Bar Deadlift' },
-        { id: 'leg_press', name: 'Leg Press' }
-    ],
-    'Upper Body Push': [
-        { id: 'bench_press', name: 'Bench Press' },
-        { id: 'overhead_press', name: 'Overhead Press' },
-        { id: 'incline_bench', name: 'Incline Bench' },
-        { id: 'dips_weighted', name: 'Dips (Weighted)' }
-    ],
-    'Upper Body Pull': [
-        { id: 'pullups_weighted', name: 'Pullups (Weighted)' },
-        { id: 'barbell_row', name: 'Barbell Row' },
-        { id: 'lat_pulldown', name: 'Lat Pulldown' }
-    ]
-};
-import { calculateRpmForFan, WATTBIKE_MODELS, WATTBIKE_TABLES } from '../../utils/performanceUtils';
 import WattbikeMapCalculator from './WattbikeMapCalculator';
+import * as Calc from '../../utils/toolkitCalculators';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Sports-Science Toolkit
+//
+// Replaces the old Performance Lab (its tabs — 1RM/DSI/RSI/Nordic/MAP save +
+// import — are now the Testing Hub's job). This is a pure *calculator* surface:
+// fast, athlete-optional, nothing persisted. All maths lives in
+// utils/toolkitCalculators.ts so it can be reasoned about in isolation.
+//
+// Layout: desktop = centred modal with a calculator rail; mobile = full-screen
+// page (grid → calculator, with a back arrow). Every calculator carries a
+// "how to use" note + reference at the bottom.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const PerformanceLab = ({ isOpen, onClose }) => {
-    const {
-        teams, exercises, onSaveMetric, handleSaveMetric, handleDeleteMetric,
-        hamLeft, setHamLeft,
-        hamRight, setHamRight,
-        hamAggregate, setHamAggregate,
-        hamAthleteId, setHamAthleteId,
-        hamAssessmentMode, setHamAssessmentMode,
-        hamBodyWeight, setHamBodyWeight,
-        isHamstringEditMode, setIsHamstringEditMode,
-        showToast,
-        importStaging, setImportStaging,
-        isImportResolverOpen, setIsImportResolverOpen,
-        importStatus, setImportStatus,
-        handleCommitImport,
-        recentDeletions,
-        handleUndoDelete,
-        questionnaires,
-        setQuestionnaires
-    } = useAppState();
+const numInput =
+    'w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20';
+const labelCls =
+    'text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1';
 
-    const [activeTab, setActiveTab] = useState('1rm'); // '1rm', 'dsi', 'rsi', 'map', 'hamstring', 'import', 'wellness'
-    const allAthletes = useMemo(() => teams.flatMap(t => t.players), [teams]);
+const NoteBox = ({ children, reference }: { children: React.ReactNode; reference?: string }) => (
+    <div className="mt-6 p-4 bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-xl">
+        <div className="flex items-center gap-1.5 mb-1.5">
+            <InfoIcon size={12} className="text-indigo-500 dark:text-indigo-300" />
+            <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">How to use</span>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-[#CBD5E1] leading-relaxed">{children}</p>
+        {reference && (
+            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-2 italic">Reference: {reference}</p>
+        )}
+    </div>
+);
 
-    // --- 1RM STATE ---
+const CalcShell = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => (
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div>
+            <h4 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-[#E2E8F0]">{title}</h4>
+            {subtitle && <p className="text-xs text-slate-500 dark:text-[#CBD5E1] mt-0.5">{subtitle}</p>}
+        </div>
+        {children}
+    </div>
+);
+
+// ─── 1RM & %1RM ───────────────────────────────────────────────────────────────
+const OneRmCalc = () => {
     const [weight, setWeight] = useState('');
     const [reps, setReps] = useState('');
-    const [oneRmAthleteId, setOneRmAthleteId] = useState('');
-    const [oneRmExerciseId, setOneRmExerciseId] = useState('');
+    const est = useMemo(() => Calc.estimate1RM(parseFloat(weight), parseFloat(reps)), [weight, reps]);
+    const table = useMemo(() => (est ? Calc.percentTable(est.average) : []), [est]);
 
-    // --- DSI STATE ---
-    const [dsiBallistic, setDsiBallistic] = useState('');
-    const [dsiIsometric, setDsiIsometric] = useState('');
-    const [dsiAthleteId, setDsiAthleteId] = useState('');
+    return (
+        <CalcShell title="1RM & %1RM" subtitle="Estimate one-rep max from a set, then prescribe loads">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelCls}>Load (kg)</label>
+                    <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className={numInput} placeholder="100" />
+                </div>
+                <div>
+                    <label className={labelCls}>Reps</label>
+                    <input type="number" value={reps} onChange={e => setReps(e.target.value)} className={numInput} placeholder="5" />
+                </div>
+            </div>
 
-    // --- RSI STATE ---
-    const [rsiHeight, setRsiHeight] = useState('');
-    const [rsiContactTime, setRsiContactTime] = useState('');
-    const [rsiAthleteId, setRsiAthleteId] = useState('');
+            {est && (
+                <>
+                    <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-center">
+                        <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wide block mb-1">Estimated 1RM (avg of 7 formulas)</span>
+                        <div className="text-5xl font-semibold tracking-tighter text-white">{est.average}<span className="text-xl text-slate-400 ml-1">kg</span></div>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {([['Epley', est.epley], ['Brzycki', est.brzycki], ['Lombardi', est.lombardi], ['Lander', est.lander], ['O’Connor', est.oconnor], ['Mayhew', est.mayhew], ['Wathan', est.wathan]] as [string, number][]).map(([n, v]) => (
+                            <div key={n} className="bg-slate-50 dark:bg-[#0F1C30] border border-slate-100 dark:border-[#243A58] rounded-lg px-2 py-1.5 text-center">
+                                <div className="text-[8px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wide">{n}</div>
+                                <div className="text-sm font-semibold text-slate-700 dark:text-[#E2E8F0]">{isFinite(v) ? v : '—'}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide mb-2">Training Load Table</div>
+                        <div className="rounded-xl border border-slate-100 dark:border-[#243A58] overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-[#0F1C30]">
+                                    <tr>
+                                        <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">% 1RM</th>
+                                        <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Load</th>
+                                        <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">~ Max reps</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {table.map(r => (
+                                        <tr key={r.pct} className="border-t border-slate-50 dark:border-[#1A2D48]">
+                                            <td className="px-4 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-300">{r.pct}%</td>
+                                            <td className="px-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{r.load} kg</td>
+                                            <td className="px-4 py-2 text-xs text-slate-500 dark:text-[#CBD5E1]">{r.reps ?? '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
-    // --- IMPORT STATE ---
-    const [csvContent, setCsvContent] = useState('');
-    const [selectedDsiPreset, setSelectedDsiPreset] = useState('');
+            <NoteBox reference="LeSuer et al. (1997); NSCA training-load chart">
+                Enter a submaximal set (load × reps) to estimate 1RM across seven validated formulas and their average — single-formula estimates carry more error. The load table then prescribes working weights. Most accurate at <strong>2–10 reps</strong>; if you already know a true 1RM, enter it as the load with <strong>1 rep</strong>.
+            </NoteBox>
+        </CalcShell>
+    );
+};
 
-    // --- MAP STATE ---
-    const [mapWatts, setMapWatts] = useState('');
-    const [targetPct, setTargetPct] = useState('100');
-    const [bikeModel, setBikeModel] = useState('Trainer'); // 'Trainer' or 'Pro'
+// ─── RPE → LOAD ───────────────────────────────────────────────────────────────
+const RpeCalc = () => {
+    const [oneRm, setOneRm] = useState('');
+    const [reps, setReps] = useState('');
+    const [rpe, setRpe] = useState('');
+    const res = useMemo(() => Calc.rpeLoad(parseFloat(oneRm), parseFloat(reps), parseFloat(rpe)), [oneRm, reps, rpe]);
 
-    const [saveStatus, setSaveStatus] = useState(null);
+    return (
+        <CalcShell title="RPE → Load" subtitle="Autoregulated working load from a target RPE">
+            <div className="grid grid-cols-3 gap-3">
+                <div>
+                    <label className={labelCls}>1RM (kg)</label>
+                    <input type="number" value={oneRm} onChange={e => setOneRm(e.target.value)} className={numInput} placeholder="140" />
+                </div>
+                <div>
+                    <label className={labelCls}>Reps</label>
+                    <input type="number" value={reps} onChange={e => setReps(e.target.value)} className={numInput} placeholder="5" />
+                </div>
+                <div>
+                    <label className={labelCls}>Target RPE</label>
+                    <input type="number" min="1" max="10" step="0.5" value={rpe} onChange={e => setRpe(e.target.value)} className={numInput} placeholder="8" />
+                </div>
+            </div>
 
-    const showSaveStatus = (status) => {
-        setSaveStatus(status);
-        setTimeout(() => setSaveStatus(null), 3000);
-    };
+            {res && (
+                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center space-y-4">
+                    <div>
+                        <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wide block mb-1">Working Load</span>
+                        <div className="text-5xl font-semibold tracking-tighter">{res.load}<span className="text-xl text-slate-400 ml-1">kg</span></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-800 dark:border-[#243A58]">
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">RIR</span><div className="text-lg font-semibold">{res.rir}</div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">% 1RM</span><div className="text-lg font-semibold text-indigo-400">{res.pct}%</div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Reps to failure</span><div className="text-lg font-semibold">{res.repsToFailure}</div></div>
+                    </div>
+                </div>
+            )}
 
-    // 1RM Calculation
-    const oneRepMax = useMemo(() => {
-        const w = parseFloat(weight);
-        const r = parseFloat(reps);
-        if (!w || !r) return 0;
-        if (r === 1) return w;
-        return Math.round(w * (1 + r / 30));
-    }, [weight, reps]);
+            <NoteBox reference="Zourdos et al. (2016) RIR-based RPE">
+                Converts a target <strong>RPE</strong> (rating of perceived exertion) into the load that lets an athlete hit the prescribed reps with the matching reps-in-reserve (RIR = 10 − RPE). Use it for autoregulated programming when an athlete's day-to-day readiness varies. Built on the Epley relationship, so it stays continuous across rep ranges.
+            </NoteBox>
+        </CalcShell>
+    );
+};
 
-    // DSI Combinations
-    const dsiCombinations = {
-        lower: [
-            { label: 'Gold Standard (Classic)', strength: 'IMTP', ballistic: 'CMJ' },
-            { label: 'Dynamic Performance', strength: 'Heavy Back Squat', ballistic: 'Countermovement Jump' },
-            { label: 'Strength-Deficit', strength: 'Trap Bar Deadlift', ballistic: 'Trap Bar Jump' },
-            { label: 'Unilateral Power', strength: 'Weighted Bulgarian Split Squat', ballistic: 'Jumping Lunges' },
-            { label: 'Posterior Chain', strength: 'Heavy RDL', ballistic: 'Weighted Broad Jump' }
-        ],
-        upper: [
-            { label: 'Standard Upper', strength: 'Iso Bench Press', ballistic: 'Ballistic Bench Throw' },
-            { label: 'Compound Push/Pull', strength: 'Weighted Dip / Close-Grip Bench', ballistic: 'Med Ball Chest Pass' },
-            { label: 'Vertical Focus', strength: 'Weighted Pull-up', ballistic: 'Explosive High Pull-up' }
-        ]
-    };
+// ─── PLATE LOADER ─────────────────────────────────────────────────────────────
+const PlateCalc = () => {
+    const [target, setTarget] = useState('');
+    const [bar, setBar] = useState('20');
+    const res = useMemo(() => Calc.plateBreakdown(parseFloat(target), parseFloat(bar)), [target, bar]);
 
-    const applyDsiPreset = (presetName) => {
-        const all = [...dsiCombinations.lower, ...dsiCombinations.upper];
-        const p = all.find(x => x.label === presetName);
-        if (p) {
-            setSelectedDsiPreset(presetName);
-        }
-    };
+    return (
+        <CalcShell title="Plate Loader" subtitle="Plates per side for a target barbell weight">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelCls}>Target Total (kg)</label>
+                    <input type="number" value={target} onChange={e => setTarget(e.target.value)} className={numInput} placeholder="100" />
+                </div>
+                <div>
+                    <label className={labelCls}>Bar (kg)</label>
+                    <input type="number" value={bar} onChange={e => setBar(e.target.value)} className={numInput} placeholder="20" />
+                </div>
+            </div>
 
-    // DSI Calculation
-    const dsiScore = useMemo(() => {
-        const b = parseFloat(dsiBallistic);
-        const i = parseFloat(dsiIsometric);
-        if (!b || !i) return null;
-        return (b / i).toFixed(2);
-    }, [dsiBallistic, dsiIsometric]);
+            {res && res.perSide.length > 0 && (
+                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white space-y-4">
+                    <div className="text-center">
+                        <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wide block mb-2">Load per side</span>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {res.perSide.map(p => (
+                                <span key={p.plate} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-sm font-semibold">
+                                    {p.count} × {p.plate}kg
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center text-xs text-slate-400">
+                        Loaded total: <strong className="text-white">{res.loadedTotal} kg</strong>
+                        {!res.achievable && <span className="text-amber-400"> · {res.shortfall}kg short of target (not achievable with these plates)</span>}
+                    </div>
+                </div>
+            )}
+            {res && res.perSide.length === 0 && parseFloat(target) > 0 && (
+                <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/30 rounded-xl p-4 text-xs text-amber-700 dark:text-amber-300">
+                    Target is at or below the bar weight — nothing to load.
+                </div>
+            )}
 
-    const dsiCategory = useMemo(() => {
-        if (!dsiScore) return null;
-        if (Number(dsiScore) < 0.60) return { label: 'Ballistic Deficit', color: 'text-orange-500', rec: 'Plyometrics / Power' };
-        if (Number(dsiScore) > 0.80) return { label: 'Strength Deficit', color: 'text-indigo-500', rec: 'Maximal Strength' };
-        return { label: 'Concurrent / Balanced', color: 'text-emerald-500', rec: 'Train Both' };
-    }, [dsiScore]);
+            <NoteBox reference="Standard IPF / Olympic plate set (25 → 1.25 kg)">
+                Shows exactly which plates to put on <strong>each side</strong> to reach a target weight, given the bar. Uses a standard plate set and picks the heaviest plates first. If a target can't be made exactly, it shows the closest achievable load and the shortfall.
+            </NoteBox>
+        </CalcShell>
+    );
+};
 
-    // RSI Calculation
-    const rsiScore = useMemo(() => {
-        const h = parseFloat(rsiHeight);
-        const t = parseFloat(rsiContactTime);
-        if (!h || !t) return null;
-        return (h / t).toFixed(2);
-    }, [rsiHeight, rsiContactTime]);
+// ─── WARM-UP RAMP ─────────────────────────────────────────────────────────────
+const WarmupCalc = () => {
+    const [working, setWorking] = useState('');
+    const [bar, setBar] = useState('20');
+    const ramp = useMemo(() => Calc.warmupRamp(parseFloat(working), parseFloat(bar)), [working, bar]);
 
-    // HAMSTRING Calculation
-    const hamResults = useMemo(() => {
-        const bw = parseFloat(hamBodyWeight);
-        if (hamAssessmentMode === 'split') {
-            const l = parseFloat(hamLeft);
-            const r = parseFloat(hamRight);
-            if (!l || !r) return null;
-            const max = Math.max(l, r);
-            const total = l + r;
-            const avg = total / 2;
-            let relativeStrength = null;
-            const asymmetry = Math.abs(l - r) / max * 100;
-            if (bw && bw > 0) relativeStrength = (avg / bw).toFixed(2);
-            const rs = parseFloat(relativeStrength || 0);
-            let riskText = 'Low Risk';
-            let riskColor = 'text-emerald-500';
-            if (rs > 0 && rs < 3.37) { riskText = 'High Risk'; riskColor = 'text-rose-500'; }
-            else if (rs >= 3.37 && rs < 4.47) { riskText = 'Moderate Risk'; riskColor = 'text-orange-500'; }
-            return { avg, relativeStrength, asymmetry: asymmetry.toFixed(1), riskText, color: riskColor };
-        } else {
-            // Average mode: the entered value IS the average force across both limbs
-            const avgForce = parseFloat(hamAggregate);
-            if (!avgForce) return null;
-            let relativeStrength = null;
-            if (bw && bw > 0) relativeStrength = (avgForce / bw).toFixed(2);
-            const rs = parseFloat(relativeStrength || 0);
-            let riskText = 'Low Risk';
-            let riskColor = 'text-emerald-500';
-            if (rs > 0 && rs < 3.37) { riskText = 'High Risk'; riskColor = 'text-rose-500'; }
-            else if (rs >= 3.37 && rs < 4.47) { riskText = 'Moderate Risk'; riskColor = 'text-orange-500'; }
-            return { total: avgForce, relativeStrength, avg: avgForce, riskText, color: riskColor };
-        }
-    }, [hamAssessmentMode, hamLeft, hamRight, hamAggregate, hamBodyWeight]);
+    return (
+        <CalcShell title="Warm-up Ramp" subtitle="Warm-up sets building to a working weight">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelCls}>Working Weight (kg)</label>
+                    <input type="number" value={working} onChange={e => setWorking(e.target.value)} className={numInput} placeholder="120" />
+                </div>
+                <div>
+                    <label className={labelCls}>Bar (kg)</label>
+                    <input type="number" value={bar} onChange={e => setBar(e.target.value)} className={numInput} placeholder="20" />
+                </div>
+            </div>
 
-    const handleSave = (type) => {
-        let data = null;
-        let athleteId = null;
-        if (type === '1rm') {
-            if (!oneRmAthleteId || !oneRmExerciseId || !oneRepMax) return showSaveStatus('error');
-            athleteId = oneRmAthleteId;
-            const exerciseLabel = Object.values(ONE_RM_EXERCISES).flat().find(e => e.id === oneRmExerciseId)?.name || oneRmExerciseId;
-            data = {
-                type: '1rm',
-                exerciseId: oneRmExerciseId,
-                exerciseLabel,
-                value: oneRepMax,
-                weight: weight,
-                reps: reps
-            };
-        } else if (type === 'dsi') {
-            if (!dsiAthleteId || !dsiScore) return showSaveStatus('error');
-            athleteId = dsiAthleteId;
-            data = { type: 'dsi', value: dsiScore, ballistic: dsiBallistic, isometric: dsiIsometric, category: dsiCategory.label };
-        } else if (type === 'rsi') {
-            if (!rsiAthleteId || !rsiScore) return showSaveStatus('error');
-            athleteId = rsiAthleteId;
-            data = { type: 'rsi', value: rsiScore, height: rsiHeight, contactTime: rsiContactTime };
-        } else if (type === 'hamstring') {
-            if (!hamAthleteId || !hamResults) return showSaveStatus('error');
-            athleteId = hamAthleteId;
-            if (hamAssessmentMode === 'split') {
-                data = {
-                    type: 'hamstring',
-                    mode: 'split',
-                    left: hamLeft,
-                    right: hamRight,
-                    asymmetry: hamResults.asymmetry,
-                    avgForce: hamResults.avg.toFixed(1),
-                    bodyWeight: hamBodyWeight,
-                    relativeStrength: hamResults.relativeStrength,
-                    riskText: hamResults.riskText
-                };
-            } else {
-                data = {
-                    type: 'hamstring',
-                    mode: 'aggregate',
-                    aggregate: hamAggregate,
-                    avgForce: hamResults.avg.toFixed(1),
-                    value: hamResults.avg,
-                    bodyWeight: hamBodyWeight,
-                    relativeStrength: hamResults.relativeStrength,
-                    riskText: hamResults.riskText
-                };
-            }
-        }
-        if (athleteId && data) {
-            handleSaveMetric(athleteId, data);
-            showSaveStatus('success');
-        }
-    };
+            {ramp.length > 0 && (
+                <div className="rounded-xl border border-slate-100 dark:border-[#243A58] overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 dark:bg-[#0F1C30]">
+                            <tr>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Set</th>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Load</th>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Reps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ramp.map((s, i) => (
+                                <tr key={i} className={`border-t border-slate-50 dark:border-[#1A2D48] ${s.pct === 100 ? 'bg-indigo-50/60 dark:bg-indigo-500/10' : ''}`}>
+                                    <td className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-[#CBD5E1]">{s.label}</td>
+                                    <td className="px-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{s.load} kg</td>
+                                    <td className="px-4 py-2 text-xs text-slate-500 dark:text-[#CBD5E1]">{s.reps ?? 'work'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-    const handleImport = () => {
-        if (!csvContent) return;
-        const lines = csvContent.split('\n');
-        const staging = [];
-        lines.forEach((line, idx) => {
-            const parts = line.split(',').map(p => p.trim());
-            if (parts.length < 3) return;
-            const [name, typeRaw, v1, v2] = parts;
-            const type = typeRaw.toLowerCase();
-            let data = null;
-            if (type === 'dsi') {
-                const b = parseFloat(v1), i = parseFloat(v2);
-                if (b && i) {
-                    const score = (b / i).toFixed(2);
-                    let cat = 'Balanced';
-                    if (Number(score) < 0.60) cat = 'Ballistic Deficit';
-                    if (Number(score) > 0.80) cat = 'Strength Deficit';
-                    data = { type: 'dsi', value: score, ballistic: b, isometric: i, category: cat };
-                }
-            } else if (type === 'rsi') {
-                const h = parseFloat(v1), t = parseFloat(v2);
-                if (h && t) data = { type: 'rsi', value: (h / t).toFixed(2), height: h, contactTime: t };
-            } else if (type === '1rm') {
-                if (v1) data = { type: '1rm', value: parseFloat(v1), exerciseLabel: v2 };
-            } else if (type === 'map' || type === 'peak map') {
-                if (v1) data = { type: 'map', value: parseFloat(v1), baseWatts: parseFloat(v1), percentage: '100', bikeModel: 'Pro' };
-            }
-            if (data) {
-                const match = allAthletes.find(p => p.name.toLowerCase() === name.toLowerCase());
-                staging.push({ id: `sim_${idx}`, originalName: name, status: match ? 'matched' : 'conflict', matchedId: match ? match.id : '', matchedName: match ? match.name : '', data: data });
-            }
-        });
-        setImportStaging(staging);
-        setIsImportResolverOpen(true);
-    };
+            <NoteBox>
+                Generates a general-prep warm-up progression (empty bar → 40 / 55 / 70 / 85% → working weight) so an athlete ramps to their working load without under- or over-fatiguing. Adjust to the movement and the individual — heavier or more technical lifts may need extra ramp steps.
+            </NoteBox>
+        </CalcShell>
+    );
+};
 
-    const handlePdfUpload = async (file) => {
-        if (!(window as any).pdfjsLib) return showToast("PDF Library not loaded.");
-        setImportStatus("Scanning PDF... please wait.");
-        const buffer = await file.arrayBuffer();
-        const pdf = await (window as any).pdfjsLib.getDocument(buffer).promise;
-        let extractedText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            const items = content.items.sort((a, b) => {
-                if (Math.abs(a.transform[5] - b.transform[5]) > 5) return b.transform[5] - a.transform[5];
-                return a.transform[4] - b.transform[4];
-            });
-            let lastY = -1;
-            items.forEach(item => {
-                if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 10) extractedText += "\n";
-                extractedText += item.str + "  ";
-                lastY = item.transform[5];
-            });
-            extractedText += "\n";
-        }
-        setCsvContent(prev => prev + "\n" + extractedText);
-        setImportStatus("PDF Scanned! Please review and click Process.");
-    };
+// ─── MAS / ASR ────────────────────────────────────────────────────────────────
+const MasCalc = () => {
+    const [mode, setMode] = useState<'direct' | 'trial'>('direct');
+    const [mas, setMas] = useState('');
+    const [dist, setDist] = useState('');
+    const [time, setTime] = useState('');
+    const [pct, setPct] = useState('100');
+    const [work, setWork] = useState('');
+    const [mss, setMss] = useState('');
+
+    const masValue = useMemo(() => {
+        if (mode === 'direct') return parseFloat(mas) || 0;
+        return Calc.masFromTrial(parseFloat(dist), parseFloat(time)) || 0;
+    }, [mode, mas, dist, time]);
+
+    const res = useMemo(
+        () => Calc.masPrescription(masValue, parseFloat(pct), parseFloat(work) || undefined, parseFloat(mss) || undefined),
+        [masValue, pct, work, mss]
+    );
+
+    const refTable = useMemo(
+        () => (masValue > 0 ? [90, 100, 110, 120].map(p => ({ p, r: Calc.masPrescription(masValue, p) })) : []),
+        [masValue]
+    );
+
+    return (
+        <CalcShell title="MAS / ASR" subtitle="Turn a MAS test into running pace & interval distances">
+            <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
+                {(['direct', 'trial'] as const).map(m => (
+                    <button key={m} onClick={() => setMode(m)} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${mode === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
+                        {m === 'direct' ? 'Enter MAS' : 'From Time-Trial'}
+                    </button>
+                ))}
+            </div>
+
+            {mode === 'direct' ? (
+                <div>
+                    <label className={labelCls}>MAS (m/s)</label>
+                    <input type="number" step="0.1" value={mas} onChange={e => setMas(e.target.value)} className={numInput} placeholder="4.2" />
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className={labelCls}>Distance (m)</label>
+                        <input type="number" value={dist} onChange={e => setDist(e.target.value)} className={numInput} placeholder="1500" />
+                    </div>
+                    <div>
+                        <label className={labelCls}>Time (s)</label>
+                        <input type="number" value={time} onChange={e => setTime(e.target.value)} className={numInput} placeholder="360" />
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-3 gap-3">
+                <div>
+                    <label className={labelCls}>Target % MAS</label>
+                    <input type="number" value={pct} onChange={e => setPct(e.target.value)} className={numInput} placeholder="100" />
+                </div>
+                <div>
+                    <label className={labelCls}>Work (s)</label>
+                    <input type="number" value={work} onChange={e => setWork(e.target.value)} className={numInput} placeholder="15" />
+                </div>
+                <div>
+                    <label className={labelCls}>MSS (m/s) <span className="text-slate-300 dark:text-[#475569] normal-case">opt.</span></label>
+                    <input type="number" step="0.1" value={mss} onChange={e => setMss(e.target.value)} className={numInput} placeholder="9.0" />
+                </div>
+            </div>
+
+            {res && masValue > 0 && (
+                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Speed</span><div className="text-xl font-semibold">{res.speedMs}<span className="text-xs text-slate-400"> m/s</span></div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Speed</span><div className="text-xl font-semibold">{res.speedKmh}<span className="text-xs text-slate-400"> km/h</span></div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Pace /km</span><div className="text-xl font-semibold text-indigo-400">{res.pacePerKm ?? '—'}</div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Distance</span><div className="text-xl font-semibold text-emerald-400">{res.distanceM != null ? `${res.distanceM} m` : '—'}</div></div>
+                    </div>
+                    {res.asr != null && (
+                        <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center text-xs text-slate-400">
+                            ASR (MSS − MAS): <strong className="text-white">{res.asr} m/s</strong>
+                            {res.pctASR != null && <span> · this rep sits at <strong className="text-white">{res.pctASR}% ASR</strong></span>}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {refTable.length > 0 && (
+                <div className="rounded-xl border border-slate-100 dark:border-[#243A58] overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 dark:bg-[#0F1C30]">
+                            <tr>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">% MAS</th>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">km/h</th>
+                                <th className="px-4 py-2 text-[9px] font-semibold uppercase text-slate-400 tracking-wide">Pace /km</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {refTable.map(({ p, r }) => (
+                                <tr key={p} className="border-t border-slate-50 dark:border-[#1A2D48]">
+                                    <td className="px-4 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-300">{p}%</td>
+                                    <td className="px-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#E2E8F0]">{r?.speedKmh}</td>
+                                    <td className="px-4 py-2 text-xs text-slate-500 dark:text-[#CBD5E1]">{r?.pacePerKm ?? '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <NoteBox reference="Baker (2011); Buchheit & Laursen (2013)">
+                <strong>MAS</strong> (maximal aerobic speed) is the lowest speed that elicits VO₂max — derive it from a max time-trial (distance ÷ time, e.g. a 1200–1500 m run) or a field test. Set a <strong>% MAS</strong> to get the running speed, pace, and the distance to cover in a work interval — the running equivalent of the Wattbike MAP → RPM prescription. Add <strong>MSS</strong> (max sprint speed) to get <strong>ASR</strong> for individualising supramaximal (&gt;100% MAS) intervals.
+            </NoteBox>
+        </CalcShell>
+    );
+};
+
+// ─── PACE CONVERTER ───────────────────────────────────────────────────────────
+const PaceCalc = () => {
+    const [value, setValue] = useState('');
+    const [unit, setUnit] = useState<Calc.SpeedUnit>('kmh');
+    const res = useMemo(() => Calc.convertSpeed(value, unit), [value, unit]);
+    const isPace = unit === 'pace_km' || unit === 'pace_mi';
+
+    return (
+        <CalcShell title="Pace Converter" subtitle="m/s · km/h · mph · pace per km / mile">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelCls}>Value</label>
+                    <input
+                        type={isPace ? 'text' : 'number'}
+                        value={value}
+                        onChange={e => setValue(e.target.value)}
+                        className={numInput}
+                        placeholder={isPace ? '4:00' : '15'}
+                    />
+                </div>
+                <div>
+                    <label className={labelCls}>Unit</label>
+                    <CustomSelect value={unit} onChange={(e: any) => setUnit(e.target.value)} variant="form" size="sm">
+                        <option value="kmh">km/h</option>
+                        <option value="ms">m/s</option>
+                        <option value="mph">mph</option>
+                        <option value="pace_km">Pace (min/km)</option>
+                        <option value="pace_mi">Pace (min/mile)</option>
+                    </CustomSelect>
+                </div>
+            </div>
+
+            {res && (
+                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+                    <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">m/s</span><div className="text-lg font-semibold">{res.ms}</div></div>
+                    <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">km/h</span><div className="text-lg font-semibold">{res.kmh}</div></div>
+                    <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">mph</span><div className="text-lg font-semibold">{res.mph}</div></div>
+                    <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">/km</span><div className="text-lg font-semibold text-indigo-400">{res.paceKm ?? '—'}</div></div>
+                    <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">/mile</span><div className="text-lg font-semibold text-indigo-400">{res.paceMi ?? '—'}</div></div>
+                </div>
+            )}
+
+            <NoteBox>
+                Convert any running speed or pace into every other unit. Enter pace as <strong>m:ss</strong> (e.g. 4:00). Handy for translating GPS speeds, treadmill settings and MAS prescriptions into the units your athletes actually read.
+            </NoteBox>
+        </CalcShell>
+    );
+};
+
+// ─── HR ZONES ─────────────────────────────────────────────────────────────────
+const HrZonesCalc = () => {
+    const [age, setAge] = useState('');
+    const [manualMax, setManualMax] = useState('');
+    const [rest, setRest] = useState('');
+    const [method, setMethod] = useState<'max' | 'karvonen'>('max');
+
+    const hrMax = useMemo(() => {
+        if (manualMax) return parseFloat(manualMax);
+        if (age) return Calc.tanakaHrMax(parseFloat(age));
+        return 0;
+    }, [age, manualMax]);
+
+    const zones = useMemo(
+        () => Calc.hrZones(hrMax, method, parseFloat(rest) || 60),
+        [hrMax, method, rest]
+    );
+
+    const zoneColors = ['text-sky-400', 'text-emerald-400', 'text-amber-400', 'text-orange-400', 'text-rose-400'];
+
+    return (
+        <CalcShell title="HR Zones" subtitle="Five training zones from max HR or heart-rate reserve">
+            <div className="grid grid-cols-3 gap-3">
+                <div>
+                    <label className={labelCls}>Age</label>
+                    <input type="number" value={age} onChange={e => setAge(e.target.value)} className={numInput} placeholder="22" />
+                </div>
+                <div>
+                    <label className={labelCls}>Max HR <span className="text-slate-300 dark:text-[#475569] normal-case">opt.</span></label>
+                    <input type="number" value={manualMax} onChange={e => setManualMax(e.target.value)} className={numInput} placeholder="auto" />
+                </div>
+                <div>
+                    <label className={labelCls}>Rest HR <span className="text-slate-300 dark:text-[#475569] normal-case">opt.</span></label>
+                    <input type="number" value={rest} onChange={e => setRest(e.target.value)} className={numInput} placeholder="60" />
+                </div>
+            </div>
+
+            <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
+                {([['max', '% Max HR'], ['karvonen', 'Karvonen (HRR)']] as const).map(([m, lbl]) => (
+                    <button key={m} onClick={() => setMethod(m)} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${method === m ? 'bg-white dark:bg-[#1A2D48] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1]'}`}>
+                        {lbl}
+                    </button>
+                ))}
+            </div>
+
+            {hrMax > 0 && (
+                <>
+                    <div className="text-center text-xs text-slate-500 dark:text-[#CBD5E1]">
+                        Max HR: <strong className="text-slate-800 dark:text-[#E2E8F0]">{hrMax} bpm</strong>
+                        {method === 'karvonen' && <span> · Rest HR: <strong className="text-slate-800 dark:text-[#E2E8F0]">{parseFloat(rest) || 60} bpm</strong></span>}
+                    </div>
+                    <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-4 space-y-2">
+                        {zones.slice().reverse().map(z => (
+                            <div key={z.zone} className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-slate-300">
+                                    <span className={`font-bold ${zoneColors[z.zone - 1]}`}>Z{z.zone}</span> · {z.name} <span className="text-slate-500">({z.lowPct}–{z.highPct}%)</span>
+                                </span>
+                                <span className={`text-sm font-semibold ${zoneColors[z.zone - 1]}`}>{z.low}–{z.high} bpm</span>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            <NoteBox reference="Tanaka et al. (2001); Karvonen (1957)">
+                Builds five HR training zones. Max HR is estimated from age (Tanaka: 208 − 0.7 × age) unless you enter a measured value. Choose <strong>% Max HR</strong> for a simple split, or <strong>Karvonen</strong> (heart-rate reserve) for a more individualised range — it needs a resting HR. Use when writing HR-based conditioning.
+            </NoteBox>
+        </CalcShell>
+    );
+};
+
+// ─── MATURITY OFFSET (PHV) ────────────────────────────────────────────────────
+const MaturityCalc = () => {
+    const [sex, setSex] = useState<'male' | 'female'>('male');
+    const [age, setAge] = useState('');
+    const [height, setHeight] = useState('');
+    const [sitting, setSitting] = useState('');
+    const [weight, setWeight] = useState('');
+
+    const res = useMemo(() => Calc.maturityOffset({
+        sex, ageYears: parseFloat(age), heightCm: parseFloat(height),
+        sittingHeightCm: parseFloat(sitting), weightKg: parseFloat(weight),
+    }), [sex, age, height, sitting, weight]);
+
+    const tone = res?.statusTone === 'pre' ? 'text-sky-400' : res?.statusTone === 'post' ? 'text-emerald-400' : 'text-amber-400';
+
+    return (
+        <CalcShell title="Maturity Offset (PHV)" subtitle="Predicted years from peak height velocity — youth athletes">
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label className={labelCls}>Sex</label>
+                    <CustomSelect value={sex} onChange={(e: any) => setSex(e.target.value)} variant="form" size="sm">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </CustomSelect>
+                </div>
+                <div>
+                    <label className={labelCls}>Age (yrs, decimal)</label>
+                    <input type="number" step="0.1" value={age} onChange={e => setAge(e.target.value)} className={numInput} placeholder="13.4" />
+                </div>
+                <div>
+                    <label className={labelCls}>Standing Height (cm)</label>
+                    <input type="number" value={height} onChange={e => setHeight(e.target.value)} className={numInput} placeholder="165" />
+                </div>
+                <div>
+                    <label className={labelCls}>Sitting Height (cm)</label>
+                    <input type="number" value={sitting} onChange={e => setSitting(e.target.value)} className={numInput} placeholder="85" />
+                </div>
+                <div className="col-span-2">
+                    <label className={labelCls}>Body Mass (kg)</label>
+                    <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className={numInput} placeholder="52" />
+                </div>
+            </div>
+
+            {res && (
+                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white space-y-4">
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Maturity Offset</span><div className="text-xl font-semibold">{res.maturityOffset > 0 ? '+' : ''}{res.maturityOffset} <span className="text-xs text-slate-400">yrs</span></div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Age at PHV</span><div className="text-xl font-semibold text-indigo-400">{res.aphv}</div></div>
+                        <div><span className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block">Leg Length</span><div className="text-xl font-semibold">{res.legLengthCm} <span className="text-xs text-slate-400">cm</span></div></div>
+                    </div>
+                    <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center">
+                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 ${tone}`}>{res.status}</span>
+                    </div>
+                </div>
+            )}
+
+            <NoteBox reference="Mirwald et al. (2002)">
+                Predicts <strong>maturity offset</strong> — years before/after peak height velocity (PHV) — from age, standing &amp; sitting height and mass, and the predicted age at PHV. Use it to interpret youth testing (a bigger, earlier-maturing athlete isn't necessarily more talented) and to manage growth-related injury load. Most valid near PHV; less accurate at the extremes and outside ~8–16 yrs.
+            </NoteBox>
+        </CalcShell>
+    );
+};
+
+// ─── REGISTRY ─────────────────────────────────────────────────────────────────
+interface CalcDef { id: string; group: string; name: string; icon: any; blurb: string; launch?: boolean; }
+const CALCS: CalcDef[] = [
+    { id: 'onerm', group: 'Strength & Power', name: '1RM & %1RM', icon: DumbbellIcon, blurb: 'Estimate 1RM and build a load table' },
+    { id: 'rpe', group: 'Strength & Power', name: 'RPE → Load', icon: GaugeIcon, blurb: 'Autoregulated load from a target RPE' },
+    { id: 'plate', group: 'Strength & Power', name: 'Plate Loader', icon: LayersIcon, blurb: 'Plates per side for a target weight' },
+    { id: 'warmup', group: 'Strength & Power', name: 'Warm-up Ramp', icon: TrendingUpIcon, blurb: 'Warm-up sets to a working weight' },
+    { id: 'mas', group: 'Conditioning', name: 'MAS / ASR', icon: ZapIcon, blurb: 'Running pace & interval distances' },
+    { id: 'pace', group: 'Conditioning', name: 'Pace Converter', icon: ArrowRightLeftIcon, blurb: 'm/s · km/h · mph · pace' },
+    { id: 'hr', group: 'Conditioning', name: 'HR Zones', icon: HeartPulseIcon, blurb: '5 zones (max-HR or Karvonen)' },
+    { id: 'map', group: 'Conditioning', name: 'MAP → RPM (Wattbike)', icon: BikeIcon, blurb: 'Wattbike MAP prescription & fan/RPM' },
+    { id: 'maturity', group: 'Profiling', name: 'Maturity Offset (PHV)', icon: ActivityIcon, blurb: 'Years from peak height velocity' },
+];
+const GROUPS = ['Strength & Power', 'Conditioning', 'Profiling'];
+
+const renderCalc = (id: string) => {
+    switch (id) {
+        case 'onerm': return <OneRmCalc />;
+        case 'rpe': return <RpeCalc />;
+        case 'plate': return <PlateCalc />;
+        case 'warmup': return <WarmupCalc />;
+        case 'mas': return <MasCalc />;
+        case 'pace': return <PaceCalc />;
+        case 'hr': return <HrZonesCalc />;
+        case 'maturity': return <MaturityCalc />;
+        case 'map': return <WattbikeMapCalculator inline />;
+        default: return null;
+    }
+};
+
+// ─── SHELL ────────────────────────────────────────────────────────────────────
+const PerformanceLab = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    const isMobile = useIsMobile();
+    // Desktop opens straight into the first calculator; mobile lands on the grid.
+    const [activeId, setActiveId] = useState<string | null>(() =>
+        (typeof window !== 'undefined' && window.innerWidth < 1024) ? null : 'onerm'
+    );
 
     if (!isOpen) return null;
 
+    const openCalc = (c: CalcDef) => setActiveId(c.id);
+
+    const activeDef = CALCS.find(c => c.id === activeId) || null;
+
+    const Header = (
+        <div className="px-6 py-3 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between bg-white dark:bg-[#132338] shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+                {isMobile && activeDef && (
+                    <button onClick={() => setActiveId(null)} aria-label="Back" className="p-2 -ml-2 rounded-full text-slate-400 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#1A2D48]">
+                        <ArrowLeftIcon size={18} />
+                    </button>
+                )}
+                <FlaskConicalIcon size={22} className="text-indigo-600 dark:text-indigo-300 shrink-0" />
+                <div className="min-w-0">
+                    <h3 className="text-lg font-semibold uppercase tracking-tight text-slate-900 dark:text-[#E2E8F0] leading-none truncate">Toolkit</h3>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5">Sports-Science Calculators</p>
+                </div>
+            </div>
+            <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 dark:text-[#94A3B8] transition-colors shrink-0"><XIcon size={20} /></button>
+        </div>
+    );
+
+    // Grid of calculator cards (mobile landing + used when nothing selected).
+    const Grid = (
+        <div className="p-5 space-y-6">
+            {GROUPS.map(g => (
+                <div key={g}>
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider mb-2">{g}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {CALCS.filter(c => c.group === g).map(c => (
+                            <button key={c.id} onClick={() => openCalc(c)} className="group text-left bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl p-4 shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all">
+                                <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500 dark:group-hover:text-white flex items-center justify-center mb-2 transition-all">
+                                    <c.icon size={18} />
+                                </div>
+                                <div className="text-sm font-semibold text-slate-900 dark:text-[#E2E8F0] group-hover:text-indigo-600 dark:group-hover:text-indigo-300 leading-tight transition-colors">{c.name}</div>
+                                <div className="text-[11px] text-slate-500 dark:text-[#CBD5E1] mt-0.5 leading-snug">{c.blurb}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+
+    // Left rail (desktop only) — grouped calculator list.
+    const Rail = (
+        <div className="w-56 shrink-0 border-r border-slate-100 dark:border-[#243A58] overflow-y-auto no-scrollbar py-3 bg-slate-50/50 dark:bg-[#0F1C30]/40">
+            {GROUPS.map(g => (
+                <div key={g} className="mb-2">
+                    <div className="px-4 py-1.5 text-[9px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase tracking-wider">{g}</div>
+                    {CALCS.filter(c => c.group === g).map(c => {
+                        const active = c.id === activeId;
+                        return (
+                            <button key={c.id} onClick={() => openCalc(c)} className={`w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors ${active ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-600' : 'text-slate-600 dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-[#1A2D48]'}`}>
+                                <c.icon size={15} className="shrink-0" />
+                                <span className="text-xs font-medium truncate">{c.name}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            ))}
+        </div>
+    );
+
+    // ── Mobile: full-screen page ──
+    if (isMobile) {
+        return (
+            <div className="fixed inset-0 z-[800] bg-white dark:bg-[#132338] flex flex-col animate-in fade-in duration-200">
+                {Header}
+                {activeDef
+                    ? <div className="p-5 overflow-y-auto flex-1">{renderCalc(activeDef.id)}</div>
+                    : <div className="flex-1 overflow-y-auto">{Grid}</div>}
+            </div>
+        );
+    }
+
+    // ── Desktop: centred modal with rail + pane ──
     return (
         <div className="fixed inset-0 z-[800] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col animate-in zoom-in-95 border-t border-t-indigo-600">
-                <div className="p-6 border-b border-slate-100 dark:border-[#243A58] flex items-center justify-between bg-white dark:bg-[#132338] shrink-0">
-                    <h3 className="text-xl font-semibold uppercase tracking-tighter text-slate-900 dark:text-[#E2E8F0] flex items-center gap-2">
-                        <FlaskConicalIcon size={24} className="text-indigo-600 dark:text-indigo-300" />
-                        Performance Lab
-                    </h3>
-                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-100 dark:hover:bg-[#1A2D48] rounded-full text-slate-400 dark:text-[#94A3B8] transition-colors"><XIcon size={20} /></button>
-                </div>
-
-                <div className="flex border-b border-slate-100 dark:border-[#243A58] px-6 gap-6 overflow-x-auto no-scrollbar shrink-0">
-                    {[
-                        { id: '1rm', label: '1RM Calc' },
-                        { id: 'dsi', label: 'DSI Profiler' },
-                        { id: 'rsi', label: 'RSI Profiler' },
-                        { id: 'map', label: 'MAP Calc' },
-                        { id: 'hamstring', label: 'Nordic Force' },
-                        { id: 'import', label: 'Data Import' }
-                    ].map(tab => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 text-xs font-semibold uppercase tracking-wide border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id ? 'border-indigo-600 text-indigo-600 dark:text-indigo-300' : 'border-transparent text-slate-400 dark:text-[#CBD5E1] hover:text-indigo-500 dark:hover:text-indigo-300'}`}>
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="p-6 overflow-y-auto no-scrollbar">
-                    {activeTab === '1rm' && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Weight (kg/lbs)</label>
-                                    <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="100" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Reps</label>
-                                    <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="5" />
-                                </div>
-                            </div>
-                            <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center">
-                                <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wide block mb-1">Estimated 1RM</span>
-                                <div className="text-5xl font-semibold tracking-tighter">{oneRepMax}</div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-100 dark:border-[#243A58]">
-                                <CustomSelect
-                                    variant="form"
-                                    size="xs"
-                                    value={oneRmAthleteId}
-                                    onChange={(e) => setOneRmAthleteId(e.target.value)}
-                                    placeholder="Select Athlete..."
-                                >
-                                    <option value="">Select Athlete...</option>
-                                    {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </CustomSelect>
-                                <CustomSelect
-                                    variant="form"
-                                    size="xs"
-                                    value={oneRmExerciseId}
-                                    onChange={(e) => setOneRmExerciseId(e.target.value)}
-                                    placeholder="Select Exercise..."
-                                >
-                                    <option value="">Select Exercise...</option>
-                                    {Object.entries(ONE_RM_EXERCISES).map(([group, items]) => (
-                                        <optgroup key={group} label={group}>
-                                            {items.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-                                        </optgroup>
-                                    ))}
-                                </CustomSelect>
-                                <button onClick={() => handleSave('1rm')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-500 transition-colors">Save 1RM</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'dsi' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl text-xs text-indigo-900 dark:text-indigo-300 leading-relaxed">
-                                <strong className="block uppercase tracking-wide mb-1 text-indigo-600 dark:text-indigo-300">Dynamic Strength Index</strong>
-                                <p className="mb-3">Measures the difference between an athlete's ballistic peak force (e.g. CMJ) and isometric peak force (e.g. IMTP).</p>
-                                <div className="flex gap-2 items-center">
-                                    <span className="text-[10px] font-bold uppercase tracking-wide text-indigo-400 dark:text-indigo-300 shrink-0">Presets:</span>
-                                    <CustomSelect
-                                        variant="filter"
-                                        size="xs"
-                                        value={selectedDsiPreset}
-                                        onChange={(e) => applyDsiPreset(e.target.value)}
-                                        placeholder="Custom Entry..."
-                                    >
-                                        <option value="">Custom Entry...</option>
-                                        <optgroup label="Lower Body">
-                                            {dsiCombinations.lower.map(x => <option key={x.label} value={x.label}>{x.label}</option>)}
-                                        </optgroup>
-                                        <optgroup label="Upper Body">
-                                            {dsiCombinations.upper.map(x => <option key={x.label} value={x.label}>{x.label}</option>)}
-                                        </optgroup>
-                                    </CustomSelect>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Peak Force: Ballistic (N)</label>
-                                    <input type="number" value={dsiBallistic} onChange={(e) => setDsiBallistic(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-cyan-500/20" placeholder="e.g. 1800" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Peak Force: Isometric (N)</label>
-                                    <input type="number" value={dsiIsometric} onChange={(e) => setDsiIsometric(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 3200" />
-                                </div>
-                            </div>
-                            {dsiScore && (
-                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Index Score</span>
-                                            <div className="text-3xl font-semibold tracking-tighter text-white">{dsiScore}</div>
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Recommendation</span>
-                                            <div className={`text-xl font-semibold tracking-tighter ${dsiCategory.color}`}>{dsiCategory.label}</div>
-                                        </div>
-                                    </div>
-                                    <div className="pt-4 border-t border-slate-800">
-                                        <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dsiCategory.color} bg-white/10`}>Focus: {dsiCategory.rec}</div>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
-                                <CustomSelect
-                                    variant="form"
-                                    size="xs"
-                                    value={dsiAthleteId}
-                                    onChange={(e) => setDsiAthleteId(e.target.value)}
-                                    placeholder="Select Athlete to Save Score..."
-                                >
-                                    <option value="">Select Athlete to Save Score...</option>
-                                    {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </CustomSelect>
-                                <button onClick={() => handleSave('dsi')} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-indigo-500 transition-colors">Save DSI Profile</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'rsi' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="p-4 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-100 dark:border-emerald-500/30 rounded-xl text-xs text-emerald-900 dark:text-emerald-300 leading-relaxed">
-                                <strong className="block uppercase tracking-wide mb-1 text-emerald-600 dark:text-emerald-300">Reactive Strength Index</strong>
-                                <p>Commonly measured via a 10-to-5 jump or drop jump. Calculation: Jump Height (m) / Contact Time (s).</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Jump Height (m)</label>
-                                    <input type="number" step="0.01" value={rsiHeight} onChange={(e) => setRsiHeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.35" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Contact Time (s)</label>
-                                    <input type="number" step="0.001" value={rsiContactTime} onChange={(e) => setRsiContactTime(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. 0.18" />
-                                </div>
-                            </div>
-                            {rsiScore && (
-                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white text-center space-y-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">RSI Score</span>
-                                    <div className="text-6xl font-semibold tracking-tighter text-emerald-400">{rsiScore}</div>
-                                </div>
-                            )}
-                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
-                                <CustomSelect
-                                    variant="form"
-                                    size="xs"
-                                    value={rsiAthleteId}
-                                    onChange={(e) => setRsiAthleteId(e.target.value)}
-                                    placeholder="Select Athlete to Save Score..."
-                                >
-                                    <option value="">Select Athlete to Save Score...</option>
-                                    {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </CustomSelect>
-                                <button onClick={() => handleSave('rsi')} className="w-full py-3 bg-emerald-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-emerald-600 transition-colors">Save RSI Profile</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'map' && (() => {
-                        const watts = parseFloat(mapWatts) || 0;
-                        const pct = parseFloat(targetPct) || 100;
-                        const targetWatts = watts * (pct / 100);
-                        return (
-                            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 pb-2">
-                                <div className="p-4 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-100 dark:border-indigo-500/30 rounded-xl">
-                                    <p className="text-[10px] font-semibold uppercase text-indigo-600 dark:text-indigo-300 tracking-wide">Wattbike MAP Calculator</p>
-                                    <p className="text-[10px] font-medium text-indigo-400 dark:text-indigo-300 mt-0.5">Convert your MAP into RPM targets for specific Fan settings.</p>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block">MAP Watts</label>
-                                        <input
-                                            type="number"
-                                            value={mapWatts}
-                                            onChange={(e) => setMapWatts(e.target.value)}
-                                            placeholder="e.g. 300"
-                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block">Target %</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="200"
-                                            value={targetPct}
-                                            onChange={(e) => setTargetPct(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                        />
-                                    </div>
-                                </div>
-
-                                <CustomSelect
-                                    value={bikeModel}
-                                    onChange={(e: any) => setBikeModel(e.target.value)}
-                                    variant="form"
-                                    size="sm"
-                                >
-                                    {WATTBIKE_MODELS.map(m => (
-                                        <option key={m} value={m}>{WATTBIKE_TABLES[m].label}</option>
-                                    ))}
-                                </CustomSelect>
-
-                                <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-5 grid grid-cols-5 gap-3">
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(fan => {
-                                        const rpm = watts > 0 ? calculateRpmForFan(targetWatts, fan, bikeModel) : '< 40';
-                                        return (
-                                            <div key={fan} className="text-center space-y-1">
-                                                <div className="text-[8px] font-semibold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide">Fan {fan}</div>
-                                                <div className="text-sm font-semibold text-indigo-400">{rpm}</div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        );
-                    })()}
-
-                    {activeTab === 'hamstring' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="flex bg-slate-100 dark:bg-[#0F1C30] p-1 rounded-xl">
-                                <button onClick={() => setHamAssessmentMode('split')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'split' ? 'bg-white dark:bg-[#1A2D48] text-orange-600 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Split (L/R)</button>
-                                <button onClick={() => setHamAssessmentMode('aggregate')} className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wide rounded-lg transition-all ${hamAssessmentMode === 'aggregate' ? 'bg-white dark:bg-[#1A2D48] text-orange-600 dark:text-orange-300 shadow-sm' : 'text-slate-400 dark:text-[#CBD5E1] hover:text-slate-600 dark:hover:text-[#E2E8F0]'}`}>Average</button>
-                            </div>
-                            {hamAssessmentMode === 'split' ? (
-                                <div className="space-y-6">
-                                    <div className="p-4 bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/30 rounded-xl text-xs text-orange-900 dark:text-orange-300 leading-relaxed">
-                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 dark:text-orange-300 text-[10px]">Nordic Split Assessment</strong>
-                                        <p>Input peak force for each leg and body weight to calculate relative strength and asymmetry.</p>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Left (N)</label>
-                                            <input type="number" value={hamLeft} onChange={(e) => setHamLeft(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="350" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Right (N)</label>
-                                            <input type="number" value={hamRight} onChange={(e) => setHamRight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="340" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">BW (kg)</label>
-                                            <input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-3 py-2 text-md font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="85" />
-                                        </div>
-                                    </div>
-                                    {hamResults && (
-                                        <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-5 text-white space-y-4">
-                                            <div className="grid grid-cols-3 gap-2 text-center">
-                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Avg Force</span><div className="text-xl font-semibold">{Math.round(hamResults.avg)}N</div></div>
-                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Asymmetry</span><div className={`text-xl font-semibold ${hamResults.color}`}>{hamResults.asymmetry}%</div></div>
-                                                <div><span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Rel. Str</span><div className="text-xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'}</div></div>
-                                            </div>
-                                            <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center"><div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div></div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    <div className="p-4 bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/30 rounded-xl text-xs text-orange-900 dark:text-orange-300 leading-relaxed">
-                                        <strong className="block uppercase tracking-wide mb-1 text-orange-600 dark:text-orange-300 text-[10px]">Nordic Average Assessment</strong>
-                                        <p>Input average force across both limbs and body weight to calculate relative strength.</p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Average Force (N)</label><input type="number" value={hamAggregate} onChange={(e) => setHamAggregate(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 330" /></div>
-                                        <div><label className="text-[9px] font-semibold uppercase text-slate-500 dark:text-[#CBD5E1] tracking-wide block mb-1">Body Weight (kg)</label><input type="number" value={hamBodyWeight} onChange={(e) => setHamBodyWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-[#0F1C30] border border-slate-200 dark:border-[#243A58] rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] outline-none focus:ring-2 focus:ring-orange-500/20" placeholder="e.g. 85" /></div>
-                                    </div>
-                                    {hamResults && (
-                                        <div className="bg-slate-900 dark:bg-[#0F1C30] rounded-xl p-6 text-white space-y-4">
-                                            <div className="grid grid-cols-2 gap-4 text-center">
-                                                <div>
-                                                    <span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Avg Force</span>
-                                                    <div className="text-2xl font-semibold">{Math.round(hamResults.avg)}N</div>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[8px] font-bold text-slate-500 dark:text-[#CBD5E1] uppercase tracking-wide block mb-1">Rel. Strength</span>
-                                                    <div className="text-2xl font-semibold text-orange-400">{hamResults.relativeStrength || '--'} <span className="text-sm">N/kg</span></div>
-                                                </div>
-                                            </div>
-                                            <div className="pt-3 border-t border-slate-800 dark:border-[#243A58] text-center">
-                                                <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${hamResults.color} bg-white/10`}>Risk: {hamResults.riskText}</div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <div className="pt-4 border-t border-slate-100 dark:border-[#243A58] space-y-3">
-                                <CustomSelect
-                                    variant="form"
-                                    size="xs"
-                                    value={hamAthleteId}
-                                    onChange={(e) => setHamAthleteId(e.target.value)}
-                                    placeholder="Select Athlete to Save Score..."
-                                >
-                                    <option value="">Select Athlete to Save Score...</option>
-                                    {allAthletes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </CustomSelect>
-                                <button onClick={() => handleSave('hamstring')} className="w-full py-3 bg-orange-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-lg hover:bg-orange-500 transition-colors">Save Assessment</button>
-                            </div>
-                        </div>
-                    )}
-
-
-                    {activeTab === 'import' && (
-                        <SmartTestImport
-                            allAthletes={allAthletes}
-                            teams={teams}
-                            handleSaveMetric={handleSaveMetric}
-                            showToast={showToast}
-                        />
-                    )}
-
-                    {saveStatus && (
-                        <div className="absolute inset-x-8 bottom-8 animate-in slide-in-from-bottom-4">
-                            <div className="bg-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><CheckIcon size={18} /></div>
-                                    <span className="font-bold text-sm">Save {saveStatus === 'success' ? 'Successful' : 'Error'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            <div className="bg-white dark:bg-[#132338] rounded-xl w-full max-w-4xl h-[85vh] max-h-[720px] shadow-2xl border border-slate-200 dark:border-[#243A58] overflow-hidden flex flex-col border-t-2 border-t-indigo-600 animate-in zoom-in-95">
+                {Header}
+                <div className="flex flex-1 min-h-0">
+                    {Rail}
+                    <div className="flex-1 min-w-0 p-6 overflow-y-auto">
+                        {activeDef ? renderCalc(activeDef.id) : (
+                            <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-[#94A3B8]">Select a calculator</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

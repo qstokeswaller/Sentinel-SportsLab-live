@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
-import { X, Trash2, Plus } from 'lucide-react';
-import { BLOCK_COLOR_PRESETS } from '../../utils/periodizationUtils';
+import { X, Trash2, Plus, AlertTriangle } from 'lucide-react';
+import { BLOCK_COLOR_PRESETS, formatDateShort } from '../../utils/periodizationUtils';
 import { CustomSelect } from '../ui/CustomSelect';
 import DatePicker from '../../components/ui/DatePicker';
 
@@ -79,6 +79,28 @@ export const AddBlockModal = () => {
     const planMods    = plan?.modalities || [];
     const blockOnlyMods = Object.keys(modalityLevels).filter(m => !planMods.includes(m));
     const allMods     = [...planMods, ...blockOnlyMods];
+
+    // Non-blocking date sanity checks: reversed range + dates falling outside the
+    // assigned phase. Purely advisory — the coach can still save intentionally.
+    const selectedPhase = plan?.phases?.find(ph => ph.id === phaseId);
+    const dateWarnings = (() => {
+        const w: string[] = [];
+        if (startDate && endDate && endDate < startDate) {
+            w.push('End date is before the start date — this saves as a single-week block.');
+        }
+        if (selectedPhase?.startDate) {
+            const ps = selectedPhase.startDate;
+            const pe = selectedPhase.endDate;
+            const nm = selectedPhase.name || 'the phase';
+            if (startDate && startDate < ps) w.push(`Starts before ${nm} begins (${formatDateShort(ps)}).`);
+            if (pe && startDate && startDate > pe) w.push(`Starts after ${nm} ends (${formatDateShort(pe)}).`);
+            if (pe && endDate && endDate > pe) w.push(`Ends after ${nm} ends (${formatDateShort(pe)}).`);
+            if (!(startDate && endDate && endDate < startDate) && endDate && endDate < ps) {
+                w.push(`Ends before ${nm} begins (${formatDateShort(ps)}).`);
+            }
+        }
+        return w;
+    })();
 
     const addCustomMod = () => {
         const val = customModInput.trim();
@@ -199,6 +221,17 @@ export const AddBlockModal = () => {
                             <DatePicker value={endDate} onChange={e => setEndDate(e.target.value)} />
                         </div>
                     </div>
+
+                    {/* Date sanity warnings (non-blocking) */}
+                    {dateWarnings.length > 0 && (
+                        <div className="flex gap-2 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/15 px-3 py-2.5">
+                            <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                            <div className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed space-y-0.5">
+                                {dateWarnings.map((msg, i) => <p key={i}>{msg}</p>)}
+                                <p className="text-amber-500/80 dark:text-amber-400/70 italic mt-1">You can still save — this is just a heads-up.</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Goals */}
                     <div>

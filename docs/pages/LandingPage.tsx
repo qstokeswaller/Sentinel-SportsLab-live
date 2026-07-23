@@ -1195,7 +1195,7 @@ const LandingPage: React.FC = () => {
                                 name: 'Elite', price: "Let's talk", per: '',
                                 seats: 'Full platform access · Organisational',
                                 desc: 'The complete platform — and we onboard your whole staff personally',
-                                features: ['Everything in Performance','Full access — Reporting Hub, Analytics terminals, GPS & ACWR, Performance Lab, Periodization','Guided 21-day onboarding with our team','Hands-on training sessions for your staff','We configure the platform around your programme','Direct line to our sport-science team'],
+                                features: ['Everything in Performance','Full access — Reporting Hub, Analytics terminals, GPS & ACWR, Sports-Science Toolkit, Periodization','Guided 21-day onboarding with our team','Hands-on training sessions for your staff','We configure the platform around your programme','Direct line to our sport-science team'],
                                 pop: false, cust: false, elite: true,
                             },
                             {

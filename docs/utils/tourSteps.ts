@@ -59,7 +59,7 @@ export const PAGE_TOURS: PageTourDef[] = [
             {
                 element: '[data-tour="sidebar-nav"]',
                 title: 'Sidebar navigation',
-                description: 'Every section of Sentinel SportsLab lives in this sidebar — Dashboard (here), Planner, Roster, Workouts, Library, Conditioning, Wellness, Testing, Reporting, Analytics, and Performance Lab. Sections you don\'t have access to under your current subscription tier show a lock icon and link to the Settings → Organisation upgrade page.',
+                description: 'Every section of Sentinel SportsLab lives in this sidebar — Dashboard (here), Planner, Roster, Workouts, Library, Conditioning, Wellness, Testing, Reporting, Analytics, and Toolkit. Sections you don\'t have access to under your current subscription tier show a lock icon and link to the Settings → Organisation upgrade page.',
                 side: 'right',
             },
             {
@@ -164,7 +164,7 @@ export const PAGE_TOURS: PageTourDef[] = [
             {
                 element: '[data-tour="test-categories"]',
                 title: 'Test protocol library',
-                description: '80+ sports-science test protocols organised by category — Musculoskeletal (1RM, isometric strength), Strength (CMJ, DSI, RSI), Speed, Flexibility, Aerobic (VO₂ max, Yo-Yo IR), Anthropometry, and more. Click a category to see its tests. Results you save here feed into Athlete Profiles, Analytics (Baseline Trends, Force-Velocity), and Performance Lab calculators.',
+                description: '80+ sports-science test protocols organised by category — Musculoskeletal (1RM, isometric strength), Strength (CMJ, DSI, RSI), Speed, Flexibility, Aerobic (VO₂ max, Yo-Yo IR), Anthropometry, and more. Click a category to see its tests. Results you save here feed into Athlete Profiles, Analytics (Baseline Trends, Force-Velocity).',
                 side: 'bottom',
             },
             {
@@ -422,7 +422,7 @@ export const WORKFLOW_TOURS: WorkflowTourDef[] = [
             {
                 element: '[data-tour="test-save-button"]',
                 title: 'Save assessment',
-                description: 'Saving the result writes it to the athlete\'s test history and timestamps it. From here the value automatically flows into the Athlete Profile page, Analytics → Baseline Trends, Performance Lab calculators, and any team comparison. You can revisit and edit the result later if there\'s a data-entry error.',
+                description: 'Saving the result writes it to the athlete\'s test history and timestamps it. From here the value automatically flows into the Athlete Profile page, Analytics → Baseline Trends, and any team comparison. You can revisit and edit the result later if there\'s a data-entry error.',
                 side: 'top',
             },
         ],

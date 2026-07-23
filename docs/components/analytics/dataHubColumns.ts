@@ -620,7 +620,7 @@ export const GROUP_DESCRIPTIONS: Record<string, string> = {
     Availability: 'Availability status + formal active injuries + same-day pain flags.',
     ACWR: 'Acute:Chronic Workload Ratio + recent training load. Requires ACWR config in Settings.',
     Workouts: 'Last completed session data — date, session RPE, duration. Source: scheduled_sessions.',
-    Performance: 'Tested capacities — strength, hamstring, jumps. Source: Testing Hub + Performance Lab.',
+    Performance: 'Tested capacities — strength, hamstring, jumps. Source: Testing Hub.',
     GPS: 'Movement telemetry. Requires GPS data import.',
 };
 

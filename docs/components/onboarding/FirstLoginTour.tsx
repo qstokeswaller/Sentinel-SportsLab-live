@@ -207,7 +207,7 @@ export const FirstLoginTour: React.FC = () => {
                 element: '[data-tour="sidebar-nav"]',
                 popover: {
                     title: 'Your navigation',
-                    description: "Every hub lives in the left sidebar — Dashboard, Roster, Workouts, Library, Conditioning, Wellness, Testing, Reporting, Analytics, Performance Lab. Items that don't match your subscription tier show a lock icon — upgrade in Settings to unlock them.",
+                    description: "Every hub lives in the left sidebar — Dashboard, Roster, Workouts, Library, Conditioning, Wellness, Testing, Reporting, Analytics, Toolkit. Items that don't match your subscription tier show a lock icon — upgrade in Settings to unlock them.",
                     side: 'right',
                     align: 'start',
                 },

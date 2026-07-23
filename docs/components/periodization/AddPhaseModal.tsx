@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
-import { X, Trash2, Plus } from 'lucide-react';
+import { X, Trash2, Plus, AlertTriangle } from 'lucide-react';
 import { PHASE_COLOR_PRESETS } from '../../utils/periodizationUtils';
 import { formatDateShort } from '../../utils/periodizationUtils';
 import DatePicker from '../../components/ui/DatePicker';
@@ -76,6 +76,24 @@ export const AddPhaseModal = () => {
 
     // Custom focuses = ones not in the preset list
     const customFocuses = focuses.filter(f => !PRESET_FOCUSES.includes(f));
+
+    // Non-blocking warnings: reversed range, plus any blocks that would fall
+    // outside the phase's new dates (phase edits don't move their blocks).
+    const currentPhase = plan?.phases?.find(ph => ph.id === editingPlanPhase?.id);
+    const phaseWarnings = (() => {
+        const w: string[] = [];
+        if (startDate && endDate && endDate < startDate) w.push('End date is before the start date.');
+        const outside = isEditing
+            ? (currentPhase?.blocks || []).filter((b: any) => {
+                  if (!b.startDate) return false;
+                  if (startDate && b.startDate < startDate) return true;
+                  if (endDate && b.startDate > endDate) return true;
+                  if (endDate && b.endDate && b.endDate > endDate) return true;
+                  return false;
+              })
+            : [];
+        return { w, outside };
+    })();
 
     const handleSubmit = () => {
         if (!name.trim() || !startDate) return;
@@ -216,6 +234,23 @@ export const AddPhaseModal = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* Phase date warnings (non-blocking) */}
+                    {(phaseWarnings.w.length > 0 || phaseWarnings.outside.length > 0) && (
+                        <div className="flex gap-2 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/15 px-3 py-2.5">
+                            <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                            <div className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed space-y-0.5">
+                                {phaseWarnings.w.map((msg, i) => <p key={i}>{msg}</p>)}
+                                {phaseWarnings.outside.length > 0 && (
+                                    <p>
+                                        <span className="font-semibold">{phaseWarnings.outside.length}</span> block{phaseWarnings.outside.length !== 1 ? 's' : ''}
+                                        {' '}({phaseWarnings.outside.map((b: any) => b.name).filter(Boolean).join(', ')}) will fall outside these dates. Block dates don't move automatically — adjust them in the Blocks tab.
+                                    </p>
+                                )}
+                                <p className="text-amber-500/80 dark:text-amber-400/70 italic mt-1">You can still save — this is just a heads-up.</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Color */}
                     <div>

@@ -20,7 +20,7 @@ const FEATURE_BLURB: Partial<Record<Feature, string>> = {
     reporting:    'Reporting Hub with GPS Insights, Data Hub, Tracking Hub.',
     analytics:    'Analytics Hub — 5 terminals including Scenario Modelling, Dose-Response, F-V Profile.',
     planner:      'Periodization Planner — block/microcycle scheduling.',
-    lab:          'Performance Lab.',
+    lab:          'Sports-Science Toolkit — quick S&C calculators (1RM, MAS, HR zones, and more).',
 };
 
 export const UpgradePromptModal: React.FC<UpgradePromptModalProps> = ({

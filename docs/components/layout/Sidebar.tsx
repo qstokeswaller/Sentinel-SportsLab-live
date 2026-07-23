@@ -16,7 +16,7 @@ import {
 // render locked rows for tiers that don't include it.
 // Ordering: foundational pages first (dashboard → library), then hubs grouped by
 // daily workflow (Conditioning → Wellness → Testing) before analysis-layer hubs
-// (Reporting → Analytics → Performance Lab).
+// (Reporting → Analytics → Toolkit).
 export const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = [
     { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon, feature: 'dashboard' },
     { id: 'periodization', label: 'Planner',          icon: CalendarIcon,        feature: 'planner' },
@@ -28,7 +28,7 @@ export const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature
     { id: 'testing',       label: 'Testing',          icon: ClipboardListIcon,   feature: 'testing' },
     { id: 'reports',       label: 'Reporting',        icon: FileIcon,            feature: 'reporting' },
     { id: 'analytics',     label: 'Analytics',        icon: BarChart3Icon,       feature: 'analytics' },
-    { id: 'lab',           label: 'Performance Lab',  icon: FlaskConicalIcon,    feature: 'lab' },
+    { id: 'lab',           label: 'Toolkit',          icon: FlaskConicalIcon,    feature: 'lab' },
 ];
 
 export const Sidebar = () => {
