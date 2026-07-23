@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
-    Plus, PencilIcon, Trash2, MoreHorizontal, X,
+    Plus, PencilIcon, Trash2, MoreHorizontal, X, AlertTriangle,
     Layers, BookOpen, BarChart2, Target,
     CheckCircle2, Loader2, Timer, LayoutList,
 } from 'lucide-react';
@@ -34,6 +34,19 @@ function getBlockStatus(block, today) {
     if (block.endDate && block.endDate < today) return { label: 'Completed', cls: 'bg-slate-100 dark:bg-[#1A2D48] text-slate-600 dark:text-[#CBD5E1] border-slate-200 dark:border-[#243A58]' };
     if (block.startDate <= today && (!block.endDate || block.endDate >= today)) return { label: 'In Progress', cls: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/40' };
     return { label: 'Upcoming', cls: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40' };
+}
+
+// Advisory: reason a block's dates look wrong (reversed, or outside its phase), else null.
+function blockDateIssue(block, phaseStart, phaseEnd) {
+    if (!block.startDate) return null;
+    if (block.endDate && block.endDate < block.startDate) return 'End date is before start date';
+    if (!phaseStart) return null;
+    const startsBefore = block.startDate < phaseStart;
+    const endsBefore   = block.endDate && block.endDate < phaseStart;
+    const startsAfter  = phaseEnd && block.startDate > phaseEnd;
+    const endsAfter    = phaseEnd && block.endDate && block.endDate > phaseEnd;
+    if (startsBefore || endsBefore || startsAfter || endsAfter) return 'Dates fall outside its phase';
+    return null;
 }
 
 // ── Intensity badge ────────────────────────────────────────────────────────────
@@ -130,7 +143,10 @@ export const BlocksTab = ({ plan }) => {
     // Flat list of all blocks with parent phase info
     const allBlocks = useMemo(() =>
         plan.phases.flatMap(ph =>
-            ph.blocks.map(b => ({ ...b, phaseName: ph.name, phaseColor: ph.color, phaseId: ph.id }))
+            ph.blocks.map(b => ({
+                ...b, phaseName: ph.name, phaseColor: ph.color, phaseId: ph.id,
+                dateIssue: blockDateIssue(b, ph.startDate, ph.endDate),
+            }))
         ),
         [plan.phases]
     );
@@ -430,9 +446,16 @@ export const BlocksTab = ({ plan }) => {
                                 </div>
 
                                 {/* Dates */}
-                                <div className="text-[10px] text-slate-500 dark:text-[#CBD5E1]">
-                                    {block.startDate ? formatDateShort(block.startDate) : '—'}
-                                    {block.endDate ? ` — ${formatDateShort(block.endDate)}` : ''}
+                                <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-[#CBD5E1]">
+                                    <span className="truncate">
+                                        {block.startDate ? formatDateShort(block.startDate) : '—'}
+                                        {block.endDate ? ` — ${formatDateShort(block.endDate)}` : ''}
+                                    </span>
+                                    {block.dateIssue && (
+                                        <span title={block.dateIssue} className="shrink-0 inline-flex">
+                                            <AlertTriangle size={11} className="text-amber-500" />
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Weeks */}
@@ -511,6 +534,11 @@ export const BlocksTab = ({ plan }) => {
                                         {' · '}{selectedBlock.blockType}
                                         {' · '}{selectedBlock.phaseName}
                                     </span>
+                                    {selectedBlock.dateIssue && (
+                                        <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-900/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 align-middle">
+                                            <AlertTriangle size={10} /> {selectedBlock.dateIssue}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <button
