@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppState } from '../context/AppStateContext';
+import { useRestorableState } from '../hooks/useRestorableState';
 import { useAuth } from '../context/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useSmartSearch } from '../hooks/useSmartSearch';
@@ -338,7 +339,7 @@ export const ExerciseLibraryPage = () => {
     } = useCollections();
 
     // ── View state ────────────────────────────────────────────────────────
-    const [libraryViewMode, setLibraryViewMode] = useState<'exercises' | 'myLibrary' | 'protocols'>('exercises');
+    const [libraryViewMode, setLibraryViewMode] = useRestorableState<'exercises' | 'myLibrary' | 'protocols'>('ssl_library_view', 'exercises');
     const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
     // <lg: no side detail panel — tapping an exercise opens it full-screen (mobile
     // takeover) instead. >=lg: proportional side panel so the left list keeps ~62%

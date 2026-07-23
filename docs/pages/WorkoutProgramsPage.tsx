@@ -16,6 +16,7 @@ import { CreatorBadge } from '../components/tier/CreatorBadge';
 import { useAuth } from '../context/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { fuzzySearch } from '../utils/fuzzySearch';
+import { shouldRestoreWorkoutBuilder, persistWorkoutBuilder } from '../utils/workoutBuilderRestore';
 import DidYouMeanBanner from '../components/library/DidYouMeanBanner';
 import {
     LayersIcon, PlusIcon,
@@ -92,7 +93,12 @@ export const WorkoutProgramsPage = () => {
     const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
     const [selectedWeek, setSelectedWeek] = useState<number>(1);
     const { data: selectedFullProgram } = useProgramWithDays(selectedProgram?.id ?? null);
-    const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState(false);
+    // Reopen the Create Program builder ONLY when returning to the exact history entry
+    // it was open on (Settings → Back). A fresh sidebar visit has a new location.key and
+    // starts on the list. See utils/workoutBuilderRestore.
+    const [isProgramBuilderOpen, setIsProgramBuilderOpen] = useState<boolean>(
+        () => shouldRestoreWorkoutBuilder('ssl_workout_program_restore', location.key),
+    );
     const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
     const [editingProgramBasic, setEditingProgramBasic] = useState(null);
     const { data: editingFullProgram } = useProgramWithDays(editingProgramId);
@@ -375,10 +381,19 @@ export const WorkoutProgramsPage = () => {
         });
     }, [registerCreate]);
 
-    // When the builder takes over, hide the shell header so it has the full canvas
-    useEffect(() => {
+    // When the builder takes over, hide the shell header so it has the full canvas.
+    // useLayoutEffect so it lands in the FIRST paint — critical on a restore mount (Settings →
+    // Back with the builder open), otherwise the shell tabs flash in for one frame. This page
+    // is the sole authority for hideShell on the Programs tab (the provider no longer resets it).
+    useLayoutEffect(() => {
         setHideShell(isProgramBuilderOpen);
     }, [isProgramBuilderOpen, setHideShell]);
+
+    // Persist ONLY the open CREATE builder, tagged to this history entry, so Settings → Back
+    // reopens it. Editing (editingProgramId set) isn't persisted — its loaded days aren't stored.
+    useEffect(() => {
+        persistWorkoutBuilder('ssl_workout_program_restore', location.key, isProgramBuilderOpen && editingProgramId === null);
+    }, [isProgramBuilderOpen, editingProgramId, location.key]);
 
     // Push Overview rows to the shell's top-right tile.
     // useLayoutEffect (not useEffect) so the populated rows land in the FIRST paint —

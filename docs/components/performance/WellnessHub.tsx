@@ -40,10 +40,19 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
     const chartLabelColor = isDarkMode ? '#64748B' : '#94a3b8';
     const chartTextColor  = isDarkMode ? '#E2E8F0' : '#1e293b';
 
-    const [viewMode, setViewMode] = useState<'selection' | 'dashboard' | 'athlete' | 'templates' | 'share'>('selection');
+    // Persist "where you were" in Questionnaire Data (team-level view + team + tab)
+    // to sessionStorage so navigating away (e.g. to Settings) and back returns you
+    // to the same spot. Only 'selection'/'dashboard' are restored (other modes need
+    // extra state); a stale/deleted team falls back to the selection screen below.
+    const [viewMode, setViewMode] = useState<'selection' | 'dashboard' | 'athlete' | 'templates' | 'share'>(() => {
+        try { const r = JSON.parse(sessionStorage.getItem('ssl_wellnesshub_restore') || 'null'); return (r?.viewMode === 'dashboard' || r?.viewMode === 'selection') ? r.viewMode : 'selection'; } catch { return 'selection'; }
+    });
     const [previewTemplate, setPreviewTemplate] = useState<'daily' | 'weekly' | null>(null);
     const [expandedPreviewQ, setExpandedPreviewQ] = useState<string | null>(null);
-    const [selectedTeamId, setSelectedTeamId]     = useState<string | null>(initialTeamId || null);
+    const [selectedTeamId, setSelectedTeamId]     = useState<string | null>(() => {
+        if (initialTeamId) return initialTeamId;
+        try { return JSON.parse(sessionStorage.getItem('ssl_wellnesshub_restore') || 'null')?.selectedTeamId || null; } catch { return null; }
+    });
 
     React.useEffect(() => {
         if (initialTeamId) {
@@ -52,7 +61,26 @@ const WellnessHub: React.FC<{ initialTeamId?: string; onBackToSections?: () => v
         }
     }, [initialTeamId]);
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-    const [dashboardTab, setDashboardTab]           = useState<'overview' | 'insights'>('overview');
+    const [dashboardTab, setDashboardTab]           = useState<'overview' | 'insights'>(() => {
+        try { return JSON.parse(sessionStorage.getItem('ssl_wellnesshub_restore') || 'null')?.dashboardTab === 'insights' ? 'insights' : 'overview'; } catch { return 'overview'; }
+    });
+
+    // Save the current team-level position whenever it changes (team-level modes only).
+    React.useEffect(() => {
+        if (viewMode === 'dashboard' || viewMode === 'selection') {
+            try { sessionStorage.setItem('ssl_wellnesshub_restore', JSON.stringify({ viewMode, selectedTeamId, dashboardTab })); } catch {}
+        }
+    }, [viewMode, selectedTeamId, dashboardTab]);
+
+    // If a restored team no longer exists (deleted while away), fall back to the
+    // selection screen instead of a broken dashboard. useLayoutEffect avoids a flash.
+    React.useLayoutEffect(() => {
+        if (viewMode === 'dashboard' && selectedTeamId && !selectedTeamId.startsWith('ind_')
+            && teams.length > 0 && !teams.some(t => t.id === selectedTeamId)) {
+            setViewMode('selection');
+            setSelectedTeamId(null);
+        }
+    }, [teams, viewMode, selectedTeamId]);
 
     // ── Visualization blocks (Insights tab) ─────────────────────────────────
     const [vizBlocks, setVizBlocks] = useState<VizBlock[]>([]);

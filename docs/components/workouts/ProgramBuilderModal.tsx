@@ -1020,9 +1020,10 @@ export const ProgramBuilderModal = ({
           </div>
         </div>
 
-        {/* Scrollable content */}
+        {/* Scrollable content — tight horizontal padding on mobile so the nested
+            week/day/section cards don't stack up margins and starve the content. */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="px-6 py-6 space-y-6">
+          <div className="px-2 py-4 space-y-4 lg:px-6 lg:py-6 lg:space-y-6">
 
             {/* Setup card — collapsible (matches Packets `Details` UX). Slim summary always visible, full form on expand. */}
             <div className="bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] rounded-xl">
@@ -1199,7 +1200,7 @@ export const ProgramBuilderModal = ({
               </div>
 
               {/* Day accordion — each day is its own collapsible card */}
-              <div className="p-3 space-y-2">
+              <div className="p-2 space-y-2 lg:p-3">
                 {activeWeekDays.map((day, i) => {
                   const globalIdx = activeWeekStartIdx + i;
                   const dDate = formatShortDate(dateForDay(globalIdx));
@@ -1265,14 +1266,14 @@ export const ProgramBuilderModal = ({
 
                       {/* Expanded body */}
                       {isExpanded && (
-                        <div className="px-4 pb-4 border-t border-slate-100 dark:border-[#243A58] space-y-5 pt-4">
+                        <div className="px-2.5 pb-4 border-t border-slate-100 dark:border-[#243A58] space-y-4 pt-4 lg:px-4 lg:space-y-5">
                           {/* Day name input + rest toggle + delete */}
                           <div className="flex items-center gap-2">
                             <input
                               value={day.name}
                               onChange={(e) => updateDay(globalIdx, 'name', e.target.value)}
                               placeholder="Day Name *"
-                              className={`flex-1 border rounded-lg px-3 py-2 text-sm font-bold outline-none transition-colors bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] ${day.isRestDay ? 'border-slate-300 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] focus:border-slate-400' : 'border-slate-200 dark:border-[#243A58] focus:border-indigo-500'}`}
+                              className={`flex-1 min-w-0 border rounded-lg px-3 py-2 text-sm font-bold outline-none transition-colors bg-white dark:bg-[#0F1C30] text-slate-900 dark:text-[#E2E8F0] placeholder:text-slate-400 dark:placeholder:text-[#475569] ${day.isRestDay ? 'border-slate-300 dark:border-[#243A58] text-slate-500 dark:text-[#CBD5E1] focus:border-slate-400' : 'border-slate-200 dark:border-[#243A58] focus:border-indigo-500'}`}
                             />
                             <button
                               type="button"
@@ -1446,7 +1447,7 @@ export const ProgramBuilderModal = ({
                                 const isDropTarget = exerciseDropTarget?.dayIdx === globalIdx && exerciseDropTarget?.sec === sec;
                                 return (
                                   <div
-                                    className={`p-3 space-y-3 min-h-[120px] max-h-[60vh] overflow-y-auto transition-colors ${isDropTarget ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
+                                    className={`p-2 lg:p-3 space-y-3 min-h-[120px] max-h-[60vh] overflow-y-auto transition-colors ${isDropTarget ? 'bg-indigo-50/40 dark:bg-indigo-900/15 ring-2 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
                                     onDragOver={(e) => {
                                       const types = e.dataTransfer.types;
                                       if (!types.includes('text/plain')) return;

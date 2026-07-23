@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useRestorableState } from '../hooks/useRestorableState';
 import { useAppState } from '../context/AppStateContext';
 import {
     CalendarDays, Plus, ArrowLeft, Trash2,
@@ -61,7 +62,7 @@ export const PeriodizationPage = () => {
     const activePlan = periodizationPlans.find(p => p.id === activePlanId);
 
     // Tab state — reset to overview whenever the active plan changes
-    const [activeTab, setActiveTab] = useState<TabId>('overview');
+    const [activeTab, setActiveTab] = useRestorableState<TabId>('ssl_planner_tab', 'overview');
     useEffect(() => { setActiveTab('overview'); }, [activePlanId]);
 
     // Cross-tab navigation: Periods → Microcycles, and return from WorkoutPackets

@@ -2065,7 +2065,12 @@ const ACWRMonitoringHub: React.FC = () => {
 
 // ── Main Page Component ─────────────────────────────────────────────────
 export const WellnessHubPage: React.FC = () => {
-    const [activeSection, setActiveSection] = useState<string | null>(null);
+    // Remember which Wellness Hub section you were in so returning (e.g. via the
+    // Settings back button) re-opens it instead of the sections grid. Session-scoped;
+    // the URL ?section= param still wins when present (see effect below).
+    const [activeSection, setActiveSection] = useState<string | null>(() => {
+        try { return sessionStorage.getItem('ssl_wellness_section') || null; } catch { return null; }
+    });
     const { isLoading } = useAppState();
     const [searchParams] = useSearchParams();
 
@@ -2075,6 +2080,14 @@ export const WellnessHubPage: React.FC = () => {
         const section = searchParams.get('section');
         if (section) setActiveSection(section);
     }, []);
+
+    // Persist the current section for the back-button / re-entry restore.
+    useEffect(() => {
+        try {
+            if (activeSection) sessionStorage.setItem('ssl_wellness_section', activeSection);
+            else sessionStorage.removeItem('ssl_wellness_section');
+        } catch {}
+    }, [activeSection]);
 
     if (activeSection) {
         // Questionnaire Data owns its own consolidated breadcrumb (Wellness Hub >

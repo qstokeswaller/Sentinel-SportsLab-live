@@ -132,15 +132,21 @@ export const WorkoutsLayoutProvider = ({
     const [sidebarExtra, setSidebarExtra] = useState<ReactNode>(null);
     const createHandlerRef = useRef<(() => void) | null>(null);
 
-    // Reset transient per-tab state when switching tabs so the shell starts clean.
+    // Reset only the per-tab SEARCH when switching tabs so the shell starts clean.
     // NOTE: `overviewRows`, `sidebarExtra`, AND `createHandlerRef` are NOT cleared here
     // on purpose. Each page sets them via a useLayoutEffect / useEffect and clears them
     // via its cleanup. If we cleared them here too, this parent effect would fire AFTER
     // the child's setup (React runs child effects before parent effects) and wipe out
     // the just-registered values — making the tiles invisible and the Create button no-op.
+    //
+    // `hideShell` is DELIBERATELY not touched here either. Each Workouts page authoritatively
+    // sets it for its OWN tab via useLayoutEffect (list → false, builder open → true), and only
+    // one page is mounted at a time (conditional render in Shell) — so there is a single writer
+    // per tab and no effect-ordering race with this provider. Having the provider also reset it
+    // is what previously clobbered a restored builder's setHideShell(true) and wrongly re-showed
+    // the shell tabs inside the builder.
     useEffect(() => {
         setSearchInternal('');
-        setHideShell(false);
     }, [activeTab]);
 
     const setSearch = useCallback((v: string) => setSearchInternal(v), []);

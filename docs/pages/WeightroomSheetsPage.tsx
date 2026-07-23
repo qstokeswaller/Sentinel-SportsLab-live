@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useWorkoutsLayout } from '../context/WorkoutsLayoutContext';
 import { WEIGHTROOM_1RM_EXERCISES } from '../utils/constants';
@@ -17,6 +17,7 @@ import { ShareToOrgToggle } from '../components/tier/ShareToOrgToggle';
 import { useAuth } from '../context/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { fuzzySearch } from '../utils/fuzzySearch';
+import { shouldRestoreWorkoutBuilder, persistWorkoutBuilder } from '../utils/workoutBuilderRestore';
 import {
     ArrowLeft as ArrowLeftIcon,
     Printer as PrinterIcon,
@@ -70,6 +71,7 @@ function formatSourceLine(src?: { packetName?: string; sessionDate?: string | nu
 
 export const WeightroomSheetsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { teams, exercises, maxHistory, isLoading, isSecondaryLoading, scheduledSessions, showToast } = useAppState();
     const { data: savedSheets = [] } = useWeightroomSheets();
     const createSheet = useCreateSheet();
@@ -78,7 +80,12 @@ export const WeightroomSheetsPage = () => {
 
     // ── Mode + currently-loaded sheet ──────────────────────────────────────
     // 'list' = saved sheets table; 'builder' = active build/edit UI
-    const [mode, setMode] = useState<'list' | 'builder'>('list');
+    // Reopen the CREATE builder only when returning to the exact history entry it was
+    // open on (Settings → Back). Fresh sidebar visits start on the list. Other builder
+    // fields already default to their "new sheet" values. See utils/workoutBuilderRestore.
+    const [mode, setMode] = useState<'list' | 'builder'>(
+        () => (shouldRestoreWorkoutBuilder('ssl_workout_sheet_restore', location.key) ? 'builder' : 'list'),
+    );
     const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
     const [sheetName, setSheetName] = useState('');
     const [sheetVisibility, setSheetVisibility] = useState<'personal' | 'org'>('personal');
@@ -281,10 +288,18 @@ export const WeightroomSheetsPage = () => {
         return registerCreate(() => openNewSheet());
     }, [registerCreate]);
 
-    // Hide the shell header when the builder takes over the canvas
-    useEffect(() => {
+    // Hide the shell header when the builder takes over the canvas.
+    // useLayoutEffect so it lands in the FIRST paint (no shell-tabs flash on a restore mount).
+    // This page is the sole authority for hideShell on the Sheets tab (the provider no longer resets it).
+    useLayoutEffect(() => {
         setHideShell(mode === 'builder');
     }, [mode, setHideShell]);
+
+    // Persist ONLY the open CREATE builder, tagged to this history entry, so Settings → Back
+    // reopens it. Editing (editingSheetId set) isn't persisted — its loaded fields aren't stored.
+    useEffect(() => {
+        persistWorkoutBuilder('ssl_workout_sheet_restore', location.key, mode === 'builder' && editingSheetId === null);
+    }, [mode, editingSheetId, location.key]);
 
     // Push Overview rows to the shell's top-right tile (Total + Drafts to match Programs/Packets).
     // useLayoutEffect so the rows land in the first paint (not one frame late on initial nav).

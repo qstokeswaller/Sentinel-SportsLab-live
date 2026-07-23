@@ -1,12 +1,12 @@
 // v7
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useAppState } from '../context/AppStateContext';
 import { DatabaseService } from '../services/databaseService';
 import {
-  SaveIcon, LogOutIcon, UserIcon, SettingsIcon,
+  SaveIcon, LogOutIcon, UserIcon, SettingsIcon, ArrowLeftIcon,
   GaugeIcon, UsersIcon, ToggleLeftIcon, ToggleRightIcon,
   SlidersHorizontalIcon, ShieldIcon, ChevronRightIcon,
   FlaskConicalIcon, ChevronDownIcon, ChevronUpIcon, AlertTriangleIcon,
@@ -291,6 +291,13 @@ function AppearanceTab({ isDarkMode, toggleDarkMode }: { isDarkMode: boolean; to
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Back — return to the page the user came from (browser history). Falls back
+  // to the dashboard if Settings was opened directly (no in-app history entry).
+  const handleBack = () => {
+    if (location.key && location.key !== 'default') navigate(-1);
+    else navigate('/dashboard');
+  };
   const { user, signOut } = useAuth();
   const { teams, acwrSettings, setAcwrSettings, acwrRecalcAnchors, setAcwrRecalcAnchors, testVisibility, setTestVisibility, tourState, setTourState, showToast, gpsProfiles, setGpsProfiles, polarIntegration, setPolarIntegration, gpsDataSources, setGpsDataSources, isDarkMode, toggleDarkMode, currentOrg, isOrgAdmin, currentUserRole, refreshCurrentOrg } = useAppState();
   const { replayOnboarding } = useOnboarding();
@@ -864,7 +871,15 @@ const SettingsPage: React.FC = () => {
   // ══════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
+    <div className="max-w-4xl mx-auto py-6 px-4 min-h-[calc(100vh-80px)]">
+      {/* Back — returns to the page you came from */}
+      <button
+        onClick={handleBack}
+        className="flex items-center gap-1.5 mb-4 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-[#CBD5E1] bg-white dark:bg-[#132338] border border-slate-200 dark:border-[#243A58] hover:bg-slate-50 dark:hover:bg-[#1A2D48] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors"
+      >
+        <ArrowLeftIcon size={15} /> Back
+      </button>
+      <div className="flex flex-col md:flex-row gap-6">
       {/* Sidebar — vertical list on md+, horizontal pill tabs on mobile */}
       <div className="md:w-56 md:shrink-0">
         {/* Mobile: same 3×2 tab grid, but each cell lays the icon + label
@@ -1002,6 +1017,7 @@ const SettingsPage: React.FC = () => {
           onSaved={() => { setGpsProfiles(loadGpsProfiles()); showToast?.('Column names updated', 'success'); setGpsPreviewProfile(null); }}
         />
       )}
+      </div>
     </div>
   );
 };

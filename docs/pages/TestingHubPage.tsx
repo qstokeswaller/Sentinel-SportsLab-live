@@ -42,14 +42,32 @@ export const TestingHubPage: React.FC = () => {
     } = useAppState();
 
     // ─── Page-local state-based navigation ────────────────────────────
-    const [activeCategory, setActiveCategory] = useState<TestCategory | null>(null);
-    const [activeTestId, setActiveTestId] = useState<string | null>(null);
-    const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
+    // Restore the last Testing Hub position (view + category/test/athlete) so
+    // navigating away (e.g. to Settings) and back returns you to the same spot.
+    // Session-scoped; category/test are validated against the registry (stale-safe).
+    const [activeCategory, setActiveCategory] = useState<TestCategory | null>(() => {
+        try { const r = JSON.parse(sessionStorage.getItem('ssl_testinghub_restore') || 'null'); return (r?.activeCategory && TEST_CATEGORIES.some(c => c.id === r.activeCategory)) ? r.activeCategory : null; } catch { return null; }
+    });
+    const [activeTestId, setActiveTestId] = useState<string | null>(() => {
+        try { const r = JSON.parse(sessionStorage.getItem('ssl_testinghub_restore') || 'null'); return (r?.activeTestId && getTestById(r.activeTestId)) ? r.activeTestId : null; } catch { return null; }
+    });
+    const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(() => {
+        try { return JSON.parse(sessionStorage.getItem('ssl_testinghub_restore') || 'null')?.selectedAthleteId ?? null; } catch { return null; }
+    });
     const [testDate, setTestDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [entryMode, setEntryMode] = useState<'individual' | 'team'>('individual');
+    const [entryMode, setEntryMode] = useState<'individual' | 'team'>(() => {
+        try { return JSON.parse(sessionStorage.getItem('ssl_testinghub_restore') || 'null')?.entryMode === 'team' ? 'team' : 'individual'; } catch { return 'individual'; }
+    });
     const [historyRefresh, setHistoryRefresh] = useState(0);
-    const [hubView, setHubView] = useState<HubView>('categories');
+    const [hubView, setHubView] = useState<HubView>(() => {
+        try { const v = JSON.parse(sessionStorage.getItem('ssl_testinghub_restore') || 'null')?.hubView; return (v === 'categories' || v === 'compare' || v === 'export' || v === 'insights') ? v : 'categories'; } catch { return 'categories'; }
+    });
+
+    // Save the current Testing Hub position whenever it changes.
+    useEffect(() => {
+        try { sessionStorage.setItem('ssl_testinghub_restore', JSON.stringify({ hubView, activeCategory, activeTestId, selectedAthleteId, entryMode })); } catch {}
+    }, [hubView, activeCategory, activeTestId, selectedAthleteId, entryMode]);
 
     // Global search — searches every visible test across every category. Uses
     // the project's fuzzySearch util (exact-first, trigram fallback) so the

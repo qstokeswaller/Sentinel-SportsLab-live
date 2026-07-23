@@ -75,9 +75,17 @@ export const WorkoutSessionsPage = () => {
     const { user: authUser } = useAuth();
     const [ownershipScope, setOwnershipScope] = useState<OwnershipScope>('all');
     // search + view live in the Workouts shell layout (persistent across tab switches).
-    const { search, setSearch, view, registerCreate, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
+    const { search, setSearch, view, registerCreate, setHideShell, setOverviewRows, setSidebarExtra } = useWorkoutsLayout();
     // Mobile has no right-rail panel — tapping a packet opens the full-view modal directly.
     const isMobile = useIsMobile();
+
+    // Packets never enter an in-page builder (Create Packet navigates to /workouts/packets),
+    // so the shell is always shown on this tab. We must assert that on mount because the
+    // provider no longer resets hideShell — otherwise switching here FROM an open Programs/Sheets
+    // builder (which left hideShell=true) would keep the shell hidden. useLayoutEffect = no flash.
+    useLayoutEffect(() => {
+        setHideShell(false);
+    }, [setHideShell]);
 
     // Tabs mirror Programs: Templates = all saved; Assigned = templates with at least one scheduled session
     const [activeTab, setActiveTab] = useState<'templates' | 'assigned'>('templates');

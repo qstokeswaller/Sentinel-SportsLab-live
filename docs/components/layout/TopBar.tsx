@@ -1,23 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MenuIcon, ActivityIcon } from 'lucide-react';
+import { MenuIcon } from 'lucide-react';
 import { useAppState } from '../../context/AppStateContext';
 import { useAuth } from '../../context/AuthContext';
+import { NAV_ITEMS } from './Sidebar';
 
-// Page title map — matches NAV_ITEMS ids + any sub-routes
-const PAGE_TITLES: Record<string, string> = {
-    dashboard:     'Dashboard',
-    periodization: 'Planner',
-    clients:       'Roster',
-    workouts:      'Workouts',
-    library:       'Library',
-    conditioning:  'Conditioning Hub',
-    analytics:     'Analytics Hub',
-    reports:       'Reporting Hub',
-    wellness:      'Wellness Hub',
-    testing:       'Testing Hub',
-    lab:           'Performance Lab',
-    settings:      'Settings',
+// Titles for routes that aren't in the sidebar nav (so they still show a name).
+// The sidebar labels themselves are the single source of truth for the page
+// title (see pageTitle below) — so the top bar can never drift from the menu.
+const EXTRA_TITLES: Record<string, string> = {
+    settings: 'Settings',
 };
 
 export const TopBar = () => {
@@ -27,7 +19,7 @@ export const TopBar = () => {
 
     const displayName = user?.user_metadata?.full_name || user?.email || '';
     const userInitial = displayName[0]?.toUpperCase() ?? '?';
-    const pageTitle = PAGE_TITLES[activeTab] ?? 'Sentinel SportsLab';
+    const pageTitle = NAV_ITEMS.find(i => i.id === activeTab)?.label ?? EXTRA_TITLES[activeTab] ?? 'Sentinel SportsLab';
 
     return (
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#132338] border-b border-slate-200 dark:border-[#243A58] z-30 shrink-0 print:hidden">

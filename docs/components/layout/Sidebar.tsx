@@ -17,7 +17,7 @@ import {
 // Ordering: foundational pages first (dashboard → library), then hubs grouped by
 // daily workflow (Conditioning → Wellness → Testing) before analysis-layer hubs
 // (Reporting → Analytics → Performance Lab).
-const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = [
+export const NAV_ITEMS: { id: string; label: string; icon: any; feature: Feature }[] = [
     { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboardIcon, feature: 'dashboard' },
     { id: 'periodization', label: 'Planner',          icon: CalendarIcon,        feature: 'planner' },
     { id: 'clients',       label: 'Roster',           icon: UsersIcon,           feature: 'roster' },

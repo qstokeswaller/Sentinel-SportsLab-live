@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
+import { useRestorableState } from '../hooks/useRestorableState';
 import {
     UserPlusIcon, ShieldIcon, ChevronRightIcon, UsersIcon, PlusIcon,
     LayoutGridIcon, ListIcon, Trash2Icon, AlertTriangleIcon,
@@ -33,12 +34,20 @@ export const RosterPage = () => {
 
     const openAthlete = (player: any) => navigate(`/clients/${player.id}`);
 
-    const [viewMode, setViewMode]           = useState<ViewMode>('grid');
-    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+    const [viewMode, setViewMode]           = useRestorableState<ViewMode>('ssl_roster_view', 'grid');
+    const [selectedTeamId, setSelectedTeamId] = useRestorableState<string | null>('ssl_roster_team', null);
     const [playerLayout, setPlayerLayout]   = useState<PlayerLayout>('cards');
     // Start all teams collapsed — user expands the ones they want to see
     const [collapsedTeams, setCollapsedTeams] = useState<Set<string>>(() => new Set(teams.map(t => t.id)));
-    const [teamDetailTab, setTeamDetailTab] = useState<TeamDetailTab>('athletes');
+    const [teamDetailTab, setTeamDetailTab] = useRestorableState<TeamDetailTab>('ssl_roster_tab', 'athletes');
+
+    // If a restored team no longer exists (deleted while away), drop back to the
+    // roster landing instead of a broken team-detail view.
+    React.useEffect(() => {
+        if (selectedTeamId && teams.length > 0 && !teams.some(t => t.id === selectedTeamId)) {
+            setSelectedTeamId(null);
+        }
+    }, [teams, selectedTeamId]);
     const [confirmDelete, setConfirmDelete] = useState<{ type: 'athlete' | 'team'; id: string; name: string } | null>(null);
     const [deleting, setDeleting]           = useState(false);
     const [showImport, setShowImport]       = useState(false);
@@ -361,8 +370,8 @@ export const RosterPage = () => {
         return (
             <>
                 {/* Detail header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
                         <button
                             onClick={() => setSelectedTeamId(null)}
                             className="flex items-center gap-1.5 text-sm font-semibold text-slate-400 dark:text-[#CBD5E1] hover:text-slate-900 dark:hover:text-[#E2E8F0] transition-colors"
@@ -378,7 +387,7 @@ export const RosterPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         {/* Player layout sub-toggle — only visible on Athletes tab */}
                         {teamDetailTab === 'athletes' && (
                             <div className="flex items-center bg-slate-100 dark:bg-[#1A2D48] rounded-lg p-1 gap-0.5">
